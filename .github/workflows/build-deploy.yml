@@ -29,6 +29,6 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss:${{ github.ref_name }}
-            ${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss:sha-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
