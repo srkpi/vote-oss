@@ -21,6 +21,7 @@ pnpm-debug.log*
 .env.development
 .env.test
 .env.production
+.env.example
 
 # git
 .git
@@ -39,6 +40,8 @@ coverage
 *.md
 *.log
 *.tsbuildinfo
+.prettierignore
+.prettierrc
 
 # IDE / OS
 .vscode
