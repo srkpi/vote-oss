@@ -3,13 +3,12 @@ import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Errors } from '@/lib/errors';
 
-// Public transparency endpoint – anyone authenticated can read all encrypted ballots
-// to verify their own vote is included and no ballots have been removed
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const electionId = parseInt(params.id, 10);
+  const { id } = await params;
+  const electionId = parseInt(id, 10);
   if (isNaN(electionId)) return Errors.badRequest('Invalid election id');
 
   const election = await prisma.election.findUnique({

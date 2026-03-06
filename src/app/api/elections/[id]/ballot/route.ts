@@ -10,11 +10,12 @@ import {
 } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const electionId = parseInt(params.id, 10);
+  const { id } = await params;
+  const electionId = parseInt(id, 10);
   if (isNaN(electionId)) return Errors.badRequest('Invalid election id');
 
   let body: {
@@ -48,33 +49,22 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (now < election.opens_at) return Errors.badRequest('Election has not started yet');
   if (now > election.closes_at) return Errors.badRequest('Election has already closed');
 
-  // Verify vote token signature using election public key
   const signatureValid = verifyVoteTokenSignature(election.public_key, token, signature);
-  if (!signatureValid) {
-    return Errors.badRequest('Invalid vote token signature');
-  }
+  if (!signatureValid) return Errors.badRequest('Invalid vote token signature');
 
-  // Verify token belongs to this election
   const tokenElectionId = token.split(':')[0];
   if (parseInt(tokenElectionId, 10) !== electionId) {
     return Errors.badRequest('Vote token does not belong to this election');
   }
 
-  // Verify nullifier = H(token)
   const expectedNullifier = computeNullifier(token);
   if (expectedNullifier !== nullifier) {
     return Errors.badRequest('Nullifier does not match token hash');
   }
 
-  // Check nullifier not already used
-  const usedNullifier = await prisma.usedTokenNullifier.findUnique({
-    where: { nullifier },
-  });
-  if (usedNullifier) {
-    return Errors.conflict('This vote token has already been used');
-  }
+  const usedNullifier = await prisma.usedTokenNullifier.findUnique({ where: { nullifier } });
+  if (usedNullifier) return Errors.conflict('This vote token has already been used');
 
-  // Decrypt ballot and verify choice is valid
   let choiceIdStr: string;
   try {
     choiceIdStr = decryptBallot(election.private_key, encryptedBallot);
@@ -84,11 +74,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const choiceId = parseInt(choiceIdStr, 10);
   const validChoice = election.choices.find((c) => c.id === choiceId);
-  if (!validChoice) {
-    return Errors.badRequest('Decrypted ballot contains invalid choice');
-  }
+  if (!validChoice) return Errors.badRequest('Decrypted ballot contains invalid choice');
 
-  // Get previous ballot hash for chain continuity
   const lastBallot = await prisma.ballot.findFirst({
     where: { election_id: electionId },
     orderBy: { id: 'desc' },
@@ -97,14 +84,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const previousHash = lastBallot?.current_hash ?? null;
 
-  // Sign the ballot entry with election private key
   const ballotSignature = signBallotEntry(election.private_key, {
     electionId,
     encryptedBallot,
     previousHash,
   });
 
-  // Compute blockchain hash
   const currentHash = computeBallotHash({
     electionId,
     encryptedBallot,
@@ -112,7 +97,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     previousHash,
   });
 
-  // Persist nullifier + ballot atomically
   await prisma.$transaction([
     prisma.usedTokenNullifier.create({
       data: { nullifier, election_id: electionId },

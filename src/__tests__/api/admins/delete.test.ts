@@ -33,7 +33,7 @@ describe('DELETE /api/admins/[userId]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     const req = makeRequest({ method: 'DELETE' });
-    const res = await DELETE(req, { params: { userId: 'user-002' } });
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'user-002' }) });
     expect(res.status).toBe(401);
   });
 
@@ -41,20 +41,20 @@ describe('DELETE /api/admins/[userId]', () => {
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     const req = makeAuthRequest(access.token, { method: 'DELETE' });
-    const res = await DELETE(req, { params: { userId: 'user-002' } });
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'user-002' }) });
     expect(res.status).toBe(403);
   });
 
   it('returns 403 when admin does not have manage_admins permission', async () => {
     const req = await adminReq({ ...ADMIN_RECORD, manage_admins: false });
-    const res = await DELETE(req, { params: { userId: 'admin-002' } });
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
     expect(res.status).toBe(403);
   });
 
   it('returns 400 when trying to delete yourself', async () => {
     const req = await adminReq(ADMIN_RECORD);
     // ADMIN_PAYLOAD.sub === ADMIN_RECORD.user_id === "superadmin-001"
-    const res = await DELETE(req, { params: { userId: 'superadmin-001' } });
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'superadmin-001' }) });
     expect(res.status).toBe(400);
   });
 
@@ -62,7 +62,7 @@ describe('DELETE /api/admins/[userId]', () => {
     const req = await adminReq(ADMIN_RECORD);
     // findUnique already used for requireAdmin; second call is for target
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
-    const res = await DELETE(req, { params: { userId: 'nonexistent-admin' } });
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'nonexistent-admin' }) });
     expect(res.status).toBe(404);
   });
 
@@ -86,7 +86,7 @@ describe('DELETE /api/admins/[userId]', () => {
       .mockResolvedValueOnce({ promoted_by: null }); // ancestor walk hits root
 
     const reqFresh = makeAuthRequest(access.token, { method: 'DELETE' });
-    const res = await DELETE(reqFresh, { params: { userId: 'admin-002' } });
+    const res = await DELETE(reqFresh, { params: Promise.resolve({ userId: 'admin-002' }) });
     expect(res.status).toBe(403);
   });
 
@@ -100,7 +100,7 @@ describe('DELETE /api/admins/[userId]', () => {
 
     prismaMock.admin.delete.mockResolvedValueOnce({});
 
-    const res = await DELETE(req, { params: { userId: 'admin-002' } });
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
@@ -117,7 +117,7 @@ describe('DELETE /api/admins/[userId]', () => {
 
     prismaMock.admin.delete.mockResolvedValueOnce({});
 
-    await DELETE(req, { params: { userId: 'admin-002' } });
+    await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
 
     expect(prismaMock.admin.delete).toHaveBeenCalledWith({ where: { user_id: 'admin-002' } });
   });
@@ -136,7 +136,7 @@ describe('DELETE /api/admins/[userId]', () => {
       .mockResolvedValueOnce({ promoted_by: 'admin-y' }); // cycle guard fires
 
     const req = makeAuthRequest(access.token, { method: 'DELETE' });
-    const res = await DELETE(req, { params: { userId: 'admin-x' } });
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-x' }) });
     expect(res.status).toBe(403);
   });
 });

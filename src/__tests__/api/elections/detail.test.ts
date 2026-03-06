@@ -13,7 +13,7 @@ jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 
 import { GET } from '@/app/api/elections/[id]/route';
 
-const PARAMS = { params: { id: '1' } };
+const PARAMS = { params: Promise.resolve({ id: '1' }) };
 
 async function authRequest(payload = USER_PAYLOAD) {
   const { access } = await makeTokenPair(payload);
@@ -36,7 +36,7 @@ describe('GET /api/elections/[id]', () => {
 
   it('returns 400 for a non-numeric id', async () => {
     const req = await authRequest();
-    const res = await GET(req, { params: { id: 'abc' } });
+    const res = await GET(req, { params: Promise.resolve({ id: 'abc' }) });
     expect(res.status).toBe(400);
   });
 

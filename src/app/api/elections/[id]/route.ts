@@ -3,11 +3,12 @@ import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { Errors } from '@/lib/errors';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const electionId = parseInt(params.id, 10);
+  const { id } = await params;
+  const electionId = parseInt(id, 10);
   if (isNaN(electionId)) return Errors.badRequest('Invalid election id');
 
   const election = await prisma.election.findUnique({
@@ -23,7 +24,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const { user } = auth;
 
-  // Check user eligibility for restricted elections
   if (
     (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) ||
     (election.restricted_to_group && election.restricted_to_group !== user.group)

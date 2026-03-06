@@ -4,11 +4,12 @@ import { prisma } from '@/lib/prisma';
 import { decryptBallot } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const electionId = parseInt(params.id, 10);
+  const { id } = await params;
+  const electionId = parseInt(id, 10);
   if (isNaN(electionId)) return Errors.badRequest('Invalid election id');
 
   const election = await prisma.election.findUnique({
@@ -28,7 +29,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     );
   }
 
-  // If tallies already computed, return them directly
   if (election.tallies.length > 0) {
     const result = election.choices.map((c) => {
       const tally = election.tallies.find((t) => t.choice_id === c.id);
@@ -50,7 +50,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     });
   }
 
-  // Compute tallies: decrypt all ballots in memory
   const ballots = await prisma.ballot.findMany({
     where: { election_id: electionId },
     select: { encrypted_ballot: true },
@@ -69,12 +68,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         tally[choiceId]++;
       }
     } catch {
-      // Malformed ballot – skip but log
       console.error(`[tally] Failed to decrypt ballot for election ${electionId}`);
     }
   }
 
-  // Persist tallies
   await prisma.electionTally.createMany({
     data: Object.entries(tally).map(([choiceId, count]) => ({
       election_id: electionId,
