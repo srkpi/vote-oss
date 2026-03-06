@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model JwtToken {
+  access_jti  String   @unique
+  refresh_jti String   @unique
+  created_at  DateTime @default(now())
+
+  @@map("jwt_tokens")
+}
+
+model Admin {
+  user_id               String   @id
+  full_name             String
+  group                 String
+  faculty               String
+  promoted_by           String?
+  promoter              Admin?   @relation("AdminHierarchy", fields: [promoted_by], references: [user_id])
+  subordinates          Admin[]  @relation("AdminHierarchy")
+  promoted_at           DateTime @default(now())
+  manage_admins         Boolean  @default(false)
+  restricted_to_faculty Boolean  @default(true)
+
+  created_elections     Election[]
+  created_invite_tokens AdminInviteToken[]
+
+  @@map("admins")
+}
+
+model AdminInviteToken {
+  token_hash            String   @id
+  max_usage             Int
+  current_usage         Int      @default(0)
+  manage_admins         Boolean
+  restricted_to_faculty Boolean
+  valid_due             DateTime
+  created_at            DateTime @default(now())
+  created_by            String
+  creator               Admin    @relation(fields: [created_by], references: [user_id])
+
+  @@map("admin_invite_tokens")
+}
+
+model Election {
+  id                    Int      @id @default(autoincrement())
+  title                 String
+  created_by            String
+  creator               Admin    @relation(fields: [created_by], references: [user_id])
+  created_at            DateTime @default(now())
+  opens_at              DateTime
+  closes_at             DateTime
+  restricted_to_faculty String?
+  restricted_to_group   String?
+  public_key            String   @db.Text
+  private_key           String   @db.Text
+
+  choices               ElectionChoice[]
+  issued_tokens         IssuedToken[]
+  ballots               Ballot[]
+  tallies               ElectionTally[]
+  nullifiers            UsedTokenNullifier[]
+
+  @@map("elections")
+}
+
+model ElectionChoice {
+  id          Int      @id @default(autoincrement())
+  election_id Int
+  election    Election @relation(fields: [election_id], references: [id])
+  choice      String
+  position    Int
+
+  tallies     ElectionTally[]
+
+  @@map("election_choices")
+}
+
+model IssuedToken {
+  id          Int      @id @default(autoincrement())
+  election_id Int
+  election    Election @relation(fields: [election_id], references: [id])
+  user_id     String
+
+  @@unique([election_id, user_id])
+  @@map("issued_tokens")
+}
+
+model Ballot {
+  id               Int      @id @default(autoincrement())
+  election_id      Int
+  election         Election @relation(fields: [election_id], references: [id])
+  encrypted_ballot String   @unique @db.Text
+  created_at       DateTime @default(now())
+  signature        String   @db.Text
+  previous_hash    String?
+  current_hash     String   @unique
+
+  @@map("ballots")
+}
+
+model UsedTokenNullifier {
+  nullifier   String   @id
+  election_id Int
+  election    Election @relation(fields: [election_id], references: [id])
+
+  @@map("used_token_nullifiers")
+}
+
+model ElectionTally {
+  election_id Int
+  choice_id   Int
+  election    Election       @relation(fields: [election_id], references: [id])
+  choice      ElectionChoice @relation(fields: [choice_id], references: [id])
+  vote_count  Int
+
+  @@id([election_id, choice_id])
+  @@map("election_tallies")
+}
