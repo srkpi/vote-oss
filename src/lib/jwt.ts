@@ -28,6 +28,17 @@ function getRefreshSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+function peekTokenType(token: string): string | undefined {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return undefined;
+    const decoded = JSON.parse(Buffer.from(parts[1]!, 'base64url').toString('utf8'));
+    return decoded?.token_type;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function signAccessToken(
   payload: Omit<JwtUserPayload, 'jti' | 'token_type'>,
 ): Promise<{ token: string; jti: string }> {
@@ -55,12 +66,22 @@ export async function signRefreshToken(
 }
 
 export async function verifyAccessToken(token: string): Promise<JosePayload> {
+  const tokenType = peekTokenType(token);
+  if (tokenType !== undefined && tokenType !== 'access') {
+    throw new Error('Invalid token type');
+  }
+
   const { payload } = await jwtVerify<JosePayload>(token, getAccessSecret());
   if (payload.token_type !== 'access') throw new Error('Invalid token type');
   return payload;
 }
 
 export async function verifyRefreshToken(token: string): Promise<JosePayload> {
+  const tokenType = peekTokenType(token);
+  if (tokenType !== undefined && tokenType !== 'refresh') {
+    throw new Error('Invalid token type');
+  }
+
   const { payload } = await jwtVerify<JosePayload>(token, getRefreshSecret());
   if (payload.token_type !== 'refresh') throw new Error('Invalid token type');
   return payload;

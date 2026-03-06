@@ -64,4 +64,9 @@ export function resetPrismaMock() {
       (delegate as jest.Mock).mockReset();
     }
   });
+
+  prismaMock.ballot.create.mockImplementation((args: unknown) => args);
+  prismaMock.usedTokenNullifier.create.mockImplementation((args: unknown) => args);
+  prismaMock.admin.create.mockImplementation((args: unknown) => args);
+  prismaMock.adminInviteToken.create.mockImplementation((args: unknown) => args);
 }

@@ -27,7 +27,9 @@ async function isAncestor(ancestorId: string, targetUserId: string): Promise<boo
 
 export async function DELETE(req: NextRequest, { params }: { params: { userId: string } }) {
   const auth = await requireAdmin(req);
-  if (!auth.ok) return Errors.forbidden(auth.error);
+  if (!auth.ok) {
+    return auth.status === 401 ? Errors.unauthorized(auth.error) : Errors.forbidden(auth.error);
+  }
 
   const { admin, user } = auth;
 

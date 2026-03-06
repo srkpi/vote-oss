@@ -6,7 +6,9 @@ import { Errors } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
-  if (!auth.ok) return Errors.forbidden(auth.error);
+  if (!auth.ok) {
+    return auth.status === 401 ? Errors.unauthorized(auth.error) : Errors.forbidden(auth.error);
+  }
 
   const { admin, user } = auth;
 
