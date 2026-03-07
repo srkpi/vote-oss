@@ -23,10 +23,8 @@ const config: Config = {
         },
       },
     ],
-    // ✅ Transform ESM-only node_modules (like jose) using Babel
     '^.+\\.js$': 'babel-jest',
   },
-  // ✅ Allow jose (and other ESM packages) to be transformed
   transformIgnorePatterns: ['/node_modules/(?!(jose)/)'],
   collectCoverageFrom: ['src/lib/**/*.ts', 'src/app/api/**/*.ts', '!src/**/*.d.ts'],
   coverageDirectory: 'coverage',
