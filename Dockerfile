@@ -6,7 +6,13 @@ WORKDIR /app
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
+
+ARG DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL=${DATABASE_URL}
+
 RUN npm ci --include=dev --legacy-peer-deps
+RUN npm run db:generate
 
 # builder
 FROM base AS builder
