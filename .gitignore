@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/allure-report
+/allure-results
 
 # next.js
 /.next/

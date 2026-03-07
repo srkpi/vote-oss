@@ -1,3 +1,5 @@
 node_modules
 .next
 out
+allure-report
+allure-results
