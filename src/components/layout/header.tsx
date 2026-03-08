@@ -7,10 +7,10 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import type { Session } from '@/types';
+import type { User } from '@/types';
 
 interface HeaderProps {
-  session: Session | null;
+  session: User | null;
 }
 
 export function Header({ session }: HeaderProps) {

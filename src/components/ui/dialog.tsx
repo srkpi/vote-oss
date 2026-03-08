@@ -79,9 +79,11 @@ export function DialogPanel({ className, maxWidth = 'md', children, ...props }: 
   );
 }
 
-interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function DialogHeader({ className, children, ...props }: DialogHeaderProps) {
+export function DialogHeader({
+  className,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn('flex items-start justify-between gap-4', 'p-6 pb-0', className)} {...props}>
       {children}

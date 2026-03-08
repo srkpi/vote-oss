@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import type { Session } from '@/types';
+import type { User } from '@/types';
 
 interface JwtPayload {
   sub: string;
@@ -28,7 +28,7 @@ function isTokenExpired(payload: JwtPayload): boolean {
   return Date.now() / 1000 > payload.exp;
 }
 
-export async function getServerSession(): Promise<Session | null> {
+export async function getServerSession(): Promise<User | null> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
@@ -46,7 +46,7 @@ export async function getServerSession(): Promise<Session | null> {
   };
 }
 
-export async function requireServerSession(): Promise<Session> {
+export async function requireServerSession(): Promise<User> {
   const session = await getServerSession();
   if (!session) {
     throw new Error('UNAUTHORIZED');

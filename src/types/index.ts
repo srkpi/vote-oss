@@ -8,8 +8,6 @@ export interface User {
   isAdmin: boolean;
 }
 
-export interface Session extends User {}
-
 // ==================== ELECTION TYPES ====================
 
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';
