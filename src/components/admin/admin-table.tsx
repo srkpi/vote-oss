@@ -1,0 +1,280 @@
+'use client';
+
+import { useState } from 'react';
+import { cn, formatDate, formatFacultyName } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogPanel,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogBody,
+  DialogFooter,
+  DialogCloseButton,
+} from '@/components/ui/dialog';
+import { Alert } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { deleteAdmin } from '@/lib/api-client';
+import type { Admin } from '@/types';
+
+interface AdminTableProps {
+  admins: Admin[];
+  currentUserId: string;
+  onDelete: (userId: string) => void;
+}
+
+export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps) {
+  const { toast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<Admin | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+
+    const result = await deleteAdmin(deleteTarget.user_id);
+    if (result.success) {
+      toast({
+        title: 'Адміністратора видалено',
+        description: `${deleteTarget.full_name} більше не є адміністратором.`,
+        variant: 'success',
+      });
+      onDelete(deleteTarget.user_id);
+      setDeleteTarget(null);
+    } else {
+      toast({ title: 'Помилка', description: result.error, variant: 'error' });
+    }
+    setDeleting(false);
+  };
+
+  if (admins.length === 0) {
+    return (
+      <div className="text-center py-12 text-[var(--muted-foreground)] font-body text-sm">
+        Адміністраторів не знайдено
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-[var(--border-subtle)]">
+              {['Користувач', 'Факультет / Група', 'Призначено', 'Права', 'Дії'].map((h) => (
+                <th
+                  key={h}
+                  className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--border-subtle)]">
+            {admins.map((admin) => (
+              <AdminRow
+                key={admin.user_id}
+                admin={admin}
+                isCurrentUser={admin.user_id === currentUserId}
+                onDelete={() => setDeleteTarget(admin)}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-3">
+        {admins.map((admin) => (
+          <AdminCard
+            key={admin.user_id}
+            admin={admin}
+            isCurrentUser={admin.user_id === currentUserId}
+            onDelete={() => setDeleteTarget(admin)}
+          />
+        ))}
+      </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
+        <DialogPanel maxWidth="sm">
+          <DialogHeader>
+            <div>
+              <DialogTitle>Видалити адміністратора?</DialogTitle>
+              <DialogDescription>Ця дія безповоротна</DialogDescription>
+            </div>
+            <DialogCloseButton onClose={() => setDeleteTarget(null)} />
+          </DialogHeader>
+          <DialogBody>
+            <Alert variant="warning">
+              <strong>{deleteTarget?.full_name}</strong> втратить доступ до адмін-панелі.
+            </Alert>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Скасувати
+            </Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleting}>
+              Видалити
+            </Button>
+          </DialogFooter>
+        </DialogPanel>
+      </Dialog>
+    </>
+  );
+}
+
+interface AdminRowProps {
+  admin: Admin;
+  isCurrentUser: boolean;
+  onDelete: () => void;
+}
+
+function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
+  return (
+    <tr
+      className={cn(
+        'hover:bg-[var(--surface)] transition-colors duration-150',
+        isCurrentUser && 'bg-[var(--kpi-navy)]/3',
+      )}
+    >
+      <td className="px-4 py-3.5">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full navy-gradient flex items-center justify-center text-white text-sm font-semibold shrink-0">
+            {admin.full_name.charAt(0)}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[var(--foreground)] font-body">
+              {admin.full_name}
+            </p>
+            <p className="text-xs text-[var(--muted-foreground)] font-body">{admin.user_id}</p>
+          </div>
+          {isCurrentUser && (
+            <Badge variant="navy" size="sm">
+              Ви
+            </Badge>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-3.5">
+        <span className="text-sm font-body text-[var(--foreground)]">
+          {formatFacultyName(admin.faculty)} · {admin.group}
+        </span>
+      </td>
+      <td className="px-4 py-3.5">
+        <div>
+          <p className="text-sm font-body text-[var(--foreground)]">
+            {formatDate(admin.promoted_at)}
+          </p>
+          {admin.promoted_by && (
+            <p className="text-xs text-[var(--muted-foreground)] font-body">{admin.promoted_by}</p>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-3.5">
+        <div className="flex flex-wrap gap-1.5">
+          {admin.manage_admins && (
+            <Badge variant="info" size="sm">
+              Керування адмінами
+            </Badge>
+          )}
+          {admin.restricted_to_faculty && (
+            <Badge variant="warning" size="sm">
+              Обмежені права
+            </Badge>
+          )}
+          {!admin.manage_admins && !admin.restricted_to_faculty && (
+            <Badge variant="default" size="sm">
+              Базові
+            </Badge>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-3.5">
+        {!isCurrentUser && (
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={onDelete}
+            className="text-[var(--error)] hover:bg-[var(--error-bg)] hover:text-[var(--error)]"
+          >
+            Видалити
+          </Button>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+function AdminCard({ admin, isCurrentUser, onDelete }: AdminRowProps) {
+  return (
+    <div
+      className={cn(
+        'p-4 rounded-[var(--radius-lg)] border border-[var(--border-color)]',
+        'bg-white shadow-[var(--shadow-sm)]',
+        isCurrentUser && 'border-[var(--kpi-navy)]/20 bg-[var(--kpi-navy)]/3',
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full navy-gradient flex items-center justify-center text-white font-semibold shrink-0">
+            {admin.full_name.charAt(0)}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-semibold text-[var(--foreground)] font-body">
+                {admin.full_name}
+              </p>
+              {isCurrentUser && (
+                <Badge variant="navy" size="sm">
+                  Ви
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+              {formatFacultyName(admin.faculty)} · {admin.group}
+            </p>
+          </div>
+        </div>
+        {!isCurrentUser && (
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={onDelete}
+            className="text-[var(--error)] hover:bg-[var(--error-bg)]"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </Button>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {admin.manage_admins && (
+          <Badge variant="info" size="sm">
+            Керування адмінами
+          </Badge>
+        )}
+        {admin.restricted_to_faculty && (
+          <Badge variant="warning" size="sm">
+            Обмежені права
+          </Badge>
+        )}
+      </div>
+
+      <p className="text-xs text-[var(--muted-foreground)] font-body mt-2">
+        Призначено: {formatDate(admin.promoted_at)}
+      </p>
+    </div>
+  );
+}
