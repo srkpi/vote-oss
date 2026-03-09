@@ -8,7 +8,6 @@ const accentStyles = {
 interface StatCardProps {
   label: string;
   value: string | number;
-  sub?: string;
   icon: React.ReactNode;
   accent: 'navy' | 'orange' | 'success' | 'info';
   delay?: number;
@@ -17,16 +16,40 @@ interface StatCardProps {
 export function StatCard({ label, value, accent, icon, delay = 0 }: StatCardProps) {
   return (
     <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-5 animate-fade-up"
+      className="
+        group
+        flex items-center gap-4
+        bg-white
+        rounded-[var(--radius-xl)]
+        border border-[var(--border-color)]
+        shadow-[var(--shadow-card)]
+        p-4 sm:p-5
+        transition-all duration-200
+        hover:shadow-lg hover:-translate-y-[2px]
+        animate-fade-up
+      "
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
       <div
-        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)] mb-3`}
+        className={`
+          w-10 h-10
+          rounded-xl
+          ${accentStyles[accent]}
+          flex items-center justify-center
+          text-white
+          shadow-[var(--shadow-sm)]
+          shrink-0
+        `}
       >
         {icon}
       </div>
-      <p className="font-display text-xl sm:text-2xl font-bold text-[var(--foreground)]">{value}</p>
-      <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">{label}</p>
+
+      <div className="flex flex-col leading-tight">
+        <p className="font-display text-xl sm:text-2xl font-bold text-[var(--foreground)]">
+          {value}
+        </p>
+        <p className="text-xs font-body text-[var(--muted-foreground)]">{label}</p>
+      </div>
     </div>
   );
 }
