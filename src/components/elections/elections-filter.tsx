@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { Search, X, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ElectionCard, ElectionCardSkeleton } from './election-card';
 import { EmptyState } from '@/components/common/empty-state';
@@ -98,14 +99,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <Search className="w-4 h-4" />
           </div>
           <input
             type="text"
@@ -126,14 +120,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
               onClick={() => setSearch('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -150,16 +137,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
       {filtered.length === 0 ? (
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)]">
           <EmptyState
-            icon={
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            }
+            icon={<FileText className="w-8 h-8" />}
             title={search ? 'Голосувань не знайдено' : 'Голосувань поки що немає'}
             description={
               search

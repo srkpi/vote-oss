@@ -1,3 +1,4 @@
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -84,19 +85,7 @@ export function ErrorState({
       )}
     >
       <div className="w-16 h-16 rounded-2xl bg-[var(--error-bg)] border border-[var(--error)]/20 flex items-center justify-center mb-5">
-        <svg
-          className="w-8 h-8 text-[var(--error)]"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
+        <AlertTriangle className="w-8 h-8 text-[var(--error)]" />
       </div>
       <h3 className="font-display text-xl font-semibold text-[var(--foreground)] mb-2">{title}</h3>
       <p className="text-sm text-[var(--muted-foreground)] max-w-sm font-body">{description}</p>
@@ -114,10 +103,7 @@ export function ErrorState({
 export function PageLoader() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-      <div className="relative w-12 h-12">
-        <div className="absolute inset-0 rounded-full border-4 border-[var(--border-color)]" />
-        <div className="absolute inset-0 rounded-full border-4 border-[var(--kpi-navy)] border-t-transparent animate-spin" />
-      </div>
+      <Loader2 className="w-12 h-12 text-[var(--kpi-navy)] animate-spin" />
       <p className="text-sm text-[var(--muted-foreground)] font-body">Завантаження…</p>
     </div>
   );

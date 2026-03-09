@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Key, X, Shield, CheckCircle, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
@@ -53,14 +54,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
     return (
       <div className="flex flex-col items-center text-center gap-6 py-4 animate-scale-in">
         <div className="w-20 h-20 rounded-full bg-[var(--success-bg)] border-2 border-[var(--success)]/30 flex items-center justify-center">
-          <svg
-            className="w-10 h-10 text-[var(--success)]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+          <Check className="w-10 h-10 text-[var(--success)]" />
         </div>
         <div className="space-y-2">
           <h3 className="font-display text-2xl font-semibold text-[var(--foreground)]">
@@ -94,14 +88,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
         </label>
         <div className="relative">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-              />
-            </svg>
+            <Key className="w-4 h-4" />
           </div>
           <input
             id="token"
@@ -132,14 +119,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
               onClick={() => setToken('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -155,16 +135,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
         fullWidth
         loading={loading}
         disabled={!token.trim()}
-        icon={
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-            />
-          </svg>
-        }
+        icon={<Shield className="w-4 h-4" />}
       >
         Приєднатися як адміністратор
       </Button>
@@ -180,17 +151,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
               key={item}
               className="flex items-start gap-2 text-xs text-[var(--muted-foreground)] font-body"
             >
-              <svg
-                className="w-3.5 h-3.5 text-[var(--kpi-blue-light)] shrink-0 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <CheckCircle className="w-3.5 h-3.5 text-[var(--kpi-blue-light)] shrink-0 mt-0.5" />
               {item}
             </div>
           ))}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ChevronRight, HelpCircle, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
@@ -37,7 +38,6 @@ export function VoteForm({ election }: VoteFormProps) {
     const { token, signature } = tokenResult.data;
 
     // Step 2: Encrypt the ballot and compute nullifier client-side
-    // We need Web Crypto API for RSA encryption
     let encryptedBallot: string;
     let nullifier: string;
 
@@ -106,16 +106,7 @@ export function VoteForm({ election }: VoteFormProps) {
             fullWidth
             disabled={!selectedChoice}
             onClick={() => setStep('confirm')}
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            }
+            icon={<ChevronRight className="w-4 h-4" />}
             iconPosition="right"
           >
             Продовжити
@@ -217,19 +208,7 @@ function ConfirmationStep({ choice, onBack, onConfirm, loading }: ConfirmationSt
     <div className="space-y-6 animate-fade-up">
       <div className="text-center space-y-2">
         <div className="w-16 h-16 rounded-full bg-[var(--kpi-navy)]/10 border-2 border-[var(--kpi-navy)]/20 flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-[var(--kpi-navy)]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <HelpCircle className="w-8 h-8 text-[var(--kpi-navy)]" />
         </div>
         <h4 className="font-display text-xl font-semibold text-[var(--foreground)]">
           Підтвердіть свій вибір
@@ -266,16 +245,7 @@ function ConfirmationStep({ choice, onBack, onConfirm, loading }: ConfirmationSt
           fullWidth
           onClick={onConfirm}
           loading={loading}
-          icon={
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          }
+          icon={<Check className="w-4 h-4" />}
         >
           Підтвердити голос
         </Button>
@@ -289,10 +259,7 @@ function ConfirmationStep({ choice, onBack, onConfirm, loading }: ConfirmationSt
 function SubmittingStep() {
   return (
     <div className="flex flex-col items-center gap-6 py-8 animate-fade-in">
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-[var(--border-color)]" />
-        <div className="absolute inset-0 rounded-full border-4 border-[var(--kpi-navy)] border-t-transparent animate-spin" />
-      </div>
+      <Loader2 className="w-16 h-16 text-[var(--kpi-navy)] animate-spin" />
       <div className="text-center">
         <p className="font-display text-lg font-semibold text-[var(--foreground)]">
           Обробка голосу…
@@ -314,14 +281,7 @@ function VotingSuccess({ hash, electionId }: { hash: string; electionId: number 
     <div className="flex flex-col items-center text-center gap-6 py-4 animate-scale-in">
       <div className="relative">
         <div className="w-20 h-20 rounded-full bg-[var(--success-bg)] border-2 border-[var(--success)]/30 flex items-center justify-center">
-          <svg
-            className="w-10 h-10 text-[var(--success)]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+          <Check className="w-10 h-10 text-[var(--success)]" />
         </div>
       </div>
 
@@ -362,7 +322,6 @@ function VotingSuccess({ hash, electionId }: { hash: string; electionId: number 
 // ==================== CRYPTO HELPERS (Browser-side) ====================
 
 async function encryptChoice(publicKeyPem: string, choiceId: number): Promise<string> {
-  // Convert PEM to ArrayBuffer
   const pemHeader = '-----BEGIN PUBLIC KEY-----';
   const pemFooter = '-----END PUBLIC KEY-----';
   const pemContents = publicKeyPem

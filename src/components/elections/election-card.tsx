@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Lock, Calendar, User, FileText, ChevronRight } from 'lucide-react';
 import { cn, formatDate, formatDateTime, pluralize } from '@/lib/utils';
 import { ElectionStatusBadge } from './election-status-badge';
 import type { Election } from '@/types';
@@ -47,19 +48,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           {/* Faculty / Group restriction indicator */}
           {(election.restrictedToFaculty || election.restrictedToGroup) && (
             <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
-              <svg
-                className="w-3.5 h-3.5 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
+              <Lock className="w-3.5 h-3.5 shrink-0" />
               <span>
                 {election.restrictedToGroup
                   ? election.restrictedToGroup
@@ -82,19 +71,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         {/* Meta info */}
         <div className="space-y-2 mb-5">
           <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-            <svg
-              className="w-4 h-4 shrink-0 text-[var(--kpi-gray-mid)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            <Calendar className="w-4 h-4 shrink-0 text-[var(--kpi-gray-mid)]" />
             <span>
               {isOpen && <>Діє до {formatDateTime(election.closesAt)}</>}
               {isUpcoming && <>Починається {formatDateTime(election.opensAt)}</>}
@@ -103,19 +80,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           </div>
 
           <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-            <svg
-              className="w-4 h-4 shrink-0 text-[var(--kpi-gray-mid)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
+            <User className="w-4 h-4 shrink-0 text-[var(--kpi-gray-mid)]" />
             <span>{election.creator.full_name}</span>
           </div>
         </div>
@@ -144,19 +109,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         {/* Footer stats */}
         <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
           <div className="flex items-center gap-1.5 text-sm text-[var(--muted-foreground)]">
-            <svg
-              className="w-4 h-4 text-[var(--kpi-gray-mid)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            <FileText className="w-4 h-4 text-[var(--kpi-gray-mid)]" />
             <span>{pluralize(election.ballotCount, ['голос', 'голоси', 'голосів'])}</span>
           </div>
 
@@ -168,14 +121,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
             )}
           >
             <span>{isOpen ? 'Проголосувати' : 'Переглянути'}</span>
-            <svg
-              className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ChevronDown, LogOut, Menu, X, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/lib/api-client';
@@ -58,19 +59,7 @@ export function Header({ session }: HeaderProps) {
               'transition-transform duration-200 group-hover:scale-105',
             )}
           >
-            <svg
-              className="w-4 h-4 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <CheckCircle className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <div className="hidden sm:block">
             <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight block">
@@ -130,22 +119,12 @@ export function Header({ session }: HeaderProps) {
                     {session.faculty} · {session.group}
                   </p>
                 </div>
-                <svg
+                <ChevronDown
                   className={cn(
                     'w-4 h-4 text-[var(--muted-foreground)] transition-transform duration-200',
                     userMenuOpen && 'rotate-180',
                   )}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                />
               </button>
 
               {/* Dropdown */}
@@ -179,19 +158,7 @@ export function Header({ session }: HeaderProps) {
                         disabled={loggingOut}
                         className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors disabled:opacity-50"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                          />
-                        </svg>
+                        <LogOut className="w-4 h-4" />
                         {loggingOut ? 'Виходимо…' : 'Вийти'}
                       </button>
                     </div>
@@ -215,25 +182,7 @@ export function Header({ session }: HeaderProps) {
             )}
             aria-label="Меню"
           >
-            {mobileOpen ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            )}
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>

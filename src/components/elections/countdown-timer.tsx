@@ -1,5 +1,6 @@
 'use client';
 
+import { Clock } from 'lucide-react';
 import { useCountdown } from '@/hooks/use-countdown';
 import { cn } from '@/lib/utils';
 
@@ -19,14 +20,7 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
           className,
         )}
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+        <Clock className="w-4 h-4" />
         <span>Час минув</span>
       </div>
     );

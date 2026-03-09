@@ -2,6 +2,16 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  FileText,
+  Search,
+  X,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { getBallots } from '@/lib/api-client';
@@ -57,33 +67,14 @@ export function BallotsClient({ electionId, initialData, initialPage }: BallotsC
       {/* Stats + search */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)]">
-          <svg
-            className="w-4 h-4 text-[var(--kpi-gray-mid)]"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
+          <FileText className="w-4 h-4 text-[var(--kpi-gray-mid)]" />
           <span>{total} бюлетенів</span>
         </div>
 
         {/* Hash search */}
         <div className="relative flex-1 max-w-md">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <Search className="w-4 h-4" />
           </div>
           <input
             type="text"
@@ -103,14 +94,7 @@ export function BallotsClient({ electionId, initialData, initialPage }: BallotsC
               onClick={() => setSearchQuery('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -128,36 +112,12 @@ export function BallotsClient({ electionId, initialData, initialPage }: BallotsC
         >
           {foundBallot ? (
             <span className="flex items-center gap-2">
-              <svg
-                className="w-4 h-4 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <CheckCircle className="w-4 h-4 shrink-0" />
               Бюлетень знайдено на цій сторінці (бюлетень #{foundBallot.id})
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              <svg
-                className="w-4 h-4 shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <XCircle className="w-4 h-4 shrink-0" />
               На цій сторінці не знайдено — спробуйте на іншій
             </span>
           )}
@@ -168,19 +128,7 @@ export function BallotsClient({ electionId, initialData, initialPage }: BallotsC
       {ballots.length === 0 ? (
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-12 text-center">
           <div className="w-14 h-14 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-7 h-7 text-[var(--kpi-gray-mid)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
+            <FileText className="w-7 h-7 text-[var(--kpi-gray-mid)]" />
           </div>
           <p className="font-display text-lg font-semibold text-[var(--foreground)]">
             Бюлетенів поки немає
@@ -223,16 +171,7 @@ export function BallotsClient({ electionId, initialData, initialPage }: BallotsC
               size="sm"
               disabled={page <= 1 || isPending}
               onClick={() => handlePageChange(page - 1)}
-              icon={
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              }
+              icon={<ChevronLeft className="w-4 h-4" />}
             >
               Назад
             </Button>
@@ -268,16 +207,7 @@ export function BallotsClient({ electionId, initialData, initialPage }: BallotsC
               size="sm"
               disabled={page >= totalPages || isPending}
               onClick={() => handlePageChange(page + 1)}
-              icon={
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              }
+              icon={<ChevronRight className="w-4 h-4" />}
               iconPosition="right"
             >
               Вперед
@@ -326,17 +256,12 @@ function BallotRow({ ballot, index, isHighlighted, isExpanded, onToggle }: Ballo
         </div>
 
         {/* Expand icon */}
-        <svg
+        <ChevronDown
           className={cn(
             'w-4 h-4 text-[var(--muted-foreground)] transition-transform duration-200 shrink-0',
             isExpanded && 'rotate-180',
           )}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        />
       </button>
 
       {/* Expanded details */}
