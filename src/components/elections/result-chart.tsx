@@ -4,6 +4,20 @@ import { useState, useEffect } from 'react';
 import { cn, calculateVotePercentage } from '@/lib/utils';
 import type { TallyResult } from '@/types';
 
+const colors = [
+  { bar: 'from-[var(--kpi-navy)] to-[var(--kpi-blue-mid)]', badge: 'bg-[var(--kpi-navy)]' },
+  {
+    bar: 'from-[var(--kpi-orange)] to-[var(--kpi-orange-dark)]',
+    badge: 'bg-[var(--kpi-orange)]',
+  },
+  {
+    bar: 'from-[var(--kpi-blue-light)] to-[var(--kpi-blue-mid)]',
+    badge: 'bg-[var(--kpi-blue-light)]',
+  },
+  { bar: 'from-[var(--kpi-wine)] to-[var(--kpi-wine-deep)]', badge: 'bg-[var(--kpi-wine)]' },
+  { bar: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-500' },
+];
+
 interface ResultsChartProps {
   results: TallyResult[];
   totalBallots: number;
@@ -29,21 +43,7 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
       winners.add(result.choiceId);
     }
   }
-
   const winnerLabel = winners.size > 1 ? 'Нічия' : 'Переможець';
-  const colors = [
-    { bar: 'from-[var(--kpi-navy)] to-[var(--kpi-blue-mid)]', badge: 'bg-[var(--kpi-navy)]' },
-    {
-      bar: 'from-[var(--kpi-orange)] to-[var(--kpi-orange-dark)]',
-      badge: 'bg-[var(--kpi-orange)]',
-    },
-    {
-      bar: 'from-[var(--kpi-blue-light)] to-[var(--kpi-blue-mid)]',
-      badge: 'bg-[var(--kpi-blue-light)]',
-    },
-    { bar: 'from-[var(--kpi-wine)] to-[var(--kpi-wine-deep)]', badge: 'bg-[var(--kpi-wine)]' },
-    { bar: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-500' },
-  ];
 
   return (
     <div className="space-y-6">

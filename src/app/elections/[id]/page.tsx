@@ -1,21 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ChevronRight,
-  User,
-  FileText,
-  Calendar,
-  Clock,
-  GraduationCap,
-  Users,
-  Key,
-} from 'lucide-react';
+import { ChevronRight, User, FileText, Calendar, Clock, GraduationCap, Users } from 'lucide-react';
 import { serverFetch } from '@/lib/server-auth';
 import { VoteForm } from '@/components/elections/vote-form';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { CountdownTimer } from '@/components/elections/countdown-timer';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
+import { EncryptionKey } from '@/components/elections/encryption-key';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
@@ -235,61 +227,19 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             </div>
 
-            {/* Security info */}
-            <div
-              className="navy-gradient rounded-[var(--radius-xl)] p-5 animate-fade-up"
-              style={{ animationDelay: '200ms' }}
-            >
-              <h3 className="font-display text-base font-semibold text-white mb-3">Безпека</h3>
-              <div className="space-y-2.5">
-                {['RSA-2048 шифрування', 'Нульові знання', 'Публічна перевірка'].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-2 text-sm text-white/80 font-body"
-                  >
-                    <Key className="w-4 h-4 text-[var(--kpi-orange)] shrink-0" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <EncryptionKey
+              title="Публічний ключ"
+              description="RSA-2048 SPKI · Використовується для шифрування бюлетенів"
+              keyValue={election.publicKey}
+            />
 
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5 animate-fade-up"
-              style={{ animationDelay: '250ms' }}
-            >
-              <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-2">
-                Публічний ключ
-              </h3>
-              <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
-                <textarea
-                  readOnly
-                  className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed w-full h-20 border border-gray-300 rounded p-2 resize-none"
-                  value={election.publicKey}
-                />
-              </div>
-            </div>
-
-            {/* Private key (after close) */}
             {isClosed && election.privateKey && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5 animate-fade-up"
-                style={{ animationDelay: '250ms' }}
-              >
-                <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-2">
-                  Приватний ключ
-                </h3>
-                <p className="text-xs text-[var(--muted-foreground)] font-body mb-3 leading-relaxed">
-                  Ключ розкрито після завершення — можна перевірити розшифрування бюлетенів.
-                </p>
-                <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
-                  <textarea
-                    readOnly
-                    className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed w-full h-20 border border-gray-300 rounded p-2 resize-none"
-                    value={election.privateKey}
-                  />
-                </div>
-              </div>
+              <EncryptionKey
+                isPrivate
+                title="Приватний ключ"
+                description="Використовується для розшифрування та перевірки"
+                keyValue={election.privateKey}
+              />
             )}
           </div>
         </div>

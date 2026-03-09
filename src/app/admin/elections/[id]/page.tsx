@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, FileText, ExternalLink, Plus, Play, StopCircle, Unlock } from 'lucide-react';
+import { ChevronRight, FileText, ExternalLink, Plus, Play, StopCircle } from 'lucide-react';
 import { serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { ResultsChart } from '@/components/elections/result-chart';
-import { CopyButton } from '@/components/ui/copy-button';
+import { EncryptionKey } from '@/components/elections/encryption-key';
 import { formatDateTime, formatDate } from '@/lib/utils';
 import type { ElectionDetail, TallyResponse } from '@/types';
 
@@ -165,38 +165,19 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   </h2>
                 </div>
                 <div className="p-4 sm:p-6 space-y-3">
-                  {election.choices.map((choice, index) => {
-                    const tallyItem = tally?.results.find((r) => r.choiceId === choice.id);
-                    const pct = tally
-                      ? tally.totalBallots > 0
-                        ? Math.round(((tallyItem?.votes ?? 0) / tally.totalBallots) * 1000) / 10
-                        : 0
-                      : null;
-
-                    return (
-                      <div
-                        key={choice.id}
-                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
-                      >
-                        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
-                          {String.fromCharCode(65 + index)}
-                        </span>
-                        <span className="flex-1 text-sm font-body text-[var(--foreground)]">
-                          {choice.choice}
-                        </span>
-                        {pct !== null && (
-                          <div className="text-right shrink-0">
-                            <span className="font-display text-base sm:text-lg font-bold text-[var(--foreground)]">
-                              {pct}%
-                            </span>
-                            <p className="text-xs text-[var(--muted-foreground)] font-body">
-                              {tallyItem?.votes ?? 0} голосів
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {election.choices.map((choice, index) => (
+                    <div
+                      key={choice.id}
+                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
+                    >
+                      <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <span className="flex-1 text-sm font-body text-[var(--foreground)]">
+                        {choice.choice}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -276,55 +257,19 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             </div>
 
-            {/* Public key */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-              style={{ animationDelay: '300ms', animationFillMode: 'both' }}
-            >
-              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
-                <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
-                  Публічний ключ
-                </h3>
-                <CopyButton text={election.publicKey} />
-              </div>
-              <div className="p-4 sm:p-5">
-                <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
-                  <p className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed line-clamp-3">
-                    {election.publicKey}
-                  </p>
-                </div>
-                <p className="text-xs text-[var(--muted-foreground)] font-body mt-2">
-                  RSA-2048 SPKI · Використовується для шифрування бюлетенів
-                </p>
-              </div>
-            </div>
+            <EncryptionKey
+              title="Публічний ключ"
+              description="RSA-2048 SPKI · Використовується для шифрування бюлетенів"
+              keyValue={election.publicKey}
+            />
 
-            {/* Private key (only after closing) */}
             {isClosed && election.privateKey && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--kpi-orange)]/30 shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-                style={{ animationDelay: '350ms', animationFillMode: 'both' }}
-              >
-                <div className="px-4 sm:px-5 py-4 border-b border-[var(--kpi-orange)]/20 flex items-center justify-between bg-[var(--warning-bg)]">
-                  <div className="flex items-center gap-2">
-                    <Unlock className="w-4 h-4 text-[var(--kpi-orange)]" />
-                    <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
-                      Приватний ключ
-                    </h3>
-                  </div>
-                  <CopyButton text={election.privateKey} />
-                </div>
-                <div className="p-4 sm:p-5">
-                  <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
-                    <p className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed line-clamp-3">
-                      {election.privateKey}
-                    </p>
-                  </div>
-                  <p className="text-xs text-[var(--muted-foreground)] font-body mt-2">
-                    Розкрито після закриття · Використовується для розшифрування та перевірки
-                  </p>
-                </div>
-              </div>
+              <EncryptionKey
+                isPrivate
+                title="Приватний ключ"
+                description="Використовується для розшифрування та перевірки"
+                keyValue={election.privateKey}
+              />
             )}
           </div>
         </div>
