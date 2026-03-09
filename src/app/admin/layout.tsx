@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { getServerSession } from '@/lib/server-auth';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 
 export const metadata: Metadata = {
@@ -10,12 +8,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession();
-
-  if (!session) redirect('/auth/login');
-  if (!session.isAdmin) redirect('/elections');
-
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-[calc(100vh-var(--header-height))] flex bg-[var(--surface)]">
       <AdminSidebar />

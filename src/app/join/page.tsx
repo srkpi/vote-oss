@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { getServerSession } from '@/lib/server-auth';
@@ -15,10 +14,7 @@ interface Props {
 }
 
 export default async function JoinPage({ searchParams }: Props) {
-  const session = await getServerSession();
-  if (!session) redirect('/auth/login');
-  if (session.isAdmin) redirect('/admin');
-
+  const session = (await getServerSession())!;
   const { token } = await searchParams;
 
   return <JoinPageContent session={session} initialToken={token} />;

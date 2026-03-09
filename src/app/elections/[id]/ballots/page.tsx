@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
+import { serverFetch } from '@/lib/server-auth';
 import { BallotsClient } from '@/components/elections/ballots-client';
 import { Alert } from '@/components/ui/alert';
 import type { BallotsResponse } from '@/types';
@@ -21,9 +21,6 @@ export default async function BallotsPage({ params, searchParams }: BallotsPageP
   const { id } = await params;
   const { page: pageParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam ?? '1', 10));
-
-  const session = await getServerSession();
-  if (!session) redirect('/auth/login');
 
   const { data, error, status } = await serverFetch<BallotsResponse>(
     `/api/elections/${id}/ballots?page=${page}&pageSize=20`,

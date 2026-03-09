@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getServerSession } from '@/lib/server-auth';
 import { JoinPageContent } from '@/app/join/page';
@@ -12,13 +11,8 @@ interface Props {
 }
 
 export default async function JoinWithTokenPage({ params }: Props) {
-  const session = await getServerSession();
-  if (!session) redirect('/auth/login');
-  if (session.isAdmin) redirect('/admin');
-
+  const session = (await getServerSession())!;
   const { token } = await params;
 
-  const decodedToken = decodeURIComponent(token);
-
-  return <JoinPageContent session={session} initialToken={decodedToken} />;
+  return <JoinPageContent session={session} initialToken={decodeURIComponent(token)} />;
 }

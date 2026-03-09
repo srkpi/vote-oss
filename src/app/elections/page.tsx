@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
@@ -15,8 +14,6 @@ export const metadata: Metadata = {
 
 export default async function ElectionsPage() {
   const session = await getServerSession();
-  if (!session) redirect('/auth/login');
-
   const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
 
   const open = (elections ?? []).filter((e) => e.status === 'open').length;
@@ -61,7 +58,7 @@ export default async function ElectionsPage() {
                 )}
               </div>
 
-              {session.isAdmin && (
+              {session?.isAdmin && (
                 <Button variant="accent" size="sm" asChild icon={<Plus className="w-3.5 h-3.5" />}>
                   <Link href="/admin/elections/new">Нове голосування</Link>
                 </Button>

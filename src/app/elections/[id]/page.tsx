@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
   ChevronRight,
@@ -11,7 +11,7 @@ import {
   Users,
   Key,
 } from 'lucide-react';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
+import { serverFetch } from '@/lib/server-auth';
 import { VoteForm } from '@/components/elections/vote-form';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { CountdownTimer } from '@/components/elections/countdown-timer';
@@ -28,15 +28,11 @@ interface ElectionPageProps {
 export async function generateMetadata({ params }: ElectionPageProps): Promise<Metadata> {
   const { id } = await params;
   const { data } = await serverFetch<ElectionDetail>(`/api/elections/${id}`);
-  return {
-    title: data?.title ?? 'Голосування',
-  };
+  return { title: data?.title ?? 'Голосування' };
 }
 
 export default async function ElectionPage({ params }: ElectionPageProps) {
   const { id } = await params;
-  const session = await getServerSession();
-  if (!session) redirect('/auth/login');
 
   const {
     data: election,

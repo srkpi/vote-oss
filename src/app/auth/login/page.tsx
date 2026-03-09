@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { getServerSession } from '@/lib/server-auth';
 import { KPIIDLogin } from '@/components/auth/kpi-id-login';
 
 export const metadata: Metadata = {
@@ -8,10 +6,7 @@ export const metadata: Metadata = {
   description: 'Увійдіть за допомогою вашого КПІ ID',
 };
 
-export default async function LoginPage() {
-  const session = await getServerSession();
-  if (session) redirect('/elections');
-
+export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-var(--header-height))] flex">
       {/* Left panel - decorative */}
@@ -156,7 +151,7 @@ export default async function LoginPage() {
                   >
                     <path
                       fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 001.414 0l4-4z"
                       clipRule="evenodd"
                     />
                   </svg>
