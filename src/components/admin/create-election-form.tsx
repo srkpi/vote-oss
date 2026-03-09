@@ -108,8 +108,7 @@ export function CreateElectionForm() {
     setLoading(false);
   };
 
-  // Min datetime for inputs
-  const minDateTime = new Date(Date.now() + 60000).toISOString().slice(0, 16);
+  const [minDateTime] = useState(() => new Date(Date.now() + 60000).toISOString().slice(0, 16));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">

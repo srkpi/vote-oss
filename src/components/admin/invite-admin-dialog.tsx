@@ -31,8 +31,10 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InviteTokenResponse | null>(null);
   const [copied, setCopied] = useState(false);
-
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  const [tomorrow] = useState(() =>
+    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+  );
+  const [oneMinuteAhead] = useState(() => new Date(Date.now() + 60000).toISOString().slice(0, 16));
 
   const [form, setForm] = useState({
     validDue: tomorrow,
@@ -108,7 +110,7 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
                     id="validDue"
                     type="datetime-local"
                     value={form.validDue}
-                    min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                    min={oneMinuteAhead}
                     onChange={(e) => setForm((p) => ({ ...p, validDue: e.target.value }))}
                   />
                 </FormField>

@@ -31,19 +31,18 @@ export default function CallbackPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const calledRef = useRef(false);
 
+  const ticketId = searchParams.get('ticketId');
+
   useEffect(() => {
-    if (calledRef.current) return;
-    calledRef.current = true;
-
-    const ticketId = searchParams.get('ticketId');
-
-    if (!ticketId) {
-      setErrorMessage('Не отримано токен авторизації від сервісу КПІ ID.');
-      setStatus('error');
+    if (!ticketId || calledRef.current) {
       return;
     }
 
-    loginWithTicket(ticketId).then((result) => {
+    calledRef.current = true;
+
+    const run = async () => {
+      const result = await loginWithTicket(ticketId);
+
       if (result.success) {
         setStatus('success');
         setTimeout(() => {
@@ -54,8 +53,10 @@ export default function CallbackPage() {
         setErrorMessage(result.error);
         setStatus('error');
       }
-    });
-  }, [router, searchParams]);
+    };
+
+    run();
+  }, [ticketId, router]);
 
   const config = STATUS_CONFIG[status];
 
