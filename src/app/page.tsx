@@ -12,7 +12,50 @@ import { getServerSession } from '@/lib/server-auth';
 import { serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { ElectionCard } from '@/components/elections/election-card';
+import { FeatureCard } from '@/components/landing/feature-card';
+import { StatItem } from '@/components/landing/stat-item';
 import type { Election } from '@/types';
+
+const features = [
+  {
+    icon: <Lock className="w-6 h-6" />,
+    title: 'RSA-шифрування',
+    description: "Кожен бюлетень зашифровано. Ніхто не може пов'язати голос із виборцем.",
+  },
+  {
+    icon: <Link2 className="w-6 h-6" />,
+    title: 'Ланцюжок бюлетенів',
+    description: "Кожен голос хешується та пов'язується з попереднім — фальсифікація неможлива.",
+  },
+  {
+    icon: <Eye className="w-6 h-6" />,
+    title: 'Публічна перевірка',
+    description: 'Будь-хто може перевірити свій бюлетень за хешем без розкриття змісту голосу.',
+  },
+  {
+    icon: <ShieldCheck className="w-6 h-6" />,
+    title: 'Авторизація КПІ ID',
+    description:
+      'Вхід через офіційну систему ідентифікації КПІ гарантує, що голосує справжній студент.',
+  },
+  {
+    icon: <UserCheck className="w-6 h-6" />,
+    title: 'Анонімність',
+    description: 'Cистема знає, що ви проголосували, але не знає ваш вибір.',
+  },
+  {
+    icon: <LayoutDashboard className="w-6 h-6" />,
+    title: 'Адмін-панель',
+    description: 'Зручний інтерфейс для організаторів виборів з гнучкими налаштуваннями доступу.',
+  },
+];
+
+const stats = [
+  { value: '100%', label: 'Анонімність' },
+  { value: 'RSA-2048', label: 'Шифрування' },
+  { value: '0', label: 'Знань про вибір' },
+  { value: '24/7', label: 'Доступність' },
+];
 
 export default async function HomePage() {
   const session = await getServerSession();
@@ -60,8 +103,8 @@ export default async function HomePage() {
               className="font-body text-lg md:text-xl text-white/75 leading-relaxed mb-10 max-w-xl animate-fade-up"
               style={{ animationDelay: '100ms' }}
             >
-              Безпечна, прозора та анонімна система електронного голосування для студентів і
-              співробітників університету.
+              Безпечна, прозора та анонімна система електронного голосування для органів
+              студентського самоврядування.
             </p>
 
             <div
@@ -111,14 +154,9 @@ export default async function HomePage() {
       {/* Features */}
       <section className="py-20 bg-white">
         <div className="container">
-          <div className="text-center mb-14 animate-fade-up">
-            <h2 className="font-display text-4xl font-bold text-[var(--foreground)] mb-3">
-              Чому КПІ Голос?
-            </h2>
-            <p className="text-[var(--muted-foreground)] font-body max-w-lg mx-auto">
-              Сучасні технології шифрування та блокчейн забезпечують чесність кожного голосування
-            </p>
-          </div>
+          <h2 className="text-center mb-14 animate-fade-up font-display text-4xl font-bold text-[var(--foreground)]">
+            Чому КПІ Голос?
+          </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
             {features.map((feat) => (
@@ -166,79 +204,5 @@ export default async function HomePage() {
         </div>
       </section>
     </>
-  );
-}
-
-const features = [
-  {
-    icon: <Lock className="w-6 h-6" />,
-    title: 'RSA-шифрування',
-    description:
-      "Кожен бюлетень зашифровано ключем виборів. Ніхто не може пов'язати голос із виборцем.",
-  },
-  {
-    icon: <Link2 className="w-6 h-6" />,
-    title: 'Ланцюжок бюлетенів',
-    description: "Кожен голос хешується та пов'язується з попереднім — фальсифікація неможлива.",
-  },
-  {
-    icon: <Eye className="w-6 h-6" />,
-    title: 'Публічна перевірка',
-    description: 'Будь-хто може перевірити свій бюлетень за хешем без розкриття змісту голосу.',
-  },
-  {
-    icon: <ShieldCheck className="w-6 h-6" />,
-    title: 'Авторизація КПІ ID',
-    description:
-      'Вхід через офіційну систему ідентифікації КПІ гарантує, що голосує справжній студент.',
-  },
-  {
-    icon: <UserCheck className="w-6 h-6" />,
-    title: 'Анонімність',
-    description:
-      'Нульові знання: система знає, що ви проголосували, але не може прочитати ваш вибір.',
-  },
-  {
-    icon: <LayoutDashboard className="w-6 h-6" />,
-    title: 'Адмін-панель',
-    description: 'Зручний інтерфейс для організаторів виборів з гнучкими налаштуваннями доступу.',
-  },
-];
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="p-6 rounded-[var(--radius-xl)] bg-white border border-[var(--border-subtle)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-300 group">
-      <div className="w-12 h-12 rounded-xl navy-gradient flex items-center justify-center text-white mb-4 group-hover:scale-105 transition-transform duration-300">
-        {icon}
-      </div>
-      <h3 className="font-display text-lg font-semibold text-[var(--foreground)] mb-2">{title}</h3>
-      <p className="text-sm text-[var(--muted-foreground)] font-body leading-relaxed">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-const stats = [
-  { value: '100%', label: 'Анонімність' },
-  { value: 'RSA-2048', label: 'Шифрування' },
-  { value: '0', label: 'Знань про вибір' },
-  { value: '24/7', label: 'Доступність' },
-];
-
-function StatItem({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="text-center">
-      <div className="font-display text-4xl font-bold text-white mb-2">{value}</div>
-      <div className="text-sm text-white/60 font-body uppercase tracking-wider">{label}</div>
-    </div>
   );
 }
