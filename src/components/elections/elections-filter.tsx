@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Search, X, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ElectionCard, ElectionCardSkeleton } from './election-card';
+import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
 import { EmptyState } from '@/components/common/empty-state';
 import type { Election, ElectionStatus } from '@/types';
 

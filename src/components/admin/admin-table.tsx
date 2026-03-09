@@ -10,7 +10,6 @@ import {
   DialogPanel,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogBody,
   DialogFooter,
   DialogCloseButton,
@@ -23,10 +22,11 @@ import type { Admin } from '@/types';
 interface AdminTableProps {
   admins: Admin[];
   currentUserId: string;
+  deleteAllowed: boolean;
   onDelete: (userId: string) => void;
 }
 
-export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps) {
+export function AdminTable({ admins, currentUserId, deleteAllowed, onDelete }: AdminTableProps) {
   const { toast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<Admin | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -81,6 +81,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
                 key={admin.user_id}
                 admin={admin}
                 isCurrentUser={admin.user_id === currentUserId}
+                deleteAllowed={deleteAllowed}
                 onDelete={() => setDeleteTarget(admin)}
               />
             ))}
@@ -95,6 +96,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
             key={admin.user_id}
             admin={admin}
             isCurrentUser={admin.user_id === currentUserId}
+            deleteAllowed={deleteAllowed}
             onDelete={() => setDeleteTarget(admin)}
           />
         ))}
@@ -104,10 +106,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
         <DialogPanel maxWidth="sm">
           <DialogHeader>
-            <div>
-              <DialogTitle>Видалити адміністратора?</DialogTitle>
-              <DialogDescription>Ця дія безповоротна</DialogDescription>
-            </div>
+            <DialogTitle>Видалити адміністратора?</DialogTitle>
             <DialogCloseButton onClose={() => setDeleteTarget(null)} />
           </DialogHeader>
           <DialogBody>
@@ -132,15 +131,16 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
 interface AdminRowProps {
   admin: Admin;
   isCurrentUser: boolean;
+  deleteAllowed: boolean;
   onDelete: () => void;
 }
 
-function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
+function AdminRow({ admin, isCurrentUser, deleteAllowed, onDelete }: AdminRowProps) {
   return (
     <tr
       className={cn(
         'hover:bg-[var(--surface)] transition-colors duration-150',
-        isCurrentUser && 'bg-[var(--kpi-navy)]/3',
+        isCurrentUser && 'bg-[var(--kpi-blue-light)]/10',
       )}
     >
       <td className="px-4 py-3.5">
@@ -154,11 +154,6 @@ function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
             </p>
             <p className="text-xs text-[var(--muted-foreground)] font-body">{admin.user_id}</p>
           </div>
-          {isCurrentUser && (
-            <Badge variant="navy" size="sm">
-              Ви
-            </Badge>
-          )}
         </div>
       </td>
       <td className="px-4 py-3.5">
@@ -196,14 +191,14 @@ function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
         </div>
       </td>
       <td className="px-4 py-3.5">
-        {!isCurrentUser && (
+        {!isCurrentUser && deleteAllowed && (
           <Button
             variant="ghost"
-            size="xs"
+            size="md"
             onClick={onDelete}
-            className="text-[var(--error)] hover:bg-[var(--error-bg)] hover:text-[var(--error)]"
+            className="text-[var(--error)] hover:bg-[var(--error-bg)]"
           >
-            Видалити
+            <Trash2 className="w-4 h-4" />
           </Button>
         )}
       </td>
@@ -211,13 +206,13 @@ function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
   );
 }
 
-function AdminCard({ admin, isCurrentUser, onDelete }: AdminRowProps) {
+function AdminCard({ admin, isCurrentUser, deleteAllowed, onDelete }: AdminRowProps) {
   return (
     <div
       className={cn(
         'p-4 rounded-[var(--radius-lg)] border border-[var(--border-color)]',
         'bg-white shadow-[var(--shadow-sm)]',
-        isCurrentUser && 'border-[var(--kpi-navy)]/20 bg-[var(--kpi-navy)]/3',
+        isCurrentUser && 'border-[var(--kpi-navy)]',
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -230,18 +225,13 @@ function AdminCard({ admin, isCurrentUser, onDelete }: AdminRowProps) {
               <p className="text-sm font-semibold text-[var(--foreground)] font-body">
                 {admin.full_name}
               </p>
-              {isCurrentUser && (
-                <Badge variant="navy" size="sm">
-                  Ви
-                </Badge>
-              )}
             </div>
             <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
               {formatFacultyName(admin.faculty)} · {admin.group}
             </p>
           </div>
         </div>
-        {!isCurrentUser && (
+        {!isCurrentUser && deleteAllowed && (
           <Button
             variant="ghost"
             size="xs"
