@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-import { Header } from '@/components/layout/header';
+import { PageLayout } from '@/components/layout/page-layout';
 import { ToastProvider } from '@/providers/toast-provider';
 import { getServerSession } from '@/lib/server-auth';
 import { Geist } from 'next/font/google';
@@ -42,10 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body>
         <ToastProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header session={session} />
-            <main className="flex-1 pt-[var(--header-height)]">{children}</main>
-          </div>
+          <PageLayout session={session}>{children}</PageLayout>
         </ToastProvider>
       </body>
     </html>

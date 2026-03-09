@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { CheckCircle } from 'lucide-react';
 import { KPIIDLogin } from '@/components/auth/kpi-id-login';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Вхід',
@@ -8,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-[calc(100vh-var(--header-height))] flex">
+    <div className="min-h-screen flex">
       {/* Left panel - decorative */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 navy-gradient-subtle p-12 relative overflow-hidden">
         {/* Decorative elements */}
@@ -17,21 +19,9 @@ export default function LoginPage() {
         <div className="absolute inset-0 pattern-grid opacity-10" />
 
         {/* Logo */}
-        <div className="relative flex items-center gap-3">
+        <Link className="relative flex items-center gap-3" href="/">
           <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <CheckCircle className="w-4 h-4 text-white" />
           </div>
           <div>
             <span className="font-display text-xl font-bold text-white leading-tight block">
@@ -41,7 +31,7 @@ export default function LoginPage() {
               Система голосування
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Main text */}
         <div className="relative">

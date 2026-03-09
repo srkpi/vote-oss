@@ -34,13 +34,19 @@ export default function CallbackPage() {
   const ticketId = searchParams.get('ticketId');
 
   useEffect(() => {
-    if (!ticketId || calledRef.current) {
+    if (calledRef.current) {
       return;
     }
 
     calledRef.current = true;
 
     const run = async () => {
+      if (!ticketId) {
+        setErrorMessage('Відсутній ticketId');
+        setStatus('error');
+        return;
+      }
+
       const result = await loginWithTicket(ticketId);
 
       if (result.success) {
@@ -141,31 +147,6 @@ export default function CallbackPage() {
               {status === 'error' && errorMessage ? errorMessage : config.description}
             </p>
 
-            {/* Progress steps */}
-            {status === 'loading' && (
-              <div className="mt-8 space-y-3">
-                {['Отримання токена від КПІ ID', 'Верифікація особи', 'Створення сесії'].map(
-                  (step, i) => (
-                    <div key={step} className="flex items-center gap-3 text-left">
-                      <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0">
-                        <div
-                          className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                            i === 0 ? 'bg-[var(--kpi-navy)] scale-125' : 'bg-[var(--border-color)]'
-                          }`}
-                          style={{ transitionDelay: `${i * 200}ms` }}
-                        />
-                      </div>
-                      <span
-                        className={`text-xs font-body ${i === 0 ? 'text-[var(--foreground)]' : 'text-[var(--muted-foreground)]'}`}
-                      >
-                        {step}
-                      </span>
-                    </div>
-                  ),
-                )}
-              </div>
-            )}
-
             {/* Error action */}
             {status === 'error' && (
               <div className="mt-8 flex flex-col gap-3">
@@ -177,9 +158,9 @@ export default function CallbackPage() {
                 </button>
                 <button
                   onClick={() => {
-                    calledRef.current = false;
                     setStatus('loading');
                     setErrorMessage(null);
+                    calledRef.current = false;
                     window.location.reload();
                   }}
                   className="w-full h-10 px-4 rounded-[var(--radius)] bg-[var(--surface)] text-[var(--foreground)] text-sm font-medium font-body border border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors"
@@ -188,24 +169,6 @@ export default function CallbackPage() {
                 </button>
               </div>
             )}
-
-            {/* Security note */}
-            <div className="mt-8 pt-6 border-t border-[var(--border-subtle)]">
-              <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)] font-body">
-                <svg
-                  className="w-3.5 h-3.5 text-[var(--success)] shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Захищене з&apos;єднання · КПІ ім. Ігоря Сікорського</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

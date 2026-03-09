@@ -59,7 +59,7 @@ export function Header({ session }: HeaderProps) {
               'transition-transform duration-200 group-hover:scale-105',
             )}
           >
-            <CheckCircle className="w-4 h-4 text-white" strokeWidth={2.5} />
+            <CheckCircle className="w-4 h-4 text-white" />
           </div>
           <div className="hidden sm:block">
             <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight block">
