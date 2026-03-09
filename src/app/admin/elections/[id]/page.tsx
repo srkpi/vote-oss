@@ -190,11 +190,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
               style={{ animationDelay: '200ms', animationFillMode: 'both' }}
             >
-              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
-                <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
-                  Розклад
-                </h3>
-              </div>
               <div className="p-4 sm:p-5 space-y-4">
                 <TimelineItem
                   label="Створено"

@@ -155,15 +155,15 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
 
               <div className="space-y-3">
                 <ToggleField
-                  label="Обмежити факультетом"
-                  description="Новий адмін зможе керувати лише своїм факультетом"
+                  label="Обмежити підрозділом"
+                  description="Новий адмін зможе керувати створювати опитування лише для свого підрозділу"
                   checked={form.restrictedToFaculty}
                   onChange={(v) => setForm((p) => ({ ...p, restrictedToFaculty: v }))}
                 />
 
                 {canGrantManageAdmins && (
                   <ToggleField
-                    label="Право керувати адмінами"
+                    label="Керувати адмінами"
                     description="Дозволити запрошеному адміну запрошувати інших"
                     checked={form.manageAdmins}
                     onChange={(v) => setForm((p) => ({ ...p, manageAdmins: v }))}

@@ -7,6 +7,7 @@ import {
   constants,
 } from 'crypto';
 import { randomBytes } from 'crypto';
+import type { Ballot } from '@/types';
 
 export function generateElectionKeyPair(): { publicKey: string; privateKey: string } {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', {
@@ -85,4 +86,50 @@ export function hashToken(token: string): string {
 
 export function generateInviteToken(): string {
   return randomBytes(32).toString('hex');
+}
+
+export async function importPrivateKey(privateKeyPem: string): Promise<CryptoKey> {
+  const pemContents = privateKeyPem
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\s+/g, '');
+  const binaryArray = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+  return window.crypto.subtle.importKey(
+    'pkcs8',
+    binaryArray.buffer,
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    false,
+    ['decrypt'],
+  );
+}
+
+export async function decryptBallotData(
+  key: CryptoKey,
+  encryptedBase64: string,
+): Promise<string | null> {
+  try {
+    const buf = Uint8Array.from(atob(encryptedBase64), (c) => c.charCodeAt(0));
+    const dec = await window.crypto.subtle.decrypt({ name: 'RSA-OAEP' }, key, buf);
+    return new TextDecoder().decode(dec);
+  } catch {
+    return null;
+  }
+}
+
+export async function verifyBallotHash(ballot: Ballot, electionId: number): Promise<boolean> {
+  try {
+    const raw = JSON.stringify({
+      electionId,
+      encryptedBallot: ballot.encrypted_ballot,
+      signature: ballot.signature,
+      previousHash: ballot.previous_hash,
+    });
+    const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    const computed = Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    return computed === ballot.current_hash;
+  } catch {
+    return false;
+  }
 }

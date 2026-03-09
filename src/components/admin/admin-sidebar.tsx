@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, FileText, Users, Settings, Home } from 'lucide-react';
+import { LayoutGrid, FileText, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -108,16 +108,6 @@ export function AdminSidebar() {
               </Link>
             );
           })}
-          {/* Back to main site */}
-          <Link
-            href="/elections"
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-1 text-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all duration-150 min-h-[56px]"
-          >
-            <span className="flex items-center justify-center w-8 h-6 rounded-lg">
-              <Home className="w-4 h-4" />
-            </span>
-            <span className="text-[10px] font-body font-medium leading-tight">Сайт</span>
-          </Link>
         </div>
       </div>
     </>

@@ -54,18 +54,20 @@ export interface Ballot {
   current_hash: string;
 }
 
-export interface BallotPagination {
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-}
-
 export interface BallotsResponse {
   election: { id: number; title: string };
-  pagination: BallotPagination;
   ballots: Ballot[];
+  total: number;
 }
+
+export interface DecryptionResult {
+  choiceId: number | null;
+  choiceLabel: string | null;
+  valid: boolean;
+  hashValid: boolean;
+}
+
+export type DecryptedMap = Map<number, DecryptionResult>;
 
 // ==================== TALLY TYPES ====================
 

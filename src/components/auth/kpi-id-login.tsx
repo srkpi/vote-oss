@@ -28,6 +28,7 @@ export function KPIIDLogin({ appId }: KPIIDLoginProps) {
     <div
       id="kpi_id_signin"
       data-app-id={appId || ''}
+      data-full-width="true"
       data-size="large"
       data-logo-alignment="left"
       data-locale="uk"

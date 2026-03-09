@@ -2,13 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Search, X, FileText } from 'lucide-react';
+import { Search, X, FileText, Play, StopCircle } from 'lucide-react';
 import { cn, formatDateTime } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EmptyState, ErrorState } from '@/components/common/empty-state';
 import type { Election, ElectionStatus } from '@/types';
+import { useRouter } from 'next/navigation';
 
 interface AdminElectionsClientProps {
   elections: Election[];
@@ -159,7 +159,7 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[var(--border-subtle)]">
-                  {['Назва', 'Статус', 'Строки', 'Бюлетені', 'Доступ', 'Дії'].map((h) => (
+                  {['Назва', 'Статус', 'Початок', 'Завершення', 'Голоси', 'Доступ'].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
@@ -190,8 +190,13 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
 }
 
 function ElectionRow({ election }: { election: Election }) {
+  const router = useRouter();
+
   return (
-    <tr className="hover:bg-[var(--surface)] transition-colors duration-150 group">
+    <tr
+      onClick={() => router.push(`/admin/elections/${election.id}`)}
+      className="hover:bg-[var(--surface)] transition-colors duration-150 group cursor-pointer"
+    >
       <td className="px-4 py-3.5 max-w-xs">
         <div>
           <p className="text-sm font-medium font-body text-[var(--foreground)] truncate group-hover:text-[var(--kpi-navy)] transition-colors">
@@ -203,17 +208,17 @@ function ElectionRow({ election }: { election: Election }) {
         </div>
       </td>
       <td className="px-4 py-3.5">
-        <ElectionStatusBadge status={election.status} size="sm" />
+        <ElectionStatusBadge status={election.status} size="md" />
       </td>
       <td className="px-4 py-3.5">
-        <div>
-          <p className="text-xs font-body text-[var(--foreground)]">
-            {formatDateTime(election.opensAt)}
-          </p>
-          <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">
-            → {formatDateTime(election.closesAt)}
-          </p>
-        </div>
+        <p className="text-xs font-body text-[var(--foreground)]">
+          {formatDateTime(election.opensAt)}
+        </p>
+      </td>
+      <td className="px-4 py-3.5">
+        <p className="text-xs font-body text-[var(--foreground)]">
+          {formatDateTime(election.closesAt)}
+        </p>
       </td>
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-1.5">
@@ -229,31 +234,21 @@ function ElectionRow({ election }: { election: Election }) {
         {election.restrictedToFaculty || election.restrictedToGroup ? (
           <div className="flex flex-col gap-1">
             {election.restrictedToFaculty && (
-              <Badge variant="info" size="sm">
+              <Badge variant="info" size="md">
                 {election.restrictedToFaculty}
               </Badge>
             )}
             {election.restrictedToGroup && (
-              <Badge variant="secondary" size="sm">
+              <Badge variant="secondary" size="md">
                 {election.restrictedToGroup}
               </Badge>
             )}
           </div>
         ) : (
-          <Badge variant="success" size="sm">
+          <Badge variant="success" size="md">
             Всі
           </Badge>
         )}
-      </td>
-      <td className="px-4 py-3.5">
-        <div className="flex items-center gap-1.5">
-          <Button variant="ghost" size="xs" asChild>
-            <Link href={`/admin/elections/${election.id}`}>Деталі</Link>
-          </Button>
-          <Button variant="ghost" size="xs" asChild>
-            <Link href={`/elections/${election.id}/ballots`}>Бюлетені</Link>
-          </Button>
-        </div>
       </td>
     </tr>
   );
@@ -262,45 +257,42 @@ function ElectionRow({ election }: { election: Election }) {
 function ElectionMobileCard({ election }: { election: Election }) {
   return (
     <div className="p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold font-body text-[var(--foreground)] leading-snug">
-            {election.title}
-          </p>
-          <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">
-            {election.creator.full_name}
-          </p>
+      <Link key={election.id} href={`/admin/elections/${election.id}`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold font-body text-[var(--foreground)] leading-snug">
+              {election.title}
+            </p>
+            <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">
+              {election.creator.full_name}
+            </p>
+          </div>
+          <ElectionStatusBadge status={election.status} size="sm" />
         </div>
-        <ElectionStatusBadge status={election.status} size="sm" />
-      </div>
 
-      <div className="flex items-center gap-4 text-xs font-body text-[var(--muted-foreground)]">
-        <div className="flex items-center gap-1">
-          <FileText className="w-3.5 h-3.5" />
-          {formatDateTime(election.closesAt)}
-        </div>
-        <div className="flex items-center gap-1">
-          <FileText className="w-3.5 h-3.5" />
-          <span className="font-semibold text-[var(--foreground)]">
-            {election.ballotCount}
-          </span>{' '}
-          бюлетенів
-        </div>
-        {(election.restrictedToFaculty || election.restrictedToGroup) && (
-          <Badge variant="info" size="sm">
-            {election.restrictedToGroup ?? election.restrictedToFaculty}
-          </Badge>
-        )}
-      </div>
+        <div className="text-xs font-body text-[var(--muted-foreground)] space-y-1.5 mt-2">
+          <div className="flex items-center gap-2">
+            <Play className="w-3.5 h-3.5 shrink-0" />
+            <span>{formatDateTime(election.opensAt)}</span>
+          </div>
 
-      <div className="flex items-center gap-2 pt-1">
-        <Button variant="secondary" size="sm" fullWidth asChild>
-          <Link href={`/admin/elections/${election.id}`}>Деталі</Link>
-        </Button>
-        <Button variant="ghost" size="sm" fullWidth asChild>
-          <Link href={`/elections/${election.id}/ballots`}>Бюлетені</Link>
-        </Button>
-      </div>
+          <div className="flex items-center gap-2">
+            <StopCircle className="w-3.5 h-3.5 shrink-0" />
+            <span>{formatDateTime(election.closesAt)}</span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <FileText className="w-3.5 h-3.5 shrink-0" />
+            <span className="font-semibold text-[var(--foreground)]">{election.ballotCount}</span>
+            Голосів
+            {(election.restrictedToFaculty || election.restrictedToGroup) && (
+              <Badge variant="info" size="sm" className="ml-2">
+                {election.restrictedToGroup ?? election.restrictedToFaculty}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </Link>
     </div>
   );
 }

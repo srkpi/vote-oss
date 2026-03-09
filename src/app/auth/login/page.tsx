@@ -110,7 +110,7 @@ export default function LoginPage() {
           {/* KPI ID Button */}
           <div className="space-y-6">
             <div className="flex flex-col items-center">
-              <KPIIDLogin />
+              <KPIIDLogin appId="tests" />
             </div>
 
             <div className="relative">

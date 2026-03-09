@@ -72,7 +72,7 @@ export default async function AdminElectionsPage() {
             icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
-            label="Всього бюлетенів"
+            label="Усього бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="info"
             delay={180}
@@ -80,7 +80,6 @@ export default async function AdminElectionsPage() {
           />
         </div>
 
-        {/* Elections list */}
         <AdminElectionsClient elections={all} error={error} />
       </div>
     </div>

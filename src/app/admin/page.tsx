@@ -149,7 +149,7 @@ export default async function AdminDashboardPage() {
                   return (
                     <Link
                       key={election.id}
-                      href={`/elections/${election.id}`}
+                      href={`/admin/elections/${election.id}`}
                       className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-[var(--surface)] transition-colors group"
                     >
                       <div
