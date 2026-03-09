@@ -28,17 +28,19 @@ function StatCard({ label, value, sub, icon, accent = 'navy', delay = 0 }: StatC
 
   return (
     <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-6 animate-fade-up"
+      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-6 animate-fade-up"
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
         <div
-          className={`w-10 h-10 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)]`}
+          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)]`}
         >
           {icon}
         </div>
       </div>
-      <p className="font-display text-3xl font-bold text-[var(--foreground)] mb-1">{value}</p>
+      <p className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] mb-1">
+        {value}
+      </p>
       <p className="text-sm font-body text-[var(--muted-foreground)]">{label}</p>
       {sub && <p className="text-xs font-body text-[var(--muted-foreground)] mt-1">{sub}</p>}
     </div>
@@ -68,18 +70,18 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Page header */}
-      <div className="bg-white border-b border-[var(--border-subtle)] px-8 py-6">
-        <div className="flex items-center justify-between">
-          <div className="animate-fade-up">
-            <h1 className="font-display text-3xl font-bold text-[var(--foreground)]">
+      <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="animate-fade-up min-w-0">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] truncate">
               Добрий день, {session?.fullName.split(' ')[1] ?? session?.fullName}!
             </h1>
-            <p className="font-body text-[var(--muted-foreground)] mt-0.5">
+            <p className="font-body text-sm text-[var(--muted-foreground)] mt-0.5">
               Ось короткий огляд системи голосування
             </p>
           </div>
           <div
-            className="flex items-center gap-3 animate-fade-up"
+            className="flex items-center gap-3 animate-fade-up shrink-0"
             style={{ animationDelay: '100ms' }}
           >
             <Button
@@ -97,15 +99,18 @@ export default async function AdminDashboardPage() {
                 </svg>
               }
             >
-              <Link href="/admin/elections/new">Нове голосування</Link>
+              <Link href="/admin/elections/new">
+                <span className="hidden sm:inline">Нове голосування</span>
+                <span className="sm:hidden">Нове</span>
+              </Link>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="p-8 space-y-8">
+      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
         {/* Stats grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
           <StatCard
             label="Активних голосувань"
             value={openElections.length}
@@ -115,7 +120,12 @@ export default async function AdminDashboardPage() {
             accent="success"
             delay={0}
             icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -132,7 +142,12 @@ export default async function AdminDashboardPage() {
             accent="navy"
             delay={60}
             icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -149,7 +164,12 @@ export default async function AdminDashboardPage() {
             accent="orange"
             delay={120}
             icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -166,7 +186,12 @@ export default async function AdminDashboardPage() {
             accent="info"
             delay={180}
             icon={
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -178,19 +203,19 @@ export default async function AdminDashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* Recent elections */}
           <div
-            className="xl:col-span-2 bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
+            className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
             style={{ animationDelay: '250ms', animationFillMode: 'both' }}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
-              <h2 className="font-display text-lg font-semibold text-[var(--foreground)]">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
+              <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
                 Нещодавні голосування
               </h2>
               <Link
                 href="/admin/elections"
-                className="text-xs font-body text-[var(--kpi-navy)] hover:underline"
+                className="text-xs font-body text-[var(--kpi-navy)] hover:underline shrink-0"
               >
                 Переглянути всі →
               </Link>
@@ -251,7 +276,7 @@ export default async function AdminDashboardPage() {
                     <Link
                       key={election.id}
                       href={`/elections/${election.id}`}
-                      className="flex items-center gap-4 px-6 py-4 hover:bg-[var(--surface)] transition-colors group"
+                      className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-[var(--surface)] transition-colors group"
                     >
                       <div
                         className={`w-2 h-2 rounded-full shrink-0 ${statusConfig.dot} ${election.status === 'open' ? 'animate-pulse' : ''}`}
@@ -260,163 +285,23 @@ export default async function AdminDashboardPage() {
                         <p className="text-sm font-medium font-body text-[var(--foreground)] truncate group-hover:text-[var(--kpi-navy)] transition-colors">
                           {election.title}
                         </p>
-                        <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">
+                        <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5 hidden sm:block">
                           {formatDateTime(election.opensAt)} — {formatDateTime(election.closesAt)}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                         <span
                           className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusConfig.bg} ${statusConfig.text}`}
                         >
                           {statusConfig.label}
                         </span>
-                        <span className="text-xs font-body text-[var(--muted-foreground)]">
+                        <span className="text-xs font-body text-[var(--muted-foreground)] hidden sm:inline">
                           {election.ballotCount} голосів
                         </span>
                       </div>
                     </Link>
                   );
                 })}
-              </div>
-            )}
-          </div>
-
-          {/* Quick actions + Active elections */}
-          <div className="space-y-5">
-            {/* Quick actions */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-              style={{ animationDelay: '300ms', animationFillMode: 'both' }}
-            >
-              <div className="px-5 py-4 border-b border-[var(--border-subtle)]">
-                <h2 className="font-display text-base font-semibold text-[var(--foreground)]">
-                  Швидкі дії
-                </h2>
-              </div>
-              <div className="p-3 space-y-1.5">
-                {[
-                  {
-                    label: 'Нове голосування',
-                    href: '/admin/elections/new',
-                    icon: (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                    ),
-                    accent: true,
-                  },
-                  {
-                    label: 'Керувати адмінами',
-                    href: '/admin/admins',
-                    icon: (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    ),
-                    accent: false,
-                  },
-                  {
-                    label: 'Переглянути всі виборчі',
-                    href: '/elections',
-                    icon: (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                        />
-                      </svg>
-                    ),
-                    accent: false,
-                  },
-                ].map((action) => (
-                  <Link
-                    key={action.href}
-                    href={action.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius)] text-sm font-body font-medium transition-all duration-150 ${
-                      action.accent
-                        ? 'bg-[var(--kpi-orange)] text-white hover:bg-[var(--kpi-orange-dark)]'
-                        : 'text-[var(--foreground)] hover:bg-[var(--surface)] hover:text-[var(--kpi-navy)]'
-                    }`}
-                  >
-                    {action.icon}
-                    {action.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Active elections */}
-            {openElections.length > 0 && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-                style={{ animationDelay: '350ms', animationFillMode: 'both' }}
-              >
-                <div className="px-5 py-4 border-b border-[var(--border-subtle)]">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[var(--success)] animate-pulse" />
-                    <h2 className="font-display text-base font-semibold text-[var(--foreground)]">
-                      Зараз активні
-                    </h2>
-                  </div>
-                </div>
-                <div className="divide-y divide-[var(--border-subtle)]">
-                  {openElections.slice(0, 4).map((election) => (
-                    <Link
-                      key={election.id}
-                      href={`/elections/${election.id}`}
-                      className="flex items-center justify-between px-5 py-3.5 hover:bg-[var(--surface)] transition-colors group"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium font-body text-[var(--foreground)] truncate group-hover:text-[var(--kpi-navy)] transition-colors">
-                          {election.title}
-                        </p>
-                        <p className="text-xs font-body text-[var(--success)] mt-0.5">
-                          {election.ballotCount} бюлетенів
-                        </p>
-                      </div>
-                      <svg
-                        className="w-3.5 h-3.5 text-[var(--muted-foreground)] shrink-0 ml-3 group-hover:text-[var(--kpi-navy)] transition-colors"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </Link>
-                  ))}
-                </div>
               </div>
             )}
           </div>

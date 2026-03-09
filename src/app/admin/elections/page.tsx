@@ -30,15 +30,15 @@ function StatCard({
   };
   return (
     <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-5 animate-fade-up"
+      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-5 animate-fade-up"
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
       <div
-        className={`w-9 h-9 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)] mb-3`}
+        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)] mb-3`}
       >
         {icon}
       </div>
-      <p className="font-display text-2xl font-bold text-[var(--foreground)]">{value}</p>
+      <p className="font-display text-xl sm:text-2xl font-bold text-[var(--foreground)]">{value}</p>
       <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">{label}</p>
     </div>
   );
@@ -56,18 +56,18 @@ export default async function AdminElectionsPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Page header */}
-      <div className="bg-white border-b border-[var(--border-subtle)] px-8 py-6">
-        <div className="flex items-center justify-between">
-          <div className="animate-fade-up">
-            <h1 className="font-display text-3xl font-bold text-[var(--foreground)]">
+      <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="animate-fade-up min-w-0">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
               Голосування
             </h1>
-            <p className="font-body text-[var(--muted-foreground)] mt-0.5">
+            <p className="font-body text-sm text-[var(--muted-foreground)] mt-0.5">
               Управління всіма голосуваннями в системі
             </p>
           </div>
           <div
-            className="flex items-center gap-3 animate-fade-up"
+            className="flex items-center gap-3 animate-fade-up shrink-0"
             style={{ animationDelay: '100ms' }}
           >
             <Button
@@ -85,22 +85,25 @@ export default async function AdminElectionsPage() {
                 </svg>
               }
             >
-              <Link href="/admin/elections/new">Нове голосування</Link>
+              <Link href="/admin/elections/new">
+                <span className="hidden sm:inline">Нове голосування</span>
+                <span className="sm:hidden">Нове</span>
+              </Link>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Stats grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             label="Активних зараз"
             value={openCount}
             accent="success"
             delay={0}
             icon={
-              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -116,7 +119,7 @@ export default async function AdminElectionsPage() {
             accent="orange"
             delay={60}
             icon={
-              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -132,7 +135,7 @@ export default async function AdminElectionsPage() {
             accent="navy"
             delay={120}
             icon={
-              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -148,7 +151,7 @@ export default async function AdminElectionsPage() {
             accent="info"
             delay={180}
             icon={
-              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

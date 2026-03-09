@@ -18,10 +18,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-[calc(100vh-var(--header-height))] flex bg-[var(--surface)]">
-      <AdminSidebar session={session} />
-
-      {/* Main content */}
-      <div className="flex-1 min-w-0 flex flex-col">{children}</div>
+      <AdminSidebar />
+      <div className="flex-1 min-w-0 flex flex-col">
+        {children}
+        <div className="lg:hidden h-[56px] w-full" aria-hidden="true" />
+      </div>
     </div>
   );
 }

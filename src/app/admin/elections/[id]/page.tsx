@@ -39,13 +39,18 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
   return (
     <div className="flex-1 overflow-auto">
       {/* Page header */}
-      <div className="bg-white border-b border-[var(--border-subtle)] px-8 py-6">
+      <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
         <div className="animate-fade-down">
-          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4">
+          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-3 sm:mb-4">
             <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
               Адмін
             </Link>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              className="w-3.5 h-3.5 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
             <Link
@@ -54,14 +59,21 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             >
               Голосування
             </Link>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              className="w-3.5 h-3.5 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-[var(--foreground)] truncate max-w-xs">{election.title}</span>
+            <span className="text-[var(--foreground)] truncate max-w-[120px] sm:max-w-xs">
+              {election.title}
+            </span>
           </nav>
 
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+            <div className="space-y-2 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <ElectionStatusBadge status={election.status} size="md" />
                 {election.restrictedToFaculty && (
@@ -75,10 +87,10 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   </Badge>
                 )}
               </div>
-              <h1 className="font-display text-3xl font-bold text-[var(--foreground)] leading-tight">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] leading-tight">
                 {election.title}
               </h1>
-              <p className="text-sm font-body text-[var(--muted-foreground)]">
+              <p className="text-xs sm:text-sm font-body text-[var(--muted-foreground)]">
                 Створено: {election.creator.full_name} ({election.creator.faculty}) ·{' '}
                 {formatDate(election.createdAt)}
               </p>
@@ -118,7 +130,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                       d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                     />
                   </svg>
-                  Публічна сторінка
+                  <span className="hidden sm:inline">Публічна сторінка</span>
                 </Link>
               </Button>
             </div>
@@ -126,32 +138,32 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
         </div>
       </div>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left column */}
           <div className="xl:col-span-2 space-y-6">
             {/* Live indicator for open elections */}
             {isOpen && (
               <div
-                className="flex items-center gap-4 p-5 rounded-[var(--radius-xl)] bg-[var(--success-bg)] border border-[var(--success)]/20 animate-fade-up"
+                className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] bg-[var(--success-bg)] border border-[var(--success)]/20 animate-fade-up"
                 style={{ animationFillMode: 'both' }}
               >
-                <div className="w-12 h-12 rounded-xl bg-[var(--success)] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[var(--success)] flex items-center justify-center shrink-0">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
                   </span>
                 </div>
-                <div className="flex-1">
-                  <p className="font-display text-base font-semibold text-[var(--success)]">
+                <div className="flex-1 min-w-0">
+                  <p className="font-display text-sm sm:text-base font-semibold text-[var(--success)]">
                     Голосування активне
                   </p>
-                  <p className="text-sm font-body text-[var(--success)]/80 mt-0.5">
+                  <p className="text-xs sm:text-sm font-body text-[var(--success)]/80 mt-0.5">
                     Завершується {formatDateTime(election.closesAt)}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-display text-3xl font-bold text-[var(--success)]">
+                  <p className="font-display text-2xl sm:text-3xl font-bold text-[var(--success)]">
                     {election.ballotCount.toLocaleString('uk-UA')}
                   </p>
                   <p className="text-xs font-body text-[var(--success)]/70">бюлетенів подано</p>
@@ -165,15 +177,15 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
                 style={{ animationDelay: '50ms', animationFillMode: 'both' }}
               >
-                <div className="px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
-                  <h2 className="font-display text-lg font-semibold text-[var(--foreground)]">
+                <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
+                  <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
                     Результати голосування
                   </h2>
                   <Badge variant="secondary" size="md">
                     {tally.totalBallots} бюлетенів
                   </Badge>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <ResultsChart results={tally.results} totalBallots={tally.totalBallots} />
                 </div>
               </div>
@@ -184,12 +196,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
               style={{ animationDelay: '100ms', animationFillMode: 'both' }}
             >
-              <div className="px-6 py-4 border-b border-[var(--border-subtle)]">
-                <h2 className="font-display text-lg font-semibold text-[var(--foreground)]">
+              <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
+                <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
                   Варіанти відповідей
                 </h2>
               </div>
-              <div className="p-6 space-y-3">
+              <div className="p-4 sm:p-6 space-y-3">
                 {election.choices.map((choice, index) => {
                   const tallyItem = tally?.results.find((r) => r.choiceId === choice.id);
                   const pct = tally
@@ -201,9 +213,9 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   return (
                     <div
                       key={choice.id}
-                      className="flex items-center gap-4 p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
+                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
                     >
-                      <span className="w-8 h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
+                      <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
                         {String.fromCharCode(65 + index)}
                       </span>
                       <span className="flex-1 text-sm font-body text-[var(--foreground)]">
@@ -211,7 +223,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                       </span>
                       {pct !== null && (
                         <div className="text-right shrink-0">
-                          <span className="font-display text-lg font-bold text-[var(--foreground)]">
+                          <span className="font-display text-base sm:text-lg font-bold text-[var(--foreground)]">
                             {pct}%
                           </span>
                           <p className="text-xs text-[var(--muted-foreground)] font-body">
@@ -230,13 +242,13 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
               style={{ animationDelay: '150ms', animationFillMode: 'both' }}
             >
-              <div className="px-6 py-4 border-b border-[var(--border-subtle)]">
-                <h2 className="font-display text-lg font-semibold text-[var(--foreground)]">
+              <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
+                <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
                   Ланцюжок бюлетенів
                 </h2>
               </div>
-              <div className="p-6">
-                <div className="grid grid-cols-3 gap-4 mb-5">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-5">
                   {[
                     {
                       label: 'Всього бюлетенів',
@@ -256,12 +268,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="text-center p-3 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
+                      className="text-center p-2 sm:p-3 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
                     >
-                      <p className={`font-display text-xl font-bold ${item.accent}`}>
+                      <p className={`font-display text-base sm:text-xl font-bold ${item.accent}`}>
                         {item.value}
                       </p>
-                      <p className="text-[10px] text-[var(--muted-foreground)] font-body uppercase tracking-wider mt-1">
+                      <p className="text-[9px] sm:text-[10px] text-[var(--muted-foreground)] font-body uppercase tracking-wider mt-1">
                         {item.label}
                       </p>
                     </div>
@@ -305,12 +317,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
               style={{ animationDelay: '200ms', animationFillMode: 'both' }}
             >
-              <div className="px-5 py-4 border-b border-[var(--border-subtle)]">
+              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
                 <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
                   Розклад
                 </h3>
               </div>
-              <div className="p-5 space-y-4">
+              <div className="p-4 sm:p-5 space-y-4">
                 <TimelineItem
                   label="Створено"
                   value={formatDateTime(election.createdAt)}
@@ -370,12 +382,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
               style={{ animationDelay: '250ms', animationFillMode: 'both' }}
             >
-              <div className="px-5 py-4 border-b border-[var(--border-subtle)]">
+              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
                 <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
                   Доступ
                 </h3>
               </div>
-              <div className="p-5 space-y-3">
+              <div className="p-4 sm:p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-body text-[var(--muted-foreground)]">
                     Факультет
@@ -410,13 +422,13 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
               style={{ animationDelay: '300ms', animationFillMode: 'both' }}
             >
-              <div className="px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
+              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
                 <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
                   Публічний ключ
                 </h3>
                 <CopyButton text={election.publicKey} />
               </div>
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
                   <p className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed line-clamp-3">
                     {election.publicKey}
@@ -434,7 +446,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 className="bg-white rounded-[var(--radius-xl)] border border-[var(--kpi-orange)]/30 shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
                 style={{ animationDelay: '350ms', animationFillMode: 'both' }}
               >
-                <div className="px-5 py-4 border-b border-[var(--kpi-orange)]/20 flex items-center justify-between bg-[var(--warning-bg)]">
+                <div className="px-4 sm:px-5 py-4 border-b border-[var(--kpi-orange)]/20 flex items-center justify-between bg-[var(--warning-bg)]">
                   <div className="flex items-center gap-2">
                     <svg
                       className="w-4 h-4 text-[var(--kpi-orange)]"
@@ -455,7 +467,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   </div>
                   <CopyButton text={election.privateKey} />
                 </div>
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                   <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
                     <p className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed line-clamp-3">
                       {election.privateKey}
@@ -473,7 +485,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
               style={{ animationDelay: '400ms', animationFillMode: 'both' }}
             >
-              <div className="px-5 py-4 border-b border-[var(--border-subtle)]">
+              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
                 <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
                   Швидкі дії
                 </h3>
@@ -570,11 +582,7 @@ function TimelineItem({
   return (
     <div className="flex items-start gap-3">
       <div
-        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-          status === 'done'
-            ? 'bg-[var(--kpi-navy)] text-white'
-            : 'bg-[var(--surface)] text-[var(--kpi-gray-mid)] border border-[var(--border-subtle)]'
-        }`}
+        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${status === 'done' ? 'bg-[var(--kpi-navy)] text-white' : 'bg-[var(--surface)] text-[var(--kpi-gray-mid)] border border-[var(--border-subtle)]'}`}
       >
         {icon}
       </div>

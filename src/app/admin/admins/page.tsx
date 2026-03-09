@@ -25,14 +25,19 @@ export default async function AdminsPage() {
   return (
     <div className="flex-1 overflow-auto">
       {/* Page header */}
-      <div className="bg-white border-b border-[var(--border-subtle)] px-8 py-6">
-        <div className="flex items-center justify-between">
-          <div className="animate-fade-up">
-            <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-3">
+      <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="animate-fade-up min-w-0">
+            <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-2 sm:mb-3">
               <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
                 Адмін
               </Link>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-3.5 h-3.5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -42,27 +47,26 @@ export default async function AdminsPage() {
               </svg>
               <span className="text-[var(--foreground)]">Адміністратори</span>
             </nav>
-            <h1 className="font-display text-3xl font-bold text-[var(--foreground)]">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
               Адміністратори
             </h1>
-            <p className="font-body text-[var(--muted-foreground)] mt-0.5">
+            <p className="font-body text-sm text-[var(--muted-foreground)] mt-0.5">
               Керування правами та запрошення нових адміністраторів
             </p>
           </div>
 
-          {/* Invite button placeholder — rendered by client component */}
           <div
-            className="animate-fade-up"
+            className="animate-fade-up shrink-0"
             style={{ animationDelay: '100ms', animationFillMode: 'both' }}
             id="admins-header-actions"
           />
         </div>
       </div>
 
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Stats row */}
         <div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-up"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 animate-fade-up"
           style={{ animationFillMode: 'both' }}
         >
           <StatCard
@@ -118,11 +122,16 @@ export default async function AdminsPage() {
         {/* How to join info card (if user can invite) */}
         {canInvite && (
           <div
-            className="flex items-start gap-4 p-5 rounded-[var(--radius-xl)] navy-gradient text-white animate-fade-up"
+            className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] navy-gradient text-white animate-fade-up"
             style={{ animationDelay: '180ms', animationFillMode: 'both' }}
           >
-            <div className="w-10 h-10 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center shrink-0 mt-0.5">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center shrink-0 mt-0.5">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -132,10 +141,10 @@ export default async function AdminsPage() {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-display text-base font-semibold leading-tight">
+              <p className="font-display text-sm sm:text-base font-semibold leading-tight">
                 Запрошення адміністраторів
               </p>
-              <p className="text-sm text-white/80 font-body mt-1 leading-relaxed">
+              <p className="text-xs sm:text-sm text-white/80 font-body mt-1 leading-relaxed">
                 Натисніть «Запросити адміна», щоб створити одноразовий токен. Передайте його
                 потрібній людині — вона зможе приєднатися через сторінку{' '}
                 <Link
@@ -156,7 +165,7 @@ export default async function AdminsPage() {
           style={{ animationDelay: '220ms', animationFillMode: 'both' }}
         >
           {/* Card header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg navy-gradient flex items-center justify-center">
                 <svg
@@ -173,7 +182,7 @@ export default async function AdminsPage() {
                   />
                 </svg>
               </div>
-              <h2 className="font-display text-lg font-semibold text-[var(--foreground)]">
+              <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
                 Список адміністраторів
               </h2>
             </div>
@@ -181,7 +190,7 @@ export default async function AdminsPage() {
 
           {/* Error state */}
           {error && (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <Alert variant="error" title="Помилка завантаження">
                 {error}
               </Alert>
@@ -190,7 +199,7 @@ export default async function AdminsPage() {
 
           {/* Client component handles invite button + table + dialog */}
           {!error && session && (
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
               <AdminsPageClient
                 initialAdmins={all}
                 currentUser={session}
@@ -203,13 +212,13 @@ export default async function AdminsPage() {
 
         {/* Hierarchy explanation */}
         <div
-          className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-6 animate-fade-up"
+          className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-6 animate-fade-up"
           style={{ animationDelay: '280ms', animationFillMode: 'both' }}
         >
           <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-4">
             Ієрархія прав
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
               {
                 title: 'Базові права',
@@ -264,7 +273,7 @@ export default async function AdminsPage() {
             ].map((item) => (
               <div
                 key={item.title}
-                className={`p-4 rounded-[var(--radius-lg)] border ${item.color}`}
+                className={`p-3 sm:p-4 rounded-[var(--radius-lg)] border ${item.color}`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   {item.icon}
@@ -301,15 +310,17 @@ function StatCard({
 
   return (
     <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-5 animate-fade-up"
+      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-5 animate-fade-up"
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
       <div
-        className={`w-10 h-10 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)] mb-4`}
+        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)] mb-3 sm:mb-4`}
       >
         {icon}
       </div>
-      <p className="font-display text-3xl font-bold text-[var(--foreground)]">{value}</p>
+      <p className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
+        {value}
+      </p>
       <p className="text-xs font-body text-[var(--muted-foreground)] mt-1">{label}</p>
     </div>
   );

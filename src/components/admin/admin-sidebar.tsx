@@ -3,11 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import type { User } from '@/types';
-
-interface AdminSidebarProps {
-  session: User;
-}
 
 const NAV_ITEMS = [
   {
@@ -57,7 +52,7 @@ const NAV_ITEMS = [
   },
 ];
 
-export function AdminSidebar({ session }: AdminSidebarProps) {
+export function AdminSidebar() {
   const pathname = usePathname();
 
   const isActive = (href: string, exact: boolean) =>
@@ -124,62 +119,56 @@ export function AdminSidebar({ session }: AdminSidebarProps) {
             </Link>
           ))}
         </nav>
-
-        {/* User info footer */}
-        <div className="p-3 border-t border-[var(--border-subtle)]">
-          <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-8 h-8 rounded-full navy-gradient flex items-center justify-center text-white text-xs font-semibold shrink-0">
-              {session.fullName.charAt(0)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-[var(--foreground)] truncate font-body">
-                {session.fullName.split(' ')[0]}
-              </p>
-              <p className="text-[10px] text-[var(--muted-foreground)] font-body">
-                {session.faculty} · {session.group}
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/elections"
-            className={cn(
-              'mt-1 flex items-center gap-2 px-3 py-2 rounded-[var(--radius)] text-xs font-body',
-              'text-[var(--muted-foreground)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
-              'transition-colors duration-150',
-            )}
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            На головну
-          </Link>
-        </div>
       </aside>
 
-      {/* Mobile top nav */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-[var(--border-subtle)] px-4 py-2">
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] text-xs font-medium font-body whitespace-nowrap',
-                'transition-all duration-150',
-                isActive(item.href, item.exact)
-                  ? 'bg-[var(--kpi-navy)] text-white'
-                  : 'text-[var(--muted-foreground)] hover:bg-[var(--surface)]',
-              )}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
+      {/* Mobile bottom navigation bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[var(--border-subtle)] shadow-[0_-4px_12px_rgb(28_57_110/0.08)] safe-area-pb">
+        <div className="flex items-stretch">
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.href, item.exact);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-1 text-center',
+                  'transition-all duration-150 min-h-[56px]',
+                  active
+                    ? 'text-[var(--kpi-navy)]'
+                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
+                )}
+              >
+                <span
+                  className={cn(
+                    'flex items-center justify-center w-8 h-6 rounded-lg transition-all duration-150',
+                    active && 'bg-[var(--kpi-navy)]/10',
+                  )}
+                >
+                  {item.icon}
+                </span>
+                <span className="text-[10px] font-body font-medium leading-tight">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+          {/* Back to main site */}
+          <Link
+            href="/elections"
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-1 text-center text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all duration-150 min-h-[56px]"
+          >
+            <span className="flex items-center justify-center w-8 h-6 rounded-lg">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+            </span>
+            <span className="text-[10px] font-body font-medium leading-tight">Сайт</span>
+          </Link>
         </div>
       </div>
     </>
