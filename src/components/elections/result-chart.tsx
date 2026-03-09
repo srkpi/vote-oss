@@ -7,10 +7,9 @@ import type { TallyResult } from '@/types';
 interface ResultsChartProps {
   results: TallyResult[];
   totalBallots: number;
-  loading?: boolean;
 }
 
-export function ResultsChart({ results, totalBallots, loading }: ResultsChartProps) {
+export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
   const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
@@ -18,13 +17,20 @@ export function ResultsChart({ results, totalBallots, loading }: ResultsChartPro
     return () => clearTimeout(t);
   }, []);
 
-  if (loading) {
-    return <ResultsChartSkeleton />;
+  let highestVotes = 0;
+  const winners: Set<number> = new Set();
+
+  for (const result of results) {
+    if (result.votes > highestVotes) {
+      highestVotes = result.votes;
+      winners.clear();
+      winners.add(result.choiceId);
+    } else if (result.votes === highestVotes) {
+      winners.add(result.choiceId);
+    }
   }
 
-  const sorted = [...results].sort((a, b) => b.votes - a.votes);
-  const winner = sorted[0];
-
+  const winnerLabel = winners.size > 1 ? 'Нічия' : 'Переможець';
   const colors = [
     { bar: 'from-[var(--kpi-navy)] to-[var(--kpi-blue-mid)]', badge: 'bg-[var(--kpi-navy)]' },
     {
@@ -41,12 +47,11 @@ export function ResultsChart({ results, totalBallots, loading }: ResultsChartPro
 
   return (
     <div className="space-y-6">
-      {/* Results */}
       <div className="space-y-4">
-        {sorted.map((result, index) => {
+        {results.map((result, index) => {
           const pct = calculateVotePercentage(result.votes, totalBallots);
           const color = colors[index % colors.length]!;
-          const isWinner = result.choiceId === winner?.choiceId && totalBallots > 0;
+          const isWinner = winners.has(result.choiceId);
 
           return (
             <div
@@ -78,7 +83,7 @@ export function ResultsChart({ results, totalBallots, loading }: ResultsChartPro
                   </span>
                   {isWinner && totalBallots > 0 && (
                     <span className="text-[10px] font-semibold text-white bg-[var(--kpi-orange)] px-2 py-0.5 rounded-full uppercase tracking-wide">
-                      Лідер
+                      {winnerLabel}
                     </span>
                   )}
                 </div>
@@ -114,26 +119,6 @@ export function ResultsChart({ results, totalBallots, loading }: ResultsChartPro
           Поки що голосів немає
         </p>
       )}
-    </div>
-  );
-}
-
-function ResultsChartSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="skeleton h-16 rounded-[var(--radius-lg)]" />
-      {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="p-4 rounded-[var(--radius-lg)] border border-[var(--border-subtle)]"
-        >
-          <div className="flex justify-between mb-3">
-            <div className="skeleton h-4 w-40 rounded" />
-            <div className="skeleton h-6 w-12 rounded" />
-          </div>
-          <div className="skeleton h-2 w-full rounded-full" />
-        </div>
-      ))}
     </div>
   );
 }
