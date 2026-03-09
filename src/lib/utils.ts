@@ -108,20 +108,12 @@ export function isFutureDate(dateString: string): boolean {
 
 export function formatFacultyName(faculty: string): string {
   const faculties: Record<string, string> = {
-    FICS: 'ФІОТ',
+    FICE: 'ФІОТ',
     FEL: 'ФЕЛ',
     FMF: 'ФМФ',
-    IASA: 'ІАСА',
+    IASA: 'ІПСА',
     FBT: 'ФБТ',
     FMM: 'ФММ',
-    FAT: 'ФАТ',
-    FPM: 'ФПМ',
-    FPS: 'ФПС',
-    IHF: 'ІГФ',
-    IPP: 'ІПП',
-    TEEF: 'ТЕEФ',
-    RTF: 'РТФ',
-    MMI: 'ММІ',
   };
   return faculties[faculty] || faculty;
 }

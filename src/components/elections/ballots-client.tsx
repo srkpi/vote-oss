@@ -323,32 +323,6 @@ function BallotRow({ ballot, index, isHighlighted, isExpanded, onToggle }: Ballo
           <p className="font-mono text-xs text-[var(--foreground)] truncate">
             {ballot.current_hash}
           </p>
-          {ballot.previous_hash && (
-            <p className="font-mono text-[10px] text-[var(--muted-foreground)] truncate">
-              ← {ballot.previous_hash}
-            </p>
-          )}
-        </div>
-
-        {/* Chain indicator */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {ballot.previous_hash ? (
-            <span className="flex items-center gap-1 text-[10px] font-body text-[var(--success)] bg-[var(--success-bg)] px-1.5 py-0.5 rounded-full border border-[var(--success)]/20">
-              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                />
-              </svg>
-              ланцюг
-            </span>
-          ) : (
-            <span className="text-[10px] font-body text-[var(--kpi-orange)] bg-[var(--warning-bg)] px-1.5 py-0.5 rounded-full border border-[var(--kpi-orange)]/20">
-              перший
-            </span>
-          )}
         </div>
 
         {/* Expand icon */}

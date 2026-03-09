@@ -337,12 +337,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             >
               <h3 className="font-display text-base font-semibold text-white mb-3">Безпека</h3>
               <div className="space-y-2.5">
-                {[
-                  'RSA-2048 шифрування',
-                  'Блокчейн-ланцюжок',
-                  'Нульові знання',
-                  'Публічна перевірка',
-                ].map((item) => (
+                {['RSA-2048 шифрування', 'Нульові знання', 'Публічна перевірка'].map((item) => (
                   <div
                     key={item}
                     className="flex items-center gap-2 text-sm text-white/80 font-body"

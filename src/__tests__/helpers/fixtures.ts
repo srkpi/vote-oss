@@ -9,18 +9,22 @@ import { publicEncrypt, constants } from 'crypto';
 
 export const USER_PAYLOAD = {
   sub: 'user-001',
-  faculty: 'FICS',
+  faculty: 'FICE',
   group: 'KV-91',
   full_name: 'Ivan Petrenko',
   is_admin: false,
+  restricted_to_faculty: false,
+  manage_admins: false,
 };
 
 export const ADMIN_PAYLOAD = {
   sub: 'superadmin-001',
-  faculty: 'FICS',
+  faculty: 'FICE',
   group: 'KV-11',
   full_name: 'Super Admin User',
   is_admin: true,
+  restricted_to_faculty: false,
+  manage_admins: true,
 };
 
 export const OTHER_FACULTY_PAYLOAD = {
@@ -29,6 +33,8 @@ export const OTHER_FACULTY_PAYLOAD = {
   group: 'EL-21',
   full_name: 'Olena Kovalchuk',
   is_admin: false,
+  restricted_to_faculty: false,
+  manage_admins: false,
 };
 
 /** Returns signed access + refresh tokens for the given payload. */
@@ -44,7 +50,7 @@ export const ADMIN_RECORD = {
   user_id: 'superadmin-001',
   full_name: 'Super Admin User',
   group: 'KV-11',
-  faculty: 'FICS',
+  faculty: 'FICE',
   promoted_by: null,
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
@@ -53,9 +59,9 @@ export const ADMIN_RECORD = {
 
 export const RESTRICTED_ADMIN_RECORD = {
   user_id: 'admin-002',
-  full_name: 'Faculty Admin FICS',
+  full_name: 'Faculty Admin FICE',
   group: 'KV-12',
-  faculty: 'FICS',
+  faculty: 'FICE',
   promoted_by: 'superadmin-001',
   promoted_at: new Date('2024-01-02'),
   manage_admins: true,
@@ -80,7 +86,7 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     restricted_to_group: null as string | null,
     public_key: keys.publicKey,
     private_key: keys.privateKey,
-    creator: { full_name: 'Super Admin User', faculty: 'FICS' },
+    creator: { full_name: 'Super Admin User', faculty: 'FICE' },
     choices: [
       { id: 10, election_id: 1, choice: 'Option A', position: 0 },
       { id: 11, election_id: 1, choice: 'Option B', position: 1 },

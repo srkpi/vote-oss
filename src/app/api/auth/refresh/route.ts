@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
 
   const { user } = auth;
 
-  // Revoke old token pair
   await prisma.jwtToken.deleteMany({
     where: { refresh_jti: user.jti },
   });
@@ -27,6 +26,8 @@ export async function POST(req: NextRequest) {
     group: user.group,
     full_name: user.full_name,
     is_admin: user.is_admin,
+    restricted_to_faculty: user.restricted_to_faculty,
+    manage_admins: user.manage_admins,
   };
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =

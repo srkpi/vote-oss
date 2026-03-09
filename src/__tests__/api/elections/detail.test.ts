@@ -49,7 +49,7 @@ describe('GET /api/elections/[id]', () => {
 
   it('returns 403 when user faculty does not match restriction', async () => {
     const req = await authRequest(OTHER_FACULTY_PAYLOAD);
-    const election = makeElection({ restricted_to_faculty: 'FICS' });
+    const election = makeElection({ restricted_to_faculty: 'FICE' });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(403);

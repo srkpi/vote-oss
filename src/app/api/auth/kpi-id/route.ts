@@ -35,12 +35,18 @@ export async function POST(req: NextRequest) {
     return Errors.unauthorized('Invalid or expired ticket');
   }
 
+  const adminRecord = await prisma.admin.findUnique({
+    where: { user_id: userInfo.userId },
+  });
+  const isAdmin = !!adminRecord;
   const tokenPayload = {
     sub: userInfo.userId,
     faculty: userInfo.faculty,
     group: userInfo.group,
     full_name: userInfo.fullName,
-    is_admin: userInfo.isAdmin,
+    is_admin: isAdmin,
+    restricted_to_faculty: adminRecord?.restricted_to_faculty ?? false,
+    manage_admins: adminRecord?.manage_admins ?? false,
   };
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
@@ -60,7 +66,7 @@ export async function POST(req: NextRequest) {
       fullName: userInfo.fullName,
       faculty: userInfo.faculty,
       group: userInfo.group,
-      isAdmin: userInfo.isAdmin,
+      isAdmin,
     },
     { status: 200 },
   );

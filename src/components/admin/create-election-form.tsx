@@ -263,7 +263,7 @@ export function CreateElectionForm() {
           <FormField
             label="Обмежити факультетом"
             htmlFor="faculty"
-            hint="Наприклад: FICS, FEL, FMF"
+            hint="Наприклад: FICE, FEL, FMF"
           >
             <Input
               id="faculty"

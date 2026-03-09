@@ -4,48 +4,11 @@ import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
 import type { Election, Admin } from '@/types';
+import { StatCard } from '@/components/admin/stat-card';
 
 export const metadata: Metadata = {
   title: 'Огляд',
 };
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon: React.ReactNode;
-  accent?: 'navy' | 'orange' | 'success' | 'info';
-  delay?: number;
-}
-
-function StatCard({ label, value, sub, icon, accent = 'navy', delay = 0 }: StatCardProps) {
-  const accentStyles = {
-    navy: 'navy-gradient',
-    orange: 'bg-[var(--kpi-orange)]',
-    success: 'bg-[var(--success)]',
-    info: 'bg-[var(--kpi-blue-light)]',
-  };
-
-  return (
-    <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-6 animate-fade-up"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
-    >
-      <div className="flex items-start justify-between mb-3 sm:mb-4">
-        <div
-          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)]`}
-        >
-          {icon}
-        </div>
-      </div>
-      <p className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] mb-1">
-        {value}
-      </p>
-      <p className="text-sm font-body text-[var(--muted-foreground)]">{label}</p>
-      {sub && <p className="text-xs font-body text-[var(--muted-foreground)] mt-1">{sub}</p>}
-    </div>
-  );
-}
 
 export default async function AdminDashboardPage() {
   const session = await getServerSession();
@@ -59,8 +22,6 @@ export default async function AdminDashboardPage() {
   const admins = adminsResult.data ?? [];
 
   const openElections = elections.filter((e) => e.status === 'open');
-  const upcomingElections = elections.filter((e) => e.status === 'upcoming');
-  const closedElections = elections.filter((e) => e.status === 'closed');
   const totalBallots = elections.reduce((sum, e) => sum + e.ballotCount, 0);
 
   const recentElections = [...elections]
@@ -108,15 +69,12 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Stats grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             label="Активних голосувань"
             value={openElections.length}
-            sub={
-              openElections.length > 0 ? `${upcomingElections.length} очікується` : 'Немає активних'
-            }
             accent="success"
             delay={0}
             icon={
@@ -138,7 +96,6 @@ export default async function AdminDashboardPage() {
           <StatCard
             label="Всього голосувань"
             value={elections.length}
-            sub={`${closedElections.length} завершено`}
             accent="navy"
             delay={60}
             icon={
@@ -160,7 +117,6 @@ export default async function AdminDashboardPage() {
           <StatCard
             label="Подано бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
-            sub="Загалом по всіх виборах"
             accent="orange"
             delay={120}
             icon={
@@ -182,7 +138,6 @@ export default async function AdminDashboardPage() {
           <StatCard
             label="Адміністраторів"
             value={admins.length}
-            sub="Активних в системі"
             accent="info"
             delay={180}
             icon={

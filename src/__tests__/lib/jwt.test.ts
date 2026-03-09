@@ -11,10 +11,12 @@ import {
 
 const BASE_PAYLOAD = {
   sub: 'user-001',
-  faculty: 'FICS',
+  faculty: 'FICE',
   group: 'KV-91',
   full_name: 'Ivan Petrenko',
   is_admin: false,
+  restricted_to_faculty: false,
+  manage_admins: false,
 };
 
 describe('jwt', () => {
@@ -59,12 +61,14 @@ describe('jwt', () => {
       expect(payload.group).toBe(BASE_PAYLOAD.group);
       expect(payload.full_name).toBe(BASE_PAYLOAD.full_name);
       expect(payload.is_admin).toBe(BASE_PAYLOAD.is_admin);
+      expect(payload.restricted_to_faculty).toBe(BASE_PAYLOAD.restricted_to_faculty);
+      expect(payload.manage_admins).toBe(BASE_PAYLOAD.manage_admins);
       expect(payload.token_type).toBe('access');
     });
 
     it('rejects a refresh token passed as access token', async () => {
       const { token } = await signRefreshToken(BASE_PAYLOAD);
-      await expect(verifyAccessToken(token)).rejects.toThrow('Invalid token type');
+      await expect(verifyAccessToken(token)).rejects.toThrow('signature verification failed');
     });
 
     it('rejects a malformed token', async () => {
@@ -95,7 +99,7 @@ describe('jwt', () => {
 
     it('rejects an access token passed as refresh token', async () => {
       const { token } = await signAccessToken(BASE_PAYLOAD);
-      await expect(verifyRefreshToken(token)).rejects.toThrow('Invalid token type');
+      await expect(verifyRefreshToken(token)).rejects.toThrow('signature verification failed');
     });
   });
 

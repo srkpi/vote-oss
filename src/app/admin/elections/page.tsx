@@ -4,45 +4,11 @@ import { serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { AdminElectionsClient } from '@/components/admin/admin-elections-client';
 import type { Election } from '@/types';
+import { StatCard } from '@/components/admin/stat-card';
 
 export const metadata: Metadata = {
   title: 'Голосування',
 };
-
-function StatCard({
-  label,
-  value,
-  accent,
-  icon,
-  delay = 0,
-}: {
-  label: string;
-  value: string | number;
-  accent: 'navy' | 'orange' | 'success' | 'info';
-  icon: React.ReactNode;
-  delay?: number;
-}) {
-  const accentStyles = {
-    navy: 'navy-gradient',
-    orange: 'bg-[var(--kpi-orange)]',
-    success: 'bg-[var(--success)]',
-    info: 'bg-[var(--kpi-blue-light)]',
-  };
-  return (
-    <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-5 animate-fade-up"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
-    >
-      <div
-        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)] mb-3`}
-      >
-        {icon}
-      </div>
-      <p className="font-display text-xl sm:text-2xl font-bold text-[var(--foreground)]">{value}</p>
-      <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">{label}</p>
-    </div>
-  );
-}
 
 export default async function AdminElectionsPage() {
   const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
@@ -103,7 +69,12 @@ export default async function AdminElectionsPage() {
             accent="success"
             delay={0}
             icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -114,28 +85,17 @@ export default async function AdminElectionsPage() {
             }
           />
           <StatCard
-            label="Очікується"
-            value={upcomingCount}
-            accent="orange"
-            delay={60}
-            icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            }
-          />
-          <StatCard
             label="Завершених"
             value={closedCount}
             accent="navy"
             delay={120}
             icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -146,12 +106,38 @@ export default async function AdminElectionsPage() {
             }
           />
           <StatCard
+            label="Очікується"
+            value={upcomingCount}
+            accent="orange"
+            delay={60}
+            icon={
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            }
+          />
+          <StatCard
             label="Всього бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="info"
             delay={180}
             icon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

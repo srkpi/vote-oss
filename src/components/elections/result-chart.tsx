@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { cn, calculateVotePercentage, pluralize } from '@/lib/utils';
+import { cn, calculateVotePercentage } from '@/lib/utils';
 import type { TallyResult } from '@/types';
 
 interface ResultsChartProps {
@@ -41,28 +41,6 @@ export function ResultsChart({ results, totalBallots, loading }: ResultsChartPro
 
   return (
     <div className="space-y-6">
-      {/* Total count */}
-      <div className="flex items-center gap-3 p-4 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]">
-        <div className="w-10 h-10 rounded-lg navy-gradient flex items-center justify-center shrink-0">
-          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        </div>
-        <div>
-          <p className="font-display text-2xl font-bold text-[var(--foreground)]">
-            {totalBallots.toLocaleString('uk-UA')}
-          </p>
-          <p className="text-xs text-[var(--muted-foreground)] font-body">
-            {pluralize(totalBallots, ['бюлетень', 'бюлетені', 'бюлетенів'])} подано
-          </p>
-        </div>
-      </div>
-
       {/* Results */}
       <div className="space-y-4">
         {sorted.map((result, index) => {

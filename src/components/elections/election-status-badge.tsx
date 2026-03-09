@@ -10,7 +10,7 @@ interface ElectionStatusBadgeProps {
 export function ElectionStatusBadge({ status, size = 'md' }: ElectionStatusBadgeProps) {
   const config = {
     upcoming: { variant: 'warning' as const, dot: true },
-    open: { variant: 'success' as const, dot: true },
+    open: { variant: 'success' as const, dot: false },
     closed: { variant: 'default' as const, dot: false },
   };
 

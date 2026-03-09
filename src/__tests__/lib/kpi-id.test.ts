@@ -13,16 +13,16 @@ describe('kpi-id', () => {
       const user = await resolveTicket('ticket-superadmin-1');
       expect(user).not.toBeNull();
       expect(user!.userId).toBe('superadmin-001');
-      expect(user!.isAdmin).toBe(true);
-      expect(user!.faculty).toBe('FICS');
+      expect(user!.faculty).toBe('FICE');
     });
 
     it('resolves regular user ticket correctly', async () => {
       const user = await resolveTicket('ticket-user-1');
       expect(user).not.toBeNull();
       expect(user!.userId).toBe('user-001');
-      expect(user!.isAdmin).toBe(false);
       expect(user!.fullName).toBe('Ivan Petrenko');
+      expect(user!.faculty).toBe('FICE');
+      expect(user!.group).toBe('KV-91');
     });
 
     it('returns null for unknown ticket', async () => {

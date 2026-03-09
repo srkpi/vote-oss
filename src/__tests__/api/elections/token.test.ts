@@ -74,7 +74,7 @@ describe('POST /api/elections/[id]/token', () => {
   it('returns 403 when user faculty does not match restriction', async () => {
     const req = await authReq(OTHER_FACULTY_PAYLOAD); // FEL
     prismaMock.election.findUnique.mockResolvedValueOnce(
-      makeElection({ restricted_to_faculty: 'FICS' }),
+      makeElection({ restricted_to_faculty: 'FICE' }),
     );
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(403);

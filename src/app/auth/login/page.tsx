@@ -67,7 +67,7 @@ export default async function LoginPage() {
 
         {/* Security badges */}
         <div className="relative flex flex-wrap gap-3">
-          {['RSA-2048', 'Анонімно', 'Блокчейн'].map((badge) => (
+          {['RSA-2048', 'Анонімно'].map((badge) => (
             <div
               key={badge}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15"

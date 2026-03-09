@@ -4,6 +4,7 @@ import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { AdminsPageClient } from '@/components/admin/admins-page-client';
 import { Alert } from '@/components/ui/alert';
 import type { Admin } from '@/types';
+import { StatCard } from '@/components/admin/stat-card';
 
 export const metadata: Metadata = {
   title: 'Адміністратори',
@@ -119,46 +120,6 @@ export default async function AdminsPage() {
           />
         </div>
 
-        {/* How to join info card (if user can invite) */}
-        {canInvite && (
-          <div
-            className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] navy-gradient text-white animate-fade-up"
-            style={{ animationDelay: '180ms', animationFillMode: 'both' }}
-          >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center shrink-0 mt-0.5">
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display text-sm sm:text-base font-semibold leading-tight">
-                Запрошення адміністраторів
-              </p>
-              <p className="text-xs sm:text-sm text-white/80 font-body mt-1 leading-relaxed">
-                Натисніть «Запросити адміна», щоб створити одноразовий токен. Передайте його
-                потрібній людині — вона зможе приєднатися через сторінку{' '}
-                <Link
-                  href="/join"
-                  className="underline underline-offset-2 hover:text-white transition-colors"
-                >
-                  /join
-                </Link>
-                .
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Main content card */}
         <div
           className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
@@ -209,119 +170,7 @@ export default async function AdminsPage() {
             </div>
           )}
         </div>
-
-        {/* Hierarchy explanation */}
-        <div
-          className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-6 animate-fade-up"
-          style={{ animationDelay: '280ms', animationFillMode: 'both' }}
-        >
-          <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-4">
-            Ієрархія прав
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            {[
-              {
-                title: 'Базові права',
-                description:
-                  'Може створювати та переглядати голосування. Обмежений своїм факультетом, якщо встановлено обмеження.',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                ),
-                color: 'text-[var(--success)] bg-[var(--success-bg)] border-[var(--success)]/20',
-              },
-              {
-                title: 'Керування адмінами',
-                description:
-                  'Може запрошувати нових адміністраторів та видаляти тих, кого сам призначив.',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                    />
-                  </svg>
-                ),
-                color:
-                  'text-[var(--kpi-blue-light)] bg-[var(--info-bg)] border-[var(--kpi-blue-light)]/20',
-              },
-              {
-                title: 'Обмежений адмін',
-                description:
-                  'Може керувати лише голосуваннями свого факультету. Не може знімати обмеження при запрошенні.',
-                icon: (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                ),
-                color:
-                  'text-[var(--kpi-orange)] bg-[var(--warning-bg)] border-[var(--kpi-orange)]/20',
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className={`p-3 sm:p-4 rounded-[var(--radius-lg)] border ${item.color}`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {item.icon}
-                  <span className="font-body text-sm font-semibold">{item.title}</span>
-                </div>
-                <p className="text-xs font-body leading-relaxed opacity-80">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-  accent,
-  delay,
-}: {
-  label: string;
-  value: number;
-  icon: React.ReactNode;
-  accent: 'navy' | 'orange' | 'info';
-  delay: number;
-}) {
-  const accentStyles = {
-    navy: 'navy-gradient',
-    orange: 'bg-[var(--kpi-orange)]',
-    info: 'bg-[var(--kpi-blue-light)]',
-  };
-
-  return (
-    <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-5 animate-fade-up"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
-    >
-      <div
-        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg ${accentStyles[accent]} flex items-center justify-center text-white shadow-[var(--shadow-sm)] mb-3 sm:mb-4`}
-      >
-        {icon}
-      </div>
-      <p className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
-        {value}
-      </p>
-      <p className="text-xs font-body text-[var(--muted-foreground)] mt-1">{label}</p>
     </div>
   );
 }
