@@ -9,13 +9,27 @@ export const metadata: Metadata = {
   description: 'Використайте токен запрошення, щоб отримати права адміністратора КПІ Голос.',
 };
 
-export default async function JoinPage() {
+interface Props {
+  searchParams: Promise<{ token?: string }>;
+}
+
+export default async function JoinPage({ searchParams }: Props) {
   const session = await getServerSession();
   if (!session) redirect('/auth/login');
-
-  // If already an admin, redirect to admin panel
   if (session.isAdmin) redirect('/admin');
 
+  const { token } = await searchParams;
+
+  return <JoinPageContent session={session} initialToken={token} />;
+}
+
+export function JoinPageContent({
+  session,
+  initialToken,
+}: {
+  session: { fullName: string; faculty: string; group: string };
+  initialToken?: string;
+}) {
   return (
     <div className="min-h-[calc(100vh-var(--header-height))] flex items-center justify-center p-6 bg-[var(--surface)]">
       {/* Background decoration */}
@@ -103,7 +117,7 @@ export default async function JoinPage() {
 
           {/* Form */}
           <div className="px-8 py-7">
-            <JoinAdminForm />
+            <JoinAdminForm initialToken={initialToken} />
           </div>
 
           {/* Footer */}

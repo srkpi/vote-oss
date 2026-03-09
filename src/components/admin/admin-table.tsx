@@ -184,7 +184,7 @@ function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
           )}
           {admin.restricted_to_faculty && (
             <Badge variant="warning" size="sm">
-              Обмежені права
+              Обмежений до підрозділу
             </Badge>
           )}
           {!admin.manage_admins && !admin.restricted_to_faculty && (
@@ -267,7 +267,7 @@ function AdminCard({ admin, isCurrentUser, onDelete }: AdminRowProps) {
         )}
         {admin.restricted_to_faculty && (
           <Badge variant="warning" size="sm">
-            Обмежені права
+            Обмежений до підрозділу
           </Badge>
         )}
       </div>

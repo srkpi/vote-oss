@@ -103,7 +103,7 @@ export default async function AdminsPage() {
             delay={60}
           />
           <StatCard
-            label="Обмежені (по факультету)"
+            label="Обмежені до підрозділу"
             value={restricted}
             icon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

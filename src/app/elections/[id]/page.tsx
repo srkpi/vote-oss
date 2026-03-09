@@ -359,6 +359,22 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             </div>
 
+            <div
+              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5 animate-fade-up"
+              style={{ animationDelay: '250ms' }}
+            >
+              <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-2">
+                Публічний ключ
+              </h3>
+              <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
+                <textarea
+                  readOnly
+                  className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed w-full h-20 border border-gray-300 rounded p-2 resize-none"
+                  value={election.publicKey}
+                />
+              </div>
+            </div>
+
             {/* Private key (after close) */}
             {isClosed && election.privateKey && (
               <div
@@ -366,35 +382,20 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 style={{ animationDelay: '250ms' }}
               >
                 <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-2">
-                  Публічний ключ
+                  Приватний ключ
                 </h3>
                 <p className="text-xs text-[var(--muted-foreground)] font-body mb-3 leading-relaxed">
                   Ключ розкрито після завершення — можна перевірити розшифрування бюлетенів.
                 </p>
                 <div className="p-3 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--border-subtle)] overflow-hidden">
-                  <p className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed line-clamp-4">
-                    {election.privateKey}
-                  </p>
+                  <textarea
+                    readOnly
+                    className="font-mono text-[10px] text-[var(--muted-foreground)] break-all leading-relaxed w-full h-20 border border-gray-300 rounded p-2 resize-none"
+                    value={election.privateKey}
+                  />
                 </div>
               </div>
             )}
-
-            {/* Ballots link */}
-            <div className="animate-fade-up" style={{ animationDelay: '300ms' }}>
-              <Button variant="secondary" fullWidth size="md" asChild>
-                <Link href={`/elections/${id}/ballots`}>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Переглянути бюлетені
-                </Link>
-              </Button>
-            </div>
           </div>
         </div>
       </div>

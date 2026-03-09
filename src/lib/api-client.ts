@@ -16,7 +16,33 @@ import type {
 
 const BASE_URL = '/api';
 
-async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
+// Ensures concurrent 401 responses only trigger a single refresh request
+// instead of a stampede of parallel refresh calls.
+let _refreshing: Promise<boolean> | null = null;
+
+async function _doRefresh(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+function triggerRefresh(): Promise<boolean> {
+  if (!_refreshing) {
+    _refreshing = _doRefresh().finally(() => {
+      _refreshing = null;
+    });
+  }
+  return _refreshing;
+}
+
+async function rawFetch<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
   try {
     const response = await fetch(`${BASE_URL}${path}`, {
       credentials: 'include',
@@ -49,6 +75,39 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<Api
   }
 }
 
+/**
+ * Fetch with automatic token refresh.
+ * On a 401, attempts one silent refresh then retries.
+ * If the refresh also fails the user is redirected to /auth/login.
+ */
+async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
+  const result = await rawFetch<T>(path, options);
+
+  if (result.success || result.statusCode !== 401) {
+    return result;
+  }
+
+  if (path === '/auth/refresh') {
+    return result;
+  }
+
+  const refreshed = await triggerRefresh();
+
+  if (refreshed) {
+    return rawFetch<T>(path, options);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.location.href = '/auth/login';
+  }
+
+  return {
+    success: false,
+    error: 'Сесія закінчилась. Будь ласка, увійдіть знову.',
+    statusCode: 401,
+  };
+}
+
 // ==================== AUTH ====================
 
 export async function loginWithTicket(ticketId: string) {
@@ -69,7 +128,7 @@ export async function logout() {
 }
 
 export async function refreshToken() {
-  return fetchApi<{ ok: boolean }>('/auth/refresh', { method: 'POST' });
+  return rawFetch<{ ok: boolean; isAdmin: boolean }>('/auth/refresh', { method: 'POST' });
 }
 
 // ==================== ELECTIONS ====================

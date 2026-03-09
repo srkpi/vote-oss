@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { ResultsChart } from '@/components/elections/result-chart';
-import { Alert } from '@/components/ui/alert';
 import { CopyButton } from '@/components/ui/copy-button';
 import { formatDateTime, formatDate } from '@/lib/utils';
 import type { ElectionDetail, TallyResponse } from '@/types';
@@ -192,122 +191,52 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             )}
 
             {/* Choices */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-              style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-            >
-              <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
-                <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
-                  Варіанти відповідей
-                </h2>
-              </div>
-              <div className="p-4 sm:p-6 space-y-3">
-                {election.choices.map((choice, index) => {
-                  const tallyItem = tally?.results.find((r) => r.choiceId === choice.id);
-                  const pct = tally
-                    ? tally.totalBallots > 0
-                      ? Math.round(((tallyItem?.votes ?? 0) / tally.totalBallots) * 1000) / 10
-                      : 0
-                    : null;
-
-                  return (
-                    <div
-                      key={choice.id}
-                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
-                    >
-                      <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
-                        {String.fromCharCode(65 + index)}
-                      </span>
-                      <span className="flex-1 text-sm font-body text-[var(--foreground)]">
-                        {choice.choice}
-                      </span>
-                      {pct !== null && (
-                        <div className="text-right shrink-0">
-                          <span className="font-display text-base sm:text-lg font-bold text-[var(--foreground)]">
-                            {pct}%
-                          </span>
-                          <p className="text-xs text-[var(--muted-foreground)] font-body">
-                            {tallyItem?.votes ?? 0} голосів
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Ballot chain integrity */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-              style={{ animationDelay: '150ms', animationFillMode: 'both' }}
-            >
-              <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
-                <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
-                  Ланцюжок бюлетенів
-                </h2>
-              </div>
-              <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-5">
-                  {[
-                    {
-                      label: 'Всього бюлетенів',
-                      value: election.ballotCount.toLocaleString('uk-UA'),
-                      accent: 'text-[var(--kpi-navy)]',
-                    },
-                    {
-                      label: 'Шифрування',
-                      value: 'RSA-2048',
-                      accent: 'text-[var(--kpi-blue-light)]',
-                    },
-                    {
-                      label: 'Алгоритм хешу',
-                      value: 'SHA-256',
-                      accent: 'text-[var(--kpi-orange)]',
-                    },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="text-center p-2 sm:p-3 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
-                    >
-                      <p className={`font-display text-base sm:text-xl font-bold ${item.accent}`}>
-                        {item.value}
-                      </p>
-                      <p className="text-[9px] sm:text-[10px] text-[var(--muted-foreground)] font-body uppercase tracking-wider mt-1">
-                        {item.label}
-                      </p>
-                    </div>
-                  ))}
+            {!isClosed && (
+              <div
+                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
+                style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+              >
+                <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
+                  <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
+                    Варіанти відповідей
+                  </h2>
                 </div>
+                <div className="p-4 sm:p-6 space-y-3">
+                  {election.choices.map((choice, index) => {
+                    const tallyItem = tally?.results.find((r) => r.choiceId === choice.id);
+                    const pct = tally
+                      ? tally.totalBallots > 0
+                        ? Math.round(((tallyItem?.votes ?? 0) / tally.totalBallots) * 1000) / 10
+                        : 0
+                      : null;
 
-                <Alert variant="info">
-                  Кожен бюлетень хешується та посилається на попередній, утворюючи незмінний
-                  ланцюжок. Будь-яка спроба фальсифікації порушує ланцюжок і буде виявлена при
-                  перевірці.
-                </Alert>
-
-                <div className="mt-4">
-                  <Button variant="secondary" size="sm" asChild>
-                    <Link href={`/elections/${id}/ballots`}>
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                    return (
+                      <div
+                        key={choice.id}
+                        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Переглянути всі бюлетені
-                    </Link>
-                  </Button>
+                        <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
+                          {String.fromCharCode(65 + index)}
+                        </span>
+                        <span className="flex-1 text-sm font-body text-[var(--foreground)]">
+                          {choice.choice}
+                        </span>
+                        {pct !== null && (
+                          <div className="text-right shrink-0">
+                            <span className="font-display text-base sm:text-lg font-bold text-[var(--foreground)]">
+                              {pct}%
+                            </span>
+                            <p className="text-xs text-[var(--muted-foreground)] font-body">
+                              {tallyItem?.votes ?? 0} голосів
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right column */}
@@ -479,88 +408,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 </div>
               </div>
             )}
-
-            {/* Quick links */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-              style={{ animationDelay: '400ms', animationFillMode: 'both' }}
-            >
-              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
-                <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
-                  Швидкі дії
-                </h3>
-              </div>
-              <div className="p-3 space-y-1">
-                {[
-                  {
-                    label: 'Публічна сторінка',
-                    href: `/elections/${id}`,
-                    icon: (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: 'Усі бюлетені',
-                    href: `/elections/${id}/ballots`,
-                    icon: (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    label: 'Усі голосування',
-                    href: '/admin/elections',
-                    icon: (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                    ),
-                  },
-                ].map((action) => (
-                  <Link
-                    key={action.href}
-                    href={action.href}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius)] text-sm font-body font-medium text-[var(--foreground)] hover:bg-[var(--surface)] hover:text-[var(--kpi-navy)] transition-all duration-150"
-                  >
-                    <span className="text-[var(--muted-foreground)]">{action.icon}</span>
-                    {action.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>

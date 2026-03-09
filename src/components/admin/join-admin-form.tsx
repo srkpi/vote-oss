@@ -8,11 +8,15 @@ import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { joinAsAdmin } from '@/lib/api-client';
 
-export function JoinAdminForm() {
+interface JoinAdminFormProps {
+  initialToken?: string;
+}
+
+export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(initialToken ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

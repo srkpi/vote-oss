@@ -20,14 +20,20 @@ export async function POST(req: NextRequest) {
     where: { refresh_jti: user.jti },
   });
 
+  const adminRecord = await prisma.admin.findUnique({
+    where: { user_id: user.sub },
+  });
+
+  const isAdmin = !!adminRecord;
+
   const tokenPayload = {
     sub: user.sub,
     faculty: user.faculty,
     group: user.group,
     full_name: user.full_name,
-    is_admin: user.is_admin,
-    restricted_to_faculty: user.restricted_to_faculty,
-    manage_admins: user.manage_admins,
+    is_admin: isAdmin,
+    restricted_to_faculty: adminRecord?.restricted_to_faculty ?? false,
+    manage_admins: adminRecord?.manage_admins ?? false,
   };
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
@@ -41,7 +47,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const response = NextResponse.json({ ok: true }, { status: 200 });
+  const response = NextResponse.json({ ok: true, isAdmin }, { status: 200 });
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));
 

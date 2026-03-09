@@ -1,42 +1,25 @@
+'use server';
+
 import { cookies } from 'next/headers';
+import {
+  verifyAccessToken,
+  verifyRefreshToken,
+  signAccessToken,
+  signRefreshToken,
+  tokenCookieOptions,
+  COOKIE_ACCESS,
+  COOKIE_REFRESH,
+} from '@/lib/jwt';
+import { prisma } from '@/lib/prisma';
 import type { User } from '@/types';
 
-interface JwtPayload {
+function toUser(payload: {
   sub: string;
   faculty: string;
   group: string;
   full_name: string;
   is_admin: boolean;
-  jti: string;
-  exp: number;
-  iat: number;
-}
-
-function decodeJwtPayload(token: string): JwtPayload | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(Buffer.from(parts[1]!, 'base64url').toString('utf-8')) as JwtPayload;
-    if (!payload.sub) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-function isTokenExpired(payload: JwtPayload): boolean {
-  return Date.now() / 1000 > payload.exp;
-}
-
-export async function getServerSession(): Promise<User | null> {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('access_token')?.value;
-
-  if (!accessToken) return null;
-
-  const payload = decodeJwtPayload(accessToken);
-  if (!payload || isTokenExpired(payload)) return null;
-
+}): User {
   return {
     userId: payload.sub,
     faculty: payload.faculty,
@@ -46,11 +29,87 @@ export async function getServerSession(): Promise<User | null> {
   };
 }
 
+async function tryAccessToken(token: string): Promise<User | null> {
+  let payload;
+  try {
+    payload = await verifyAccessToken(token);
+  } catch {
+    return null;
+  }
+
+  const record = await prisma.jwtToken.findFirst({
+    where: { access_jti: payload.jti },
+  });
+
+  if (!record) return null;
+
+  return toUser(payload);
+}
+
+async function tryRefreshToken(refreshToken: string): Promise<User | null> {
+  let payload;
+  try {
+    payload = await verifyRefreshToken(refreshToken);
+  } catch {
+    return null;
+  }
+
+  const record = await prisma.jwtToken.findFirst({
+    where: { refresh_jti: payload.jti },
+  });
+
+  if (!record) return null;
+
+  await prisma.jwtToken.deleteMany({ where: { refresh_jti: payload.jti } });
+
+  const adminRecord = await prisma.admin.findUnique({
+    where: { user_id: payload.sub },
+  });
+
+  const newPayload = {
+    sub: payload.sub,
+    faculty: payload.faculty,
+    group: payload.group,
+    full_name: payload.full_name,
+    is_admin: !!adminRecord,
+    restricted_to_faculty: adminRecord?.restricted_to_faculty ?? false,
+    manage_admins: adminRecord?.manage_admins ?? false,
+  };
+
+  const [{ token: newAccess, jti: accessJti }, { token: newRefresh, jti: refreshJti }] =
+    await Promise.all([signAccessToken(newPayload), signRefreshToken(newPayload)]);
+
+  await prisma.jwtToken.create({
+    data: { access_jti: accessJti, refresh_jti: refreshJti, created_at: new Date() },
+  });
+
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_ACCESS, newAccess, tokenCookieOptions('access'));
+  cookieStore.set(COOKIE_REFRESH, newRefresh, tokenCookieOptions('refresh'));
+
+  return toUser(newPayload);
+}
+
+export async function getServerSession(): Promise<User | null> {
+  const cookieStore = await cookies();
+
+  const accessToken = cookieStore.get(COOKIE_ACCESS)?.value;
+  if (accessToken) {
+    const user = await tryAccessToken(accessToken);
+    if (user) return user;
+  }
+
+  const refreshTokenValue = cookieStore.get(COOKIE_REFRESH)?.value;
+  if (refreshTokenValue) {
+    return tryRefreshToken(refreshTokenValue);
+  }
+
+  return null;
+}
+
 export async function requireServerSession(): Promise<User> {
   const session = await getServerSession();
-  if (!session) {
-    throw new Error('UNAUTHORIZED');
-  }
+  if (!session) throw new Error('UNAUTHORIZED');
   return session;
 }
 
