@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
@@ -61,26 +62,7 @@ export default async function ElectionsPage() {
               </div>
 
               {session.isAdmin && (
-                <Button
-                  variant="accent"
-                  size="sm"
-                  asChild
-                  icon={
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  }
-                >
+                <Button variant="accent" size="sm" asChild icon={<Plus className="w-3.5 h-3.5" />}>
                   <Link href="/admin/elections/new">Нове голосування</Link>
                 </Button>
               )}

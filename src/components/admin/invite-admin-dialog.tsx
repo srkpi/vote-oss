@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FormField, Input } from '@/components/ui/form';
 import {
@@ -10,12 +8,13 @@ import {
   DialogPanel,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogBody,
   DialogFooter,
   DialogCloseButton,
 } from '@/components/ui/dialog';
 import { Alert } from '@/components/ui/alert';
+import { ToggleField } from '@/components/ui/toggle-field';
+import { TokenResult } from '@/components/admin/token-result';
 import { useToast } from '@/hooks/use-toast';
 import { createInviteToken } from '@/lib/api-client';
 import type { InviteTokenResponse } from '@/types';
@@ -28,10 +27,14 @@ interface InviteAdminDialogProps {
 
 export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: InviteAdminDialogProps) {
   const { toast } = useToast();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InviteTokenResponse | null>(null);
+
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   const [tomorrow] = useState(() =>
     new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
   );
@@ -60,26 +63,55 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
     } else {
       setError(result.error);
     }
+
     setLoading(false);
   };
 
   const handleCopy = async () => {
     if (!result) return;
+
     await navigator.clipboard.writeText(result.token);
     setCopied(true);
-    toast({ title: 'Скопійовано!', variant: 'success', duration: 2000 });
+
+    toast({
+      title: 'Скопійовано!',
+      variant: 'success',
+      duration: 2000,
+    });
+
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyLink = async () => {
+    if (!result) return;
+
+    const link = `${window.location.origin}/join/${result.token}`;
+    await navigator.clipboard.writeText(link);
+
+    setCopiedLink(true);
+
+    toast({
+      title: 'Посилання скопійовано!',
+      variant: 'success',
+      duration: 2000,
+    });
+
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleClose = () => {
     setResult(null);
     setError(null);
+    setCopied(false);
+    setCopiedLink(false);
+
     setForm({
       validDue: tomorrow,
       maxUsage: '1',
       manageAdmins: false,
       restrictedToFaculty: true,
     });
+
     onClose();
   };
 
@@ -87,12 +119,7 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
     <Dialog open={open} onClose={handleClose}>
       <DialogPanel maxWidth="md">
         <DialogHeader>
-          <div>
-            <DialogTitle>Запросити адміністратора</DialogTitle>
-            <DialogDescription>
-              Створіть токен для запрошення нового адміністратора
-            </DialogDescription>
-          </div>
+          <DialogTitle>Запросити адміністратора</DialogTitle>
           <DialogCloseButton onClose={handleClose} />
         </DialogHeader>
 
@@ -105,28 +132,26 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
 
           {!result ? (
             <>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField label="Дійсний до" required htmlFor="validDue">
-                  <Input
-                    id="validDue"
-                    type="datetime-local"
-                    value={form.validDue}
-                    min={oneMinuteAhead}
-                    onChange={(e) => setForm((p) => ({ ...p, validDue: e.target.value }))}
-                  />
-                </FormField>
+              <FormField label="Дійсний до" required htmlFor="validDue">
+                <Input
+                  id="validDue"
+                  type="datetime-local"
+                  value={form.validDue}
+                  min={oneMinuteAhead}
+                  onChange={(e) => setForm((p) => ({ ...p, validDue: e.target.value }))}
+                />
+              </FormField>
 
-                <FormField label="Кількість використань" htmlFor="maxUsage" hint="Від 1 до 100">
-                  <Input
-                    id="maxUsage"
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={form.maxUsage}
-                    onChange={(e) => setForm((p) => ({ ...p, maxUsage: e.target.value }))}
-                  />
-                </FormField>
-              </div>
+              <FormField label="Кількість використань" htmlFor="maxUsage" hint="Від 1 до 100">
+                <Input
+                  id="maxUsage"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={form.maxUsage}
+                  onChange={(e) => setForm((p) => ({ ...p, maxUsage: e.target.value }))}
+                />
+              </FormField>
 
               <div className="space-y-3">
                 <ToggleField
@@ -147,7 +172,13 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
               </div>
             </>
           ) : (
-            <TokenResult token={result.token} copied={copied} onCopy={handleCopy} info={result} />
+            <TokenResult
+              token={result.token}
+              copied={copied}
+              copiedLink={copiedLink}
+              onCopy={handleCopy}
+              onCopyLink={handleCopyLink}
+            />
           )}
         </DialogBody>
 
@@ -157,6 +188,7 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
               <Button variant="secondary" onClick={handleClose} disabled={loading}>
                 Скасувати
               </Button>
+
               <Button variant="primary" onClick={handleSubmit} loading={loading}>
                 Створити токен
               </Button>
@@ -169,84 +201,5 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
         </DialogFooter>
       </DialogPanel>
     </Dialog>
-  );
-}
-
-interface ToggleFieldProps {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}
-
-function ToggleField({ label, description, checked, onChange }: ToggleFieldProps) {
-  return (
-    <label className="flex items-start gap-3 cursor-pointer group">
-      <div className="relative mt-0.5">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onChange(e.target.checked)}
-          className="sr-only"
-        />
-        <div
-          className={cn(
-            'w-10 h-6 rounded-full transition-all duration-200',
-            checked ? 'bg-[var(--kpi-navy)]' : 'bg-[var(--border-color)]',
-          )}
-        >
-          <div
-            className={cn(
-              'absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-200',
-              checked ? 'left-5' : 'left-1',
-            )}
-          />
-        </div>
-      </div>
-      <div>
-        <p className="text-sm font-medium text-[var(--foreground)] font-body">{label}</p>
-        {description && (
-          <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">{description}</p>
-        )}
-      </div>
-    </label>
-  );
-}
-
-interface TokenResultProps {
-  token: string;
-  copied: boolean;
-  onCopy: () => void;
-  info: InviteTokenResponse;
-}
-
-function TokenResult({ token, copied, onCopy }: TokenResultProps) {
-  return (
-    <div className="space-y-4 animate-scale-in">
-      <Alert variant="success" title="Токен успішно створено">
-        Скопіюйте токен та передайте його потрібній людині. Він буде показаний лише один раз.
-      </Alert>
-
-      <div>
-        <p className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-2 font-body">
-          Токен запрошення
-        </p>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 p-3 rounded-[var(--radius)] bg-[var(--surface)] border border-[var(--border-color)] overflow-hidden">
-            <p className="font-mono text-xs text-[var(--foreground)] break-all select-all">
-              {token}
-            </p>
-          </div>
-          <Button
-            variant={copied ? 'secondary' : 'outline'}
-            size="sm"
-            onClick={onCopy}
-            icon={copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          >
-            {copied ? 'Скопійовано' : 'Копіювати'}
-          </Button>
-        </div>
-      </div>
-    </div>
   );
 }

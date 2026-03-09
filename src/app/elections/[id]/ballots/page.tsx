@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { BallotsClient } from '@/components/elections/ballots-client';
 import { Alert } from '@/components/ui/alert';
@@ -39,9 +40,7 @@ export default async function BallotsPage({ params, searchParams }: BallotsPageP
             <Link href="/elections" className="hover:text-[var(--kpi-navy)] transition-colors">
               Голосування
             </Link>
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3.5 h-3.5" />
             {data?.election && (
               <>
                 <Link
@@ -50,14 +49,7 @@ export default async function BallotsPage({ params, searchParams }: BallotsPageP
                 >
                   {data.election.title}
                 </Link>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <ChevronRight className="w-3.5 h-3.5" />
               </>
             )}
             <span className="text-[var(--foreground)]">Бюлетені</span>

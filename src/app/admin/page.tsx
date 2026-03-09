@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Plus, CheckCircle2, FileText, CreditCard, Users } from 'lucide-react';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
@@ -7,7 +8,7 @@ import type { Election, Admin } from '@/types';
 import { StatCard } from '@/components/admin/stat-card';
 
 export const metadata: Metadata = {
-  title: 'Огляд',
+  title: 'Адмін панель',
 };
 
 export default async function AdminDashboardPage() {
@@ -45,21 +46,7 @@ export default async function AdminDashboardPage() {
             className="flex items-center gap-3 animate-fade-up shrink-0"
             style={{ animationDelay: '100ms' }}
           >
-            <Button
-              variant="accent"
-              size="sm"
-              asChild
-              icon={
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              }
-            >
+            <Button variant="accent" size="sm" asChild icon={<Plus className="w-3.5 h-3.5" />}>
               <Link href="/admin/elections/new">
                 <span className="hidden sm:inline">Нове голосування</span>
                 <span className="sm:hidden">Нове</span>
@@ -77,84 +64,28 @@ export default async function AdminDashboardPage() {
             value={openElections.length}
             accent="success"
             delay={0}
-            icon={
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            }
+            icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Всього голосувань"
             value={elections.length}
             accent="navy"
             delay={60}
-            icon={
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            }
+            icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Подано бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="orange"
             delay={120}
-            icon={
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-            }
+            icon={<CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Адміністраторів"
             value={admins.length}
             accent="info"
             delay={180}
-            icon={
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            }
+            icon={<Users className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
         </div>
 
@@ -179,19 +110,7 @@ export default async function AdminDashboardPage() {
             {recentElections.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center px-6">
                 <div className="w-14 h-14 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] flex items-center justify-center mb-4">
-                  <svg
-                    className="w-7 h-7 text-[var(--kpi-gray-mid)]"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+                  <FileText className="w-7 h-7 text-[var(--kpi-gray-mid)]" strokeWidth={1.5} />
                 </div>
                 <p className="font-display text-base font-semibold text-[var(--foreground)]">
                   Голосувань поки немає

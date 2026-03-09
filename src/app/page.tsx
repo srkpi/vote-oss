@@ -1,4 +1,13 @@
 import Link from 'next/link';
+import {
+  ChevronRight,
+  Lock,
+  Link2,
+  Eye,
+  ShieldCheck,
+  UserCheck,
+  LayoutDashboard,
+} from 'lucide-react';
 import { getServerSession } from '@/lib/server-auth';
 import { serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
@@ -63,19 +72,7 @@ export default async function HomePage() {
                 <Button variant="accent" size="xl" asChild>
                   <Link href="/elections">
                     Переглянути голосування
-                    <svg
-                      className="w-5 h-5 ml-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
+                    <ChevronRight className="w-5 h-5 ml-1" />
                   </Link>
                 </Button>
               ) : (
@@ -83,19 +80,7 @@ export default async function HomePage() {
                   <Button variant="accent" size="xl" asChild>
                     <Link href="/auth/login">
                       Увійти через КПІ ID
-                      <svg
-                        className="w-5 h-5 ml-1"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                      <ChevronRight className="w-5 h-5 ml-1" />
                     </Link>
                   </Button>
                   <Button
@@ -186,95 +171,35 @@ export default async function HomePage() {
 
 const features = [
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-        />
-      </svg>
-    ),
+    icon: <Lock className="w-6 h-6" />,
     title: 'RSA-шифрування',
     description:
       "Кожен бюлетень зашифровано ключем виборів. Ніхто не може пов'язати голос із виборцем.",
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-        />
-      </svg>
-    ),
+    icon: <Link2 className="w-6 h-6" />,
     title: 'Ланцюжок бюлетенів',
     description: "Кожен голос хешується та пов'язується з попереднім — фальсифікація неможлива.",
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-        />
-      </svg>
-    ),
+    icon: <Eye className="w-6 h-6" />,
     title: 'Публічна перевірка',
     description: 'Будь-хто може перевірити свій бюлетень за хешем без розкриття змісту голосу.',
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-        />
-      </svg>
-    ),
+    icon: <ShieldCheck className="w-6 h-6" />,
     title: 'Авторизація КПІ ID',
     description:
       'Вхід через офіційну систему ідентифікації КПІ гарантує, що голосує справжній студент.',
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"
-        />
-      </svg>
-    ),
+    icon: <UserCheck className="w-6 h-6" />,
     title: 'Анонімність',
     description:
       'Нульові знання: система знає, що ви проголосували, але не може прочитати ваш вибір.',
   },
   {
-    icon: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 18h.01M8 21h8a2 2 0 002-2v-2M8 21a2 2 0 01-2-2v-2m12 0v-4a2 2 0 00-2-2h-1M8 17v-4a2 2 0 012-2h1m0 0V9a2 2 0 012-2h2a2 2 0 012 2v2m0 0h1M12 9h.01"
-        />
-      </svg>
-    ),
+    icon: <LayoutDashboard className="w-6 h-6" />,
     title: 'Адмін-панель',
     description: 'Зручний інтерфейс для організаторів виборів з гнучкими налаштуваннями доступу.',
   },

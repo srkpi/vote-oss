@@ -122,10 +122,10 @@ export function CreateElectionForm() {
       {/* Basic Info */}
       <section>
         <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-4">
-          Основна інформація
+          Створення голосування
         </h2>
         <div className="space-y-5">
-          <FormField label="Назва голосування" required error={fieldErrors.title} htmlFor="title">
+          <FormField label="Назва" required error={fieldErrors.title} htmlFor="title">
             <Input
               id="title"
               value={form.title}

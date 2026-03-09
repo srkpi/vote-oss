@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronRight, FileText, ExternalLink, Plus, Play, StopCircle, Unlock } from 'lucide-react';
 import { serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,28 +45,14 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
               Адмін
             </Link>
-            <svg
-              className="w-3.5 h-3.5 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3.5 h-3.5 shrink-0" />
             <Link
               href="/admin/elections"
               className="hover:text-[var(--kpi-navy)] transition-colors"
             >
               Голосування
             </Link>
-            <svg
-              className="w-3.5 h-3.5 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3.5 h-3.5 shrink-0" />
             <span className="text-[var(--foreground)] truncate max-w-[120px] sm:max-w-xs">
               {election.title}
             </span>
@@ -98,37 +85,13 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             <div className="flex items-center gap-2 shrink-0">
               <Button variant="secondary" size="sm" asChild>
                 <Link href={`/elections/${id}/ballots`}>
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+                  <FileText className="w-3.5 h-3.5" />
                   Бюлетені
                 </Link>
               </Button>
               <Button variant="ghost" size="sm" asChild>
                 <Link href={`/elections/${id}`}>
-                  <svg
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
+                  <ExternalLink className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Публічна сторінка</span>
                 </Link>
               </Button>
@@ -255,52 +218,19 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 <TimelineItem
                   label="Створено"
                   value={formatDateTime(election.createdAt)}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  }
+                  icon={<Plus className="w-4 h-4" />}
                   status="done"
                 />
                 <TimelineItem
                   label="Початок"
                   value={formatDateTime(election.opensAt)}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                      />
-                    </svg>
-                  }
+                  icon={<Play className="w-4 h-4" />}
                   status={election.status === 'upcoming' ? 'pending' : 'done'}
                 />
                 <TimelineItem
                   label="Завершення"
                   value={formatDateTime(election.closesAt)}
-                  icon={
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
-                      />
-                    </svg>
-                  }
+                  icon={<StopCircle className="w-4 h-4" />}
                   status={isClosed ? 'done' : 'pending'}
                 />
               </div>
@@ -377,19 +307,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               >
                 <div className="px-4 sm:px-5 py-4 border-b border-[var(--kpi-orange)]/20 flex items-center justify-between bg-[var(--warning-bg)]">
                   <div className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-[var(--kpi-orange)]"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
-                      />
-                    </svg>
+                    <Unlock className="w-4 h-4 text-[var(--kpi-orange)]" />
                     <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
                       Приватний ключ
                     </h3>
