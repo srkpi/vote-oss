@@ -1,7 +1,7 @@
 'use server';
 
 import { headers, cookies } from 'next/headers';
-import type { User } from '@/types';
+import type { User } from '@/types/auth';
 
 export async function getServerSession(): Promise<User | null> {
   const h = await headers();

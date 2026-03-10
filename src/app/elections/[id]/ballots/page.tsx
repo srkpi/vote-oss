@@ -5,7 +5,8 @@ import { ChevronRight } from 'lucide-react';
 import { serverFetch } from '@/lib/server-auth';
 import { BallotsClient } from '@/components/elections/ballots-client';
 import { Alert } from '@/components/ui/alert';
-import type { BallotsResponse, ElectionDetail } from '@/types';
+import type { BallotsResponse } from '@/types/ballot';
+import type { ElectionDetail } from '@/types/election';
 
 interface BallotsPageProps {
   params: Promise<{ id: string }>;

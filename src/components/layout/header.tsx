@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import type { User } from '@/types';
+import type { User } from '@/types/auth';
 
 interface HeaderProps {
   session: User | null;

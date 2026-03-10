@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { cn, calculateVotePercentage } from '@/lib/utils';
-import type { TallyResult } from '@/types';
+import type { TallyResult } from '@/types/tally';
 
 const colors = [
   { bar: 'from-[var(--kpi-navy)] to-[var(--kpi-blue-mid)]', badge: 'bg-[var(--kpi-navy)]' },

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { getVote } from '@/lib/vote-storage';
 import { AlreadyVotedCard } from './already-voted-card';
 import { VoteForm } from '@/components/elections/vote-form';
-import type { ElectionDetail, VoteRecord } from '@/types';
+import type { VoteRecord } from '@/types/vote';
+import type { ElectionDetail } from '@/types/election';
 
 interface VoteStatusWrapperProps {
   election: ElectionDetail;

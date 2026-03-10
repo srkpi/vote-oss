@@ -6,7 +6,7 @@ import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/elect
 import { EmptyState } from '@/components/common/empty-state';
 import { Tabs } from '@/components/ui/tabs';
 import { SearchInput } from '@/components/ui/search-input';
-import type { Election, ElectionStatus } from '@/types';
+import type { Election, ElectionStatus } from '@/types/election';
 
 interface ElectionsFilterProps {
   elections: Election[];

@@ -1,4 +1,6 @@
 import { cn } from '@/lib/utils';
+import { Ballot, DecryptionResult } from '@/types/ballot';
+import { ElectionChoice } from '@/types/election';
 import {
   AlertTriangle,
   CheckCircle,
@@ -9,7 +11,6 @@ import {
   XCircle,
   UserCheck,
 } from 'lucide-react';
-import type { Ballot, DecryptionResult, ElectionChoice } from '@/types';
 
 interface BallotRowProps {
   ballot: Ballot;

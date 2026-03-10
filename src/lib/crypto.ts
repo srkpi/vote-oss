@@ -7,7 +7,7 @@ import {
   constants,
 } from 'crypto';
 import { randomBytes } from 'crypto';
-import type { Ballot } from '@/types';
+import type { Ballot } from '@/types/ballot';
 
 export function generateElectionKeyPair(): { publicKey: string; privateKey: string } {
   const { publicKey, privateKey } = generateKeyPairSync('rsa', {

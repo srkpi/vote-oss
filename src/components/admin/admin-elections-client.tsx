@@ -10,7 +10,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EmptyState, ErrorState } from '@/components/common/empty-state';
 import { Tabs } from '@/components/ui/tabs';
-import type { Election, ElectionStatus } from '@/types';
+import type { Election, ElectionStatus } from '@/types/election';
 
 interface AdminElectionsClientProps {
   elections: Election[];

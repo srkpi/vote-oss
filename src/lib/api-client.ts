@@ -1,19 +1,11 @@
-import type {
-  Election,
-  ElectionDetail,
-  BallotsResponse,
-  TallyResponse,
-  VoteToken,
-  BallotResponse,
-  Admin,
-  InviteTokenRequest,
-  InviteTokenResponse,
-  CreateElectionRequest,
-  CreateElectionResponse,
-  ApiResult,
-  ApiError,
-} from '@/types';
 import { clearAllVotes } from '@/lib/vote-storage';
+import { InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
+import { ApiError, ApiResult } from '@/types/api';
+import { BallotResponse, BallotsResponse } from '@/types/ballot';
+import { CreateElectionRequest, CreateElectionResponse, ElectionDetail } from '@/types/election';
+import { TallyResponse } from '@/types/tally';
+import { VoteToken } from '@/types/vote';
+import { Admin, Election } from '@prisma/client';
 
 const BASE_URL = '/api';
 

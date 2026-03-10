@@ -17,7 +17,7 @@ import { ToggleField } from '@/components/ui/toggle-field';
 import { TokenResult } from '@/components/admin/token-result';
 import { useToast } from '@/hooks/use-toast';
 import { createInviteToken } from '@/lib/api-client';
-import type { InviteTokenResponse } from '@/types';
+import type { InviteTokenResponse } from '@/types/admin';
 
 interface InviteAdminDialogProps {
   open: boolean;

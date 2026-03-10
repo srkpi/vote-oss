@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
 import { StatItem } from '@/components/landing/stat-item';
-import type { Election } from '@/types';
+import type { Election } from '@/types/election';
 
 const features = [
   {

@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
-import type { ElectionDetail, TallyResponse } from '@/types';
+import type { ElectionDetail } from '@/types/election';
+import type { TallyResponse } from '@/types/tally';
 
 interface ElectionPageProps {
   params: Promise<{ id: string }>;

@@ -9,7 +9,7 @@ import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { getVoteToken, submitBallot } from '@/lib/api-client';
 import { saveVote } from '@/lib/vote-storage';
-import type { ElectionDetail, ElectionChoice } from '@/types';
+import type { ElectionDetail, ElectionChoice } from '@/types/election';
 
 interface VoteFormProps {
   election: ElectionDetail;

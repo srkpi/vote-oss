@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { AdminsPageClient } from '@/components/admin/admins-page-client';
-import type { Admin } from '@/types';
+import type { Admin } from '@/types/admin';
 
 export const metadata: Metadata = {
   title: 'Адміністратори',

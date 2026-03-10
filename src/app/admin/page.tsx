@@ -4,8 +4,9 @@ import { Plus, CheckCircle2, FileText, CreditCard, Users } from 'lucide-react';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { formatDateTime } from '@/lib/utils';
-import type { Election, Admin } from '@/types';
 import { StatCard } from '@/components/admin/stat-card';
+import type { Admin } from '@/types/admin';
+import type { Election } from '@/types/election';
 
 export const metadata: Metadata = {
   title: 'Адмін панель',

@@ -1,4 +1,4 @@
-import type { VoteRecord } from '@/types';
+import type { VoteRecord } from '@/types/vote';
 
 const KEY_PREFIX = 'kpi_vote_';
 

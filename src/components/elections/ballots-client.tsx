@@ -19,13 +19,9 @@ import { BallotRow } from '@/components/elections/ballot-row';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { getVote } from '@/lib/vote-storage';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
-import type {
-  BallotsResponse,
-  ElectionDetail,
-  ElectionChoice,
-  DecryptedMap,
-  VoteRecord,
-} from '@/types';
+import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
+import type { ElectionChoice, ElectionDetail } from '@/types/election';
+import type { VoteRecord } from '@/types/vote';
 
 interface BallotsClientProps {
   initialData: BallotsResponse;

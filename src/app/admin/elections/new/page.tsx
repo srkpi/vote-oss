@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { CreateElectionForm } from '@/components/admin/create-election-form';
-import type { Admin } from '@/types';
+import type { Admin } from '@/types/admin';
 
 export const metadata: Metadata = {
   title: 'Нове голосування',

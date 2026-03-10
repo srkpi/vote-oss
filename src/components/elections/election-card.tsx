@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Lock, Calendar, User, FileText, ChevronRight } from 'lucide-react';
 import { cn, formatDate, formatDateTime, pluralize } from '@/lib/utils';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import type { Election } from '@/types';
+import type { Election } from '@/types/election';
 
 interface ElectionCardProps {
   election: Election;

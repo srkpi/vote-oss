@@ -5,7 +5,7 @@ import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
 import { ErrorState } from '@/components/common/empty-state';
-import type { Election } from '@/types';
+import type { Election } from '@/types/election';
 
 export const metadata: Metadata = {
   title: 'Голосування',

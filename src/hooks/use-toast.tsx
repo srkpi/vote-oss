@@ -2,7 +2,16 @@
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import { generateId } from '@/lib/utils';
-import type { Toast, ToastVariant } from '@/types';
+
+type ToastVariant = 'default' | 'success' | 'error' | 'warning' | 'info';
+
+interface Toast {
+  id: string;
+  title: string;
+  description?: string;
+  variant: ToastVariant;
+  duration?: number;
+}
 
 interface ToastContextValue {
   toasts: Toast[];

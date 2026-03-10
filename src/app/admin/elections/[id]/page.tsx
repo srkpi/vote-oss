@@ -9,7 +9,8 @@ import { ElectionStatusBadge } from '@/components/elections/election-status-badg
 import { ResultsChart } from '@/components/elections/result-chart';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { formatDateTime, formatDate } from '@/lib/utils';
-import type { ElectionDetail, TallyResponse } from '@/types';
+import type { ElectionDetail } from '@/types/election';
+import type { TallyResponse } from '@/types/tally';
 
 interface AdminElectionPageProps {
   params: Promise<{ id: string }>;

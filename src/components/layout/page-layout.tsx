@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { cn } from '@/lib/utils';
-import type { User } from '@/types';
+import type { User } from '@/types/auth';
 
 const hideHeaderPaths = ['/auth/login'];
 

@@ -17,7 +17,7 @@ import {
 import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { deleteAdmin } from '@/lib/api-client';
-import type { Admin } from '@/types';
+import type { Admin } from '@/types/admin';
 
 interface AdminTableProps {
   admins: Admin[];

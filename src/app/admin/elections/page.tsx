@@ -4,8 +4,8 @@ import { Plus, CheckCircle2, FileText, Clock, CreditCard } from 'lucide-react';
 import { serverFetch } from '@/lib/server-auth';
 import { Button } from '@/components/ui/button';
 import { AdminElectionsClient } from '@/components/admin/admin-elections-client';
-import type { Election } from '@/types';
 import { StatCard } from '@/components/admin/stat-card';
+import type { Election } from '@/types/election';
 
 export const metadata: Metadata = {
   title: 'Голосування',
