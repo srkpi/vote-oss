@@ -1,35 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
-
-const COOKIE_ACCESS = 'access_token';
-const COOKIE_REFRESH = 'refresh_token';
+import {
+  COOKIE_ACCESS,
+  COOKIE_REFRESH,
+  verifyAccessToken,
+  verifyRefreshToken,
+  type VerifiedPayload,
+} from '@/lib/jwt';
 
 const PROTECTED_PATHS = ['/elections', '/admin', '/join'];
 const GUEST_ONLY_PATHS = ['/auth/login'];
 const ADMIN_ONLY_PATHS = ['/admin'];
-
-interface JWTClaims {
-  sub: string;
-  full_name: string;
-  faculty: string;
-  group: string;
-  is_admin: boolean;
-  token_type: string;
-  jti: string;
-}
-
-function getSecret(envVar: string): Uint8Array {
-  return new TextEncoder().encode(process.env[envVar] ?? '');
-}
-
-async function verifyJWT(token: string, secret: Uint8Array): Promise<JWTClaims | null> {
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload as unknown as JWTClaims;
-  } catch {
-    return null;
-  }
-}
 
 function parseSetCookie(cookieStr: string): { name: string; value: string } | null {
   const semi = cookieStr.indexOf(';');
@@ -52,20 +32,21 @@ export async function proxy(req: NextRequest) {
   const accessCookie = req.cookies.get(COOKIE_ACCESS)?.value;
   const refreshCookie = req.cookies.get(COOKIE_REFRESH)?.value;
 
-  let user: JWTClaims | null = null;
+  let user: VerifiedPayload | null = null;
   let newSetCookies: string[] = [];
 
   // ── 1. Try access token (signature only — no DB round-trip) ──────────────
   if (accessCookie) {
-    const payload = await verifyJWT(accessCookie, getSecret('JWT_ACCESS_SECRET'));
-    if (payload?.token_type === 'access') user = payload;
+    const payload = await verifyAccessToken(accessCookie);
+    if (payload?.token_type === 'access') {
+      user = payload;
+    }
   }
 
   // ── 2. If no valid access token, attempt a silent refresh ─────────────────
   if (!user && refreshCookie) {
     // Pre-check signature to avoid a useless HTTP call for garbage tokens
-    const refreshPayload = await verifyJWT(refreshCookie, getSecret('JWT_REFRESH_SECRET'));
-
+    const refreshPayload = await verifyRefreshToken(refreshCookie);
     if (refreshPayload?.token_type === 'refresh') {
       try {
         const refreshRes = await fetch(new URL('/api/auth/refresh', req.nextUrl.origin).href, {
@@ -74,10 +55,7 @@ export async function proxy(req: NextRequest) {
         });
 
         if (refreshRes.ok) {
-          // The refresh endpoint validates against the DB and issues new tokens.
-          // Use the (already-verified) refresh payload as the identity for this
-          // request; new cookies will take effect for the very next request.
-          user = refreshPayload as unknown as JWTClaims;
+          user = refreshPayload;
 
           // Collect Set-Cookie strings so we can forward them to the client and
           // also patch the request cookie header for same-request API calls.
