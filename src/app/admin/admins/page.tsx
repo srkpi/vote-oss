@@ -14,9 +14,10 @@ export default async function AdminsPage() {
   const { data: admins, error } = await serverFetch<Admin[]>('/api/admins');
 
   const all = admins ?? [];
-  const canInvite = session?.manage_admins ?? false;
-  const canGrantManageAdmins = session?.manage_admins ?? false;
-  const restrictedToFaculty = session?.restricted_to_faculty ?? false;
+  const currentAdmin = all.find((a) => a.user_id === session?.userId);
+  const canInvite = currentAdmin?.manage_admins ?? false;
+  const canGrantManageAdmins = currentAdmin?.manage_admins ?? false;
+  const restrictedToFaculty = currentAdmin?.restricted_to_faculty ?? false;
 
   return (
     <div className="flex-1 overflow-auto">

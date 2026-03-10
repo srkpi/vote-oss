@@ -105,15 +105,3 @@ export function isValidDate(dateString: string): boolean {
 export function isFutureDate(dateString: string): boolean {
   return new Date(dateString) > new Date();
 }
-
-export function formatFacultyName(faculty: string): string {
-  const faculties: Record<string, string> = {
-    FICE: 'ФІОТ',
-    FEL: 'ФЕЛ',
-    FMF: 'ФМФ',
-    IASA: 'ІПСА',
-    FBT: 'ФБТ',
-    FMM: 'ФММ',
-  };
-  return faculties[faculty] || faculty;
-}

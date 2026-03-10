@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { getServerSession } from '@/lib/server-auth';
+import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { CreateElectionForm } from '@/components/admin/create-election-form';
+import type { Admin } from '@/types';
 
 export const metadata: Metadata = {
   title: 'Нове голосування',
@@ -10,8 +11,10 @@ export const metadata: Metadata = {
 
 export default async function NewElectionPage() {
   const session = await getServerSession();
-  const restrictedToFaculty = session?.restricted_to_faculty ?? false;
-  const adminFaculty = session?.faculty ?? '';
+  const currentAdmin = await serverFetch<Admin>(`/api/admins/${session!.userId}`);
+
+  const restrictedToFaculty = currentAdmin.data?.restricted_to_faculty ?? false;
+  const adminFaculty = currentAdmin.data?.faculty ?? '';
 
   return (
     <div className="flex-1 overflow-auto">
@@ -46,10 +49,7 @@ export default async function NewElectionPage() {
             className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-5 sm:p-8 animate-fade-up"
             style={{ animationDelay: '100ms', animationFillMode: 'both' }}
           >
-            <CreateElectionForm
-              restrictedToFaculty={restrictedToFaculty}
-              adminFaculty={adminFaculty}
-            />
+            <CreateElectionForm restrictedToFaculty={restrictedToFaculty ? adminFaculty : null} />
           </div>
         </div>
       </div>

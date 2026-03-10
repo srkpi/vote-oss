@@ -45,8 +45,6 @@ export async function POST(req: NextRequest) {
     group: userInfo.group,
     full_name: userInfo.fullName,
     is_admin: isAdmin,
-    restricted_to_faculty: adminRecord?.restricted_to_faculty ?? false,
-    manage_admins: adminRecord?.manage_admins ?? false,
   };
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =

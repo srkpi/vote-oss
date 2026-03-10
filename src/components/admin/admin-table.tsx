@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { cn, formatDate, formatFacultyName } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -65,7 +65,7 @@ export function AdminTable({ admins, currentUserId, deletableIds, onDelete }: Ad
         <table className="w-full">
           <thead>
             <tr className="border-b border-[var(--border-subtle)]">
-              {['Користувач', 'Факультет / Група', 'Призначено', 'Права', 'Дії'].map((h) => (
+              {['Користувач', 'Підрозділ', 'Група', 'Призначено', 'Права', 'Дії'].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
@@ -157,9 +157,10 @@ function AdminRow({ admin, isCurrentUser, canDelete, onDelete }: AdminRowProps) 
         </div>
       </td>
       <td className="px-4 py-3.5">
-        <span className="text-sm font-body text-[var(--foreground)]">
-          {formatFacultyName(admin.faculty)} · {admin.group}
-        </span>
+        <span className="text-sm font-body text-[var(--foreground)]">{admin.faculty}</span>
+      </td>
+      <td className="px-4 py-3.5">
+        <span className="text-sm font-body text-[var(--foreground)]">{admin.group}</span>
       </td>
       <td className="px-4 py-3.5">
         <div>
@@ -227,7 +228,7 @@ function AdminCard({ admin, isCurrentUser, canDelete, onDelete }: AdminRowProps)
               </p>
             </div>
             <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
-              {formatFacultyName(admin.faculty)} · {admin.group}
+              {admin.faculty} · {admin.group}
             </p>
           </div>
         </div>
@@ -259,6 +260,9 @@ function AdminCard({ admin, isCurrentUser, canDelete, onDelete }: AdminRowProps)
       <p className="text-xs text-[var(--muted-foreground)] font-body mt-2">
         Призначено: {formatDate(admin.promoted_at)}
       </p>
+      {admin.promoted_by && (
+        <p className="text-xs text-[var(--muted-foreground)] font-body">{admin.promoted_by}</p>
+      )}
     </div>
   );
 }

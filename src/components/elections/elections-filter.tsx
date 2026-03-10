@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, X, FileText } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { FileText } from 'lucide-react';
 import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
 import { EmptyState } from '@/components/common/empty-state';
+import { Tabs } from '@/components/ui/tabs';
+import { SearchInput } from '@/components/ui/search-input';
 import type { Election, ElectionStatus } from '@/types';
 
 interface ElectionsFilterProps {
@@ -62,68 +63,9 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
   return (
     <div className="space-y-6 animate-fade-up">
       {/* Tabs + Search bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-white border border-[var(--border-subtle)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xs)] overflow-x-auto shrink-0">
-          {TABS.map((tab) => {
-            const count = tabCount(tab.key);
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] text-sm font-medium font-body',
-                  'transition-all duration-150 whitespace-nowrap',
-                  isActive
-                    ? 'bg-[var(--kpi-navy)] text-white shadow-[var(--shadow-sm)]'
-                    : 'text-[var(--muted-foreground)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
-                )}
-              >
-                {tab.label}
-                <span
-                  className={cn(
-                    'inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-semibold px-1',
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[var(--surface)] text-[var(--muted-foreground)]',
-                  )}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search */}
-        <div className="relative flex-1 max-w-sm">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
-            <Search className="w-4 h-4" />
-          </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Пошук голосувань…"
-            className={cn(
-              'w-full h-9 pl-9 pr-3 text-sm font-body',
-              'bg-white border border-[var(--border-color)] rounded-[var(--radius-lg)]',
-              'placeholder:text-[var(--subtle)]',
-              'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-              'transition-colors duration-150',
-              'shadow-[var(--shadow-xs)]',
-            )}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
+        <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} tabCount={tabCount} />
+        <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
       </div>
 
       {/* Results count */}

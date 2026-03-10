@@ -10,8 +10,6 @@ export interface TokenPayload {
   group: string;
   full_name: string;
   is_admin: boolean;
-  restricted_to_faculty: boolean;
-  manage_admins: boolean;
 }
 
 export interface VerifiedPayload extends TokenPayload {
@@ -66,8 +64,6 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
     group: payload['group'] as string,
     full_name: payload['full_name'] as string,
     is_admin: (payload['is_admin'] as boolean) ?? false,
-    restricted_to_faculty: (payload['restricted_to_faculty'] as boolean) ?? false,
-    manage_admins: (payload['manage_admins'] as boolean) ?? false,
     jti: payload.jti as string,
     token_type: 'access',
   };
@@ -83,8 +79,6 @@ export async function verifyRefreshToken(token: string): Promise<VerifiedPayload
     group: payload['group'] as string,
     full_name: payload['full_name'] as string,
     is_admin: (payload['is_admin'] as boolean) ?? false,
-    restricted_to_faculty: (payload['restricted_to_faculty'] as boolean) ?? false,
-    manage_admins: (payload['manage_admins'] as boolean) ?? false,
     jti: payload.jti as string,
     token_type: 'refresh',
   };

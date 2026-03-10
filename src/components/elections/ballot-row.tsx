@@ -34,7 +34,7 @@ export function BallotRow({ ballot, index, isExpanded, onToggle, decryption }: B
           isAnomalous && 'hover:bg-[var(--error-bg)]/80',
         )}
       >
-        <span className="w-8 text-xs font-body text-[var(--muted-foreground)] shrink-0 text-right tabular-nums">
+        <span className="w-4 text-xs font-body text-[var(--muted-foreground)] shrink-0 text-right tabular-nums">
           {index}
         </span>
 
@@ -92,7 +92,7 @@ export function BallotRow({ ballot, index, isExpanded, onToggle, decryption }: B
 
       {isExpanded && (
         <div className="px-5 pb-4 border-t border-[var(--border-subtle)] bg-[var(--surface)]/50">
-          <div className="pt-4 space-y-4 ml-[52px]">
+          <div className="pt-4 space-y-4 md:ml-[52px]">
             {decryption && (
               <div>
                 <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-1.5">

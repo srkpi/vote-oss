@@ -2,13 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Search, X, FileText, Play, StopCircle } from 'lucide-react';
-import { cn, formatDateTime } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { FileText, Play, StopCircle } from 'lucide-react';
+import { formatDateTime } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { SearchInput } from '@/components/ui/search-input';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EmptyState, ErrorState } from '@/components/common/empty-state';
+import { Tabs } from '@/components/ui/tabs';
 import type { Election, ElectionStatus } from '@/types';
-import { useRouter } from 'next/navigation';
 
 interface AdminElectionsClientProps {
   elections: Election[];
@@ -71,63 +73,13 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
     >
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex items-center gap-1 p-1 bg-white border border-[var(--border-subtle)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xs)] overflow-x-auto shrink-0">
-          {TABS.map((tab) => {
-            const count = counts[tab.key];
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] text-sm font-medium font-body whitespace-nowrap transition-all duration-150',
-                  isActive
-                    ? 'bg-[var(--kpi-navy)] text-white shadow-[var(--shadow-sm)]'
-                    : 'text-[var(--muted-foreground)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
-                )}
-              >
-                {tab.label}
-                <span
-                  className={cn(
-                    'inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-semibold px-1',
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-[var(--surface)] text-[var(--muted-foreground)]',
-                  )}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="relative flex-1 max-w-sm">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
-            <Search className="w-4 h-4" />
-          </div>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Пошук голосувань…"
-            className={cn(
-              'w-full h-9 pl-9 pr-9 text-sm font-body',
-              'bg-white border border-[var(--border-color)] rounded-[var(--radius-lg)]',
-              'placeholder:text-[var(--subtle)]',
-              'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-              'transition-colors duration-150 shadow-[var(--shadow-xs)]',
-            )}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        <Tabs
+          tabs={TABS}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabCount={(key) => counts[key]}
+        />
+        <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
 
         {(search || activeTab !== 'all') && filtered.length > 0 && (
           <p className="text-xs text-[var(--muted-foreground)] font-body shrink-0">
@@ -141,15 +93,8 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
           <EmptyState
             icon={<FileText className="w-8 h-8" />}
-            title={search ? 'Голосувань не знайдено' : 'Голосувань поки немає'}
-            description={
-              search
-                ? `За запитом «${search}» нічого не знайдено`
-                : 'Створіть перше голосування для вашого факультету'
-            }
-            action={
-              !search ? { label: 'Створити голосування', href: '/admin/elections/new' } : undefined
-            }
+            title={search ? 'Голосувань не знайдено' : 'Голосувань немає'}
+            description={search ? `За запитом «${search}» нічого не знайдено` : undefined}
           />
         </div>
       ) : (

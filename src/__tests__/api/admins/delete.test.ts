@@ -14,9 +14,6 @@ jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 
 import { DELETE } from '@/app/api/admins/[userId]/route';
 
-/**
- * Mocks requireAdmin internals for the requesting admin.
- */
 async function adminReq(adminRecord = ADMIN_RECORD) {
   const { access } = await makeTokenPair(ADMIN_PAYLOAD);
   prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);

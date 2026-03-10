@@ -59,8 +59,11 @@ export default async function ElectionsPage() {
               </div>
 
               {session?.isAdmin && (
-                <Button variant="accent" size="sm" asChild icon={<Plus className="w-3.5 h-3.5" />}>
-                  <Link href="/admin/elections/new">Нове голосування</Link>
+                <Button variant="accent" size="sm" asChild>
+                  <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5" />
+                    <span className="inline">Нове голосування</span>
+                  </Link>
                 </Button>
               )}
             </div>

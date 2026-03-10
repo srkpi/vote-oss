@@ -1,13 +1,9 @@
-// ==================== AUTH TYPES ====================
-
 export interface User {
   userId: string;
   fullName: string;
   faculty: string;
   group: string;
   isAdmin: boolean;
-  restricted_to_faculty: boolean;
-  manage_admins: boolean;
 }
 
 // ==================== ELECTION TYPES ====================

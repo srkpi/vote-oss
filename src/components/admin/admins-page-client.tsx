@@ -84,7 +84,7 @@ export function AdminsPageClient({
               onClick={() => setInviteOpen(true)}
               icon={<UserPlus className="w-3.5 h-3.5" />}
             >
-              Запросити адміна
+              <span className="hidden sm:inline">Запросити адміна</span>
             </Button>
           </div>
         )}
@@ -101,7 +101,7 @@ export function AdminsPageClient({
 
       {!error && currentUser && (
         <div className="p-4 sm:p-6 space-y-5">
-          <div className="flex items-center gap-4 text-sm font-body text-[var(--muted-foreground)] px-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm font-body text-[var(--muted-foreground)] px-1">
             <span>
               <strong className="text-[var(--foreground)]">{admins.length}</strong> адміністратор
               {admins.length === 1 ? '' : admins.length < 5 ? 'и' : 'ів'}

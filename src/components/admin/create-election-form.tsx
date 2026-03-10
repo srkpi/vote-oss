@@ -11,14 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 import { createElection } from '@/lib/api-client';
 
 interface CreateElectionFormProps {
-  restrictedToFaculty?: boolean;
-  adminFaculty?: string;
+  restrictedToFaculty: string | null;
 }
 
-export function CreateElectionForm({
-  restrictedToFaculty = false,
-  adminFaculty = '',
-}: CreateElectionFormProps) {
+export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectionFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -29,7 +25,7 @@ export function CreateElectionForm({
     title: '',
     opensAt: '',
     closesAt: '',
-    restrictedToFaculty: restrictedToFaculty ? adminFaculty : '',
+    restrictedToFaculty: restrictedToFaculty ?? '',
     restrictedToGroup: '',
   });
 
@@ -249,27 +245,27 @@ export function CreateElectionForm({
           Обмеження доступу
         </h2>
         <p className="text-sm text-[var(--muted-foreground)] font-body mb-4">
-          {restrictedToFaculty
-            ? 'Ваш акаунт обмежений одним факультетом — поле факультету заблоковано.'
-            : 'Залиште порожнім для всіх студентів'}
+          Залиште порожнім для всіх студентів
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <FormField
-            label="Обмежити факультетом"
+            label="Обмежити підрозділом"
             htmlFor="faculty"
-            hint={restrictedToFaculty ? undefined : 'Наприклад: FICE, FEL, FMF'}
+            hint={
+              restrictedToFaculty
+                ? 'Акаунт обмежений одним підрозділом'
+                : 'Наприклад: FICE, FEL, FMF'
+            }
           >
             <div className="relative">
               <Input
                 id="faculty"
                 value={form.restrictedToFaculty}
-                onChange={(e) => {
-                  if (!restrictedToFaculty) updateForm('restrictedToFaculty', e.target.value);
-                }}
-                placeholder="Код факультету"
+                onChange={(e) => updateForm('restrictedToFaculty', e.target.value)}
+                placeholder="Факультет/інститут"
                 maxLength={20}
-                readOnly={restrictedToFaculty}
+                readOnly={!!restrictedToFaculty}
                 className={cn(restrictedToFaculty && 'bg-[var(--surface)] cursor-not-allowed pr-9')}
               />
               {restrictedToFaculty && (

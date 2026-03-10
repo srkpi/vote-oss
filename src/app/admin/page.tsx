@@ -46,10 +46,10 @@ export default async function AdminDashboardPage() {
             className="flex items-center gap-3 animate-fade-up shrink-0"
             style={{ animationDelay: '100ms' }}
           >
-            <Button variant="accent" size="sm" asChild icon={<Plus className="w-3.5 h-3.5" />}>
-              <Link href="/admin/elections/new">
+            <Button variant="accent" size="sm" asChild>
+              <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
+                <Plus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Нове голосування</span>
-                <span className="sm:hidden">Нове</span>
               </Link>
             </Button>
           </div>

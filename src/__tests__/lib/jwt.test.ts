@@ -61,8 +61,6 @@ describe('jwt', () => {
       expect(payload.group).toBe(BASE_PAYLOAD.group);
       expect(payload.full_name).toBe(BASE_PAYLOAD.full_name);
       expect(payload.is_admin).toBe(BASE_PAYLOAD.is_admin);
-      expect(payload.restricted_to_faculty).toBe(BASE_PAYLOAD.restricted_to_faculty);
-      expect(payload.manage_admins).toBe(BASE_PAYLOAD.manage_admins);
       expect(payload.token_type).toBe('access');
     });
 

@@ -3,8 +3,6 @@
 import { useState, useMemo, useRef } from 'react';
 import {
   FileText,
-  Search,
-  X,
   CheckCircle,
   XCircle,
   ChevronLeft,
@@ -14,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { SearchInput } from '@/components/ui/search-input';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { BallotRow } from '@/components/elections/ballot-row';
 import type { BallotsResponse, ElectionDetail, ElectionChoice, DecryptedMap } from '@/types';
@@ -155,36 +154,13 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           </span>
         </div>
 
-        <div className="relative flex-1 max-w-md">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
-            <Search className="w-4 h-4" />
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder={
-              decryptionDone
-                ? 'Пошук за хешем або варіантом відповіді…'
-                : 'Пошук за хешем бюлетеня…'
-            }
-            className={cn(
-              'w-full h-9 pl-9 pr-9 text-sm font-mono',
-              'bg-white border border-[var(--border-color)] rounded-[var(--radius-lg)]',
-              'placeholder:text-[var(--subtle)] placeholder:font-body',
-              'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-              'transition-colors duration-150 shadow-[var(--shadow-xs)]',
-            )}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => handleSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={handleSearch}
+          placeholder={
+            decryptionDone ? 'Пошук за хешем або варіантом відповіді…' : 'Пошук за хешем бюлетеня…'
+          }
+        />
       </div>
 
       {trimmedQuery && (
