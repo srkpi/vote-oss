@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, requireAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+
+import { requireAdmin, requireAuth } from '@/lib/auth';
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/elections
 // Returns elections visible to the requesting user (respects faculty/group restrictions)

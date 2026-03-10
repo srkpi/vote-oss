@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveTicket } from '@/lib/kpi-id';
+
+import { Errors } from '@/lib/errors';
 import {
-  signAccessToken,
-  signRefreshToken,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
+  signAccessToken,
+  signRefreshToken,
   tokenCookieOptions,
 } from '@/lib/jwt';
+import { resolveTicket } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
-import { Errors } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   let body: { ticketId?: string };
@@ -35,12 +36,16 @@ export async function POST(req: NextRequest) {
     return Errors.unauthorized('Invalid or expired ticket');
   }
 
+  const adminRecord = await prisma.admin.findUnique({
+    where: { user_id: userInfo.userId },
+  });
+  const isAdmin = !!adminRecord;
   const tokenPayload = {
     sub: userInfo.userId,
     faculty: userInfo.faculty,
     group: userInfo.group,
     full_name: userInfo.fullName,
-    is_admin: userInfo.isAdmin,
+    is_admin: isAdmin,
   };
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest) {
       fullName: userInfo.fullName,
       faculty: userInfo.faculty,
       group: userInfo.group,
-      isAdmin: userInfo.isAdmin,
+      isAdmin,
     },
     { status: 200 },
   );

@@ -1,20 +1,23 @@
 import * as allure from 'allure-js-commons';
+
 import {
-  signAccessToken,
-  signRefreshToken,
-  verifyAccessToken,
-  verifyRefreshToken,
-  tokenCookieOptions,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
+  signAccessToken,
+  signRefreshToken,
+  tokenCookieOptions,
+  verifyAccessToken,
+  verifyRefreshToken,
 } from '@/lib/jwt';
 
 const BASE_PAYLOAD = {
   sub: 'user-001',
-  faculty: 'FICS',
+  faculty: 'FICE',
   group: 'KV-91',
   full_name: 'Ivan Petrenko',
   is_admin: false,
+  restricted_to_faculty: false,
+  manage_admins: false,
 };
 
 describe('jwt', () => {
@@ -64,7 +67,7 @@ describe('jwt', () => {
 
     it('rejects a refresh token passed as access token', async () => {
       const { token } = await signRefreshToken(BASE_PAYLOAD);
-      await expect(verifyAccessToken(token)).rejects.toThrow('Invalid token type');
+      await expect(verifyAccessToken(token)).rejects.toThrow('signature verification failed');
     });
 
     it('rejects a malformed token', async () => {
@@ -95,7 +98,7 @@ describe('jwt', () => {
 
     it('rejects an access token passed as refresh token', async () => {
       const { token } = await signAccessToken(BASE_PAYLOAD);
-      await expect(verifyRefreshToken(token)).rejects.toThrow('Invalid token type');
+      await expect(verifyRefreshToken(token)).rejects.toThrow('signature verification failed');
     });
   });
 

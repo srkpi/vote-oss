@@ -1,13 +1,15 @@
 import * as allure from 'allure-js-commons';
+
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
+
+import { JWT_TOKEN_RECORD, makeTokenPair, USER_PAYLOAD } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import {
-  makeRequest,
-  makeRefreshRequest,
-  parseJson,
   getResponseCookie,
+  makeRefreshRequest,
+  makeRequest,
+  parseJson,
 } from '../../helpers/request';
-import { makeTokenPair, USER_PAYLOAD, JWT_TOKEN_RECORD } from '../../helpers/fixtures';
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 

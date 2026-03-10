@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { generateInviteToken, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);

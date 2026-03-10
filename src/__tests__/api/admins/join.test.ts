@@ -1,13 +1,15 @@
 import * as allure from 'allure-js-commons';
-import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { makeRequest, makeAuthRequest, parseJson } from '../../helpers/request';
+
+import { generateInviteToken, hashToken } from '@/lib/crypto';
+
 import {
-  makeTokenPair,
-  USER_PAYLOAD,
   ADMIN_RECORD,
   JWT_TOKEN_RECORD,
+  makeTokenPair,
+  USER_PAYLOAD,
 } from '../../helpers/fixtures';
-import { generateInviteToken, hashToken } from '@/lib/crypto';
+import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
+import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 

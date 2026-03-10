@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { Errors } from '@/lib/errors';
+import { prisma } from '@/lib/prisma';
 
 async function isAncestor(ancestorId: string, targetUserId: string): Promise<boolean> {
   const visited = new Set<string>();
@@ -22,6 +23,24 @@ async function isAncestor(ancestorId: string, targetUserId: string): Promise<boo
   }
 
   return false;
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+  const auth = await requireAdmin(req);
+  if (!auth.ok) {
+    return auth.status === 401 ? Errors.unauthorized(auth.error) : Errors.forbidden(auth.error);
+  }
+
+  const { userId } = await params;
+  if (!userId) return Errors.badRequest('userId is required');
+
+  const admin = await prisma.admin.findUnique({
+    where: { user_id: userId },
+  });
+
+  if (!admin) return Errors.notFound('Admin not found');
+
+  return NextResponse.json(admin);
 }
 
 export async function DELETE(

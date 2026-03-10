@@ -1,65 +1,209 @@
-import Image from 'next/image';
+import {
+  ChevronRight,
+  Eye,
+  LayoutDashboard,
+  Link2,
+  Lock,
+  ShieldCheck,
+  UserCheck,
+} from 'lucide-react';
+import Link from 'next/link';
 
-export default function Home() {
+import { ElectionCard } from '@/components/elections/election-card';
+import { FeatureCard } from '@/components/landing/feature-card';
+import { StatItem } from '@/components/landing/stat-item';
+import { Button } from '@/components/ui/button';
+import { getServerSession } from '@/lib/server-auth';
+import { serverFetch } from '@/lib/server-auth';
+import type { Election } from '@/types/election';
+
+const features = [
+  {
+    icon: <Lock className="w-6 h-6" />,
+    title: 'RSA-шифрування',
+    description: "Кожен бюлетень зашифровано. Ніхто не може пов'язати голос із виборцем.",
+  },
+  {
+    icon: <Link2 className="w-6 h-6" />,
+    title: 'Ланцюжок бюлетенів',
+    description: "Кожен голос хешується та пов'язується з попереднім — фальсифікація неможлива.",
+  },
+  {
+    icon: <Eye className="w-6 h-6" />,
+    title: 'Публічна перевірка',
+    description: 'Будь-хто може перевірити свій бюлетень за хешем без розкриття змісту голосу.',
+  },
+  {
+    icon: <ShieldCheck className="w-6 h-6" />,
+    title: 'Авторизація КПІ ID',
+    description:
+      'Вхід через офіційну систему ідентифікації КПІ гарантує, що голосує справжній студент.',
+  },
+  {
+    icon: <UserCheck className="w-6 h-6" />,
+    title: 'Анонімність',
+    description: 'Cистема знає, що ви проголосували, але не знає ваш вибір.',
+  },
+  {
+    icon: <LayoutDashboard className="w-6 h-6" />,
+    title: 'Адмін-панель',
+    description: 'Зручний інтерфейс для організаторів виборів з гнучкими налаштуваннями доступу.',
+  },
+];
+
+const stats = [
+  { value: '100%', label: 'Анонімність' },
+  { value: 'RSA-2048', label: 'Шифрування' },
+  { value: '0', label: 'Знань про вибір' },
+  { value: '24/7', label: 'Доступність' },
+];
+
+export default async function HomePage() {
+  const session = await getServerSession();
+
+  let featuredElections: Election[] = [];
+  if (session) {
+    const { data } = await serverFetch<Election[]>('/api/elections');
+    featuredElections = (data || []).filter((e) => e.status === 'open').slice(0, 3);
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 navy-gradient-subtle" />
+        <div className="absolute inset-0 pattern-grid opacity-10" />
+
+        {/* Decorative circles */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[var(--kpi-blue-light)]/20 blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-[var(--kpi-orange)]/15 blur-3xl" />
+
+        <div className="container relative py-24 md:py-32">
+          <div className="max-w-3xl">
+            {/* Pill badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs font-body uppercase tracking-widest mb-6 animate-fade-down">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--kpi-orange)] animate-pulse" />
+              КПІ ім. Ігоря Сікорського
+            </div>
+
+            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[1.05] mb-6 animate-fade-up">
+              Голос кожного{' '}
+              <span className="relative">
+                <span
+                  className="relative z-10 text-transparent bg-clip-text"
+                  style={{ backgroundImage: 'linear-gradient(90deg, #f07d00, #fbbf24)' }}
+                >
+                  важливий
+                </span>
+                <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-[var(--kpi-orange)] to-amber-400 rounded-full opacity-60" />
+              </span>
+            </h1>
+
+            <p
+              className="font-body text-lg md:text-xl text-white/75 leading-relaxed mb-10 max-w-xl animate-fade-up"
+              style={{ animationDelay: '100ms' }}
             >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Безпечна, прозора та анонімна система електронного голосування для органів
+              студентського самоврядування.
+            </p>
+
+            <div
+              className="flex flex-wrap gap-4 animate-fade-up"
+              style={{ animationDelay: '200ms' }}
             >
-              Learning
-            </a>{' '}
-            center.
-          </p>
+              {session ? (
+                <Button variant="accent" size="xl" asChild>
+                  <Link href="/elections">
+                    Переглянути голосування
+                    <ChevronRight className="w-5 h-5 ml-1" />
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="accent" size="xl" asChild>
+                    <Link href="/auth/login">
+                      Увійти через КПІ ID
+                      <ChevronRight className="w-5 h-5 ml-1" />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="xl"
+                    className="text-white border-white/40 hover:border-white hover:bg-white hover:text-[var(--kpi-navy)]"
+                    asChild
+                  >
+                    <Link href="/elections">Переглянути виборчий список</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        {/* Bottom wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M0 48L1440 48L1440 0C1440 0 1152 36 720 36C288 36 0 0 0 0L0 48Z"
+              fill="white"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </svg>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-20 bg-white">
+        <div className="container">
+          <h2 className="text-center mb-14 animate-fade-up font-display text-4xl font-bold text-[var(--foreground)]">
+            Чому КПІ Голос?
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+            {features.map((feat) => (
+              <FeatureCard key={feat.title} {...feat} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Active elections */}
+      {session && featuredElections.length > 0 && (
+        <section className="py-20 bg-[var(--surface)]">
+          <div className="container">
+            <div className="flex items-center justify-between mb-10 animate-fade-up">
+              <div>
+                <h2 className="font-display text-3xl font-bold text-[var(--foreground)]">
+                  Активні голосування
+                </h2>
+                <p className="text-[var(--muted-foreground)] font-body mt-1">
+                  Доступні зараз для вашого факультету
+                </p>
+              </div>
+              <Button variant="secondary" asChild>
+                <Link href="/elections">Усі голосування</Link>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredElections.map((election, index) => (
+                <ElectionCard key={election.id} election={election} index={index} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Stats */}
+      <section className="py-20 bg-[var(--kpi-navy)]">
+        <div className="container">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 stagger-children">
+            {stats.map((stat) => (
+              <StatItem key={stat.label} {...stat} />
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

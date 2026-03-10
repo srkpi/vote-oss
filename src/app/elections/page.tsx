@@ -1,0 +1,90 @@
+import { Plus } from 'lucide-react';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+
+import { ErrorState } from '@/components/common/empty-state';
+import { ElectionsFilter } from '@/components/elections/elections-filter';
+import { Button } from '@/components/ui/button';
+import { getServerSession, serverFetch } from '@/lib/server-auth';
+import type { Election } from '@/types/election';
+
+export const metadata: Metadata = {
+  title: 'Голосування',
+  description: 'Список всіх доступних голосувань',
+};
+
+export default async function ElectionsPage() {
+  const session = await getServerSession();
+  const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
+
+  const open = (elections ?? []).filter((e) => e.status === 'open').length;
+  const upcoming = (elections ?? []).filter((e) => e.status === 'upcoming').length;
+  const closed = (elections ?? []).filter((e) => e.status === 'closed').length;
+
+  return (
+    <div className="min-h-screen bg-[var(--surface)]">
+      {/* Page header */}
+      <div className="bg-white border-b border-[var(--border-subtle)]">
+        <div className="container py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="animate-fade-up">
+              <h1 className="font-display text-3xl font-bold text-[var(--foreground)] leading-tight">
+                Голосування
+              </h1>
+              <p className="text-[var(--muted-foreground)] font-body mt-1">
+                Всі доступні вам голосування в одному місці
+              </p>
+            </div>
+
+            <div
+              className="flex items-center gap-3 animate-fade-up"
+              style={{ animationDelay: '100ms' }}
+            >
+              <div className="hidden sm:flex items-center gap-2">
+                {open > 0 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--success-bg)] border border-[var(--success)]/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+                    <span className="text-xs font-medium text-[var(--success)] font-body">
+                      {open} активних
+                    </span>
+                  </div>
+                )}
+                {upcoming > 0 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--warning-bg)] border border-[var(--kpi-orange)]/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--kpi-orange)]" />
+                    <span className="text-xs font-medium text-[var(--kpi-orange)] font-body">
+                      {upcoming} майбутніх
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {session?.isAdmin && (
+                <Button variant="accent" size="sm" asChild>
+                  <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
+                    <Plus className="w-3.5 h-3.5" />
+                    <span className="inline">Нове голосування</span>
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="container py-8">
+        {error ? (
+          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden">
+            <ErrorState title="Не вдалося завантажити голосування" description={error} />
+          </div>
+        ) : (
+          <ElectionsFilter
+            elections={elections ?? []}
+            counts={{ open, upcoming, closed, total: (elections ?? []).length }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

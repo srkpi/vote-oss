@@ -41,7 +41,7 @@ model AdminInviteToken {
   valid_due             DateTime
   created_at            DateTime @default(now())
   created_by            String
-  creator               Admin    @relation(fields: [created_by], references: [user_id])
+  creator               Admin    @relation(fields: [created_by], references: [user_id], onDelete: Cascade)
 
   @@map("admin_invite_tokens")
 }
@@ -59,11 +59,11 @@ model Election {
   public_key            String   @db.Text
   private_key           String   @db.Text
 
-  choices               ElectionChoice[]
-  issued_tokens         IssuedToken[]
-  ballots               Ballot[]
-  tallies               ElectionTally[]
-  nullifiers            UsedTokenNullifier[]
+  choices       ElectionChoice[]
+  issued_tokens IssuedToken[]
+  ballots       Ballot[]
+  tallies       ElectionTally[]
+  nullifiers    UsedTokenNullifier[]
 
   @@map("elections")
 }
@@ -75,7 +75,7 @@ model ElectionChoice {
   choice      String
   position    Int
 
-  tallies     ElectionTally[]
+  tallies ElectionTally[]
 
   @@map("election_choices")
 }

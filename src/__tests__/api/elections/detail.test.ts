@@ -1,13 +1,14 @@
 import * as allure from 'allure-js-commons';
-import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { makeRequest, makeAuthRequest, parseJson } from '../../helpers/request';
+
 import {
-  makeTokenPair,
-  USER_PAYLOAD,
-  OTHER_FACULTY_PAYLOAD,
   JWT_TOKEN_RECORD,
   makeElection,
+  makeTokenPair,
+  OTHER_FACULTY_PAYLOAD,
+  USER_PAYLOAD,
 } from '../../helpers/fixtures';
+import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
+import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 
@@ -49,7 +50,7 @@ describe('GET /api/elections/[id]', () => {
 
   it('returns 403 when user faculty does not match restriction', async () => {
     const req = await authRequest(OTHER_FACULTY_PAYLOAD);
-    const election = makeElection({ restricted_to_faculty: 'FICS' });
+    const election = makeElection({ restricted_to_faculty: 'FICE' });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(403);

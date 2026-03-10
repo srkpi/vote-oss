@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireRefreshAuth } from '@/lib/auth';
+import { Errors } from '@/lib/errors';
 import {
-  signAccessToken,
-  signRefreshToken,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
+  signAccessToken,
+  signRefreshToken,
   tokenCookieOptions,
 } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
-import { Errors } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   const auth = await requireRefreshAuth(req);
@@ -16,17 +17,24 @@ export async function POST(req: NextRequest) {
 
   const { user } = auth;
 
-  // Revoke old token pair
   await prisma.jwtToken.deleteMany({
     where: { refresh_jti: user.jti },
   });
+
+  const adminRecord = await prisma.admin.findUnique({
+    where: { user_id: user.sub },
+  });
+
+  const isAdmin = !!adminRecord;
 
   const tokenPayload = {
     sub: user.sub,
     faculty: user.faculty,
     group: user.group,
     full_name: user.full_name,
-    is_admin: user.is_admin,
+    is_admin: isAdmin,
+    restricted_to_faculty: adminRecord?.restricted_to_faculty ?? false,
+    manage_admins: adminRecord?.manage_admins ?? false,
   };
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
@@ -40,7 +48,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const response = NextResponse.json({ ok: true }, { status: 200 });
+  const response = NextResponse.json({ ok: true, isAdmin }, { status: 200 });
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));
 
