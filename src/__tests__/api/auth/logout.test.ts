@@ -4,8 +4,8 @@ import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
 
 import { makeTokenPair, USER_PAYLOAD } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { tokenStoreMock, resetTokenStoreMock } from '../../helpers/token-store-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);

@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -8,7 +9,6 @@ import {
   RESTRICTED_ADMIN_RECORD,
   USER_PAYLOAD,
 } from '../../helpers/fixtures';
-import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
