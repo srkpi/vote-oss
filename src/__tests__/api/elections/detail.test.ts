@@ -9,8 +9,10 @@ import {
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { GET } from '@/app/api/elections/[id]/route';
 
@@ -25,6 +27,7 @@ async function authRequest(payload = USER_PAYLOAD) {
 describe('GET /api/elections/[id]', () => {
   beforeEach(() => {
     resetPrismaMock();
+    resetTokenStoreMock();
     allure.feature('Elections');
     allure.story('Election Detail');
   });

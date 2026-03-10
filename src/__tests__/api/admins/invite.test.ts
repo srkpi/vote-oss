@@ -10,8 +10,10 @@ import {
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { POST } from '@/app/api/admins/invite/route';
 
@@ -27,6 +29,7 @@ async function adminReq(body: object, adminRecord: object = ADMIN_RECORD) {
 describe('POST /api/admins/invite', () => {
   beforeEach(() => {
     resetPrismaMock();
+    resetTokenStoreMock();
     allure.feature('Admins');
     allure.story('Create Invite Token');
   });

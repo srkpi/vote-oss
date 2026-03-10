@@ -8,6 +8,10 @@ import {
 } from '@/lib/crypto';
 import { signAccessToken, signRefreshToken } from '@/lib/jwt';
 
+// ---------------------------------------------------------------------------
+// JWT payload fixtures
+// ---------------------------------------------------------------------------
+
 export const USER_PAYLOAD = {
   sub: 'user-001',
   faculty: 'FICE',
@@ -38,6 +42,10 @@ export const OTHER_FACULTY_PAYLOAD = {
   manage_admins: false,
 };
 
+// ---------------------------------------------------------------------------
+// Token helpers
+// ---------------------------------------------------------------------------
+
 /** Returns signed access + refresh tokens for the given payload. */
 export async function makeTokenPair(payload = USER_PAYLOAD) {
   const [access, refresh] = await Promise.all([
@@ -47,12 +55,16 @@ export async function makeTokenPair(payload = USER_PAYLOAD) {
   return { access, refresh };
 }
 
+// ---------------------------------------------------------------------------
+// Admin DB fixtures
+// ---------------------------------------------------------------------------
+
 export const ADMIN_RECORD = {
   user_id: 'superadmin-001',
   full_name: 'Super Admin User',
   group: 'KV-11',
   faculty: 'FICE',
-  promoted_by: null,
+  promoted_by: null as string | null,
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
   restricted_to_faculty: false,
@@ -68,6 +80,21 @@ export const RESTRICTED_ADMIN_RECORD = {
   manage_admins: true,
   restricted_to_faculty: true,
 };
+
+// ---------------------------------------------------------------------------
+// jwt_tokens DB record fixture
+// Used in token-store DB-fallback tests and as a reference shape.
+// ---------------------------------------------------------------------------
+
+export const JWT_TOKEN_RECORD = {
+  access_jti: 'access-jti-stub',
+  refresh_jti: 'refresh-jti-stub',
+  created_at: new Date(),
+};
+
+// ---------------------------------------------------------------------------
+// Election helpers
+// ---------------------------------------------------------------------------
 
 export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBase>> = {}) {
   const keys = generateElectionKeyPair();
@@ -97,7 +124,7 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
   };
 }
 
-/** Encrypt a choice ID with the election's public key (OAEP/SHA-256). */
+/** Encrypt a choice ID with the election's RSA public key (OAEP/SHA-256). */
 export function encryptChoice(publicKeyPem: string, choiceId: number): string {
   const buf = publicEncrypt(
     { key: publicKeyPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
@@ -106,7 +133,7 @@ export function encryptChoice(publicKeyPem: string, choiceId: number): string {
   return buf.toString('base64');
 }
 
-/** Build a valid vote submission payload for a given election. */
+/** Build a valid vote submission payload for a given election + choice. */
 export function makeVoteBallot(election: ReturnType<typeof makeElection>, choiceId = 10) {
   const { token } = generateVoteToken(election.id);
   const signature = signVoteToken(election.private_key, token);
@@ -114,9 +141,3 @@ export function makeVoteBallot(election: ReturnType<typeof makeElection>, choice
   const encryptedBallot = encryptChoice(election.public_key, choiceId);
   return { token, signature, nullifier, encryptedBallot };
 }
-
-export const JWT_TOKEN_RECORD = {
-  access_jti: 'access-jti-stub',
-  refresh_jti: 'refresh-jti-stub',
-  created_at: new Date(),
-};

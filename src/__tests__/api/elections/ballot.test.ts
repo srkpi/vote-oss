@@ -2,6 +2,7 @@ import * as allure from 'allure-js-commons';
 
 import { computeNullifier, generateVoteToken, signVoteToken } from '@/lib/crypto';
 
+import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
 import {
   encryptChoice,
   JWT_TOKEN_RECORD,
@@ -12,8 +13,11 @@ import {
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+jest.mock('@/lib/token-store', () => tokenStoreMock);
+jest.mock('@/lib/cache', () => cacheMock);
 
 import { POST } from '@/app/api/elections/[id]/ballot/route';
 
@@ -28,6 +32,8 @@ async function authReq(body: object) {
 describe('POST /api/elections/[id]/ballot', () => {
   beforeEach(() => {
     resetPrismaMock();
+    resetTokenStoreMock();
+    resetCacheMock();
     allure.feature('Elections');
     allure.story('Submit Ballot');
   });

@@ -16,8 +16,6 @@ const BASE_PAYLOAD = {
   group: 'KV-91',
   full_name: 'Ivan Petrenko',
   is_admin: false,
-  restricted_to_faculty: false,
-  manage_admins: false,
 };
 
 describe('jwt', () => {
@@ -34,7 +32,7 @@ describe('jwt', () => {
       expect(jti).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
     });
 
-    it('produces unique jti on each call', async () => {
+    it('produces a unique jti on each call', async () => {
       const a = await signAccessToken(BASE_PAYLOAD);
       const b = await signAccessToken(BASE_PAYLOAD);
       expect(a.jti).not.toBe(b.jti);
@@ -65,7 +63,23 @@ describe('jwt', () => {
       expect(payload.token_type).toBe('access');
     });
 
-    it('rejects a refresh token passed as access token', async () => {
+    it('includes a numeric iat claim', async () => {
+      const before = Math.floor(Date.now() / 1_000);
+      const { token } = await signAccessToken(BASE_PAYLOAD);
+      const after = Math.floor(Date.now() / 1_000) + 1;
+      const payload = await verifyAccessToken(token);
+      expect(typeof payload.iat).toBe('number');
+      expect(payload.iat).toBeGreaterThanOrEqual(before);
+      expect(payload.iat).toBeLessThanOrEqual(after);
+    });
+
+    it('includes the jti from the signing result', async () => {
+      const { token, jti } = await signAccessToken(BASE_PAYLOAD);
+      const payload = await verifyAccessToken(token);
+      expect(payload.jti).toBe(jti);
+    });
+
+    it('rejects a refresh token passed as an access token', async () => {
       const { token } = await signRefreshToken(BASE_PAYLOAD);
       await expect(verifyAccessToken(token)).rejects.toThrow('signature verification failed');
     });
@@ -74,7 +88,7 @@ describe('jwt', () => {
       await expect(verifyAccessToken('garbage.token.here')).rejects.toThrow();
     });
 
-    it('rejects a token signed with wrong secret', async () => {
+    it('rejects a token signed with the wrong secret', async () => {
       const orig = process.env.JWT_ACCESS_SECRET;
       process.env.JWT_ACCESS_SECRET = 'wrong-secret-that-is-also-long-enough-00';
       const { token } = await signAccessToken(BASE_PAYLOAD);
@@ -89,14 +103,16 @@ describe('jwt', () => {
       allure.story('Refresh Token');
     });
 
-    it('round-trip encodes and decodes correctly', async () => {
+    it('round-trip encodes and decodes all fields including iat', async () => {
+      const before = Math.floor(Date.now() / 1_000);
       const { token } = await signRefreshToken(BASE_PAYLOAD);
       const payload = await verifyRefreshToken(token);
       expect(payload.token_type).toBe('refresh');
       expect(payload.sub).toBe(BASE_PAYLOAD.sub);
+      expect(payload.iat).toBeGreaterThanOrEqual(before);
     });
 
-    it('rejects an access token passed as refresh token', async () => {
+    it('rejects an access token passed as a refresh token', async () => {
       const { token } = await signAccessToken(BASE_PAYLOAD);
       await expect(verifyRefreshToken(token)).rejects.toThrow('signature verification failed');
     });
@@ -114,12 +130,12 @@ describe('jwt', () => {
       expect(opts.sameSite).toBe('lax');
     });
 
-    it('does NOT set secure flag when NODE_ENV is not production', () => {
+    it('does NOT set the secure flag when NODE_ENV is not production', () => {
       (process.env.NODE_ENV as string) = 'test';
       expect(tokenCookieOptions('access').secure).toBe(false);
     });
 
-    it('sets secure flag when NODE_ENV is production', () => {
+    it('sets the secure flag when NODE_ENV is production', () => {
       (process.env.NODE_ENV as string) = 'production';
       expect(tokenCookieOptions('access').secure).toBe(true);
       (process.env.NODE_ENV as string) = 'test';
