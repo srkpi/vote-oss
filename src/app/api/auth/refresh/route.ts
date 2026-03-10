@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireRefreshAuth } from '@/lib/auth';
+import { Errors } from '@/lib/errors';
 import {
-  signAccessToken,
-  signRefreshToken,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
+  signAccessToken,
+  signRefreshToken,
   tokenCookieOptions,
 } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
-import { Errors } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   const auth = await requireRefreshAuth(req);

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { Errors } from '@/lib/errors';
+import { prisma } from '@/lib/prisma';
 
 async function isAncestor(ancestorId: string, targetUserId: string): Promise<boolean> {
   const visited = new Set<string>();

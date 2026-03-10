@@ -1,19 +1,20 @@
-import Link from 'next/link';
 import {
   ChevronRight,
-  Lock,
-  Link2,
   Eye,
+  LayoutDashboard,
+  Link2,
+  Lock,
   ShieldCheck,
   UserCheck,
-  LayoutDashboard,
 } from 'lucide-react';
-import { getServerSession } from '@/lib/server-auth';
-import { serverFetch } from '@/lib/server-auth';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
 import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
 import { StatItem } from '@/components/landing/stat-item';
+import { Button } from '@/components/ui/button';
+import { getServerSession } from '@/lib/server-auth';
+import { serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 
 const features = [

@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { FileText, Play, StopCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FileText, Play, StopCircle } from 'lucide-react';
-import { formatDateTime } from '@/lib/utils';
+import { useMemo, useState } from 'react';
+
+import { EmptyState, ErrorState } from '@/components/common/empty-state';
+import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { SearchInput } from '@/components/ui/search-input';
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { EmptyState, ErrorState } from '@/components/common/empty-state';
 import { Tabs } from '@/components/ui/tabs';
+import { formatDateTime } from '@/lib/utils';
 import type { Election, ElectionStatus } from '@/types/election';
 
 interface AdminElectionsClientProps {

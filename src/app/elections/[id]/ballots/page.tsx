@@ -1,10 +1,11 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { serverFetch } from '@/lib/server-auth';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+
 import { BallotsClient } from '@/components/elections/ballots-client';
 import { Alert } from '@/components/ui/alert';
+import { serverFetch } from '@/lib/server-auth';
 import type { BallotsResponse } from '@/types/ballot';
 import type { ElectionDetail } from '@/types/election';
 

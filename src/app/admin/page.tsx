@@ -1,10 +1,11 @@
+import { CheckCircle2, CreditCard, FileText, Plus, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Plus, CheckCircle2, FileText, CreditCard, Users } from 'lucide-react';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
-import { Button } from '@/components/ui/button';
-import { formatDateTime } from '@/lib/utils';
+
 import { StatCard } from '@/components/admin/stat-card';
+import { Button } from '@/components/ui/button';
+import { getServerSession, serverFetch } from '@/lib/server-auth';
+import { formatDateTime } from '@/lib/utils';
 import type { Admin } from '@/types/admin';
 import type { Election } from '@/types/election';
 

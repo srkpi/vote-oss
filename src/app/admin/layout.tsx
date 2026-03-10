@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 
 export const metadata: Metadata = {

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { cn, calculateVotePercentage } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+
+import { calculateVotePercentage, cn } from '@/lib/utils';
 import type { TallyResult } from '@/types/tally';
 
 const colors = [

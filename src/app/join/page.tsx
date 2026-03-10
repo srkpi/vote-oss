@@ -1,8 +1,9 @@
+import { CheckCircle2, ChevronLeft, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronLeft, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { getServerSession } from '@/lib/server-auth';
+
 import { JoinAdminForm } from '@/components/admin/join-admin-form';
+import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Приєднатися як адміністратор',

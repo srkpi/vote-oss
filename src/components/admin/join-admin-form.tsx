@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { Check, CheckCircle, Key, Shield, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Key, X, Shield, CheckCircle, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+
 import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { joinAsAdmin, refreshToken } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 
 interface JoinAdminFormProps {
   initialToken?: string;

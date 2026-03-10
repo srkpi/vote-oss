@@ -1,24 +1,25 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  FileText,
-  Search,
-  X,
   CheckCircle,
-  XCircle,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
+  FileText,
+  Search,
   ShieldAlert,
+  ShieldCheck,
+  X,
+  XCircle,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { DecryptionPanel } from '@/components/elections/decryption-panel';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
 import { BallotRow } from '@/components/elections/ballot-row';
+import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
-import { getVote } from '@/lib/vote-storage';
+import { Button } from '@/components/ui/button';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
+import { cn } from '@/lib/utils';
+import { getVote } from '@/lib/vote-storage';
 import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
 import type { ElectionChoice, ElectionDetail } from '@/types/election';
 import type { VoteRecord } from '@/types/vote';

@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+
 import type { ElectionStatus } from '@/types/election';
 
 export function cn(...inputs: ClassValue[]) {

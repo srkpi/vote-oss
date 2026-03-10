@@ -1,14 +1,15 @@
+import { ChevronRight, ExternalLink, FileText, Play, Plus, StopCircle } from 'lucide-react';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, FileText, ExternalLink, Plus, Play, StopCircle } from 'lucide-react';
-import { serverFetch } from '@/lib/server-auth';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { notFound } from 'next/navigation';
+
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { ResultsChart } from '@/components/elections/result-chart';
 import { EncryptionKey } from '@/components/elections/encryption-key';
-import { formatDateTime, formatDate } from '@/lib/utils';
+import { ResultsChart } from '@/components/elections/result-chart';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { serverFetch } from '@/lib/server-auth';
+import { formatDate, formatDateTime } from '@/lib/utils';
 import type { ElectionDetail } from '@/types/election';
 import type { TallyResponse } from '@/types/tally';
 

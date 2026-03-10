@@ -1,13 +1,14 @@
+import type { Admin } from '@prisma/client';
 import { NextRequest } from 'next/server';
+
 import {
-  verifyAccessToken,
-  verifyRefreshToken,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
   VerifiedPayload,
+  verifyAccessToken,
+  verifyRefreshToken,
 } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
-import type { Admin } from '@prisma/client';
 
 export type AuthFailure = {
   ok: false;

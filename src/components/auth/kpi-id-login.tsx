@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+
 import { useScript } from '@/hooks/use-script';
 
 declare global {

@@ -1,7 +1,8 @@
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 // ==================== EMPTY STATE ====================
 

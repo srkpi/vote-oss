@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+
 import { resolveTicket } from '@/lib/kpi-id';
 
 describe('kpi-id', () => {

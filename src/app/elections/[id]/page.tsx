@@ -1,15 +1,16 @@
+import { Calendar, ChevronRight, Clock, FileText, GraduationCap, User, Users } from 'lucide-react';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronRight, User, FileText, Calendar, Clock, GraduationCap, Users } from 'lucide-react';
-import { serverFetch } from '@/lib/server-auth';
-import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
-import { ResultsChart } from '@/components/elections/result-chart';
+import { notFound } from 'next/navigation';
+
 import { CountdownTimer } from '@/components/elections/countdown-timer';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { Badge } from '@/components/ui/badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
+import { ResultsChart } from '@/components/elections/result-chart';
+import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { serverFetch } from '@/lib/server-auth';
 import { formatDateTime } from '@/lib/utils';
 import type { ElectionDetail } from '@/types/election';
 import type { TallyResponse } from '@/types/tally';

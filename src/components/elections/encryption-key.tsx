@@ -1,4 +1,5 @@
 import { Unlock } from 'lucide-react';
+
 import { CopyButton } from '@/components/ui/copy-button';
 
 interface EncryptionKeyProps {

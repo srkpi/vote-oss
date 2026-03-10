@@ -1,8 +1,9 @@
+import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
+
 import { CreateElectionForm } from '@/components/admin/create-election-form';
+import { getServerSession, serverFetch } from '@/lib/server-auth';
 import type { Admin } from '@/types/admin';
 
 export const metadata: Metadata = {

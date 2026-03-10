@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+
 import { loginWithTicket } from '@/lib/api-client';
 
 type Status = 'loading' | 'success' | 'error';

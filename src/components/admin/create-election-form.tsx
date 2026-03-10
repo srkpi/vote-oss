@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Plus, Lock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react';
+
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { FormField, Input } from '@/components/ui/form';
-import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { createElection } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 
 interface CreateElectionFormProps {
   restrictedToFaculty: string | null;

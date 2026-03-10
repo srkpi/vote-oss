@@ -1,12 +1,13 @@
 import {
-  generateKeyPairSync,
+  constants,
+  createHash,
   createSign,
   createVerify,
+  generateKeyPairSync,
   privateDecrypt,
-  createHash,
-  constants,
 } from 'crypto';
 import { randomBytes } from 'crypto';
+
 import type { Ballot } from '@/types/ballot';
 
 export function generateElectionKeyPair(): { publicKey: string; privateKey: string } {

@@ -1,6 +1,7 @@
-import { cn } from '@/lib/utils';
 import { AlertTriangle, ArrowDown, CheckCircle, UserCheck } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import type { VoteRecord } from '@/types/vote';
 
 interface MyVoteBannerProps {

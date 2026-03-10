@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useState } from 'react';
+
 import { generateId } from '@/lib/utils';
 
 type ToastVariant = 'default' | 'success' | 'error' | 'warning' | 'info';

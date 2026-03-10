@@ -1,11 +1,12 @@
-import { signAccessToken, signRefreshToken } from '@/lib/jwt';
+import { constants, publicEncrypt } from 'crypto';
+
 import {
+  computeNullifier,
   generateElectionKeyPair,
   generateVoteToken,
   signVoteToken,
-  computeNullifier,
 } from '@/lib/crypto';
-import { publicEncrypt, constants } from 'crypto';
+import { signAccessToken, signRefreshToken } from '@/lib/jwt';
 
 export const USER_PAYLOAD = {
   sub: 'user-001',

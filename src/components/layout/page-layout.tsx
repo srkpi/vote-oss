@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+
 import { Header } from '@/components/layout/header';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types/auth';

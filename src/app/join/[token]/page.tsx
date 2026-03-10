@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { getServerSession } from '@/lib/server-auth';
+
 import { JoinPageContent } from '@/app/join/page';
+import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Приєднатися як адміністратор',

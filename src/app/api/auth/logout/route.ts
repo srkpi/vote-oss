@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAuth } from '@/lib/auth';
+import { Errors } from '@/lib/errors';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
-import { Errors } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);

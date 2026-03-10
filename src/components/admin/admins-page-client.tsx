@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { UserPlus, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert } from '@/components/ui/alert';
+import { useState } from 'react';
+
 import { AdminTable } from '@/components/admin/admin-table';
 import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
+import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import type { Admin } from '@/types/admin';
 import type { User } from '@/types/auth';
 

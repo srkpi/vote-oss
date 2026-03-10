@@ -1,22 +1,23 @@
 'use client';
 
-import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+
+import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogPanel,
-  DialogHeader,
-  DialogTitle,
   DialogBody,
-  DialogFooter,
   DialogCloseButton,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogTitle,
 } from '@/components/ui/dialog';
-import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { deleteAdmin } from '@/lib/api-client';
+import { cn, formatDate } from '@/lib/utils';
 import type { Admin } from '@/types/admin';
 
 interface AdminTableProps {

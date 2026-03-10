@@ -1,17 +1,18 @@
 import * as allure from 'allure-js-commons';
+import { constants, publicEncrypt } from 'crypto';
+
 import {
-  generateElectionKeyPair,
-  generateVoteToken,
-  signVoteToken,
-  verifyVoteTokenSignature,
+  computeBallotHash,
   computeNullifier,
   decryptBallot,
-  signBallotEntry,
-  computeBallotHash,
-  hashToken,
+  generateElectionKeyPair,
   generateInviteToken,
+  generateVoteToken,
+  hashToken,
+  signBallotEntry,
+  signVoteToken,
+  verifyVoteTokenSignature,
 } from '@/lib/crypto';
-import { publicEncrypt, constants } from 'crypto';
 
 describe('crypto', () => {
   describe('generateElectionKeyPair', () => {

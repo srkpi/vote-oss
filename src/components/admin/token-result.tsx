@@ -1,6 +1,7 @@
 import { Check, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 interface TokenResultProps {
   token: string;

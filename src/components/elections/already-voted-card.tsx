@@ -1,5 +1,6 @@
+import { Check, CheckCircle, Copy, Hash } from 'lucide-react';
 import { useState } from 'react';
-import { CheckCircle, Hash, Copy, Check } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import type { VoteRecord } from '@/types/vote';
 

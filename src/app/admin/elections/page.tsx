@@ -1,10 +1,11 @@
+import { CheckCircle2, Clock, CreditCard, FileText, Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Plus, CheckCircle2, FileText, Clock, CreditCard } from 'lucide-react';
-import { serverFetch } from '@/lib/server-auth';
-import { Button } from '@/components/ui/button';
+
 import { AdminElectionsClient } from '@/components/admin/admin-elections-client';
 import { StatCard } from '@/components/admin/stat-card';
+import { Button } from '@/components/ui/button';
+import { serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 
 export const metadata: Metadata = {

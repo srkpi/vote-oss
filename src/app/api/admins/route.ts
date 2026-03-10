@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAdmin } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { Errors } from '@/lib/errors';
+import { prisma } from '@/lib/prisma';
 
 function computeDeletableIds(
   admins: { user_id: string; promoted_by: string | null }[],

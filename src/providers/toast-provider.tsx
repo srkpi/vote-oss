@@ -1,8 +1,9 @@
 'use client';
 
-import { ToastProvider as ToastContextProvider, useToast } from '@/hooks/use-toast';
-import { ToastItem } from '@/components/ui/alert';
 import type { ReactNode } from 'react';
+
+import { ToastItem } from '@/components/ui/alert';
+import { ToastProvider as ToastContextProvider, useToast } from '@/hooks/use-toast';
 
 function ToastContainer() {
   const { toasts, dismiss } = useToast();

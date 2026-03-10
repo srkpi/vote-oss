@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
 import { FileText } from 'lucide-react';
-import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
+import { useMemo, useState } from 'react';
+
 import { EmptyState } from '@/components/common/empty-state';
-import { Tabs } from '@/components/ui/tabs';
+import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
 import { SearchInput } from '@/components/ui/search-input';
+import { Tabs } from '@/components/ui/tabs';
 import type { Election, ElectionStatus } from '@/types/election';
 
 interface ElectionsFilterProps {

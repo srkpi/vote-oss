@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
 import { CheckCircle } from 'lucide-react';
-import { KPIIDLogin } from '@/components/auth/kpi-id-login';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+import { KPIIDLogin } from '@/components/auth/kpi-id-login';
 
 export const metadata: Metadata = {
   title: 'Вхід',

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { requireAuth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);

@@ -1,13 +1,14 @@
 'use client';
 
+import { CheckCircle, ChevronDown, LogOut, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ChevronDown, LogOut, Menu, X, CheckCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { Button } from '@/components/ui/button';
-import { logout } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import { logout } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 import type { User } from '@/types/auth';
 
 interface HeaderProps {

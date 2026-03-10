@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getVote } from '@/lib/vote-storage';
-import { AlreadyVotedCard } from './already-voted-card';
+import { useEffect, useState } from 'react';
+
 import { VoteForm } from '@/components/elections/vote-form';
-import type { VoteRecord } from '@/types/vote';
+import { getVote } from '@/lib/vote-storage';
 import type { ElectionDetail } from '@/types/election';
+import type { VoteRecord } from '@/types/vote';
+
+import { AlreadyVotedCard } from './already-voted-card';
 
 interface VoteStatusWrapperProps {
   election: ElectionDetail;

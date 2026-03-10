@@ -1,11 +1,12 @@
-import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-import { PageLayout } from '@/components/layout/page-layout';
-import { ToastProvider } from '@/providers/toast-provider';
-import { getServerSession } from '@/lib/server-auth';
+import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
+
+import { PageLayout } from '@/components/layout/page-layout';
+import { getServerSession } from '@/lib/server-auth';
 import { cn } from '@/lib/utils';
+import { ToastProvider } from '@/providers/toast-provider';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 

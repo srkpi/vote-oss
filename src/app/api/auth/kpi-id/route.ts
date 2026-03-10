@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resolveTicket } from '@/lib/kpi-id';
+
+import { Errors } from '@/lib/errors';
 import {
-  signAccessToken,
-  signRefreshToken,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
+  signAccessToken,
+  signRefreshToken,
   tokenCookieOptions,
 } from '@/lib/jwt';
+import { resolveTicket } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
-import { Errors } from '@/lib/errors';
 
 export async function POST(req: NextRequest) {
   let body: { ticketId?: string };

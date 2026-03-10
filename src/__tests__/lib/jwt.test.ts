@@ -1,12 +1,13 @@
 import * as allure from 'allure-js-commons';
+
 import {
-  signAccessToken,
-  signRefreshToken,
-  verifyAccessToken,
-  verifyRefreshToken,
-  tokenCookieOptions,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
+  signAccessToken,
+  signRefreshToken,
+  tokenCookieOptions,
+  verifyAccessToken,
+  verifyRefreshToken,
 } from '@/lib/jwt';
 
 const BASE_PAYLOAD = {

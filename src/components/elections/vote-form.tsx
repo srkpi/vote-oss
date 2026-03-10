@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { Check, ChevronRight, HelpCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, HelpCircle, Check, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+
 import { Alert } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getVoteToken, submitBallot } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 import { saveVote } from '@/lib/vote-storage';
-import type { ElectionDetail, ElectionChoice } from '@/types/election';
+import type { ElectionChoice, ElectionDetail } from '@/types/election';
 
 interface VoteFormProps {
   election: ElectionDetail;
