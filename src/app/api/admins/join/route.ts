@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { invalidateAdmins } from '@/lib/cache';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
@@ -39,11 +40,9 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('Invite token has reached its maximum usage');
   }
 
-  // Check if user is already an admin
   const existingAdmin = await prisma.admin.findUnique({ where: { user_id: user.sub } });
   if (existingAdmin) return Errors.conflict('You are already an admin');
 
-  // Create admin and increment usage atomically
   await prisma.$transaction([
     prisma.admin.create({
       data: {
@@ -62,6 +61,7 @@ export async function POST(req: NextRequest) {
       data: { current_usage: { increment: 1 } },
     }),
   ]);
+  await invalidateAdmins();
 
   return NextResponse.json(
     {

@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
+import { getCachedElections, invalidateElections, setCachedElections } from '@/lib/cache';
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import type { Election } from '@/types/election';
 
+// ---------------------------------------------------------------------------
 // GET /api/elections
-// Returns elections visible to the requesting user (respects faculty/group restrictions)
+// Returns elections visible to the requesting user.
+// Response is served from a 60-second Redis cache keyed by (faculty, group).
+// ---------------------------------------------------------------------------
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
@@ -14,15 +19,16 @@ export async function GET(req: NextRequest) {
   const { user } = auth;
   const now = new Date();
 
+  const cached = await getCachedElections(user.faculty, user.group);
+  if (cached) {
+    return NextResponse.json(cached);
+  }
+
   const elections = await prisma.election.findMany({
     where: {
       AND: [
-        {
-          OR: [{ restricted_to_faculty: null }, { restricted_to_faculty: user.faculty }],
-        },
-        {
-          OR: [{ restricted_to_group: null }, { restricted_to_group: user.group }],
-        },
+        { OR: [{ restricted_to_faculty: null }, { restricted_to_faculty: user.faculty }] },
+        { OR: [{ restricted_to_group: null }, { restricted_to_group: user.group }] },
       ],
     },
     select: {
@@ -34,21 +40,23 @@ export async function GET(req: NextRequest) {
       restricted_to_faculty: true,
       restricted_to_group: true,
       public_key: true,
-      // private_key exposed only after election closes
       private_key: true,
       creator: { select: { full_name: true, faculty: true } },
-      choices: { select: { id: true, choice: true, position: true }, orderBy: { position: 'asc' } },
+      choices: {
+        select: { id: true, choice: true, position: true },
+        orderBy: { position: 'asc' },
+      },
       _count: { select: { ballots: true } },
     },
     orderBy: { opens_at: 'desc' },
   });
 
-  const result = elections.map((e) => ({
+  const result: Election[] = elections.map((e) => ({
     id: e.id,
     title: e.title,
-    createdAt: e.created_at,
-    opensAt: e.opens_at,
-    closesAt: e.closes_at,
+    createdAt: e.created_at.toISOString(),
+    opensAt: e.opens_at.toISOString(),
+    closesAt: e.closes_at.toISOString(),
     restrictedToFaculty: e.restricted_to_faculty,
     restrictedToGroup: e.restricted_to_group,
     publicKey: e.public_key,
@@ -59,11 +67,16 @@ export async function GET(req: NextRequest) {
     ballotCount: e._count.ballots,
   }));
 
+  await setCachedElections(user.faculty, user.group, result);
+
   return NextResponse.json(result);
 }
 
+// ---------------------------------------------------------------------------
 // POST /api/elections
-// Admin only – create an election with choices
+// Admin only – create an election with choices.
+// Invalidates the elections cache on success.
+// ---------------------------------------------------------------------------
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) return Errors.forbidden(auth.error);
@@ -105,7 +118,6 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('closesAt must be after opensAt');
   }
 
-  // Enforce faculty restriction for restricted admins
   if (admin.restricted_to_faculty) {
     restrictedToFaculty = admin.faculty;
   }
@@ -115,7 +127,7 @@ export async function POST(req: NextRequest) {
   const election = await prisma.election.create({
     data: {
       title,
-      created_by: user?.sub,
+      created_by: user.sub,
       created_at: new Date(),
       opens_at: openDate,
       closes_at: closeDate,
@@ -131,6 +143,8 @@ export async function POST(req: NextRequest) {
       choices: { orderBy: { position: 'asc' } },
     },
   });
+
+  await invalidateElections();
 
   return NextResponse.json(
     {

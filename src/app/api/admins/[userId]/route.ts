@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { invalidateAdmins } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
@@ -71,6 +72,7 @@ export async function DELETE(
   }
 
   await prisma.admin.delete({ where: { user_id: targetUserId } });
+  await invalidateAdmins();
 
   return NextResponse.json({ ok: true, removedUserId: targetUserId });
 }

@@ -3,15 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { Errors } from '@/lib/errors';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
-import { prisma } from '@/lib/prisma';
+import { revokeByAccessJti } from '@/lib/token-store';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  await prisma.jwtToken.deleteMany({
-    where: { access_jti: auth.user.jti },
-  });
+  const { user } = auth;
+
+  await revokeByAccessJti(user.jti, user.iat);
 
   const response = NextResponse.json({ ok: true }, { status: 200 });
 
