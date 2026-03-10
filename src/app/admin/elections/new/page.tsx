@@ -1,13 +1,18 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { getServerSession } from '@/lib/server-auth';
 import { CreateElectionForm } from '@/components/admin/create-election-form';
 
 export const metadata: Metadata = {
   title: 'Нове голосування',
 };
 
-export default function NewElectionPage() {
+export default async function NewElectionPage() {
+  const session = await getServerSession();
+  const restrictedToFaculty = session?.restricted_to_faculty ?? false;
+  const adminFaculty = session?.faculty ?? '';
+
   return (
     <div className="flex-1 overflow-auto">
       <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
@@ -41,7 +46,10 @@ export default function NewElectionPage() {
             className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-5 sm:p-8 animate-fade-up"
             style={{ animationDelay: '100ms', animationFillMode: 'both' }}
           >
-            <CreateElectionForm />
+            <CreateElectionForm
+              restrictedToFaculty={restrictedToFaculty}
+              adminFaculty={adminFaculty}
+            />
           </div>
         </div>
       </div>

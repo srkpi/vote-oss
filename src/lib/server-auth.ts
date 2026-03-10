@@ -14,6 +14,8 @@ export async function getServerSession(): Promise<User | null> {
     faculty: h.get('x-user-faculty') ?? '',
     group: h.get('x-user-group') ?? '',
     isAdmin: h.get('x-user-is-admin') === 'true',
+    restricted_to_faculty: h.get('x-restricted-to-faculty') === 'true',
+    manage_admins: h.get('x-manage-admins') === 'true',
   };
 }
 

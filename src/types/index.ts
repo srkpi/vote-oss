@@ -6,6 +6,8 @@ export interface User {
   faculty: string;
   group: string;
   isAdmin: boolean;
+  restricted_to_faculty: boolean;
+  manage_admins: boolean;
 }
 
 // ==================== ELECTION TYPES ====================

@@ -22,11 +22,11 @@ import type { Admin } from '@/types';
 interface AdminTableProps {
   admins: Admin[];
   currentUserId: string;
-  deleteAllowed: boolean;
+  deletableIds: Set<string>;
   onDelete: (userId: string) => void;
 }
 
-export function AdminTable({ admins, currentUserId, deleteAllowed, onDelete }: AdminTableProps) {
+export function AdminTable({ admins, currentUserId, deletableIds, onDelete }: AdminTableProps) {
   const { toast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<Admin | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -81,7 +81,7 @@ export function AdminTable({ admins, currentUserId, deleteAllowed, onDelete }: A
                 key={admin.user_id}
                 admin={admin}
                 isCurrentUser={admin.user_id === currentUserId}
-                deleteAllowed={deleteAllowed}
+                canDelete={deletableIds.has(admin.user_id)}
                 onDelete={() => setDeleteTarget(admin)}
               />
             ))}
@@ -96,7 +96,7 @@ export function AdminTable({ admins, currentUserId, deleteAllowed, onDelete }: A
             key={admin.user_id}
             admin={admin}
             isCurrentUser={admin.user_id === currentUserId}
-            deleteAllowed={deleteAllowed}
+            canDelete={deletableIds.has(admin.user_id)}
             onDelete={() => setDeleteTarget(admin)}
           />
         ))}
@@ -131,11 +131,11 @@ export function AdminTable({ admins, currentUserId, deleteAllowed, onDelete }: A
 interface AdminRowProps {
   admin: Admin;
   isCurrentUser: boolean;
-  deleteAllowed: boolean;
+  canDelete: boolean;
   onDelete: () => void;
 }
 
-function AdminRow({ admin, isCurrentUser, deleteAllowed, onDelete }: AdminRowProps) {
+function AdminRow({ admin, isCurrentUser, canDelete, onDelete }: AdminRowProps) {
   return (
     <tr
       className={cn(
@@ -191,7 +191,7 @@ function AdminRow({ admin, isCurrentUser, deleteAllowed, onDelete }: AdminRowPro
         </div>
       </td>
       <td className="px-4 py-3.5">
-        {!isCurrentUser && deleteAllowed && (
+        {!isCurrentUser && canDelete && (
           <Button
             variant="ghost"
             size="md"
@@ -206,7 +206,7 @@ function AdminRow({ admin, isCurrentUser, deleteAllowed, onDelete }: AdminRowPro
   );
 }
 
-function AdminCard({ admin, isCurrentUser, deleteAllowed, onDelete }: AdminRowProps) {
+function AdminCard({ admin, isCurrentUser, canDelete, onDelete }: AdminRowProps) {
   return (
     <div
       className={cn(
@@ -231,7 +231,7 @@ function AdminCard({ admin, isCurrentUser, deleteAllowed, onDelete }: AdminRowPr
             </p>
           </div>
         </div>
-        {!isCurrentUser && deleteAllowed && (
+        {!isCurrentUser && canDelete && (
           <Button
             variant="ghost"
             size="xs"

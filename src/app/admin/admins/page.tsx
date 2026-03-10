@@ -11,17 +11,15 @@ export const metadata: Metadata = {
 
 export default async function AdminsPage() {
   const session = await getServerSession();
-
   const { data: admins, error } = await serverFetch<Admin[]>('/api/admins');
 
   const all = admins ?? [];
-  const currentAdmin = all.find((a) => a.user_id === session?.userId);
-  const canInvite = currentAdmin?.manage_admins ?? false;
-  const canGrantManageAdmins = currentAdmin?.manage_admins ?? false;
+  const canInvite = session?.manage_admins ?? false;
+  const canGrantManageAdmins = session?.manage_admins ?? false;
+  const restrictedToFaculty = session?.restricted_to_faculty ?? false;
 
   return (
     <div className="flex-1 overflow-auto">
-      {/* Page header */}
       <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center justify-between gap-3">
           <div className="animate-fade-up min-w-0">
@@ -54,6 +52,7 @@ export default async function AdminsPage() {
           currentUser={session}
           canInvite={canInvite}
           canGrantManageAdmins={canGrantManageAdmins}
+          restrictedToFaculty={restrictedToFaculty}
           error={error}
         />
       </div>

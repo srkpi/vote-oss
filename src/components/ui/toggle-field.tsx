@@ -4,16 +4,29 @@ interface ToggleFieldProps {
   label: string;
   description?: string;
   checked: boolean;
+  disabled?: boolean;
   onChange: (v: boolean) => void;
 }
 
-export function ToggleField({ label, description, checked, onChange }: ToggleFieldProps) {
+export function ToggleField({
+  label,
+  description,
+  checked,
+  disabled = false,
+  onChange,
+}: ToggleFieldProps) {
   return (
-    <label className="flex items-start gap-3 cursor-pointer group">
+    <label
+      className={cn(
+        'flex items-start gap-3 group',
+        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+      )}
+    >
       <div className="relative mt-0.5">
         <input
           type="checkbox"
           checked={checked}
+          disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
           className="sr-only"
         />

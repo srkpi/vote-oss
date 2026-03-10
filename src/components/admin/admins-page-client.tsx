@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
@@ -13,7 +13,29 @@ interface AdminsPageClientProps {
   currentUser: User | null;
   canInvite: boolean;
   canGrantManageAdmins: boolean;
+  restrictedToFaculty: boolean;
   error: string | null;
+}
+
+function getDeletableIds(admins: Admin[], currentUserId: string): Set<string> {
+  const deletable = new Set<string>();
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    for (const admin of admins) {
+      if (deletable.has(admin.user_id)) continue;
+      if (
+        admin.promoted_by === currentUserId ||
+        (admin.promoted_by !== null && deletable.has(admin.promoted_by))
+      ) {
+        deletable.add(admin.user_id);
+        changed = true;
+      }
+    }
+  }
+
+  return deletable;
 }
 
 export function AdminsPageClient({
@@ -21,10 +43,16 @@ export function AdminsPageClient({
   currentUser,
   canInvite,
   canGrantManageAdmins,
+  restrictedToFaculty,
   error,
 }: AdminsPageClientProps) {
   const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  const deletableIds = useMemo(
+    () => (currentUser ? getDeletableIds(admins, currentUser.userId) : new Set<string>()),
+    [admins, currentUser],
+  );
 
   const handleDelete = (userId: string) => {
     setAdmins((prev) => prev.filter((a) => a.user_id !== userId));
@@ -71,7 +99,6 @@ export function AdminsPageClient({
         </div>
       )}
 
-      {/* Client component handles invite button + table + dialog */}
       {!error && currentUser && (
         <div className="p-4 sm:p-6 space-y-5">
           <div className="flex items-center gap-4 text-sm font-body text-[var(--muted-foreground)] px-1">
@@ -95,7 +122,7 @@ export function AdminsPageClient({
           <AdminTable
             admins={admins}
             currentUserId={currentUser.userId}
-            deleteAllowed={canGrantManageAdmins}
+            deletableIds={deletableIds}
             onDelete={handleDelete}
           />
         </div>
@@ -106,6 +133,7 @@ export function AdminsPageClient({
           open={inviteOpen}
           onClose={() => setInviteOpen(false)}
           canGrantManageAdmins={canGrantManageAdmins}
+          restrictedToFaculty={restrictedToFaculty}
         />
       )}
     </div>

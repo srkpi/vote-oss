@@ -14,6 +14,8 @@ interface JWTClaims {
   faculty: string;
   group: string;
   is_admin: boolean;
+  restricted_to_faculty: boolean;
+  manage_admins: boolean;
   token_type: string;
   jti: string;
 }
@@ -129,6 +131,8 @@ export async function proxy(req: NextRequest) {
     requestHeaders.set('x-user-faculty', user.faculty);
     requestHeaders.set('x-user-group', user.group);
     requestHeaders.set('x-user-is-admin', String(user.is_admin));
+    requestHeaders.set('x-restricted-to-faculty', String(user.restricted_to_faculty));
+    requestHeaders.set('x-manage-admins', String(user.manage_admins));
   }
 
   // ── 5. If tokens were refreshed, patch the cookie header so that

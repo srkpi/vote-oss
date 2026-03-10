@@ -23,9 +23,15 @@ interface InviteAdminDialogProps {
   open: boolean;
   onClose: () => void;
   canGrantManageAdmins: boolean;
+  restrictedToFaculty: boolean;
 }
 
-export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: InviteAdminDialogProps) {
+export function InviteAdminDialog({
+  open,
+  onClose,
+  canGrantManageAdmins,
+  restrictedToFaculty,
+}: InviteAdminDialogProps) {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
@@ -109,7 +115,7 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
       validDue: tomorrow,
       maxUsage: '1',
       manageAdmins: false,
-      restrictedToFaculty: true,
+      restrictedToFaculty: restrictedToFaculty,
     });
 
     onClose();
@@ -159,16 +165,16 @@ export function InviteAdminDialog({ open, onClose, canGrantManageAdmins }: Invit
                   description="Новий адмін зможе керувати створювати опитування лише для свого підрозділу"
                   checked={form.restrictedToFaculty}
                   onChange={(v) => setForm((p) => ({ ...p, restrictedToFaculty: v }))}
+                  disabled={restrictedToFaculty}
                 />
 
-                {canGrantManageAdmins && (
-                  <ToggleField
-                    label="Керувати адмінами"
-                    description="Дозволити запрошеному адміну запрошувати інших"
-                    checked={form.manageAdmins}
-                    onChange={(v) => setForm((p) => ({ ...p, manageAdmins: v }))}
-                  />
-                )}
+                <ToggleField
+                  label="Керувати адмінами"
+                  description="Дозволити запрошеному адміну запрошувати інших"
+                  checked={form.manageAdmins}
+                  onChange={(v) => setForm((p) => ({ ...p, manageAdmins: v }))}
+                  disabled={!canGrantManageAdmins}
+                />
               </div>
             </>
           ) : (

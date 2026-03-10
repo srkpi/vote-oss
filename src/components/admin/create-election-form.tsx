@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FormField, Input } from '@/components/ui/form';
@@ -10,7 +10,15 @@ import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { createElection } from '@/lib/api-client';
 
-export function CreateElectionForm() {
+interface CreateElectionFormProps {
+  restrictedToFaculty?: boolean;
+  adminFaculty?: string;
+}
+
+export function CreateElectionForm({
+  restrictedToFaculty = false,
+  adminFaculty = '',
+}: CreateElectionFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -21,7 +29,7 @@ export function CreateElectionForm() {
     title: '',
     opensAt: '',
     closesAt: '',
-    restrictedToFaculty: '',
+    restrictedToFaculty: restrictedToFaculty ? adminFaculty : '',
     restrictedToGroup: '',
   });
 
@@ -241,22 +249,35 @@ export function CreateElectionForm() {
           Обмеження доступу
         </h2>
         <p className="text-sm text-[var(--muted-foreground)] font-body mb-4">
-          Залиште порожнім для всіх студентів
+          {restrictedToFaculty
+            ? 'Ваш акаунт обмежений одним факультетом — поле факультету заблоковано.'
+            : 'Залиште порожнім для всіх студентів'}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <FormField
             label="Обмежити факультетом"
             htmlFor="faculty"
-            hint="Наприклад: FICE, FEL, FMF"
+            hint={restrictedToFaculty ? undefined : 'Наприклад: FICE, FEL, FMF'}
           >
-            <Input
-              id="faculty"
-              value={form.restrictedToFaculty}
-              onChange={(e) => updateForm('restrictedToFaculty', e.target.value)}
-              placeholder="Код факультету"
-              maxLength={20}
-            />
+            <div className="relative">
+              <Input
+                id="faculty"
+                value={form.restrictedToFaculty}
+                onChange={(e) => {
+                  if (!restrictedToFaculty) updateForm('restrictedToFaculty', e.target.value);
+                }}
+                placeholder="Код факультету"
+                maxLength={20}
+                readOnly={restrictedToFaculty}
+                className={cn(restrictedToFaculty && 'bg-[var(--surface)] cursor-not-allowed pr-9')}
+              />
+              {restrictedToFaculty && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
+                  <Lock className="w-4 h-4" />
+                </div>
+              )}
+            </div>
           </FormField>
 
           <FormField label="Обмежити групою" htmlFor="group" hint="Наприклад: КВ-91, ЕЛ-21">

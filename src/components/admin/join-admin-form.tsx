@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { joinAsAdmin } from '@/lib/api-client';
+import { joinAsAdmin, refreshToken } from '@/lib/api-client';
 
 interface JoinAdminFormProps {
   initialToken?: string;
@@ -33,6 +33,8 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
     const result = await joinAsAdmin(trimmed);
 
     if (result.success) {
+      await refreshToken();
+
       setSuccess(true);
       toast({
         title: 'Вітаємо!',
