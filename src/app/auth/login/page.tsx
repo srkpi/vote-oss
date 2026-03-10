@@ -1,4 +1,4 @@
-import { CheckCircle } from 'lucide-react';
+import { Check, CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -81,19 +81,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
             <div className="w-9 h-9 rounded-xl navy-gradient flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <CheckCircle className="w-4 h-4 text-white" />
             </div>
             <span className="font-display text-xl font-bold text-[var(--kpi-navy)]">КПІ Голос</span>
           </div>
@@ -111,7 +99,7 @@ export default function LoginPage() {
           {/* KPI ID Button */}
           <div className="space-y-6">
             <div className="flex flex-col items-center">
-              <KPIIDLogin appId="tests" />
+              <KPIIDLogin appId={process.env.KPI_APP_ID} />
             </div>
 
             <div className="relative">
@@ -135,27 +123,12 @@ export default function LoginPage() {
                   key={item}
                   className="flex items-center gap-2.5 text-sm text-[var(--muted-foreground)] font-body"
                 >
-                  <svg
-                    className="w-4 h-4 text-[var(--success)] shrink-0"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <Check color="var(--success)" />
                   {item}
                 </div>
               ))}
             </div>
           </div>
-
-          <p className="mt-10 text-xs text-[var(--muted-foreground)] font-body text-center leading-relaxed">
-            Використовуючи систему, ви погоджуєтесь з умовами використання КПІ ім. Ігоря
-            Сікорського.
-          </p>
         </div>
       </div>
     </div>
