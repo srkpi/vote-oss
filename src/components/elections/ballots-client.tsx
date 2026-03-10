@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   FileText,
+  Search,
+  X,
   CheckCircle,
   XCircle,
   ChevronLeft,
@@ -12,11 +14,18 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { SearchInput } from '@/components/ui/search-input';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { BallotRow } from '@/components/elections/ballot-row';
-import type { BallotsResponse, ElectionDetail, ElectionChoice, DecryptedMap } from '@/types';
+import { MyVoteBanner } from '@/components/elections/my-vote-banner';
+import { getVote } from '@/lib/vote-storage';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
+import type {
+  BallotsResponse,
+  ElectionDetail,
+  ElectionChoice,
+  DecryptedMap,
+  VoteRecord,
+} from '@/types';
 
 interface BallotsClientProps {
   initialData: BallotsResponse;
@@ -38,11 +47,21 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const [showDecrypted, setShowDecrypted] = useState(true);
   const cryptoKeyRef = useRef<CryptoKey | null>(null);
 
+  // ── User's stored vote record ──────────────────────────────────────────────
+  const [myVoteRecord, setMyVoteRecord] = useState<VoteRecord | null>(null);
+  const myBallotRef = useRef<HTMLDivElement | null>(null);
+
   const isClosed = election?.status === 'closed';
   const privateKey = election?.privateKey;
   const canDecrypt = isClosed && !!privateKey;
   const choices: ElectionChoice[] = election?.choices ?? [];
   const electionId = election?.id ?? electionMeta.id;
+
+  // Load stored vote on mount
+  useEffect(() => {
+    const record = getVote(electionId);
+    setMyVoteRecord(record);
+  }, [electionId]);
 
   const handleDecryptAll = async () => {
     if (!privateKey) return;
@@ -90,6 +109,13 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     }
   };
 
+  // After decryption completes, scroll to user's ballot if it's on screen
+  useEffect(() => {
+    if (decryptionDone && myBallotRef.current) {
+      myBallotRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [decryptionDone]);
+
   const trimmedQuery = searchQuery.trim();
   const filteredBallots = useMemo(() => {
     if (!trimmedQuery) return ballots;
@@ -107,10 +133,19 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     setPage(1);
   };
 
-  // ---- Local pagination ----
+  // ── Local pagination ──────────────────────────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(filteredBallots.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pagedBallots = filteredBallots.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // Jump to the page that contains the user's ballot on first load
+  useEffect(() => {
+    if (!myVoteRecord) return;
+    const idx = filteredBallots.findIndex((b) => b.current_hash === myVoteRecord.ballotHash);
+    if (idx !== -1) {
+      setPage(Math.floor(idx / PAGE_SIZE) + 1);
+    }
+  }, [myVoteRecord, filteredBallots]);
 
   const toggleExpand = (id: number) => {
     setExpandedIds((prev) => {
@@ -121,7 +156,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     });
   };
 
-  // ---- Stats ----
+  // ── Stats ─────────────────────────────────────────────────────────────────
   const malformedCount = decryptionDone
     ? [...decryptedMap.values()].filter((v) => !v.valid).length
     : 0;
@@ -129,8 +164,34 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     ? [...decryptedMap.values()].filter((v) => !v.hashValid).length
     : 0;
 
+  // ── My ballot lookup ──────────────────────────────────────────────────────
+  const myBallot = myVoteRecord
+    ? (ballots.find((b) => b.current_hash === myVoteRecord.ballotHash) ?? null)
+    : null;
+
+  // Verify stored choice matches decrypted choice
+  const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
+  const myVoteMatchesDecryption =
+    myDecryption !== undefined && myVoteRecord !== null
+      ? myDecryption.valid && myDecryption.choiceId === myVoteRecord.choiceId
+      : null;
+
   return (
     <div className="space-y-5 animate-fade-up">
+      {/* My Vote Banner */}
+      {myVoteRecord && (
+        <MyVoteBanner
+          record={myVoteRecord}
+          found={myBallot !== null}
+          decryptionDone={decryptionDone}
+          matchesDecryption={myVoteMatchesDecryption}
+          decryptedChoiceLabel={myDecryption?.choiceLabel ?? null}
+          onScrollTo={() =>
+            myBallotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }
+        />
+      )}
+
       {canDecrypt && (
         <DecryptionPanel
           ballotCount={ballots.length}
@@ -154,13 +215,36 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           </span>
         </div>
 
-        <SearchInput
-          value={searchQuery}
-          onChange={handleSearch}
-          placeholder={
-            decryptionDone ? 'Пошук за хешем або варіантом відповіді…' : 'Пошук за хешем бюлетеня…'
-          }
-        />
+        <div className="relative flex-1 max-w-md">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
+            <Search className="w-4 h-4" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder={
+              decryptionDone
+                ? 'Пошук за хешем або варіантом відповіді…'
+                : 'Пошук за хешем бюлетеня…'
+            }
+            className={cn(
+              'w-full h-9 pl-9 pr-9 text-sm font-mono',
+              'bg-white border border-[var(--border-color)] rounded-[var(--radius-lg)]',
+              'placeholder:text-[var(--subtle)] placeholder:font-body',
+              'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
+              'transition-colors duration-150 shadow-[var(--shadow-xs)]',
+            )}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => handleSearch('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {trimmedQuery && (
@@ -175,12 +259,12 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           {filteredBallots.length > 0 ? (
             <span className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 shrink-0" />
-              Знайдено {filteredBallots.length} бюлетень(ів) серед усіх {ballots.length}
+              Знайдено {filteredBallots.length} бюлетень(ів) серед {ballots.length}
             </span>
           ) : (
             <span className="flex items-center gap-2">
               <XCircle className="w-4 h-4 shrink-0" />
-              Жодного бюлетеня не знайдено серед усіх {ballots.length}
+              Жодного бюлетеня не знайдено серед {ballots.length}
             </span>
           )}
         </div>
@@ -227,19 +311,33 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           )}
 
           <div className="divide-y divide-[var(--border-subtle)]">
-            {pagedBallots.map((ballot, index) => (
-              <BallotRow
-                key={ballot.id}
-                ballot={ballot}
-                index={(safePage - 1) * PAGE_SIZE + index + 1}
-                isExpanded={expandedIds.has(ballot.id)}
-                onToggle={() => toggleExpand(ballot.id)}
-                decryption={
-                  decryptionDone && showDecrypted ? decryptedMap.get(ballot.id) : undefined
-                }
-                choices={choices}
-              />
-            ))}
+            {pagedBallots.map((ballot, index) => {
+              const isMyBallot =
+                myVoteRecord !== null && ballot.current_hash === myVoteRecord.ballotHash;
+              return (
+                <div
+                  key={ballot.id}
+                  ref={isMyBallot ? myBallotRef : undefined}
+                  className={cn(
+                    isMyBallot &&
+                      'ring-2 ring-inset ring-[var(--kpi-blue-light)] rounded-none relative',
+                  )}
+                >
+                  <BallotRow
+                    ballot={ballot}
+                    index={(safePage - 1) * PAGE_SIZE + index + 1}
+                    isExpanded={expandedIds.has(ballot.id)}
+                    onToggle={() => toggleExpand(ballot.id)}
+                    decryption={
+                      decryptionDone && showDecrypted ? decryptedMap.get(ballot.id) : undefined
+                    }
+                    choices={choices}
+                    isMyBallot={isMyBallot}
+                    myStoredChoiceLabel={isMyBallot ? myVoteRecord!.choiceLabel : undefined}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

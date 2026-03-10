@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { getVoteToken, submitBallot } from '@/lib/api-client';
+import { saveVote } from '@/lib/vote-storage';
 import type { ElectionDetail, ElectionChoice } from '@/types';
 
 interface VoteFormProps {
@@ -64,7 +65,18 @@ export function VoteForm({ election }: VoteFormProps) {
       return;
     }
 
-    setBallotHash(ballotResult.data.ballotHash);
+    const hash = ballotResult.data.ballotHash;
+
+    // Persist vote locally so the user can see it on future visits
+    saveVote({
+      electionId: election.id,
+      choiceId: selectedChoice.id,
+      choiceLabel: selectedChoice.choice,
+      ballotHash: hash,
+      votedAt: new Date().toISOString(),
+    });
+
+    setBallotHash(hash);
     setStep('done');
     toast({
       title: 'Голос зараховано!',
@@ -290,7 +302,7 @@ function VotingSuccess({ hash, electionId }: { hash: string; electionId: number 
           Голос зараховано!
         </h4>
         <p className="text-sm text-[var(--muted-foreground)] font-body">
-          Ваш голос успішно зафіксовано в блокчейні.
+          Ваш голос успішно зафіксовано. Вибір та хеш збережено у вашому браузері.
         </p>
       </div>
 
@@ -304,8 +316,8 @@ function VotingSuccess({ hash, electionId }: { hash: string; electionId: number 
       </div>
 
       <div className="flex flex-col gap-3 w-full">
-        <Button variant="primary" fullWidth onClick={() => router.push(`/elections/${electionId}`)}>
-          До сторінки виборів
+        <Button variant="primary" fullWidth onClick={() => router.push(`/elections`)}>
+          До сторінки опитувань
         </Button>
         <Button
           variant="secondary"

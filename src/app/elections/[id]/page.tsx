@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, User, FileText, Calendar, Clock, GraduationCap, Users } from 'lucide-react';
 import { serverFetch } from '@/lib/server-auth';
-import { VoteForm } from '@/components/elections/vote-form';
+import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { CountdownTimer } from '@/components/elections/countdown-timer';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
@@ -126,7 +126,11 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             )}
 
-            {/* Vote form (open elections) */}
+            {/*
+              Vote form / already-voted state (open elections).
+              VoteStatusWrapper is a client component that reads localStorage
+              and renders either the VoteForm or the AlreadyVotedCard.
+            */}
             {isOpen && (
               <div
                 className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6 animate-fade-up"
@@ -135,7 +139,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
                   Ваш голос
                 </h2>
-                <VoteForm election={election} />
+                <VoteStatusWrapper election={election} />
               </div>
             )}
 
@@ -204,11 +208,6 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   icon={<Clock className="w-4 h-4" />}
                   label="Завершення"
                   value={formatDateTime(election.closesAt)}
-                />
-                <InfoRow
-                  icon={<FileText className="w-4 h-4" />}
-                  label="Бюлетенів"
-                  value={election.ballotCount.toString()}
                 />
                 {election.restrictedToFaculty && (
                   <InfoRow

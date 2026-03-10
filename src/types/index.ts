@@ -6,6 +6,14 @@ export interface User {
   isAdmin: boolean;
 }
 
+export interface VoteRecord {
+  electionId: number;
+  choiceId: number;
+  choiceLabel: string;
+  ballotHash: string;
+  votedAt: string;
+}
+
 // ==================== ELECTION TYPES ====================
 
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';

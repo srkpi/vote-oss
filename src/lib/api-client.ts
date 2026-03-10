@@ -13,6 +13,7 @@ import type {
   ApiResult,
   ApiError,
 } from '@/types';
+import { clearAllVotes } from '@/lib/vote-storage';
 
 const BASE_URL = '/api';
 
@@ -111,6 +112,9 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<Api
 // ==================== AUTH ====================
 
 export async function loginWithTicket(ticketId: string) {
+  // Clear any stale vote data from a previous session before logging in.
+  if (typeof window !== 'undefined') clearAllVotes();
+
   return fetchApi<{
     userId: string;
     fullName: string;
@@ -124,7 +128,10 @@ export async function loginWithTicket(ticketId: string) {
 }
 
 export async function logout() {
-  return fetchApi<{ ok: boolean }>('/auth/logout', { method: 'POST' });
+  const result = await fetchApi<{ ok: boolean }>('/auth/logout', { method: 'POST' });
+  // Wipe locally-stored votes so the next user on this device starts clean.
+  if (typeof window !== 'undefined') clearAllVotes();
+  return result;
 }
 
 export async function refreshToken() {

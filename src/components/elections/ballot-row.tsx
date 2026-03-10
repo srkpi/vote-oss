@@ -7,6 +7,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   XCircle,
+  UserCheck,
 } from 'lucide-react';
 import type { Ballot, DecryptionResult, ElectionChoice } from '@/types';
 
@@ -17,24 +18,47 @@ interface BallotRowProps {
   onToggle: () => void;
   decryption?: DecryptionResult;
   choices: ElectionChoice[];
+  isMyBallot?: boolean;
+  myStoredChoiceLabel?: string;
 }
 
-export function BallotRow({ ballot, index, isExpanded, onToggle, decryption }: BallotRowProps) {
+export function BallotRow({
+  ballot,
+  index,
+  isExpanded,
+  onToggle,
+  decryption,
+  isMyBallot = false,
+  myStoredChoiceLabel,
+}: BallotRowProps) {
   const isMalformed = decryption !== undefined && !decryption.valid;
   const isBadHash = decryption !== undefined && !decryption.hashValid;
   const isAnomalous = isMalformed || isBadHash;
 
+  // Compare locally-stored choice with the decrypted one
+  const myChoiceVerified =
+    isMyBallot && decryption !== undefined && myStoredChoiceLabel !== undefined
+      ? decryption.valid && decryption.choiceLabel === myStoredChoiceLabel
+      : null;
+
   return (
-    <div className={cn('transition-colors duration-200', isAnomalous && 'bg-[var(--error-bg)]')}>
+    <div
+      className={cn(
+        'transition-colors duration-200',
+        isMyBallot && 'bg-[var(--info-bg)]/40',
+        isAnomalous && 'bg-[var(--error-bg)]',
+      )}
+    >
       <button
         onClick={onToggle}
         className={cn(
           'w-full flex items-center gap-3 px-5 py-4 text-left',
           'hover:bg-[var(--surface)] transition-colors duration-150',
           isAnomalous && 'hover:bg-[var(--error-bg)]/80',
+          isMyBallot && !isAnomalous && 'hover:bg-[var(--info-bg)]/60',
         )}
       >
-        <span className="w-4 text-xs font-body text-[var(--muted-foreground)] shrink-0 text-right tabular-nums">
+        <span className="w-8 text-xs font-body text-[var(--muted-foreground)] shrink-0 text-right tabular-nums">
           {index}
         </span>
 
@@ -76,11 +100,32 @@ export function BallotRow({ ballot, index, isExpanded, onToggle, decryption }: B
           )}
         </div>
 
-        {isAnomalous && (
-          <span className="shrink-0 text-[10px] font-semibold text-white bg-[var(--error)] px-2 py-0.5 rounded-full uppercase tracking-wide">
-            {isBadHash ? 'Хеш ≠' : 'Зіпсований'}
-          </span>
-        )}
+        {/* Status badges (right side) */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {isMyBallot && (
+            <span
+              className={cn(
+                'text-[10px] font-semibold text-white px-2 py-0.5 rounded-full uppercase tracking-wide flex items-center gap-1',
+                myChoiceVerified === true && 'bg-[var(--success)]',
+                myChoiceVerified === false && 'bg-[var(--error)]',
+                myChoiceVerified === null && 'bg-[var(--kpi-blue-light)]',
+              )}
+            >
+              <UserCheck className="w-3 h-3" />
+              {myChoiceVerified === true
+                ? 'Верифіковано'
+                : myChoiceVerified === false
+                  ? 'Розбіжність!'
+                  : 'Ви'}
+            </span>
+          )}
+
+          {isAnomalous && (
+            <span className="text-[10px] font-semibold text-white bg-[var(--error)] px-2 py-0.5 rounded-full uppercase tracking-wide">
+              {isBadHash ? 'Хеш ≠' : 'Зіпсований'}
+            </span>
+          )}
+        </div>
 
         <ChevronDown
           className={cn(
@@ -92,7 +137,55 @@ export function BallotRow({ ballot, index, isExpanded, onToggle, decryption }: B
 
       {isExpanded && (
         <div className="px-5 pb-4 border-t border-[var(--border-subtle)] bg-[var(--surface)]/50">
-          <div className="pt-4 space-y-4 md:ml-[52px]">
+          <div className="pt-4 space-y-4 ml-[52px]">
+            {/* My vote verification block */}
+            {isMyBallot && (
+              <div>
+                <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-1.5">
+                  Верифікація вашого голосу
+                </p>
+                {myChoiceVerified === null ? (
+                  <div className="p-3 rounded-[var(--radius)] border bg-[var(--info-bg)] border-[var(--kpi-blue-light)]/30 flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-[var(--kpi-blue-light)] shrink-0" />
+                    <div>
+                      <p className="text-sm font-body font-semibold text-[var(--foreground)]">
+                        Ваш збережений вибір: {myStoredChoiceLabel}
+                      </p>
+                      <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+                        Розшифруйте бюлетені, щоб верифікувати
+                      </p>
+                    </div>
+                  </div>
+                ) : myChoiceVerified === true ? (
+                  <div className="p-3 rounded-[var(--radius)] border bg-[var(--success-bg)] border-[var(--success)]/30 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-[var(--success)] shrink-0" />
+                    <div>
+                      <p className="text-sm font-body font-semibold text-[var(--success)]">
+                        Голос верифіковано
+                      </p>
+                      <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+                        Розшифрований вибір збігається з локальним записом:{' '}
+                        <strong>{myStoredChoiceLabel}</strong>
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-[var(--radius)] border bg-[var(--error-bg)] border-[var(--error)]/30 flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-[var(--error)] shrink-0" />
+                    <div>
+                      <p className="text-sm font-body font-semibold text-[var(--error)]">
+                        Розбіжність виборів!
+                      </p>
+                      <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+                        Збережено: <strong>{myStoredChoiceLabel}</strong> · Розшифровано:{' '}
+                        <strong>{decryption?.choiceLabel ?? '?'}</strong>
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {decryption && (
               <div>
                 <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-1.5">
