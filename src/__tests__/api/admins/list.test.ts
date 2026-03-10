@@ -7,6 +7,7 @@ import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
   JWT_TOKEN_RECORD,
+  RESTRICTED_ADMIN_RECORD,
 } from '../../helpers/fixtures';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
@@ -60,16 +61,21 @@ describe('GET /api/admins', () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-    prismaMock.admin.findMany.mockResolvedValueOnce([ADMIN_RECORD]);
+    prismaMock.admin.findMany.mockResolvedValueOnce([ADMIN_RECORD, RESTRICTED_ADMIN_RECORD]);
 
     const req = makeAuthRequest(access.token);
     const { body } = await parseJson<any[]>(await GET(req));
 
-    expect(body).toHaveLength(1);
+    expect(body).toHaveLength(2);
     expect(body[0]).toMatchObject({
       user_id: ADMIN_RECORD.user_id,
       full_name: ADMIN_RECORD.full_name,
-      manage_admins: true,
+      deletable: false,
+    });
+    expect(body[1]).toMatchObject({
+      user_id: RESTRICTED_ADMIN_RECORD.user_id,
+      full_name: RESTRICTED_ADMIN_RECORD.full_name,
+      deletable: true,
     });
   });
 });

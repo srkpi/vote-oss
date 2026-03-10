@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
@@ -17,27 +17,6 @@ interface AdminsPageClientProps {
   error: string | null;
 }
 
-function getDeletableIds(admins: Admin[], currentUserId: string): Set<string> {
-  const deletable = new Set<string>();
-  let changed = true;
-
-  while (changed) {
-    changed = false;
-    for (const admin of admins) {
-      if (deletable.has(admin.user_id)) continue;
-      if (
-        admin.promoted_by === currentUserId ||
-        (admin.promoted_by !== null && deletable.has(admin.promoted_by))
-      ) {
-        deletable.add(admin.user_id);
-        changed = true;
-      }
-    }
-  }
-
-  return deletable;
-}
-
 export function AdminsPageClient({
   initialAdmins,
   currentUser,
@@ -48,11 +27,6 @@ export function AdminsPageClient({
 }: AdminsPageClientProps) {
   const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
   const [inviteOpen, setInviteOpen] = useState(false);
-
-  const deletableIds = useMemo(
-    () => (currentUser ? getDeletableIds(admins, currentUser.userId) : new Set<string>()),
-    [admins, currentUser],
-  );
 
   const handleDelete = (userId: string) => {
     setAdmins((prev) => prev.filter((a) => a.user_id !== userId));
@@ -119,12 +93,7 @@ export function AdminsPageClient({
               обмежених до підрозділу
             </span>
           </div>
-          <AdminTable
-            admins={admins}
-            currentUserId={currentUser.userId}
-            deletableIds={deletableIds}
-            onDelete={handleDelete}
-          />
+          <AdminTable admins={admins} currentUserId={currentUser.userId} onDelete={handleDelete} />
         </div>
       )}
 

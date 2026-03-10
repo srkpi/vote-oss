@@ -123,6 +123,7 @@ export interface Admin {
   promoted_at: string;
   manage_admins: boolean;
   restricted_to_faculty: boolean;
+  deletable?: boolean;
 }
 
 export interface InviteTokenRequest {
