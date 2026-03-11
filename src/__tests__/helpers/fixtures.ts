@@ -7,6 +7,7 @@ import {
   signVoteToken,
 } from '@/lib/crypto';
 import { signAccessToken, signRefreshToken } from '@/lib/jwt';
+import type { AdminPromoter } from '@/types/admin';
 
 // ---------------------------------------------------------------------------
 // JWT payload fixtures
@@ -58,6 +59,8 @@ export async function makeTokenPair(payload = USER_PAYLOAD) {
 // ---------------------------------------------------------------------------
 // Admin DB fixtures
 // All records include the soft-delete columns (null = active).
+// `promoter` is the hydrated relation; `promoted_by` FK is intentionally
+// absent from the public shape to avoid redundancy.
 // ---------------------------------------------------------------------------
 
 export const ADMIN_RECORD = {
@@ -65,7 +68,8 @@ export const ADMIN_RECORD = {
   full_name: 'Super Admin User',
   group: 'KV-11',
   faculty: 'FICE',
-  promoted_by: null as string | null,
+  /** Root admin — no promoter. */
+  promoter: null as AdminPromoter | null,
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
   restricted_to_faculty: false,
@@ -78,7 +82,7 @@ export const RESTRICTED_ADMIN_RECORD = {
   full_name: 'Faculty Admin FICE',
   group: 'KV-12',
   faculty: 'FICE',
-  promoted_by: 'superadmin-001',
+  promoter: { user_id: 'superadmin-001', full_name: 'Super Admin User' } as AdminPromoter | null,
   promoted_at: new Date('2024-01-02'),
   manage_admins: true,
   restricted_to_faculty: true,
@@ -88,7 +92,7 @@ export const RESTRICTED_ADMIN_RECORD = {
 
 /**
  * A previously-active admin who has been soft-deleted.
- * `promoted_by` is intentionally preserved to keep the hierarchy chain intact.
+ * `promoter` is intentionally preserved to keep the hierarchy chain intact.
  */
 export const DELETED_ADMIN_RECORD = {
   ...RESTRICTED_ADMIN_RECORD,

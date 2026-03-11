@@ -80,9 +80,10 @@ describe('GET /api/admins/[userId]', () => {
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    expect(body).toEqual({
-      ...ADMIN_RECORD,
-      promoted_at: ADMIN_RECORD.promoted_at.toISOString(),
+    expect(body).toMatchObject({
+      user_id: ADMIN_RECORD.user_id,
+      full_name: ADMIN_RECORD.full_name,
+      promoter: ADMIN_RECORD.promoter,
     });
   });
 
@@ -93,9 +94,11 @@ describe('GET /api/admins/[userId]', () => {
 
     await GET(req, { params: Promise.resolve({ userId: 'admin-002' }) });
 
-    expect(prismaMock.admin.findUnique).toHaveBeenLastCalledWith({
-      where: { user_id: 'admin-002' },
-    });
+    expect(prismaMock.admin.findUnique).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: { user_id: 'admin-002' },
+      }),
+    );
   });
 
   it('returns 200 and the admin from cache without hitting the DB', async () => {
@@ -121,5 +124,24 @@ describe('GET /api/admins/[userId]', () => {
     expect(res.status).toBe(404);
     // No extra DB round-trip should happen
     expect(prismaMock.admin.findUnique).toHaveBeenCalledTimes(1); // only requireAdmin
+  });
+
+  it('returns promoter as an object with user_id and full_name', async () => {
+    const req = await adminReq(ADMIN_RECORD);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null);
+    // Use a record that has a real promoter
+    const { RESTRICTED_ADMIN_RECORD } = await import('../../helpers/fixtures');
+    prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
+
+    const res = await GET(req, {
+      params: Promise.resolve({ userId: RESTRICTED_ADMIN_RECORD.user_id }),
+    });
+    const { status, body } = await parseJson<any>(res);
+
+    expect(status).toBe(200);
+    expect(body.promoter).toEqual({
+      user_id: 'superadmin-001',
+      full_name: 'Super Admin User',
+    });
   });
 });

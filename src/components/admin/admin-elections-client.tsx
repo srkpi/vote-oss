@@ -288,24 +288,26 @@ function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps) {
         className="px-4 py-3.5 cursor-pointer"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
-        {election.restrictedToFaculty || election.restrictedToGroup ? (
-          <div className="flex flex-col gap-1">
-            {election.restrictedToFaculty && (
-              <Badge variant="info" size="md">
-                {election.restrictedToFaculty}
-              </Badge>
-            )}
-            {election.restrictedToGroup && (
-              <Badge variant="secondary" size="md">
-                {election.restrictedToGroup}
-              </Badge>
-            )}
-          </div>
-        ) : (
-          <Badge variant="success" size="md">
-            Всі
-          </Badge>
-        )}
+        <div className="flex flex-col gap-1">
+          {election.restrictedToFaculty || election.restrictedToGroup ? (
+            <>
+              {election.restrictedToFaculty && (
+                <Badge variant="info" size="md">
+                  {election.restrictedToFaculty}
+                </Badge>
+              )}
+              {election.restrictedToGroup && (
+                <Badge variant="secondary" size="md">
+                  {election.restrictedToGroup}
+                </Badge>
+              )}
+            </>
+          ) : (
+            <Badge variant="success" size="md">
+              Всі
+            </Badge>
+          )}
+        </div>
       </td>
       <td className="px-4 py-3.5 text-right">
         {canDelete && (
@@ -316,7 +318,7 @@ function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps) {
               e.stopPropagation();
               onDelete();
             }}
-            className="text-[var(--error)] hover:bg-[var(--error-bg)] opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-[var(--error)] hover:bg-[var(--error-bg)] transition-opacity"
           >
             <Trash2 className="w-4 h-4" />
           </Button>

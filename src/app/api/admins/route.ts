@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
       full_name: true,
       group: true,
       faculty: true,
-      promoted_by: true,
+      promoter: { select: { user_id: true, full_name: true } },
       promoted_at: true,
       manage_admins: true,
       restricted_to_faculty: true,
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     orderBy: { promoted_at: 'asc' },
   });
 
-  await setCachedAdmins(admins as Parameters<typeof setCachedAdmins>[0]);
+  await setCachedAdmins(admins);
 
   const activeIds = admins.map((a) => a.user_id);
   const deletableIds = computeDeletableIds(graph, activeIds, user.sub);

@@ -49,6 +49,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   // ── Cache miss: fall through to DB ───────────────────────────────────────
   const admin = await prisma.admin.findUnique({
     where: { user_id: userId },
+    select: {
+      user_id: true,
+      full_name: true,
+      group: true,
+      faculty: true,
+      promoter: { select: { user_id: true, full_name: true } },
+      promoted_at: true,
+      manage_admins: true,
+      restricted_to_faculty: true,
+    },
   });
 
   if (!admin) return Errors.notFound('Admin not found');

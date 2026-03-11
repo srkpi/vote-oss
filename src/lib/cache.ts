@@ -13,9 +13,8 @@
  * through to the database.
  */
 
-import type { Admin } from '@prisma/client';
-
 import { redis, safeRedis } from '@/lib/redis';
+import type { CachedAdmin } from '@/types/admin';
 import type { Election } from '@/types/election';
 
 // ---------------------------------------------------------------------------
@@ -79,18 +78,18 @@ export async function invalidateElections(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /** Return cached admin list, or null if not cached / Redis down. */
-export async function getCachedAdmins(): Promise<Admin[] | null> {
+export async function getCachedAdmins(): Promise<CachedAdmin[] | null> {
   const raw = await safeRedis(() => redis.get(ADMINS_KEY));
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as Admin[];
+    return JSON.parse(raw) as CachedAdmin[];
   } catch {
     return null;
   }
 }
 
 /** Store admin list in cache. */
-export async function setCachedAdmins(data: Admin[]): Promise<void> {
+export async function setCachedAdmins(data: CachedAdmin[]): Promise<void> {
   await safeRedis(() => redis.set(ADMINS_KEY, JSON.stringify(data), 'EX', ADMINS_TTL_SECS));
 }
 

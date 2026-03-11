@@ -65,7 +65,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
         <table className="w-full">
           <thead>
             <tr className="border-b border-[var(--border-subtle)]">
-              {['Користувач', 'Підрозділ', 'Група', 'Призначено', 'Права', 'Дії'].map((h) => (
+              {['Користувач', 'Підрозділ', 'Група', 'Призначено', 'Права', ''].map((h) => (
                 <th
                   key={h}
                   className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
@@ -164,8 +164,10 @@ function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
           <p className="text-sm font-body text-[var(--foreground)]">
             {formatDate(admin.promoted_at)}
           </p>
-          {admin.promoted_by && (
-            <p className="text-xs text-[var(--muted-foreground)] font-body">{admin.promoted_by}</p>
+          {admin.promoter && (
+            <p className="text-xs text-[var(--muted-foreground)] font-body">
+              {admin.promoter.full_name}
+            </p>
           )}
         </div>
       </td>
@@ -257,8 +259,10 @@ function AdminCard({ admin, isCurrentUser, onDelete }: AdminRowProps) {
       <p className="text-xs text-[var(--muted-foreground)] font-body mt-2">
         Призначено: {formatDate(admin.promoted_at)}
       </p>
-      {admin.promoted_by && (
-        <p className="text-xs text-[var(--muted-foreground)] font-body">{admin.promoted_by}</p>
+      {admin.promoter && (
+        <p className="text-xs text-[var(--muted-foreground)] font-body">
+          {admin.promoter.full_name}
+        </p>
       )}
     </div>
   );
