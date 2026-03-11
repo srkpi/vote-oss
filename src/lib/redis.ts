@@ -41,9 +41,17 @@ function createClient(): Redis {
 // request, so we stash the client on globalThis to avoid leaking connections).
 // ---------------------------------------------------------------------------
 const g = globalThis as typeof globalThis & { _redis?: Redis };
-if (!g._redis) g._redis = createClient();
 
-export const redis: Redis = g._redis;
+function getRedis(): Redis {
+  if (!g._redis) g._redis = createClient();
+  return g._redis;
+}
+
+export const redis: Redis = new Proxy({} as Redis, {
+  get(_target, prop) {
+    return (getRedis() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Availability helper – callers use this to decide whether to fall back to DB
