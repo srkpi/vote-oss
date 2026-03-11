@@ -11,7 +11,7 @@
  * the TTL; subsequent requests only increment the counter).
  */
 
-import { isRedisReady, redis, safeRedis } from '@/lib/redis';
+import { redis, safeRedis } from '@/lib/redis';
 
 interface RateLimitResult {
   limited: boolean;
@@ -38,7 +38,7 @@ export async function rateLimit(
   limit: number,
   windowMs: number,
 ): Promise<RateLimitResult> {
-  if (!isRedisReady()) {
+  if (redis.status !== 'ready') {
     // Fail-open during Redis outage
     return { limited: false, remaining: limit, resetInMs: windowMs };
   }

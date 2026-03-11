@@ -136,13 +136,17 @@ describe('bloom filter', () => {
     });
 
     it('returns "error" when pipeline.exec() rejects', async () => {
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockRejectedValueOnce(new Error('timeout'));
       expect(await bloomCheck(SAMPLE_JTI)).toBe('error');
+      spy.mockRestore();
     });
 
     it('returns "error" when pipeline.exec() returns null', async () => {
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockResolvedValueOnce(null);
       expect(await bloomCheck(SAMPLE_JTI)).toBe('error');
+      spy.mockRestore();
     });
 
     it('checks exactly 7 bits + 1 EXISTS in a single pipeline', async () => {
@@ -184,7 +188,7 @@ describe('bloom filter', () => {
     it('calls redis.eval with the bits key, reset_at key, now, and interval', async () => {
       redisMock.eval.mockResolvedValueOnce(NOW_MS);
       await getBloomResetAt();
-      const [, , keys, ...args] = redisMock.eval.mock.calls[0] as unknown[];
+      const [, keys, ...args] = redisMock.eval.mock.calls[0] as unknown[];
       expect(keys).toBe(2); // numkeys
       expect(args[0]).toBe('bloom:bits');
       expect(args[1]).toBe('bloom:reset_at');
@@ -236,8 +240,10 @@ describe('bloom filter', () => {
     });
 
     it('returns null when bloomCheck returns "error" (Redis unavailable)', async () => {
+      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockRejectedValueOnce(new Error('timeout'));
       expect(await isTokenClean(SAMPLE_JTI)).toBeNull();
+      spy.mockRestore();
     });
   });
 });

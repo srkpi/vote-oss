@@ -166,8 +166,9 @@ describe('GET /api/elections/[id]/tally', () => {
     ]);
     prismaMock.electionTally.createMany.mockResolvedValueOnce({ count: 2 });
 
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(200);
+    spy.mockRestore();
   });
 });

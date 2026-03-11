@@ -81,15 +81,15 @@ describe('rate-limit', () => {
     it('uses key format rate:{category}:{identifier}', async () => {
       redisMock.eval.mockResolvedValueOnce([1, 60]);
       await rateLimit('mycat', 'myid', 5, 30_000);
-      // The key is passed as KEYS[1] = the 4th argument to eval
-      const keyArg = redisMock.eval.mock.calls[0][3] as string;
+      // The key is passed as KEYS[1] = the 3rd argument to eval
+      const keyArg = redisMock.eval.mock.calls[0][2] as string;
       expect(keyArg).toBe('rate:mycat:myid');
     });
 
     it('passes window in seconds (ceiling) as ARGV[1]', async () => {
       redisMock.eval.mockResolvedValueOnce([1, 60]);
       await rateLimit('test', 'id', 5, 61_500); // 61.5s → ceiling = 62
-      const windowArg = redisMock.eval.mock.calls[0][4] as string;
+      const windowArg = redisMock.eval.mock.calls[0][3] as string;
       expect(windowArg).toBe('62');
     });
 
@@ -106,7 +106,7 @@ describe('rate-limit', () => {
     it('uses limit 20 with 60-second window', async () => {
       redisMock.eval.mockResolvedValueOnce([1, 60]);
       await rateLimitLogin('1.2.3.4');
-      const keyArg = redisMock.eval.mock.calls[0][3] as string;
+      const keyArg = redisMock.eval.mock.calls[0][2] as string;
       expect(keyArg).toMatch(/^rate:login:/);
       // Verify remaining = 20 - 1 = 19
       const res = await (async () => {
@@ -130,7 +130,7 @@ describe('rate-limit', () => {
       redisMock.eval.mockResolvedValueOnce([1, 3600]);
       const res = await rateLimitInvite('user-001');
       expect(res.remaining).toBe(9); // 10 - 1
-      const keyArg = redisMock.eval.mock.calls[0][3] as string;
+      const keyArg = redisMock.eval.mock.calls[0][2] as string;
       expect(keyArg).toMatch(/^rate:invite:user-001$/);
     });
   });
