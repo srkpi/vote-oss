@@ -15,16 +15,18 @@ model JwtToken {
 }
 
 model Admin {
-  user_id               String   @id
+  user_id               String    @id
   full_name             String
   group                 String
   faculty               String
   promoted_by           String?
-  promoter              Admin?   @relation("AdminHierarchy", fields: [promoted_by], references: [user_id])
-  subordinates          Admin[]  @relation("AdminHierarchy")
-  promoted_at           DateTime @default(now())
-  manage_admins         Boolean  @default(false)
-  restricted_to_faculty Boolean  @default(true)
+  promoter              Admin?    @relation("AdminHierarchy", fields: [promoted_by], references: [user_id], onDelete: Restrict)
+  subordinates          Admin[]   @relation("AdminHierarchy")
+  promoted_at           DateTime  @default(now())
+  manage_admins         Boolean   @default(false)
+  restricted_to_faculty Boolean   @default(true)
+  deleted_at            DateTime?
+  deleted_by            String?
 
   created_elections     Election[]
   created_invite_tokens AdminInviteToken[]
@@ -50,7 +52,7 @@ model Election {
   id                    String   @id @default(uuid())
   title                 String
   created_by            String
-  creator               Admin    @relation(fields: [created_by], references: [user_id])
+  creator               Admin    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
   created_at            DateTime @default(now())
   opens_at              DateTime
   closes_at             DateTime

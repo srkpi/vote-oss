@@ -89,7 +89,7 @@ export async function requireAdmin(req: NextRequest): Promise<AuthFailure | Admi
   }
 
   const admin = await prisma.admin.findUnique({ where: { user_id: user.sub } });
-  if (!admin) {
+  if (!admin || admin.deleted_at !== null) {
     return { ok: false, error: 'Admin record not found', status: 403 };
   }
 

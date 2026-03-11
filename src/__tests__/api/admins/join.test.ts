@@ -5,6 +5,7 @@ import { generateInviteToken, hashToken } from '@/lib/crypto';
 import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
 import {
   ADMIN_RECORD,
+  DELETED_ADMIN_RECORD,
   JWT_TOKEN_RECORD,
   makeTokenPair,
   USER_PAYLOAD,
@@ -24,6 +25,9 @@ function makeInviteRecord(
     valid_due: Date;
     current_usage: number;
     max_usage: number;
+    created_by: string;
+    manage_admins: boolean;
+    restricted_to_faculty: boolean;
   }> = {},
 ) {
   return {
@@ -49,6 +53,8 @@ describe('POST /api/admins/join', () => {
     allure.story('Redeem Invite Token');
   });
 
+  // ── Auth guards ───────────────────────────────────────────────────────────
+
   it('returns 401 when unauthenticated', async () => {
     const req = makeRequest({ method: 'POST', body: { token: 'abc' } });
     const res = await POST(req);
@@ -62,6 +68,8 @@ describe('POST /api/admins/join', () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
+
+  // ── Invite-token validation ───────────────────────────────────────────────
 
   it('returns 404 when invite token is unknown (wrong hash)', async () => {
     const { access } = await makeTokenPair(USER_PAYLOAD);
@@ -94,22 +102,27 @@ describe('POST /api/admins/join', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 409 when user is already an admin', async () => {
+  // ── Active-admin conflict ─────────────────────────────────────────────────
+
+  it('returns 409 when user is already an active admin', async () => {
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
+    // Existing active admin record (deleted_at = null)
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
     const req = makeAuthRequest(access.token, { method: 'POST', body: { token: 'sometoken' } });
     const res = await POST(req);
     expect(res.status).toBe(409);
   });
 
-  it('returns 201 with admin info on successful join', async () => {
+  // ── Brand-new admin (happy path) ─────────────────────────────────────────
+
+  it('returns 201 with admin info on successful first-time join', async () => {
     const rawToken = generateInviteToken();
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
-    prismaMock.admin.findUnique.mockResolvedValueOnce(null);
+    prismaMock.admin.findUnique.mockResolvedValueOnce(null); // no existing record
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
     const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
@@ -138,7 +151,7 @@ describe('POST /api/admins/join', () => {
     );
   });
 
-  it('creates admin record and increments usage atomically via $transaction', async () => {
+  it('creates admin record and increments usage atomically via $transaction for new admin', async () => {
     const rawToken = generateInviteToken();
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
@@ -152,5 +165,158 @@ describe('POST /api/admins/join', () => {
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
     const [ops] = prismaMock.$transaction.mock.calls[0];
     expect(ops).toHaveLength(2);
+  });
+
+  // ── Re-join (previously soft-deleted admin) ───────────────────────────────
+
+  it('returns 201 when a previously-deleted admin rejoins with a valid invite', async () => {
+    const rawToken = generateInviteToken();
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
+    // Existing soft-deleted record
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    const res = await POST(req);
+    const { status, body } = await parseJson<any>(res);
+
+    expect(status).toBe(201);
+    expect(body.userId).toBe(USER_PAYLOAD.sub);
+  });
+
+  it('uses admin.update (not admin.create) when a soft-deleted admin rejoins', async () => {
+    const rawToken = generateInviteToken();
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    await POST(req);
+
+    // The first operation in the transaction should be an update, not a create.
+    // We distinguish by checking the mock call order on the delegates.
+    expect(prismaMock.admin.update).toHaveBeenCalledTimes(1);
+    expect(prismaMock.admin.create).not.toHaveBeenCalled();
+  });
+
+  it('nullifies deleted_at and deleted_by when a soft-deleted admin rejoins', async () => {
+    const rawToken = generateInviteToken();
+    const newInviter = 'another-admin-999';
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+      makeInviteRecord({ created_by: newInviter }),
+    );
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    await POST(req);
+
+    expect(prismaMock.admin.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { user_id: USER_PAYLOAD.sub },
+        data: expect.objectContaining({
+          deleted_at: null,
+          deleted_by: null,
+        }),
+      }),
+    );
+  });
+
+  it('sets new promoted_by from the invite token when a soft-deleted admin rejoins', async () => {
+    const rawToken = generateInviteToken();
+    const newInviter = 'another-admin-999';
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+      makeInviteRecord({ created_by: newInviter }),
+    );
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    await POST(req);
+
+    expect(prismaMock.admin.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ promoted_by: newInviter }),
+      }),
+    );
+  });
+
+  it('applies new manage_admins and restricted_to_faculty from the invite on rejoin', async () => {
+    const rawToken = generateInviteToken();
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+      makeInviteRecord({ manage_admins: true, restricted_to_faculty: false }),
+    );
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    await POST(req);
+
+    expect(prismaMock.admin.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          manage_admins: true,
+          restricted_to_faculty: false,
+        }),
+      }),
+    );
+  });
+
+  it('increments invite-token usage atomically on rejoin (2-op transaction)', async () => {
+    const rawToken = generateInviteToken();
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    await POST(req);
+
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    const [ops] = prismaMock.$transaction.mock.calls[0];
+    expect(ops).toHaveLength(2);
+  });
+
+  it('returns the correct promotedBy (new inviter) in the response on rejoin', async () => {
+    const rawToken = generateInviteToken();
+    const newInviter = 'fresh-inviter-007';
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+      makeInviteRecord({ created_by: newInviter }),
+    );
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    const res = await POST(req);
+    const { body } = await parseJson<any>(res);
+
+    expect(body.promotedBy).toBe(newInviter);
+  });
+
+  it('invalidates the admins cache on a successful rejoin', async () => {
+    const rawToken = generateInviteToken();
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
+    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
+    await POST(req);
+
+    expect(cacheMock.invalidateAdmins).toHaveBeenCalledTimes(1);
   });
 });

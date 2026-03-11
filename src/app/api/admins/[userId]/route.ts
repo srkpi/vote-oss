@@ -4,27 +4,30 @@ import { requireAdmin } from '@/lib/auth';
 import { getCachedAdmins, invalidateAdmins } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { isAncestorInGraph } from '@/lib/utils';
 
-async function isAncestor(ancestorId: string, targetUserId: string): Promise<boolean> {
-  const visited = new Set<string>();
-  let currentId: string | null = targetUserId;
+// ---------------------------------------------------------------------------
+// Hierarchy graph helpers
+// ---------------------------------------------------------------------------
 
-  while (currentId) {
-    if (visited.has(currentId)) break;
-    visited.add(currentId);
-
-    const node: { promoted_by: string | null } | null = await prisma.admin.findUnique({
-      where: { user_id: currentId },
-      select: { promoted_by: true },
-    });
-
-    if (!node) break;
-    if (node.promoted_by === ancestorId) return true;
-    currentId = node.promoted_by;
-  }
-
-  return false;
+/**
+ * Load every admin's (user_id, promoted_by) pair in a single query — including
+ * soft-deleted records — and return a Map keyed by user_id.
+ *
+ * Soft-deleted nodes are intentionally included so that transitive chains
+ * through removed intermediaries (A → B[deleted] → C) are preserved.
+ * The result is only used for ancestry checks, never exposed to consumers.
+ */
+async function fetchHierarchyGraph(): Promise<Map<string, string | null>> {
+  const nodes = await prisma.admin.findMany({
+    select: { user_id: true, promoted_by: true },
+  });
+  return new Map(nodes.map((n) => [n.user_id, n.promoted_by]));
 }
+
+// ---------------------------------------------------------------------------
+// GET /api/admins/[userId]
+// ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   const auth = await requireAdmin(req);
@@ -39,7 +42,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   const cached = await getCachedAdmins();
   if (cached) {
     const admin = cached.find((a) => a.user_id === userId);
-    // If the list is cached and the admin isn't in it, they don't exist.
     if (!admin) return Errors.notFound('Admin not found');
     return NextResponse.json(admin);
   }
@@ -53,6 +55,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
 
   return NextResponse.json(admin);
 }
+
+// ---------------------------------------------------------------------------
+// DELETE /api/admins/[userId]
+// ---------------------------------------------------------------------------
 
 export async function DELETE(
   req: NextRequest,
@@ -74,14 +80,20 @@ export async function DELETE(
   if (targetUserId === user.sub) return Errors.badRequest('You cannot remove yourself');
 
   const targetAdmin = await prisma.admin.findUnique({ where: { user_id: targetUserId } });
-  if (!targetAdmin) return Errors.notFound('Admin not found');
+  if (!targetAdmin || targetAdmin.deleted_at !== null) {
+    return Errors.notFound('Admin not found');
+  }
 
-  const canManage = await isAncestor(user.sub, targetUserId);
-  if (!canManage) {
+  // Load the full hierarchy graph in one query, then check ancestry in memory.
+  const graph = await fetchHierarchyGraph();
+  if (!isAncestorInGraph(graph, user.sub, targetUserId)) {
     return Errors.forbidden('You can only remove admins in your own branch of the hierarchy');
   }
 
-  await prisma.admin.delete({ where: { user_id: targetUserId } });
+  await prisma.admin.update({
+    where: { user_id: targetUserId },
+    data: { deleted_at: new Date(), deleted_by: user.sub },
+  });
   await invalidateAdmins();
 
   return NextResponse.json({ ok: true, removedUserId: targetUserId });
