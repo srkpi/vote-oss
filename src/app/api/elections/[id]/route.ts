@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
+import { invalidateElections } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils';
@@ -50,4 +51,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
     ballotCount: election._count.ballots,
   });
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAdmin(req);
+  if (!auth.ok) {
+    return auth.status === 401 ? Errors.unauthorized(auth.error) : Errors.forbidden(auth.error);
+  }
+
+  const { id: electionId } = await params;
+  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+
+  const { admin } = auth;
+
+  const election = await prisma.election.findUnique({ where: { id: electionId } });
+  if (!election) return Errors.notFound('Election not found');
+
+  // Faculty-restricted admins may only delete elections scoped to their own faculty
+  if (admin.restricted_to_faculty && election.restricted_to_faculty !== admin.faculty) {
+    return Errors.forbidden('You can only delete elections of your own faculty');
+  }
+
+  await prisma.election.delete({ where: { id: electionId } });
+  await invalidateElections();
+
+  return NextResponse.json({ ok: true, deletedId: electionId });
 }

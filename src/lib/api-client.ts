@@ -148,6 +148,12 @@ export async function createElection(data: CreateElectionRequest) {
   });
 }
 
+export async function deleteElection(id: string) {
+  return fetchApi<{ ok: boolean; deletedId: string }>(`/elections/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 // ==================== VOTING ====================
 
 export async function getVoteToken(electionId: string) {
