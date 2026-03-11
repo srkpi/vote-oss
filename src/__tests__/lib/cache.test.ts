@@ -1,6 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import type { Election } from '@/types/election';
+import type { CachedElection } from '@/lib/cache';
 
 import { redisMock, resetRedisMock } from '../helpers/redis-mock';
 
@@ -32,10 +32,19 @@ import {
 // Sample fixtures
 // ---------------------------------------------------------------------------
 
-const SAMPLE_ELECTION: Partial<Election> = {
-  id: 1,
+const SAMPLE_CACHED_ELECTION: CachedElection = {
+  id: 'sample-uuid',
   title: 'Test Election',
-  status: 'open',
+  createdAt: '2024-01-01T00:00:00.000Z',
+  opensAt: new Date(Date.now() - 60_000).toISOString(),
+  closesAt: new Date(Date.now() + 3_600_000).toISOString(),
+  restrictedToFaculty: null,
+  restrictedToGroup: null,
+  publicKey: '-----BEGIN PUBLIC KEY-----\nfake\n-----END PUBLIC KEY-----',
+  privateKey: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----',
+  creator: { full_name: 'Admin', faculty: 'FICE' },
+  choices: [],
+  ballotCount: 0,
 };
 
 const SAMPLE_ADMIN = {
@@ -55,90 +64,69 @@ describe('cache', () => {
     allure.feature('Redis Cache');
   });
 
-  // ── Elections cache ───────────────────────────────────────────────────────
-
   describe('getCachedElections', () => {
     beforeEach(() => allure.story('getCachedElections'));
 
     it('returns null on a cache miss', async () => {
       redisMock.get.mockResolvedValueOnce(null);
-      expect(await getCachedElections('FICE', 'KV-11')).toBeNull();
+      expect(await getCachedElections()).toBeNull();
     });
 
     it('parses and returns the cached array on a cache hit', async () => {
-      redisMock.get.mockResolvedValueOnce(JSON.stringify([SAMPLE_ELECTION]));
-      const result = await getCachedElections('FICE', 'KV-11');
+      redisMock.get.mockResolvedValueOnce(JSON.stringify([SAMPLE_CACHED_ELECTION]));
+      const result = await getCachedElections();
       expect(result).toHaveLength(1);
-      expect(result![0].id).toBe(1);
+      expect(result![0].title).toBe('Test Election');
     });
 
-    it('uses the key cache:elections:{faculty}:{group}', async () => {
+    it('uses the key cache:elections', async () => {
       redisMock.get.mockResolvedValueOnce(null);
-      await getCachedElections('FEL', 'EL-21');
-      expect(redisMock.get).toHaveBeenCalledWith('cache:elections:FEL:EL-21');
+      await getCachedElections();
+      expect(redisMock.get).toHaveBeenCalledWith('cache:elections');
     });
 
     it('returns null when Redis is unavailable (safeRedis catches error)', async () => {
       redisMock.get.mockRejectedValueOnce(new Error('ECONNREFUSED'));
-      expect(await getCachedElections('FICE', 'KV-11')).toBeNull();
+      expect(await getCachedElections()).toBeNull();
     });
 
     it('returns null when cached value is malformed JSON', async () => {
       redisMock.get.mockResolvedValueOnce('not valid json {{');
-      expect(await getCachedElections('FICE', 'KV-11')).toBeNull();
+      expect(await getCachedElections()).toBeNull();
+    });
+
+    it('cached entries do not contain a status field', async () => {
+      redisMock.get.mockResolvedValueOnce(JSON.stringify([SAMPLE_CACHED_ELECTION]));
+      const result = await getCachedElections();
+      expect(result![0]).not.toHaveProperty('status');
     });
   });
 
   describe('setCachedElections', () => {
     beforeEach(() => allure.story('setCachedElections'));
 
-    it('serialises the array and stores it with a 60-second TTL', async () => {
-      const data = [SAMPLE_ELECTION] as Election[];
-      await setCachedElections('FICE', 'KV-11', data);
-      expect(redisMock.set).toHaveBeenCalledWith(
-        'cache:elections:FICE:KV-11',
-        JSON.stringify(data),
-        'EX',
-        60,
-      );
+    it('serialises the array and stores it under cache:elections with a 60-second TTL', async () => {
+      const data = [SAMPLE_CACHED_ELECTION];
+      await setCachedElections(data);
+      expect(redisMock.set).toHaveBeenCalledWith('cache:elections', JSON.stringify(data), 'EX', 60);
     });
 
     it('does not throw when Redis is unavailable', async () => {
       redisMock.set.mockRejectedValueOnce(new Error('timeout'));
-      await expect(setCachedElections('FICE', 'KV-11', [])).resolves.toBeUndefined();
+      await expect(setCachedElections([])).resolves.toBeUndefined();
     });
   });
 
   describe('invalidateElections', () => {
     beforeEach(() => allure.story('invalidateElections'));
 
-    it('calls del with matching keys returned by SCAN', async () => {
-      redisMock.scan.mockResolvedValueOnce([
-        '0',
-        ['cache:elections:FICE:KV-11', 'cache:elections:FEL:EL-21'],
-      ]);
+    it('deletes the cache:elections key', async () => {
       await invalidateElections();
-      expect(redisMock.del).toHaveBeenCalledWith(
-        'cache:elections:FICE:KV-11',
-        'cache:elections:FEL:EL-21',
-      );
-    });
-
-    it('does not call del when no keys match', async () => {
-      redisMock.scan.mockResolvedValueOnce(['0', []]);
-      await invalidateElections();
-      expect(redisMock.del).not.toHaveBeenCalled();
-    });
-
-    it('paginates SCAN until cursor is "0"', async () => {
-      redisMock.scan.mockResolvedValueOnce(['42', ['key1']]).mockResolvedValueOnce(['0', ['key2']]);
-      await invalidateElections();
-      expect(redisMock.scan).toHaveBeenCalledTimes(2);
-      expect(redisMock.del).toHaveBeenCalledWith('key1', 'key2');
+      expect(redisMock.del).toHaveBeenCalledWith('cache:elections');
     });
 
     it('does not throw when Redis is unavailable', async () => {
-      redisMock.scan.mockRejectedValueOnce(new Error('down'));
+      redisMock.del.mockRejectedValueOnce(new Error('down'));
       await expect(invalidateElections()).resolves.toBeUndefined();
     });
   });

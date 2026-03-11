@@ -33,6 +33,25 @@ async function makeAdminReq(body: object, adminRecord = ADMIN_RECORD) {
   return makeAuthRequest(access.token, { method: 'POST', body });
 }
 
+/** Build the shape that the route stores in cache (no `status` field). */
+function makeCachedElection(overrides = {}) {
+  const e = makeElection(overrides);
+  return {
+    id: e.id,
+    title: e.title,
+    createdAt: e.created_at.toISOString(),
+    opensAt: e.opens_at.toISOString(),
+    closesAt: e.closes_at.toISOString(),
+    restrictedToFaculty: e.restricted_to_faculty,
+    restrictedToGroup: e.restricted_to_group,
+    publicKey: e.public_key,
+    privateKey: e.private_key, // always present in cache
+    creator: e.creator,
+    choices: e.choices,
+    ballotCount: 0,
+  };
+}
+
 // ── GET /api/elections ────────────────────────────────────────────────────────
 
 describe('GET /api/elections', () => {
@@ -51,14 +70,14 @@ describe('GET /api/elections', () => {
 
   it('returns cached data immediately on a cache hit (no DB query)', async () => {
     const req = await makeAuthReq();
-    const cached = [{ id: 99, title: 'Cached' }];
+    const cached = [makeCachedElection()];
     cacheMock.getCachedElections.mockResolvedValueOnce(cached as any);
 
     const res = await GET(req);
     const { status, body } = await parseJson<any[]>(res);
 
     expect(status).toBe(200);
-    expect(body).toEqual(cached);
+    expect(body).toHaveLength(1);
     expect(prismaMock.election.findMany).not.toHaveBeenCalled();
   });
 
@@ -86,26 +105,53 @@ describe('GET /api/elections', () => {
     ]);
 
     await GET(req);
-    expect(cacheMock.setCachedElections).toHaveBeenCalledWith(
-      USER_PAYLOAD.faculty,
-      USER_PAYLOAD.group,
-      expect.any(Array),
-    );
+    expect(cacheMock.setCachedElections).toHaveBeenCalledWith(expect.any(Array));
   });
 
-  it('filters by the requesting user faculty and group', async () => {
+  it('cache stores elections without a status field', async () => {
     const req = await makeAuthReq();
+    const election = makeElection();
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
-    prismaMock.election.findMany.mockResolvedValueOnce([]);
+    prismaMock.election.findMany.mockResolvedValueOnce([
+      {
+        ...election,
+        private_key: election.private_key,
+        creator: { full_name: 'Admin', faculty: 'FICE' },
+        choices: election.choices,
+        _count: { ballots: 0 },
+      },
+    ]);
 
     await GET(req);
-    const { where } = prismaMock.election.findMany.mock.calls[0][0];
-    expect(where.AND[0].OR).toEqual(
-      expect.arrayContaining([
-        { restricted_to_faculty: null },
-        { restricted_to_faculty: USER_PAYLOAD.faculty },
-      ]),
-    );
+
+    const [storedArray] = cacheMock.setCachedElections.mock.calls[0];
+    expect(storedArray[0]).not.toHaveProperty('status');
+  });
+
+  it('filters cached elections by the requesting user faculty', async () => {
+    const req = await makeAuthReq(); // USER_PAYLOAD.faculty = 'FICE'
+    const ficeElection = makeCachedElection({ restricted_to_faculty: 'FICE' });
+    const otherElection = makeCachedElection({ restricted_to_faculty: 'FEL' });
+    cacheMock.getCachedElections.mockResolvedValueOnce([ficeElection, otherElection] as any);
+
+    const res = await GET(req);
+    const { body } = await parseJson<any[]>(res);
+
+    expect(body).toHaveLength(1);
+    expect(body[0].restrictedToFaculty).toBe('FICE');
+  });
+
+  it('filters cached elections by the requesting user group', async () => {
+    const req = await makeAuthReq(); // USER_PAYLOAD.group = 'KV-91'
+    const myGroup = makeCachedElection({ restricted_to_group: 'KV-91' });
+    const otherGroup = makeCachedElection({ restricted_to_group: 'EL-21' });
+    cacheMock.getCachedElections.mockResolvedValueOnce([myGroup, otherGroup] as any);
+
+    const res = await GET(req);
+    const { body } = await parseJson<any[]>(res);
+
+    expect(body).toHaveLength(1);
+    expect(body[0].restrictedToGroup).toBe('KV-91');
   });
 
   it('does not expose privateKey for open elections', async () => {
@@ -121,6 +167,16 @@ describe('GET /api/elections', () => {
         _count: { ballots: 0 },
       },
     ]);
+
+    const res = await GET(req);
+    const { body } = await parseJson<any[]>(res);
+    expect(body[0].privateKey).toBeUndefined();
+  });
+
+  it('does not expose privateKey for open elections served from cache', async () => {
+    const req = await makeAuthReq();
+    const cached = [makeCachedElection()]; // open by default
+    cacheMock.getCachedElections.mockResolvedValueOnce(cached as any);
 
     const res = await GET(req);
     const { body } = await parseJson<any[]>(res);
@@ -149,7 +205,22 @@ describe('GET /api/elections', () => {
     expect(body[0].privateKey).toBeDefined();
   });
 
-  it('includes status field (upcoming/open/closed)', async () => {
+  it('exposes privateKey for closed elections served from cache', async () => {
+    const req = await makeAuthReq();
+    const cached = [
+      makeCachedElection({
+        opens_at: new Date(Date.now() - 7_200_000),
+        closes_at: new Date(Date.now() - 100),
+      }),
+    ];
+    cacheMock.getCachedElections.mockResolvedValueOnce(cached as any);
+
+    const res = await GET(req);
+    const { body } = await parseJson<any[]>(res);
+    expect(body[0].privateKey).toBeDefined();
+  });
+
+  it('includes status field computed at serve time (upcoming/open/closed)', async () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
     const election = makeElection(); // open
@@ -166,6 +237,32 @@ describe('GET /api/elections', () => {
     const res = await GET(req);
     const { body } = await parseJson<any[]>(res);
     expect(body[0].status).toBe('open');
+  });
+
+  it('computes correct status from cached elections at serve time', async () => {
+    const req = await makeAuthReq();
+    const openElection = makeCachedElection(); // open
+    const upcomingElection = makeCachedElection({
+      opens_at: new Date(Date.now() + 3_600_000),
+      closes_at: new Date(Date.now() + 7_200_000),
+    });
+    const closedElection = makeCachedElection({
+      opens_at: new Date(Date.now() - 7_200_000),
+      closes_at: new Date(Date.now() - 100),
+    });
+    cacheMock.getCachedElections.mockResolvedValueOnce([
+      openElection,
+      upcomingElection,
+      closedElection,
+    ] as any);
+
+    const res = await GET(req);
+    const { body } = await parseJson<any[]>(res);
+
+    const statuses = body.map((e: any) => e.status);
+    expect(statuses).toContain('open');
+    expect(statuses).toContain('upcoming');
+    expect(statuses).toContain('closed');
   });
 
   it('returns 200 with empty array when no elections exist', async () => {

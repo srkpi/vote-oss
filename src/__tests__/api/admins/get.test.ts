@@ -61,16 +61,20 @@ describe('GET /api/admins/[userId]', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when admin does not exist', async () => {
+  // ── Cache-miss path (DB fallback) ─────────────────────────────────────────
+
+  it('returns 404 when admin does not exist (cache miss, DB miss)', async () => {
     const req = await adminReq(ADMIN_RECORD);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null); // cache miss
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
     const res = await GET(req, { params: Promise.resolve({ userId: 'missing-admin' }) });
 
     expect(res.status).toBe(404);
   });
 
-  it('returns 200 and the admin when found', async () => {
+  it('returns 200 and the admin from DB when cache is empty', async () => {
     const req = await adminReq(ADMIN_RECORD);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null); // cache miss
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
     const res = await GET(req, { params: Promise.resolve({ userId: ADMIN_RECORD.user_id }) });
     const { status, body } = await parseJson<any>(res);
@@ -82,8 +86,9 @@ describe('GET /api/admins/[userId]', () => {
     });
   });
 
-  it('calls prisma.admin.findUnique with the correct userId', async () => {
+  it('calls prisma.admin.findUnique with the correct userId when cache is empty', async () => {
     const req = await adminReq(ADMIN_RECORD);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
 
     await GET(req, { params: Promise.resolve({ userId: 'admin-002' }) });
@@ -91,5 +96,30 @@ describe('GET /api/admins/[userId]', () => {
     expect(prismaMock.admin.findUnique).toHaveBeenLastCalledWith({
       where: { user_id: 'admin-002' },
     });
+  });
+
+  it('returns 200 and the admin from cache without hitting the DB', async () => {
+    const req = await adminReq(ADMIN_RECORD);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_RECORD] as any);
+
+    const res = await GET(req, { params: Promise.resolve({ userId: ADMIN_RECORD.user_id }) });
+    const { status, body } = await parseJson<any>(res);
+
+    expect(status).toBe(200);
+    expect(body.user_id).toBe(ADMIN_RECORD.user_id);
+    // DB must NOT have been consulted for the lookup (only for requireAdmin's auth check)
+    expect(prismaMock.admin.findUnique).toHaveBeenCalledTimes(1); // only requireAdmin call
+  });
+
+  it('returns 404 when cache is populated but target admin is absent', async () => {
+    const req = await adminReq(ADMIN_RECORD);
+    // Cache has records, but not the one we're looking for
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_RECORD] as any);
+
+    const res = await GET(req, { params: Promise.resolve({ userId: 'nonexistent-admin' }) });
+
+    expect(res.status).toBe(404);
+    // No extra DB round-trip should happen
+    expect(prismaMock.admin.findUnique).toHaveBeenCalledTimes(1); // only requireAdmin
   });
 });

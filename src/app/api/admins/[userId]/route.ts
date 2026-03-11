@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
-import { invalidateAdmins } from '@/lib/cache';
+import { getCachedAdmins, invalidateAdmins } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
@@ -35,6 +35,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   const { userId } = await params;
   if (!userId) return Errors.badRequest('userId is required');
 
+  // ── Fast path: serve from cache when available ───────────────────────────
+  const cached = await getCachedAdmins();
+  if (cached) {
+    const admin = cached.find((a) => a.user_id === userId);
+    // If the list is cached and the admin isn't in it, they don't exist.
+    if (!admin) return Errors.notFound('Admin not found');
+    return NextResponse.json(admin);
+  }
+
+  // ── Cache miss: fall through to DB ───────────────────────────────────────
   const admin = await prisma.admin.findUnique({
     where: { user_id: userId },
   });
