@@ -4,6 +4,7 @@ import {
   JWT_TOKEN_RECORD,
   makeElection,
   makeTokenPair,
+  MOCK_ELECTION_ID,
   USER_PAYLOAD,
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
@@ -15,7 +16,7 @@ jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { GET } from '@/app/api/elections/[id]/ballots/route';
 
-const PARAMS = { params: Promise.resolve({ id: '1' }) };
+const PARAMS = { params: Promise.resolve({ id: MOCK_ELECTION_ID }) };
 
 async function authReq() {
   const { access } = await makeTokenPair(USER_PAYLOAD);
@@ -27,7 +28,7 @@ async function authReq() {
 }
 
 const MOCK_BALLOT = {
-  id: 1,
+  id: '550e8400-e29b-41d4-a716-446655440001',
   encrypted_ballot: 'enc-data-base64',
   created_at: new Date(),
   signature: 'sig-base64',
@@ -50,7 +51,7 @@ describe('GET /api/elections/[id]/ballots', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for non-numeric election id', async () => {
+  it('returns 400 for non-uuid election id', async () => {
     const req = await authReq();
 
     const res = await GET(req, {
@@ -73,7 +74,8 @@ describe('GET /api/elections/[id]/ballots', () => {
   it('returns ballots for the election', async () => {
     const req = await authReq();
 
-    prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
+    const mockElection = makeElection();
+    prismaMock.election.findUnique.mockResolvedValueOnce(mockElection);
     prismaMock.ballot.findMany.mockResolvedValueOnce([MOCK_BALLOT]);
 
     const res = await GET(req, PARAMS);
@@ -82,7 +84,8 @@ describe('GET /api/elections/[id]/ballots', () => {
     expect(status).toBe(200);
     expect(body.ballots).toHaveLength(1);
     expect(body.total).toBe(1);
-    expect(body.election.id).toBe(1);
+    expect(body.election.id).toBe(mockElection.id);
+    expect(body.ballots[0].id).toBe(MOCK_BALLOT.id);
   });
 
   it('returns ballots ordered by id ascending', async () => {
@@ -95,7 +98,7 @@ describe('GET /api/elections/[id]/ballots', () => {
 
     expect(prismaMock.ballot.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        orderBy: { id: 'asc' },
+        orderBy: { created_at: 'asc' },
       }),
     );
   });

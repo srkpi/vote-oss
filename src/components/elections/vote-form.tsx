@@ -39,7 +39,7 @@ export function VoteForm({ election }: VoteFormProps) {
 
     const { token, signature } = tokenResult.data;
 
-    // Step 2: Encrypt the ballot and compute nullifier client-side
+    // Step 2: Encrypt the ballot and compute nullifier client-side.
     let encryptedBallot: string;
     let nullifier: string;
 
@@ -287,7 +287,7 @@ function SubmittingStep() {
 
 // ==================== SUCCESS ====================
 
-function VotingSuccess({ hash, electionId }: { hash: string; electionId: number }) {
+function VotingSuccess({ hash, electionId }: { hash: string; electionId: string }) {
   const router = useRouter();
 
   return (
@@ -334,7 +334,11 @@ function VotingSuccess({ hash, electionId }: { hash: string; electionId: number 
 
 // ==================== CRYPTO HELPERS (Browser-side) ====================
 
-async function encryptChoice(publicKeyPem: string, choiceId: number): Promise<string> {
+/**
+ * Encrypts a choice UUID string using the election's RSA-OAEP public key.
+ * The choice ID is stored as a raw string — no parseInt needed on decryption.
+ */
+async function encryptChoice(publicKeyPem: string, choiceId: string): Promise<string> {
   const pemHeader = '-----BEGIN PUBLIC KEY-----';
   const pemFooter = '-----END PUBLIC KEY-----';
   const pemContents = publicKeyPem
@@ -356,7 +360,8 @@ async function encryptChoice(publicKeyPem: string, choiceId: number): Promise<st
     ['encrypt'],
   );
 
-  const encoded = new TextEncoder().encode(String(choiceId));
+  // Encode the UUID choice ID directly as UTF-8 bytes
+  const encoded = new TextEncoder().encode(choiceId);
   const encrypted = await window.crypto.subtle.encrypt({ name: 'RSA-OAEP' }, key, encoded);
 
   return btoa(String.fromCharCode(...new Uint8Array(encrypted)));

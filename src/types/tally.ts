@@ -1,12 +1,12 @@
 export interface TallyResult {
-  choiceId: number;
+  choiceId: string;
   choice: string;
   position: number;
   votes: number;
 }
 
 export interface TallyResponse {
-  electionId: number;
+  electionId: string;
   title: string;
   closedAt: string;
   privateKey: string;

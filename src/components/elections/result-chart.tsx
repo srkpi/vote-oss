@@ -33,7 +33,7 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
   }, []);
 
   let highestVotes = 0;
-  const winners: Set<number> = new Set();
+  const winners: Set<string> = new Set();
 
   for (const result of results) {
     if (result.votes > highestVotes) {

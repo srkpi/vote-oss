@@ -101,10 +101,19 @@ export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBa
   return { ...makeElectionBase(keys), ...overrides };
 }
 
+export const MOCK_ELECTION_ID = '550e8400-e29b-41d4-a716-446655440000';
+export const MOCK_ELECTION_ID_NOT_EXISTING = '550e8400-e29b-41d4-a716-446655440999';
+
+export const MOCK_ELECTION_CHOICES = [
+  { id: '550e8400-e29b-41d4-a716-446655441000', election_id: 1, choice: 'Option A', position: 0 },
+  { id: '550e8400-e29b-41d4-a716-446655441001', election_id: 1, choice: 'Option B', position: 1 },
+];
+export const MOCK_ELECTION_INVALID_CHOICE_ID = '550e8400-e29b-41d4-a716-446655441999';
+
 function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
   const now = new Date();
   return {
-    id: 1,
+    id: MOCK_ELECTION_ID,
     title: 'Test Election',
     created_by: 'superadmin-001',
     created_at: new Date('2024-01-01'),
@@ -115,17 +124,14 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     public_key: keys.publicKey,
     private_key: keys.privateKey,
     creator: { full_name: 'Super Admin User', faculty: 'FICE' },
-    choices: [
-      { id: 10, election_id: 1, choice: 'Option A', position: 0 },
-      { id: 11, election_id: 1, choice: 'Option B', position: 1 },
-    ],
+    choices: MOCK_ELECTION_CHOICES,
     tallies: [] as unknown[],
     _count: { ballots: 0 },
   };
 }
 
 /** Encrypt a choice ID with the election's RSA public key (OAEP/SHA-256). */
-export function encryptChoice(publicKeyPem: string, choiceId: number): string {
+export function encryptChoice(publicKeyPem: string, choiceId: string): string {
   const buf = publicEncrypt(
     { key: publicKeyPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
     Buffer.from(String(choiceId)),
@@ -134,7 +140,10 @@ export function encryptChoice(publicKeyPem: string, choiceId: number): string {
 }
 
 /** Build a valid vote submission payload for a given election + choice. */
-export function makeVoteBallot(election: ReturnType<typeof makeElection>, choiceId = 10) {
+export function makeVoteBallot(
+  election: ReturnType<typeof makeElection>,
+  choiceId: string = MOCK_ELECTION_CHOICES[0].id,
+) {
   const { token } = generateVoteToken(election.id);
   const signature = signVoteToken(election.private_key, token);
   const nullifier = computeNullifier(token);

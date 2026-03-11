@@ -1,5 +1,5 @@
 export interface Ballot {
-  id: number;
+  id: string;
   encrypted_ballot: string;
   created_at: string;
   signature: string;
@@ -8,19 +8,19 @@ export interface Ballot {
 }
 
 export interface BallotsResponse {
-  election: { id: number; title: string };
+  election: { id: string; title: string };
   ballots: Ballot[];
   total: number;
 }
 
 export interface DecryptionResult {
-  choiceId: number | null;
+  choiceId: string | null;
   choiceLabel: string | null;
   valid: boolean;
   hashValid: boolean;
 }
 
-export type DecryptedMap = Map<number, DecryptionResult>;
+export type DecryptedMap = Map<string, DecryptionResult>;
 
 export interface BallotSubmission {
   token: string;

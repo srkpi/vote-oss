@@ -47,7 +47,7 @@ model AdminInviteToken {
 }
 
 model Election {
-  id                    Int      @id @default(autoincrement())
+  id                    String   @id @default(uuid())
   title                 String
   created_by            String
   creator               Admin    @relation(fields: [created_by], references: [user_id])
@@ -69,8 +69,8 @@ model Election {
 }
 
 model ElectionChoice {
-  id          Int      @id @default(autoincrement())
-  election_id Int
+  id          String   @id @default(uuid())
+  election_id String
   election    Election @relation(fields: [election_id], references: [id])
   choice      String
   position    Int
@@ -81,8 +81,8 @@ model ElectionChoice {
 }
 
 model IssuedToken {
-  id          Int      @id @default(autoincrement())
-  election_id Int
+  id          String   @id @default(uuid())
+  election_id String
   election    Election @relation(fields: [election_id], references: [id])
   user_id     String
 
@@ -91,8 +91,8 @@ model IssuedToken {
 }
 
 model Ballot {
-  id               Int      @id @default(autoincrement())
-  election_id      Int
+  id               String   @id @default(uuid())
+  election_id      String
   election         Election @relation(fields: [election_id], references: [id])
   encrypted_ballot String   @unique @db.Text
   created_at       DateTime @default(now())
@@ -105,15 +105,15 @@ model Ballot {
 
 model UsedTokenNullifier {
   nullifier   String   @id
-  election_id Int
+  election_id String
   election    Election @relation(fields: [election_id], references: [id])
 
   @@map("used_token_nullifiers")
 }
 
 model ElectionTally {
-  election_id Int
-  choice_id   Int
+  election_id String
+  choice_id   String
   election    Election       @relation(fields: [election_id], references: [id])
   choice      ElectionChoice @relation(fields: [choice_id], references: [id])
   vote_count  Int

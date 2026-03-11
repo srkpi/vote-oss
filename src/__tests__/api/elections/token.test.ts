@@ -4,6 +4,7 @@ import {
   JWT_TOKEN_RECORD,
   makeElection,
   makeTokenPair,
+  MOCK_ELECTION_ID,
   OTHER_FACULTY_PAYLOAD,
   USER_PAYLOAD,
 } from '../../helpers/fixtures';
@@ -16,7 +17,7 @@ jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { POST } from '@/app/api/elections/[id]/token/route';
 
-const PARAMS = { params: Promise.resolve({ id: '1' }) };
+const PARAMS = { params: Promise.resolve({ id: MOCK_ELECTION_ID }) };
 
 async function authReq(payload = USER_PAYLOAD) {
   const { access } = await makeTokenPair(payload);
@@ -38,7 +39,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for non-numeric election id', async () => {
+  it('returns 400 for non-uuid election id', async () => {
     const req = await authReq();
     const res = await POST(req, { params: Promise.resolve({ id: 'xyz' }) });
     expect(res.status).toBe(400);
@@ -96,7 +97,7 @@ describe('POST /api/elections/[id]/token', () => {
   it('returns 409 when vote token is already issued to this user', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
-    prismaMock.issuedToken.findUnique.mockResolvedValueOnce({ id: 1 });
+    prismaMock.issuedToken.findUnique.mockResolvedValueOnce({ id: MOCK_ELECTION_ID });
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(409);
   });
@@ -114,7 +115,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(status).toBe(200);
     expect(typeof body.token).toBe('string');
     expect(typeof body.signature).toBe('string');
-    expect(body.token.startsWith('1:')).toBe(true);
+    expect(body.token.startsWith(`${MOCK_ELECTION_ID}:`)).toBe(true);
   });
 
   it('issued token signature is verifiable with election public key', async () => {
@@ -141,7 +142,7 @@ describe('POST /api/elections/[id]/token', () => {
 
     expect(prismaMock.issuedToken.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { election_id: 1, user_id: USER_PAYLOAD.sub },
+        data: { election_id: MOCK_ELECTION_ID, user_id: USER_PAYLOAD.sub },
       }),
     );
   });

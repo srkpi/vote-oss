@@ -36,38 +36,14 @@ export default async function ElectionsPage() {
               </p>
             </div>
 
-            <div
-              className="flex items-center gap-3 animate-fade-up"
-              style={{ animationDelay: '100ms' }}
-            >
-              <div className="hidden sm:flex items-center gap-2">
-                {open > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--success-bg)] border border-[var(--success)]/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-                    <span className="text-xs font-medium text-[var(--success)] font-body">
-                      {open} активних
-                    </span>
-                  </div>
-                )}
-                {upcoming > 0 && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--warning-bg)] border border-[var(--kpi-orange)]/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--kpi-orange)]" />
-                    <span className="text-xs font-medium text-[var(--kpi-orange)] font-body">
-                      {upcoming} майбутніх
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {session?.isAdmin && (
-                <Button variant="accent" size="sm" asChild>
-                  <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
-                    <Plus className="w-3.5 h-3.5" />
-                    <span className="inline">Нове голосування</span>
-                  </Link>
-                </Button>
-              )}
-            </div>
+            {session?.isAdmin && (
+              <Button variant="accent" size="sm" asChild>
+                <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="inline">Нове голосування</span>
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

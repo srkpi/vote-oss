@@ -2,7 +2,7 @@ import type { VoteRecord } from '@/types/vote';
 
 const KEY_PREFIX = 'kpi_vote_';
 
-function key(electionId: number): string {
+function key(electionId: string): string {
   return `${KEY_PREFIX}${electionId}`;
 }
 
@@ -15,7 +15,7 @@ export function saveVote(record: VoteRecord): void {
   }
 }
 
-export function getVote(electionId: number): VoteRecord | null {
+export function getVote(electionId: string): VoteRecord | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(key(electionId));

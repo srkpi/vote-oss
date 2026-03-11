@@ -4,6 +4,7 @@ import {
   JWT_TOKEN_RECORD,
   makeElection,
   makeTokenPair,
+  MOCK_ELECTION_ID,
   OTHER_FACULTY_PAYLOAD,
   USER_PAYLOAD,
 } from '../../helpers/fixtures';
@@ -16,7 +17,7 @@ jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { GET } from '@/app/api/elections/[id]/route';
 
-const PARAMS = { params: Promise.resolve({ id: '1' }) };
+const PARAMS = { params: Promise.resolve({ id: MOCK_ELECTION_ID }) };
 
 async function authRequest(payload = USER_PAYLOAD) {
   const { access } = await makeTokenPair(payload);
@@ -38,7 +39,7 @@ describe('GET /api/elections/[id]', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for a non-numeric id', async () => {
+  it('returns 400 for a non-uuid id', async () => {
     const req = await authRequest();
     const res = await GET(req, { params: Promise.resolve({ id: 'abc' }) });
     expect(res.status).toBe(400);
@@ -76,8 +77,8 @@ describe('GET /api/elections/[id]', () => {
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    expect(body.id).toBe(1);
-    expect(body.title).toBe('Test Election');
+    expect(body.id).toBe(election.id);
+    expect(body.title).toBe(election.title);
     expect(body.choices).toHaveLength(2);
     expect(body.ballotCount).toBe(0);
   });

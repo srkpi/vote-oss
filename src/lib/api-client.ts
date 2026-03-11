@@ -137,7 +137,7 @@ export async function getElections() {
   return fetchApi<Election[]>('/elections');
 }
 
-export async function getElection(id: number) {
+export async function getElection(id: string) {
   return fetchApi<ElectionDetail>(`/elections/${id}`);
 }
 
@@ -150,14 +150,14 @@ export async function createElection(data: CreateElectionRequest) {
 
 // ==================== VOTING ====================
 
-export async function getVoteToken(electionId: number) {
+export async function getVoteToken(electionId: string) {
   return fetchApi<VoteToken>(`/elections/${electionId}/token`, {
     method: 'POST',
   });
 }
 
 export async function submitBallot(
-  electionId: number,
+  electionId: string,
   data: {
     token: string;
     signature: string;
@@ -173,7 +173,7 @@ export async function submitBallot(
 
 // ==================== BALLOTS ====================
 
-export async function getBallots(electionId: number, page: number = 1, pageSize: number = 50) {
+export async function getBallots(electionId: string, page: number = 1, pageSize: number = 50) {
   return fetchApi<BallotsResponse>(
     `/elections/${electionId}/ballots?page=${page}&pageSize=${pageSize}`,
   );
@@ -181,7 +181,7 @@ export async function getBallots(electionId: number, page: number = 1, pageSize:
 
 // ==================== TALLY ====================
 
-export async function getTally(electionId: number) {
+export async function getTally(electionId: string) {
   return fetchApi<TallyResponse>(`/elections/${electionId}/tally`);
 }
 

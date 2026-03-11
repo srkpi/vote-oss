@@ -1,7 +1,7 @@
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';
 
 export interface ElectionChoice {
-  id: number;
+  id: string;
   choice: string;
   position: number;
 }
@@ -12,7 +12,7 @@ export interface ElectionCreator {
 }
 
 export interface Election {
-  id: number;
+  id: string;
   title: string;
   createdAt: string;
   opensAt: string;
@@ -47,7 +47,7 @@ export interface CreateElectionRequest {
 }
 
 export interface CreateElectionResponse {
-  id: number;
+  id: string;
   title: string;
   opensAt: string;
   closesAt: string;
