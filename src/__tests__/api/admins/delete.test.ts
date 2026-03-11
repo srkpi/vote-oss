@@ -99,7 +99,11 @@ describe('DELETE /api/admins/[userId]', () => {
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique
       .mockResolvedValueOnce(ADMIN_RECORD) // requireAdmin
-      .mockResolvedValueOnce({ ...RESTRICTED_ADMIN_RECORD, promoted_by: 'other-admin' }); // target
+      .mockResolvedValueOnce({
+        // target — promoted by a different root
+        ...RESTRICTED_ADMIN_RECORD,
+        promoter: { user_id: 'other-admin', full_name: 'Other Admin' },
+      });
     // Graph: target is in a completely different branch — superadmin-001 is not an ancestor
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
@@ -118,7 +122,7 @@ describe('DELETE /api/admins/[userId]', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD).mockResolvedValueOnce({
       ...RESTRICTED_ADMIN_RECORD,
       user_id: 'admin-x',
-      promoted_by: 'admin-y',
+      promoter: { user_id: 'admin-y', full_name: 'Admin Y' },
       deleted_at: null,
     });
     // Cycle: x → y → x; superadmin-001 is unreachable
@@ -222,7 +226,7 @@ describe('DELETE /api/admins/[userId]', () => {
   it('traverses through a previously-deleted intermediary when checking ancestry', async () => {
     // Scenario: caller (superadmin-001) → admin-middle[deleted] → admin-leaf
     // The graph walk resolves ancestry through the deleted intermediary because
-    // soft-delete never clears promoted_by, and fetchHierarchyGraph loads all nodes.
+    // soft-delete never clears promoter, and fetchHierarchyGraph loads all nodes.
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique
@@ -231,10 +235,10 @@ describe('DELETE /api/admins/[userId]', () => {
         // target active-check: leaf is active
         ...RESTRICTED_ADMIN_RECORD,
         user_id: 'admin-leaf',
-        promoted_by: 'admin-middle',
+        promoter: { user_id: 'admin-middle', full_name: 'Admin Middle' },
         deleted_at: null,
       });
-    // Graph includes the soft-deleted intermediary
+    // Graph includes the soft-deleted intermediary (uses promoted_by FK internally)
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'admin-middle', promoted_by: 'superadmin-001' }, // deleted but present

@@ -83,12 +83,9 @@ describe('GET /api/admins', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
     prismaMock.admin.findMany
       .mockResolvedValueOnce([
-        // graph
-        { user_id: ADMIN_RECORD.user_id, promoted_by: ADMIN_RECORD.promoted_by },
-        {
-          user_id: RESTRICTED_ADMIN_RECORD.user_id,
-          promoted_by: RESTRICTED_ADMIN_RECORD.promoted_by,
-        },
+        // graph — uses promoted_by FK (internal hierarchy query)
+        { user_id: ADMIN_RECORD.user_id, promoted_by: null },
+        { user_id: RESTRICTED_ADMIN_RECORD.user_id, promoted_by: 'superadmin-001' },
       ])
       .mockResolvedValueOnce([ADMIN_RECORD, RESTRICTED_ADMIN_RECORD]); // active admins
 
@@ -99,11 +96,13 @@ describe('GET /api/admins', () => {
     expect(body[0]).toMatchObject({
       user_id: ADMIN_RECORD.user_id,
       full_name: ADMIN_RECORD.full_name,
+      promoter: null,
       deletable: false,
     });
     expect(body[1]).toMatchObject({
       user_id: RESTRICTED_ADMIN_RECORD.user_id,
       full_name: RESTRICTED_ADMIN_RECORD.full_name,
+      promoter: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
       deletable: true,
     });
   });
@@ -138,7 +137,7 @@ describe('GET /api/admins', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
     // Graph query always runs — return only active node
     prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: ADMIN_RECORD.user_id, promoted_by: ADMIN_RECORD.promoted_by },
+      { user_id: ADMIN_RECORD.user_id, promoted_by: null },
     ]);
     // Cache holds only the active admin
     cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_RECORD] as any);
@@ -153,7 +152,7 @@ describe('GET /api/admins', () => {
     expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
   });
 
-  it('marks a soft-deleted admin as not deletable even if promoted_by points to caller', async () => {
+  it('marks a soft-deleted admin as not deletable even if promoter points to caller', async () => {
     // Soft-deleted admins should not appear in the list at all; this test
     // confirms that the DB query properly excludes them so the deletable
     // computation never even sees them.
@@ -163,7 +162,7 @@ describe('GET /api/admins', () => {
     prismaMock.admin.findMany
       .mockResolvedValueOnce([
         // graph
-        { user_id: ADMIN_RECORD.user_id, promoted_by: ADMIN_RECORD.promoted_by },
+        { user_id: ADMIN_RECORD.user_id, promoted_by: null },
       ])
       .mockResolvedValueOnce([ADMIN_RECORD]); // active admins (deleted one filtered by where)
 
@@ -187,11 +186,11 @@ describe('GET /api/admins', () => {
     const activeLeaf = {
       ...RESTRICTED_ADMIN_RECORD,
       user_id: 'admin-leaf',
-      promoted_by: 'admin-middle',
+      promoter: { user_id: 'admin-middle', full_name: 'Admin Middle' },
     };
     prismaMock.admin.findMany
       .mockResolvedValueOnce([
-        // graph — includes deleted middle
+        // graph — includes deleted middle; uses promoted_by FK (internal)
         { user_id: 'superadmin-001', promoted_by: null },
         { user_id: 'admin-middle', promoted_by: 'superadmin-001' },
         { user_id: 'admin-leaf', promoted_by: 'admin-middle' },
@@ -204,5 +203,6 @@ describe('GET /api/admins', () => {
     const leaf = body.find((a: any) => a.user_id === 'admin-leaf');
     expect(leaf).toBeDefined();
     expect(leaf.deletable).toBe(true);
+    expect(leaf.promoter).toEqual({ user_id: 'admin-middle', full_name: 'Admin Middle' });
   });
 });

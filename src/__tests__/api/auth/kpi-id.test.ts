@@ -154,7 +154,7 @@ describe('POST /api/auth/kpi-id', () => {
     await POST(req);
 
     expect(prismaMock.admin.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { user_id: 'user-001' } }),
+      expect.objectContaining({ where: { user_id: 'user-001', deleted_at: null } }),
     );
   });
 

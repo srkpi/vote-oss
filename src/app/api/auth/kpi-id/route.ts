@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   }
 
   const adminRecord = await prisma.admin.findUnique({
-    where: { user_id: userInfo.userId },
+    where: { user_id: userInfo.userId, deleted_at: null },
   });
   const isAdmin = !!adminRecord;
   const tokenPayload = {
