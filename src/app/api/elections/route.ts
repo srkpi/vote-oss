@@ -1,36 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
-import { getCachedElections, invalidateElections, setCachedElections } from '@/lib/cache';
+import {
+  type CachedElection,
+  getCachedElections,
+  invalidateElections,
+  setCachedElections,
+} from '@/lib/cache';
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import type { Election } from '@/types/election';
+import type { Election, ElectionStatus } from '@/types/election';
+
+function computeStatus(opensAt: string, closesAt: string): ElectionStatus {
+  const now = Date.now();
+  const open = new Date(opensAt).getTime();
+  const close = new Date(closesAt).getTime();
+  if (now < open) return 'upcoming';
+  if (now <= close) return 'open';
+  return 'closed';
+}
+
+/**
+ * Apply per-user filtering (faculty / group restrictions) and attach the
+ * live `status` and conditionally expose `privateKey`.
+ */
+function toClientElections(cached: CachedElection[], faculty: string, group: string): Election[] {
+  const now = Date.now();
+  return cached
+    .filter(
+      (e) =>
+        (!e.restrictedToFaculty || e.restrictedToFaculty === faculty) &&
+        (!e.restrictedToGroup || e.restrictedToGroup === group),
+    )
+    .map((e) => ({
+      ...e,
+      status: computeStatus(e.opensAt, e.closesAt),
+      // Only expose the private key after the election has closed
+      privateKey: now > new Date(e.closesAt).getTime() ? e.privateKey : undefined,
+    }));
+}
 
 // ---------------------------------------------------------------------------
 // GET /api/elections
 // Returns elections visible to the requesting user.
-// Response is served from a 60-second Redis cache keyed by (faculty, group).
+// Cache: single global key (all elections, unfiltered, status-free).
+// Status and per-user filtering are applied at serve time so cached data
+// never becomes stale as elections transition between states.
 // ---------------------------------------------------------------------------
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
   const { user } = auth;
-  const now = new Date();
 
-  const cached = await getCachedElections(user.faculty, user.group);
+  const cached = await getCachedElections();
   if (cached) {
-    return NextResponse.json(cached);
+    return NextResponse.json(toClientElections(cached, user.faculty, user.group));
   }
 
+  // ── Cache miss: fetch everything from DB (no faculty/group filter) ────────
   const elections = await prisma.election.findMany({
-    where: {
-      AND: [
-        { OR: [{ restricted_to_faculty: null }, { restricted_to_faculty: user.faculty }] },
-        { OR: [{ restricted_to_group: null }, { restricted_to_group: user.group }] },
-      ],
-    },
     select: {
       id: true,
       title: true,
@@ -51,7 +81,8 @@ export async function GET(req: NextRequest) {
     orderBy: { opens_at: 'desc' },
   });
 
-  const result: Election[] = elections.map((e) => ({
+  // Build cache entries: no `status` so they never go stale.
+  const rawResult: CachedElection[] = elections.map((e) => ({
     id: e.id,
     title: e.title,
     createdAt: e.created_at.toISOString(),
@@ -60,16 +91,16 @@ export async function GET(req: NextRequest) {
     restrictedToFaculty: e.restricted_to_faculty,
     restrictedToGroup: e.restricted_to_group,
     publicKey: e.public_key,
-    privateKey: now > e.closes_at ? e.private_key : undefined,
-    status: now < e.opens_at ? 'upcoming' : now <= e.closes_at ? 'open' : 'closed',
+    privateKey: e.private_key, // always store; conditionally expose in toClientElections
     creator: e.creator,
     choices: e.choices,
     ballotCount: e._count.ballots,
   }));
 
-  await setCachedElections(user.faculty, user.group, result);
+  // Populate cache (best-effort — failure is non-fatal)
+  await setCachedElections(rawResult);
 
-  return NextResponse.json(result);
+  return NextResponse.json(toClientElections(rawResult, user.faculty, user.group));
 }
 
 // ---------------------------------------------------------------------------

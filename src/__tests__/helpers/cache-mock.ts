@@ -10,9 +10,11 @@
  * resolve with undefined.
  */
 
+import type { CachedElection } from '@/lib/cache';
+
 export const cacheMock = {
-  getCachedElections: jest.fn<Promise<null>, [string, string]>(),
-  setCachedElections: jest.fn<Promise<void>, [string, string, unknown[]]>(),
+  getCachedElections: jest.fn<Promise<null>, []>(),
+  setCachedElections: jest.fn<Promise<void>, [CachedElection[]]>(),
   invalidateElections: jest.fn<Promise<void>, []>(),
   getCachedAdmins: jest.fn<Promise<null>, []>(),
   setCachedAdmins: jest.fn<Promise<void>, [unknown[]]>(),
