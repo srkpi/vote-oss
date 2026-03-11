@@ -57,6 +57,7 @@ export async function makeTokenPair(payload = USER_PAYLOAD) {
 
 // ---------------------------------------------------------------------------
 // Admin DB fixtures
+// All records include the soft-delete columns (null = active).
 // ---------------------------------------------------------------------------
 
 export const ADMIN_RECORD = {
@@ -68,6 +69,8 @@ export const ADMIN_RECORD = {
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
   restricted_to_faculty: false,
+  deleted_at: null as Date | null,
+  deleted_by: null as string | null,
 };
 
 export const RESTRICTED_ADMIN_RECORD = {
@@ -79,6 +82,19 @@ export const RESTRICTED_ADMIN_RECORD = {
   promoted_at: new Date('2024-01-02'),
   manage_admins: true,
   restricted_to_faculty: true,
+  deleted_at: null as Date | null,
+  deleted_by: null as string | null,
+};
+
+/**
+ * A previously-active admin who has been soft-deleted.
+ * `promoted_by` is intentionally preserved to keep the hierarchy chain intact.
+ */
+export const DELETED_ADMIN_RECORD = {
+  ...RESTRICTED_ADMIN_RECORD,
+  user_id: 'admin-002',
+  deleted_at: new Date('2024-06-01'),
+  deleted_by: 'superadmin-001',
 };
 
 // ---------------------------------------------------------------------------

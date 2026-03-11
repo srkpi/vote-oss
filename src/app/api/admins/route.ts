@@ -4,40 +4,45 @@ import { requireAdmin } from '@/lib/auth';
 import { getCachedAdmins, setCachedAdmins } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { isAncestorInGraph } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
-// Helper: compute the set of admin IDs that `currentUserId` may delete.
-// An admin is deletable if it was (transitively) promoted by the current user.
+// Helper: compute the set of active admin IDs that `currentUserId` may delete.
+//
+// Takes the FULL hierarchy graph (including soft-deleted nodes) so that
+// transitive chains through removed intermediaries are preserved:
+//
+//   A → B[deleted] → C
+//
+// Without the deleted B in the graph, C would appear un-deletable by A even
+// though A is C's transitive root.  By walking the full graph we correctly
+// resolve C as deletable.
+//
+// Only IDs present in `activeAdminIds` are ever added to the result set —
+// deleted admins are never surfaced to callers.
 // ---------------------------------------------------------------------------
 function computeDeletableIds(
-  admins: { user_id: string; promoted_by: string | null }[],
+  graph: Map<string, string | null>,
+  activeAdminIds: string[],
   currentUserId: string,
 ): Set<string> {
   const deletable = new Set<string>();
-  let changed = true;
-
-  while (changed) {
-    changed = false;
-    for (const admin of admins) {
-      if (deletable.has(admin.user_id)) continue;
-
-      const directlyPromotedByCurrent = admin.promoted_by === currentUserId;
-      const promoterIsAlreadyDeletable =
-        admin.promoted_by !== null && deletable.has(admin.promoted_by);
-
-      if (directlyPromotedByCurrent || promoterIsAlreadyDeletable) {
-        deletable.add(admin.user_id);
-        changed = true;
-      }
+  for (const adminId of activeAdminIds) {
+    if (isAncestorInGraph(graph, currentUserId, adminId)) {
+      deletable.add(adminId);
     }
   }
-
   return deletable;
 }
 
 // ---------------------------------------------------------------------------
 // GET /api/admins
+// Returns only active (non-deleted) admins.
 // Served from a 30-second Redis cache (invalidated on mutations).
+//
+// The deletable flag is always computed against the FULL hierarchy graph
+// (one lightweight query, no joins) so deleted intermediaries do not break
+// transitive chains.  Even on a cache hit we issue this cheap query.
 // ---------------------------------------------------------------------------
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -47,15 +52,22 @@ export async function GET(req: NextRequest) {
 
   const { user } = auth;
 
+  const graphNodes = await prisma.admin.findMany({
+    select: { user_id: true, promoted_by: true },
+  });
+  const graph = new Map(graphNodes.map((n) => [n.user_id, n.promoted_by]));
+
   const cached = await getCachedAdmins();
   if (cached) {
-    const deletableIds = computeDeletableIds(cached, user.sub);
+    const activeIds = cached.map((a) => a.user_id);
+    const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
     return NextResponse.json(
       cached.map((admin) => ({ ...admin, deletable: deletableIds.has(admin.user_id) })),
     );
   }
 
   const admins = await prisma.admin.findMany({
+    where: { deleted_at: null },
     select: {
       user_id: true,
       full_name: true,
@@ -69,11 +81,10 @@ export async function GET(req: NextRequest) {
     orderBy: { promoted_at: 'asc' },
   });
 
-  // ── Populate cache (best-effort) ──────────────────────────────────────
-  // Cast is safe: the selected fields match what getCachedAdmins returns.
   await setCachedAdmins(admins as Parameters<typeof setCachedAdmins>[0]);
 
-  const deletableIds = computeDeletableIds(admins, user.sub);
+  const activeIds = admins.map((a) => a.user_id);
+  const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
 
   return NextResponse.json(
     admins.map((admin) => ({

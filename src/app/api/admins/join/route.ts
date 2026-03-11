@@ -41,26 +41,51 @@ export async function POST(req: NextRequest) {
   }
 
   const existingAdmin = await prisma.admin.findUnique({ where: { user_id: user.sub } });
-  if (existingAdmin) return Errors.conflict('You are already an admin');
 
-  await prisma.$transaction([
-    prisma.admin.create({
-      data: {
-        user_id: user.sub,
-        full_name: user.full_name,
-        group: user.group,
-        faculty: user.faculty,
-        promoted_by: inviteToken.created_by,
-        promoted_at: now,
-        manage_admins: inviteToken.manage_admins,
-        restricted_to_faculty: inviteToken.restricted_to_faculty,
-      },
-    }),
-    prisma.adminInviteToken.update({
-      where: { token_hash: tokenHash },
-      data: { current_usage: { increment: 1 } },
-    }),
-  ]);
+  if (existingAdmin) {
+    if (existingAdmin.deleted_at === null) {
+      // Active admin — cannot join again.
+      return Errors.conflict('You are already an admin');
+    }
+
+    await prisma.$transaction([
+      prisma.admin.update({
+        where: { user_id: user.sub },
+        data: {
+          promoted_by: inviteToken.created_by,
+          promoted_at: now,
+          manage_admins: inviteToken.manage_admins,
+          restricted_to_faculty: inviteToken.restricted_to_faculty,
+          deleted_at: null,
+          deleted_by: null,
+        },
+      }),
+      prisma.adminInviteToken.update({
+        where: { token_hash: tokenHash },
+        data: { current_usage: { increment: 1 } },
+      }),
+    ]);
+  } else {
+    await prisma.$transaction([
+      prisma.admin.create({
+        data: {
+          user_id: user.sub,
+          full_name: user.full_name,
+          group: user.group,
+          faculty: user.faculty,
+          promoted_by: inviteToken.created_by,
+          promoted_at: now,
+          manage_admins: inviteToken.manage_admins,
+          restricted_to_faculty: inviteToken.restricted_to_faculty,
+        },
+      }),
+      prisma.adminInviteToken.update({
+        where: { token_hash: tokenHash },
+        data: { current_usage: { increment: 1 } },
+      }),
+    ]);
+  }
+
   await invalidateAdmins();
 
   return NextResponse.json(
