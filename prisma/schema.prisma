@@ -71,7 +71,7 @@ model Election {
 model ElectionChoice {
   id          String   @id @default(uuid())
   election_id String
-  election    Election @relation(fields: [election_id], references: [id])
+  election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
   choice      String
   position    Int
 
@@ -83,7 +83,7 @@ model ElectionChoice {
 model IssuedToken {
   id          String   @id @default(uuid())
   election_id String
-  election    Election @relation(fields: [election_id], references: [id])
+  election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
   user_id     String
 
   @@unique([election_id, user_id])
@@ -93,7 +93,7 @@ model IssuedToken {
 model Ballot {
   id               String   @id @default(uuid())
   election_id      String
-  election         Election @relation(fields: [election_id], references: [id])
+  election         Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
   encrypted_ballot String   @unique @db.Text
   created_at       DateTime @default(now())
   signature        String   @db.Text
@@ -106,7 +106,7 @@ model Ballot {
 model UsedTokenNullifier {
   nullifier   String   @id
   election_id String
-  election    Election @relation(fields: [election_id], references: [id])
+  election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
 
   @@map("used_token_nullifiers")
 }
@@ -114,8 +114,8 @@ model UsedTokenNullifier {
 model ElectionTally {
   election_id String
   choice_id   String
-  election    Election       @relation(fields: [election_id], references: [id])
-  choice      ElectionChoice @relation(fields: [choice_id], references: [id])
+  election    Election       @relation(fields: [election_id], references: [id], onDelete: Cascade)
+  choice      ElectionChoice @relation(fields: [choice_id], references: [id], onDelete: Cascade)
   vote_count  Int
 
   @@id([election_id, choice_id])

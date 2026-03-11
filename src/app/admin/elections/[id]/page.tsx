@@ -3,13 +3,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { DeleteElectionButton } from '@/components/admin/delete-election-button';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { serverFetch } from '@/lib/server-auth';
+import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { formatDate, formatDateTime } from '@/lib/utils';
+import type { Admin } from '@/types/admin';
 import type { ElectionDetail } from '@/types/election';
 import type { TallyResponse } from '@/types/tally';
 
@@ -26,8 +28,15 @@ export async function generateMetadata({ params }: AdminElectionPageProps): Prom
 export default async function AdminElectionDetailPage({ params }: AdminElectionPageProps) {
   const { id } = await params;
 
+  const session = await getServerSession();
   const { data: election, status } = await serverFetch<ElectionDetail>(`/api/elections/${id}`);
   if (status === 404 || !election) notFound();
+
+  // Determine if current admin can delete this election
+  const { data: currentAdmin } = await serverFetch<Admin>(`/api/admins/${session!.userId}`);
+  const canDelete = currentAdmin
+    ? !currentAdmin.restricted_to_faculty || election.restrictedToFaculty === currentAdmin.faculty
+    : false;
 
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';
@@ -97,6 +106,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   <span className="hidden sm:inline">Публічна сторінка</span>
                 </Link>
               </Button>
+              {canDelete && <DeleteElectionButton electionId={id} electionTitle={election.title} />}
             </div>
           </div>
         </div>

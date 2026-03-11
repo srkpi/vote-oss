@@ -26,26 +26,32 @@ export const prismaMock = {
     findUnique: jest.fn(),
     findMany: jest.fn(),
     create: jest.fn(),
+    delete: jest.fn(),
   },
   electionChoice: {
     findMany: jest.fn(),
+    deleteMany: jest.fn(),
   },
   issuedToken: {
     findUnique: jest.fn(),
     create: jest.fn(),
+    deleteMany: jest.fn(),
   },
   ballot: {
     findFirst: jest.fn(),
     findMany: jest.fn(),
     create: jest.fn(),
     count: jest.fn(),
+    deleteMany: jest.fn(),
   },
   usedTokenNullifier: {
     findUnique: jest.fn(),
     create: jest.fn(),
+    deleteMany: jest.fn(),
   },
   electionTally: {
     createMany: jest.fn(),
+    deleteMany: jest.fn(),
   },
   $transaction: jest.fn(),
 };
