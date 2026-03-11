@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -10,8 +11,11 @@ import {
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+jest.mock('@/lib/token-store', () => tokenStoreMock);
+jest.mock('@/lib/cache', () => cacheMock);
 
 import { DELETE } from '@/app/api/admins/[userId]/route';
 
@@ -25,6 +29,8 @@ async function adminReq(adminRecord = ADMIN_RECORD) {
 describe('DELETE /api/admins/[userId]', () => {
   beforeEach(() => {
     resetPrismaMock();
+    resetTokenStoreMock();
+    resetCacheMock();
     allure.feature('Admins');
     allure.story('Delete Admin');
   });

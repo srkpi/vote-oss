@@ -10,8 +10,25 @@ import {
 } from '@/lib/jwt';
 import { resolveTicket } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
+import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
+import { persistTokenPair } from '@/lib/token-store';
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req.headers);
+  const rl = await rateLimitLogin(ip);
+  if (rl.limited) {
+    return NextResponse.json(
+      { error: 'TooManyRequests', message: 'Too many login attempts. Try again shortly.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(rl.resetInMs / 1_000)),
+          'X-RateLimit-Remaining': '0',
+        },
+      },
+    );
+  }
+
   let body: { ticketId?: string };
   try {
     body = await req.json();
@@ -51,13 +68,7 @@ export async function POST(req: NextRequest) {
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
     await Promise.all([signAccessToken(tokenPayload), signRefreshToken(tokenPayload)]);
 
-  await prisma.jwtToken.create({
-    data: {
-      access_jti: accessJti,
-      refresh_jti: refreshJti,
-      created_at: new Date(),
-    },
-  });
+  await persistTokenPair(accessJti, refreshJti);
 
   const response = NextResponse.json(
     {

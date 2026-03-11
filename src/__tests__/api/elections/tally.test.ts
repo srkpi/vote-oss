@@ -9,8 +9,10 @@ import {
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { GET } from '@/app/api/elections/[id]/tally/route';
 
@@ -25,6 +27,7 @@ async function authReq() {
 describe('GET /api/elections/[id]/tally', () => {
   beforeEach(() => {
     resetPrismaMock();
+    resetTokenStoreMock();
     allure.feature('Elections');
     allure.story('Election Tally');
   });
@@ -163,8 +166,9 @@ describe('GET /api/elections/[id]/tally', () => {
     ]);
     prismaMock.electionTally.createMany.mockResolvedValueOnce({ count: 2 });
 
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(200);
+    spy.mockRestore();
   });
 });

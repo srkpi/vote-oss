@@ -4,11 +4,12 @@ import { NextRequest } from 'next/server';
 import {
   COOKIE_ACCESS,
   COOKIE_REFRESH,
-  VerifiedPayload,
+  type VerifiedPayload,
   verifyAccessToken,
   verifyRefreshToken,
 } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
+import { isAccessTokenValid, isRefreshTokenValid } from '@/lib/token-store';
 
 export type AuthFailure = {
   ok: false;
@@ -27,6 +28,14 @@ export type AdminSuccess = {
   admin: Admin;
 };
 
+// ---------------------------------------------------------------------------
+// requireAuth
+//
+// 1. Verify JWT signature + expiry (free, no I/O).
+// 2. Check token validity via Redis bloom filter (fast path, no DB).
+// 3. Fall back to DB if Redis is unavailable.
+// ---------------------------------------------------------------------------
+
 export async function requireAuth(req: NextRequest): Promise<AuthFailure | AuthSuccess> {
   const token = req.cookies.get(COOKIE_ACCESS)?.value;
   if (!token) {
@@ -40,10 +49,8 @@ export async function requireAuth(req: NextRequest): Promise<AuthFailure | AuthS
     return { ok: false, error: 'Invalid access token', status: 401 };
   }
 
-  const record = await prisma.jwtToken.findFirst({
-    where: { access_jti: payload.jti },
-  });
-  if (!record) {
+  const valid = await isAccessTokenValid(payload.jti, payload.iat);
+  if (!valid) {
     return { ok: false, error: 'Token revoked', status: 401 };
   }
 
@@ -63,10 +70,8 @@ export async function requireRefreshAuth(req: NextRequest): Promise<AuthFailure 
     return { ok: false, error: 'Invalid refresh token', status: 401 };
   }
 
-  const record = await prisma.jwtToken.findFirst({
-    where: { refresh_jti: payload.jti },
-  });
-  if (!record) {
+  const valid = await isRefreshTokenValid(payload.jti, payload.iat);
+  if (!valid) {
     return { ok: false, error: 'Token revoked', status: 401 };
   }
 

@@ -14,6 +14,7 @@ export interface TokenPayload {
 
 export interface VerifiedPayload extends TokenPayload {
   jti: string;
+  iat: number;
   token_type: 'access' | 'refresh';
 }
 
@@ -54,6 +55,7 @@ export async function signRefreshToken(
 export async function verifyAccessToken(token: string): Promise<VerifiedPayload> {
   const secret = getSecret('JWT_ACCESS_SECRET');
   const { payload } = await jwtVerify(token, secret);
+
   if (payload['token_type'] !== 'access') {
     throw new Error('Invalid token type');
   }
@@ -65,6 +67,7 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
     full_name: payload['full_name'] as string,
     is_admin: (payload['is_admin'] as boolean) ?? false,
     jti: payload.jti as string,
+    iat: payload.iat as number,
     token_type: 'access',
   };
 }
@@ -72,7 +75,9 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
 export async function verifyRefreshToken(token: string): Promise<VerifiedPayload> {
   const secret = getSecret('JWT_REFRESH_SECRET');
   const { payload } = await jwtVerify(token, secret);
+
   if (payload['token_type'] !== 'refresh') throw new Error('Invalid token type');
+
   return {
     sub: payload.sub as string,
     faculty: payload['faculty'] as string,
@@ -80,6 +85,7 @@ export async function verifyRefreshToken(token: string): Promise<VerifiedPayload
     full_name: payload['full_name'] as string,
     is_admin: (payload['is_admin'] as boolean) ?? false,
     jti: payload.jti as string,
+    iat: payload.iat as number,
     token_type: 'refresh',
   };
 }
