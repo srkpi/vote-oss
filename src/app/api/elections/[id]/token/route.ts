@@ -4,14 +4,14 @@ import { requireAuth } from '@/lib/auth';
 import { generateVoteToken, signVoteToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { isValidUuid } from '@/lib/utils';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const { id } = await params;
-  const electionId = parseInt(id, 10);
-  if (isNaN(electionId)) return Errors.badRequest('Invalid election id');
+  const { id: electionId } = await params;
+  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
 
   const { user } = auth;
   const now = new Date();

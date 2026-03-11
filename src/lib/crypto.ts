@@ -19,7 +19,7 @@ export function generateElectionKeyPair(): { publicKey: string; privateKey: stri
   return { publicKey, privateKey };
 }
 
-export function generateVoteToken(electionId: number): { token: string; randomSecret: string } {
+export function generateVoteToken(electionId: string): { token: string; randomSecret: string } {
   const randomSecret = randomBytes(32).toString('hex');
   const token = `${electionId}:${randomSecret}`;
   return { token, randomSecret };
@@ -62,7 +62,7 @@ export function decryptBallot(privateKeyPem: string, encryptedBallotBase64: stri
 
 export function signBallotEntry(
   privateKeyPem: string,
-  data: { electionId: number; encryptedBallot: string; previousHash: string | null },
+  data: { electionId: string; encryptedBallot: string; previousHash: string | null },
 ): string {
   const payload = JSON.stringify(data);
   const signer = createSign('SHA256');
@@ -72,7 +72,7 @@ export function signBallotEntry(
 }
 
 export function computeBallotHash(data: {
-  electionId: number;
+  electionId: string;
   encryptedBallot: string;
   signature: string;
   previousHash: string | null;
@@ -117,7 +117,7 @@ export async function decryptBallotData(
   }
 }
 
-export async function verifyBallotHash(ballot: Ballot, electionId: number): Promise<boolean> {
+export async function verifyBallotHash(ballot: Ballot, electionId: string): Promise<boolean> {
   try {
     const raw = JSON.stringify({
       electionId,

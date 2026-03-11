@@ -25,7 +25,9 @@ export function formatDateTime(dateString: string): string {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date);
+  })
+    .format(date)
+    .replace('р. о', '');
 }
 
 export function formatTimeRemaining(targetDate: string): string {
@@ -105,4 +107,14 @@ export function isValidDate(dateString: string): boolean {
 
 export function isFutureDate(dateString: string): boolean {
   return new Date(dateString) > new Date();
+}
+
+/**
+ * Validates that a string is a well-formed UUID v4.
+ * Used in API routes to reject obviously invalid IDs before hitting the DB.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isValidUuid(id: string): boolean {
+  return UUID_RE.test(id);
 }

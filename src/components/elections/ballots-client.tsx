@@ -36,7 +36,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   const [decryptedMap, setDecryptedMap] = useState<DecryptedMap>(new Map());
   const [isDecrypting, setIsDecrypting] = useState(false);
@@ -78,18 +78,15 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
               decryptBallotData(key, ballot.encrypted_ballot),
               verifyBallotHash(ballot, electionId),
             ]);
-            let choiceId: number | null = null;
+            let choiceId: string | null = null;
             let choiceLabel: string | null = null;
             let valid = false;
             if (decryptedRaw !== null) {
-              const parsed = parseInt(decryptedRaw, 10);
-              if (!isNaN(parsed)) {
-                choiceId = parsed;
-                const match = choices.find((c) => c.id === parsed);
-                if (match) {
-                  choiceLabel = match.choice;
-                  valid = true;
-                }
+              const match = choices.find((c) => c.id === decryptedRaw);
+              if (match) {
+                choiceId = decryptedRaw;
+                choiceLabel = match.choice;
+                valid = true;
               }
             }
             map.set(ballot.id, { choiceId, choiceLabel, valid, hashValid });
@@ -144,7 +141,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     }
   }, [myVoteRecord, filteredBallots]);
 
-  const toggleExpand = (id: number) => {
+  const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);

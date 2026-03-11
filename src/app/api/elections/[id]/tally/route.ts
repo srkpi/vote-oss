@@ -4,14 +4,14 @@ import { requireAuth } from '@/lib/auth';
 import { decryptBallot } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { isValidUuid } from '@/lib/utils';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const { id } = await params;
-  const electionId = parseInt(id, 10);
-  if (isNaN(electionId)) return Errors.badRequest('Invalid election id');
+  const { id: electionId } = await params;
+  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
 
   const election = await prisma.election.findUnique({
     where: { id: electionId },
@@ -56,15 +56,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     select: { encrypted_ballot: true },
   });
 
-  const tally: Record<number, number> = {};
+  const tally: Record<string, number> = {};
   election.choices.forEach((c) => {
     tally[c.id] = 0;
   });
 
   for (const ballot of ballots) {
     try {
-      const decrypted = decryptBallot(election.private_key, ballot.encrypted_ballot);
-      const choiceId = parseInt(decrypted, 10);
+      const choiceId = decryptBallot(election.private_key, ballot.encrypted_ballot);
       if (choiceId in tally) {
         tally[choiceId]++;
       }
@@ -76,7 +75,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   await prisma.electionTally.createMany({
     data: Object.entries(tally).map(([choiceId, count]) => ({
       election_id: electionId,
-      choice_id: parseInt(choiceId, 10),
+      choice_id: choiceId,
       vote_count: count,
     })),
     skipDuplicates: true,

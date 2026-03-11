@@ -10,14 +10,14 @@ import {
 } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { isValidUuid } from '@/lib/utils';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const { id } = await params;
-  const electionId = parseInt(id, 10);
-  if (isNaN(electionId)) return Errors.badRequest('Invalid election id');
+  const { id: electionId } = await params;
+  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
 
   let body: {
     token?: string;
@@ -53,8 +53,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const signatureValid = verifyVoteTokenSignature(election.public_key, token, signature);
   if (!signatureValid) return Errors.badRequest('Invalid vote token signature');
 
-  const tokenElectionId = token.split(':')[0];
-  if (parseInt(tokenElectionId, 10) !== electionId) {
+  const tokenElectionId = token.slice(0, token.indexOf(':'));
+  if (tokenElectionId !== electionId) {
     return Errors.badRequest('Vote token does not belong to this election');
   }
 
@@ -66,20 +66,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const usedNullifier = await prisma.usedTokenNullifier.findUnique({ where: { nullifier } });
   if (usedNullifier) return Errors.conflict('This vote token has already been used');
 
-  let choiceIdStr: string;
+  let choiceId: string;
   try {
-    choiceIdStr = decryptBallot(election.private_key, encryptedBallot);
+    choiceId = decryptBallot(election.private_key, encryptedBallot);
   } catch {
     return Errors.badRequest('Failed to decrypt ballot – check encryption format');
   }
 
-  const choiceId = parseInt(choiceIdStr, 10);
   const validChoice = election.choices.find((c) => c.id === choiceId);
   if (!validChoice) return Errors.badRequest('Decrypted ballot contains invalid choice');
 
   const lastBallot = await prisma.ballot.findFirst({
     where: { election_id: electionId },
-    orderBy: { id: 'desc' },
+    orderBy: { created_at: 'desc' },
     select: { current_hash: true },
   });
 

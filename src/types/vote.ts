@@ -1,6 +1,6 @@
 export interface VoteRecord {
-  electionId: number;
-  choiceId: number;
+  electionId: string;
+  choiceId: string;
   choiceLabel: string;
   ballotHash: string;
   votedAt: string;

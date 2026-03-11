@@ -5,6 +5,8 @@ import {
   JWT_TOKEN_RECORD,
   makeElection,
   makeTokenPair,
+  MOCK_ELECTION_CHOICES,
+  MOCK_ELECTION_ID,
   USER_PAYLOAD,
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
@@ -16,7 +18,7 @@ jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { GET } from '@/app/api/elections/[id]/tally/route';
 
-const PARAMS = { params: Promise.resolve({ id: '1' }) };
+const PARAMS = { params: Promise.resolve({ id: MOCK_ELECTION_ID }) };
 
 async function authReq() {
   const { access } = await makeTokenPair(USER_PAYLOAD);
@@ -38,7 +40,7 @@ describe('GET /api/elections/[id]/tally', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for non-numeric election id', async () => {
+  it('returns 400 for non-uuid election id', async () => {
     const req = await authReq();
     const res = await GET(req, { params: Promise.resolve({ id: 'bad' }) });
     expect(res.status).toBe(400);
@@ -68,8 +70,8 @@ describe('GET /api/elections/[id]/tally', () => {
       opens_at: new Date(Date.now() - 7_200_000),
       closes_at: new Date(Date.now() - 100),
       tallies: [
-        { election_id: 1, choice_id: 10, vote_count: 5 },
-        { election_id: 1, choice_id: 11, vote_count: 3 },
+        { election_id: MOCK_ELECTION_ID, choice_id: MOCK_ELECTION_CHOICES[0].id, vote_count: 5 },
+        { election_id: MOCK_ELECTION_ID, choice_id: MOCK_ELECTION_CHOICES[1].id, vote_count: 3 },
       ] as any,
     });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -79,7 +81,7 @@ describe('GET /api/elections/[id]/tally', () => {
 
     expect(status).toBe(200);
     expect(body.results).toHaveLength(2);
-    const optA = body.results.find((r: any) => r.choiceId === 10);
+    const optA = body.results.find((r: any) => r.choiceId === MOCK_ELECTION_CHOICES[0].id);
     expect(optA.votes).toBe(5);
     // Should NOT re-query ballots since tallies are cached
     expect(prismaMock.ballot.findMany).not.toHaveBeenCalled();
@@ -90,7 +92,9 @@ describe('GET /api/elections/[id]/tally', () => {
     const election = makeElection({
       opens_at: new Date(Date.now() - 7_200_000),
       closes_at: new Date(Date.now() - 100),
-      tallies: [{ election_id: 1, choice_id: 10, vote_count: 2 }] as any,
+      tallies: [
+        { election_id: MOCK_ELECTION_ID, choice_id: MOCK_ELECTION_CHOICES[0].id, vote_count: 2 },
+      ] as any,
     });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
 
@@ -108,9 +112,9 @@ describe('GET /api/elections/[id]/tally', () => {
       tallies: [] as any,
     });
 
-    // Encrypt two ballots: one for choice 10, one for choice 11
-    const ballot1 = encryptChoice(election.public_key, 10);
-    const ballot2 = encryptChoice(election.public_key, 11);
+    // Encrypt two ballots
+    const ballot1 = encryptChoice(election.public_key, MOCK_ELECTION_CHOICES[0].id);
+    const ballot2 = encryptChoice(election.public_key, MOCK_ELECTION_CHOICES[1].id);
 
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     prismaMock.ballot.findMany.mockResolvedValueOnce([
@@ -123,10 +127,10 @@ describe('GET /api/elections/[id]/tally', () => {
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    const choice10 = body.results.find((r: any) => r.choiceId === 10);
-    const choice11 = body.results.find((r: any) => r.choiceId === 11);
-    expect(choice10.votes).toBe(1);
-    expect(choice11.votes).toBe(1);
+    const choice1 = body.results.find((r: any) => r.choiceId === MOCK_ELECTION_CHOICES[0].id);
+    const choice2 = body.results.find((r: any) => r.choiceId === MOCK_ELECTION_CHOICES[1].id);
+    expect(choice1.votes).toBe(1);
+    expect(choice2.votes).toBe(1);
     expect(body.totalBallots).toBe(2);
   });
 
@@ -146,7 +150,7 @@ describe('GET /api/elections/[id]/tally', () => {
 
     expect(prismaMock.electionTally.createMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.arrayContaining([expect.objectContaining({ election_id: 1 })]),
+        data: expect.arrayContaining([expect.objectContaining({ election_id: MOCK_ELECTION_ID })]),
         skipDuplicates: true,
       }),
     );

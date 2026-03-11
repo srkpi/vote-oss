@@ -21,7 +21,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ['**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
+    files: ['**/__tests__/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },

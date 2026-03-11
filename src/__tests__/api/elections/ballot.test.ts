@@ -9,6 +9,9 @@ import {
   makeElection,
   makeTokenPair,
   makeVoteBallot,
+  MOCK_ELECTION_ID,
+  MOCK_ELECTION_ID_NOT_EXISTING,
+  MOCK_ELECTION_INVALID_CHOICE_ID,
   USER_PAYLOAD,
 } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
@@ -21,7 +24,7 @@ jest.mock('@/lib/cache', () => cacheMock);
 
 import { POST } from '@/app/api/elections/[id]/ballot/route';
 
-const PARAMS = { params: Promise.resolve({ id: '1' }) };
+const PARAMS = { params: Promise.resolve({ id: MOCK_ELECTION_ID }) };
 
 async function authReq(body: object) {
   const { access } = await makeTokenPair(USER_PAYLOAD);
@@ -44,7 +47,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for non-numeric election id', async () => {
+  it('returns 400 for non-uuid election id', async () => {
     const req = await authReq({});
     const res = await POST(req, { params: Promise.resolve({ id: 'abc' }) });
     expect(res.status).toBe(400);
@@ -101,10 +104,10 @@ describe('POST /api/elections/[id]/ballot', () => {
 
   it('returns 400 when token belongs to a different election', async () => {
     const election = makeElection();
-    const { token: wrongToken } = generateVoteToken(999); // election 999 != 1
+    const { token: wrongToken } = generateVoteToken(MOCK_ELECTION_ID_NOT_EXISTING);
     const signature = signVoteToken(election.private_key, wrongToken);
     const nullifier = computeNullifier(wrongToken);
-    const encryptedBallot = encryptChoice(election.public_key, 10);
+    const encryptedBallot = encryptChoice(election.public_key, election.choices[0].id);
 
     const req = await authReq({ token: wrongToken, signature, nullifier, encryptedBallot });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -133,10 +136,10 @@ describe('POST /api/elections/[id]/ballot', () => {
 
   it('returns 400 when encrypted ballot decrypts to invalid choice id', async () => {
     const election = makeElection();
-    const { token } = generateVoteToken(1);
+    const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
     const nullifier = computeNullifier(token);
-    const encryptedBallot = encryptChoice(election.public_key, 9999); // invalid choice
+    const encryptedBallot = encryptChoice(election.public_key, MOCK_ELECTION_INVALID_CHOICE_ID);
 
     const req = await authReq({ token, signature, nullifier, encryptedBallot });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);

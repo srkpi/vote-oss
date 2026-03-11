@@ -122,18 +122,7 @@ export default async function HomePage() {
               ) : (
                 <>
                   <Button variant="accent" size="xl" asChild>
-                    <Link href="/auth/login">
-                      Увійти через КПІ ID
-                      <ChevronRight className="w-5 h-5 ml-1" />
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="xl"
-                    className="text-white border-white/40 hover:border-white hover:bg-white hover:text-[var(--kpi-navy)]"
-                    asChild
-                  >
-                    <Link href="/elections">Переглянути виборчий список</Link>
+                    <Link href="/auth/login">Увійти через КПІ ID</Link>
                   </Button>
                 </>
               )}
