@@ -1,6 +1,7 @@
 import * as allure from 'allure-js-commons';
 
 import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
+import { campusMock, resetCampusMock } from '../../helpers/campus-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -15,6 +16,7 @@ import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-m
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 jest.mock('@/lib/cache', () => cacheMock);
+jest.mock('@/lib/campus-api', () => campusMock);
 
 import { GET, POST } from '@/app/api/elections/route';
 
@@ -59,6 +61,7 @@ describe('GET /api/elections', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetCampusMock();
     allure.feature('Elections');
     allure.story('List Elections');
   });
@@ -283,6 +286,7 @@ describe('POST /api/elections', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetCampusMock();
     allure.feature('Elections');
     allure.story('Create Election');
   });

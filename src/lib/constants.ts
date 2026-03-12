@@ -29,6 +29,13 @@ export const CACHE_KEY_ELECTIONS = 'cache:elections';
 export const CACHE_KEY_ADMINS = 'cache:admins';
 
 // ---------------------------------------------------------------------------
+// Campus API cache
+// ---------------------------------------------------------------------------
+
+export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
+export const CACHE_TTL_CAMPUS_GROUPS_SECS = 60 * 60; // 1 hour
+
+// ---------------------------------------------------------------------------
 // JWT
 // ---------------------------------------------------------------------------
 

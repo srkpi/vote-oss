@@ -7,6 +7,7 @@ import {
   invalidateElections,
   setCachedElections,
 } from '@/lib/cache';
+import { fetchFacultyGroups } from '@/lib/campus-api';
 import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
@@ -127,7 +128,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { title, opensAt, closesAt, choices } = body;
-  let restrictedToFaculty = body.restrictedToFaculty;
+  let restrictedToFaculty = body.restrictedToFaculty ?? null;
+  const restrictedToGroup = body.restrictedToGroup ?? null;
 
   if (!title || !opensAt || !closesAt || !choices?.length) {
     return Errors.badRequest('title, opensAt, closesAt, choices are required');
@@ -162,8 +164,39 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('closesAt must be after opensAt');
   }
 
+  // Faculty-restricted admins may only create elections for their own faculty
   if (admin.restricted_to_faculty) {
     restrictedToFaculty = admin.faculty;
+  }
+
+  // ── Validate group is not set without faculty ────────────────────────────
+  if (restrictedToGroup && !restrictedToFaculty) {
+    return Errors.badRequest('restrictedToGroup requires restrictedToFaculty to be set');
+  }
+
+  // ── Validate faculty / group against campus API ──────────────────────────
+  if (restrictedToFaculty) {
+    let facultyGroups: Record<string, string[]>;
+    try {
+      facultyGroups = await fetchFacultyGroups();
+    } catch {
+      return Errors.internal(
+        'Could not validate faculty/group: campus API is unavailable. Please try again later.',
+      );
+    }
+
+    if (!facultyGroups[restrictedToFaculty]) {
+      return Errors.badRequest(`Faculty "${restrictedToFaculty}" does not exist`);
+    }
+
+    if (restrictedToGroup) {
+      const groups = facultyGroups[restrictedToFaculty] ?? [];
+      if (!groups.includes(restrictedToGroup)) {
+        return Errors.badRequest(
+          `Group "${restrictedToGroup}" does not exist in faculty "${restrictedToFaculty}"`,
+        );
+      }
+    }
   }
 
   const { publicKey, privateKey } = generateElectionKeyPair();
@@ -176,7 +209,7 @@ export async function POST(req: NextRequest) {
       opens_at: openDate,
       closes_at: closeDate,
       restricted_to_faculty: restrictedToFaculty ?? null,
-      restricted_to_group: body.restrictedToGroup ?? null,
+      restricted_to_group: restrictedToGroup ?? null,
       public_key: publicKey,
       private_key: privateKey,
       choices: {

@@ -2,11 +2,12 @@
 
 import { Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CharCounter } from '@/components/ui/char-counter';
+import { Combobox } from '@/components/ui/combobox';
 import { FormField, Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { createElection } from '@/lib/api-client';
@@ -29,6 +30,34 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [facultyGroups, setFacultyGroups] = useState<Record<string, string[]>>({});
+  const [groupsLoading, setGroupsLoading] = useState(true);
+  const [groupsError, setGroupsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/campus/groups', { credentials: 'include' })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<Record<string, string[]>>;
+      })
+      .then((data) => {
+        setFacultyGroups(data);
+        setGroupsLoading(false);
+      })
+      .catch(() => {
+        setGroupsError('Не вдалося завантажити список факультетів і груп');
+        setGroupsLoading(false);
+      });
+  }, []);
+
+  // Sorted faculty names: regular faculties first (A-Z), НН ones last (A-Z)
+  const facultyOptions = Object.keys(facultyGroups).sort((a, b) => {
+    const aIsNN = a.startsWith('НН ');
+    const bIsNN = b.startsWith('НН ');
+    if (aIsNN !== bIsNN) return aIsNN ? 1 : -1;
+    return a.localeCompare(b, 'uk');
+  });
+
   const [form, setForm] = useState({
     title: '',
     opensAt: '',
@@ -43,6 +72,12 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const updateForm = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setFieldErrors((prev) => ({ ...prev, [field]: '' }));
+  };
+
+  // When the faculty changes, always reset the group selection
+  const handleFacultyChange = (faculty: string) => {
+    setForm((prev) => ({ ...prev, restrictedToFaculty: faculty, restrictedToGroup: '' }));
+    setFieldErrors((prev) => ({ ...prev, restrictedToFaculty: '', restrictedToGroup: '' }));
   };
 
   const updateChoice = (index: number, value: string) => {
@@ -63,6 +98,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       setChoices((prev) => prev.filter((_, i) => i !== index));
     }
   };
+
+  const groupOptions = form.restrictedToFaculty
+    ? (facultyGroups[form.restrictedToFaculty] ?? [])
+    : [];
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -101,7 +140,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     return Object.keys(errors).length === 0;
   };
 
-  // Derived: are there any over-limit fields right now (for live disabling)?
   const hasOverLimit =
     form.title.length > ELECTION_TITLE_MAX_LENGTH ||
     choices.some((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
@@ -273,50 +311,85 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
       </section>
 
-      {/* Restrictions */}
+      {/* Access Restrictions */}
       <section>
         <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-1">
           Обмеження доступу
         </h2>
         <p className="text-sm text-[var(--muted-foreground)] font-body mb-4">
-          Залиште порожнім для всіх студентів
+          Залиште порожнім для всіх студентів. Групу можна вибрати лише після вибору факультету.
         </p>
 
+        {groupsError && (
+          <Alert variant="warning" className="mb-4">
+            {groupsError}
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Faculty picker */}
           <FormField
             label="Обмежити підрозділом"
             htmlFor="faculty"
             hint={
               restrictedToFaculty
                 ? 'Акаунт обмежений одним підрозділом'
-                : 'Наприклад: FICE, FEL, FMF'
+                : 'Наприклад: FICE, ФЕЛ, ФІОТ'
             }
           >
-            <div className="relative">
-              <Input
-                id="faculty"
-                value={form.restrictedToFaculty}
-                onChange={(e) => updateForm('restrictedToFaculty', e.target.value)}
-                placeholder="Факультет/інститут"
-                maxLength={20}
-                readOnly={!!restrictedToFaculty}
-                className={cn(restrictedToFaculty && 'bg-[var(--surface)] cursor-not-allowed pr-9')}
-              />
-              {restrictedToFaculty && (
+            {restrictedToFaculty ? (
+              /* Locked – admin is faculty-restricted */
+              <div className="relative">
+                <Input
+                  id="faculty"
+                  value={form.restrictedToFaculty}
+                  readOnly
+                  className="bg-[var(--surface)] cursor-not-allowed pr-9"
+                />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
                   <Lock className="w-4 h-4" />
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              /* Free combobox */
+              <Combobox
+                id="faculty"
+                options={groupsLoading ? [] : facultyOptions}
+                value={form.restrictedToFaculty}
+                onChange={handleFacultyChange}
+                placeholder={groupsLoading ? 'Завантаження…' : 'Без обмеження'}
+                searchPlaceholder="Пошук факультету…"
+                clearable
+                disabled={groupsLoading}
+                error={!!fieldErrors.restrictedToFaculty}
+                emptyText="Факультет не знайдено"
+              />
+            )}
           </FormField>
 
-          <FormField label="Обмежити групою" htmlFor="group" hint="Наприклад: КВ-91, ЕЛ-21">
-            <Input
+          {/* Group picker */}
+          <FormField
+            label="Обмежити групою"
+            htmlFor="group"
+            hint={
+              !form.restrictedToFaculty
+                ? 'Спочатку оберіть факультет'
+                : groupOptions.length === 0 && !groupsLoading
+                  ? 'Немає груп для цього факультету'
+                  : "Не обов'язково"
+            }
+          >
+            <Combobox
               id="group"
+              options={groupOptions}
               value={form.restrictedToGroup}
-              onChange={(e) => updateForm('restrictedToGroup', e.target.value)}
-              placeholder="Код групи"
-              maxLength={20}
+              onChange={(v) => updateForm('restrictedToGroup', v)}
+              placeholder="Без обмеження"
+              searchPlaceholder="Пошук групи…"
+              clearable
+              disabled={!form.restrictedToFaculty || groupsLoading}
+              error={!!fieldErrors.restrictedToGroup}
+              emptyText="Групу не знайдено"
             />
           </FormField>
         </div>
