@@ -8,6 +8,7 @@ import {
 } from '@/lib/constants';
 
 import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
+import { campusMock, resetCampusMock } from '../../helpers/campus-mock';
 import { ADMIN_PAYLOAD, ADMIN_RECORD, makeTokenPair } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
 import { makeAuthRequest, parseJson } from '../../helpers/request';
@@ -16,6 +17,7 @@ import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-m
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 jest.mock('@/lib/cache', () => cacheMock);
+jest.mock('@/lib/campus-api', () => campusMock);
 
 import { POST } from '@/app/api/elections/route';
 
@@ -41,6 +43,7 @@ describe('POST /api/elections — constant-driven validation', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetCampusMock();
     allure.feature('Elections');
     allure.story('Create Election – Constants Validation');
   });
