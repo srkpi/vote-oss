@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
 export interface MockRequestOptions {
   method?: string;

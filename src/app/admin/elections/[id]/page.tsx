@@ -70,7 +70,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           </nav>
 
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
-            <div className="space-y-2 min-w-0">
+            <div className="space-y-2 flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <ElectionStatusBadge status={election.status} size="md" />
                 {election.restrictedToFaculty && (
@@ -84,7 +84,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   </Badge>
                 )}
               </div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] leading-tight">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] leading-tight break-words">
                 {election.title}
               </h1>
               <p className="text-xs sm:text-sm font-body text-[var(--muted-foreground)]">
@@ -185,7 +185,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                       <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
                         {String.fromCharCode(65 + index)}
                       </span>
-                      <span className="flex-1 text-sm font-body text-[var(--foreground)]">
+                      <span className="flex-1 text-sm font-body text-[var(--foreground)] min-w-0 break-words">
                         {choice.choice}
                       </span>
                     </div>

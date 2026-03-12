@@ -68,7 +68,7 @@ export function MyVoteBanner({
 
           {/* Choice row */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-body">
-            <span className="text-[var(--muted-foreground)]">
+            <span className="text-[var(--muted-foreground)] min-w-0 break-words">
               Збережений вибір:{' '}
               <strong className="text-[var(--foreground)]">{record.choiceLabel}</strong>
             </span>

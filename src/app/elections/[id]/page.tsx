@@ -69,7 +69,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
           </nav>
 
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 animate-fade-up">
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <ElectionStatusBadge status={election.status} size="md" />
                 {election.restrictedToFaculty && (
@@ -83,7 +83,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   </Badge>
                 )}
               </div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-[var(--foreground)] leading-tight">
+              <h1 className="font-display text-3xl md:text-4xl font-bold text-[var(--foreground)] leading-tight break-words">
                 {election.title}
               </h1>
               <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--muted-foreground)] font-body">

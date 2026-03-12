@@ -1,6 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
 import { ADMIN_RECORD } from '../../helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';

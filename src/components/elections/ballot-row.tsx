@@ -149,8 +149,8 @@ export function BallotRow({
                 {myChoiceVerified === null ? (
                   <div className="p-3 rounded-[var(--radius)] border bg-[var(--info-bg)] border-[var(--kpi-blue-light)]/30 flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-[var(--kpi-blue-light)] shrink-0" />
-                    <div>
-                      <p className="text-sm font-body font-semibold text-[var(--foreground)]">
+                    <div className="min-w-0">
+                      <p className="text-sm font-body font-semibold text-[var(--foreground)] break-words">
                         Ваш збережений вибір: {myStoredChoiceLabel}
                       </p>
                       <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
@@ -161,11 +161,11 @@ export function BallotRow({
                 ) : myChoiceVerified === true ? (
                   <div className="p-3 rounded-[var(--radius)] border bg-[var(--success-bg)] border-[var(--success)]/30 flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-[var(--success)] shrink-0" />
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-body font-semibold text-[var(--success)]">
                         Голос верифіковано
                       </p>
-                      <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+                      <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5 break-words">
                         Розшифрований вибір збігається з локальним записом:{' '}
                         <strong>{myStoredChoiceLabel}</strong>
                       </p>

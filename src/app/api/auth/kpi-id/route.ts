@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
-import {
-  COOKIE_ACCESS,
-  COOKIE_REFRESH,
-  signAccessToken,
-  signRefreshToken,
-  tokenCookieOptions,
-} from '@/lib/jwt';
+import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
 import { resolveTicket } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';

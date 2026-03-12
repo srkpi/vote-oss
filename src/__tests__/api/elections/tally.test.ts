@@ -175,4 +175,44 @@ describe('GET /api/elections/[id]/tally', () => {
     expect(res.status).toBe(200);
     spy.mockRestore();
   });
+
+  it('deletes issued tokens after computing tallies for the first time', async () => {
+    const req = await authReq();
+    const election = makeElection({
+      opens_at: new Date(Date.now() - 7_200_000),
+      closes_at: new Date(Date.now() - 100),
+      tallies: [] as any,
+    });
+
+    prismaMock.election.findUnique.mockResolvedValueOnce(election);
+    prismaMock.ballot.findMany.mockResolvedValueOnce([]);
+    prismaMock.electionTally.createMany.mockResolvedValueOnce({ count: 0 });
+    prismaMock.issuedToken.deleteMany.mockResolvedValueOnce({ count: 3 });
+
+    await GET(req, PARAMS);
+
+    expect(prismaMock.issuedToken.deleteMany).toHaveBeenCalledWith({
+      where: { election_id: MOCK_ELECTION_ID },
+    });
+  });
+
+  it('deletes nullifiers after computing tallies for the first time', async () => {
+    const req = await authReq();
+    const election = makeElection({
+      opens_at: new Date(Date.now() - 7_200_000),
+      closes_at: new Date(Date.now() - 100),
+      tallies: [] as any,
+    });
+
+    prismaMock.election.findUnique.mockResolvedValueOnce(election);
+    prismaMock.ballot.findMany.mockResolvedValueOnce([]);
+    prismaMock.electionTally.createMany.mockResolvedValueOnce({ count: 0 });
+    prismaMock.issuedToken.deleteMany.mockResolvedValueOnce({ count: 3 });
+
+    await GET(req, PARAMS);
+
+    expect(prismaMock.usedTokenNullifier.deleteMany).toHaveBeenCalledWith({
+      where: { election_id: MOCK_ELECTION_ID },
+    });
+  });
 });

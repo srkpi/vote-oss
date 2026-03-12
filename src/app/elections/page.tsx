@@ -2,9 +2,9 @@ import { Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { ErrorState } from '@/components/common/empty-state';
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ui/empty-state';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 

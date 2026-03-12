@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import {
-  COOKIE_ACCESS,
-  COOKIE_REFRESH,
-  type VerifiedPayload,
-  verifyAccessToken,
-  verifyRefreshToken,
-} from '@/lib/jwt';
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
+import { type VerifiedPayload, verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 
 const PROTECTED_PATHS = ['/elections', '/admin', '/join'];
 const GUEST_ONLY_PATHS = ['/auth/login'];

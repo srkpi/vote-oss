@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { EmptyState, ErrorState } from '@/components/common/empty-state';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +18,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { EmptyState, ErrorState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -334,7 +334,7 @@ function ElectionMobileCard({ election, canDelete, onDelete }: ElectionRowProps)
       <div className="flex items-start justify-between gap-3">
         <Link href={`/admin/elections/${election.id}`} className="flex-1 min-w-0">
           <div>
-            <p className="text-sm font-semibold font-body text-[var(--foreground)] leading-snug">
+            <p className="text-sm font-semibold font-body text-[var(--foreground)] leading-snug break-words">
               {election.title}
             </p>
             <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">

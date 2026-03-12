@@ -63,14 +63,14 @@ export default async function AdminDashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             label="Активних голосувань"
-            value={openElections.length}
+            value={openElections.length.toLocaleString('uk-UA')}
             accent="success"
             delay={0}
             icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Всього голосувань"
-            value={elections.length}
+            value={elections.length.toLocaleString('uk-UA')}
             accent="navy"
             delay={60}
             icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -84,7 +84,7 @@ export default async function AdminDashboardPage() {
           />
           <StatCard
             label="Адміністраторів"
-            value={admins.length}
+            value={admins.length.toLocaleString('uk-UA')}
             accent="info"
             delay={180}
             icon={<Users className="w-4 h-4 sm:w-5 sm:h-5" />}

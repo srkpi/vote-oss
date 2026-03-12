@@ -6,9 +6,16 @@ import { useState } from 'react';
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { CharCounter } from '@/components/ui/char-counter';
 import { FormField, Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { createElection } from '@/lib/api-client';
+import {
+  ELECTION_CHOICE_MAX_LENGTH,
+  ELECTION_CHOICES_MAX,
+  ELECTION_CHOICES_MIN,
+  ELECTION_TITLE_MAX_LENGTH,
+} from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 interface CreateElectionFormProps {
@@ -48,11 +55,11 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   };
 
   const addChoice = () => {
-    if (choices.length < 10) setChoices((prev) => [...prev, '']);
+    if (choices.length < ELECTION_CHOICES_MAX) setChoices((prev) => [...prev, '']);
   };
 
   const removeChoice = (index: number) => {
-    if (choices.length > 2) {
+    if (choices.length > ELECTION_CHOICES_MIN) {
       setChoices((prev) => prev.filter((_, i) => i !== index));
     }
   };
@@ -60,7 +67,12 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!form.title.trim()) errors.title = "Назва обов'язкова";
+    if (!form.title.trim()) {
+      errors.title = "Назва обов'язкова";
+    } else if (form.title.length > ELECTION_TITLE_MAX_LENGTH) {
+      errors.title = `Назва не може перевищувати ${ELECTION_TITLE_MAX_LENGTH} символів`;
+    }
+
     if (!form.opensAt) errors.opensAt = "Дата початку обов'язкова";
     if (!form.closesAt) errors.closesAt = "Дата завершення обов'язкова";
 
@@ -72,7 +84,12 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     }
 
     choices.forEach((choice, i) => {
-      if (!choice.trim()) errors[`choice_${i}`] = 'Варіант не може бути порожнім';
+      if (!choice.trim()) {
+        errors[`choice_${i}`] = 'Варіант не може бути порожнім';
+      } else if (choice.length > ELECTION_CHOICE_MAX_LENGTH) {
+        errors[`choice_${i}`] =
+          `Варіант не може перевищувати ${ELECTION_CHOICE_MAX_LENGTH} символів`;
+      }
     });
 
     const uniqueChoices = new Set(choices.map((c) => c.trim().toLowerCase()));
@@ -83,6 +100,11 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
+  // Derived: are there any over-limit fields right now (for live disabling)?
+  const hasOverLimit =
+    form.title.length > ELECTION_TITLE_MAX_LENGTH ||
+    choices.some((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,14 +153,18 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </h2>
         <div className="space-y-5">
           <FormField label="Назва" required error={fieldErrors.title} htmlFor="title">
-            <Input
-              id="title"
-              value={form.title}
-              onChange={(e) => updateForm('title', e.target.value)}
-              placeholder="Введіть назву голосування"
-              error={!!fieldErrors.title}
-              maxLength={200}
-            />
+            <div className="space-y-1">
+              <Input
+                id="title"
+                value={form.title}
+                onChange={(e) => updateForm('title', e.target.value)}
+                placeholder="Введіть назву голосування"
+                error={!!fieldErrors.title || form.title.length > ELECTION_TITLE_MAX_LENGTH}
+              />
+              <div className="flex justify-end">
+                <CharCounter value={form.title} max={ELECTION_TITLE_MAX_LENGTH} />
+              </div>
+            </div>
           </FormField>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -173,7 +199,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
           Варіанти відповідей
         </h2>
         <p className="text-sm text-[var(--muted-foreground)] font-body mb-4">
-          Додайте від 2 до 10 варіантів
+          Додайте від {ELECTION_CHOICES_MIN} до {ELECTION_CHOICES_MAX} варіантів
         </p>
 
         {fieldErrors.choices && (
@@ -183,50 +209,57 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
 
         <div className="space-y-3">
-          {choices.map((choice, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-3 animate-fade-up"
-              style={{ animationDelay: `${index * 30}ms` }}
-            >
-              <div className="w-8 h-10 flex items-center justify-center shrink-0">
-                <span className="w-7 h-7 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body">
-                  {String.fromCharCode(65 + index)}
-                </span>
-              </div>
-              <div className="flex-1">
-                <Input
-                  value={choice}
-                  onChange={(e) => updateChoice(index, e.target.value)}
-                  placeholder={`Варіант ${String.fromCharCode(65 + index)}`}
-                  error={!!fieldErrors[`choice_${index}`]}
-                  maxLength={200}
-                />
-                {fieldErrors[`choice_${index}`] && (
-                  <p className="text-xs text-[var(--error)] mt-1">
-                    {fieldErrors[`choice_${index}`]}
-                  </p>
+          {choices.map((choice, index) => {
+            const isOverLimit = choice.length > ELECTION_CHOICE_MAX_LENGTH;
+            return (
+              <div
+                key={index}
+                className="flex items-start gap-3 animate-fade-up"
+                style={{ animationDelay: `${index * 30}ms` }}
+              >
+                <div className="w-8 h-10 flex items-center justify-center shrink-0">
+                  <span className="w-7 h-7 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body">
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Input
+                    value={choice}
+                    onChange={(e) => updateChoice(index, e.target.value)}
+                    placeholder={`Варіант ${String.fromCharCode(65 + index)}`}
+                    error={!!fieldErrors[`choice_${index}`] || isOverLimit}
+                  />
+                  <div className="flex items-center justify-between">
+                    {fieldErrors[`choice_${index}`] ? (
+                      <p className="text-xs text-[var(--error)]">
+                        {fieldErrors[`choice_${index}`]}
+                      </p>
+                    ) : (
+                      <span />
+                    )}
+                    <CharCounter value={choice} max={ELECTION_CHOICE_MAX_LENGTH} />
+                  </div>
+                </div>
+                {choices.length > ELECTION_CHOICES_MIN && (
+                  <button
+                    type="button"
+                    onClick={() => removeChoice(index)}
+                    className={cn(
+                      'w-10 h-10 flex items-center justify-center shrink-0 rounded-[var(--radius)]',
+                      'text-[var(--muted-foreground)] hover:text-[var(--error)] hover:bg-[var(--error-bg)]',
+                      'transition-colors duration-150',
+                    )}
+                    aria-label="Видалити варіант"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
               </div>
-              {choices.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => removeChoice(index)}
-                  className={cn(
-                    'w-10 h-10 flex items-center justify-center shrink-0 rounded-[var(--radius)]',
-                    'text-[var(--muted-foreground)] hover:text-[var(--error)] hover:bg-[var(--error-bg)]',
-                    'transition-colors duration-150',
-                  )}
-                  aria-label="Видалити варіант"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {choices.length < 10 && (
+        {choices.length < ELECTION_CHOICES_MAX && (
           <Button
             type="button"
             variant="secondary"
@@ -305,6 +338,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
           variant="accent"
           size="lg"
           loading={loading}
+          disabled={hasOverLimit}
           icon={<Plus className="w-4 h-4" />}
         >
           Створити голосування

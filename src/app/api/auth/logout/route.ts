@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/jwt';
 import { revokeByAccessJti } from '@/lib/token-store';
 
 export async function POST(req: NextRequest) {

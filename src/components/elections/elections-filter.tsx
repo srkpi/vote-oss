@@ -3,8 +3,8 @@
 import { FileText } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { EmptyState } from '@/components/common/empty-state';
 import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import type { Election, ElectionStatus } from '@/types/election';

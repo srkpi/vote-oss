@@ -56,7 +56,9 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
         <span className="w-8 h-8 rounded-lg navy-gradient text-white flex items-center justify-center font-display font-bold text-base shrink-0">
           ✓
         </span>
-        <span className="font-body font-semibold text-[var(--kpi-navy)]">{record.choiceLabel}</span>
+        <span className="font-body font-semibold text-[var(--kpi-navy)] min-w-0 break-words">
+          {record.choiceLabel}
+        </span>
       </div>
 
       {/* Ballot hash */}

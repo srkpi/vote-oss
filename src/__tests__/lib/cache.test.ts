@@ -27,6 +27,12 @@ import {
   setCachedAdmins,
   setCachedElections,
 } from '@/lib/cache';
+import {
+  CACHE_KEY_ADMINS,
+  CACHE_KEY_ELECTIONS,
+  CACHE_TTL_ADMINS_SECS,
+  CACHE_TTL_ELECTIONS_SECS,
+} from '@/lib/constants';
 
 // ---------------------------------------------------------------------------
 // Sample fixtures
@@ -79,10 +85,10 @@ describe('cache', () => {
       expect(result![0].title).toBe('Test Election');
     });
 
-    it('uses the key cache:elections', async () => {
+    it('uses the correct cache key', async () => {
       redisMock.get.mockResolvedValueOnce(null);
       await getCachedElections();
-      expect(redisMock.get).toHaveBeenCalledWith('cache:elections');
+      expect(redisMock.get).toHaveBeenCalledWith(CACHE_KEY_ELECTIONS);
     });
 
     it('returns null when Redis is unavailable (safeRedis catches error)', async () => {
@@ -105,10 +111,15 @@ describe('cache', () => {
   describe('setCachedElections', () => {
     beforeEach(() => allure.story('setCachedElections'));
 
-    it('serialises the array and stores it under cache:elections with a 60-second TTL', async () => {
+    it('serialises the array and stores it under with TTL', async () => {
       const data = [SAMPLE_CACHED_ELECTION];
       await setCachedElections(data);
-      expect(redisMock.set).toHaveBeenCalledWith('cache:elections', JSON.stringify(data), 'EX', 60);
+      expect(redisMock.set).toHaveBeenCalledWith(
+        CACHE_KEY_ELECTIONS,
+        JSON.stringify(data),
+        'EX',
+        CACHE_TTL_ELECTIONS_SECS,
+      );
     });
 
     it('does not throw when Redis is unavailable', async () => {
@@ -120,9 +131,9 @@ describe('cache', () => {
   describe('invalidateElections', () => {
     beforeEach(() => allure.story('invalidateElections'));
 
-    it('deletes the cache:elections key', async () => {
+    it('deletes the cache key', async () => {
       await invalidateElections();
-      expect(redisMock.del).toHaveBeenCalledWith('cache:elections');
+      expect(redisMock.del).toHaveBeenCalledWith(CACHE_KEY_ELECTIONS);
     });
 
     it('does not throw when Redis is unavailable', async () => {
@@ -148,10 +159,10 @@ describe('cache', () => {
       expect(result![0].user_id).toBe('admin-001');
     });
 
-    it('uses the key cache:admins', async () => {
+    it('uses the correct cache key', async () => {
       redisMock.get.mockResolvedValueOnce(null);
       await getCachedAdmins();
-      expect(redisMock.get).toHaveBeenCalledWith('cache:admins');
+      expect(redisMock.get).toHaveBeenCalledWith(CACHE_KEY_ADMINS);
     });
 
     it('returns null on malformed JSON', async () => {
@@ -163,13 +174,13 @@ describe('cache', () => {
   describe('setCachedAdmins', () => {
     beforeEach(() => allure.story('setCachedAdmins'));
 
-    it('stores the admin array with a 30-second TTL', async () => {
-      await setCachedAdmins([SAMPLE_ADMIN] as Parameters<typeof setCachedAdmins>[0]);
+    it('stores the admin array with TTL', async () => {
+      await setCachedAdmins([SAMPLE_ADMIN] as unknown as Parameters<typeof setCachedAdmins>[0]);
       expect(redisMock.set).toHaveBeenCalledWith(
-        'cache:admins',
+        CACHE_KEY_ADMINS,
         JSON.stringify([SAMPLE_ADMIN]),
         'EX',
-        30,
+        CACHE_TTL_ADMINS_SECS,
       );
     });
   });
@@ -177,9 +188,9 @@ describe('cache', () => {
   describe('invalidateAdmins', () => {
     beforeEach(() => allure.story('invalidateAdmins'));
 
-    it('deletes the cache:admins key', async () => {
+    it('deletes the cache key', async () => {
       await invalidateAdmins();
-      expect(redisMock.del).toHaveBeenCalledWith('cache:admins');
+      expect(redisMock.del).toHaveBeenCalledWith(CACHE_KEY_ADMINS);
     });
 
     it('does not throw when Redis is unavailable', async () => {
