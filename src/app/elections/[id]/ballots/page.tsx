@@ -59,7 +59,9 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
               Публічні бюлетені
             </h1>
             {data?.election && (
-              <p className="text-[var(--muted-foreground)] font-body mt-1">{data.election.title}</p>
+              <p className="text-[var(--muted-foreground)] font-body mt-1 break-words">
+                {data.election.title}
+              </p>
             )}
           </div>
         </div>

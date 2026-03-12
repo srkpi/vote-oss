@@ -1,8 +1,7 @@
 import { randomUUID } from 'crypto';
 import { jwtVerify, SignJWT } from 'jose';
 
-export const COOKIE_ACCESS = 'access_token';
-export const COOKIE_REFRESH = 'refresh_token';
+import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 
 export interface TokenPayload {
   sub: string;
@@ -29,11 +28,12 @@ export async function signAccessToken(
 ): Promise<{ token: string; jti: string }> {
   const jti = randomUUID();
   const secret = getSecret('JWT_ACCESS_SECRET');
+  const expirationTime = Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECS;
   const token = await new SignJWT({ ...payload, token_type: 'access' })
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(jti)
     .setIssuedAt()
-    .setExpirationTime('15m')
+    .setExpirationTime(expirationTime)
     .sign(secret);
   return { token, jti };
 }
@@ -43,11 +43,12 @@ export async function signRefreshToken(
 ): Promise<{ token: string; jti: string }> {
   const jti = randomUUID();
   const secret = getSecret('JWT_REFRESH_SECRET');
+  const expirationTime = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL_SECS;
   const token = await new SignJWT({ ...payload, token_type: 'refresh' })
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(jti)
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime(expirationTime)
     .sign(secret);
   return { token, jti };
 }
@@ -95,7 +96,7 @@ export function tokenCookieOptions(type: 'access' | 'refresh') {
     httpOnly: true,
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: type === 'access' ? 60 * 15 : 60 * 60 * 24 * 7,
+    maxAge: type === 'access' ? ACCESS_TOKEN_TTL_SECS : REFRESH_TOKEN_TTL_SECS,
     path: '/',
   };
 }

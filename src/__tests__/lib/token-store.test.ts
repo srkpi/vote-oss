@@ -33,12 +33,11 @@ jest.mock('@/lib/cache', () => ({
   invalidateAdmins: jest.fn().mockResolvedValue(undefined),
 }));
 
+import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 import {
-  ACCESS_TTL_SECS,
   isAccessTokenValid,
   isRefreshTokenValid,
   persistTokenPair,
-  REFRESH_TTL_SECS,
   revokeByAccessJti,
   revokeByRefreshJti,
   revokeTokenPair,
@@ -298,7 +297,7 @@ describe('token-store', () => {
       const iat = NOW_SECS - 60; // 60 seconds ago
       await revokeTokenPair('acc-jti', 'ref-jti', iat, iat);
       const accCall = bloomMock.bloomAdd.mock.calls.find((c) => c[0] === 'acc-jti')!;
-      const expectedTtl = ACCESS_TTL_SECS - 60;
+      const expectedTtl = ACCESS_TOKEN_TTL_SECS - 60;
       expect(accCall[1]).toBeCloseTo(expectedTtl, -1);
     });
 
@@ -307,7 +306,7 @@ describe('token-store', () => {
       const iat = NOW_SECS - 3600;
       await revokeTokenPair('acc-jti', 'ref-jti', iat, iat);
       const refCall = bloomMock.bloomAdd.mock.calls.find((c) => c[0] === 'ref-jti')!;
-      const expectedTtl = REFRESH_TTL_SECS - 3600;
+      const expectedTtl = REFRESH_TOKEN_TTL_SECS - 3600;
       expect(refCall[1]).toBeCloseTo(expectedTtl, -2);
     });
   });

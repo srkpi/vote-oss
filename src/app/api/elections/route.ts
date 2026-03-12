@@ -7,6 +7,12 @@ import {
   invalidateElections,
   setCachedElections,
 } from '@/lib/cache';
+import {
+  ELECTION_CHOICE_MAX_LENGTH,
+  ELECTION_CHOICES_MAX,
+  ELECTION_CHOICES_MIN,
+  ELECTION_TITLE_MAX_LENGTH,
+} from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
@@ -43,10 +49,6 @@ function toClientElections(cached: CachedElection[], faculty: string, group: str
 
 // ---------------------------------------------------------------------------
 // GET /api/elections
-// Returns elections visible to the requesting user.
-// Cache: single global key (all elections, unfiltered, status-free).
-// Status and per-user filtering are applied at serve time so cached data
-// never becomes stale as elections transition between states.
 // ---------------------------------------------------------------------------
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
@@ -59,7 +61,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(toClientElections(cached, user.faculty, user.group));
   }
 
-  // ── Cache miss: fetch everything from DB (no faculty/group filter) ────────
   const elections = await prisma.election.findMany({
     select: {
       id: true,
@@ -81,7 +82,6 @@ export async function GET(req: NextRequest) {
     orderBy: { opens_at: 'desc' },
   });
 
-  // Build cache entries: no `status` so they never go stale.
   const rawResult: CachedElection[] = elections.map((e) => ({
     id: e.id,
     title: e.title,
@@ -91,13 +91,12 @@ export async function GET(req: NextRequest) {
     restrictedToFaculty: e.restricted_to_faculty,
     restrictedToGroup: e.restricted_to_group,
     publicKey: e.public_key,
-    privateKey: e.private_key, // always store; conditionally expose in toClientElections
+    privateKey: e.private_key,
     creator: e.creator,
     choices: e.choices,
     ballotCount: e._count.ballots,
   }));
 
-  // Populate cache (best-effort — failure is non-fatal)
   await setCachedElections(rawResult);
 
   return NextResponse.json(toClientElections(rawResult, user.faculty, user.group));
@@ -105,8 +104,6 @@ export async function GET(req: NextRequest) {
 
 // ---------------------------------------------------------------------------
 // POST /api/elections
-// Admin only – create an election with choices.
-// Invalidates the elections cache on success.
 // ---------------------------------------------------------------------------
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -135,8 +132,24 @@ export async function POST(req: NextRequest) {
   if (!title || !opensAt || !closesAt || !choices?.length) {
     return Errors.badRequest('title, opensAt, closesAt, choices are required');
   }
-  if (choices.length < 2) {
-    return Errors.badRequest('At least 2 choices are required');
+
+  if (title.length > ELECTION_TITLE_MAX_LENGTH) {
+    return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
+  }
+
+  if (choices.length < ELECTION_CHOICES_MIN) {
+    return Errors.badRequest(`At least ${ELECTION_CHOICES_MIN} choices are required`);
+  }
+
+  if (choices.length > ELECTION_CHOICES_MAX) {
+    return Errors.badRequest(`At most ${ELECTION_CHOICES_MAX} choices are allowed`);
+  }
+
+  const tooLongChoice = choices.find((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
+  if (tooLongChoice) {
+    return Errors.badRequest(
+      `Each choice must be at most ${ELECTION_CHOICE_MAX_LENGTH} characters`,
+    );
   }
 
   const openDate = new Date(opensAt);

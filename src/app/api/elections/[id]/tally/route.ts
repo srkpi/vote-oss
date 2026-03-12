@@ -72,6 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
   }
 
+  await prisma.issuedToken.deleteMany({ where: { election_id: electionId } });
   await prisma.electionTally.createMany({
     data: Object.entries(tally).map(([choiceId, count]) => ({
       election_id: electionId,

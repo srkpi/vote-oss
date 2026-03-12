@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, CreditCard, FileText, Plus } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Clock, CreditCard, FileText, Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -34,15 +34,21 @@ export default async function AdminElectionsPage() {
 
   return (
     <div className="flex-1 overflow-auto">
-      {/* Page header */}
       <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center justify-between gap-3">
           <div className="animate-fade-up min-w-0">
+            <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-2 sm:mb-3">
+              <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
+                Адмін
+              </Link>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-[var(--foreground)]">Голосування</span>
+            </nav>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
               Голосування
             </h1>
             <p className="font-body text-sm text-[var(--muted-foreground)] mt-0.5">
-              Управління всіма голосуваннями в системі
+              Керування всіма голосуваннями в системі
             </p>
           </div>
           <div
@@ -64,21 +70,21 @@ export default async function AdminElectionsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             label="Активних зараз"
-            value={openCount}
+            value={openCount.toLocaleString('uk-UA')}
             accent="success"
             delay={0}
             icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Завершених"
-            value={closedCount}
+            value={closedCount.toLocaleString('uk-UA')}
             accent="navy"
             delay={120}
             icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Очікується"
-            value={upcomingCount}
+            value={upcomingCount.toLocaleString('uk-UA')}
             accent="orange"
             delay={60}
             icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5" />}

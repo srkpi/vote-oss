@@ -197,7 +197,7 @@ function ChoiceButton({ choice, selected, onSelect, index }: ChoiceButtonProps) 
       {/* Text */}
       <span
         className={cn(
-          'flex-1 font-body text-sm font-medium transition-colors duration-200',
+          'flex-1 min-w-0 break-words font-body text-sm font-medium transition-colors duration-200',
           selected ? 'text-[var(--kpi-navy)]' : 'text-[var(--foreground)]',
         )}
       >
@@ -244,7 +244,9 @@ function ConfirmationStep({ choice, onBack, onConfirm, loading }: ConfirmationSt
           <span className="w-8 h-8 rounded-lg bg-[var(--kpi-navy)] text-white flex items-center justify-center font-display font-bold text-base shrink-0">
             {String.fromCharCode(65 + choice.position)}
           </span>
-          <span className="font-body font-semibold text-[var(--kpi-navy)]">{choice.choice}</span>
+          <span className="font-body font-semibold text-[var(--kpi-navy)] min-w-0 break-words">
+            {choice.choice}
+          </span>
         </div>
       </div>
 

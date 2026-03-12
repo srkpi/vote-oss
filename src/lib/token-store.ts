@@ -24,15 +24,9 @@
  */
 
 import { bloomAdd, getBloomResetAt, isTokenClean } from '@/lib/bloom';
+import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { safeRedis } from '@/lib/redis';
-
-// ---------------------------------------------------------------------------
-// Token lifetimes (must match src/lib/jwt.ts)
-// ---------------------------------------------------------------------------
-
-export const ACCESS_TTL_SECS = 60 * 15; // 15 minutes
-export const REFRESH_TTL_SECS = 60 * 60 * 24 * 7; // 7 days
 
 // ---------------------------------------------------------------------------
 // Issuance
@@ -140,8 +134,8 @@ export async function revokeTokenPair(
 ): Promise<void> {
   const now = Math.floor(Date.now() / 1_000);
 
-  const accessTtl = Math.max(1, accessIat + ACCESS_TTL_SECS - now);
-  const refreshTtl = Math.max(1, refreshIat + REFRESH_TTL_SECS - now);
+  const accessTtl = Math.max(1, accessIat + ACCESS_TOKEN_TTL_SECS - now);
+  const refreshTtl = Math.max(1, refreshIat + REFRESH_TOKEN_TTL_SECS - now);
 
   await Promise.all([
     bloomAdd(accessJti, accessTtl),
@@ -167,8 +161,8 @@ export async function revokeByRefreshJti(
     select: { access_jti: true },
   });
 
-  const refreshTtl = Math.max(1, refreshIat + REFRESH_TTL_SECS - now);
-  const accessTtl = ACCESS_TTL_SECS; // conservative upper bound
+  const refreshTtl = Math.max(1, refreshIat + REFRESH_TOKEN_TTL_SECS - now);
+  const accessTtl = ACCESS_TOKEN_TTL_SECS; // conservative upper bound
 
   const ops: Promise<unknown>[] = [
     bloomAdd(refreshJti, refreshTtl),
@@ -193,7 +187,7 @@ export async function revokeByRefreshJti(
  */
 export async function revokeByAccessJti(accessJti: string, accessIat: number): Promise<void> {
   const now = Math.floor(Date.now() / 1_000);
-  const accessTtl = Math.max(1, accessIat + ACCESS_TTL_SECS - now);
+  const accessTtl = Math.max(1, accessIat + ACCESS_TOKEN_TTL_SECS - now);
 
   // Bloom the access token immediately (don't wait for DB lookup)
   const bloomAccessOp = bloomAdd(accessJti, accessTtl);
@@ -211,7 +205,7 @@ export async function revokeByAccessJti(accessJti: string, accessIat: number): P
 
   if (record?.refresh_jti) {
     const refreshIat = Math.floor(record.created_at.getTime() / 1_000);
-    const refreshTtl = Math.max(1, refreshIat + REFRESH_TTL_SECS - now);
+    const refreshTtl = Math.max(1, refreshIat + REFRESH_TOKEN_TTL_SECS - now);
     ops.push(bloomAdd(record.refresh_jti, refreshTtl));
   }
 

@@ -63,7 +63,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         <h3
           className={cn(
             'font-display text-xl font-semibold text-[var(--foreground)] leading-snug mb-3',
-            'group-hover:text-[var(--kpi-navy)] transition-colors duration-200',
+            'group-hover:text-[var(--kpi-navy)] transition-colors duration-200 line-clamp-2 break-words',
           )}
         >
           {election.title}
@@ -94,7 +94,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
               className={cn(
                 'text-xs px-2.5 py-1 rounded-full font-body',
                 'bg-[var(--surface)] text-[var(--muted-foreground)]',
-                'border border-[var(--border-subtle)]',
+                'border border-[var(--border-subtle)] truncate',
               )}
             >
               {choice.choice}

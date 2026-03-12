@@ -63,7 +63,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.badRequest('Nullifier does not match token hash');
   }
 
-  const usedNullifier = await prisma.usedTokenNullifier.findUnique({ where: { nullifier } });
+  const usedNullifier = await prisma.usedTokenNullifier.findUnique({
+    where: { nullifier, election_id: electionId },
+  });
   if (usedNullifier) return Errors.conflict('This vote token has already been used');
 
   let choiceId: string;

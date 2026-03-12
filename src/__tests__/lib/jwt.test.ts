@@ -1,8 +1,7 @@
 import * as allure from 'allure-js-commons';
 
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import {
-  COOKIE_ACCESS,
-  COOKIE_REFRESH,
   signAccessToken,
   signRefreshToken,
   tokenCookieOptions,
