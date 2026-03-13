@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { AdminElectionsClient } from '@/components/admin/admin-elections-client';
 import { StatCard } from '@/components/admin/stat-card';
 import { Button } from '@/components/ui/button';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
-import type { Admin } from '@/types/admin';
+import { getCurrentAdmin } from '@/lib/current-admin';
+import { serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 
 export const metadata: Metadata = {
@@ -14,17 +14,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminElectionsPage() {
-  const session = await getServerSession();
-
-  const [electionsResult, currentAdminResult] = await Promise.all([
+  const [{ data: elections, error }, currentAdmin] = await Promise.all([
     serverFetch<Election[]>('/api/elections'),
-    session
-      ? serverFetch<Admin>(`/api/admins/${session.userId}`)
-      : Promise.resolve({ data: null, error: null, status: 404 }),
+    getCurrentAdmin(),
   ]);
-
-  const { data: elections, error } = electionsResult;
-  const currentAdmin = currentAdminResult.data!;
 
   const all = elections ?? [];
   const openCount = all.filter((e) => e.status === 'open').length;

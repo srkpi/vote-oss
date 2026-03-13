@@ -1,21 +1,20 @@
+// src/app/admin/elections/new/page.tsx
 import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { CreateElectionForm } from '@/components/admin/create-election-form';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
-import type { Admin } from '@/types/admin';
+import { getCurrentAdmin } from '@/lib/current-admin';
 
 export const metadata: Metadata = {
   title: 'Нове голосування',
 };
 
 export default async function NewElectionPage() {
-  const session = await getServerSession();
-  const currentAdmin = await serverFetch<Admin>(`/api/admins/${session!.userId}`);
+  const currentAdmin = await getCurrentAdmin();
 
-  const restrictedToFaculty = currentAdmin.data?.restricted_to_faculty ?? false;
-  const adminFaculty = currentAdmin.data?.faculty ?? '';
+  const restrictedToFaculty = currentAdmin?.restricted_to_faculty ?? false;
+  const adminFaculty = currentAdmin?.faculty ?? '';
 
   return (
     <div className="flex-1 overflow-auto">

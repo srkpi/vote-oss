@@ -9,9 +9,9 @@ import { EncryptionKey } from '@/components/elections/encryption-key';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
+import { getCurrentAdmin } from '@/lib/current-admin';
+import { serverFetch } from '@/lib/server-auth';
 import { formatDate, formatDateTime } from '@/lib/utils';
-import type { Admin } from '@/types/admin';
 import type { ElectionDetail } from '@/types/election';
 import type { TallyResponse } from '@/types/tally';
 
@@ -28,12 +28,13 @@ export async function generateMetadata({ params }: AdminElectionPageProps): Prom
 export default async function AdminElectionDetailPage({ params }: AdminElectionPageProps) {
   const { id } = await params;
 
-  const session = await getServerSession();
-  const { data: election, status } = await serverFetch<ElectionDetail>(`/api/elections/${id}`);
+  const [{ data: election, status }, currentAdmin] = await Promise.all([
+    serverFetch<ElectionDetail>(`/api/elections/${id}`),
+    getCurrentAdmin(),
+  ]);
+
   if (status === 404 || !election) notFound();
 
-  // Determine if current admin can delete this election
-  const { data: currentAdmin } = await serverFetch<Admin>(`/api/admins/${session!.userId}`);
   const canDelete = currentAdmin
     ? !currentAdmin.restricted_to_faculty || election.restrictedToFaculty === currentAdmin.faculty
     : false;
@@ -111,7 +112,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left column */}
           <div className="xl:col-span-2 space-y-6">
-            {/* Live indicator for open elections */}
             {isOpen && (
               <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] bg-[var(--success-bg)] border border-[var(--success)]/20">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[var(--success)] flex items-center justify-center shrink-0">
@@ -137,7 +137,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             )}
 
-            {/* Results section (closed only) */}
             {isClosed && tally && (
               <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
                 <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
@@ -154,7 +153,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             )}
 
-            {/* Choices */}
             {!isClosed && (
               <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
                 <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
@@ -183,7 +181,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
           {/* Right column */}
           <div className="space-y-5">
-            {/* Timeline */}
             <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
               <div className="p-4 sm:p-5 space-y-4">
                 <TimelineItem
@@ -207,7 +204,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             </div>
 
-            {/* Access restrictions */}
             <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
               <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
                 <h3 className="font-display text-base font-semibold text-[var(--foreground)]">

@@ -42,7 +42,9 @@ async function rawFetch<T>(path: string, options: RequestInit = {}): Promise<Api
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        ...(options.headers || {}),
+        ...(options.headers instanceof Headers
+          ? Object.fromEntries(options.headers.entries())
+          : options.headers || {}),
       },
       ...options,
     });
