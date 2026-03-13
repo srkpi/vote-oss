@@ -30,7 +30,6 @@ function makeTokenRecord(overrides: Partial<Record<string, unknown>> = {}) {
     valid_due: FUTURE,
     created_at: new Date(),
     created_by: 'superadmin-001',
-    creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
     ...overrides,
   };
 }

@@ -29,7 +29,6 @@ function makeTokenRecord(overrides: Partial<Record<string, unknown>> = {}) {
     restricted_to_faculty: true,
     valid_due: FUTURE,
     created_at: new Date(),
-    created_by: 'superadmin-001',
     creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
     ...overrides,
   };
@@ -145,9 +144,7 @@ describe('GET /api/admins/invite', () => {
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
     ]);
-    cacheMock.getCachedInviteTokens.mockResolvedValueOnce([
-      makeTokenRecord({ created_by: 'superadmin-001' }),
-    ] as any);
+    cacheMock.getCachedInviteTokens.mockResolvedValueOnce([makeTokenRecord()] as any);
 
     const { body } = await parseJson<any[]>(await GET(req));
     expect(body[0].isOwn).toBe(true);
@@ -161,7 +158,7 @@ describe('GET /api/admins/invite', () => {
       { user_id: 'admin-002', promoted_by: 'superadmin-001' },
     ]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce([
-      makeTokenRecord({ created_by: 'admin-002' }),
+      makeTokenRecord({ creator: { user_id: 'admin-002', full_name: 'Test Admin' } }),
     ] as any);
 
     const { body } = await parseJson<any[]>(await GET(req));
@@ -179,7 +176,7 @@ describe('GET /api/admins/invite', () => {
       { user_id: 'other-leaf', promoted_by: 'other-root' },
     ]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce([
-      makeTokenRecord({ created_by: 'other-leaf' }),
+      makeTokenRecord({ creator: { user_id: 'other-leaf', full_name: 'Other Admin' } }),
     ] as any);
 
     const { body } = await parseJson<any[]>(await GET(req));
@@ -194,7 +191,7 @@ describe('GET /api/admins/invite', () => {
       { user_id: 'admin-003', promoted_by: 'admin-002' },
     ]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce([
-      makeTokenRecord({ created_by: 'admin-003' }),
+      makeTokenRecord({ creator: { user_id: 'admin-003', full_name: 'Test Admin' } }),
     ] as any);
 
     const { body } = await parseJson<any[]>(await GET(req));

@@ -45,7 +45,14 @@ export async function GET(req: NextRequest) {
 
   if (!allTokens) {
     const dbTokens = await prisma.adminInviteToken.findMany({
-      include: {
+      select: {
+        token_hash: true,
+        max_usage: true,
+        current_usage: true,
+        manage_admins: true,
+        restricted_to_faculty: true,
+        valid_due: true,
+        created_at: true,
         creator: { select: { user_id: true, full_name: true } },
       },
       orderBy: { created_at: 'desc' },
@@ -59,7 +66,6 @@ export async function GET(req: NextRequest) {
       restricted_to_faculty: t.restricted_to_faculty,
       valid_due: t.valid_due.toISOString(),
       created_at: t.created_at.toISOString(),
-      created_by: t.created_by,
       creator: { user_id: t.creator.user_id, full_name: t.creator.full_name },
     }));
 
@@ -68,10 +74,13 @@ export async function GET(req: NextRequest) {
 
   // ── Filter by caller's hierarchy and attach computed flags ────────────────
   const visible = allTokens
-    .filter((t) => t.created_by === user.sub || isAncestorInGraph(graph, user.sub, t.created_by))
+    .filter(
+      (t) =>
+        t.creator.user_id === user.sub || isAncestorInGraph(graph, user.sub, t.creator.user_id),
+    )
     .map((t) => ({
       ...t,
-      isOwn: t.created_by === user.sub,
+      isOwn: t.creator.user_id === user.sub,
       // If you can see it, you can delete it (you're either the owner or an ancestor)
       deletable: true,
     }));

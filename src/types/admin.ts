@@ -44,7 +44,6 @@ export interface InviteToken {
   restricted_to_faculty: boolean;
   valid_due: string;
   created_at: string;
-  created_by: string;
   creator: { user_id: string; full_name: string };
   isOwn: boolean;
   deletable: boolean;

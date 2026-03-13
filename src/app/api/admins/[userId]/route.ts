@@ -7,25 +7,6 @@ import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
-// Hierarchy graph helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Load every admin's (user_id, promoted_by) pair in a single query — including
- * soft-deleted records — and return a Map keyed by user_id.
- *
- * Soft-deleted nodes are intentionally included so that transitive chains
- * through removed intermediaries (A → B[deleted] → C) are preserved.
- * The result is only used for ancestry checks, never exposed to consumers.
- */
-async function fetchHierarchyGraph(): Promise<Map<string, string | null>> {
-  const nodes = await prisma.admin.findMany({
-    select: { user_id: true, promoted_by: true },
-  });
-  return new Map(nodes.map((n) => [n.user_id, n.promoted_by]));
-}
-
-// ---------------------------------------------------------------------------
 // GET /api/admins/[userId]
 // ---------------------------------------------------------------------------
 
@@ -95,7 +76,10 @@ export async function DELETE(
   }
 
   // Load the full hierarchy graph in one query, then check ancestry in memory.
-  const graph = await fetchHierarchyGraph();
+  const nodes = await prisma.admin.findMany({
+    select: { user_id: true, promoted_by: true },
+  });
+  const graph = new Map(nodes.map((n) => [n.user_id, n.promoted_by]));
   if (!isAncestorInGraph(graph, user.sub, targetUserId)) {
     return Errors.forbidden('You can only remove admins in your own branch of the hierarchy');
   }
