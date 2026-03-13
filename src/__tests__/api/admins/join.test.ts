@@ -11,13 +11,14 @@ import {
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
-import { generateInviteToken, hashToken } from '@/lib/crypto';
+import { generateBase64Token, hashToken } from '@/lib/crypto';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 jest.mock('@/lib/cache', () => cacheMock);
 
 import { POST } from '@/app/api/admins/join/route';
+import { INVITE_TOKEN_LENGTH } from '@/lib/constants';
 
 function makeInviteRecord(
   overrides: Partial<{
@@ -117,7 +118,7 @@ describe('POST /api/admins/join', () => {
   // ── Brand-new admin (happy path) ─────────────────────────────────────────
 
   it('returns 201 with admin info on successful first-time join', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
@@ -135,7 +136,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('looks up invite token using SHA-256 hash of provided raw token', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const expectedHash = hashToken(rawToken);
 
     const { access } = await makeTokenPair(USER_PAYLOAD);
@@ -151,7 +152,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('creates admin record and increments usage atomically via $transaction for new admin', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
@@ -169,7 +170,7 @@ describe('POST /api/admins/join', () => {
   // ── Re-join (previously soft-deleted admin) ───────────────────────────────
 
   it('returns 201 when a previously-deleted admin rejoins with a valid invite', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
@@ -186,7 +187,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('uses admin.update (not admin.create) when a soft-deleted admin rejoins', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
@@ -203,7 +204,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('nullifies deleted_at and deleted_by when a soft-deleted admin rejoins', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const newInviter = 'another-admin-999';
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
@@ -228,7 +229,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('sets new promoted_by from the invite token when a soft-deleted admin rejoins', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const newInviter = 'another-admin-999';
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
@@ -249,7 +250,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('applies new manage_admins and restricted_to_faculty from the invite on rejoin', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
@@ -272,7 +273,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('increments invite-token usage atomically on rejoin (2-op transaction)', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());
@@ -288,7 +289,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('returns the correct promotedBy (new inviter) in the response on rejoin', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const newInviter = 'fresh-inviter-007';
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
@@ -306,7 +307,7 @@ describe('POST /api/admins/join', () => {
   });
 
   it('invalidates the admins cache on a successful rejoin', async () => {
-    const rawToken = generateInviteToken();
+    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(makeInviteRecord());

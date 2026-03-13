@@ -2,12 +2,13 @@ import * as allure from 'allure-js-commons';
 import { constants, publicEncrypt } from 'crypto';
 
 import { MOCK_ELECTION_ID } from '@/__tests__/helpers/fixtures';
+import { INVITE_TOKEN_LENGTH } from '@/lib/constants';
 import {
   computeBallotHash,
   computeNullifier,
   decryptBallot,
+  generateBase64Token,
   generateElectionKeyPair,
-  generateInviteToken,
   generateVoteToken,
   hashToken,
   signBallotEntry,
@@ -221,7 +222,7 @@ describe('crypto', () => {
     });
   });
 
-  describe('hashToken / generateInviteToken', () => {
+  describe('hashToken / generateBase64Token', () => {
     beforeEach(() => {
       allure.feature('Crypto');
       allure.story('Invite Token');
@@ -235,12 +236,16 @@ describe('crypto', () => {
       expect(hashToken('a')).not.toBe(hashToken('b'));
     });
 
-    it('generateInviteToken returns a 64-char hex string', () => {
-      expect(generateInviteToken()).toMatch(/^[a-f0-9]{64}$/);
+    it('generateBase64Token returns a valid Base64URL string of correct length', () => {
+      const token = generateBase64Token(INVITE_TOKEN_LENGTH);
+      expect(token.length).toBe(INVITE_TOKEN_LENGTH);
+      expect(token).toMatch(new RegExp(`^[A-Za-z0-9_-]{${INVITE_TOKEN_LENGTH}}$`));
     });
 
-    it('generateInviteToken produces unique tokens', () => {
-      expect(generateInviteToken()).not.toBe(generateInviteToken());
+    it('generateBase64Token produces unique tokens', () => {
+      expect(generateBase64Token(INVITE_TOKEN_LENGTH)).not.toBe(
+        generateBase64Token(INVITE_TOKEN_LENGTH),
+      );
     });
   });
 });

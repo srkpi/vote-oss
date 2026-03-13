@@ -11,6 +11,7 @@ export const ELECTION_CHOICE_MAX_LENGTH = 100;
 // Admin invite token limits
 // ---------------------------------------------------------------------------
 
+export const INVITE_TOKEN_LENGTH = 16;
 export const INVITE_TOKEN_MAX_USAGE_MIN = 1;
 export const INVITE_TOKEN_MAX_USAGE_MAX = 100;
 export const INVITE_TOKEN_MAX_COUNT = 10;

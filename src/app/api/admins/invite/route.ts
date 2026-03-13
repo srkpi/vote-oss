@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
 import { getCachedInviteTokens, invalidateInviteTokens, setCachedInviteTokens } from '@/lib/cache';
-import { INVITE_TOKEN_MAX_COUNT, INVITE_TOKEN_MAX_VALID_DAYS } from '@/lib/constants';
-import { generateInviteToken, hashToken } from '@/lib/crypto';
+import {
+  INVITE_TOKEN_LENGTH,
+  INVITE_TOKEN_MAX_COUNT,
+  INVITE_TOKEN_MAX_VALID_DAYS,
+} from '@/lib/constants';
+import { generateBase64Token, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
@@ -191,7 +195,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const rawToken = generateInviteToken();
+  const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
   const tokenHash = hashToken(rawToken);
 
   await prisma.adminInviteToken.create({

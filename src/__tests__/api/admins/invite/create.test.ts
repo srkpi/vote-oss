@@ -12,7 +12,11 @@ import {
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
-import { INVITE_TOKEN_MAX_COUNT, INVITE_TOKEN_MAX_VALID_DAYS } from '@/lib/constants';
+import {
+  INVITE_TOKEN_LENGTH,
+  INVITE_TOKEN_MAX_COUNT,
+  INVITE_TOKEN_MAX_VALID_DAYS,
+} from '@/lib/constants';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
@@ -118,7 +122,8 @@ describe('POST /api/admins/invite', () => {
 
     expect(status).toBe(201);
     expect(typeof body.token).toBe('string');
-    expect(body.token).toMatch(/^[a-f0-9]{64}$/);
+    expect(body.token.length).toBe(INVITE_TOKEN_LENGTH);
+    expect(body.token).toMatch(new RegExp(`^[A-Za-z0-9_-]{${INVITE_TOKEN_LENGTH}}$`));
     expect(body.maxUsage).toBe(1);
     expect(body.manageAdmins).toBe(false);
   });
