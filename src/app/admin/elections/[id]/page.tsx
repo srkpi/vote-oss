@@ -51,63 +51,58 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
     <div className="flex-1 overflow-auto">
       {/* Page header */}
       <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
-        <div className="animate-fade-down">
-          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-3 sm:mb-4">
-            <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
-              Адмін
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-            <Link
-              href="/admin/elections"
-              className="hover:text-[var(--kpi-navy)] transition-colors"
-            >
-              Голосування
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-            <span className="text-[var(--foreground)] truncate max-w-[120px] sm:max-w-xs">
+        <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-3 sm:mb-4">
+          <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
+            Адмін
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+          <Link href="/admin/elections" className="hover:text-[var(--kpi-navy)] transition-colors">
+            Голосування
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-[var(--foreground)] truncate max-w-[120px] sm:max-w-xs">
+            {election.title}
+          </span>
+        </nav>
+
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+          <div className="space-y-2 flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <ElectionStatusBadge status={election.status} size="md" />
+              {election.restrictedToFaculty && (
+                <Badge variant="info" size="md">
+                  {election.restrictedToFaculty}
+                </Badge>
+              )}
+              {election.restrictedToGroup && (
+                <Badge variant="secondary" size="md">
+                  {election.restrictedToGroup}
+                </Badge>
+              )}
+            </div>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] leading-tight break-words">
               {election.title}
-            </span>
-          </nav>
+            </h1>
+            <p className="text-xs sm:text-sm font-body text-[var(--muted-foreground)]">
+              Створено: {election.creator.full_name} ({election.creator.faculty}) ·{' '}
+              {formatDate(election.createdAt)}
+            </p>
+          </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
-            <div className="space-y-2 flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <ElectionStatusBadge status={election.status} size="md" />
-                {election.restrictedToFaculty && (
-                  <Badge variant="info" size="md">
-                    {election.restrictedToFaculty}
-                  </Badge>
-                )}
-                {election.restrictedToGroup && (
-                  <Badge variant="secondary" size="md">
-                    {election.restrictedToGroup}
-                  </Badge>
-                )}
-              </div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] leading-tight break-words">
-                {election.title}
-              </h1>
-              <p className="text-xs sm:text-sm font-body text-[var(--muted-foreground)]">
-                Створено: {election.creator.full_name} ({election.creator.faculty}) ·{' '}
-                {formatDate(election.createdAt)}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="secondary" size="sm" asChild>
-                <Link href={`/elections/${id}/ballots`}>
-                  <FileText className="w-3.5 h-3.5" />
-                  Бюлетені
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={`/elections/${id}`}>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Публічна сторінка</span>
-                </Link>
-              </Button>
-              {canDelete && <DeleteElectionButton electionId={id} electionTitle={election.title} />}
-            </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="secondary" size="sm" asChild>
+              <Link href={`/elections/${id}/ballots`}>
+                <FileText className="w-3.5 h-3.5" />
+                Бюлетені
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/elections/${id}`}>
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Публічна сторінка</span>
+              </Link>
+            </Button>
+            {canDelete && <DeleteElectionButton electionId={id} electionTitle={election.title} />}
           </div>
         </div>
       </div>
@@ -118,10 +113,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           <div className="xl:col-span-2 space-y-6">
             {/* Live indicator for open elections */}
             {isOpen && (
-              <div
-                className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] bg-[var(--success-bg)] border border-[var(--success)]/20 animate-fade-up"
-                style={{ animationFillMode: 'both' }}
-              >
+              <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] bg-[var(--success-bg)] border border-[var(--success)]/20">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[var(--success)] flex items-center justify-center shrink-0">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
@@ -147,10 +139,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
             {/* Results section (closed only) */}
             {isClosed && tally && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-                style={{ animationDelay: '50ms', animationFillMode: 'both' }}
-              >
+              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
                 <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
                   <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
                     Результати голосування
@@ -167,10 +156,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
             {/* Choices */}
             {!isClosed && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-                style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-              >
+              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
                 <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
                   <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
                     Варіанти відповідей
@@ -198,10 +184,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           {/* Right column */}
           <div className="space-y-5">
             {/* Timeline */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-              style={{ animationDelay: '200ms', animationFillMode: 'both' }}
-            >
+            <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
               <div className="p-4 sm:p-5 space-y-4">
                 <TimelineItem
                   label="Створено"
@@ -225,10 +208,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             </div>
 
             {/* Access restrictions */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
-              style={{ animationDelay: '250ms', animationFillMode: 'both' }}
-            >
+            <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
               <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
                 <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
                   Доступ

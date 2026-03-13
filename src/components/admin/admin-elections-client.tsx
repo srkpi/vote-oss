@@ -119,10 +119,7 @@ export function AdminElectionsClient({
 
   return (
     <>
-      <div
-        className="space-y-4 animate-fade-up"
-        style={{ animationDelay: '200ms', animationFillMode: 'both' }}
-      >
+      <div className="space-y-4">
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Tabs

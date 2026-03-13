@@ -55,7 +55,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
 
   if (success) {
     return (
-      <div className="flex flex-col items-center text-center gap-6 py-4 animate-scale-in">
+      <div className="flex flex-col items-center text-center gap-6 py-4">
         <div className="w-20 h-20 rounded-full bg-[var(--success-bg)] border-2 border-[var(--success)]/30 flex items-center justify-center">
           <Check className="w-10 h-10 text-[var(--success)]" />
         </div>

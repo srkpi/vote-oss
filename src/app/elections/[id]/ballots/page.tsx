@@ -35,7 +35,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
     <div className="min-h-screen bg-[var(--surface)]">
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-6">
-          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4 animate-fade-down">
+          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4">
             <Link href="/elections" className="hover:text-[var(--kpi-navy)] transition-colors">
               Голосування
             </Link>
@@ -54,16 +54,14 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
             <span className="text-[var(--foreground)]">Бюлетені</span>
           </nav>
 
-          <div className="animate-fade-up">
-            <h1 className="font-display text-3xl font-bold text-[var(--foreground)] leading-tight">
-              Публічні бюлетені
-            </h1>
-            {data?.election && (
-              <p className="text-[var(--muted-foreground)] font-body mt-1 break-words">
-                {data.election.title}
-              </p>
-            )}
-          </div>
+          <h1 className="font-display text-3xl font-bold text-[var(--foreground)] leading-tight">
+            Публічні бюлетені
+          </h1>
+          {data?.election && (
+            <p className="text-[var(--muted-foreground)] font-body mt-1 break-words">
+              {data.election.title}
+            </p>
+          )}
         </div>
       </div>
 

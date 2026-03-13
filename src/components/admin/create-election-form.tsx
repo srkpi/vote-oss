@@ -250,11 +250,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
           {choices.map((choice, index) => {
             const isOverLimit = choice.length > ELECTION_CHOICE_MAX_LENGTH;
             return (
-              <div
-                key={index}
-                className="flex items-start gap-3 animate-fade-up"
-                style={{ animationDelay: `${index * 30}ms` }}
-              >
+              <div key={index} className="flex items-start gap-3">
                 <div className="w-8 h-10 flex items-center justify-center shrink-0">
                   <span className="w-7 h-7 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body">
                     {String.fromCharCode(65 + index)}

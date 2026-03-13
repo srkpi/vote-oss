@@ -41,14 +41,14 @@ export function JoinPageContent({
         {/* Back link */}
         <Link
           href="/elections"
-          className="inline-flex items-center gap-1.5 text-sm font-body text-[var(--muted-foreground)] hover:text-[var(--kpi-navy)] transition-colors mb-6 animate-fade-down"
+          className="inline-flex items-center gap-1.5 text-sm font-body text-[var(--muted-foreground)] hover:text-[var(--kpi-navy)] transition-colors mb-6"
         >
           <ChevronLeft className="w-4 h-4" />
           Назад до голосувань
         </Link>
 
         {/* Main card */}
-        <div className="bg-white rounded-[var(--radius-2xl)] border border-[var(--border-color)] shadow-[var(--shadow-xl)] overflow-hidden animate-fade-up">
+        <div className="bg-white rounded-[var(--radius-2xl)] border border-[var(--border-color)] shadow-[var(--shadow-xl)] overflow-hidden">
           {/* Top accent bar */}
           <div className="h-1.5 w-full navy-gradient" />
 

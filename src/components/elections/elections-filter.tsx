@@ -62,7 +62,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
   };
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-6">
       {/* Tabs + Search bar */}
       <div className="flex flex-col md:flex-row md:items-center gap-4">
         <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} tabCount={tabCount} />

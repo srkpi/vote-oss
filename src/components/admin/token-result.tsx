@@ -16,7 +16,7 @@ export function TokenResult({ token, copied, copiedLink, onCopy, onCopyLink }: T
     typeof window !== 'undefined' ? `${window.location.origin}/join/${token}` : `/join/${token}`;
 
   return (
-    <div className="space-y-5 animate-scale-in">
+    <div className="space-y-5">
       <Alert variant="success" title="Токен успішно створено">
         Скопіюйте токен або поділіться посиланням.
       </Alert>

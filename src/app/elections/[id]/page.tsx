@@ -60,7 +60,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-6">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4 animate-fade-down">
+          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4">
             <Link href="/elections" className="hover:text-[var(--kpi-navy)] transition-colors">
               Голосування
             </Link>
@@ -68,7 +68,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             <span className="text-[var(--foreground)] truncate max-w-xs">{election.title}</span>
           </nav>
 
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 animate-fade-up">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="space-y-3 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <ElectionStatusBadge status={election.status} size="md" />
@@ -91,10 +91,13 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   <User className="w-4 h-4" />
                   {election.creator.full_name}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <FileText className="w-4 h-4" />
-                  {election.ballotCount} бюлетенів
-                </span>
+
+                <Button variant="secondary" size="sm" asChild>
+                  <Link href={`/elections/${id}/ballots`}>
+                    <FileText className="w-3.5 h-3.5" />
+                    {election.ballotCount} бюлетенів
+                  </Link>
+                </Button>
               </div>
             </div>
 
@@ -117,10 +120,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
           <div className="lg:col-span-2 space-y-6">
             {/* Countdown timer */}
             {(isOpen || isUpcoming) && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6 animate-fade-up"
-                style={{ animationDelay: '50ms' }}
-              >
+              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
                 <p className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-4">
                   {isOpen ? 'Залишилось часу' : 'Починається через'}
                 </p>
@@ -134,10 +134,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               and renders either the VoteForm or the AlreadyVotedCard.
             */}
             {isOpen && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6 animate-fade-up"
-                style={{ animationDelay: '100ms' }}
-              >
+              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
                 <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
                   Ваш голос
                 </h2>
@@ -147,10 +144,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
             {/* Results (closed elections) */}
             {isClosed && tally && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6 animate-fade-up"
-                style={{ animationDelay: '100ms' }}
-              >
+              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
                 <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
                   Результати
                 </h2>
@@ -160,10 +154,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
             {/* Preview choices (upcoming) */}
             {isUpcoming && (
-              <div
-                className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6 animate-fade-up"
-                style={{ animationDelay: '100ms' }}
-              >
+              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
                 <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-4">
                   Варіанти відповідей
                 </h2>
@@ -193,10 +184,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
           {/* Right: sidebar */}
           <div className="space-y-5">
             {/* Election info */}
-            <div
-              className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5 animate-fade-up"
-              style={{ animationDelay: '150ms' }}
-            >
+            <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5">
               <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-4">
                 Деталі голосування
               </h3>

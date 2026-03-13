@@ -53,13 +53,7 @@ export function Header({ session }: HeaderProps) {
       <div className="container h-full flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
-          <div
-            className={cn(
-              'w-8 h-8 rounded-lg navy-gradient',
-              'flex items-center justify-center',
-              'transition-transform duration-200 group-hover:scale-105',
-            )}
-          >
+          <div className={'w-8 h-8 rounded-lg navy-gradient flex items-center justify-center'}>
             <CheckCircle className="w-4 h-4 text-white" />
           </div>
           <div className="hidden sm:block">
@@ -138,7 +132,7 @@ export function Header({ session }: HeaderProps) {
                       'bg-white rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)]',
                       'border border-[var(--border-color)]',
                       'overflow-hidden',
-                      'animate-scale-in origin-top-right',
+                      'origin-top-right',
                     )}
                   >
                     <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
