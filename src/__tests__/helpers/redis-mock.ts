@@ -37,6 +37,7 @@ export const redisMock = {
   eval: jest.fn().mockResolvedValue(null),
   pipeline: jest.fn().mockReturnValue(pipelineMock),
   scan: jest.fn().mockResolvedValue(['0', [] as string[]]),
+  ping: jest.fn().mockResolvedValue('PONG'),
 };
 
 export function resetRedisMock(): void {
@@ -50,6 +51,7 @@ export function resetRedisMock(): void {
   redisMock.eval.mockReset().mockResolvedValue(null);
   redisMock.pipeline.mockReset().mockReturnValue(pipelineMock);
   redisMock.scan.mockReset().mockResolvedValue(['0', []]);
+  redisMock.ping.mockReset().mockResolvedValue('PONG');
 
   pipelineMock.setbit.mockReset().mockReturnThis();
   pipelineMock.getbit.mockReset().mockReturnThis();

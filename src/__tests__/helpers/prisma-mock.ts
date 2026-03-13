@@ -59,6 +59,7 @@ export const prismaMock = {
     deleteMany: jest.fn(),
   },
   $transaction: jest.fn(),
+  $queryRaw: jest.fn(),
 };
 
 /** Reset all mock implementations/calls without clearing the references */
