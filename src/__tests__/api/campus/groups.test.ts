@@ -1,9 +1,9 @@
 import * as allure from 'allure-js-commons';
 
-import { JWT_TOKEN_RECORD, makeTokenPair, USER_PAYLOAD } from '../../helpers/fixtures';
-import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
+import { JWT_TOKEN_RECORD, makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
+import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
+import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
@@ -61,7 +61,9 @@ describe('GET /api/campus/groups', () => {
   it('returns 500 when campus API throws', async () => {
     fetchFacultyGroupsMock.mockRejectedValueOnce(new Error('campus down'));
     const req = await authReq();
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const res = await GET(req);
     expect(res.status).toBe(500);
+    spy.mockRestore();
   });
 });

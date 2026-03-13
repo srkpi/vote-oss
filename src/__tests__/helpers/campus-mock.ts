@@ -2,7 +2,7 @@
  * Mock for @/lib/campus-api.
  *
  * Usage:
- *   import { campusMock, resetCampusMock } from '../../helpers/campus-mock';
+ *   import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
  *   jest.mock('@/lib/campus-api', () => campusMock);
  *   beforeEach(() => resetCampusMock());
  *

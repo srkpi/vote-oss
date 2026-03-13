@@ -6,7 +6,7 @@ import {
   pipelineMock,
   redisMock,
   resetRedisMock,
-} from '../helpers/redis-mock';
+} from '@/__tests__/helpers/redis-mock';
 
 // ---------------------------------------------------------------------------
 // Module mock – must precede the import of bloom

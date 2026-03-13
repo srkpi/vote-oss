@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
-import { getCachedAdmins, invalidateAdmins } from '@/lib/cache';
+import { getCachedAdmins, invalidateAdmins, invalidateInviteTokens } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
@@ -100,11 +100,20 @@ export async function DELETE(
     return Errors.forbidden('You can only remove admins in your own branch of the hierarchy');
   }
 
-  await prisma.admin.update({
-    where: { user_id: targetUserId },
-    data: { deleted_at: new Date(), deleted_by: user.sub },
-  });
-  await invalidateAdmins();
+  // Soft-delete the admin AND hard-delete all their invite tokens atomically.
+  // Invite tokens are revoked because a deleted admin can no longer vouch for
+  // new admins — keeping their tokens would be a privilege escalation bypass.
+  await prisma.$transaction([
+    prisma.admin.update({
+      where: { user_id: targetUserId },
+      data: { deleted_at: new Date(), deleted_by: user.sub },
+    }),
+    prisma.adminInviteToken.deleteMany({
+      where: { created_by: targetUserId },
+    }),
+  ]);
+
+  await Promise.all([invalidateAdmins(), invalidateInviteTokens()]);
 
   return NextResponse.json({ ok: true, removedUserId: targetUserId });
 }

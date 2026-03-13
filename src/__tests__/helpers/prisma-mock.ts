@@ -20,8 +20,12 @@ export const prismaMock = {
   },
   adminInviteToken: {
     findUnique: jest.fn(),
+    findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
   },
   election: {
     findUnique: jest.fn(),
@@ -77,4 +81,5 @@ export function resetPrismaMock() {
   prismaMock.admin.create.mockImplementation((args: unknown) => args);
   prismaMock.admin.update.mockImplementation((args: unknown) => args);
   prismaMock.adminInviteToken.create.mockImplementation((args: unknown) => args);
+  prismaMock.adminInviteToken.count.mockResolvedValue(0);
 }

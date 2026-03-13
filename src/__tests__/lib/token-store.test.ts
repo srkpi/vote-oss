@@ -1,7 +1,7 @@
 import * as allure from 'allure-js-commons';
 
-import { JWT_TOKEN_RECORD } from '../helpers/fixtures';
-import { prismaMock, resetPrismaMock } from '../helpers/prisma-mock';
+import { JWT_TOKEN_RECORD } from '@/__tests__/helpers/fixtures';
+import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 
 // ---------------------------------------------------------------------------
 // Module mocks

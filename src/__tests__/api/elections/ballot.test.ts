@@ -1,8 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import { computeNullifier, generateVoteToken, signVoteToken } from '@/lib/crypto';
-
-import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
+import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   encryptChoice,
   JWT_TOKEN_RECORD,
@@ -13,10 +11,11 @@ import {
   MOCK_ELECTION_ID_NOT_EXISTING,
   MOCK_ELECTION_INVALID_CHOICE_ID,
   USER_PAYLOAD,
-} from '../../helpers/fixtures';
-import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
+} from '@/__tests__/helpers/fixtures';
+import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
+import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { computeNullifier, generateVoteToken, signVoteToken } from '@/lib/crypto';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);

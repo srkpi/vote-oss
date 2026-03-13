@@ -1,6 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
+import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -9,10 +9,10 @@ import {
   makeTokenPair,
   RESTRICTED_ADMIN_RECORD,
   USER_PAYLOAD,
-} from '../../helpers/fixtures';
-import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
+} from '@/__tests__/helpers/fixtures';
+import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
+import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
