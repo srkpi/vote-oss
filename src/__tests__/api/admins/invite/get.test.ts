@@ -211,4 +211,111 @@ describe('GET /api/admins/invite', () => {
 
     expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
   });
+
+  // ── Expired / exhausted cleanup (deleteMany) ───────────────────────────────
+
+  it('deletes expired tokens with deleteMany, invalidates cache, and returns empty list', async () => {
+    const req = await adminReq();
+
+    const expired = makeTokenRecord({
+      token_hash: 'expired-hash',
+      valid_due: new Date(Date.now() - 60_000),
+    });
+
+    prismaMock.admin.findMany.mockResolvedValueOnce([
+      { user_id: 'superadmin-001', promoted_by: null },
+    ]);
+
+    cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([expired] as any);
+    prismaMock.adminInviteToken.deleteMany.mockResolvedValueOnce({ count: 1 });
+
+    const res = await GET(req);
+    const { status, body } = await parseJson<any[]>(res);
+
+    expect(status).toBe(200);
+    expect(body).toEqual([]);
+
+    expect(prismaMock.adminInviteToken.deleteMany).toHaveBeenCalledWith({
+      where: {
+        token_hash: { in: ['expired-hash'] },
+      },
+    });
+
+    expect(cacheMock.invalidateInviteTokens).toHaveBeenCalledTimes(1);
+  });
+
+  it('deletes exhausted tokens with deleteMany and returns empty list', async () => {
+    const req = await adminReq();
+
+    const exhausted = makeTokenRecord({
+      token_hash: 'exhausted-hash',
+      current_usage: 5,
+      max_usage: 5,
+    });
+
+    prismaMock.admin.findMany.mockResolvedValueOnce([
+      { user_id: 'superadmin-001', promoted_by: null },
+    ]);
+
+    cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([exhausted] as any);
+    prismaMock.adminInviteToken.deleteMany.mockResolvedValueOnce({ count: 1 });
+
+    const res = await GET(req);
+    const { status, body } = await parseJson<any[]>(res);
+
+    expect(status).toBe(200);
+    expect(body).toEqual([]);
+
+    expect(prismaMock.adminInviteToken.deleteMany).toHaveBeenCalledWith({
+      where: {
+        token_hash: { in: ['exhausted-hash'] },
+      },
+    });
+
+    expect(cacheMock.invalidateInviteTokens).toHaveBeenCalledTimes(1);
+  });
+
+  it('deletes multiple stale tokens in one deleteMany call', async () => {
+    const req = await adminReq();
+
+    const expired = makeTokenRecord({
+      token_hash: 'expired-hash',
+      valid_due: new Date(Date.now() - 60_000),
+    });
+
+    const exhausted = makeTokenRecord({
+      token_hash: 'exhausted-hash',
+      current_usage: 5,
+      max_usage: 5,
+    });
+
+    const valid = makeTokenRecord({
+      token_hash: 'valid-hash',
+    });
+
+    prismaMock.admin.findMany.mockResolvedValueOnce([
+      { user_id: 'superadmin-001', promoted_by: null },
+    ]);
+
+    cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([expired, exhausted, valid] as any);
+    prismaMock.adminInviteToken.deleteMany.mockResolvedValueOnce({ count: 2 });
+
+    const res = await GET(req);
+    const { status, body } = await parseJson<any[]>(res);
+
+    expect(status).toBe(200);
+    expect(body).toHaveLength(1);
+    expect(body[0].token_hash).toBe('valid-hash');
+
+    expect(prismaMock.adminInviteToken.deleteMany).toHaveBeenCalledWith({
+      where: {
+        token_hash: { in: ['expired-hash', 'exhausted-hash'] },
+      },
+    });
+
+    expect(cacheMock.invalidateInviteTokens).toHaveBeenCalledTimes(1);
+  });
 });

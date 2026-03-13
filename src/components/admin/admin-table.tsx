@@ -254,6 +254,11 @@ function AdminCard({ admin, isCurrentUser, onDelete }: AdminRowProps) {
             Обмежений до підрозділу
           </Badge>
         )}
+        {!admin.manage_admins && !admin.restricted_to_faculty && (
+          <Badge variant="default" size="sm">
+            Базові
+          </Badge>
+        )}
       </div>
 
       <p className="text-xs text-[var(--muted-foreground)] font-body mt-2">

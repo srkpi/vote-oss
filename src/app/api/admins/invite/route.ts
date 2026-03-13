@@ -12,14 +12,14 @@ import { isAncestorInGraph } from '@/lib/utils';
 // GET /api/admins/invite
 // Returns invite tokens visible to the caller based on the admin hierarchy.
 //
+// Before returning, stale tokens (expired or exhausted) are hard-deleted from
+// the database so the list stays clean without a background job.
+//
 // Visibility rule: a caller can see a token if they created it OR they are
 // a transitive ancestor of the token's creator in the admin hierarchy.
 //
-// The cache stores ALL tokens (caller-agnostic); hierarchy filtering
-// happens in-memory so a single cache entry serves every caller.
-// The hierarchy graph is always loaded fresh (cheap two-column SELECT) so
-// that soft-deleted intermediaries are included and transitive chains
-// through deleted nodes are preserved.
+// The cache stores ALL tokens (caller-agnostic); hierarchy filtering and
+// stale-cleanup both happen in-memory so the cache is shared across callers.
 // ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest) {
@@ -72,8 +72,28 @@ export async function GET(req: NextRequest) {
     await setCachedInviteTokens(allTokens);
   }
 
+  // ── Purge stale tokens (expired or exhausted) from DB ────────────────────
+  // This keeps the list self-cleaning without a background job. We derive
+  // "stale" from the in-memory list so a single DB call covers all cases.
+  const now = new Date();
+  const staleHashes = allTokens
+    .filter((t) => new Date(t.valid_due) < now || t.current_usage >= t.max_usage)
+    .map((t) => t.token_hash);
+
+  if (staleHashes.length > 0) {
+    await prisma.adminInviteToken.deleteMany({
+      where: { token_hash: { in: staleHashes } },
+    });
+    await invalidateInviteTokens();
+  }
+
+  // ── Keep only fresh tokens ────────────────────────────────────────────────
+  const freshTokens = allTokens.filter(
+    (t) => new Date(t.valid_due) >= now && t.current_usage < t.max_usage,
+  );
+
   // ── Filter by caller's hierarchy and attach computed flags ────────────────
-  const visible = allTokens
+  const visible = freshTokens
     .filter(
       (t) =>
         t.creator.user_id === user.sub || isAncestorInGraph(graph, user.sub, t.creator.user_id),

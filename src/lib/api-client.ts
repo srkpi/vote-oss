@@ -1,7 +1,7 @@
 import { Admin, Election } from '@prisma/client';
 
 import { clearAllVotes } from '@/lib/vote-storage';
-import { InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
+import { InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import { ApiError, ApiResult } from '@/types/api';
 import { BallotResponse, BallotsResponse } from '@/types/ballot';
 import { CreateElectionRequest, CreateElectionResponse, ElectionDetail } from '@/types/election';
@@ -203,12 +203,26 @@ export async function deleteAdmin(userId: string) {
   });
 }
 
+// ==================== INVITE TOKENS ====================
+
+export async function getInviteTokens() {
+  return fetchApi<InviteToken[]>('/admins/invite');
+}
+
 export async function createInviteToken(data: InviteTokenRequest) {
   return fetchApi<InviteTokenResponse>('/admins/invite', {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
+
+export async function deleteInviteToken(tokenHash: string) {
+  return fetchApi<{ ok: boolean; deletedTokenHash: string }>(`/admins/invite/${tokenHash}`, {
+    method: 'DELETE',
+  });
+}
+
+// ==================== JOIN ====================
 
 export async function joinAsAdmin(token: string) {
   return fetchApi<{
