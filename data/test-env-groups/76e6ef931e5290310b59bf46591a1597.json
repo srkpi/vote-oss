@@ -1,0 +1,1 @@
+{"id":"76e6ef931e5290310b59bf46591a1597","fullName":"src/__tests__/lib/kpi-id.test.ts#kpi-id resolveTicket (PoC mode) returns null for unknown ticket","name":"returns null for unknown ticket","status":"passed","testResultsByEnv":{"default":"90b109a199c2d739a6061f7f907f8a1f"}}

@@ -1,0 +1,1 @@
+{"id":"f485d58c954c7a0a2944b83b7b88f650","fullName":"src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite respects custom maxUsage and manageAdmins values","name":"respects custom maxUsage and manageAdmins values","status":"passed","testResultsByEnv":{"default":"314351c225f050f4b3f9b05608928b9b"}}

@@ -1,0 +1,1 @@
+{"id":"ac115cb2c2135113b68630eacdc1720a","fullName":"src/__tests__/api/elections/token.test.ts#POST /api/elections/[id]/token returns 400 when election has not started yet","name":"returns 400 when election has not started yet","status":"passed","testResultsByEnv":{"default":"b6bbe0d8cc5636b90bd20f8e4106e4e0"}}

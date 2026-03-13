@@ -1,0 +1,1 @@
+{"id":"069c10b05c74666a91bbb64252de1a29","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimit returns limited=true when count exceeds limit","name":"returns limited=true when count exceeds limit","status":"passed","testResultsByEnv":{"default":"c88518e957276c7bf86a69c2bea8d18e"}}

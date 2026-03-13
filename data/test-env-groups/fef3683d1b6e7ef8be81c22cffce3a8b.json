@@ -1,0 +1,1 @@
+{"id":"fef3683d1b6e7ef8be81c22cffce3a8b","fullName":"src/__tests__/api/elections/tally.test.ts#GET /api/elections/[id]/tally returns cached tallies when already computed","name":"returns cached tallies when already computed","status":"passed","testResultsByEnv":{"default":"79eb6510ce737d1192e26a81f1d256da"}}

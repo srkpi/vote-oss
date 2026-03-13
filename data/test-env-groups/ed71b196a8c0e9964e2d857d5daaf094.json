@@ -1,0 +1,1 @@
+{"id":"ed71b196a8c0e9964e2d857d5daaf094","fullName":"src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns the correct promotedBy (new inviter) in the response on rejoin","name":"returns the correct promotedBy (new inviter) in the response on rejoin","status":"passed","testResultsByEnv":{"default":"a703df6b2e33ce8f268a63ffcdf9a664"}}

@@ -1,0 +1,1 @@
+{"id":"211764a380bf2eb5924c3484ffafe3a1","fullName":"src/__tests__/api/health/check.test.ts#GET /api/health handles unexpected ping responses gracefully","name":"handles unexpected ping responses gracefully","status":"passed","testResultsByEnv":{"default":"0896d8323653f405ec247106b11da4d7"}}

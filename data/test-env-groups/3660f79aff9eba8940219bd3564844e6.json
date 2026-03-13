@@ -1,0 +1,1 @@
+{"id":"3660f79aff9eba8940219bd3564844e6","fullName":"src/__tests__/lib/jwt.test.ts#jwt signAccessToken throws when JWT_ACCESS_SECRET is missing","name":"throws when JWT_ACCESS_SECRET is missing","status":"passed","testResultsByEnv":{"default":"b844012ef462a2e32c3c8c2df5b4da79"}}

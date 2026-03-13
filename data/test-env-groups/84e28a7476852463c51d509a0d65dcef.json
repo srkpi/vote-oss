@@ -1,0 +1,1 @@
+{"id":"84e28a7476852463c51d509a0d65dcef","fullName":"src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] returns 200 when restricted admin deletes an election from their own faculty","name":"returns 200 when restricted admin deletes an election from their own faculty","status":"passed","testResultsByEnv":{"default":"9e4fe5293c2aea74bb73237ea70249e0"}}

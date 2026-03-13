@@ -1,0 +1,1 @@
+{"id":"13964ab389cabf062bded014d9408668","fullName":"src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — faculty/group validation returns 500 when campus API is unavailable during validation","name":"returns 500 when campus API is unavailable during validation","status":"passed","testResultsByEnv":{"default":"cd8f67dfd0c8b63223dd97063649aa2e"}}

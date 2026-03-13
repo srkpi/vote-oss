@@ -1,0 +1,1 @@
+{"id":"78f98dfff1d8c766cbefcb27e463b9f3","fullName":"src/__tests__/lib/jwt.test.ts#jwt tokenCookieOptions sets the secure flag when NODE_ENV is production","name":"sets the secure flag when NODE_ENV is production","status":"passed","testResultsByEnv":{"default":"7923c61b35a6e3de191a8631f9d083a7"}}

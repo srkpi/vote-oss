@@ -1,0 +1,1 @@
+{"id":"85e221e13fea367e39142def5f852132","fullName":"src/__tests__/lib/crypto.test.ts#crypto generateVoteToken embeds election id as the first segment","name":"embeds election id as the first segment","status":"passed","testResultsByEnv":{"default":"848b4d12bc92943e95ff729930b93afc"}}

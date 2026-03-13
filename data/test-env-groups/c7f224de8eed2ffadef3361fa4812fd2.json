@@ -1,0 +1,1 @@
+{"id":"c7f224de8eed2ffadef3361fa4812fd2","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit getClientIp returns the single forwarded IP with one trusted hop (default)","name":"returns the single forwarded IP with one trusted hop (default)","status":"passed","testResultsByEnv":{"default":"8f70484344084520819f9f870fc439c7"}}

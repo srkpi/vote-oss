@@ -1,0 +1,1 @@
+{"id":"ec82fa88941f517da97c661c83e5e054","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimit returns limited=false and remaining=limit when Redis is not ready","name":"returns limited=false and remaining=limit when Redis is not ready","status":"passed","testResultsByEnv":{"default":"4a96b88e2af589f0c2b2a51cd5164bec"}}

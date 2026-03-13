@@ -1,0 +1,1 @@
+{"id":"6efa3fa74d0a1400cfd0b28a345dd9f1","fullName":"src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 403 when admin does not have manage_admins permission","name":"returns 403 when admin does not have manage_admins permission","status":"passed","testResultsByEnv":{"default":"747814077ef3c431718a59f96a4af783"}}

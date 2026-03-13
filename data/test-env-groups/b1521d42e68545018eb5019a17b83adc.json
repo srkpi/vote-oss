@@ -1,0 +1,1 @@
+{"id":"b1521d42e68545018eb5019a17b83adc","fullName":"src/__tests__/api/admins/list.test.ts#GET /api/admins returns a list of admins with correct fields","name":"returns a list of admins with correct fields","status":"passed","testResultsByEnv":{"default":"e9fbe0a8ddd170924a2f920c6858b89d"}}

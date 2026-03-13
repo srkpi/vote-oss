@@ -1,0 +1,1 @@
+{"id":"876af1063f29ffbcf1b22a48aa18198d","fullName":"src/__tests__/lib/token-store.test.ts#token-store revokeByAccessJti clamps TTL to minimum 1 when token has already expired","name":"clamps TTL to minimum 1 when token has already expired","status":"passed","testResultsByEnv":{"default":"0d2cfd66186247926318f49154834b2f"}}

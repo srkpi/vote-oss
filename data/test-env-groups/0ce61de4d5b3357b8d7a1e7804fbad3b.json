@@ -1,0 +1,1 @@
+{"id":"0ce61de4d5b3357b8d7a1e7804fbad3b","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit getClientIp respects TRUSTED_PROXY_COUNT=2 for a two-hop chain","name":"respects TRUSTED_PROXY_COUNT=2 for a two-hop chain","status":"passed","testResultsByEnv":{"default":"bd48931870669ca8ab7b691019e66e57"}}

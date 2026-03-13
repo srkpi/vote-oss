@@ -1,0 +1,1 @@
+{"id":"6e916c067af7b258144a8ec118497de8","fullName":"src/__tests__/api/admins/invite/delete.test.ts#DELETE /api/admins/invite/[tokenHash] returns 200 when ancestor deletes a subordinate token","name":"returns 200 when ancestor deletes a subordinate token","status":"passed","testResultsByEnv":{"default":"060049e034bce495e90d86fb2292df5c"}}

@@ -1,0 +1,1 @@
+{"id":"ca2ceeb3401265d8c632488b26c49d4c","fullName":"src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot persists nullifier and ballot atomically via $transaction","name":"persists nullifier and ballot atomically via $transaction","status":"passed","testResultsByEnv":{"default":"911c6378d19938460f00e192bccfc37c"}}

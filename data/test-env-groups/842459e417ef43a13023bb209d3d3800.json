@@ -1,0 +1,1 @@
+{"id":"842459e417ef43a13023bb209d3d3800","fullName":"src/__tests__/api/auth/refresh.test.ts#POST /api/auth/refresh returns 401 when the refresh token cookie is missing","name":"returns 401 when the refresh token cookie is missing","status":"passed","testResultsByEnv":{"default":"ad840d45b6b53b8ef73c3b6da810002a"}}

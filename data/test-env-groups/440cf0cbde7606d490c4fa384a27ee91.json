@@ -1,0 +1,1 @@
+{"id":"440cf0cbde7606d490c4fa384a27ee91","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimit returns limited=false on the first request (count=1)","name":"returns limited=false on the first request (count=1)","status":"passed","testResultsByEnv":{"default":"64eb61ba4e27ba2d181c4d1bb1e360f3"}}

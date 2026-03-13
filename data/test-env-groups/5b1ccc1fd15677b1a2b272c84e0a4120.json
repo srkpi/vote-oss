@@ -1,0 +1,1 @@
+{"id":"5b1ccc1fd15677b1a2b272c84e0a4120","fullName":"src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 400 when validDue exceeds INVITE_TOKEN_MAX_VALID_DAYS","name":"returns 400 when validDue exceeds INVITE_TOKEN_MAX_VALID_DAYS","status":"passed","testResultsByEnv":{"default":"36f58c62ac2c32c7b8ac96b7201b42c3"}}

@@ -1,0 +1,1 @@
+{"id":"04776279c9f16e6ac52e5bc0a368b2af","fullName":"src/__tests__/lib/cache.test.ts#cache getCachedElections cached entries do not contain a status field","name":"cached entries do not contain a status field","status":"passed","testResultsByEnv":{"default":"ac5c4e5cb459c861af1cc58d789b60b2"}}

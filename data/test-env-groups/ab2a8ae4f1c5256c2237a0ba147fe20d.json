@@ -1,0 +1,1 @@
+{"id":"ab2a8ae4f1c5256c2237a0ba147fe20d","fullName":"src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns 201 with admin info on successful first-time join","name":"returns 201 with admin info on successful first-time join","status":"passed","testResultsByEnv":{"default":"fe8f4d5e246ecfec450e9fc098d4bf2b"}}

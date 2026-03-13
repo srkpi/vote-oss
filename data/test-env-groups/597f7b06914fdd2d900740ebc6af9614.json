@@ -1,0 +1,1 @@
+{"id":"597f7b06914fdd2d900740ebc6af9614","fullName":"src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 201 with ballotHash for a fully valid submission","name":"returns 201 with ballotHash for a fully valid submission","status":"passed","testResultsByEnv":{"default":"ea90e89b39039c170367154125176d9c"}}

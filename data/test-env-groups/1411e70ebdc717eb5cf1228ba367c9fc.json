@@ -1,0 +1,1 @@
+{"id":"1411e70ebdc717eb5cf1228ba367c9fc","fullName":"src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout returns 200 with ok=true on successful logout","name":"returns 200 with ok=true on successful logout","status":"passed","testResultsByEnv":{"default":"78a78f803a446192373781374587d1e8"}}

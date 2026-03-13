@@ -1,0 +1,1 @@
+{"id":"4d8bcea24549a7287b149d217ecf1d10","fullName":"src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups throws when CAMPUS_API_URL is not set","name":"throws when CAMPUS_API_URL is not set","status":"passed","testResultsByEnv":{"default":"7196986039e0959e17fd1bd73280c85d"}}

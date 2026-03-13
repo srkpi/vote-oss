@@ -1,0 +1,1 @@
+{"id":"4dfa717dfe3f41878b352c131bc850fb","fullName":"src/__tests__/lib/crypto.test.ts#crypto signVoteToken / verifyVoteTokenSignature signature created with private key is verified with public key","name":"signature created with private key is verified with public key","status":"passed","testResultsByEnv":{"default":"d5bf8e41789d2f39d5f11d7980418c19"}}

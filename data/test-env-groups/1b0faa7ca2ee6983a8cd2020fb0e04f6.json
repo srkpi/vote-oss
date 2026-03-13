@@ -1,0 +1,1 @@
+{"id":"1b0faa7ca2ee6983a8cd2020fb0e04f6","fullName":"src/__tests__/api/admins/invite/delete.test.ts#DELETE /api/admins/invite/[tokenHash] returns 404 when token does not exist","name":"returns 404 when token does not exist","status":"passed","testResultsByEnv":{"default":"49b78699a2d8f36b64637bdcf90b8f1b"}}

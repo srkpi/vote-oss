@@ -1,0 +1,1 @@
+{"id":"53dcb4e64e34d8ce799dae6dc79a9498","fullName":"src/__tests__/lib/jwt.test.ts#jwt tokenCookieOptions sets httpOnly and sameSite=lax in all environments","name":"sets httpOnly and sameSite=lax in all environments","status":"passed","testResultsByEnv":{"default":"c517a60279348e69a9934445bcfca6e9"}}

@@ -1,0 +1,1 @@
+{"id":"b88fe23bb0a308fcdbcba88d176266d8","fullName":"src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 403 when admin does not have manage_admins permission","name":"returns 403 when admin does not have manage_admins permission","status":"passed","testResultsByEnv":{"default":"895f58e39b8d4fc4d1d833a932e92f21"}}

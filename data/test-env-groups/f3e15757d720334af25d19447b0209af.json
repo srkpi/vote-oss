@@ -1,0 +1,1 @@
+{"id":"f3e15757d720334af25d19447b0209af","fullName":"src/__tests__/api/auth/refresh.test.ts#POST /api/auth/refresh revokes the old refresh token pair via revokeByRefreshJti","name":"revokes the old refresh token pair via revokeByRefreshJti","status":"passed","testResultsByEnv":{"default":"f03ce83d7b9ea7ca757be7e347e3f33f"}}

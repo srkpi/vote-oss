@@ -1,0 +1,1 @@
+{"id":"5cbd3690917708f647a8ed68a0251ee3","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimit falls back to windowMs when TTL is -1 (key has no expiry)","name":"falls back to windowMs when TTL is -1 (key has no expiry)","status":"passed","testResultsByEnv":{"default":"30502124e7a5970de1d71b83518a948b"}}
