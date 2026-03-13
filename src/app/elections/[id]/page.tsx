@@ -202,7 +202,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 {election.restrictedToFaculty && (
                   <InfoRow
                     icon={<GraduationCap className="w-4 h-4" />}
-                    label="Факультет"
+                    label="Підрозділ"
                     value={election.restrictedToFaculty}
                   />
                 )}

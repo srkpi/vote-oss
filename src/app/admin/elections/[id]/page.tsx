@@ -217,7 +217,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               <div className="p-4 sm:p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-body text-[var(--muted-foreground)]">
-                    Факультет
+                    Підрозділ
                   </span>
                   {election.restrictedToFaculty ? (
                     <Badge variant="info" size="md">

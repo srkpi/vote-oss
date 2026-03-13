@@ -45,7 +45,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         setGroupsLoading(false);
       })
       .catch(() => {
-        setGroupsError('Не вдалося завантажити список факультетів і груп');
+        setGroupsError('Не вдалося завантажити список підрозділів і груп');
         setGroupsLoading(false);
       });
   }, []);
@@ -313,7 +313,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
           Обмеження доступу
         </h2>
         <p className="text-sm text-[var(--muted-foreground)] font-body mb-4">
-          Залиште порожнім для всіх студентів. Групу можна вибрати лише після вибору факультету.
+          Залиште порожнім для всіх студентів. Групу можна вибрати лише після вибору підрозділу.
         </p>
 
         {groupsError && (
@@ -354,11 +354,11 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                 value={form.restrictedToFaculty}
                 onChange={handleFacultyChange}
                 placeholder={groupsLoading ? 'Завантаження…' : 'Без обмеження'}
-                searchPlaceholder="Пошук факультету…"
+                searchPlaceholder="Пошук підрозділу…"
                 clearable
                 disabled={groupsLoading}
                 error={!!fieldErrors.restrictedToFaculty}
-                emptyText="Факультет не знайдено"
+                emptyText="Підрозділ не знайдено"
               />
             )}
           </FormField>
@@ -369,9 +369,9 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             htmlFor="group"
             hint={
               !form.restrictedToFaculty
-                ? 'Спочатку оберіть факультет'
+                ? 'Спочатку оберіть підрозділ'
                 : groupOptions.length === 0 && !groupsLoading
-                  ? 'Немає груп для цього факультету'
+                  ? 'Немає груп для цього підрозділу'
                   : "Не обов'язково"
             }
           >
@@ -402,14 +402,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         >
           Скасувати
         </Button>
-        <Button
-          type="submit"
-          variant="accent"
-          size="lg"
-          loading={loading}
-          disabled={hasOverLimit}
-          icon={<Plus className="w-4 h-4" />}
-        >
+        <Button type="submit" variant="accent" size="lg" loading={loading} disabled={hasOverLimit}>
           Створити голосування
         </Button>
       </div>

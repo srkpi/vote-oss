@@ -1,12 +1,4 @@
-import {
-  ChevronRight,
-  Eye,
-  LayoutDashboard,
-  Link2,
-  Lock,
-  ShieldCheck,
-  UserCheck,
-} from 'lucide-react';
+import { Eye, LayoutDashboard, Link2, Lock, ShieldCheck, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import { ElectionCard } from '@/components/elections/election-card';
@@ -199,10 +191,7 @@ export default async function HomePage() {
             >
               {session ? (
                 <Button variant="accent" size="xl" asChild>
-                  <Link href="/elections">
-                    Переглянути голосування
-                    <ChevronRight className="w-5 h-5 ml-1" />
-                  </Link>
+                  <Link href="/elections">Переглянути голосування</Link>
                 </Button>
               ) : (
                 <Button variant="accent" size="xl" asChild>
@@ -276,7 +265,7 @@ export default async function HomePage() {
                   Активні голосування
                 </h2>
                 <p className="text-[var(--muted-foreground)] font-body mt-1">
-                  Доступні зараз для вашого факультету
+                  Доступні зараз для вашого підрозділу
                 </p>
               </div>
               <Button variant="secondary" asChild>

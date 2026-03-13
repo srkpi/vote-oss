@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
-import { ErrorState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 

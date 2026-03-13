@@ -196,7 +196,7 @@ export function InviteAdminDialog({
                 Скасувати
               </Button>
 
-              <Button variant="primary" onClick={handleSubmit} loading={loading}>
+              <Button variant="accent" onClick={handleSubmit} loading={loading}>
                 Створити токен
               </Button>
             </>

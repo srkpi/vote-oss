@@ -18,7 +18,8 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { EmptyState, ErrorState } from '@/components/ui/empty-state';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -202,8 +203,8 @@ export function AdminElectionsClient({
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              Голосування <strong>«{deleteTarget?.title}»</strong> та всі пов&apos;язані бюлетені
-              будуть видалені. Цю дію неможливо скасувати.
+              Голосування <strong className="break-words">«{deleteTarget?.title}»</strong> та всі
+              пов&apos;язані бюлетені будуть видалені. Цю дію неможливо скасувати.
             </Alert>
           </DialogBody>
           <DialogFooter>

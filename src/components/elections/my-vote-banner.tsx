@@ -74,7 +74,7 @@ export function MyVoteBanner({
             </span>
 
             {decryptionDone && decryptedChoiceLabel && matchesDecryption === false && (
-              <span className="text-[var(--error)]">
+              <span className="text-[var(--error)] break-words">
                 Розшифровано: <strong>{decryptedChoiceLabel}</strong>
               </span>
             )}
