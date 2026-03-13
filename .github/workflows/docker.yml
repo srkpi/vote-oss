@@ -33,7 +33,7 @@ jobs:
           images: ${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss
           tags: |
             type=ref,event=branch
-            type=ref,event=branch,branch=main,format=latest
+            type=ref,event=branch,ref=refs/heads/main,format=latest
             type=sha
 
       - uses: docker/build-push-action@v6
