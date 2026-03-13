@@ -2,7 +2,7 @@
  * Mock for @/lib/cache.
  *
  * Usage:
- *   import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
+ *   import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
  *   jest.mock('@/lib/cache', () => cacheMock);
  *   beforeEach(() => resetCacheMock());
  *
@@ -19,6 +19,9 @@ export const cacheMock = {
   getCachedAdmins: jest.fn<Promise<null>, []>(),
   setCachedAdmins: jest.fn<Promise<void>, [unknown[]]>(),
   invalidateAdmins: jest.fn<Promise<void>, []>(),
+  getCachedInviteTokens: jest.fn<Promise<null>, []>(),
+  setCachedInviteTokens: jest.fn<Promise<void>, [unknown[]]>(),
+  invalidateInviteTokens: jest.fn<Promise<void>, []>(),
 };
 
 export function resetCacheMock(): void {
@@ -28,4 +31,7 @@ export function resetCacheMock(): void {
   cacheMock.getCachedAdmins.mockReset().mockResolvedValue(null);
   cacheMock.setCachedAdmins.mockReset().mockResolvedValue(undefined);
   cacheMock.invalidateAdmins.mockReset().mockResolvedValue(undefined);
+  cacheMock.getCachedInviteTokens.mockReset().mockResolvedValue(null);
+  cacheMock.setCachedInviteTokens.mockReset().mockResolvedValue(undefined);
+  cacheMock.invalidateInviteTokens.mockReset().mockResolvedValue(undefined);
 }

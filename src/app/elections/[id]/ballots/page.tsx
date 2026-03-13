@@ -32,7 +32,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
   if (status === 404 || (!data && status !== 0)) notFound();
 
   return (
-    <div className="min-h-screen bg-[var(--surface)]">
+    <div className="min-h-[calc(100vh-var(--header-height))] bg-[var(--surface)]">
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-6">
           <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4">

@@ -1,17 +1,16 @@
 import * as allure from 'allure-js-commons';
 
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
-
-import { makeTokenPair, USER_PAYLOAD } from '../../helpers/fixtures';
-import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { rateLimitMock, resetRateLimitMock } from '../../helpers/rate-limit-mock';
+import { makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
+import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
+import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import {
   getResponseCookie,
   makeRefreshRequest,
   makeRequest,
   parseJson,
-} from '../../helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
+} from '@/__tests__/helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);

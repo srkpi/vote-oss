@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
-import { ErrorState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 
@@ -22,7 +22,7 @@ export default async function ElectionsPage() {
   const closed = (elections ?? []).filter((e) => e.status === 'closed').length;
 
   return (
-    <div className="min-h-screen bg-[var(--surface)]">
+    <div className="min-h-[calc(100vh-var(--header-height))] bg-[var(--surface)]">
       {/* Page header */}
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-8">

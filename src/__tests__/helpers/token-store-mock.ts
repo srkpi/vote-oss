@@ -3,7 +3,7 @@
  *
  * Usage in test files:
  *
- *   import { tokenStoreMock, resetTokenStoreMock } from '../../helpers/token-store-mock';
+ *   import { tokenStoreMock, resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
  *   jest.mock('@/lib/token-store', () => tokenStoreMock);
  *
  *   beforeEach(() => resetTokenStoreMock());

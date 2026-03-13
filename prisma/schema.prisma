@@ -45,6 +45,7 @@ model AdminInviteToken {
   created_by            String
   creator               Admin    @relation(fields: [created_by], references: [user_id], onDelete: Cascade)
 
+  @@index([created_by])
   @@map("admin_invite_tokens")
 }
 
@@ -79,8 +80,8 @@ model ElectionChoice {
 
   tallies ElectionTally[]
 
-  @@map("election_choices")
   @@index([election_id, position])
+  @@map("election_choices")
 }
 
 model IssuedToken {
@@ -103,8 +104,8 @@ model Ballot {
   previous_hash    String?
   current_hash     String   @unique
 
-  @@map("ballots")
   @@index([election_id])
+  @@map("ballots")
 }
 
 model UsedTokenNullifier {
@@ -112,8 +113,8 @@ model UsedTokenNullifier {
   election_id String
   election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
 
-  @@map("used_token_nullifiers")
   @@index([election_id])
+  @@map("used_token_nullifiers")
 }
 
 model ElectionTally {

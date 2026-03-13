@@ -2,7 +2,7 @@
  * Mock for @/lib/rate-limit.
  *
  * Usage:
- *   import { rateLimitMock, resetRateLimitMock } from '../../helpers/rate-limit-mock';
+ *   import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
  *   jest.mock('@/lib/rate-limit', () => rateLimitMock);
  *   beforeEach(() => resetRateLimitMock());
  *

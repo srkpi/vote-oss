@@ -1,8 +1,7 @@
 import * as allure from 'allure-js-commons';
 
+import { redisMock, resetRedisMock } from '@/__tests__/helpers/redis-mock';
 import type { CachedElection } from '@/lib/cache';
-
-import { redisMock, resetRedisMock } from '../helpers/redis-mock';
 
 // ---------------------------------------------------------------------------
 // Module mock

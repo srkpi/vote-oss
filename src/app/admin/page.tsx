@@ -115,7 +115,7 @@ export default async function AdminDashboardPage() {
                   Голосувань поки немає
                 </p>
                 <p className="text-sm text-[var(--muted-foreground)] font-body mt-1 mb-4">
-                  Створіть перше голосування для вашого факультету
+                  Створіть перше голосування для вашого підрозділу
                 </p>
                 <Button variant="accent" size="sm" asChild>
                   <Link href="/admin/elections/new">Створити голосування</Link>

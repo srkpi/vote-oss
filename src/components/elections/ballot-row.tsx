@@ -178,7 +178,7 @@ export function BallotRow({
                       <p className="text-sm font-body font-semibold text-[var(--error)]">
                         Розбіжність виборів!
                       </p>
-                      <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+                      <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5 break-words">
                         Збережено: <strong>{myStoredChoiceLabel}</strong> · Розшифровано:{' '}
                         <strong>{decryption?.choiceLabel ?? '?'}</strong>
                       </p>

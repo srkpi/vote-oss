@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { AdminsPageClient } from '@/components/admin/admins-page-client';
+import { getCurrentAdmin } from '@/lib/current-admin';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import type { Admin } from '@/types/admin';
 
@@ -12,10 +13,12 @@ export const metadata: Metadata = {
 
 export default async function AdminsPage() {
   const session = await getServerSession();
-  const { data: admins, error } = await serverFetch<Admin[]>('/api/admins');
+  const [{ data: admins, error }, currentAdmin] = await Promise.all([
+    serverFetch<Admin[]>('/api/admins'),
+    getCurrentAdmin(),
+  ]);
 
   const all = admins ?? [];
-  const currentAdmin = all.find((a) => a.user_id === session?.userId);
   const canInvite = currentAdmin?.manage_admins ?? false;
   const canGrantManageAdmins = currentAdmin?.manage_admins ?? false;
   const restrictedToFaculty = currentAdmin?.restricted_to_faculty ?? false;

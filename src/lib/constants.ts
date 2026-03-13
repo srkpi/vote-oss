@@ -11,8 +11,11 @@ export const ELECTION_CHOICE_MAX_LENGTH = 100;
 // Admin invite token limits
 // ---------------------------------------------------------------------------
 
+export const INVITE_TOKEN_LENGTH = 16;
 export const INVITE_TOKEN_MAX_USAGE_MIN = 1;
 export const INVITE_TOKEN_MAX_USAGE_MAX = 100;
+export const INVITE_TOKEN_MAX_COUNT = 10;
+export const INVITE_TOKEN_MAX_VALID_DAYS = 90;
 
 // ---------------------------------------------------------------------------
 // Cache TTLs (seconds)
@@ -20,6 +23,7 @@ export const INVITE_TOKEN_MAX_USAGE_MAX = 100;
 
 export const CACHE_TTL_ELECTIONS_SECS = 60;
 export const CACHE_TTL_ADMINS_SECS = 30;
+export const CACHE_TTL_INVITE_TOKENS_SECS = 30;
 
 // ---------------------------------------------------------------------------
 // Cache keys
@@ -27,6 +31,7 @@ export const CACHE_TTL_ADMINS_SECS = 30;
 
 export const CACHE_KEY_ELECTIONS = 'cache:elections';
 export const CACHE_KEY_ADMINS = 'cache:admins';
+export const CACHE_KEY_INVITE_TOKENS = 'cache:invite-tokens';
 
 // ---------------------------------------------------------------------------
 // Campus API cache

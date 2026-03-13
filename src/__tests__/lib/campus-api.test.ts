@@ -1,6 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import { redisMock, resetRedisMock } from '../helpers/redis-mock';
+import { redisMock, resetRedisMock } from '@/__tests__/helpers/redis-mock';
 
 // ---------------------------------------------------------------------------
 // Redis mock

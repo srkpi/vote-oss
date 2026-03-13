@@ -1,16 +1,16 @@
 import * as allure from 'allure-js-commons';
 
-import { cacheMock, resetCacheMock } from '../../helpers/cache-mock';
+import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
   JWT_TOKEN_RECORD,
   makeTokenPair,
   USER_PAYLOAD,
-} from '../../helpers/fixtures';
-import { prismaMock, resetPrismaMock } from '../../helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '../../helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '../../helpers/token-store-mock';
+} from '@/__tests__/helpers/fixtures';
+import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
+import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
@@ -130,7 +130,7 @@ describe('GET /api/admins/[userId]', () => {
     const req = await adminReq(ADMIN_RECORD);
     cacheMock.getCachedAdmins.mockResolvedValueOnce(null);
     // Use a record that has a real promoter
-    const { RESTRICTED_ADMIN_RECORD } = await import('../../helpers/fixtures');
+    const { RESTRICTED_ADMIN_RECORD } = await import('@/__tests__/helpers/fixtures');
     prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
 
     const res = await GET(req, {

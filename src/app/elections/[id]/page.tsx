@@ -55,7 +55,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   const isClosed = election.status === 'closed';
 
   return (
-    <div className="min-h-screen bg-[var(--surface)]">
+    <div className="min-h-[calc(100vh-var(--header-height))] bg-[var(--surface)]">
       {/* Header */}
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-6">
@@ -100,15 +100,6 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 </Button>
               </div>
             </div>
-
-            {isClosed && (
-              <Button variant="secondary" size="sm" asChild>
-                <Link href={`/elections/${id}/ballots`}>
-                  <FileText className="w-3.5 h-3.5" />
-                  Всі бюлетені
-                </Link>
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -202,7 +193,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 {election.restrictedToFaculty && (
                   <InfoRow
                     icon={<GraduationCap className="w-4 h-4" />}
-                    label="Факультет"
+                    label="Підрозділ"
                     value={election.restrictedToFaculty}
                   />
                 )}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
-import { invalidateAdmins } from '@/lib/cache';
+import { invalidateAdmins, invalidateInviteTokens } from '@/lib/cache';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
@@ -84,6 +84,18 @@ export async function POST(req: NextRequest) {
         data: { current_usage: { increment: 1 } },
       }),
     ]);
+  }
+
+  // ── Auto-delete exhausted token (fire-and-forget, non-critical) ───────────
+  // current_usage before increment + 1 equals the new usage after the transaction.
+  const newUsage = inviteToken.current_usage + 1;
+  if (newUsage >= inviteToken.max_usage) {
+    try {
+      await prisma.adminInviteToken.delete({ where: { token_hash: tokenHash } });
+    } catch {
+      // Token may already have been deleted by a concurrent request — ignore
+    }
+    await invalidateInviteTokens();
   }
 
   await invalidateAdmins();

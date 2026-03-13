@@ -85,8 +85,10 @@ export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-export function generateInviteToken(): string {
-  return randomBytes(32).toString('hex');
+export function generateBase64Token(length: number): string {
+  const bytes = Math.ceil((length * 3) / 4);
+  const token = randomBytes(bytes).toString('base64');
+  return token.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, length);
 }
 
 export async function importPrivateKey(privateKeyPem: string): Promise<CryptoKey> {

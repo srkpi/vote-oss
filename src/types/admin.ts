@@ -31,3 +31,27 @@ export interface InviteTokenResponse {
   restrictedToFaculty: boolean;
   validDue: string;
 }
+
+// ---------------------------------------------------------------------------
+// Invite token list types
+// ---------------------------------------------------------------------------
+
+export interface InviteToken {
+  token_hash: string;
+  max_usage: number;
+  current_usage: number;
+  manage_admins: boolean;
+  restricted_to_faculty: boolean;
+  valid_due: string;
+  created_at: string;
+  creator: { user_id: string; full_name: string };
+  isOwn: boolean;
+  deletable: boolean;
+}
+
+/**
+ * Shape stored in Redis — same as InviteToken but without the
+ * caller-specific computed flags (isOwn / deletable).
+ * Those are added at serve time after hierarchy resolution.
+ */
+export type CachedInviteToken = Omit<InviteToken, 'isOwn' | 'deletable'>;

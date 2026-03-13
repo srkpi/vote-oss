@@ -1,12 +1,12 @@
 'use client';
 
-import { FileText, LayoutGrid, Settings, Users } from 'lucide-react';
+import { FileText, Key, LayoutGrid, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   {
     label: 'Огляд',
     href: '/admin',
@@ -22,13 +22,26 @@ const NAV_ITEMS = [
   {
     label: 'Адміністратори',
     href: '/admin/admins',
-    exact: false,
+    exact: true,
     icon: <Users className="w-4 h-4" />,
   },
 ];
 
-export function AdminSidebar() {
+const TOKENS_NAV_ITEM = {
+  label: 'Токени',
+  href: '/admin/tokens',
+  exact: true,
+  icon: <Key className="w-4 h-4" />,
+};
+
+interface AdminSidebarProps {
+  manageAdmins?: boolean;
+}
+
+export function AdminSidebar({ manageAdmins = false }: AdminSidebarProps) {
   const pathname = usePathname();
+
+  const navItems = manageAdmins ? [...BASE_NAV_ITEMS, TOKENS_NAV_ITEM] : BASE_NAV_ITEMS;
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -59,7 +72,7 @@ export function AdminSidebar() {
           <p className="px-3 pt-3 pb-2 text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-widest font-body">
             Навігація
           </p>
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -81,7 +94,7 @@ export function AdminSidebar() {
       {/* Mobile bottom navigation bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[var(--border-subtle)] shadow-[0_-4px_12px_rgb(28_57_110/0.08)] safe-area-pb">
         <div className="flex items-stretch">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
             return (
               <Link
