@@ -36,7 +36,7 @@ export default async function AdminDashboardPage() {
       {/* Page header */}
       <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center justify-between gap-3">
-          <div className="animate-fade-up min-w-0">
+          <div className="amin-w-0">
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] truncate">
               Добрий день, {session?.fullName.split(' ')[1] ?? session?.fullName}!
             </h1>
@@ -44,10 +44,7 @@ export default async function AdminDashboardPage() {
               Ось короткий огляд системи голосування
             </p>
           </div>
-          <div
-            className="flex items-center gap-3 animate-fade-up shrink-0"
-            style={{ animationDelay: '100ms' }}
-          >
+          <div className="flex items-center gap-3 shrink-0">
             <Button variant="accent" size="sm" asChild>
               <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
                 <Plus className="w-3.5 h-3.5" />
@@ -94,7 +91,7 @@ export default async function AdminDashboardPage() {
         <div className="grid grid-cols-1 gap-6">
           {/* Recent elections */}
           <div
-            className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
+            className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden"
             style={{ animationDelay: '250ms', animationFillMode: 'both' }}
           >
             <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">

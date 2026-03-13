@@ -26,7 +26,7 @@ export function EncryptionKey({
 
   return (
     <div
-      className={`bg-white rounded-[var(--radius-xl)] ${containerBorder} shadow-[var(--shadow-card)] overflow-hidden animate-fade-up`}
+      className={`bg-white rounded-[var(--radius-xl)] ${containerBorder} shadow-[var(--shadow-card)] overflow-hidden`}
     >
       <div
         className={`px-4 sm:px-5 py-4 border-b ${headerBorder} flex items-center justify-between ${headerBg}`}

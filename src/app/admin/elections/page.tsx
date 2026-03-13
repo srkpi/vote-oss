@@ -36,7 +36,7 @@ export default async function AdminElectionsPage() {
     <div className="flex-1 overflow-auto">
       <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center justify-between gap-3">
-          <div className="animate-fade-up min-w-0">
+          <div className="min-w-0">
             <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-2 sm:mb-3">
               <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
                 Адмін
@@ -51,10 +51,7 @@ export default async function AdminElectionsPage() {
               Керування всіма голосуваннями в системі
             </p>
           </div>
-          <div
-            className="flex items-center gap-3 animate-fade-up shrink-0"
-            style={{ animationDelay: '100ms' }}
-          >
+          <div className="flex items-center gap-3 shrink-0" style={{ animationDelay: '100ms' }}>
             <Button variant="accent" size="sm" asChild>
               <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
                 <Plus className="w-3.5 h-3.5" />

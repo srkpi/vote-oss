@@ -211,7 +211,6 @@ html {
   from {
     opacity: 0;
   }
-
   to {
     opacity: 1;
   }
@@ -222,7 +221,6 @@ html {
     opacity: 0;
     transform: translateY(16px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -234,7 +232,6 @@ html {
     opacity: 0;
     transform: translateY(-16px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -246,7 +243,6 @@ html {
     opacity: 0;
     transform: scale(0.95);
   }
-
   to {
     opacity: 1;
     transform: scale(1);
@@ -258,7 +254,6 @@ html {
     opacity: 0;
     transform: translateX(20px);
   }
-
   to {
     opacity: 1;
     transform: translateX(0);
@@ -269,7 +264,6 @@ html {
   0% {
     background-position: -400px 0;
   }
-
   100% {
     background-position: 400px 0;
   }
@@ -281,7 +275,6 @@ html {
     transform: scale(1);
     opacity: 1;
   }
-
   50% {
     transform: scale(1.4);
     opacity: 0.7;
@@ -292,7 +285,6 @@ html {
   from {
     transform: rotate(0deg);
   }
-
   to {
     transform: rotate(360deg);
   }
@@ -302,32 +294,204 @@ html {
   0% {
     transform: translateX(-100%) scaleX(0.5);
   }
-
   100% {
     transform: translateX(200%) scaleX(0.5);
   }
 }
 
+/* ── NEW: High-tech ambient animations ── */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+  66% {
+    transform: translateY(-5px) rotate(-1.5deg);
+  }
+}
+
+@keyframes float-gentle {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.02);
+  }
+}
+
+/* Concentric ring pulse (radar/sonar effect) */
+@keyframes ring-expand {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* Orb breathing glow */
+@keyframes glow-breathe {
+  0%,
+  100% {
+    opacity: 0.12;
+    filter: blur(40px);
+  }
+  50% {
+    opacity: 0.3;
+    filter: blur(55px);
+  }
+}
+
+@keyframes glow-breathe-orange {
+  0%,
+  100% {
+    opacity: 0.1;
+    filter: blur(35px);
+  }
+  50% {
+    opacity: 0.22;
+    filter: blur(45px);
+  }
+}
+
+/* Slow rotating hexagon / diamond */
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-slow-reverse {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* Scanning beam */
+@keyframes scan-down {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.6;
+  }
+  95% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(120%);
+    opacity: 0;
+  }
+}
+
+/* Badge / tag entrance */
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(6px);
+  }
+  70% {
+    transform: scale(1.04) translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Corner cross-hair blink */
+@keyframes crosshair-blink {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Data text scroll */
+@keyframes text-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+/* ── Utility classes for new animations ── */
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: float-slow 7s ease-in-out infinite;
+}
+.animate-float-gentle {
+  animation: float-gentle 5s ease-in-out infinite;
+}
+.animate-glow-breathe {
+  animation: glow-breathe 6s ease-in-out infinite;
+}
+.animate-glow-breathe-orange {
+  animation: glow-breathe-orange 8s ease-in-out infinite;
+}
+.animate-rotate-slow {
+  animation: rotate-slow 20s linear infinite;
+}
+.animate-rotate-slow-reverse {
+  animation: rotate-slow-reverse 25s linear infinite;
+}
+.animate-scan-down {
+  animation: scan-down 5s ease-in-out infinite;
+}
+.animate-badge-pop {
+  animation: badge-pop 0.5s var(--ease-bounce) both;
+}
+.animate-crosshair-blink {
+  animation: crosshair-blink 2s ease-in-out infinite;
+}
+
 .animate-fade-in {
   animation: fade-in var(--transition-base) forwards;
 }
-
 .animate-fade-up {
-  animation: fade-up var(--transition-slow) var(--ease-smooth) forwards;
+  animation: fade-up var(--transition-slow) forwards;
 }
-
 .animate-fade-down {
-  animation: fade-down var(--transition-slow) var(--ease-smooth) forwards;
+  animation: fade-down var(--transition-slow) forwards;
 }
-
 .animate-scale-in {
   animation: scale-in 200ms var(--ease-bounce) forwards;
 }
-
 .animate-slide-right {
   animation: slide-in-right var(--transition-base) var(--ease-smooth) forwards;
 }
-
 .animate-spin {
   animation: spin 1s linear infinite;
 }
@@ -361,16 +525,13 @@ html {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: var(--surface);
 }
-
 ::-webkit-scrollbar-thumb {
   background: var(--kpi-gray-light);
   border-radius: 999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: var(--kpi-gray-mid);
 }
@@ -430,6 +591,31 @@ html {
   background: linear-gradient(135deg, var(--kpi-orange) 0%, var(--kpi-orange-dark) 100%);
 }
 
+/* ── Crosshair corner helper ── */
+.crosshair {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+}
+.crosshair::before,
+.crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(0, 138, 207, 0.6);
+}
+.crosshair::before {
+  width: 1px;
+  height: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.crosshair::after {
+  width: 100%;
+  height: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 /* ===================== PAGE TRANSITIONS ===================== */
 
 .page-enter {
@@ -440,39 +626,30 @@ html {
 .stagger-children > * {
   animation: fade-up var(--transition-slow) var(--ease-smooth) both;
 }
-
 .stagger-children > *:nth-child(1) {
   animation-delay: 0ms;
 }
-
 .stagger-children > *:nth-child(2) {
   animation-delay: 60ms;
 }
-
 .stagger-children > *:nth-child(3) {
   animation-delay: 120ms;
 }
-
 .stagger-children > *:nth-child(4) {
   animation-delay: 180ms;
 }
-
 .stagger-children > *:nth-child(5) {
   animation-delay: 240ms;
 }
-
 .stagger-children > *:nth-child(6) {
   animation-delay: 300ms;
 }
-
 .stagger-children > *:nth-child(7) {
   animation-delay: 360ms;
 }
-
 .stagger-children > *:nth-child(8) {
   animation-delay: 420ms;
 }
-
 .stagger-children > *:nth-child(9) {
   animation-delay: 480ms;
 }
@@ -515,11 +692,9 @@ html {
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
     @apply bg-background text-foreground;
   }
-
   html {
     @apply font-sans;
   }

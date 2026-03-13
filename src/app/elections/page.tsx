@@ -27,7 +27,7 @@ export default async function ElectionsPage() {
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="animate-fade-up">
+            <div>
               <h1 className="font-display text-3xl font-bold text-[var(--foreground)] leading-tight">
                 Голосування
               </h1>

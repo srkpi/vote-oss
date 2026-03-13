@@ -171,7 +171,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       : null;
 
   return (
-    <div className="space-y-5 animate-fade-up">
+    <div className="space-y-5">
       {/* My Vote Banner */}
       {myVoteRecord && (
         <MyVoteBanner

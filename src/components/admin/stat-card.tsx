@@ -26,7 +26,6 @@ export function StatCard({ label, value, accent, icon, delay = 0 }: StatCardProp
         p-4 sm:p-5
         transition-all duration-200
         hover:shadow-lg hover:-translate-y-[2px]
-        animate-fade-up
       "
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >

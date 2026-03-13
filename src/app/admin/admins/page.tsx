@@ -24,7 +24,7 @@ export default async function AdminsPage() {
     <div className="flex-1 overflow-auto">
       <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center justify-between gap-3">
-          <div className="animate-fade-up min-w-0">
+          <div className="min-w-0">
             <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-2 sm:mb-3">
               <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
                 Адмін
@@ -40,11 +40,7 @@ export default async function AdminsPage() {
             </p>
           </div>
 
-          <div
-            className="animate-fade-up shrink-0"
-            style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-            id="admins-header-actions"
-          />
+          <div className="shrink-0" id="admins-header-actions" />
         </div>
       </div>
 

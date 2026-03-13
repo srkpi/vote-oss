@@ -36,7 +36,7 @@ export function AdminsPageClient({
 
   return (
     <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden animate-fade-up"
+      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden"
       style={{ animationDelay: '220ms', animationFillMode: 'both' }}
     >
       {/* Card header */}

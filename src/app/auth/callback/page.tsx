@@ -76,7 +76,7 @@ export default function CallbackPage() {
         <div className="absolute inset-0 pattern-grid opacity-[0.03]" />
       </div>
 
-      <div className="relative w-full max-w-md animate-fade-up">
+      <div className="relative w-full max-w-md">
         <div className="bg-white rounded-[var(--radius-2xl)] border border-[var(--border-color)] shadow-[var(--shadow-xl)] overflow-hidden">
           {/* Top accent */}
           <div

@@ -218,7 +218,7 @@ interface ConfirmationStepProps {
 
 function ConfirmationStep({ choice, onBack, onConfirm, loading }: ConfirmationStepProps) {
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="space-y-6">
       <div className="text-center space-y-2">
         <div className="w-16 h-16 rounded-full bg-[var(--kpi-navy)]/10 border-2 border-[var(--kpi-navy)]/20 flex items-center justify-center mx-auto mb-4">
           <HelpCircle className="w-8 h-8 text-[var(--kpi-navy)]" />
@@ -273,7 +273,7 @@ function ConfirmationStep({ choice, onBack, onConfirm, loading }: ConfirmationSt
 
 function SubmittingStep() {
   return (
-    <div className="flex flex-col items-center gap-6 py-8 animate-fade-in">
+    <div className="flex flex-col items-center gap-6 py-8">
       <Loader2 className="w-16 h-16 text-[var(--kpi-navy)] animate-spin" />
       <div className="text-center">
         <p className="font-display text-lg font-semibold text-[var(--foreground)]">

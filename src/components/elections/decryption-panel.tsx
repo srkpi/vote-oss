@@ -30,7 +30,7 @@ export function DecryptionPanel({
   return (
     <div
       className={cn(
-        'rounded-[var(--radius-xl)] border p-5 animate-fade-up',
+        'rounded-[var(--radius-xl)] border p-5',
         isClean && 'bg-[var(--success-bg)] border-[var(--success)]/30',
         hasProblem && 'bg-[var(--error-bg)] border-[var(--error)]/30',
         !decryptionDone && 'bg-white border-[var(--kpi-orange)]/30',
