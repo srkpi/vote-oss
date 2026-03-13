@@ -18,6 +18,7 @@ import { FormField, Input } from '@/components/ui/form';
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
 import { createInviteToken } from '@/lib/api-client';
+import { INVITE_TOKEN_MAX_USAGE_MAX, INVITE_TOKEN_MAX_USAGE_MIN } from '@/lib/constants';
 import type { InviteTokenResponse } from '@/types/admin';
 
 interface InviteAdminDialogProps {
@@ -114,7 +115,7 @@ export function InviteAdminDialog({
 
     setForm({
       validDue: tomorrow,
-      maxUsage: '1',
+      maxUsage: String(INVITE_TOKEN_MAX_USAGE_MIN),
       manageAdmins: false,
       restrictedToFaculty: restrictedToFaculty,
     });
@@ -149,12 +150,16 @@ export function InviteAdminDialog({
                 />
               </FormField>
 
-              <FormField label="Кількість використань" htmlFor="maxUsage" hint="Від 1 до 100">
+              <FormField
+                label="Кількість використань"
+                htmlFor="maxUsage"
+                hint={`Від ${INVITE_TOKEN_MAX_USAGE_MIN} до ${INVITE_TOKEN_MAX_USAGE_MAX}`}
+              >
                 <Input
                   id="maxUsage"
                   type="number"
-                  min={1}
-                  max={100}
+                  min={INVITE_TOKEN_MAX_USAGE_MIN}
+                  max={INVITE_TOKEN_MAX_USAGE_MAX}
                   value={form.maxUsage}
                   onChange={(e) => setForm((p) => ({ ...p, maxUsage: e.target.value }))}
                 />

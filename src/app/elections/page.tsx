@@ -22,7 +22,7 @@ export default async function ElectionsPage() {
   const closed = (elections ?? []).filter((e) => e.status === 'closed').length;
 
   return (
-    <div className="min-h-screen bg-[var(--surface)]">
+    <div className="min-h-[calc(100vh-var(--header-height))] bg-[var(--surface)]">
       {/* Page header */}
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-8">

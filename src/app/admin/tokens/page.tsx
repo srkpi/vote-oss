@@ -1,5 +1,4 @@
-// src/app/admin/tokens/page.tsx
-import { ChevronRight, Key } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -46,22 +45,6 @@ export default async function TokensPage() {
       </div>
 
       <div className="p-4 sm:p-8 space-y-6">
-        <div className="flex items-start gap-3 p-4 rounded-[var(--radius-xl)] bg-[var(--info-bg)] border border-[var(--kpi-blue-light)]/20">
-          <div className="w-8 h-8 rounded-lg bg-[var(--kpi-blue-light)] flex items-center justify-center shrink-0 mt-0.5">
-            <Key className="w-4 h-4 text-white" />
-          </div>
-          <div className="space-y-1 min-w-0">
-            <p className="text-sm font-semibold font-body text-[var(--foreground)]">
-              Як працюють токени
-            </p>
-            <p className="text-sm font-body text-[var(--muted-foreground)] leading-relaxed">
-              Кожен токен — це одноразове або обмежене посилання запрошення. Передайте його
-              майбутньому адміністратору або поділіться прямим посиланням. Токен автоматично
-              видаляється після вичерпання ліміту використань або закінчення терміну дії.
-            </p>
-          </div>
-        </div>
-
         <TokensPageClient
           initialTokens={tokens ?? []}
           canGrantManageAdmins={currentAdmin.manage_admins}

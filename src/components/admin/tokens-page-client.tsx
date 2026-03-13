@@ -2,7 +2,7 @@
 
 import { Key, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
 import { TokensTable } from '@/components/admin/tokens-table';
@@ -27,6 +27,10 @@ export function TokensPageClient({
   const router = useRouter();
   const [tokens, setTokens] = useState<InviteToken[]>(initialTokens);
   const [createOpen, setCreateOpen] = useState(false);
+
+  useEffect(() => {
+    setTokens(initialTokens);
+  }, [initialTokens]);
 
   const handleDelete = (tokenHash: string) => {
     setTokens((prev) => prev.filter((t) => t.token_hash !== tokenHash));

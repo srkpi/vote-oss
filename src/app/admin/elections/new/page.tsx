@@ -1,4 +1,3 @@
-// src/app/admin/elections/new/page.tsx
 import { ChevronRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
