@@ -32,8 +32,8 @@ jobs:
         with:
           images: ${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss
           tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,event=branch
-            type=ref,event=branch,ref=refs/heads/main,format=latest
             type=sha
 
       - uses: docker/build-push-action@v6
