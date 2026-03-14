@@ -10,6 +10,7 @@ import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
+  ELECTION_MAX_CLOSES_AT_DAYS,
   ELECTION_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
 
@@ -20,6 +21,7 @@ jest.mock('@/lib/campus-api', () => campusMock);
 
 import { POST } from '@/app/api/elections/route';
 
+const now = Date.now();
 const FUTURE_OPEN = new Date(Date.now() + 3_600_000).toISOString();
 const FUTURE_CLOSE = new Date(Date.now() + 7_200_000).toISOString();
 
@@ -185,5 +187,57 @@ describe('POST /api/elections — constant-driven validation', () => {
     const req = await makeAdminReq({ ...validBody, choices });
     const { body } = await parseJson<any>(await POST(req));
     expect(body.message).toMatch(new RegExp(String(ELECTION_CHOICE_MAX_LENGTH)));
+  });
+
+  it('returns 400 if opensAt is invalid', async () => {
+    const req = await makeAdminReq({ ...validBody, opensAt: 'not-a-date' });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/Invalid date format/);
+  });
+
+  it('returns 400 if closesAt is invalid', async () => {
+    const req = await makeAdminReq({ ...validBody, closesAt: 'not-a-date' });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/Invalid date format/);
+  });
+
+  it('returns 400 if closesAt is before opensAt', async () => {
+    const opensAt = new Date(now + 10_000).toISOString();
+    const closesAt = new Date(now + 5_000).toISOString(); // before opensAt
+    const req = await makeAdminReq({ ...validBody, opensAt, closesAt });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/closesAt must be after opensAt/);
+  });
+
+  it('returns 400 if closesAt exceeds max allowed days', async () => {
+    const closesAt = new Date(
+      now + (ELECTION_MAX_CLOSES_AT_DAYS + 1) * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const req = await makeAdminReq({ ...validBody, closesAt });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(
+      new RegExp(`closesAt must be no more than ${ELECTION_MAX_CLOSES_AT_DAYS} days`),
+    );
+  });
+
+  it('accepts valid opensAt and closesAt within allowed range', async () => {
+    const opensAt = new Date(now + 1_000_000).toISOString();
+    const closesAt = new Date(now + 2_000_000).toISOString();
+    const req = await makeAdminReq({ ...validBody, opensAt, closesAt });
+    prismaMock.election.create.mockResolvedValueOnce({
+      id: 'uuid-valid-dates',
+      title: validBody.title,
+      opens_at: new Date(opensAt),
+      closes_at: new Date(closesAt),
+      public_key: 'pk',
+      private_key: 'sk',
+      choices: [],
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(201);
   });
 });

@@ -1,16 +1,18 @@
 import { Calendar, ChevronRight, Clock, FileText, GraduationCap, User, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
+import { ErrorState } from '@/components/common/error-state';
 import { CountdownTimer } from '@/components/elections/countdown-timer';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
+import { InfoRow } from '@/components/elections/info-row';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { serverFetch } from '@/lib/server-auth';
+import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { formatDateTime } from '@/lib/utils';
 import type { ElectionDetail } from '@/types/election';
 import type { TallyResponse } from '@/types/tally';
@@ -28,19 +30,37 @@ export async function generateMetadata({ params }: ElectionPageProps): Promise<M
 export default async function ElectionPage({ params }: ElectionPageProps) {
   const { id } = await params;
 
-  const {
-    data: election,
-    error,
-    status,
-  } = await serverFetch<ElectionDetail>(`/api/elections/${id}`);
+  const [session, { data: election, error, status }] = await Promise.all([
+    getServerSession(),
+    serverFetch<ElectionDetail>(`/api/elections/${id}`),
+  ]);
 
-  if (status === 404 || !election) notFound();
-  if (error && status !== 403) {
-    return (
-      <div className="container py-20 text-center">
-        <p className="text-[var(--error)] font-body">{error}</p>
-      </div>
-    );
+  if (!session) {
+    redirect('/');
+  }
+
+  // Hard 404 — election genuinely does not exist
+  if (status === 404) notFound();
+
+  // 403 or other error — show a user-friendly error instead of 404
+  if (!election) {
+    if (status === 403) {
+      return (
+        <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden w-full max-w-md">
+            <ErrorState
+              title={status === 403 ? 'Доступ обмежено' : 'Помилка завантаження'}
+              description={
+                status === 403
+                  ? 'У вас немає доступу до цього голосування'
+                  : (error ?? 'Не вдалося завантажити дані голосування')
+              }
+            />
+          </div>
+        </div>
+      );
+    }
+    notFound();
   }
 
   // Fetch tally only for closed elections
@@ -55,7 +75,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   const isClosed = election.status === 'closed';
 
   return (
-    <div className="min-h-[calc(100vh-var(--header-height))] bg-[var(--surface)]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
       {/* Header */}
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-6">
@@ -119,21 +139,23 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             )}
 
-            {/*
-              Vote form / already-voted state (open elections).
-              VoteStatusWrapper is a client component that reads localStorage
-              and renders either the VoteForm or the AlreadyVotedCard.
-            */}
             {isOpen && (
               <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
-                <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
-                  Ваш голос
-                </h2>
-                <VoteStatusWrapper election={election} />
+                {(election.restrictedToFaculty &&
+                  session.faculty != election.restrictedToFaculty) ||
+                (election.restrictedToGroup && session.group != election.restrictedToGroup) ? (
+                  <ErrorState title="Ви не можете брати участь у цьому опитуванні" />
+                ) : (
+                  <>
+                    <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
+                      Ваш голос
+                    </h2>
+                    <VoteStatusWrapper election={election} />
+                  </>
+                )}
               </div>
             )}
 
-            {/* Results (closed elections) */}
             {isClosed && tally && (
               <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
                 <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
@@ -143,7 +165,6 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             )}
 
-            {/* Preview choices (upcoming) */}
             {isUpcoming && (
               <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
                 <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-4">
@@ -174,7 +195,6 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
           {/* Right: sidebar */}
           <div className="space-y-5">
-            {/* Election info */}
             <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5">
               <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-4">
                 Деталі голосування
@@ -223,20 +243,6 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-2.5">
-      <span className="text-[var(--kpi-gray-mid)] shrink-0 mt-0.5">{icon}</span>
-      <div className="min-w-0">
-        <p className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider font-body font-semibold leading-tight">
-          {label}
-        </p>
-        <p className="text-sm text-[var(--foreground)] font-body mt-0.5 leading-snug">{value}</p>
       </div>
     </div>
   );

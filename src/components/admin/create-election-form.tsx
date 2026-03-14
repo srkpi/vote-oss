@@ -15,6 +15,7 @@ import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
+  ELECTION_MAX_CLOSES_AT_DAYS,
   ELECTION_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -174,7 +175,14 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     setLoading(false);
   };
 
-  const [minDateTime] = useState(() => new Date(Date.now() + 60000).toISOString().slice(0, 16));
+  const [renderTime] = useState(() => Date.now());
+  const minDateTime = new Date(renderTime + 60 * 1000).toISOString().slice(0, 16);
+  const maxOpensAt = new Date(renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 1000 - 60 * 1000)
+    .toISOString()
+    .slice(0, 16);
+  const maxClosesAt = new Date(renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 1000)
+    .toISOString()
+    .slice(0, 16);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -213,6 +221,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                 value={form.opensAt}
                 onChange={(e) => updateForm('opensAt', e.target.value)}
                 min={minDateTime}
+                max={maxOpensAt}
                 error={!!fieldErrors.opensAt}
               />
             </FormField>
@@ -224,6 +233,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                 value={form.closesAt}
                 onChange={(e) => updateForm('closesAt', e.target.value)}
                 min={form.opensAt || minDateTime}
+                max={maxClosesAt}
                 error={!!fieldErrors.closesAt}
               />
             </FormField>

@@ -9,12 +9,16 @@ export async function getServerSession(): Promise<User | null> {
   const userId = h.get('x-user-id');
   if (!userId) return null;
 
+  const isAdmin = h.get('x-user-is-admin') === 'true';
+
   return {
     userId,
     fullName: h.get('x-user-name') ?? '',
     faculty: h.get('x-user-faculty') ?? '',
     group: h.get('x-user-group') ?? '',
-    isAdmin: h.get('x-user-is-admin') === 'true',
+    isAdmin,
+    restrictedToFaculty: !isAdmin || h.get('x-user-restricted-to-faculty') === 'true',
+    manageAdmins: isAdmin && h.get('x-user-manage-admins') === 'true',
   };
 }
 

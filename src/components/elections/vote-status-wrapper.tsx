@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 
+import { AlreadyVotedCard } from '@/components/elections/already-voted-card';
 import { VoteForm } from '@/components/elections/vote-form';
 import { getVote } from '@/lib/vote-storage';
 import type { ElectionDetail } from '@/types/election';
 import type { VoteRecord } from '@/types/vote';
-
-import { AlreadyVotedCard } from './already-voted-card';
 
 interface VoteStatusWrapperProps {
   election: ElectionDetail;

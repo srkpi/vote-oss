@@ -26,11 +26,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { user } = auth;
 
-  if (
-    (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) ||
-    (election.restricted_to_group && election.restricted_to_group !== user.group)
-  ) {
-    return Errors.forbidden('You are not eligible for this election');
+  // ── Access control ────────────────────────────────────────────────────────
+  // Unrestricted admins may view any election.
+  // Faculty-restricted admins may view global elections + their own faculty.
+  // Regular users must match both faculty and group restrictions.
+  if (user.is_admin && !user.restricted_to_faculty) {
+    // Unrestricted admin — no restriction check needed
+  } else if (user.is_admin && user.restricted_to_faculty) {
+    if (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) {
+      return Errors.forbidden('You are not eligible for this election');
+    }
+  } else {
+    if (
+      (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) ||
+      (election.restricted_to_group && election.restricted_to_group !== user.group)
+    ) {
+      return Errors.forbidden('You are not eligible for this election');
+    }
   }
 
   const now = new Date();

@@ -4,4 +4,6 @@ export interface User {
   faculty: string;
   group: string;
   isAdmin: boolean;
+  restrictedToFaculty: boolean;
+  manageAdmins: boolean;
 }

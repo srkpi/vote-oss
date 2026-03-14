@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { EmptyState } from '@/components/common/empty-state';
+import { ErrorState } from '@/components/common/error-state';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -18,20 +20,18 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { EmptyState } from '@/components/ui/empty-state';
-import { ErrorState } from '@/components/ui/error-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { deleteElection } from '@/lib/api-client';
 import { formatDateTime } from '@/lib/utils';
-import type { Admin } from '@/types/admin';
+import type { User } from '@/types/auth';
 import type { Election, ElectionStatus } from '@/types/election';
 
 interface AdminElectionsClientProps {
   elections: Election[];
   error: string | null;
-  currentAdmin: Admin | null;
+  session: User;
 }
 
 type TabKey = 'all' | ElectionStatus;
@@ -43,17 +43,13 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'closed', label: 'Завершені' },
 ];
 
-function canAdminDeleteElection(admin: Admin | null, election: Election): boolean {
-  if (!admin) return false;
-  if (!admin.restricted_to_faculty) return true;
-  return election.restrictedToFaculty === admin.faculty;
+function canAdminDeleteElection(user: User, election: Election): boolean {
+  if (!user.isAdmin) return false;
+  if (!user.restrictedToFaculty) return true;
+  return election.restrictedToFaculty === user.faculty;
 }
 
-export function AdminElectionsClient({
-  elections,
-  error,
-  currentAdmin,
-}: AdminElectionsClientProps) {
+export function AdminElectionsClient({ elections, error, session }: AdminElectionsClientProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
@@ -171,7 +167,7 @@ export function AdminElectionsClient({
                     <ElectionRow
                       key={election.id}
                       election={election}
-                      canDelete={canAdminDeleteElection(currentAdmin, election)}
+                      canDelete={canAdminDeleteElection(session, election)}
                       onDelete={() => setDeleteTarget(election)}
                     />
                   ))}
@@ -185,7 +181,7 @@ export function AdminElectionsClient({
                 <ElectionMobileCard
                   key={election.id}
                   election={election}
-                  canDelete={canAdminDeleteElection(currentAdmin, election)}
+                  canDelete={canAdminDeleteElection(session, election)}
                   onDelete={() => setDeleteTarget(election)}
                 />
               ))}

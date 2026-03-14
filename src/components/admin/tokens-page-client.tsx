@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 
 import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
 import { TokensTable } from '@/components/admin/tokens-table';
+import { EmptyState } from '@/components/common/empty-state';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/ui/empty-state';
 import type { InviteToken } from '@/types/admin';
 
 interface TokensPageClientProps {

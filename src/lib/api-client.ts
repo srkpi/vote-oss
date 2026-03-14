@@ -79,7 +79,7 @@ async function rawFetch<T>(path: string, options: RequestInit = {}): Promise<Api
 async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
   const result = await rawFetch<T>(path, options);
 
-  if (result.success || result.statusCode !== 401) {
+  if (result.success || result.statusCode !== 401 || path === '/auth/kpi-id') {
     return result;
   }
 

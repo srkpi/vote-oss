@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { KPIIDLogin } from '@/components/auth/kpi-id-login';
-import { AnimatedGrid } from '@/components/ui/animated-grid';
+import { AnimatedGrid } from '@/components/common/animated-grid';
 
 export const metadata: Metadata = {
   title: 'Вхід',

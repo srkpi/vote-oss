@@ -3,8 +3,8 @@
 import { FileText } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { EmptyState } from '@/components/common/empty-state';
 import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
-import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import type { Election, ElectionStatus } from '@/types/election';
@@ -84,8 +84,8 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
             title={search ? 'Голосувань не знайдено' : 'Голосувань поки що немає'}
             description={
               search
-                ? `За запитом "${search}" нічого не знайдено. Спробуйте інший запит.`
-                : 'У цій категорії немає жодного голосування.'
+                ? `За запитом "${search}" нічого не знайдено`
+                : 'У цій категорії немає жодного голосування'
             }
           />
         </div>

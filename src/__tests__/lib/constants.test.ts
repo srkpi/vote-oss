@@ -15,6 +15,7 @@ import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
+  ELECTION_MAX_CLOSES_AT_DAYS,
   ELECTION_TITLE_MAX_LENGTH,
   INVITE_TOKEN_MAX_USAGE_MAX,
   INVITE_TOKEN_MAX_USAGE_MIN,
@@ -39,6 +40,11 @@ describe('constants', () => {
     it('ELECTION_CHOICE_MAX_LENGTH is a positive integer', () => {
       expect(Number.isInteger(ELECTION_CHOICE_MAX_LENGTH)).toBe(true);
       expect(ELECTION_CHOICE_MAX_LENGTH).toBeGreaterThan(0);
+    });
+
+    it('ELECTION_MAX_CLOSES_AT_DAYS is a positive integer', () => {
+      expect(Number.isInteger(ELECTION_MAX_CLOSES_AT_DAYS)).toBe(true);
+      expect(ELECTION_MAX_CLOSES_AT_DAYS).toBeGreaterThan(0);
     });
   });
 

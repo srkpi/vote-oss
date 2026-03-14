@@ -85,12 +85,18 @@ describe('token-store', () => {
   describe('isAccessTokenValid', () => {
     beforeEach(() => allure.story('isAccessTokenValid'));
 
-    it('returns false when iat is before the bloom reset timestamp', async () => {
-      const resetAt = Date.now(); // now in ms
-      bloomMock.getBloomResetAt.mockResolvedValueOnce(resetAt);
-      // iat = 10s ago, resetAt = now → token predates reset
-      const oldIat = NOW_SECS - 10;
-      expect(await isAccessTokenValid('jti', oldIat)).toBe(false);
+    it('falls back to DB when iat predates the bloom reset and record exists', async () => {
+      bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ access_jti: 'jti' });
+
+      expect(await isAccessTokenValid('jti', NOW_SECS - 10)).toBe(true);
+    });
+
+    it('falls back to DB when iat predates the bloom reset and record does not exist', async () => {
+      bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
+
+      expect(await isAccessTokenValid('jti', NOW_SECS - 10)).toBe(false);
     });
 
     it('does NOT reject when iat is after the bloom reset', async () => {
@@ -146,8 +152,17 @@ describe('token-store', () => {
   describe('isRefreshTokenValid', () => {
     beforeEach(() => allure.story('isRefreshTokenValid'));
 
-    it('returns false when iat predates the bloom reset', async () => {
+    it('falls back to DB when iat predates the bloom reset and record exists', async () => {
       bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ refresh_jti: 'jti' });
+
+      expect(await isRefreshTokenValid('jti', NOW_SECS - 10)).toBe(true);
+    });
+
+    it('falls back to DB when iat predates the bloom reset and record does not exist', async () => {
+      bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
+
       expect(await isRefreshTokenValid('jti', NOW_SECS - 10)).toBe(false);
     });
 

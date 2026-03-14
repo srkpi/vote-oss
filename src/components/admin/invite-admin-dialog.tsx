@@ -43,10 +43,9 @@ export function InviteAdminDialog({
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const [tomorrow] = useState(() =>
-    new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
-  );
-  const [oneMinuteAhead] = useState(() => new Date(Date.now() + 60000).toISOString().slice(0, 16));
+  const [renderTime] = useState(() => Date.now());
+  const tomorrow = new Date(renderTime + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  const oneMinuteAhead = new Date(renderTime + 60000).toISOString().slice(0, 16);
 
   const [form, setForm] = useState({
     validDue: tomorrow,

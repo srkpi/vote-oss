@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRefreshAuth } from '@/lib/auth';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
-import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
+import {
+  signAccessToken,
+  signRefreshToken,
+  tokenCookieOptions,
+  type TokenPayload,
+} from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, rateLimitRefresh } from '@/lib/rate-limit';
 import { persistTokenPair, revokeByRefreshJti } from '@/lib/token-store';
@@ -28,18 +33,22 @@ export async function POST(req: NextRequest) {
 
   await revokeByRefreshJti(user.jti, user.iat);
 
+  const tokenPayload: TokenPayload = {
+    sub: user.sub,
+    faculty: user.faculty,
+    group: user.group,
+    full_name: user.full_name,
+  };
   const adminRecord = await prisma.admin.findUnique({
     where: { user_id: user.sub },
   });
   const isAdmin = !!adminRecord;
 
-  const tokenPayload = {
-    sub: user.sub,
-    faculty: user.faculty,
-    group: user.group,
-    full_name: user.full_name,
-    is_admin: isAdmin,
-  };
+  if (isAdmin) {
+    tokenPayload['is_admin'] = true;
+    tokenPayload['manage_admins'] = adminRecord.manage_admins;
+    tokenPayload['restricted_to_faculty'] = adminRecord.restricted_to_faculty;
+  }
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
     await Promise.all([signAccessToken(tokenPayload), signRefreshToken(tokenPayload)]);
