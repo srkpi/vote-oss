@@ -12,6 +12,7 @@ import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
+  ELECTION_MAX_CLOSES_AT_DAYS,
   ELECTION_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
@@ -193,12 +194,21 @@ export async function POST(req: NextRequest) {
 
   const openDate = new Date(opensAt);
   const closeDate = new Date(closesAt);
+  const maxCloseDate = Date.now() + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000;
 
-  if (isNaN(openDate.getTime()) || isNaN(closeDate.getTime())) {
-    return Errors.badRequest('Invalid date format for opensAt or closesAt');
+  if (isNaN(openDate.getTime())) {
+    return Errors.badRequest('Invalid date format for opensAt');
+  }
+  if (isNaN(closeDate.getTime())) {
+    return Errors.badRequest('Invalid date format for closesAt');
   }
   if (closeDate <= openDate) {
     return Errors.badRequest('closesAt must be after opensAt');
+  }
+  if (closeDate.getTime() > maxCloseDate) {
+    return Errors.badRequest(
+      `closesAt must be no more than ${ELECTION_MAX_CLOSES_AT_DAYS} days from current date`,
+    );
   }
 
   // Faculty-restricted admins may only create elections for their own faculty
