@@ -1,10 +1,10 @@
 import { Eye, LayoutDashboard, Link2, Lock, ShieldCheck, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
+import { AnimatedGrid } from '@/components/common/animated-grid';
 import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
 import { StatItem } from '@/components/landing/stat-item';
-import { AnimatedGrid } from '@/components/ui/animated-grid';
 import { Button } from '@/components/ui/button';
 import { getServerSession } from '@/lib/server-auth';
 import { serverFetch } from '@/lib/server-auth';
@@ -46,7 +46,7 @@ const features = [
 
 const stats = [
   { value: '100%', label: 'Анонімність' },
-  { value: 'RSA-2048', label: 'Шифрування' },
+  { value: 'RSA', label: 'Шифрування' },
   { value: '0', label: 'Знань про вибір' },
   { value: '24/7', label: 'Доступність' },
 ];
@@ -181,7 +181,7 @@ export default async function HomePage() {
               style={{ animationDelay: '100ms' }}
             >
               Безпечна, прозора та анонімна система електронного голосування для органів
-              студентського самоврядування.
+              студентського самоврядування
             </p>
 
             {/* Live status + CTA */}

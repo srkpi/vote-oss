@@ -103,6 +103,14 @@ export async function proxy(req: NextRequest) {
     requestHeaders.set('x-user-faculty', user.faculty);
     requestHeaders.set('x-user-group', user.group);
     requestHeaders.set('x-user-is-admin', String(user.is_admin));
+
+    if (user.is_admin) {
+      requestHeaders.set(
+        'x-user-restricted-to-facutly',
+        String(user.restricted_to_faculty ?? true),
+      );
+      requestHeaders.set('x-user-manage-admins', String(user.manage_admins ?? false));
+    }
   }
 
   // ── 5. If tokens were refreshed, patch the cookie header so that

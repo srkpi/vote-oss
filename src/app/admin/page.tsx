@@ -1,8 +1,10 @@
 import { CheckCircle2, CreditCard, FileText, Plus, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { StatCard } from '@/components/admin/stat-card';
+import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { getServerSession, serverFetch } from '@/lib/server-auth';
 import { formatDateTime } from '@/lib/utils';
@@ -15,6 +17,9 @@ export const metadata: Metadata = {
 
 export default async function AdminDashboardPage() {
   const session = await getServerSession();
+  if (!session) {
+    redirect('/');
+  }
 
   const [electionsResult, adminsResult] = await Promise.all([
     serverFetch<Election[]>('/api/elections'),
@@ -33,47 +38,37 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex-1 overflow-auto">
-      {/* Page header */}
-      <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="amin-w-0">
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] truncate">
-              Добрий день, {session?.fullName.split(' ')[1] ?? session?.fullName}!
-            </h1>
-            <p className="font-body text-sm text-[var(--muted-foreground)] mt-0.5">
-              Ось короткий огляд системи голосування
-            </p>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <Button variant="accent" size="sm" asChild>
-              <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
-                <Plus className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Нове голосування</span>
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title={`Добрий день, ${session?.fullName.split(' ')[1] ?? session?.fullName}!`}
+        description="Ось короткий огляд системи голосування"
+      >
+        <Button variant="accent" size="sm" asChild>
+          <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Нове голосування</span>
+          </Link>
+        </Button>
+      </PageHeader>
 
       <div className="p-4 sm:p-8 space-y-6">
         {/* Stats grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
-            label="Активних голосувань"
+            label="Активних"
             value={openElections.length.toLocaleString('uk-UA')}
             accent="success"
             delay={0}
             icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
-            label="Всього голосувань"
+            label="Голосувань"
             value={elections.length.toLocaleString('uk-UA')}
             accent="navy"
             delay={60}
             icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
-            label="Подано бюлетенів"
+            label="Бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="orange"
             delay={120}
@@ -94,17 +89,9 @@ export default async function AdminDashboardPage() {
             className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden"
             style={{ animationDelay: '250ms', animationFillMode: 'both' }}
           >
-            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
-              <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
-                Нещодавні голосування
-              </h2>
-              <Link
-                href="/admin/elections"
-                className="text-xs font-body text-[var(--kpi-navy)] hover:underline shrink-0"
-              >
-                Переглянути всі →
-              </Link>
-            </div>
+            <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)] px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
+              Нещодавні голосування
+            </h2>
 
             {recentElections.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center px-6">

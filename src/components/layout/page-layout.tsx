@@ -18,7 +18,7 @@ export function PageLayout({ session, children }: PageLayoutProps) {
   const withHeader = !hideHeaderPaths.some((p) => pathname.startsWith(p));
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-dvh">
       {withHeader && <Header session={session} />}
       <main className={cn('flex-1', withHeader && 'pt-[var(--header-height)]')}>{children}</main>
     </div>

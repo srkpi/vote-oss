@@ -1,12 +1,13 @@
-import { CheckCircle2, ChevronRight, Clock, CreditCard, FileText, Plus } from 'lucide-react';
+import { CheckCircle2, Clock, CreditCard, FileText, Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { AdminElectionsClient } from '@/components/admin/admin-elections-client';
 import { StatCard } from '@/components/admin/stat-card';
+import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
-import { getCurrentAdmin } from '@/lib/current-admin';
-import { serverFetch } from '@/lib/server-auth';
+import { getServerSession, serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 
 export const metadata: Metadata = {
@@ -14,10 +15,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminElectionsPage() {
-  const [{ data: elections, error }, currentAdmin] = await Promise.all([
-    serverFetch<Election[]>('/api/elections'),
-    getCurrentAdmin(),
-  ]);
+  const session = await getServerSession();
+  if (!session) {
+    redirect('/');
+  }
+
+  const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
 
   const all = elections ?? [];
   const openCount = all.filter((e) => e.status === 'open').length;
@@ -27,39 +30,24 @@ export default async function AdminElectionsPage() {
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-2 sm:mb-3">
-              <Link href="/admin" className="hover:text-[var(--kpi-navy)] transition-colors">
-                Адмін
-              </Link>
-              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-              <span className="text-[var(--foreground)]">Голосування</span>
-            </nav>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
-              Голосування
-            </h1>
-            <p className="font-body text-sm text-[var(--muted-foreground)] mt-0.5">
-              Керування всіма голосуваннями в системі
-            </p>
-          </div>
-          <div className="flex items-center gap-3 shrink-0" style={{ animationDelay: '100ms' }}>
-            <Button variant="accent" size="sm" asChild>
-              <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
-                <Plus className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Нове голосування</span>
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        nav={[{ label: 'Адмін', href: '/admin' }, { label: 'Голосування' }]}
+        title="Голосування"
+        description="Керування всіма голосуваннями в системі"
+      >
+        <Button variant="accent" size="sm" asChild>
+          <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Нове голосування</span>
+          </Link>
+        </Button>
+      </PageHeader>
 
       <div className="p-4 sm:p-8 space-y-6">
         {/* Stats grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
-            label="Активних зараз"
+            label="Активних"
             value={openCount.toLocaleString('uk-UA')}
             accent="success"
             delay={0}
@@ -80,7 +68,7 @@ export default async function AdminElectionsPage() {
             icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
-            label="Усього бюлетенів"
+            label="Бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="info"
             delay={180}
@@ -88,7 +76,7 @@ export default async function AdminElectionsPage() {
           />
         </div>
 
-        <AdminElectionsClient elections={all} error={error} currentAdmin={currentAdmin} />
+        <AdminElectionsClient elections={all} error={error} session={session} />
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ interface ErrorStateProps {
 
 export function ErrorState({
   title = 'Щось пішло не так',
-  description = 'Виникла помилка під час завантаження даних.',
+  description,
   onRetry,
   className,
 }: ErrorStateProps) {
@@ -28,7 +28,9 @@ export function ErrorState({
         <AlertTriangle className="w-8 h-8 text-[var(--error)]" />
       </div>
       <h3 className="font-display text-xl font-semibold text-[var(--foreground)] mb-2">{title}</h3>
-      <p className="text-sm text-[var(--muted-foreground)] max-w-sm font-body">{description}</p>
+      {description && (
+        <p className="text-sm text-[var(--muted-foreground)] max-w-sm font-body">{description}</p>
+      )}
       {onRetry && (
         <Button variant="outline" size="md" className="mt-6" onClick={onRetry}>
           Спробувати знову

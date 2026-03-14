@@ -15,7 +15,7 @@ export type TabsProps<T extends string> = {
 export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount }: TabsProps<T>) {
   return (
     <div
-      className="overflow-x-auto p-1 bg-white border border-[var(--border-subtle)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xs)]"
+      className="overflow-x-auto no-scrollbar p-1 bg-white border border-[var(--border-subtle)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xs)]"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {/* min-w-full ensures inner flex can stretch to fill container */}

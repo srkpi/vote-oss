@@ -146,8 +146,17 @@ describe('token-store', () => {
   describe('isRefreshTokenValid', () => {
     beforeEach(() => allure.story('isRefreshTokenValid'));
 
-    it('returns false when iat predates the bloom reset', async () => {
+    it('falls back to DB when iat predates the bloom reset and record exists', async () => {
       bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ refresh_jti: 'jti' });
+
+      expect(await isRefreshTokenValid('jti', NOW_SECS - 10)).toBe(true);
+    });
+
+    it('falls back to DB when iat predates the bloom reset and record does not exist', async () => {
+      bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
+
       expect(await isRefreshTokenValid('jti', NOW_SECS - 10)).toBe(false);
     });
 

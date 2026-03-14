@@ -31,15 +31,36 @@ function computeStatus(opensAt: string, closesAt: string): ElectionStatus {
 /**
  * Apply per-user filtering (faculty / group restrictions) and attach the
  * live `status` and conditionally expose `privateKey`.
+ *
+ * Visibility rules:
+ *  - Unrestricted admin  → sees every election
+ *  - Faculty-restricted admin → sees global elections + elections for their faculty (any group)
+ *  - Regular user        → sees global elections matching their faculty AND group
  */
-function toClientElections(cached: CachedElection[], faculty: string, group: string): Election[] {
+function toClientElections(
+  cached: CachedElection[],
+  faculty: string,
+  group: string,
+  isAdmin: boolean,
+  isAdminRestrictedToFaculty: boolean,
+): Election[] {
   const now = Date.now();
   return cached
-    .filter(
-      (e) =>
+    .filter((e) => {
+      if (isAdmin && !isAdminRestrictedToFaculty) {
+        // Unrestricted admin sees all elections
+        return true;
+      }
+      if (isAdmin && isAdminRestrictedToFaculty) {
+        // Restricted admin sees global + their faculty elections (no group filter)
+        return !e.restrictedToFaculty || e.restrictedToFaculty === faculty;
+      }
+      // Regular user: faculty AND group must match
+      return (
         (!e.restrictedToFaculty || e.restrictedToFaculty === faculty) &&
-        (!e.restrictedToGroup || e.restrictedToGroup === group),
-    )
+        (!e.restrictedToGroup || e.restrictedToGroup === group)
+      );
+    })
     .map((e) => ({
       ...e,
       status: computeStatus(e.opensAt, e.closesAt),
@@ -59,7 +80,15 @@ export async function GET(req: NextRequest) {
 
   const cached = await getCachedElections();
   if (cached) {
-    return NextResponse.json(toClientElections(cached, user.faculty, user.group));
+    return NextResponse.json(
+      toClientElections(
+        cached,
+        user.faculty,
+        user.group,
+        user.is_admin ?? false,
+        user.restricted_to_faculty ?? true,
+      ),
+    );
   }
 
   const elections = await prisma.election.findMany({
@@ -100,7 +129,15 @@ export async function GET(req: NextRequest) {
 
   await setCachedElections(rawResult);
 
-  return NextResponse.json(toClientElections(rawResult, user.faculty, user.group));
+  return NextResponse.json(
+    toClientElections(
+      rawResult,
+      user.faculty,
+      user.group,
+      user.is_admin ?? false,
+      user.restricted_to_faculty ?? true,
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -200,13 +237,14 @@ export async function POST(req: NextRequest) {
   }
 
   const { publicKey, privateKey } = generateElectionKeyPair();
+  const now = new Date();
 
   const election = await prisma.election.create({
     data: {
       title,
       created_by: user.sub,
-      created_at: new Date(),
-      opens_at: openDate,
+      created_at: now,
+      opens_at: now > openDate ? now : openDate,
       closes_at: closeDate,
       restricted_to_faculty: restrictedToFaculty ?? null,
       restricted_to_group: restrictedToGroup ?? null,

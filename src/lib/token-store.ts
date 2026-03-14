@@ -96,7 +96,12 @@ export async function isAccessTokenValid(jti: string, iat: number): Promise<bool
 export async function isRefreshTokenValid(jti: string, iat: number): Promise<boolean> {
   const resetAt = await getBloomResetAt();
   if (resetAt > 0 && iat * 1_000 < resetAt) {
-    return false;
+    const record = await prisma.jwtToken.findFirst({
+      where: { refresh_jti: jti },
+      select: { refresh_jti: true },
+    });
+
+    return record !== null;
   }
 
   const bloomResult = await isTokenClean(jti);
@@ -104,7 +109,6 @@ export async function isRefreshTokenValid(jti: string, iat: number): Promise<boo
   if (bloomResult === true) return true;
   if (bloomResult === false) return false;
 
-  // DB fallback
   const record = await prisma.jwtToken.findFirst({
     where: { refresh_jti: jti },
     select: { refresh_jti: true },

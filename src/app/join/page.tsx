@@ -29,7 +29,7 @@ export function JoinPageContent({
   initialToken?: string;
 }) {
   return (
-    <div className="min-h-[calc(100vh-var(--header-height))] flex items-center justify-center p-6 bg-[var(--surface)]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] flex items-center justify-center p-6 bg-[var(--surface)]">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[var(--kpi-navy)]/5 blur-3xl" />
