@@ -63,8 +63,12 @@ export async function isAccessTokenValid(jti: string, iat: number): Promise<bool
   // ── Step 1: reset-time gate ──────────────────────────────────────────────
   const resetAt = await getBloomResetAt();
   if (resetAt > 0 && iat * 1_000 < resetAt) {
-    // Token was issued before the last bloom reset → force re-authentication
-    return false;
+    const record = await prisma.jwtToken.findFirst({
+      where: { access_jti: jti },
+      select: { access_jti: true },
+    });
+
+    return record !== null;
   }
 
   // ── Step 2: bloom filter (fast path) ────────────────────────────────────
