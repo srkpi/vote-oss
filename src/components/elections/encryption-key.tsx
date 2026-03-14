@@ -42,7 +42,7 @@ export function EncryptionKey({
           <textarea
             readOnly
             className="font-mono text-[12px] xl:text-[9px] text-[var(--muted-foreground)] break-all leading-relaxed w-full h-20 border border-gray-300 rounded p-2 resize-none"
-            value={keyValue}
+            value={keyValue.replace(/\s+$/, '')}
           />
         </div>
         <p className="text-xs text-[var(--muted-foreground)] font-body mt-2">{description}</p>

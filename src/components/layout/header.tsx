@@ -56,7 +56,7 @@ export function Header({ session }: HeaderProps) {
           <div className={'w-8 h-8 rounded-lg navy-gradient flex items-center justify-center'}>
             <CheckCircle className="w-4 h-4 text-white" />
           </div>
-          <div className="hidden sm:block">
+          <div>
             <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight block">
               КПІ Голос
             </span>
@@ -136,9 +136,11 @@ export function Header({ session }: HeaderProps) {
                     )}
                   >
                     <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
-                      <p className="text-xs text-[var(--muted-foreground)]">Увійдено як</p>
-                      <p className="text-sm font-semibold text-[var(--foreground)] truncate">
+                      <p className="text-sm font-semibold text-[var(--foreground)] break-words">
                         {session.fullName}
+                      </p>
+                      <p className="text-sm text-[var(--muted-foreground)] leading-tight mt-1">
+                        {session.faculty} · {session.group}
                       </p>
                       {session.isAdmin && (
                         <span className="inline-block mt-1 text-[10px] font-semibold text-white bg-[var(--kpi-orange)] px-2 py-0.5 rounded-full uppercase tracking-wide">

@@ -155,7 +155,7 @@ export default async function HomePage() {
           />
         </div>
 
-        <div className="container relative z-10 py-24 md:py-32">
+        <div className="container relative z-10 py-16 md:py-32">
           <div className="max-w-3xl">
             {/* Pill badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs font-body uppercase tracking-widest mb-6">

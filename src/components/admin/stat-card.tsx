@@ -18,12 +18,12 @@ export function StatCard({ label, value, accent, icon, delay = 0 }: StatCardProp
     <div
       className="
         group
-        flex items-center gap-4
+        flex items-center gap-3 sm:gap-4
         bg-white
         rounded-[var(--radius-xl)]
         border border-[var(--border-color)]
         shadow-[var(--shadow-card)]
-        p-4 sm:p-5
+        p-3 sm:p-5
         transition-all duration-200
         hover:shadow-lg hover:-translate-y-[2px]
       "
@@ -31,7 +31,8 @@ export function StatCard({ label, value, accent, icon, delay = 0 }: StatCardProp
     >
       <div
         className={`
-          w-10 h-10
+          w-8 h-8
+          sm:w-10 sm:h-10
           rounded-xl
           ${accentStyles[accent]}
           flex items-center justify-center
