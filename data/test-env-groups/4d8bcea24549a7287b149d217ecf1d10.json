@@ -1,1 +1,1 @@
-{"id":"4d8bcea24549a7287b149d217ecf1d10","fullName":"src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups throws when CAMPUS_API_URL is not set","name":"throws when CAMPUS_API_URL is not set","status":"passed","testResultsByEnv":{"default":"0934157805597dce9f8a3d291ff4caef"}}
+{"id":"4d8bcea24549a7287b149d217ecf1d10","fullName":"src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups throws when CAMPUS_API_URL is not set","name":"throws when CAMPUS_API_URL is not set","status":"passed","testResultsByEnv":{"default":"39772b55b59ee76b33c47c10a16d7822"}}
