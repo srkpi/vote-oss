@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-dvh flex">
       {/* ── Left panel — decorative / high-tech ── */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 navy-gradient-subtle p-12 relative overflow-hidden">
         {/* Animated grid canvas */}
@@ -201,7 +201,7 @@ export default function LoginPage() {
           </h2>
           <p className="font-body text-white/65 leading-relaxed text-md xl:text-xl">
             Використовуйте систему КПІ ID для безпечного та верифікованого входу до платформи
-            голосування.
+            голосування
           </p>
         </div>
 
@@ -240,22 +240,21 @@ export default function LoginPage() {
 
         <div className="w-full max-w-sm relative z-10">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-9 h-9 rounded-xl navy-gradient flex items-center justify-center shadow-[var(--shadow-button)]">
-              <CheckCircle className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-display text-xl font-bold text-[var(--kpi-navy)]">КПІ Голос</span>
+          <div className="flex justify-center items-center">
+            <Link className="lg:hidden flex items-center gap-3 mb-8" href="/">
+              <div className="w-9 h-9 rounded-xl navy-gradient flex items-center justify-center shadow-[var(--shadow-button)]">
+                <CheckCircle className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-display text-2xl font-bold text-[var(--kpi-navy)]">
+                КПІ Голос
+              </span>
+            </Link>
           </div>
 
           {/* Title */}
-          <div className="mb-10">
-            <h1 className="font-display text-4xl font-bold text-[var(--foreground)] mb-2">
-              Ласкаво просимо
-            </h1>
-            <p className="font-body text-[var(--muted-foreground)] text-sm">
-              Увійдіть за допомогою вашого акаунту КПІ ID
-            </p>
-          </div>
+          <h1 className="font-display text-center text-3xl sm:text-4xl font-bold text-[var(--foreground)] mb-8">
+            Ласкаво просимо
+          </h1>
 
           {/* KPI ID Button */}
           <div className="space-y-6">
@@ -275,15 +274,15 @@ export default function LoginPage() {
             </div>
 
             {/* Trust signals */}
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               {[
-                'Безпечна авторизація через КПІ ID',
-                'Ваш голос анонімний та захищений',
+                'Голосують лише справжні студенти',
+                'Твій голос анонімний та захищений',
                 'Результати перевіряються публічно',
               ].map((item, i) => (
                 <div
                   key={item}
-                  className="flex items-center gap-2.5 text-sm text-[var(--muted-foreground)] font-body opacity-0 animate-fade-up"
+                  className="flex justify-center items-center gap-2.5 text-sm text-[var(--muted-foreground)] font-body opacity-0 animate-fade-up"
                   style={{ animationDelay: `${200 + i * 80}ms` }}
                 >
                   <Check color="var(--success)" className="w-4 h-4 shrink-0" />

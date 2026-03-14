@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: AdminElectionPageProps): Prom
 export default async function AdminElectionDetailPage({ params }: AdminElectionPageProps) {
   const session = await getServerSession();
   if (!session) {
-    redirect('/');
+    redirect('/auth/login');
   }
 
   const { id } = await params;

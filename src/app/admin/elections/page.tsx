@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function AdminElectionsPage() {
   const session = await getServerSession();
   if (!session) {
-    redirect('/');
+    redirect('/auth/login');
   }
 
   const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
@@ -50,28 +50,24 @@ export default async function AdminElectionsPage() {
             label="Активних"
             value={openCount.toLocaleString('uk-UA')}
             accent="success"
-            delay={0}
             icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Завершених"
             value={closedCount.toLocaleString('uk-UA')}
             accent="navy"
-            delay={120}
             icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Очікується"
             value={upcomingCount.toLocaleString('uk-UA')}
             accent="orange"
-            delay={60}
             icon={<Clock className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="info"
-            delay={180}
             icon={<CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
         </div>

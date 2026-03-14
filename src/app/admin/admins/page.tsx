@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
 import { AdminsPageClient } from '@/components/admin/admins-page-client';
 import { PageHeader } from '@/components/common/page-header';
@@ -11,12 +12,16 @@ export const metadata: Metadata = {
 
 export default async function AdminsPage() {
   const session = await getServerSession();
+  if (!session) {
+    redirect('/auth/login');
+  }
+
   const { data: admins, error } = await serverFetch<Admin[]>('/api/admins');
 
   const all = admins ?? [];
-  const canInvite = session?.manageAdmins ?? false;
-  const canGrantManageAdmins = session?.manageAdmins ?? false;
-  const restrictedToFaculty = session?.restrictedToFaculty ?? false;
+  const canInvite = session.manageAdmins ?? false;
+  const canGrantManageAdmins = session.manageAdmins ?? false;
+  const restrictedToFaculty = session.restrictedToFaculty ?? false;
 
   return (
     <div className="flex-1 overflow-auto">

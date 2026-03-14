@@ -176,19 +176,13 @@ export default async function HomePage() {
               </span>
             </h1>
 
-            <p
-              className="font-body text-lg md:text-xl text-white/75 leading-relaxed mb-10 max-w-xl"
-              style={{ animationDelay: '100ms' }}
-            >
+            <p className="font-body text-lg md:text-xl text-white/75 leading-relaxed mb-10 max-w-xl">
               Безпечна, прозора та анонімна система електронного голосування для органів
               студентського самоврядування
             </p>
 
             {/* Live status + CTA */}
-            <div
-              className="flex flex-col sm:flex-row items-start sm:items-center gap-4"
-              style={{ animationDelay: '200ms' }}
-            >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {session ? (
                 <Button variant="accent" size="xl" asChild>
                   <Link href="/elections">Переглянути голосування</Link>

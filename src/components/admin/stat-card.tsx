@@ -10,10 +10,9 @@ interface StatCardProps {
   value: string | number;
   icon: React.ReactNode;
   accent: 'navy' | 'orange' | 'success' | 'info';
-  delay?: number;
 }
 
-export function StatCard({ label, value, accent, icon, delay = 0 }: StatCardProps) {
+export function StatCard({ label, value, accent, icon }: StatCardProps) {
   return (
     <div
       className="
@@ -27,7 +26,6 @@ export function StatCard({ label, value, accent, icon, delay = 0 }: StatCardProp
         transition-all duration-200
         hover:shadow-lg hover:-translate-y-[2px]
       "
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
       <div
         className={`

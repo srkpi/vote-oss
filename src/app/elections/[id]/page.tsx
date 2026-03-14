@@ -36,7 +36,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   ]);
 
   if (!session) {
-    redirect('/');
+    redirect('/auth/login');
   }
 
   // Hard 404 — election genuinely does not exist

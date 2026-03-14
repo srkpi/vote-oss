@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default async function NewElectionPage() {
   const session = await getServerSession();
   if (!session) {
-    redirect('/');
+    redirect('/auth/login');
   }
 
   return (

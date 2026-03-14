@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
@@ -16,6 +17,10 @@ export const metadata: Metadata = {
 
 export default async function ElectionsPage() {
   const session = await getServerSession();
+  if (!session) {
+    redirect('/auth/login');
+  }
+
   const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
 
   const open = (elections ?? []).filter((e) => e.status === 'open').length;
@@ -25,7 +30,7 @@ export default async function ElectionsPage() {
   return (
     <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
       <PageHeader title="Голосування" description="Всі доступні вам голосування в одному місці">
-        {session?.isAdmin && (
+        {session.isAdmin && (
           <Button variant="accent" size="sm" asChild>
             <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
               <Plus className="w-3.5 h-3.5" />

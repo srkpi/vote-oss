@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function TokensPage() {
   const session = await getServerSession();
   if (!session) {
-    redirect('/');
+    redirect('/auth/login');
   }
 
   if (!session.manageAdmins) {

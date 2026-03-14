@@ -35,10 +35,7 @@ export function AdminsPageClient({
   };
 
   return (
-    <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden"
-      style={{ animationDelay: '220ms', animationFillMode: 'both' }}
-    >
+    <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
       {/* Card header */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
         {/* Left side: icon + title */}

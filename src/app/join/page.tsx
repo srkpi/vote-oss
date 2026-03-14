@@ -1,6 +1,7 @@
 import { CheckCircle2, ChevronLeft, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
 import { JoinAdminForm } from '@/components/admin/join-admin-form';
 import { getServerSession } from '@/lib/server-auth';
@@ -15,7 +16,11 @@ interface Props {
 }
 
 export default async function JoinPage({ searchParams }: Props) {
-  const session = (await getServerSession())!;
+  const session = await getServerSession();
+  if (!session) {
+    redirect('/auth/login');
+  }
+
   const { token } = await searchParams;
 
   return <JoinPageContent session={session} initialToken={token} />;

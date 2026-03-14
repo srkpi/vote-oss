@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default async function AdminDashboardPage() {
   const session = await getServerSession();
   if (!session) {
-    redirect('/');
+    redirect('/auth/login');
   }
 
   const [electionsResult, adminsResult] = await Promise.all([
@@ -57,38 +57,31 @@ export default async function AdminDashboardPage() {
             label="Активних"
             value={openElections.length.toLocaleString('uk-UA')}
             accent="success"
-            delay={0}
             icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Голосувань"
             value={elections.length.toLocaleString('uk-UA')}
             accent="navy"
-            delay={60}
             icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="orange"
-            delay={120}
             icon={<CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
           <StatCard
             label="Адміністраторів"
             value={admins.length.toLocaleString('uk-UA')}
             accent="info"
-            delay={180}
             icon={<Users className="w-4 h-4 sm:w-5 sm:h-5" />}
           />
         </div>
 
         <div className="grid grid-cols-1 gap-6">
           {/* Recent elections */}
-          <div
-            className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden"
-            style={{ animationDelay: '250ms', animationFillMode: 'both' }}
-          >
+          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
             <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)] px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
               Нещодавні голосування
             </h2>
