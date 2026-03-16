@@ -2,7 +2,7 @@ import { Check, CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { KPIIDLogin } from '@/components/auth/kpi-id-login';
+import { KpiIdLogin } from '@/components/auth/kpi-id-login';
 import { AnimatedGrid } from '@/components/common/animated-grid';
 
 export const metadata: Metadata = {
@@ -259,7 +259,7 @@ export default function LoginPage() {
           {/* KPI ID Button */}
           <div className="space-y-6">
             <div className="flex flex-col items-center" style={{ animationDelay: '100ms' }}>
-              <KPIIDLogin appId={process.env.KPI_APP_ID} />
+              <KpiIdLogin appId={process.env.KPI_APP_ID!} fullWidth />
             </div>
 
             <div className="relative">
