@@ -7,4 +7,5 @@ process.env.CAMPUS_API_URL = 'https://campus.example.com';
 process.env.NEXT_PUBLIC_KPI_AUTH_URL = 'https://fake-auth.test';
 process.env.NEXT_PUBLIC_KPI_APP_ID = 'test-app-id';
 process.env.KPI_APP_SECRET = 'test-secret';
+process.env.CRON_SECRET = 'test-cron-secret-that-is-long-enough-32chars';
 process.env.TRUSTED_PROXY_COUNT = '1';
