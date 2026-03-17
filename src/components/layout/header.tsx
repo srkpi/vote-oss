@@ -53,14 +53,14 @@ export function Header({ session }: HeaderProps) {
     >
       <div className="container h-full flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group shrink-0">
-          <div className={'w-8 h-8 rounded-lg navy-gradient flex items-center justify-center'}>
+          <div className="w-8 h-8 rounded-lg navy-gradient flex items-center justify-center">
             <CheckCircle className="w-4 h-4 text-white" />
           </div>
-          <div>
-            <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight block">
+          <div className="flex flex-col justify-center">
+            <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight">
               {APP_NAME}
             </span>
-            <span className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-widest leading-none">
+            <span className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-widest">
               Система голосування
             </span>
           </div>

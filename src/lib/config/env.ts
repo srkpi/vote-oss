@@ -91,10 +91,6 @@ export function getSecret(key: string, minLength = 32): string {
 }
 
 export const env = {
-  NEXT_PUBLIC_APP_NAME: getOptionalEnv('NEXT_PUBLIC_APP_NAME', 'Vote OSS'),
-  NEXT_PUBLIC_KPI_AUTH_URL: getUrlEnv('NEXT_PUBLIC_KPI_AUTH_URL', 'https://auth.kpi.ua'),
-  NEXT_PUBLIC_KPI_APP_ID: getEnv('NEXT_PUBLIC_KPI_APP_ID'),
-
   DATABASE_URL: getEnv('DATABASE_URL'),
   REDIS_URL: getEnv('REDIS_URL'),
 
@@ -105,6 +101,7 @@ export const env = {
   CAMPUS_API_URL: getEnv('CAMPUS_API_URL'),
 
   KPI_APP_SECRET: getEnv('KPI_APP_SECRET'),
+  CRON_SECRET: getSecret('CRON_SECRET'),
   TRUSTED_PROXY_COUNT: getNumberEnv('TRUSTED_PROXY_COUNT', 1),
   NODE_ENV: getOptionalEnv('NODE_ENV', 'production'),
 };
