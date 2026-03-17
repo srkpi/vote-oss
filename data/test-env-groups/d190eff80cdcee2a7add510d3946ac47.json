@@ -1,1 +1,1 @@
-{"id":"d190eff80cdcee2a7add510d3946ac47","fullName":"src/__tests__/api/elections/tally.test.ts#GET /api/elections/[id]/tally returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"22a8a32d25cbe413315909b784a704a8"}}
+{"id":"d190eff80cdcee2a7add510d3946ac47","fullName":"src/__tests__/api/elections/tally.test.ts#GET /api/elections/[id]/tally returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"20a33019eefa72347f1403e14bc934d7"}}
