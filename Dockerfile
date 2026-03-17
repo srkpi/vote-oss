@@ -20,6 +20,13 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+ARG NEXT_PUBLIC_KPI_AUTH_URL
+ARG NEXT_PUBLIC_KPI_APP_ID
+
+ENV NEXT_PUBLIC_KPI_AUTH_URL=${NEXT_PUBLIC_KPI_AUTH_URL}
+ENV NEXT_PUBLIC_KPI_APP_ID=${NEXT_PUBLIC_KPI_APP_ID}
+
 RUN npm run build
 
 # runner

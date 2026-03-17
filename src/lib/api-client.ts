@@ -107,10 +107,7 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<Api
 // ==================== AUTH ====================
 
 export async function loginWithTicket(ticketId: string) {
-  // Clear any stale vote data from a previous session before logging in.
-  if (typeof window !== 'undefined') clearAllVotes();
-
-  return fetchApi<{
+  const result = fetchApi<{
     userId: string;
     fullName: string;
     faculty: string;
@@ -120,6 +117,11 @@ export async function loginWithTicket(ticketId: string) {
     method: 'POST',
     body: JSON.stringify({ ticketId }),
   });
+
+  // Clear any stale vote data from a previous session before logging in.
+  if (typeof window !== 'undefined') clearAllVotes();
+
+  return result;
 }
 
 export async function logout() {

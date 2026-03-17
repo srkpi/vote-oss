@@ -258,9 +258,7 @@ export default function LoginPage() {
 
           {/* KPI ID Button */}
           <div className="space-y-6">
-            <div className="flex flex-col items-center" style={{ animationDelay: '100ms' }}>
-              <KpiIdLogin appId={process.env.KPI_APP_ID!} fullWidth />
-            </div>
+            <KpiIdLogin fullWidth />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

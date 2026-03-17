@@ -8,13 +8,13 @@ type Size = 'sm' | 'md' | 'lg';
 type LogoAlignment = 'left' | 'right';
 
 interface KpiIdLoginProps {
-  appId: string;
+  appId?: string;
   size?: Size;
   logoAlignment?: LogoAlignment;
   caption?: string;
   fullWidth?: boolean;
   className?: string;
-  devMode?: boolean;
+  authUrl?: string;
 }
 
 const SIZE_PADDING: Record<Size, string> = {
@@ -30,18 +30,26 @@ const LOGO_SIZES: Record<Size, number> = {
 };
 
 export function KpiIdLogin({
-  appId,
+  appId = process.env.NEXT_PUBLIC_KPI_APP_ID,
   size = 'lg',
   logoAlignment = 'left',
   caption = 'Увійти з KPI ID',
   fullWidth = false,
   className = '',
-  devMode = process.env.NEXT_PUBLIC_ENV !== 'production',
+  authUrl = process.env.NEXT_PUBLIC_KPI_AUTH_URL,
 }: KpiIdLoginProps) {
+  if (!authUrl) {
+    console.error('NEXT_PUBLIC_KPI_AUTH_URL not set');
+    return null;
+  }
+
+  if (!appId) {
+    console.error('NEXT_PUBLIC_KPI_APP_ID not set');
+    return null;
+  }
+
   const logoSize = LOGO_SIZES[size];
-  const href = devMode
-    ? `https://auth.cloud.kpi.ua?appId=${appId}`
-    : `https://auth.kpi.ua?appId=${appId}`;
+  const href = `${authUrl}?appId=${appId}`;
 
   return (
     <Button
@@ -55,7 +63,7 @@ export function KpiIdLogin({
       )}
     >
       <Link href={href}>
-        <Image src="/kpi-logo.svg" alt="KPI Logo" width={logoSize} height={logoSize} />
+        <Image src="/kpi-logo.svg" alt="KPI Logo" width={logoSize} height={logoSize} preload />
         <span>{caption}</span>
       </Link>
     </Button>

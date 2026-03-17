@@ -21,7 +21,7 @@ const STATUS_CONFIG = {
   error: {
     icon: 'error',
     title: 'Помилка авторизації',
-    description: 'Не вдалось підтвердити особу. Спробуйте ще раз.',
+    description: 'Не вдалось підтвердити особу',
   },
 } as const;
 
