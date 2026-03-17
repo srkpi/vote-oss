@@ -94,8 +94,14 @@ describe('GET /api/health', () => {
     const res = await GET();
     const json = await res.json();
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('DB health check failed:', expect.any(Error));
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Redis health check failed:', expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[health] DB health check failed:',
+      expect.any(Error),
+    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[health] Redis health check failed:',
+      expect.any(Error),
+    );
     expect(res.status).toBe(503);
     expect(json.db).toBe(false);
     expect(json.redis).toBe(false);

@@ -4,6 +4,8 @@ import { cookies, headers } from 'next/headers';
 
 import type { User } from '@/types/auth';
 
+const baseUrl = process.env.APP_URL ?? `http://localhost:${process.env.PORT ?? 3000}`;
+
 export async function getServerSession(): Promise<User | null> {
   const h = await headers();
   const userId = h.get('x-user-id');
@@ -38,8 +40,6 @@ export async function serverFetch<T>(
   if (refresh) {
     cookieParts.push(`refresh_token=${refresh}`);
   }
-
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
   try {
     const response = await fetch(`${baseUrl}${path}`, {

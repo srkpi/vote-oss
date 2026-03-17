@@ -1,43 +1,59 @@
-export interface UserInfo {
-  userId: string;
-  fullName: string;
-  faculty: string;
-  group: string;
-}
+import type { TicketUserInfo, UserInfo } from '@/types/auth';
 
-const TICKET_MAP: Record<string, UserInfo> = {
-  'ticket-superadmin-1': {
-    userId: 'superadmin-001',
-    fullName: 'Super Admin User',
-    faculty: 'FICE',
-    group: 'KV-11',
-  },
-  'ticket-admin-2': {
-    userId: 'admin-002',
-    fullName: 'Faculty Admin FICE',
-    faculty: 'FICE',
-    group: 'KV-12',
-  },
-  'ticket-user-1': {
-    userId: 'user-001',
-    fullName: 'Ivan Petrenko',
-    faculty: 'FICE',
-    group: 'KV-91',
-  },
-  'ticket-user-2': {
-    userId: 'user-002',
-    fullName: 'Olena Kovalchuk',
-    faculty: 'FEL',
-    group: 'EL-21',
-  },
-  'ticket-user-3': {
-    userId: 'user-003',
-    fullName: 'Mykola Savchenko',
-    faculty: 'FMF',
-    group: 'MT-31',
-  },
-};
+const authUrl = process.env.NEXT_PUBLIC_KPI_AUTH_URL;
+const appId = process.env.NEXT_PUBLIC_KPI_APP_ID;
+const appSecret = process.env.KPI_APP_SECRET;
 
 export async function resolveTicket(ticketId: string): Promise<UserInfo | null> {
-  return TICKET_MAP[ticketId] ?? null;
+  if (!ticketId) {
+    return null;
+  }
+  if (!authUrl) {
+    console.error('[auth/kpi-id] NEXT_PUBLIC_KPI_AUTH_URL not set');
+    return null;
+  }
+  if (!appId) {
+    console.error('[auth/kpi-id] NEXT_PUBLIC_KPI_APP_ID not set');
+    return null;
+  }
+  if (!appSecret) {
+    console.error('[auth/kpi-id] KPI_APP_SECRET not set');
+    return null;
+  }
+
+  const url = new URL(`${authUrl}/api/ticket`);
+  url.searchParams.append('ticketId', ticketId);
+  url.searchParams.append('appId', appId);
+  url.searchParams.append('appSecret', appSecret);
+
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const ticket: TicketUserInfo = await response.json();
+
+  if (!ticket?.data) {
+    return null;
+  }
+
+  const userId = ticket.data.STUDENT_ID;
+  const fullName = ticket.data.NAME;
+
+  if (!userId || !fullName) {
+    return null;
+  }
+
+  return {
+    userId,
+    fullName,
+    group: 'IP-24',
+    faculty: 'TEST',
+  };
 }

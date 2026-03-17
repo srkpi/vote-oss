@@ -97,7 +97,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       setDecryptedMap(map);
       setDecryptionDone(true);
     } catch (err) {
-      console.error('Decryption failed', err);
+      console.error('[crypto] Decryption failed', err);
     } finally {
       setIsDecrypting(false);
     }

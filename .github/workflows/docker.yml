@@ -44,3 +44,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_KPI_AUTH_URL=${{ vars.NEXT_PUBLIC_KPI_AUTH_URL }}
+            NEXT_PUBLIC_KPI_APP_ID=${{ vars.NEXT_PUBLIC_KPI_APP_ID }}

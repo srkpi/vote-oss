@@ -1,6 +1,7 @@
 import * as allure from 'allure-js-commons';
 
 import { ADMIN_RECORD } from '@/__tests__/helpers/fixtures';
+import { kpiIdMock, resetKpiIdMock } from '@/__tests__/helpers/kpi-id-mock';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import {
@@ -12,6 +13,7 @@ import {
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
+jest.mock('@/lib/kpi-id', () => kpiIdMock);
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 jest.mock('@/lib/rate-limit', () => rateLimitMock);
@@ -23,6 +25,7 @@ describe('POST /api/auth/kpi-id', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetRateLimitMock();
+    resetKpiIdMock();
     allure.feature('Auth');
     allure.story('KPI ID Login');
   });
