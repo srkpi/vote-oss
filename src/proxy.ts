@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { APP_URL } from '@/lib/config/server';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { type VerifiedPayload, verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 
@@ -45,7 +46,7 @@ export async function proxy(req: NextRequest) {
     const refreshPayload = await verifyRefreshToken(refreshCookie);
     if (refreshPayload?.token_type === 'refresh') {
       try {
-        const refreshRes = await fetch(new URL('/api/auth/refresh', req.nextUrl.origin).href, {
+        const refreshRes = await fetch(`${APP_URL}/api/auth/refresh`, {
           method: 'POST',
           headers: { cookie: `${COOKIE_REFRESH}=${refreshCookie}` },
         });
