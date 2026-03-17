@@ -1,9 +1,9 @@
 /**
  * Thin caching layer over Redis.
  *
- * • Elections list     – single global key (unfiltered, status-free); 60-second TTL.
- * • Admins list        – single key; 30-second TTL.
- * • Invite tokens list – single key storing ALL non-deleted tokens; 30-second TTL.
+ * • Elections list     – single global key (unfiltered, status-free);
+ * • Admins list        – single key;
+ * • Invite tokens list – single key storing ALL non-deleted tokens;
  *   Hierarchy filtering and deletable/isOwn flags are computed in-memory at
  *   serve time, so the cache is shared across all admin callers.
  *
@@ -23,10 +23,6 @@ import { redis, safeRedis } from '@/lib/redis';
 import type { CachedAdmin, CachedInviteToken } from '@/types/admin';
 import type { Election } from '@/types/election';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 /**
  * Shape stored in Redis for each election.
  *
@@ -39,10 +35,6 @@ import type { Election } from '@/types/election';
 export type CachedElection = Omit<Election, 'status'> & {
   privateKey: string; // always present in cache; conditionally exposed to clients
 };
-
-// ---------------------------------------------------------------------------
-// Elections
-// ---------------------------------------------------------------------------
 
 /** Return cached elections, or null if not cached / Redis down. */
 export async function getCachedElections(): Promise<CachedElection[] | null> {
@@ -67,10 +59,6 @@ export async function invalidateElections(): Promise<void> {
   await safeRedis(() => redis.del(CACHE_KEY_ELECTIONS));
 }
 
-// ---------------------------------------------------------------------------
-// Admins
-// ---------------------------------------------------------------------------
-
 /** Return cached admin list, or null if not cached / Redis down. */
 export async function getCachedAdmins(): Promise<CachedAdmin[] | null> {
   const raw = await safeRedis(() => redis.get(CACHE_KEY_ADMINS));
@@ -93,10 +81,6 @@ export async function setCachedAdmins(data: CachedAdmin[]): Promise<void> {
 export async function invalidateAdmins(): Promise<void> {
   await safeRedis(() => redis.del(CACHE_KEY_ADMINS));
 }
-
-// ---------------------------------------------------------------------------
-// Invite tokens
-// ---------------------------------------------------------------------------
 
 /**
  * Return cached invite token list, or null if not cached / Redis down.

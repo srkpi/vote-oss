@@ -23,14 +23,6 @@ export type AdminSuccess = {
   admin: Admin;
 };
 
-// ---------------------------------------------------------------------------
-// requireAuth
-//
-// 1. Verify JWT signature + expiry (free, no I/O).
-// 2. Check token validity via Redis bloom filter (fast path, no DB).
-// 3. Fall back to DB if Redis is unavailable.
-// ---------------------------------------------------------------------------
-
 export async function requireAuth(req: NextRequest): Promise<AuthFailure | AuthSuccess> {
   const token = req.cookies.get(COOKIE_ACCESS)?.value;
   if (!token) {

@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { joinAsAdmin, refreshToken } from '@/lib/api-client';
+import { api } from '@/lib/api/browser';
 import { cn } from '@/lib/utils';
 
 interface JoinAdminFormProps {
@@ -31,10 +31,10 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
     setLoading(true);
     setError(null);
 
-    const result = await joinAsAdmin(trimmed);
+    const result = await api.joinAsAdmin(trimmed);
 
     if (result.success) {
-      await refreshToken();
+      await api.refreshToken();
 
       setSuccess(true);
       toast({

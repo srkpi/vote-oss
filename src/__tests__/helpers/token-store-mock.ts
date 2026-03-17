@@ -15,7 +15,6 @@
  *   - revokeByAccessJti   → resolves void
  *   - revokeByRefreshJti  → resolves { accessJti: 'access-jti-stub' }
  *   - revokeTokenPair     → resolves void
- *   - invalidateAdminCache→ resolves void
  */
 
 export const tokenStoreMock = {
@@ -28,7 +27,6 @@ export const tokenStoreMock = {
   revokeByAccessJti: jest.fn<Promise<void>, [string, number]>(),
   revokeByRefreshJti: jest.fn<Promise<{ accessJti: string | null }>, [string, number]>(),
   revokeTokenPair: jest.fn<Promise<void>, [string, string, number, number]>(),
-  invalidateAdminCache: jest.fn<Promise<void>, []>(),
 };
 
 export function resetTokenStoreMock(): void {
@@ -38,5 +36,4 @@ export function resetTokenStoreMock(): void {
   tokenStoreMock.revokeByAccessJti.mockReset().mockResolvedValue(undefined);
   tokenStoreMock.revokeByRefreshJti.mockReset().mockResolvedValue({ accessJti: 'access-jti-stub' });
   tokenStoreMock.revokeTokenPair.mockReset().mockResolvedValue(undefined);
-  tokenStoreMock.invalidateAdminCache.mockReset().mockResolvedValue(undefined);
 }

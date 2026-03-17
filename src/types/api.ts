@@ -5,5 +5,5 @@ export interface ApiError {
 }
 
 export type ApiResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string; statusCode: number };
+  | { success: true; data: T; error: null; status: number }
+  | { success: false; data: null; error: string; status: number };

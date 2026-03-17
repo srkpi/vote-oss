@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 
 import { TokensPageClient } from '@/components/admin/tokens-page-client';
 import { PageHeader } from '@/components/common/page-header';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
-import type { InviteToken } from '@/types/admin';
+import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Токени запрошення',
@@ -20,7 +20,7 @@ export default async function TokensPage() {
     redirect('/admin');
   }
 
-  const { data: tokens, error } = await serverFetch<InviteToken[]>('/api/admins/invite');
+  const { data: tokens, error } = await serverApi.getInviteTokens();
 
   return (
     <div className="flex-1 overflow-auto">

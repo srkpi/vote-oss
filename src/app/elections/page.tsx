@@ -7,8 +7,8 @@ import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
-import type { Election } from '@/types/election';
+import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Голосування',
@@ -21,7 +21,7 @@ export default async function ElectionsPage() {
     redirect('/auth/login');
   }
 
-  const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
+  const { data: elections, error } = await serverApi.getElections();
 
   const open = (elections ?? []).filter((e) => e.status === 'open').length;
   const upcoming = (elections ?? []).filter((e) => e.status === 'upcoming').length;
@@ -40,7 +40,6 @@ export default async function ElectionsPage() {
         )}
       </PageHeader>
 
-      {/* Content */}
       <div className="container py-8">
         {error ? (
           <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden">

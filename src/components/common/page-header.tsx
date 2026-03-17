@@ -46,18 +46,15 @@ export function PageHeader({ nav, title, description, children }: PageHeaderProp
               })}
             </nav>
           )}
-
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-[var(--foreground)] leading-tight break-words">
             {title}
           </h1>
-
           {description && (
             <p className="font-body text-sm text-[var(--muted-foreground)] mt-0.5 break-words">
               {description}
             </p>
           )}
         </div>
-
         {children && <div className="shrink-0">{children}</div>}
       </div>
     </div>

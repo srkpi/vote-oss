@@ -48,9 +48,7 @@ export function AdminSidebar({ manageAdmins = false }: AdminSidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-[var(--border-subtle)] bg-white">
-        {/* Header */}
         <div className="p-5 border-b border-[var(--border-subtle)]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-[var(--kpi-orange)] flex items-center justify-center shadow-[var(--shadow-sm)]">
@@ -67,7 +65,6 @@ export function AdminSidebar({ manageAdmins = false }: AdminSidebarProps) {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 p-3 space-y-0.5">
           <p className="px-3 pt-3 pb-2 text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-widest font-body">
             Навігація
@@ -91,7 +88,6 @@ export function AdminSidebar({ manageAdmins = false }: AdminSidebarProps) {
         </nav>
       </aside>
 
-      {/* Mobile bottom navigation bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[var(--border-subtle)] shadow-[0_-4px_12px_rgb(28_57_110/0.08)] safe-area-pb">
         <div className="flex items-stretch">
           {navItems.map((item) => {

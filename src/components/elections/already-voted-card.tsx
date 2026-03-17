@@ -23,7 +23,6 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
 
   return (
     <div className="space-y-5">
-      {/* Success header */}
       <div className="flex items-center gap-3 p-4 rounded-[var(--radius-lg)] bg-[var(--success-bg)] border border-[var(--success)]/30">
         <div className="w-9 h-9 rounded-full bg-[var(--success)]/15 flex items-center justify-center shrink-0">
           <CheckCircle className="w-5 h-5 text-[var(--success)]" />
@@ -43,7 +42,6 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
         </div>
       </div>
 
-      {/* Choice display */}
       <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-2">
         Ваш вибір
       </p>
@@ -61,7 +59,6 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
         </span>
       </div>
 
-      {/* Ballot hash */}
       <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body">
         Хеш вашого бюлетеня
       </p>

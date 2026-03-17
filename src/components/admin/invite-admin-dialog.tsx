@@ -17,7 +17,7 @@ import {
 import { FormField, Input } from '@/components/ui/form';
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
-import { createInviteToken } from '@/lib/api-client';
+import { api } from '@/lib/api/browser';
 import { INVITE_TOKEN_MAX_USAGE_MAX, INVITE_TOKEN_MAX_USAGE_MIN } from '@/lib/constants';
 import type { InviteTokenResponse } from '@/types/admin';
 
@@ -58,7 +58,7 @@ export function InviteAdminDialog({
     setError(null);
     setLoading(true);
 
-    const result = await createInviteToken({
+    const result = await api.createInviteToken({
       validDue: new Date(form.validDue).toISOString(),
       maxUsage: parseInt(form.maxUsage, 10),
       manageAdmins: form.manageAdmins,

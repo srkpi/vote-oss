@@ -36,9 +36,7 @@ export function AdminsPageClient({
 
   return (
     <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-      {/* Card header */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
-        {/* Left side: icon + title */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg navy-gradient flex items-center justify-center">
             <Users className="w-4 h-4 text-white" />
@@ -48,7 +46,6 @@ export function AdminsPageClient({
           </h2>
         </div>
 
-        {/* Right side: Invite button */}
         {canGrantManageAdmins && (
           <div className="flex items-center gap-3">
             <Button
@@ -63,7 +60,6 @@ export function AdminsPageClient({
         )}
       </div>
 
-      {/* Error state */}
       {error && (
         <div className="p-4 sm:p-6">
           <Alert variant="error" title="Помилка завантаження">

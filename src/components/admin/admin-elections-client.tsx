@@ -1,15 +1,14 @@
 'use client';
 
-import { FileText, Play, StopCircle, Trash2 } from 'lucide-react';
-import Link from 'next/link';
+import { FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { ElectionMobileCard } from '@/components/admin/election-mobile-card';
+import { ElectionRow } from '@/components/admin/election-row';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Alert } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,8 +22,7 @@ import {
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { deleteElection } from '@/lib/api-client';
-import { formatDateTime } from '@/lib/utils';
+import { api } from '@/lib/api/browser';
 import type { User } from '@/types/auth';
 import type { Election, ElectionStatus } from '@/types/election';
 
@@ -90,7 +88,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await deleteElection(deleteTarget.id);
+    const result = await api.deleteElection(deleteTarget.id);
     if (result.success) {
       toast({
         title: 'Голосування видалено',
@@ -117,7 +115,6 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
   return (
     <>
       <div className="space-y-4">
-        {/* Toolbar */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Tabs
             tabs={TABS}
@@ -134,7 +131,6 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
           )}
         </div>
 
-        {/* Content */}
         {filtered.length === 0 ? (
           <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
             <EmptyState
@@ -145,7 +141,6 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
           </div>
         ) : (
           <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-            {/* Desktop table */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -175,7 +170,6 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
               </table>
             </div>
 
-            {/* Mobile / tablet cards */}
             <div className="lg:hidden divide-y divide-[var(--border-subtle)]">
               {filtered.map((election) => (
                 <ElectionMobileCard
@@ -190,7 +184,6 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
         )}
       </div>
 
-      {/* Delete confirmation dialog */}
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
         <DialogPanel maxWidth="sm">
           <DialogHeader>
@@ -214,165 +207,5 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
         </DialogPanel>
       </Dialog>
     </>
-  );
-}
-
-// ── Row / card sub-components ─────────────────────────────────────────────────
-
-interface ElectionRowProps {
-  election: Election;
-  canDelete: boolean;
-  onDelete: () => void;
-}
-
-function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps) {
-  const router = useRouter();
-
-  return (
-    <tr className="hover:bg-[var(--surface)] transition-colors duration-150 group">
-      <td
-        className="px-4 py-3.5 max-w-xs cursor-pointer"
-        onClick={() => router.push(`/admin/elections/${election.id}`)}
-      >
-        <div>
-          <p className="text-sm font-medium font-body text-[var(--foreground)] truncate group-hover:text-[var(--kpi-navy)] transition-colors">
-            {election.title}
-          </p>
-          <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5 truncate">
-            {election.creator.full_name}
-          </p>
-        </div>
-      </td>
-      <td
-        className="px-4 py-3.5 cursor-pointer"
-        onClick={() => router.push(`/admin/elections/${election.id}`)}
-      >
-        <ElectionStatusBadge status={election.status} size="md" />
-      </td>
-      <td
-        className="px-4 py-3.5 cursor-pointer"
-        onClick={() => router.push(`/admin/elections/${election.id}`)}
-      >
-        <p className="text-xs font-body text-[var(--foreground)]">
-          {formatDateTime(election.opensAt)}
-        </p>
-      </td>
-      <td
-        className="px-4 py-3.5 cursor-pointer"
-        onClick={() => router.push(`/admin/elections/${election.id}`)}
-      >
-        <p className="text-xs font-body text-[var(--foreground)]">
-          {formatDateTime(election.closesAt)}
-        </p>
-      </td>
-      <td
-        className="px-4 py-3.5 cursor-pointer"
-        onClick={() => router.push(`/admin/elections/${election.id}`)}
-      >
-        <div className="flex items-center gap-1.5">
-          <span className="font-display text-xl font-bold text-[var(--foreground)]">
-            {election.ballotCount.toLocaleString('uk-UA')}
-          </span>
-          {election.status === 'open' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse shrink-0" />
-          )}
-        </div>
-      </td>
-      <td
-        className="px-4 py-3.5 cursor-pointer"
-        onClick={() => router.push(`/admin/elections/${election.id}`)}
-      >
-        <div className="flex flex-col gap-1">
-          {election.restrictedToFaculty || election.restrictedToGroup ? (
-            <>
-              {election.restrictedToFaculty && (
-                <Badge variant="info" size="md">
-                  {election.restrictedToFaculty}
-                </Badge>
-              )}
-              {election.restrictedToGroup && (
-                <Badge variant="secondary" size="md">
-                  {election.restrictedToGroup}
-                </Badge>
-              )}
-            </>
-          ) : (
-            <Badge variant="success" size="md">
-              Всі
-            </Badge>
-          )}
-        </div>
-      </td>
-      <td className="px-4 py-3.5 text-right">
-        {canDelete && (
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="text-[var(--error)] hover:bg-[var(--error-bg)] transition-opacity"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        )}
-      </td>
-    </tr>
-  );
-}
-
-function ElectionMobileCard({ election, canDelete, onDelete }: ElectionRowProps) {
-  return (
-    <div className="p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <Link href={`/admin/elections/${election.id}`} className="flex-1 min-w-0">
-          <div>
-            <p className="text-sm font-semibold font-body text-[var(--foreground)] leading-snug break-words">
-              {election.title}
-            </p>
-            <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5">
-              {election.creator.full_name}
-            </p>
-          </div>
-        </Link>
-        <div className="flex items-center gap-2 shrink-0">
-          <ElectionStatusBadge status={election.status} size="sm" />
-          {canDelete && (
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={onDelete}
-              className="text-[var(--error)] hover:bg-[var(--error-bg)]"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <Link href={`/admin/elections/${election.id}`}>
-        <div className="text-xs font-body text-[var(--muted-foreground)] space-y-1.5 mt-2">
-          <div className="flex items-center gap-2">
-            <Play className="w-3.5 h-3.5 shrink-0" />
-            <span>{formatDateTime(election.opensAt)}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <StopCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>{formatDateTime(election.closesAt)}</span>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <FileText className="w-3.5 h-3.5 shrink-0" />
-            <span className="font-semibold text-[var(--foreground)]">{election.ballotCount}</span>
-            Голосів
-            {(election.restrictedToFaculty || election.restrictedToGroup) && (
-              <Badge variant="info" size="sm" className="ml-2">
-                {election.restrictedToGroup ?? election.restrictedToFaculty}
-              </Badge>
-            )}
-          </div>
-        </div>
-      </Link>
-    </div>
   );
 }

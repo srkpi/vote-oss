@@ -7,15 +7,13 @@ import { AnimatedGrid } from '@/components/common/animated-grid';
 
 export const metadata: Metadata = {
   title: 'Вхід',
-  description: 'Увійдіть за допомогою вашого КПІ ID',
+  description: 'Увійдіть за допомогою KPI ID',
 };
 
 export default function LoginPage() {
   return (
     <div className="min-h-dvh flex">
-      {/* ── Left panel — decorative / high-tech ── */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 navy-gradient-subtle p-12 relative overflow-hidden">
-        {/* Animated grid canvas */}
         <AnimatedGrid variant="dark" cellSize={44} />
 
         {/* Atmospheric glow orbs */}
@@ -171,8 +169,6 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* ── Content ── */}
-
         {/* Logo */}
         <Link className="relative flex items-center gap-3 z-10" href="/">
           <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
@@ -230,7 +226,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Right panel — login form ── */}
       <div className="flex-1 flex items-center justify-center p-8 relative">
         {/* Subtle background for the form side on mobile */}
         <div className="absolute inset-0 lg:hidden overflow-hidden">
@@ -251,12 +246,10 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Title */}
           <h1 className="font-display text-center text-3xl sm:text-4xl font-bold text-[var(--foreground)] mb-8">
             Ласкаво просимо
           </h1>
 
-          {/* KPI ID Button */}
           <div className="space-y-6">
             <KpiIdLogin fullWidth />
 
@@ -271,7 +264,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Trust signals */}
             <div className="space-y-3 w-full">
               {[
                 'Голосують лише справжні студенти',

@@ -6,8 +6,6 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// ==================== VARIANTS ====================
-
 const alertVariants = cva(
   'relative flex w-full gap-3 rounded-[var(--radius-lg)] border p-4 text-sm font-body transition-all duration-200',
   {
@@ -40,8 +38,6 @@ const ALERT_ICONS: Record<string, React.ReactNode> = {
   destructive: <XCircle className="w-4 h-4 shrink-0 mt-0.5" />,
 };
 
-// ==================== TYPES ====================
-
 export type AlertVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'destructive';
 
 export interface AlertProps
@@ -51,8 +47,6 @@ export interface AlertProps
   showIcon?: boolean;
   variant?: AlertVariant;
 }
-
-// ==================== ALERT ====================
 
 export function Alert({
   className,
@@ -93,8 +87,6 @@ export function Alert({
   );
 }
 
-// ==================== ALERT SUB-COMPONENTS ====================
-
 export function AlertTitle({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
@@ -112,8 +104,6 @@ export function AlertDescription({ className, ...props }: React.HTMLAttributes<H
     />
   );
 }
-
-// ==================== TOAST ITEM ====================
 
 export type ToastVariant = 'default' | 'success' | 'warning' | 'error' | 'info';
 
@@ -169,7 +159,6 @@ export function ToastItem({
       )}
       role="alert"
     >
-      {/* Left accent bar */}
       <div
         className={cn(
           'absolute left-0 top-0 bottom-0 w-1 rounded-l-[var(--radius-xl)]',
@@ -177,10 +166,8 @@ export function ToastItem({
         )}
       />
 
-      {/* Icon */}
       <div className={cn('shrink-0 mt-0.5', toastIconColors[variant])}>{TOAST_ICONS[variant]}</div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0 pr-1">
         <p className="font-semibold text-sm text-[var(--foreground)] font-body leading-tight">
           {title}
@@ -192,7 +179,6 @@ export function ToastItem({
         )}
       </div>
 
-      {/* Dismiss button */}
       <button
         type="button"
         onClick={() => onDismiss(id)}

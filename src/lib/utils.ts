@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import type { InviteToken } from '@/types/admin';
 import type { ElectionStatus } from '@/types/election';
 
 export function cn(...inputs: ClassValue[]) {
@@ -143,4 +144,22 @@ export function isAncestorInGraph(
   }
 
   return false;
+}
+
+export function tokenUsageFraction(token: InviteToken): number {
+  if (token.max_usage === 0) return 0;
+  return token.current_usage / token.max_usage;
+}
+
+export function tokenUsageColor(fraction: number): string {
+  if (fraction >= 1) return 'bg-[var(--error)]';
+  if (fraction >= 0.8) return 'bg-[var(--kpi-orange)]';
+  return 'bg-[var(--success)]';
+}
+
+export function tokenExpiresLabel(validDue: string): { text: string; urgent: boolean } {
+  const diff = new Date(validDue).getTime() - Date.now();
+  const days = diff / (1000 * 60 * 60 * 24);
+
+  return { text: formatDateTime(validDue), urgent: days < 3 };
 }

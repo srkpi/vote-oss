@@ -16,19 +16,11 @@
 import { CACHE_KEY_CAMPUS_GROUPS, CACHE_TTL_CAMPUS_GROUPS_SECS } from '@/lib/constants';
 import { redis, safeRedis } from '@/lib/redis';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface RawCampusGroup {
   id: number;
   name: string;
   faculty: string;
 }
-
-// ---------------------------------------------------------------------------
-// Faculty name normalisation
-// ---------------------------------------------------------------------------
 
 /**
  * Fix malformed "НН" faculty names.
@@ -46,10 +38,6 @@ export function fixFacultyName(faculty: string): string {
   return faculty;
 }
 
-// ---------------------------------------------------------------------------
-// Core fetch + cache
-// ---------------------------------------------------------------------------
-
 /**
  * Fetch all groups from the campus API and return them grouped by faculty.
  *
@@ -62,7 +50,6 @@ export function fixFacultyName(faculty: string): string {
  * @throws if CAMPUS_API_URL is not set or the upstream request fails.
  */
 export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
-  // ── 1. Try Redis cache ───────────────────────────────────────────────────
   const cached = await safeRedis(() => redis.get(CACHE_KEY_CAMPUS_GROUPS));
   if (cached) {
     try {
@@ -72,7 +59,6 @@ export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
     }
   }
 
-  // ── 2. Fetch from upstream ───────────────────────────────────────────────
   const baseUrl = process.env.CAMPUS_API_URL;
   if (!baseUrl) {
     throw new Error('CAMPUS_API_URL environment variable is not set');
@@ -84,8 +70,6 @@ export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
   }
 
   const data = (await res.json()) as RawCampusGroup[];
-
-  // ── 3. Build normalised faculty → groups map ─────────────────────────────
   const map: Record<string, string[]> = {};
 
   for (const { faculty: rawFaculty, name } of data) {
@@ -99,7 +83,6 @@ export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
     map[faculty].sort((a, b) => a.localeCompare(b, 'uk'));
   }
 
-  // ── 4. Persist to cache ───────────────────────────────────────────────────
   await safeRedis(() =>
     redis.set(CACHE_KEY_CAMPUS_GROUPS, JSON.stringify(map), 'EX', CACHE_TTL_CAMPUS_GROUPS_SECS),
   );

@@ -18,15 +18,11 @@
  *      a. Insert JTI into bloom filter + per-key confirmation entry (Redis).
  *      b. Delete DB record (keeps the table small; audit rows can be kept
  *         with a different retention policy if needed).
- *
- * The DB `jwt_tokens` table is therefore no longer on the hot read path –
- * it is only written to (on issue) and read from (fallback / false-positive).
  */
 
 import { bloomAdd, getBloomResetAt, isTokenClean } from '@/lib/bloom';
 import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
-import { safeRedis } from '@/lib/redis';
 
 // ---------------------------------------------------------------------------
 // Issuance
@@ -46,10 +42,6 @@ export async function persistTokenPair(accessJti: string, refreshJti: string): P
   });
 }
 
-// ---------------------------------------------------------------------------
-// Validation
-// ---------------------------------------------------------------------------
-
 /**
  * Check whether an access token's JTI is still valid.
  *
@@ -60,7 +52,6 @@ export async function persistTokenPair(accessJti: string, refreshJti: string): P
  * @param iat Issued-at timestamp in **seconds** (as stored in the JWT)
  */
 export async function isAccessTokenValid(jti: string, iat: number): Promise<boolean> {
-  // ── Step 1: reset-time gate ──────────────────────────────────────────────
   const resetAt = await getBloomResetAt();
   if (resetAt > 0 && iat * 1_000 < resetAt) {
     const record = await prisma.jwtToken.findFirst({
@@ -71,20 +62,14 @@ export async function isAccessTokenValid(jti: string, iat: number): Promise<bool
     return record !== null;
   }
 
-  // ── Step 2: bloom filter (fast path) ────────────────────────────────────
   const bloomResult = await isTokenClean(jti);
-
   if (bloomResult === true) {
-    // Definitely not revoked – no DB query needed
     return true;
   }
-
   if (bloomResult === false) {
-    // Confirmed revoked by the per-key entry
     return false;
   }
 
-  // ── Step 3: Redis unavailable → fall back to DB whitelist ────────────────
   const record = await prisma.jwtToken.findFirst({
     where: { access_jti: jti },
     select: { access_jti: true },
@@ -93,10 +78,6 @@ export async function isAccessTokenValid(jti: string, iat: number): Promise<bool
   return record !== null;
 }
 
-/**
- * Check whether a refresh token's JTI is still valid.
- * Same logic as `isAccessTokenValid` but queries `refresh_jti` for the fallback.
- */
 export async function isRefreshTokenValid(jti: string, iat: number): Promise<boolean> {
   const resetAt = await getBloomResetAt();
   if (resetAt > 0 && iat * 1_000 < resetAt) {
@@ -120,10 +101,6 @@ export async function isRefreshTokenValid(jti: string, iat: number): Promise<boo
 
   return record !== null;
 }
-
-// ---------------------------------------------------------------------------
-// Revocation
-// ---------------------------------------------------------------------------
 
 /**
  * Revoke an access + refresh token pair by their JTIs.
@@ -186,10 +163,6 @@ export async function revokeByRefreshJti(
   return { accessJti: record?.access_jti ?? null };
 }
 
-// ---------------------------------------------------------------------------
-// Logout helper (access-token-first lookup)
-// ---------------------------------------------------------------------------
-
 /**
  * Full logout: look up the token pair by access JTI, revoke both sides.
  */
@@ -218,17 +191,4 @@ export async function revokeByAccessJti(accessJti: string, accessIat: number): P
   }
 
   await Promise.all(ops);
-}
-
-// ---------------------------------------------------------------------------
-// Admin-session cache invalidation
-// ---------------------------------------------------------------------------
-
-/**
- * When an admin record changes (promoted, removed, etc.) the admin cache
- * should be invalidated.  This is a best-effort operation; staleness is
- * acceptable for up to ADMIN_CACHE_TTL seconds.
- */
-export async function invalidateAdminCache(): Promise<void> {
-  await safeRedis(() => import('@/lib/cache').then((m) => m.invalidateAdmins()));
 }

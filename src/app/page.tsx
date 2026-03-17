@@ -6,8 +6,8 @@ import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
 import { StatItem } from '@/components/landing/stat-item';
 import { Button } from '@/components/ui/button';
+import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { serverFetch } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 
 const features = [
@@ -56,18 +56,14 @@ export default async function HomePage() {
 
   let featuredElections: Election[] = [];
   if (session) {
-    const { data } = await serverFetch<Election[]>('/api/elections');
+    const { data } = await serverApi.getElections();
     featuredElections = (data || []).filter((e) => e.status === 'open').slice(0, 3);
   }
 
   return (
     <>
-      {/* ── Hero Section ── */}
       <section className="relative overflow-hidden">
-        {/* Background */}
         <div className="absolute inset-0 navy-gradient-subtle" />
-
-        {/* Animated grid — replaces static pattern-grid */}
         <AnimatedGrid variant="dark" cellSize={48} />
 
         {/* Breathing glow orbs */}
@@ -157,7 +153,6 @@ export default async function HomePage() {
 
         <div className="container relative z-10 py-16 md:py-32">
           <div className="max-w-3xl">
-            {/* Pill badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs font-body uppercase tracking-widest mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--kpi-orange)] animate-pulse" />
               КПІ ім. Ігоря Сікорського
@@ -181,7 +176,6 @@ export default async function HomePage() {
               студентського самоврядування
             </p>
 
-            {/* Live status + CTA */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               {session ? (
                 <Button variant="accent" size="xl" asChild>
@@ -194,7 +188,6 @@ export default async function HomePage() {
               )}
             </div>
 
-            {/* Floating stat chips below CTA */}
             <div
               className="flex flex-wrap gap-3 mt-8 animate-fade-up"
               style={{ animationDelay: '320ms' }}
@@ -234,7 +227,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Features ── */}
+      {/* Features */}
       <section className="py-20 bg-white">
         <div className="container">
           <h2 className="font-display text-center text-4xl font-bold text-[var(--foreground)] mb-8">
@@ -249,7 +242,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Active elections ── */}
+      {/* Active elections */}
       {session && featuredElections.length > 0 && (
         <section className="py-20 bg-[var(--surface)]">
           <div className="container">
@@ -276,9 +269,8 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Stats — dark with animated grid ── */}
+      {/* Stats */}
       <section className="py-20 bg-[var(--kpi-navy)] relative overflow-hidden">
-        {/* Animated grid for stats section too */}
         <AnimatedGrid variant="dark" cellSize={56} />
 
         {/* Breathing orbs */}

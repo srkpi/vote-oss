@@ -63,20 +63,17 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
 
   return (
     <div className="space-y-6">
-      {/* Tabs + Search bar */}
       <div className="flex flex-col md:flex-row md:items-center gap-4">
         <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} tabCount={tabCount} />
         <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
       </div>
 
-      {/* Results count */}
       {(search || activeTab !== 'all') && filtered.length > 0 && (
         <p className="text-xs text-[var(--muted-foreground)] font-body">
           Знайдено: {filtered.length} голосувань
         </p>
       )}
 
-      {/* Grid */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)]">
           <EmptyState

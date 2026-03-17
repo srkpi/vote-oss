@@ -43,7 +43,6 @@ export function JoinPageContent({
       </div>
 
       <div className="relative w-full max-w-lg">
-        {/* Back link */}
         <Link
           href="/elections"
           className="inline-flex items-center gap-1.5 text-sm font-body text-[var(--muted-foreground)] hover:text-[var(--kpi-navy)] transition-colors mb-6"
@@ -52,7 +51,6 @@ export function JoinPageContent({
           Назад до голосувань
         </Link>
 
-        {/* Main card */}
         <div className="bg-white rounded-[var(--radius-2xl)] border border-[var(--border-color)] shadow-[var(--shadow-xl)] overflow-hidden">
           {/* Top accent bar */}
           <div className="h-1.5 w-full navy-gradient" />
@@ -93,7 +91,6 @@ export function JoinPageContent({
             </div>
           </div>
 
-          {/* Form */}
           <div className="px-8 py-7">
             <JoinAdminForm initialToken={initialToken} />
           </div>

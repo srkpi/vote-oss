@@ -15,9 +15,7 @@ import { redis, safeRedis } from '@/lib/redis';
 
 interface RateLimitResult {
   limited: boolean;
-  /** Remaining allowed requests in the current window. */
   remaining: number;
-  /** Milliseconds until the current window resets. */
   resetInMs: number;
 }
 
@@ -75,10 +73,7 @@ export async function rateLimit(
   };
 }
 
-// ---------------------------------------------------------------------------
 // Pre-configured limiters for common endpoints
-// ---------------------------------------------------------------------------
-
 /** Login via KPI ID ticket: 20 attempts per IP per minute. */
 export async function rateLimitLogin(ip: string): Promise<RateLimitResult> {
   return rateLimit('login', ip, 20, 60_000);
@@ -93,10 +88,6 @@ export async function rateLimitRefresh(ip: string): Promise<RateLimitResult> {
 export async function rateLimitInvite(userId: string): Promise<RateLimitResult> {
   return rateLimit('invite', userId, 10, 60 * 60_000);
 }
-
-// ---------------------------------------------------------------------------
-// Utility: extract the real client IP from Next.js request headers
-// ---------------------------------------------------------------------------
 
 /**
  * Best-effort IP extraction.  In production behind a proxy / CDN,

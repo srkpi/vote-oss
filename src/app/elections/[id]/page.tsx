@@ -12,9 +12,9 @@ import { ResultsChart } from '@/components/elections/result-chart';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
+import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime } from '@/lib/utils';
-import type { ElectionDetail } from '@/types/election';
 import type { TallyResponse } from '@/types/tally';
 
 interface ElectionPageProps {
@@ -23,7 +23,7 @@ interface ElectionPageProps {
 
 export async function generateMetadata({ params }: ElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data } = await serverFetch<ElectionDetail>(`/api/elections/${id}`);
+  const { data } = await serverApi.getElection(id);
   return { title: data?.title ?? 'Голосування' };
 }
 
@@ -32,17 +32,15 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
   const [session, { data: election, error, status }] = await Promise.all([
     getServerSession(),
-    serverFetch<ElectionDetail>(`/api/elections/${id}`),
+    serverApi.getElection(id),
   ]);
 
   if (!session) {
     redirect('/auth/login');
   }
 
-  // Hard 404 — election genuinely does not exist
   if (status === 404) notFound();
 
-  // 403 or other error — show a user-friendly error instead of 404
   if (!election) {
     if (status === 403) {
       return (
@@ -66,7 +64,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   // Fetch tally only for closed elections
   let tally: TallyResponse | null = null;
   if (election.status === 'closed') {
-    const { data } = await serverFetch<TallyResponse>(`/api/elections/${id}/tally`);
+    const { data } = await serverApi.getTally(id);
     tally = data;
   }
 
@@ -76,10 +74,8 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
   return (
     <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
-      {/* Header */}
       <div className="bg-white border-b border-[var(--border-subtle)]">
         <div className="container py-6">
-          {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4">
             <Link href="/elections" className="hover:text-[var(--kpi-navy)] transition-colors">
               Голосування
@@ -124,12 +120,9 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="container py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left: main action area */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Countdown timer */}
             {(isOpen || isUpcoming) && (
               <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
                 <p className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-4">
@@ -193,7 +186,6 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
           </div>
 
-          {/* Right: sidebar */}
           <div className="space-y-5">
             <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5">
               <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-4">

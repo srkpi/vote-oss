@@ -8,14 +8,6 @@ interface CharCounterProps {
   threshold?: number;
 }
 
-/**
- * Shows a character counter once the user has consumed more than
- * threshold of the available characters.
- *
- * - Below threshold    → nothing rendered
- * - At or above threshold, within limit → "N left" in muted colour
- * - Exceeded limit     → "−N" in red
- */
 export function CharCounter({
   value,
   max,

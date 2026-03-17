@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronDown, Search, X } from 'lucide-react';
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -41,32 +41,24 @@ export function Combobox({
   const [openUpward, setOpenUpward] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const filtered = options.filter((opt) => opt.toLowerCase().includes(search.toLowerCase()));
 
-  // ── Measure available space and decide direction ─────────────────────────
-  useLayoutEffect(() => {
-    if (!open || !containerRef.current || !dropdownRef.current) return;
+  const dropdownCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node || !containerRef.current) return;
 
     const triggerRect = containerRef.current.getBoundingClientRect();
-    const dropdownHeight = dropdownRef.current.offsetHeight;
+    const dropdownHeight = node.offsetHeight;
     const spaceBelow = window.innerHeight - triggerRect.bottom;
     const spaceAbove = triggerRect.top;
 
-    // Prefer below; flip upward only when there is not enough room below but
-    // there IS enough room above.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpenUpward(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
-  }, [open, filtered.length]);
-
-  // ── Open / close helpers ─────────────────────────────────────────────────
+  }, []);
 
   function openDropdown() {
     if (disabled) return;
-    setOpenUpward(false); // reset before measuring
     setOpen(true);
     setActiveIndex(-1);
   }
@@ -89,7 +81,7 @@ export function Combobox({
     closeDropdown();
   }
 
-  // ── Focus search input when dropdown opens ───────────────────────────────
+  // Focus search input when dropdown opens
   useEffect(() => {
     if (open) {
       const t = setTimeout(() => searchRef.current?.focus(), 10);
@@ -97,7 +89,7 @@ export function Combobox({
     }
   }, [open]);
 
-  // ── Close on outside click ───────────────────────────────────────────────
+  // Close on outside click
   useEffect(() => {
     function handlePointerDown(e: PointerEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -108,14 +100,14 @@ export function Combobox({
     return () => document.removeEventListener('pointerdown', handlePointerDown);
   }, []);
 
-  // ── Scroll active option into view ───────────────────────────────────────
+  // Scroll active option into view
   useEffect(() => {
     if (activeIndex < 0 || !listRef.current) return;
     const items = listRef.current.querySelectorAll<HTMLElement>('[role="option"]');
     items[activeIndex]?.scrollIntoView({ block: 'nearest' });
   }, [activeIndex]);
 
-  // ── Keyboard handling on the search input ───────────────────────────────
+  // Keyboard handling on the search input
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     switch (e.key) {
       case 'ArrowDown':
@@ -142,7 +134,7 @@ export function Combobox({
     }
   }
 
-  // ── Keyboard handling on the trigger button ──────────────────────────────
+  // Keyboard handling on the trigger button
   function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
     if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -152,7 +144,6 @@ export function Combobox({
 
   return (
     <div ref={containerRef} className={cn('relative', className)}>
-      {/* Trigger */}
       <button
         ref={triggerRef}
         id={id}
@@ -178,12 +169,10 @@ export function Combobox({
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--kpi-blue-light)]',
         )}
       >
-        {/* Label */}
         <span className={cn('flex-1 truncate', !value && 'text-[var(--subtle)]')}>
           {value || placeholder}
         </span>
 
-        {/* Clear button */}
         {clearable && value && !disabled && (
           <span
             role="button"
@@ -202,8 +191,6 @@ export function Combobox({
             <X className="h-3 w-3" />
           </span>
         )}
-
-        {/* Chevron — rotates toward the open direction */}
         <ChevronDown
           className={cn(
             'h-4 w-4 shrink-0 text-[var(--muted-foreground)] transition-transform duration-150',
@@ -212,10 +199,9 @@ export function Combobox({
         />
       </button>
 
-      {/* Dropdown */}
       {open && (
         <div
-          ref={dropdownRef}
+          ref={dropdownCallbackRef}
           className={cn(
             'absolute z-50 w-full min-w-[200px]',
             'overflow-hidden rounded-[var(--radius-lg)]',
@@ -225,7 +211,6 @@ export function Combobox({
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
-          {/* Search input */}
           <div className="border-b border-[var(--border-subtle)] p-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none" />
@@ -260,8 +245,6 @@ export function Combobox({
               )}
             </div>
           </div>
-
-          {/* Options list */}
           <div
             ref={listRef}
             id={listboxId}
