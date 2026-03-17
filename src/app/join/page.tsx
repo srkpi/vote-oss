@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { JoinAdminForm } from '@/components/admin/join-admin-form';
+import { APP_NAME } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Приєднатися як адміністратор',
-  description: 'Використайте токен запрошення, щоб отримати права адміністратора КПІ Голос.',
+  description: 'Використайте токен запрошення, щоб отримати права адміністратора.',
 };
 
 interface Props {
@@ -66,7 +67,7 @@ export function JoinPageContent({
                   Приєднатися як адміністратор
                 </h1>
                 <p className="text-sm font-body text-[var(--muted-foreground)] mt-0.5">
-                  КПІ Голос · Система голосування
+                  {APP_NAME} · Система голосування
                 </p>
               </div>
             </div>

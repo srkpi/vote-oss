@@ -13,6 +13,7 @@
  * app always sees clean names.
  */
 
+import { CAMPUS_API_URL } from '@/lib/config/server';
 import { CACHE_KEY_CAMPUS_GROUPS, CACHE_TTL_CAMPUS_GROUPS_SECS } from '@/lib/constants';
 import { redis, safeRedis } from '@/lib/redis';
 
@@ -59,12 +60,7 @@ export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
     }
   }
 
-  const baseUrl = process.env.CAMPUS_API_URL;
-  if (!baseUrl) {
-    throw new Error('CAMPUS_API_URL environment variable is not set');
-  }
-
-  const res = await fetch(`${baseUrl}/group/all`);
+  const res = await fetch(`${CAMPUS_API_URL}/group/all`);
   if (!res.ok) {
     throw new Error(`Campus API responded with status ${res.status}`);
   }

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
+import { APP_NAME } from '@/lib/config/client';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types/auth';
 
@@ -57,7 +58,7 @@ export function Header({ session }: HeaderProps) {
           </div>
           <div>
             <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight block">
-              КПІ Голос
+              {APP_NAME}
             </span>
             <span className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-widest leading-none">
               Система голосування

@@ -11,7 +11,7 @@ const STATUS_CONFIG = {
   loading: {
     icon: null,
     title: 'Авторизація…',
-    description: 'Перевіряємо вашу особу через КПІ ID',
+    description: 'Перевіряємо вашу особу через KPI ID',
   },
   success: {
     icon: 'check',

@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { KpiIdLogin } from '@/components/auth/kpi-id-login';
 import { AnimatedGrid } from '@/components/common/animated-grid';
+import { APP_NAME } from '@/lib/config/client';
 
 export const metadata: Metadata = {
   title: 'Вхід',
@@ -176,7 +177,7 @@ export default function LoginPage() {
           </div>
           <div>
             <span className="font-display text-xl font-bold text-white leading-tight block">
-              КПІ Голос
+              {APP_NAME}
             </span>
             <span className="text-[10px] font-body text-white/50 uppercase tracking-widest">
               Система голосування
@@ -196,7 +197,7 @@ export default function LoginPage() {
             </span>
           </h2>
           <p className="font-body text-white/65 leading-relaxed text-md xl:text-xl">
-            Використовуйте систему КПІ ID для безпечного та верифікованого входу до платформи
+            Використовуйте систему KPI ID для безпечного та верифікованого входу до платформи
             голосування
           </p>
         </div>
@@ -241,7 +242,7 @@ export default function LoginPage() {
                 <CheckCircle className="w-4 h-4 text-white" />
               </div>
               <span className="font-display text-2xl font-bold text-[var(--kpi-navy)]">
-                КПІ Голос
+                {APP_NAME}
               </span>
             </Link>
           </div>

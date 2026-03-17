@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
+import { APP_NAME } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: {
     default: 'Адмін-панель',
-    template: '%s | Адмін-панель | КПІ Голос',
+    template: `%s | Адмін-панель | ${APP_NAME}`,
   },
 };
 

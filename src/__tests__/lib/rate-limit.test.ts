@@ -159,10 +159,9 @@ describe('rate-limit', () => {
     });
 
     it('respects TRUSTED_PROXY_COUNT=2 for a two-hop chain', () => {
-      process.env.TRUSTED_PROXY_COUNT = '2';
       const h = makeHeaders({ 'x-forwarded-for': '1.2.3.4, 5.6.7.8, 9.10.11.12' });
       // hops.length=3, trustedHops=2, idx=max(0,3-2)=1 → '5.6.7.8'
-      expect(getClientIp(h)).toBe('5.6.7.8');
+      expect(getClientIp(h, 2)).toBe('5.6.7.8');
     });
 
     it('falls back to x-real-ip when x-forwarded-for is absent', () => {

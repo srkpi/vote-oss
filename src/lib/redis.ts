@@ -1,10 +1,9 @@
 import Redis from 'ioredis';
 
-function createClient(): Redis {
-  const url = process.env.REDIS_URL;
-  if (!url) throw new Error('REDIS_URL environment variable is not set');
+import { REDIS_URL } from '@/lib/config/server';
 
-  const client = new Redis(url, {
+function createClient(): Redis {
+  const client = new Redis(REDIS_URL, {
     // Connection
     connectTimeout: 5_000,
     commandTimeout: 3_000,

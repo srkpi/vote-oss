@@ -11,6 +11,7 @@
  * the TTL; subsequent requests only increment the counter).
  */
 
+import { TRUSTED_PROXY_COUNT } from '@/lib/config/server';
 import { redis, safeRedis } from '@/lib/redis';
 
 interface RateLimitResult {
@@ -94,11 +95,10 @@ export async function rateLimitInvite(userId: string): Promise<RateLimitResult> 
  * set the `TRUSTED_PROXY_COUNT` env var to the number of proxy hops so
  * we don't trust spoofed `x-forwarded-for` values.
  */
-export function getClientIp(headers: Headers): string {
+export function getClientIp(headers: Headers, trustedHops: number = TRUSTED_PROXY_COUNT): string {
   const xff = headers.get('x-forwarded-for');
   if (xff) {
     const hops = xff.split(',').map((h) => h.trim());
-    const trustedHops = parseInt(process.env.TRUSTED_PROXY_COUNT ?? '1', 10);
     const idx = Math.max(0, hops.length - trustedHops);
     return hops[idx] ?? '0.0.0.0';
   }

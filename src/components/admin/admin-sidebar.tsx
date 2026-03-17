@@ -4,6 +4,7 @@ import { FileText, Key, LayoutGrid, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { APP_NAME } from '@/lib/config/client';
 import { cn } from '@/lib/utils';
 
 const BASE_NAV_ITEMS = [
@@ -59,7 +60,7 @@ export function AdminSidebar({ manageAdmins = false }: AdminSidebarProps) {
                 Адмін-панель
               </p>
               <p className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-wider">
-                КПІ Голос
+                {APP_NAME}
               </p>
             </div>
           </div>

@@ -1,11 +1,10 @@
 import { cookies } from 'next/headers';
 
 import { createApiClient } from '@/lib/api/client';
+import { APP_URL } from '@/lib/config/server';
 import type { ApiResult } from '@/types/api';
 
-const BASE_URL = process.env.APP_URL
-  ? `${process.env.APP_URL}/api`
-  : `http://localhost:${process.env.PORT ?? 3000}/api`;
+const BASE_URL = `${APP_URL}/api`;
 
 async function serverFetch<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
   const cookieStore = await cookies();

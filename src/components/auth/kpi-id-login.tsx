@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
+import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
 import { cn } from '@/lib/utils';
 
 type Size = 'sm' | 'md' | 'lg';
@@ -30,24 +31,14 @@ const LOGO_SIZES: Record<Size, number> = {
 };
 
 export function KpiIdLogin({
-  appId = process.env.NEXT_PUBLIC_KPI_APP_ID,
+  appId = KPI_APP_ID,
   size = 'lg',
   logoAlignment = 'left',
   caption = 'Увійти з KPI ID',
   fullWidth = false,
   className = '',
-  authUrl = process.env.NEXT_PUBLIC_KPI_AUTH_URL,
+  authUrl = KPI_AUTH_URL,
 }: KpiIdLoginProps) {
-  if (!authUrl) {
-    console.error('[auth/kpi-id] NEXT_PUBLIC_KPI_AUTH_URL not set');
-    return null;
-  }
-
-  if (!appId) {
-    console.error('[auth/kpi-id] NEXT_PUBLIC_KPI_APP_ID not set');
-    return null;
-  }
-
   const logoSize = LOGO_SIZES[size];
   const href = `${authUrl}?appId=${appId}`;
 

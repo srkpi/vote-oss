@@ -7,6 +7,7 @@ import { FeatureCard } from '@/components/landing/feature-card';
 import { StatItem } from '@/components/landing/stat-item';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
+import { APP_NAME } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 import type { Election } from '@/types/election';
 
@@ -28,7 +29,7 @@ const features = [
   },
   {
     icon: <ShieldCheck className="w-6 h-6" />,
-    title: 'Авторизація КПІ ID',
+    title: 'Авторизація KPI ID',
     description:
       'Вхід через офіційну систему ідентифікації КПІ гарантує, що голосує справжній студент.',
   },
@@ -183,7 +184,7 @@ export default async function HomePage() {
                 </Button>
               ) : (
                 <Button variant="accent" size="xl" asChild>
-                  <Link href="/auth/login">Увійти через КПІ ID</Link>
+                  <Link href="/auth/login">Увійти через KPI ID</Link>
                 </Button>
               )}
             </div>
@@ -231,7 +232,7 @@ export default async function HomePage() {
       <section className="py-20 bg-white">
         <div className="container">
           <h2 className="font-display text-center text-4xl font-bold text-[var(--foreground)] mb-8">
-            Чому КПІ Голос?
+            Чому {APP_NAME}?
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">

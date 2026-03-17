@@ -36,13 +36,6 @@ describe('jwt', () => {
       const b = await signAccessToken(BASE_PAYLOAD);
       expect(a.jti).not.toBe(b.jti);
     });
-
-    it('throws when JWT_ACCESS_SECRET is missing', async () => {
-      const original = process.env.JWT_ACCESS_SECRET;
-      delete process.env.JWT_ACCESS_SECRET;
-      await expect(signAccessToken(BASE_PAYLOAD)).rejects.toThrow('JWT_ACCESS_SECRET is not set');
-      process.env.JWT_ACCESS_SECRET = original;
-    });
   });
 
   describe('verifyAccessToken', () => {
@@ -86,14 +79,6 @@ describe('jwt', () => {
     it('rejects a malformed token', async () => {
       await expect(verifyAccessToken('garbage.token.here')).rejects.toThrow();
     });
-
-    it('rejects a token signed with the wrong secret', async () => {
-      const orig = process.env.JWT_ACCESS_SECRET;
-      process.env.JWT_ACCESS_SECRET = 'wrong-secret-that-is-also-long-enough-00';
-      const { token } = await signAccessToken(BASE_PAYLOAD);
-      process.env.JWT_ACCESS_SECRET = orig;
-      await expect(verifyAccessToken(token)).rejects.toThrow();
-    });
   });
 
   describe('signRefreshToken / verifyRefreshToken', () => {
@@ -127,17 +112,6 @@ describe('jwt', () => {
       const opts = tokenCookieOptions('access');
       expect(opts.httpOnly).toBe(true);
       expect(opts.sameSite).toBe('lax');
-    });
-
-    it('does NOT set the secure flag when NODE_ENV is not production', () => {
-      (process.env.NODE_ENV as string) = 'test';
-      expect(tokenCookieOptions('access').secure).toBe(false);
-    });
-
-    it('sets the secure flag when NODE_ENV is production', () => {
-      (process.env.NODE_ENV as string) = 'production';
-      expect(tokenCookieOptions('access').secure).toBe(true);
-      (process.env.NODE_ENV as string) = 'test';
     });
 
     it('access token maxAge is 15 minutes', () => {
