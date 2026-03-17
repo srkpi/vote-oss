@@ -11,6 +11,7 @@ model JwtToken {
   refresh_jti String   @unique
   created_at  DateTime @default(now())
 
+  @@index([created_at])
   @@map("jwt_tokens")
 }
 
