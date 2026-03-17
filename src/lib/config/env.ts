@@ -1,3 +1,9 @@
+function isTruthyEnv(envVar?: string) {
+  return envVar === 'true' || envVar === '1';
+}
+
+const isCI = isTruthyEnv(process.env.CI) || isTruthyEnv(process.env.SKIP_ENV_VALIDATION);
+
 function readEnv(key: string): string | undefined {
   const value = process.env[key];
   if (!value) return undefined;
@@ -6,18 +12,23 @@ function readEnv(key: string): string | undefined {
   return trimmed === '' ? undefined : trimmed;
 }
 
+function isPublicVar(key: string): boolean {
+  return key.startsWith('NEXT_PUBLIC_');
+}
+
+function ciSafe(key: string, fallback: string): string {
+  if (isCI && !isPublicVar(key)) return fallback;
+  throw new Error(`❌ Missing environment variable: ${key}`);
+}
+
 export function getEnv(key: string): string {
   const value = readEnv(key);
-  if (!value) {
-    throw new Error(`❌ Missing environment variable: ${key}`);
-  }
-
+  if (!value) return ciSafe(key, `__CI_PLACEHOLDER_${key}__`);
   return value;
 }
 
 export function getOptionalEnv(key: string): string | undefined;
 export function getOptionalEnv(key: string, defaultValue: string): string;
-
 export function getOptionalEnv(key: string, defaultValue?: string) {
   const value = readEnv(key);
   return value ?? defaultValue;
@@ -28,15 +39,12 @@ export function getNumberEnv(key: string, defaultValue?: number): number {
 
   if (value === undefined) {
     if (defaultValue !== undefined) return defaultValue;
+    if (isCI && !isPublicVar(key)) return 0;
     throw new Error(`❌ Missing number env: ${key}`);
   }
 
   const num = Number(value);
-
-  if (Number.isNaN(num)) {
-    throw new Error(`❌ Invalid number env: ${key}`);
-  }
-
+  if (Number.isNaN(num)) throw new Error(`❌ Invalid number env: ${key}`);
   return num;
 }
 
@@ -45,6 +53,7 @@ export function getBooleanEnv(key: string, defaultValue?: boolean): boolean {
 
   if (value === undefined) {
     if (defaultValue !== undefined) return defaultValue;
+    if (isCI && !isPublicVar(key)) return false;
     throw new Error(`❌ Missing boolean env: ${key}`);
   }
 
@@ -53,10 +62,10 @@ export function getBooleanEnv(key: string, defaultValue?: boolean): boolean {
 
 export function getUrlEnv(key: string, defaultValue?: string): string {
   const value = readEnv(key);
-
-  const finalValue = value ?? (defaultValue !== undefined ? defaultValue : undefined);
+  const finalValue = value ?? defaultValue;
 
   if (!finalValue) {
+    if (isCI && !isPublicVar(key)) return 'http://localhost';
     throw new Error(`❌ Missing URL env: ${key}`);
   }
 
@@ -69,9 +78,12 @@ export function getUrlEnv(key: string, defaultValue?: string): string {
 }
 
 export function getSecret(key: string, minLength = 32): string {
-  const value = getEnv(key);
+  const value = readEnv(key);
+
+  if (!value) return ciSafe(key, 'a'.repeat(minLength));
 
   if (value.length < minLength) {
+    if (isCI && !isPublicVar(key)) return value;
     throw new Error(`❌ ${key} must be at least ${minLength} characters long`);
   }
 
