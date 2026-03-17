@@ -1,0 +1,1 @@
+{"id":"7b1619537dceabfeefee63a64bca6ab7","fullName":"src/__tests__/lib/kpi-id.test.ts#kpi-id resolveTicket returns null for empty ticketId","name":"returns null for empty ticketId","status":"passed","testResultsByEnv":{"default":"9c6fdaac6aae02dbb1dd59c39e7fd2ee"}}
