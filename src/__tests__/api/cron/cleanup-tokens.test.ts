@@ -37,6 +37,7 @@ describe('POST /api/cron/cleanup-tokens', () => {
   });
 
   it('deletes expired tokens and returns count', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 3 });
 
     const res = await POST(createRequest(`Bearer ${CRON_SECRET}`));
@@ -51,6 +52,7 @@ describe('POST /api/cron/cleanup-tokens', () => {
     );
     expect(res.status).toBe(200);
     expect(json.deleted).toBe(3);
+    consoleSpy.mockRestore();
   });
 
   it('logs errors and returns 500 on failure', async () => {
@@ -71,8 +73,9 @@ describe('POST /api/cron/cleanup-tokens', () => {
   });
 
   it('uses correct expiry date based on REFRESH_TOKEN_TTL_SECS', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const fixedTime = 1_700_000_000_000; // some fixed timestamp
-    jest.spyOn(Date, 'now').mockReturnValue(fixedTime);
+    const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(fixedTime);
 
     prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 0 });
 
@@ -88,6 +91,7 @@ describe('POST /api/cron/cleanup-tokens', () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    dateSpy.mockRestore();
+    consoleSpy.mockRestore();
   });
 });
