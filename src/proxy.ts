@@ -95,9 +95,9 @@ export async function proxy(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   if (user) {
     requestHeaders.set('x-user-id', user.sub);
-    requestHeaders.set('x-user-name', user.full_name);
-    requestHeaders.set('x-user-faculty', user.faculty);
-    requestHeaders.set('x-user-group', user.group);
+    requestHeaders.set('x-user-name', Buffer.from(user.full_name, 'utf8').toString('base64'));
+    requestHeaders.set('x-user-faculty', Buffer.from(user.faculty, 'utf8').toString('base64'));
+    requestHeaders.set('x-user-group', Buffer.from(user.group, 'utf8').toString('base64'));
     requestHeaders.set('x-user-is-admin', String(user.is_admin));
 
     if (user.is_admin) {
