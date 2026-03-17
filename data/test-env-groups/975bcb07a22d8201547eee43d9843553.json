@@ -1,1 +1,1 @@
-{"id":"975bcb07a22d8201547eee43d9843553","fullName":"src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups fetches from campus API on a cache miss","name":"fetches from campus API on a cache miss","status":"passed","testResultsByEnv":{"default":"31347d6e309db4a3bf9c5cd3d22e7afa"}}
+{"id":"975bcb07a22d8201547eee43d9843553","fullName":"src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups fetches from campus API on a cache miss","name":"fetches from campus API on a cache miss","status":"passed","testResultsByEnv":{"default":"956c7424830c118327cf2c67d288cf8e"}}
