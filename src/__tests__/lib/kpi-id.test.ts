@@ -92,13 +92,9 @@ describe('kpi-id', () => {
       expect(user).toBeNull();
     });
 
-    it('returns null if fetch throws error', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    it('throws an error if fetch fails', async () => {
       (fetch as jest.Mock).mockRejectedValue(new Error('network error'));
-
-      const user = await resolveTicket('ticket');
-      expect(user).toBeNull();
-      spy.mockRestore();
+      await expect(resolveTicket('ticket')).rejects.toThrow('network error');
     });
 
     it('returns null for empty ticketId', async () => {

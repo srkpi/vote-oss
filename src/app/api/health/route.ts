@@ -7,7 +7,7 @@ export async function GET() {
   const dbCheck = prisma.$queryRaw`SELECT 1`.then(
     () => true,
     (err) => {
-      console.error('DB health check failed:', err);
+      console.error('[health] DB health check failed:', err);
       return false;
     },
   );
@@ -17,7 +17,7 @@ export async function GET() {
       const pong = await redis.ping();
       return pong === 'PONG';
     } catch (err) {
-      console.error('Redis health check failed:', err);
+      console.error('[health] Redis health check failed:', err);
       return false;
     }
   })();

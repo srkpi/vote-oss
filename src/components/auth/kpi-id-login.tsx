@@ -39,12 +39,12 @@ export function KpiIdLogin({
   authUrl = process.env.NEXT_PUBLIC_KPI_AUTH_URL,
 }: KpiIdLoginProps) {
   if (!authUrl) {
-    console.error('NEXT_PUBLIC_KPI_AUTH_URL not set');
+    console.error('[auth/kpi-id] NEXT_PUBLIC_KPI_AUTH_URL not set');
     return null;
   }
 
   if (!appId) {
-    console.error('NEXT_PUBLIC_KPI_APP_ID not set');
+    console.error('[auth/kpi-id] NEXT_PUBLIC_KPI_APP_ID not set');
     return null;
   }
 
