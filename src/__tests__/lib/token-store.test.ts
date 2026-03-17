@@ -16,22 +16,6 @@ const bloomMock = {
 
 jest.mock('@/lib/bloom', () => bloomMock);
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-// safeRedis is only used in invalidateAdminCache (dynamic import); stub it out
-jest.mock('@/lib/redis', () => ({
-  redis: {},
-  isRedisReady: jest.fn(() => true),
-  safeRedis: jest.fn(async (fn: () => Promise<unknown>) => {
-    try {
-      return await fn();
-    } catch {
-      return null;
-    }
-  }),
-}));
-// Dynamic import of @/lib/cache inside invalidateAdminCache
-jest.mock('@/lib/cache', () => ({
-  invalidateAdmins: jest.fn().mockResolvedValue(undefined),
-}));
 
 import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 import {
@@ -56,8 +40,6 @@ describe('token-store', () => {
     allure.feature('Token Store');
   });
 
-  // ── persistTokenPair ──────────────────────────────────────────────────────
-
   describe('persistTokenPair', () => {
     beforeEach(() => allure.story('persistTokenPair'));
 
@@ -79,8 +61,6 @@ describe('token-store', () => {
       expect(data.created_at).toBeInstanceOf(Date);
     });
   });
-
-  // ── isAccessTokenValid ────────────────────────────────────────────────────
 
   describe('isAccessTokenValid', () => {
     beforeEach(() => allure.story('isAccessTokenValid'));
@@ -147,8 +127,6 @@ describe('token-store', () => {
     });
   });
 
-  // ── isRefreshTokenValid ───────────────────────────────────────────────────
-
   describe('isRefreshTokenValid', () => {
     beforeEach(() => allure.story('isRefreshTokenValid'));
 
@@ -181,8 +159,6 @@ describe('token-store', () => {
       );
     });
   });
-
-  // ── revokeByAccessJti ─────────────────────────────────────────────────────
 
   describe('revokeByAccessJti', () => {
     beforeEach(() => allure.story('revokeByAccessJti'));
@@ -232,8 +208,6 @@ describe('token-store', () => {
       expect(ttl).toBeGreaterThanOrEqual(1);
     });
   });
-
-  // ── revokeByRefreshJti ────────────────────────────────────────────────────
 
   describe('revokeByRefreshJti', () => {
     beforeEach(() => allure.story('revokeByRefreshJti'));
@@ -285,8 +259,6 @@ describe('token-store', () => {
       });
     });
   });
-
-  // ── revokeTokenPair ───────────────────────────────────────────────────────
 
   describe('revokeTokenPair', () => {
     beforeEach(() => allure.story('revokeTokenPair'));

@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { JoinAdminForm } from '@/components/admin/join-admin-form';
+import { APP_NAME } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Приєднатися як адміністратор',
-  description: 'Використайте токен запрошення, щоб отримати права адміністратора КПІ Голос.',
+  description: 'Використайте токен запрошення, щоб отримати права адміністратора.',
 };
 
 interface Props {
@@ -43,7 +44,6 @@ export function JoinPageContent({
       </div>
 
       <div className="relative w-full max-w-lg">
-        {/* Back link */}
         <Link
           href="/elections"
           className="inline-flex items-center gap-1.5 text-sm font-body text-[var(--muted-foreground)] hover:text-[var(--kpi-navy)] transition-colors mb-6"
@@ -52,7 +52,6 @@ export function JoinPageContent({
           Назад до голосувань
         </Link>
 
-        {/* Main card */}
         <div className="bg-white rounded-[var(--radius-2xl)] border border-[var(--border-color)] shadow-[var(--shadow-xl)] overflow-hidden">
           {/* Top accent bar */}
           <div className="h-1.5 w-full navy-gradient" />
@@ -68,7 +67,7 @@ export function JoinPageContent({
                   Приєднатися як адміністратор
                 </h1>
                 <p className="text-sm font-body text-[var(--muted-foreground)] mt-0.5">
-                  КПІ Голос · Система голосування
+                  {APP_NAME} · Система голосування
                 </p>
               </div>
             </div>
@@ -93,7 +92,6 @@ export function JoinPageContent({
             </div>
           </div>
 
-          {/* Form */}
           <div className="px-8 py-7">
             <JoinAdminForm initialToken={initialToken} />
           </div>

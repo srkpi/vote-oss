@@ -102,7 +102,6 @@ export function BallotRow({
           )}
         </div>
 
-        {/* Status badges (right side) */}
         <div className="flex items-center gap-1.5 shrink-0">
           {isMyBallot && (
             <span
@@ -140,7 +139,6 @@ export function BallotRow({
       {isExpanded && (
         <div className="px-5 pb-4 border-t border-[var(--border-subtle)] bg-[var(--surface)]/50">
           <div className="pt-4 space-y-4 ml-[52px]">
-            {/* My vote verification block */}
             {isMyBallot && (
               <div>
                 <p className="text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-1.5">

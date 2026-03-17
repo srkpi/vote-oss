@@ -31,7 +31,7 @@ export async function proxy(req: NextRequest) {
   let user: VerifiedPayload | null = null;
   let newSetCookies: string[] = [];
 
-  // ── 1. Try access token (signature only — no DB round-trip) ──────────────
+  // Try access token (signature only — no DB round-trip)
   if (accessCookie) {
     const payload = await verifyAccessToken(accessCookie);
     if (payload?.token_type === 'access') {
@@ -39,7 +39,7 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // ── 2. If no valid access token, attempt a silent refresh ─────────────────
+  // If no valid access token, attempt a silent refresh
   if (!user && refreshCookie) {
     // Pre-check signature to avoid a useless HTTP call for garbage tokens
     const refreshPayload = await verifyRefreshToken(refreshCookie);
@@ -69,23 +69,21 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // ── 3. Routing guards ────────────────────────────────────────────────────
-
-  // Non-authenticated user hitting a protected route → login
+  // Non-authenticated user hitting a protected route
   if (!user && isProtected) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/auth/login';
     return NextResponse.redirect(loginUrl);
   }
 
-  // Authenticated user hitting a guest-only route → elections
+  // Authenticated user hitting a guest-only route
   if (user && isGuestOnly) {
-    return NextResponse.redirect(new URL('/elections', req.nextUrl.origin));
+    return NextResponse.redirect(new URL('/', req.nextUrl.origin));
   }
 
-  // Authenticated non-admin hitting an admin route → elections
+  // Authenticated non-admin hitting an admin route
   if (user && isAdminOnly && !user.is_admin) {
-    return NextResponse.redirect(new URL('/elections', req.nextUrl.origin));
+    return NextResponse.redirect(new URL('/', req.nextUrl.origin));
   }
 
   // Admin hitting /join → they already have admin, send them to admin panel
@@ -93,10 +91,8 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL('/admin', req.nextUrl.origin));
   }
 
-  // ── 4. Build enriched request headers for server components ──────────────
-
+  // Build enriched request headers for server components
   const requestHeaders = new Headers(req.headers);
-
   if (user) {
     requestHeaders.set('x-user-id', user.sub);
     requestHeaders.set('x-user-name', user.full_name);
@@ -113,8 +109,8 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // ── 5. If tokens were refreshed, patch the cookie header so that
-  //       server-component serverFetch() calls use the new access token ──────
+  // If tokens were refreshed, patch the cookie header so that
+  // server-component serverFetch() calls use the new access token
   if (newSetCookies.length > 0) {
     let newAccessValue = '';
     let newRefreshValue = '';
@@ -139,10 +135,8 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // ── 6. Build final response, forwarding any new Set-Cookie headers ────────
-
+  // Build final response, forwarding any new Set-Cookie headers
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-
   for (const cookieStr of newSetCookies) {
     response.headers.append('set-cookie', cookieStr);
   }

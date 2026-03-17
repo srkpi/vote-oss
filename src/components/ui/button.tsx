@@ -5,8 +5,6 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// ==================== VARIANTS ====================
-
 const buttonVariants = cva(
   [
     'inline-flex items-center justify-center gap-2 font-medium font-body',
@@ -57,8 +55,6 @@ const buttonVariants = cva(
   },
 );
 
-// ==================== TYPES ====================
-
 export type ButtonVariant =
   | 'default'
   | 'primary'
@@ -93,8 +89,6 @@ export interface ButtonProps
   size?: ButtonSize;
 }
 
-// ==================== BUTTON ====================
-
 function Button({
   className,
   variant = 'default',
@@ -110,8 +104,6 @@ function Button({
 }: ButtonProps) {
   const Comp = asChild ? Slot.Root : 'button';
   const isDisabled = disabled || loading;
-
-  // Icon-only button (no children)
   const isIconOnly = size?.startsWith('icon') && !children;
 
   if (asChild) {

@@ -4,18 +4,17 @@ import Link from 'next/link';
 
 import { KpiIdLogin } from '@/components/auth/kpi-id-login';
 import { AnimatedGrid } from '@/components/common/animated-grid';
+import { APP_NAME } from '@/lib/config/client';
 
 export const metadata: Metadata = {
   title: 'Вхід',
-  description: 'Увійдіть за допомогою вашого КПІ ID',
+  description: 'Увійдіть за допомогою KPI ID',
 };
 
 export default function LoginPage() {
   return (
     <div className="min-h-dvh flex">
-      {/* ── Left panel — decorative / high-tech ── */}
       <div className="hidden lg:flex flex-col justify-between w-1/2 navy-gradient-subtle p-12 relative overflow-hidden">
-        {/* Animated grid canvas */}
         <AnimatedGrid variant="dark" cellSize={44} />
 
         {/* Atmospheric glow orbs */}
@@ -171,8 +170,6 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* ── Content ── */}
-
         {/* Logo */}
         <Link className="relative flex items-center gap-3 z-10" href="/">
           <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
@@ -180,7 +177,7 @@ export default function LoginPage() {
           </div>
           <div>
             <span className="font-display text-xl font-bold text-white leading-tight block">
-              КПІ Голос
+              {APP_NAME}
             </span>
             <span className="text-[10px] font-body text-white/50 uppercase tracking-widest">
               Система голосування
@@ -200,7 +197,7 @@ export default function LoginPage() {
             </span>
           </h2>
           <p className="font-body text-white/65 leading-relaxed text-md xl:text-xl">
-            Використовуйте систему КПІ ID для безпечного та верифікованого входу до платформи
+            Використовуйте систему KPI ID для безпечного та верифікованого входу до платформи
             голосування
           </p>
         </div>
@@ -230,7 +227,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ── Right panel — login form ── */}
       <div className="flex-1 flex items-center justify-center p-8 relative">
         {/* Subtle background for the form side on mobile */}
         <div className="absolute inset-0 lg:hidden overflow-hidden">
@@ -246,17 +242,15 @@ export default function LoginPage() {
                 <CheckCircle className="w-4 h-4 text-white" />
               </div>
               <span className="font-display text-2xl font-bold text-[var(--kpi-navy)]">
-                КПІ Голос
+                {APP_NAME}
               </span>
             </Link>
           </div>
 
-          {/* Title */}
           <h1 className="font-display text-center text-3xl sm:text-4xl font-bold text-[var(--foreground)] mb-8">
             Ласкаво просимо
           </h1>
 
-          {/* KPI ID Button */}
           <div className="space-y-6">
             <KpiIdLogin fullWidth />
 
@@ -271,7 +265,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Trust signals */}
             <div className="space-y-3 w-full">
               {[
                 'Голосують лише справжні студенти',

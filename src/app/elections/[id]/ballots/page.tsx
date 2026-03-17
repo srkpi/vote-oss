@@ -5,9 +5,7 @@ import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { BallotsClient } from '@/components/elections/ballots-client';
 import { Alert } from '@/components/ui/alert';
-import { serverFetch } from '@/lib/server-auth';
-import type { BallotsResponse } from '@/types/ballot';
-import type { ElectionDetail } from '@/types/election';
+import { serverApi } from '@/lib/api/server';
 
 interface BallotsPageProps {
   params: Promise<{ id: string }>;
@@ -22,8 +20,8 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
   const { id } = await params;
 
   const [ballotsResult, electionResult] = await Promise.all([
-    serverFetch<BallotsResponse>(`/api/elections/${id}/ballots`),
-    serverFetch<ElectionDetail>(`/api/elections/${id}`),
+    serverApi.getBallots(id),
+    serverApi.getElection(id),
   ]);
 
   const { data, error, status } = ballotsResult;

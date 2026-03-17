@@ -20,7 +20,7 @@ export function CopyButton({ text, label = 'Копіювати', size = 'sm' }: 
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* ignore */
+      // ignore
     }
   };
 

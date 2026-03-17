@@ -37,7 +37,7 @@ export function TokensPageClient({
   };
 
   // When the create dialog closes (regardless of whether a token was created),
-  // trigger a server re-render so the list reflects any new token.  The local
+  // trigger a server re-render so the list reflects any new token. The local
   // state is intentionally preserved for the delete-optimistic-update path;
   // new tokens are surfaced via the server component rehydration.
   const handleDialogClose = () => {
@@ -50,7 +50,6 @@ export function TokensPageClient({
 
   return (
     <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-      {/* Card header */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg navy-gradient flex items-center justify-center">
@@ -71,7 +70,6 @@ export function TokensPageClient({
         </Button>
       </div>
 
-      {/* Error state */}
       {error && (
         <div className="p-4 sm:p-6">
           <Alert variant="error" title="Помилка завантаження">
@@ -82,7 +80,6 @@ export function TokensPageClient({
 
       {!error && (
         <div className="p-4 sm:p-6 space-y-5">
-          {/* Stats summary */}
           {totalCount > 0 && (
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm font-body text-[var(--muted-foreground)] px-1">
               <span>

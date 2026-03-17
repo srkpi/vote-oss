@@ -6,13 +6,33 @@ import { redirect } from 'next/navigation';
 import { StatCard } from '@/components/admin/stat-card';
 import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
+import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime } from '@/lib/utils';
-import type { Admin } from '@/types/admin';
-import type { Election } from '@/types/election';
 
 export const metadata: Metadata = {
   title: 'Адмін панель',
+};
+
+const statusConfig = {
+  open: {
+    label: 'Активне',
+    dot: 'bg-[var(--success)]',
+    text: 'text-[var(--success)]',
+    bg: 'bg-[var(--success-bg)]',
+  },
+  upcoming: {
+    label: 'Очікується',
+    dot: 'bg-[var(--kpi-orange)]',
+    text: 'text-[var(--kpi-orange)]',
+    bg: 'bg-[var(--warning-bg)]',
+  },
+  closed: {
+    label: 'Завершено',
+    dot: 'bg-[var(--kpi-gray-light)]',
+    text: 'text-[var(--muted-foreground)]',
+    bg: 'bg-[var(--surface)]',
+  },
 };
 
 export default async function AdminDashboardPage() {
@@ -22,8 +42,8 @@ export default async function AdminDashboardPage() {
   }
 
   const [electionsResult, adminsResult] = await Promise.all([
-    serverFetch<Election[]>('/api/elections'),
-    serverFetch<Admin[]>('/api/admins'),
+    serverApi.getElections(),
+    serverApi.getAdmins(),
   ]);
 
   const elections = electionsResult.data ?? [];
@@ -51,7 +71,6 @@ export default async function AdminDashboardPage() {
       </PageHeader>
 
       <div className="p-4 sm:p-8 space-y-6">
-        {/* Stats grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             label="Активних"
@@ -80,7 +99,6 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          {/* Recent elections */}
           <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
             <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)] px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
               Нещодавні голосування
@@ -104,27 +122,7 @@ export default async function AdminDashboardPage() {
             ) : (
               <div className="divide-y divide-[var(--border-subtle)]">
                 {recentElections.map((election) => {
-                  const statusConfig = {
-                    open: {
-                      label: 'Активне',
-                      dot: 'bg-[var(--success)]',
-                      text: 'text-[var(--success)]',
-                      bg: 'bg-[var(--success-bg)]',
-                    },
-                    upcoming: {
-                      label: 'Очікується',
-                      dot: 'bg-[var(--kpi-orange)]',
-                      text: 'text-[var(--kpi-orange)]',
-                      bg: 'bg-[var(--warning-bg)]',
-                    },
-                    closed: {
-                      label: 'Завершено',
-                      dot: 'bg-[var(--kpi-gray-light)]',
-                      text: 'text-[var(--muted-foreground)]',
-                      bg: 'bg-[var(--surface)]',
-                    },
-                  }[election.status];
-
+                  const status = statusConfig[election.status];
                   return (
                     <Link
                       key={election.id}
@@ -132,7 +130,7 @@ export default async function AdminDashboardPage() {
                       className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-[var(--surface)] transition-colors group"
                     >
                       <div
-                        className={`w-2 h-2 rounded-full shrink-0 ${statusConfig.dot} ${election.status === 'open' ? 'animate-pulse' : ''}`}
+                        className={`w-2 h-2 rounded-full shrink-0 ${status.dot} ${election.status === 'open' ? 'animate-pulse' : ''}`}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium font-body text-[var(--foreground)] truncate group-hover:text-[var(--kpi-navy)] transition-colors">
@@ -144,9 +142,9 @@ export default async function AdminDashboardPage() {
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                         <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${statusConfig.bg} ${statusConfig.text}`}
+                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.bg} ${status.text}`}
                         >
-                          {statusConfig.label}
+                          {status.label}
                         </span>
                         <span className="text-xs font-body text-[var(--muted-foreground)] hidden sm:inline">
                           {election.ballotCount} голосів

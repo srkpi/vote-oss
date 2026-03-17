@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { jwtVerify, SignJWT } from 'jose';
 
+import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, NODE_ENV } from '@/lib/config/server';
 import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 
 export interface TokenPayload {
@@ -19,24 +20,21 @@ export interface VerifiedPayload extends TokenPayload {
   token_type: 'access' | 'refresh';
 }
 
-function getSecret(envVar: string): Uint8Array {
-  const secret = process.env[envVar];
-  if (!secret) throw new Error(`${envVar} is not set`);
-  return new TextEncoder().encode(secret);
-}
+const ACCESS_SECRET_ENCODED = new TextEncoder().encode(JWT_ACCESS_SECRET);
+const REFRESH_SECRET_ENCODED = new TextEncoder().encode(JWT_REFRESH_SECRET);
 
 export async function signAccessToken(
   payload: TokenPayload,
 ): Promise<{ token: string; jti: string }> {
   const jti = randomUUID();
-  const secret = getSecret('JWT_ACCESS_SECRET');
   const expirationTime = Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECS;
   const token = await new SignJWT({ ...payload, token_type: 'access' })
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(jti)
     .setIssuedAt()
     .setExpirationTime(expirationTime)
-    .sign(secret);
+    .sign(ACCESS_SECRET_ENCODED);
+
   return { token, jti };
 }
 
@@ -44,20 +42,19 @@ export async function signRefreshToken(
   payload: TokenPayload,
 ): Promise<{ token: string; jti: string }> {
   const jti = randomUUID();
-  const secret = getSecret('JWT_REFRESH_SECRET');
   const expirationTime = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL_SECS;
   const token = await new SignJWT({ ...payload, token_type: 'refresh' })
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(jti)
     .setIssuedAt()
     .setExpirationTime(expirationTime)
-    .sign(secret);
+    .sign(REFRESH_SECRET_ENCODED);
+
   return { token, jti };
 }
 
 export async function verifyAccessToken(token: string): Promise<VerifiedPayload> {
-  const secret = getSecret('JWT_ACCESS_SECRET');
-  const { payload } = await jwtVerify(token, secret);
+  const { payload } = await jwtVerify(token, ACCESS_SECRET_ENCODED);
 
   if (payload['token_type'] !== 'access') {
     throw new Error('Invalid token type');
@@ -78,8 +75,7 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
 }
 
 export async function verifyRefreshToken(token: string): Promise<VerifiedPayload> {
-  const secret = getSecret('JWT_REFRESH_SECRET');
-  const { payload } = await jwtVerify(token, secret);
+  const { payload } = await jwtVerify(token, REFRESH_SECRET_ENCODED);
 
   if (payload['token_type'] !== 'refresh') throw new Error('Invalid token type');
 
@@ -101,7 +97,7 @@ export function tokenCookieOptions(type: 'access' | 'refresh') {
   return {
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: NODE_ENV === 'production',
     maxAge: type === 'access' ? ACCESS_TOKEN_TTL_SECS : REFRESH_TOKEN_TTL_SECS,
     path: '/',
   };

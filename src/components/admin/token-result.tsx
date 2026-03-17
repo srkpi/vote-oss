@@ -21,32 +21,24 @@ export function TokenResult({ token, copied, copiedLink, onCopy, onCopyLink }: T
         Скопіюйте токен або поділіться посиланням.
       </Alert>
 
-      <div>
-        <p className="text-xs font-semibold uppercase mb-2">Посилання запрошення</p>
-
-        <div className="flex items-center gap-2">
-          <div className="flex-1 p-3 rounded bg-[var(--surface)] border overflow-hidden">
-            <p className="font-mono text-xs break-all select-all">{inviteLink}</p>
-          </div>
-
-          <Button variant={copiedLink ? 'secondary' : 'outline'} size="icon" onClick={onCopyLink}>
-            {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          </Button>
+      <p className="text-xs font-semibold uppercase mb-2">Посилання запрошення</p>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 p-3 rounded bg-[var(--surface)] border overflow-hidden">
+          <p className="font-mono text-xs break-all select-all">{inviteLink}</p>
         </div>
+        <Button variant={copiedLink ? 'secondary' : 'outline'} size="icon" onClick={onCopyLink}>
+          {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+        </Button>
       </div>
 
-      <div>
-        <p className="text-xs font-semibold uppercase mb-2">Токен запрошення</p>
-
-        <div className="flex items-center gap-2">
-          <div className="flex-1 p-3 rounded bg-[var(--surface)] border overflow-hidden">
-            <p className="font-mono text-xs break-all select-all">{token}</p>
-          </div>
-
-          <Button variant={copied ? 'secondary' : 'outline'} size="icon" onClick={onCopy}>
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          </Button>
+      <p className="text-xs font-semibold uppercase mb-2">Токен запрошення</p>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 p-3 rounded bg-[var(--surface)] border overflow-hidden">
+          <p className="font-mono text-xs break-all select-all">{token}</p>
         </div>
+        <Button variant={copied ? 'secondary' : 'outline'} size="icon" onClick={onCopy}>
+          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+        </Button>
       </div>
     </div>
   );

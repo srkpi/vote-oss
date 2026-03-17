@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { deleteElection } from '@/lib/api-client';
+import { api } from '@/lib/api/browser';
 
 interface DeleteElectionButtonProps {
   electionId: string;
@@ -31,7 +31,7 @@ export function DeleteElectionButton({ electionId, electionTitle }: DeleteElecti
 
   const handleDelete = async () => {
     setDeleting(true);
-    const result = await deleteElection(electionId);
+    const result = await api.deleteElection(electionId);
 
     if (result.success) {
       toast({

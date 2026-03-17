@@ -29,35 +29,19 @@
 
 import { createHash } from 'crypto';
 
+import {
+  BLOOM_BITS,
+  BLOOM_K,
+  BLOOM_RESET_INTERVAL_MS,
+  KEY_BITS,
+  KEY_RESET_AT,
+  RESET_AT_CACHE_TTL_MS,
+} from '@/lib/constants';
 import { redis, safeRedis } from '@/lib/redis';
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const BLOOM_BITS = 1_000_000;
-
-/** Number of independent hash functions (Kirsch–Mitzenmacher simulated). */
-const BLOOM_K = 7;
-
-/** How often the filter is wiped and reset_at updated (matches refresh TTL). */
-const BLOOM_RESET_INTERVAL_MS = 7 * 24 * 60 * 60 * 1_000; // 7 days
-
-// ---------------------------------------------------------------------------
-// Redis key names
-// ---------------------------------------------------------------------------
-
-const KEY_BITS = 'bloom:bits';
-const KEY_RESET_AT = 'bloom:reset_at';
-
-/** Per-JTI confirmed-revocation key (with TTL). */
 export function revokedKey(jti: string): string {
   return `revoked:${jti}`;
 }
-
-// ---------------------------------------------------------------------------
-// Hash helpers
-// ---------------------------------------------------------------------------
 
 /**
  * Derive k bit-positions for a given item using the Kirsch–Mitzenmacher trick:
@@ -79,14 +63,9 @@ function bloomPositions(item: string): number[] {
   return positions;
 }
 
-// ---------------------------------------------------------------------------
-// Reset management
-// ---------------------------------------------------------------------------
-
 // Module-level cache so we avoid a Redis round-trip on every single request.
 let _cachedResetAt = 0;
 let _cachedResetFetchedAt = 0;
-const RESET_AT_CACHE_TTL_MS = 60_000; // re-fetch at most once per minute
 
 /**
  * Returns the current bloom-filter reset timestamp (ms since epoch).
@@ -153,10 +132,6 @@ export function invalidateResetAtCache(): void {
   _cachedResetAt = 0;
   _cachedResetFetchedAt = 0;
 }
-
-// ---------------------------------------------------------------------------
-// Core bloom-filter operations
-// ---------------------------------------------------------------------------
 
 /**
  * Record `jti` as revoked in the bloom filter.

@@ -18,7 +18,6 @@ export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount 
       className="overflow-x-auto no-scrollbar p-1 bg-white border border-[var(--border-subtle)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xs)]"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      {/* min-w-full ensures inner flex can stretch to fill container */}
       <div className="flex min-w-full gap-1">
         {tabs.map((tab) => {
           const count = tabCount(tab.key);

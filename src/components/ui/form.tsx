@@ -3,8 +3,6 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// ==================== LABEL ====================
-
 export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
   required?: boolean;
 }
@@ -29,8 +27,6 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
   ),
 );
 Label.displayName = 'Label';
-
-// ==================== INPUT ====================
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
@@ -100,8 +96,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 Input.displayName = 'Input';
 
-// ==================== TEXTAREA ====================
-
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   error?: boolean;
 }
@@ -128,8 +122,6 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ),
 );
 Textarea.displayName = 'Textarea';
-
-// ==================== SELECT ====================
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   error?: boolean;
@@ -162,8 +154,6 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ),
 );
 Select.displayName = 'Select';
-
-// ==================== FORM FIELD (wrapper) ====================
 
 interface FormFieldProps {
   label?: string;

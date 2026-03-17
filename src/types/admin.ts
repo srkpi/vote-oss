@@ -32,10 +32,6 @@ export interface InviteTokenResponse {
   validDue: string;
 }
 
-// ---------------------------------------------------------------------------
-// Invite token list types
-// ---------------------------------------------------------------------------
-
 export interface InviteToken {
   token_hash: string;
   max_usage: number;

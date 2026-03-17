@@ -44,7 +44,6 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const [showDecrypted, setShowDecrypted] = useState(true);
   const cryptoKeyRef = useRef<CryptoKey | null>(null);
 
-  // ── User's stored vote record ──────────────────────────────────────────────
   const [myVoteRecord, setMyVoteRecord] = useState<VoteRecord | null>(null);
   const myBallotRef = useRef<HTMLDivElement | null>(null);
 
@@ -54,7 +53,6 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const choices: ElectionChoice[] = election?.choices ?? [];
   const electionId = election?.id ?? electionMeta.id;
 
-  // Load stored vote on mount
   useEffect(() => {
     const record = getVote(electionId);
     setMyVoteRecord(record);
@@ -127,12 +125,10 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     setPage(1);
   };
 
-  // ── Local pagination ──────────────────────────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(filteredBallots.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pagedBallots = filteredBallots.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  // Jump to the page that contains the user's ballot on first load
   useEffect(() => {
     if (!myVoteRecord) return;
     const idx = filteredBallots.findIndex((b) => b.current_hash === myVoteRecord.ballotHash);
@@ -150,7 +146,6 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     });
   };
 
-  // ── Stats ─────────────────────────────────────────────────────────────────
   const malformedCount = decryptionDone
     ? [...decryptedMap.values()].filter((v) => !v.valid).length
     : 0;
@@ -158,12 +153,10 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     ? [...decryptedMap.values()].filter((v) => !v.hashValid).length
     : 0;
 
-  // ── My ballot lookup ──────────────────────────────────────────────────────
   const myBallot = myVoteRecord
     ? (ballots.find((b) => b.current_hash === myVoteRecord.ballotHash) ?? null)
     : null;
 
-  // Verify stored choice matches decrypted choice
   const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
   const myVoteMatchesDecryption =
     myDecryption !== undefined && myVoteRecord !== null
@@ -172,7 +165,6 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
   return (
     <div className="space-y-5">
-      {/* My Vote Banner */}
       {myVoteRecord && (
         <MyVoteBanner
           record={myVoteRecord}
@@ -287,7 +279,6 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
         </div>
       ) : (
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden">
-          {/* Chain integrity banner */}
           {decryptionDone && invalidHashCount > 0 && (
             <div className="px-5 py-3 bg-[var(--error-bg)] border-b border-[var(--error)]/20 flex items-center gap-2 text-sm font-body text-[var(--error)]">
               <ShieldAlert className="w-4 h-4 shrink-0" />

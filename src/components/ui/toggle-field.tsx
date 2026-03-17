@@ -48,7 +48,6 @@ export function ToggleField({
 
       <div>
         <p className="text-sm font-medium text-[var(--foreground)] font-body">{label}</p>
-
         {description && (
           <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">{description}</p>
         )}

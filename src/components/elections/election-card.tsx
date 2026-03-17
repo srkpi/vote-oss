@@ -31,7 +31,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
-      {/* Top accent bar */}
       <div
         className={cn(
           'h-1',
@@ -42,11 +41,8 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       />
 
       <div className="p-6">
-        {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-4">
           <ElectionStatusBadge status={election.status} />
-
-          {/* Faculty / Group restriction indicator */}
           {(election.restrictedToFaculty || election.restrictedToGroup) && (
             <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
               <Lock className="w-3.5 h-3.5 shrink-0" />
@@ -59,7 +55,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           )}
         </div>
 
-        {/* Title */}
         <h3
           className={cn(
             'font-display text-xl font-semibold text-[var(--foreground)] leading-snug mb-3',
@@ -69,7 +64,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           {election.title}
         </h3>
 
-        {/* Meta info */}
         <div className="space-y-2 mb-5">
           <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
             <Calendar className="w-4 h-4 shrink-0 text-[var(--kpi-gray-mid)]" />
@@ -86,7 +80,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           </div>
         </div>
 
-        {/* Choices preview */}
         <div className="flex flex-wrap gap-2 mb-5">
           {election.choices.slice(0, 3).map((choice) => (
             <span
@@ -107,7 +100,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           )}
         </div>
 
-        {/* Footer stats */}
         <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
           <div className="flex items-center gap-1.5 text-sm text-[var(--muted-foreground)]">
             <FileText className="w-4 h-4 text-[var(--kpi-gray-mid)]" />
@@ -130,7 +122,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
   );
 }
 
-// Skeleton card for loading state
 export function ElectionCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div

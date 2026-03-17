@@ -1,10 +1,9 @@
 import Redis from 'ioredis';
 
-function createClient(): Redis {
-  const url = process.env.REDIS_URL;
-  if (!url) throw new Error('REDIS_URL environment variable is not set');
+import { REDIS_URL } from '@/lib/config/server';
 
-  const client = new Redis(url, {
+function createClient(): Redis {
+  const client = new Redis(REDIS_URL, {
     // Connection
     connectTimeout: 5_000,
     commandTimeout: 3_000,
@@ -36,10 +35,10 @@ function createClient(): Redis {
   return client;
 }
 
-// ---------------------------------------------------------------------------
-// Hot-reload safe singleton (Next.js dev mode re-evaluates modules on every
-// request, so we stash the client on globalThis to avoid leaking connections).
-// ---------------------------------------------------------------------------
+/**
+ * Hot-reload safe singleton (Next.js dev mode re-evaluates modules on every
+ * request, so we stash the client on globalThis to avoid leaking connections).
+ */
 const g = globalThis as typeof globalThis & { _redis?: Redis };
 
 function getRedis(): Redis {
@@ -53,9 +52,6 @@ export const redis: Redis = new Proxy({} as Redis, {
   },
 });
 
-// ---------------------------------------------------------------------------
-// Availability helper – callers use this to decide whether to fall back to DB
-// ---------------------------------------------------------------------------
 export function isRedisReady(): boolean {
   return redis.status === 'ready';
 }

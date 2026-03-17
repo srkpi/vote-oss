@@ -10,7 +10,7 @@ import { CharCounter } from '@/components/ui/char-counter';
 import { Combobox } from '@/components/ui/combobox';
 import { FormField, Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { createElection } from '@/lib/api-client';
+import { api } from '@/lib/api/browser';
 import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
@@ -145,14 +145,14 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     form.title.length > ELECTION_TITLE_MAX_LENGTH ||
     choices.some((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
     setError(null);
 
-    const result = await createElection({
+    const result = await api.createElection({
       title: form.title.trim(),
       opensAt: new Date(form.opensAt).toISOString(),
       closesAt: new Date(form.closesAt).toISOString(),
@@ -168,7 +168,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         variant: 'success',
         duration: 6000,
       });
-      router.push(`/elections/${result.data.id}`);
+      router.push(`/admin/elections/${result.data.id}`);
     } else {
       setError(result.error);
     }
@@ -192,7 +192,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </Alert>
       )}
 
-      {/* Basic Info */}
       <section>
         <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-4">
           Створення голосування
@@ -241,7 +240,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </div>
       </section>
 
-      {/* Choices */}
       <section>
         <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-1">
           Варіанти відповідей
@@ -317,7 +315,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
       </section>
 
-      {/* Access Restrictions */}
       <section>
         <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-1">
           Обмеження доступу
@@ -333,7 +330,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Faculty picker */}
           <FormField
             label="Обмежити підрозділом"
             htmlFor="faculty"
@@ -357,7 +353,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                 </div>
               </div>
             ) : (
-              /* Free combobox */
               <Combobox
                 id="faculty"
                 options={groupsLoading ? [] : facultyOptions}
@@ -373,7 +368,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             )}
           </FormField>
 
-          {/* Group picker */}
           <FormField
             label="Обмежити групою"
             htmlFor="group"
@@ -401,7 +395,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </div>
       </section>
 
-      {/* Submit */}
       <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-[var(--border-subtle)]">
         <Button
           type="button"

@@ -7,7 +7,8 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { logout } from '@/lib/api-client';
+import { api } from '@/lib/api/browser';
+import { APP_NAME } from '@/lib/config/client';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types/auth';
 
@@ -30,7 +31,7 @@ export function Header({ session }: HeaderProps) {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    const result = await logout();
+    const result = await api.logout();
     if (result.success) {
       toast({ title: 'Вихід виконано', description: 'До побачення!', variant: 'success' });
       router.push('/auth/login');
@@ -51,14 +52,13 @@ export function Header({ session }: HeaderProps) {
       )}
     >
       <div className="container h-full flex items-center justify-between">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <div className={'w-8 h-8 rounded-lg navy-gradient flex items-center justify-center'}>
             <CheckCircle className="w-4 h-4 text-white" />
           </div>
           <div>
             <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight block">
-              КПІ Голос
+              {APP_NAME}
             </span>
             <span className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-widest leading-none">
               Система голосування
@@ -66,7 +66,6 @@ export function Header({ session }: HeaderProps) {
           </div>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link
@@ -85,7 +84,6 @@ export function Header({ session }: HeaderProps) {
           ))}
         </nav>
 
-        {/* Right section */}
         <div className="flex items-center gap-3">
           {session ? (
             <div className="relative">
@@ -122,7 +120,6 @@ export function Header({ session }: HeaderProps) {
                 />
               </button>
 
-              {/* Dropdown */}
               {userMenuOpen && (
                 <>
                   <div className="fixed inset-0" onClick={() => setUserMenuOpen(false)} />
@@ -169,7 +166,6 @@ export function Header({ session }: HeaderProps) {
             </Button>
           )}
 
-          {/* Mobile menu button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
@@ -184,7 +180,6 @@ export function Header({ session }: HeaderProps) {
         </div>
       </div>
 
-      {/* Mobile Nav Drawer */}
       {mobileOpen && (
         <>
           <div

@@ -72,7 +72,6 @@ describe('fetchFacultyGroups', () => {
     resetRedisMock();
     allure.feature('Campus API');
     allure.story('fetchFacultyGroups');
-    process.env.CAMPUS_API_URL = 'https://campus.example.com';
 
     // Always install a jest spy so `expect(global.fetch).not.toHaveBeenCalled()`
     // works even in tests where mockFetch() is never called.
@@ -84,7 +83,6 @@ describe('fetchFacultyGroups', () => {
   });
 
   afterEach(() => {
-    delete process.env.CAMPUS_API_URL;
     jest.restoreAllMocks();
   });
 
@@ -151,13 +149,6 @@ describe('fetchFacultyGroups', () => {
     const ficeGroups = result['FICE'];
 
     expect(ficeGroups).toEqual([...ficeGroups].sort((a, b) => a.localeCompare(b, 'uk')));
-  });
-
-  it('throws when CAMPUS_API_URL is not set', async () => {
-    delete process.env.CAMPUS_API_URL;
-    redisMock.get.mockResolvedValueOnce(null);
-
-    await expect(fetchFacultyGroups()).rejects.toThrow('CAMPUS_API_URL');
   });
 
   it('throws when the campus API returns a non-OK status', async () => {

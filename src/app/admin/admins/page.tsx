@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 
 import { AdminsPageClient } from '@/components/admin/admins-page-client';
 import { PageHeader } from '@/components/common/page-header';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
-import type { Admin } from '@/types/admin';
+import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Адміністратори',
@@ -16,9 +16,9 @@ export default async function AdminsPage() {
     redirect('/auth/login');
   }
 
-  const { data: admins, error } = await serverFetch<Admin[]>('/api/admins');
+  const { data, error } = await serverApi.getAdmins();
 
-  const all = admins ?? [];
+  const all = data ?? [];
   const canInvite = session.manageAdmins ?? false;
   const canGrantManageAdmins = session.manageAdmins ?? false;
   const restrictedToFaculty = session.restrictedToFaculty ?? false;

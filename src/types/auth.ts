@@ -13,6 +13,7 @@ export interface TicketUserInfo {
   };
   traceId: string;
 }
+
 export interface UserInfo {
   userId: string;
   fullName: string;

@@ -31,7 +31,6 @@ export function MyVoteBanner({
       )}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Icon */}
         <div
           className={cn(
             'w-10 h-10 rounded-[var(--radius-lg)] flex items-center justify-center shrink-0',
@@ -49,7 +48,6 @@ export function MyVoteBanner({
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0 space-y-2">
           <p
             className={cn(
@@ -66,7 +64,6 @@ export function MyVoteBanner({
                 : 'Ваш голос збережено локально'}
           </p>
 
-          {/* Choice row */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-body">
             <span className="text-[var(--muted-foreground)] min-w-0 break-words">
               Збережений вибір:{' '}
@@ -88,7 +85,6 @@ export function MyVoteBanner({
           )}
         </div>
 
-        {/* Scroll button */}
         {found && (
           <Button
             variant="secondary"

@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
 
 import { PageLayout } from '@/components/layout/page-layout';
+import { APP_NAME } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 import { cn } from '@/lib/utils';
 import { ToastProvider } from '@/providers/toast-provider';
@@ -12,17 +13,16 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: {
-    default: 'КПІ Голос — Система електронного голосування',
-    template: '%s | КПІ Голос',
+    default: `${APP_NAME} — Система електронного голосування`,
+    template: `%s | ${APP_NAME}`,
   },
   description:
     'Безпечна система електронного голосування для студентів і викладачів КПІ ім. Ігоря Сікорського.',
-  keywords: ['КПІ', 'голосування', 'вибори', 'студенти', 'КПІ Сікорського'],
-  authors: [{ name: 'КПІ ім. Ігоря Сікорського' }],
+  keywords: ['КПІ', 'голосування', 'вибори', 'студенти', 'КПІ ім. Ігоря Сікорського'],
   openGraph: {
     type: 'website',
     locale: 'uk_UA',
-    siteName: 'КПІ Голос',
+    siteName: APP_NAME,
   },
 };
 

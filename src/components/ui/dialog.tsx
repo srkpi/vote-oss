@@ -39,13 +39,11 @@ export function Dialog({ open, onClose, children }: DialogProps) {
       role="dialog"
       aria-modal="true"
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
-      {/* Content */}
       <div className="relative z-10 w-full animate-scale-in">{children}</div>
     </div>
   );

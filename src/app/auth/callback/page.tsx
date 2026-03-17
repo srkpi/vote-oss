@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-import { loginWithTicket } from '@/lib/api-client';
+import { api } from '@/lib/api/browser';
 
 type Status = 'loading' | 'success' | 'error';
 
@@ -11,7 +11,7 @@ const STATUS_CONFIG = {
   loading: {
     icon: null,
     title: 'Авторизація…',
-    description: 'Перевіряємо вашу особу через КПІ ID',
+    description: 'Перевіряємо вашу особу через KPI ID',
   },
   success: {
     icon: 'check',
@@ -48,7 +48,7 @@ export default function CallbackPage() {
         return;
       }
 
-      const result = await loginWithTicket(ticketId);
+      const result = await api.loginWithTicket(ticketId);
 
       if (result.success) {
         setStatus('success');

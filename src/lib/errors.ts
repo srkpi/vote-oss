@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export type ApiError = {
-  error: string;
-  message: string;
-  statusCode: number;
-};
+import type { ApiError } from '@/types/api';
 
 export function apiError(
   message: string,

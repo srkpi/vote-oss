@@ -4,8 +4,6 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-// ==================== VARIANTS ====================
-
 const badgeVariants = cva(
   'inline-flex items-center justify-center gap-1 font-medium font-body whitespace-nowrap rounded-full border border-transparent transition-colors duration-150 select-none',
   {
@@ -39,8 +37,6 @@ const badgeVariants = cva(
   },
 );
 
-// ==================== DOT COLORS ====================
-
 const dotColors: Record<string, string> = {
   default: 'bg-[var(--kpi-gray-mid)]',
   secondary: 'bg-[var(--kpi-gray-mid)]',
@@ -55,8 +51,6 @@ const dotColors: Record<string, string> = {
   accent: 'bg-white',
   ghost: 'bg-[var(--kpi-gray-mid)]',
 };
-
-// ==================== TYPES ====================
 
 export type BadgeVariant =
   | 'default'
@@ -81,8 +75,6 @@ export interface BadgeProps
   variant?: BadgeVariant;
   size?: BadgeSize;
 }
-
-// ==================== BADGE ====================
 
 function Badge({
   className,

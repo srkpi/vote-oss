@@ -1,16 +1,16 @@
-const accentStyles = {
-  navy: 'navy-gradient',
-  orange: 'bg-[var(--kpi-orange)]',
-  success: 'bg-[var(--success)]',
-  info: 'bg-[var(--kpi-blue-light)]',
-};
-
 interface StatCardProps {
   label: string;
   value: string | number;
   icon: React.ReactNode;
   accent: 'navy' | 'orange' | 'success' | 'info';
 }
+
+const accentStyles = {
+  navy: 'navy-gradient',
+  orange: 'bg-[var(--kpi-orange)]',
+  success: 'bg-[var(--success)]',
+  info: 'bg-[var(--kpi-blue-light)]',
+};
 
 export function StatCard({ label, value, accent, icon }: StatCardProps) {
   return (

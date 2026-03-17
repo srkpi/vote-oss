@@ -51,6 +51,41 @@ export function computeNullifier(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+export async function computeNullifierClient(token: string): Promise<string> {
+  const encoded = new TextEncoder().encode(token);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+export async function encryptChoiceClient(publicKeyPem: string, choiceId: string): Promise<string> {
+  const pemHeader = '-----BEGIN PUBLIC KEY-----';
+  const pemFooter = '-----END PUBLIC KEY-----';
+  const pemContents = publicKeyPem
+    .replace(pemHeader, '')
+    .replace(pemFooter, '')
+    .replace(/\s+/g, '');
+
+  const binaryDer = atob(pemContents);
+  const binaryArray = new Uint8Array(binaryDer.length);
+  for (let i = 0; i < binaryDer.length; i++) {
+    binaryArray[i] = binaryDer.charCodeAt(i);
+  }
+
+  const key = await window.crypto.subtle.importKey(
+    'spki',
+    binaryArray.buffer,
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    false,
+    ['encrypt'],
+  );
+
+  const encoded = new TextEncoder().encode(choiceId);
+  const encrypted = await window.crypto.subtle.encrypt({ name: 'RSA-OAEP' }, key, encoded);
+
+  return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+}
+
 export function decryptBallot(privateKeyPem: string, encryptedBallotBase64: string): string {
   const buffer = Buffer.from(encryptedBallotBase64, 'base64');
   const decrypted = privateDecrypt(

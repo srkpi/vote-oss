@@ -10,9 +10,10 @@ import { EncryptionKey } from '@/components/elections/encryption-key';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
+import { TimelineItem } from '@/components/ui/timeline-item';
+import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime } from '@/lib/utils';
-import type { ElectionDetail } from '@/types/election';
 import type { TallyResponse } from '@/types/tally';
 
 interface AdminElectionPageProps {
@@ -21,7 +22,7 @@ interface AdminElectionPageProps {
 
 export async function generateMetadata({ params }: AdminElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data } = await serverFetch<ElectionDetail>(`/api/elections/${id}`);
+  const { data } = await serverApi.getElection(id);
   return { title: data?.title ? `${data.title} — Деталі` : 'Деталі голосування' };
 }
 
@@ -33,7 +34,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   const { id } = await params;
 
-  const { data: election, status } = await serverFetch<ElectionDetail>(`/api/elections/${id}`);
+  const { data: election, status } = await serverApi.getElection(id);
 
   if (status === 404 || !election) notFound();
 
@@ -45,7 +46,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   let tally: TallyResponse | null = null;
   if (isClosed) {
-    const { data } = await serverFetch<TallyResponse>(`/api/elections/${id}/tally`);
+    const { data } = await serverApi.getTally(id);
     tally = data;
   }
 
@@ -91,7 +92,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
       <div className="p-4 sm:p-8">
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left column */}
           <div className="xl:col-span-2 space-y-6">
             {isOpen && (
               <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] bg-[var(--success-bg)] border border-[var(--success)]/20">
@@ -160,7 +160,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             )}
           </div>
 
-          {/* Right column */}
           <div className="space-y-5">
             <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
               <div className="p-4 sm:p-5 space-y-4">
@@ -237,34 +236,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function TimelineItem({
-  label,
-  value,
-  icon,
-  status,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  status: 'done' | 'pending';
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <div
-        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${status === 'done' ? 'bg-[var(--kpi-navy)] text-white' : 'bg-[var(--surface)] text-[var(--kpi-gray-mid)] border border-[var(--border-subtle)]'}`}
-      >
-        {icon}
-      </div>
-      <div>
-        <p className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider font-body font-semibold">
-          {label}
-        </p>
-        <p className="text-sm font-body text-[var(--foreground)] mt-0.5">{value}</p>
       </div>
     </div>
   );

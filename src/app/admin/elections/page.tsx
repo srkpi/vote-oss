@@ -7,8 +7,8 @@ import { AdminElectionsClient } from '@/components/admin/admin-elections-client'
 import { StatCard } from '@/components/admin/stat-card';
 import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
-import { getServerSession, serverFetch } from '@/lib/server-auth';
-import type { Election } from '@/types/election';
+import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
   title: 'Голосування',
@@ -20,7 +20,7 @@ export default async function AdminElectionsPage() {
     redirect('/auth/login');
   }
 
-  const { data: elections, error } = await serverFetch<Election[]>('/api/elections');
+  const { data: elections, error } = await serverApi.getElections();
 
   const all = elections ?? [];
   const openCount = all.filter((e) => e.status === 'open').length;
@@ -44,7 +44,6 @@ export default async function AdminElectionsPage() {
       </PageHeader>
 
       <div className="p-4 sm:p-8 space-y-6">
-        {/* Stats grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard
             label="Активних"
