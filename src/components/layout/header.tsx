@@ -26,6 +26,7 @@ export function Header({ session }: HeaderProps) {
 
   const navLinks = [
     { label: 'Голосування', href: '/elections' },
+    { label: 'FAQ', href: '/faq' },
     ...(session?.isAdmin ? [{ label: 'Адмін-панель', href: '/admin' }] : []),
   ];
 
@@ -66,7 +67,7 @@ export function Header({ session }: HeaderProps) {
           </div>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-2">
           {navLinks.map((link) => (
             <Link
               key={link.href}

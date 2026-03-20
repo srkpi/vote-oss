@@ -1,6 +1,8 @@
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
+import { cn } from '@/lib/utils';
+
 export interface NavItem {
   label: string;
   href?: string;
@@ -11,12 +13,18 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   children?: React.ReactNode;
+  isContainer?: boolean;
 }
 
-export function PageHeader({ nav, title, description, children }: PageHeaderProps) {
+export function PageHeader({ nav, title, description, children, isContainer }: PageHeaderProps) {
   return (
-    <div className="bg-white border-b border-[var(--border-subtle)] px-4 sm:px-8 py-4 sm:py-6">
-      <div className="flex items-center justify-between gap-3">
+    <div
+      className={cn(
+        'bg-white border-b border-[var(--border-subtle)] py-4 sm:py-6',
+        !isContainer && 'px-4 sm:px-8',
+      )}
+    >
+      <div className={cn('flex items-center justify-between gap-3', isContainer && 'container')}>
         <div className="min-w-0">
           {nav && nav.length > 0 && (
             <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-2 sm:mb-3">

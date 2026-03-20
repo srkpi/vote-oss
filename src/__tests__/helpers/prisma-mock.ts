@@ -58,6 +58,22 @@ export const prismaMock = {
     createMany: jest.fn(),
     deleteMany: jest.fn(),
   },
+  faqCategory: {
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  faqItem: {
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
   $transaction: jest.fn(),
   $queryRaw: jest.fn(),
 };
@@ -83,4 +99,8 @@ export function resetPrismaMock() {
   prismaMock.admin.update.mockImplementation((args: unknown) => args);
   prismaMock.adminInviteToken.create.mockImplementation((args: unknown) => args);
   prismaMock.adminInviteToken.count.mockResolvedValue(0);
+  prismaMock.faqCategory.create.mockImplementation((args: unknown) => args);
+  prismaMock.faqCategory.update.mockImplementation((args: unknown) => args);
+  prismaMock.faqItem.create.mockImplementation((args: unknown) => args);
+  prismaMock.faqItem.update.mockImplementation((args: unknown) => args);
 }

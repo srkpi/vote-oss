@@ -54,6 +54,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
           { label: 'Бюлетені' },
         ]}
         title="Публічні бюлетені"
+        isContainer
       />
 
       <div className="container py-8 space-y-6">

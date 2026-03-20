@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge';
 
 import type { InviteToken } from '@/types/admin';
 import type { ElectionStatus } from '@/types/election';
+import type { QuillDelta } from '@/types/quill';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -162,4 +163,36 @@ export function tokenExpiresLabel(validDue: string): { text: string; urgent: boo
   const days = diff / (1000 * 60 * 60 * 24);
 
   return { text: formatDateTime(validDue), urgent: days < 3 };
+}
+
+export function parseQuillDelta(content: string): QuillDelta | null {
+  try {
+    const raw = JSON.parse(content) as unknown;
+    if (!raw || typeof raw !== 'object' || !Array.isArray((raw as QuillDelta).ops)) {
+      return null;
+    }
+    return raw as QuillDelta;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract plain text from a Quill Delta JSON string.
+ * Used server-side to validate content length and client-side for previews.
+ *
+ * Quill always appends a trailing "\n" to every document; we strip it so
+ * that length checks match the visible character count.
+ */
+export function deltaToPlainText(content: string): string {
+  const delta = parseQuillDelta(content);
+  if (!delta) return '';
+
+  const text = delta.ops
+    .filter((op) => typeof op.insert === 'string')
+    .map((op) => op.insert as string)
+    .join('');
+
+  // Strip the single trailing newline Quill always appends
+  return text.endsWith('\n') ? text.slice(0, -1) : text;
 }

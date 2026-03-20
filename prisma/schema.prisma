@@ -32,6 +32,11 @@ model Admin {
   created_elections     Election[]
   created_invite_tokens AdminInviteToken[]
 
+  created_faq_categories FaqCategory[] @relation("FaqCategoryCreator")
+  updated_faq_categories FaqCategory[] @relation("FaqCategoryUpdater")
+  created_faq_items      FaqItem[]     @relation("FaqItemCreator")
+  updated_faq_items      FaqItem[]     @relation("FaqItemUpdater")
+
   @@map("admins")
 }
 
@@ -127,4 +132,39 @@ model ElectionTally {
 
   @@id([election_id, choice_id])
   @@map("election_tallies")
+}
+
+model FaqCategory {
+  id         String   @id @default(uuid())
+  title      String
+  position   Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  created_by String
+  updated_by String?
+  creator    Admin    @relation("FaqCategoryCreator", fields: [created_by], references: [user_id], onDelete: Restrict)
+  updater    Admin?   @relation("FaqCategoryUpdater", fields: [updated_by], references: [user_id], onDelete: Restrict)
+
+  items FaqItem[]
+
+  @@index([position])
+  @@map("faq_categories")
+}
+
+model FaqItem {
+  id          String      @id @default(uuid())
+  category_id String
+  category    FaqCategory @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  title       String
+  content     String      @db.Text
+  position    Int
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+  created_by  String
+  updated_by  String?
+  creator     Admin       @relation("FaqItemCreator", fields: [created_by], references: [user_id], onDelete: Restrict)
+  updater     Admin?      @relation("FaqItemUpdater", fields: [updated_by], references: [user_id], onDelete: Restrict)
+
+  @@index([category_id, position])
+  @@map("faq_items")
 }

@@ -38,9 +38,9 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
   const visibleUnits = days > 0 ? units : hours > 0 ? units.slice(1) : units.slice(2);
 
   return (
-    <div className={cn('flex items-center gap-3', className)}>
+    <div className={cn('flex items-center gap-1 sm:gap-3', className)}>
       {visibleUnits.map(({ value, label }, i) => (
-        <div key={label} className="flex items-center gap-3">
+        <div key={label} className="flex items-center gap-1 sm:gap-3">
           <div className="text-center">
             <div
               className={cn(

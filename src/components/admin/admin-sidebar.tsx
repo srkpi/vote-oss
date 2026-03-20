@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Key, LayoutGrid, Settings, Users } from 'lucide-react';
+import { CircleQuestionMark, FileText, Key, LayoutGrid, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -35,14 +35,32 @@ const TOKENS_NAV_ITEM = {
   icon: <Key className="w-4 h-4" />,
 };
 
+const FAQ_NAV_ITEM = {
+  label: 'FAQ',
+  href: '/admin/faq',
+  exact: true,
+  icon: <CircleQuestionMark className="w-4 h-4" />,
+};
+
 interface AdminSidebarProps {
   manageAdmins?: boolean;
+  restrictedToFaculty?: boolean;
 }
 
-export function AdminSidebar({ manageAdmins = false }: AdminSidebarProps) {
+export function AdminSidebar({
+  manageAdmins = false,
+  restrictedToFaculty = true,
+}: AdminSidebarProps) {
   const pathname = usePathname();
+  const navItems = [...BASE_NAV_ITEMS];
 
-  const navItems = manageAdmins ? [...BASE_NAV_ITEMS, TOKENS_NAV_ITEM] : BASE_NAV_ITEMS;
+  if (manageAdmins) {
+    navItems.push(TOKENS_NAV_ITEM);
+  }
+
+  if (!restrictedToFaculty) {
+    navItems.push(FAQ_NAV_ITEM);
+  }
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
