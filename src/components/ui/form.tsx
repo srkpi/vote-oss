@@ -100,7 +100,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, error, ...props }, ref) => (
     <textarea
       className={cn(
-        'flex min-h-[80px] w-full rounded-(--radius) bg-white',
+        'flex min-h-20 w-full rounded-(--radius) bg-white',
         'border border-(--border-color)',
         'font-body px-3 py-2 text-sm text-(--foreground)',
         'placeholder:text-(--subtle)',

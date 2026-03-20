@@ -201,7 +201,7 @@ export function Combobox({
         <div
           ref={dropdownCallbackRef}
           className={cn(
-            'absolute z-50 w-full min-w-[200px]',
+            'absolute z-50 w-full min-w-50',
             'overflow-hidden rounded-lg',
             'border border-(--border-color) bg-white',
             'shadow-(--shadow-lg)',

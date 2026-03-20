@@ -136,7 +136,7 @@ export function BallotRow({
 
       {isExpanded && (
         <div className="border-t border-(--border-subtle) bg-(--surface)/50 px-5 pb-4">
-          <div className="ml-[52px] space-y-4 pt-4">
+          <div className="ml-13 space-y-4 pt-4">
             {isMyBallot && (
               <div>
                 <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">

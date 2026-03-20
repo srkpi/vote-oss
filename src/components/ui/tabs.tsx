@@ -39,7 +39,7 @@ export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount 
               {tab.label}
               <span
                 className={cn(
-                  'inline-flex h-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold',
+                  'inline-flex h-4.5 items-center justify-center rounded-full px-1 text-[10px] font-semibold',
                   isActive ? 'bg-white/20 text-white' : 'bg-(--surface) text-(--muted-foreground)',
                 )}
               >

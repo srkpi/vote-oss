@@ -117,7 +117,7 @@ export function AdminSidebar({
                 href={item.href}
                 className={cn(
                   'flex flex-1 flex-col items-center justify-center gap-1 px-1 py-2.5 text-center',
-                  'min-h-[56px] transition-all duration-150',
+                  'min-h-14 transition-all duration-150',
                   active
                     ? 'text-(--kpi-navy)'
                     : 'text-(--muted-foreground) hover:text-(--foreground)',

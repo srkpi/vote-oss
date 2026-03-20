@@ -44,7 +44,7 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
           <div className="text-center">
             <div
               className={cn(
-                'flex h-14 min-w-[52px] items-center justify-center',
+                'flex h-14 min-w-13 items-center justify-center',
                 'navy-gradient rounded-lg',
                 'shadow-(--shadow-md)',
               )}

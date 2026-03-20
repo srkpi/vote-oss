@@ -4,11 +4,13 @@ import nextTs from 'eslint-config-next/typescript';
 import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import tailwindCanonicalClasses from 'eslint-plugin-tailwind-canonical-classes';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   prettierConfig,
+  ...tailwindCanonicalClasses.configs['flat/recommended'],
   {
     plugins: {
       prettier: prettierPlugin,
@@ -18,6 +20,13 @@ const eslintConfig = defineConfig([
       'prettier/prettier': ['error', { singleQuote: true, semi: true }],
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
+      'tailwind-canonical-classes/tailwind-canonical-classes': [
+        'warn',
+        {
+          cssPath: './src/app/globals.css',
+          calleeFunctions: ['cn', 'clsx'],
+        },
+      ],
     },
   },
   {

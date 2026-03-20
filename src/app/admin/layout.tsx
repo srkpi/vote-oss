@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       />
       <div className="flex min-w-0 flex-1 flex-col">
         {children}
-        <div className="h-[56px] w-full lg:hidden" aria-hidden="true" />
+        <div className="h-14 w-full lg:hidden" aria-hidden="true" />
       </div>
     </div>
   );

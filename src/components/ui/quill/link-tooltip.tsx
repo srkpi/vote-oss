@@ -139,7 +139,7 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
             target="_blank"
             rel="noreferrer"
             title={href}
-            className="max-w-[240px] truncate text-(--kpi-blue-light,#3b82f6) hover:underline"
+            className="max-w-60 truncate text-(--kpi-blue-light,#3b82f6) hover:underline"
           >
             <ExternalLink size={13} className="-mt-0.5 mr-1 inline" />
             {href}
