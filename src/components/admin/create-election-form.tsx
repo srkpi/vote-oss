@@ -177,10 +177,12 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
   const [renderTime] = useState(() => Date.now());
   const minDateTime = new Date(renderTime + 60 * 1000).toISOString().slice(0, 16);
-  const maxOpensAt = new Date(renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 1000 - 60 * 1000)
+  const maxOpensAt = new Date(
+    renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000 - 60 * 1000,
+  )
     .toISOString()
     .slice(0, 16);
-  const maxClosesAt = new Date(renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 1000)
+  const maxClosesAt = new Date(renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 16);
 

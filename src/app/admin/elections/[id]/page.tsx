@@ -5,7 +5,6 @@ import { notFound, redirect } from 'next/navigation';
 
 import { DeleteElectionButton } from '@/components/admin/delete-election-button';
 import { PageHeader } from '@/components/common/page-header';
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { Badge } from '@/components/ui/badge';
@@ -61,19 +60,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
         title={election.title}
       >
         <div className="flex items-center gap-2">
-          <div className="flex flex-wrap items-center gap-2 hidden sm:flex">
-            <ElectionStatusBadge status={election.status} size="md" />
-            {election.restrictedToFaculty && (
-              <Badge variant="info" size="md">
-                {election.restrictedToFaculty}
-              </Badge>
-            )}
-            {election.restrictedToGroup && (
-              <Badge variant="secondary" size="md">
-                {election.restrictedToGroup}
-              </Badge>
-            )}
-          </div>
           <Button variant="secondary" size="sm" asChild>
             <Link href={`/elections/${id}/ballots`}>
               <FileText className="w-3.5 h-3.5" />

@@ -29,7 +29,11 @@ export default async function ElectionsPage() {
 
   return (
     <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
-      <PageHeader title="Голосування" description="Всі доступні вам голосування в одному місці">
+      <PageHeader
+        title="Голосування"
+        description="Всі доступні вам голосування в одному місці"
+        isContainer
+      >
         {session.isAdmin && (
           <Button variant="accent" size="sm" asChild>
             <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">

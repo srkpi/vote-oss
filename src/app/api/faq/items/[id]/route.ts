@@ -4,10 +4,13 @@ import { requireAdmin } from '@/lib/auth';
 import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { draftToPlainText, parseDraftContent } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // PUT /api/faq/items/[id]  — root admin only
 // Updates title and/or content of a FAQ item.
+// `content` must be a JSON string of RawDraftContentState.
+// The plain-text length of the content is validated, not the raw JSON length.
 // ---------------------------------------------------------------------------
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -47,8 +50,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (content === undefined || content === null || typeof content !== 'string') {
     return Errors.badRequest('content is required');
   }
-  if (content.length > FAQ_ITEM_CONTENT_MAX_LENGTH) {
-    return Errors.badRequest(`content must be at most ${FAQ_ITEM_CONTENT_MAX_LENGTH} characters`);
+
+  // Content must be valid Draft.js raw JSON
+  if (!parseDraftContent(content)) {
+    return Errors.badRequest('content must be a valid Draft.js raw content JSON string');
+  }
+
+  // Enforce the limit on readable plain text, not the JSON envelope
+  const plainText = draftToPlainText(content);
+  if (plainText.length > FAQ_ITEM_CONTENT_MAX_LENGTH) {
+    return Errors.badRequest(
+      `content plain text must be at most ${FAQ_ITEM_CONTENT_MAX_LENGTH} characters`,
+    );
   }
 
   const updated = await prisma.faqItem.update({

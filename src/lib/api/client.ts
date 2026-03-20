@@ -1,4 +1,3 @@
-import type { FaqCategoryData } from '@/components/faq/faq-accordion';
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
 import type { BallotResponse, BallotsResponse } from '@/types/ballot';
@@ -8,6 +7,13 @@ import type {
   Election,
   ElectionDetail,
 } from '@/types/election';
+import type {
+  FaqCategoryCreated,
+  FaqCategoryData,
+  FaqCategoryUpdated,
+  FaqItemCreated,
+  FaqItemUpdated,
+} from '@/types/faq';
 import type { TallyResponse } from '@/types/tally';
 import type { VoteToken } from '@/types/vote';
 
@@ -82,6 +88,46 @@ export function createApiClient(fetcher: Fetcher) {
 
     // FAQ
     getFaq: () => fetcher<FaqCategoryData[]>('/faq'),
+
+    createFaqCategory: (title: string) =>
+      fetcher<FaqCategoryCreated>('/faq', {
+        method: 'POST',
+        body: JSON.stringify({ title }),
+      }),
+    updateFaqCategory: (id: string, title: string) =>
+      fetcher<FaqCategoryUpdated>(`/faq/categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title }),
+      }),
+    deleteFaqCategory: (id: string) =>
+      fetcher<{ ok: boolean; deletedId: string }>(`/faq/categories/${id}`, {
+        method: 'DELETE',
+      }),
+    reorderFaqCategories: (order: string[]) =>
+      fetcher<{ ok: boolean }>('/faq/categories/reorder', {
+        method: 'PATCH',
+        body: JSON.stringify({ order }),
+      }),
+
+    createFaqItem: (categoryId: string, title: string, content: string) =>
+      fetcher<FaqItemCreated>(`/faq/categories/${categoryId}/items`, {
+        method: 'POST',
+        body: JSON.stringify({ title, content }),
+      }),
+    updateFaqItem: (id: string, title: string, content: string) =>
+      fetcher<FaqItemUpdated>(`/faq/items/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title, content }),
+      }),
+    deleteFaqItem: (id: string) =>
+      fetcher<{ ok: boolean; deletedId: string }>(`/faq/items/${id}`, {
+        method: 'DELETE',
+      }),
+    reorderFaqItems: (categoryId: string, order: string[]) =>
+      fetcher<{ ok: boolean }>(`/faq/categories/${categoryId}/items/reorder`, {
+        method: 'PATCH',
+        body: JSON.stringify({ order }),
+      }),
   };
 }
 

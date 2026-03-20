@@ -3,6 +3,7 @@ import { twMerge } from 'tailwind-merge';
 
 import type { InviteToken } from '@/types/admin';
 import type { ElectionStatus } from '@/types/election';
+import type { RawDraftContent } from '@/types/faq';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -162,4 +163,38 @@ export function tokenExpiresLabel(validDue: string): { text: string; urgent: boo
   const days = diff / (1000 * 60 * 60 * 24);
 
   return { text: formatDateTime(validDue), urgent: days < 3 };
+}
+
+/**
+ * Parse a Draft.js raw content JSON string.
+ * Returns null if the string is not valid Draft.js content.
+ */
+export function parseDraftContent(content: string): RawDraftContent | null {
+  try {
+    const raw = JSON.parse(content) as unknown;
+    if (
+      !raw ||
+      typeof raw !== 'object' ||
+      !Array.isArray((raw as RawDraftContent).blocks) ||
+      typeof (raw as RawDraftContent).entityMap !== 'object'
+    ) {
+      return null;
+    }
+    return raw as RawDraftContent;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract plain text from a Draft.js raw content JSON string.
+ * Used server-side to validate content length and client-side for previews.
+ */
+export function draftToPlainText(content: string): string {
+  const raw = parseDraftContent(content);
+  if (!raw) return '';
+  return raw.blocks
+    .map((b) => b.text ?? '')
+    .join('\n')
+    .trim();
 }

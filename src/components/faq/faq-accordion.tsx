@@ -4,21 +4,9 @@ import { ChevronDown, CircleSlash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
+import { DraftRenderer } from '@/components/ui/draft-renderer';
 import { cn } from '@/lib/utils';
-
-export interface FaqItemData {
-  id: string;
-  title: string;
-  content: string;
-  position: number;
-}
-
-export interface FaqCategoryData {
-  id: string;
-  title: string;
-  position: number;
-  items: FaqItemData[];
-}
+import type { FaqCategoryData, FaqItemData } from '@/types/faq';
 
 interface FaqAccordionItemProps {
   item: FaqItemData;
@@ -47,7 +35,7 @@ function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemProps) {
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--kpi-blue-light)]',
         )}
       >
-        <span className="flex-1 min-w-0">{item.title}</span>
+        <span className="flex-1 min-w-0 break-words">{item.title}</span>
         <ChevronDown
           className={cn(
             'w-4 h-4 shrink-0 text-[var(--muted-foreground)] transition-transform duration-200',
@@ -58,22 +46,7 @@ function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemProps) {
 
       {isOpen && (
         <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-[var(--border-subtle)] bg-white">
-          <div
-            className={cn(
-              'text-sm font-body text-[var(--foreground)]/80 leading-relaxed',
-              'prose-sm max-w-none',
-              '[&_strong]:font-semibold [&_strong]:text-[var(--foreground)]',
-              '[&_em]:italic',
-              '[&_u]:underline',
-              '[&_a]:text-[var(--kpi-blue-light)] [&_a]:underline [&_a]:hover:text-[var(--kpi-blue-dark)]',
-              '[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-1.5',
-              '[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-1.5',
-              '[&_li]:my-0.5',
-              '[&_hr]:border-[var(--border-color)] [&_hr]:my-3',
-              '[&_p]:mb-2 [&_p:last-child]:mb-0',
-            )}
-            dangerouslySetInnerHTML={{ __html: item.content }}
-          />
+          <DraftRenderer content={item.content} />
         </div>
       )}
     </div>
@@ -114,7 +87,7 @@ export function FaqAccordion({ categories }: FaqAccordionProps) {
     <div className="space-y-10">
       {categories.map((category) => (
         <section key={category.id}>
-          <h2 className="font-display text-xl sm:text-2xl font-semibold text-[var(--foreground)] mb-4">
+          <h2 className="font-display text-xl sm:text-2xl font-semibold text-[var(--foreground)] mb-4 break-words">
             {category.title}
           </h2>
           <div className="space-y-2">
