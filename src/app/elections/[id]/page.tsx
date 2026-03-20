@@ -105,7 +105,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               <div className="font-body flex flex-wrap items-center gap-4 text-sm text-(--muted-foreground)">
                 <span className="flex items-center gap-1.5">
                   <User className="h-4 w-4" />
-                  {election.creator.full_name}
+                  {election.creator.fullName}
                 </span>
 
                 <Button variant="secondary" size="sm" asChild>

@@ -34,14 +34,14 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteAdmin(deleteTarget.user_id);
+    const result = await api.deleteAdmin(deleteTarget.userId);
     if (result.success) {
       toast({
         title: 'Адміністратора видалено',
-        description: `${deleteTarget.full_name} більше не є адміністратором.`,
+        description: `${deleteTarget.fullName} більше не є адміністратором.`,
         variant: 'success',
       });
-      onDelete(deleteTarget.user_id);
+      onDelete(deleteTarget.userId);
       setDeleteTarget(null);
     } else {
       toast({ title: 'Помилка', description: result.error, variant: 'error' });
@@ -76,9 +76,9 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
           <tbody className="divide-y divide-(--border-subtle)">
             {admins.map((admin) => (
               <AdminRow
-                key={admin.user_id}
+                key={admin.userId}
                 admin={admin}
-                isCurrentUser={admin.user_id === currentUserId}
+                isCurrentUser={admin.userId === currentUserId}
                 onDelete={() => setDeleteTarget(admin)}
               />
             ))}
@@ -89,9 +89,9 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
       <div className="space-y-3 md:hidden">
         {admins.map((admin) => (
           <AdminMobileCard
-            key={admin.user_id}
+            key={admin.userId}
             admin={admin}
-            isCurrentUser={admin.user_id === currentUserId}
+            isCurrentUser={admin.userId === currentUserId}
             onDelete={() => setDeleteTarget(admin)}
           />
         ))}
@@ -105,7 +105,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              <strong>{deleteTarget?.full_name}</strong> втратить доступ до адмін-панелі.
+              <strong>{deleteTarget?.fullName}</strong> втратить доступ до адмін-панелі.
             </Alert>
           </DialogBody>
           <DialogFooter>

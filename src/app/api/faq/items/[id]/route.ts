@@ -8,9 +8,6 @@ import { deltaToPlainText, parseQuillDelta } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // PUT /api/faq/items/[id]  — root admin only
-// Updates title and/or content of a FAQ item.
-// `content` must be a JSON string of a Quill Delta ({ ops: [...] }).
-// The plain-text length of the content is validated, not the raw JSON length.
 // ---------------------------------------------------------------------------
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -51,12 +48,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return Errors.badRequest('content is required');
   }
 
-  // Content must be a valid Quill Delta JSON string
   if (!parseQuillDelta(content)) {
     return Errors.badRequest('content must be a valid Quill Delta JSON string');
   }
 
-  // Enforce the limit on readable plain text, not the raw JSON envelope
   const plainText = deltaToPlainText(content);
   if (plainText.length > FAQ_ITEM_CONTENT_MAX_LENGTH) {
     return Errors.badRequest(
@@ -81,7 +76,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   });
 
-  return NextResponse.json(updated);
+  return NextResponse.json({
+    id: updated.id,
+    categoryId: updated.category_id,
+    title: updated.title,
+    content: updated.content,
+    position: updated.position,
+    updatedAt: updated.updated_at.toISOString(),
+  });
 }
 
 // ---------------------------------------------------------------------------

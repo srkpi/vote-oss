@@ -27,7 +27,7 @@ export function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps)
             {election.title}
           </p>
           <p className="font-body mt-0.5 truncate text-xs text-(--muted-foreground)">
-            {election.creator.full_name}
+            {election.creator.fullName}
           </p>
         </div>
       </td>

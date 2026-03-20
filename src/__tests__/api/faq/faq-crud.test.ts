@@ -31,14 +31,12 @@ import { DELETE as deleteItem, PUT as putItem } from '@/app/api/faq/items/[id]/r
 // Quill Delta content helpers
 // ---------------------------------------------------------------------------
 
-/** Build a minimal valid Quill Delta JSON string with the given plain text. */
 function makeQuillContent(text: string): string {
   return JSON.stringify({ ops: [{ insert: text + '\n' }] });
 }
 
 const VALID_CONTENT = makeQuillContent('Click vote.');
 
-/** Plain-text content that exceeds the allowed limit by 1 character. */
 const OVER_LIMIT_CONTENT = makeQuillContent('X'.repeat(FAQ_ITEM_CONTENT_MAX_LENGTH + 1));
 
 // ---------------------------------------------------------------------------
@@ -123,6 +121,7 @@ describe('PUT /api/faq/categories/[id]', () => {
     const { status, body } = await parseJson<any>(await putCategory(req, catParams('cat-1')));
     expect(status).toBe(200);
     expect(body.title).toBe('Updated Title');
+    expect(body.updatedAt).toBeDefined();
   });
 
   it('stores updated_by from authenticated user', async () => {
@@ -291,7 +290,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: VALID_CONTENT,
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    prismaMock.faqItem.findFirst.mockResolvedValueOnce(null); // no existing items
+    prismaMock.faqItem.findFirst.mockResolvedValueOnce(null);
     prismaMock.faqItem.create.mockResolvedValueOnce({
       id: 'item-1',
       category_id: 'cat-1',
@@ -305,7 +304,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
     const { status, body } = await parseJson<any>(await postItem(req, catParams('cat-1')));
     expect(status).toBe(201);
     expect(body.title).toBe('How to vote?');
-    expect(body.category_id).toBe('cat-1');
+    expect(body.categoryId).toBe('cat-1');
   });
 
   it('stores Quill Delta content verbatim in the database', async () => {
@@ -337,7 +336,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
   it('appends item after the last one in the category', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    prismaMock.faqItem.findFirst.mockResolvedValueOnce({ position: 2 }); // last item at position 2
+    prismaMock.faqItem.findFirst.mockResolvedValueOnce({ position: 2 });
     prismaMock.faqItem.create.mockResolvedValueOnce({
       id: 'item-3',
       category_id: 'cat-1',
@@ -453,6 +452,8 @@ describe('PUT /api/faq/items/[id]', () => {
     const { status, body } = await parseJson<any>(await putItem(req, itemParams('item-1')));
     expect(status).toBe(200);
     expect(body.title).toBe('Updated Q');
+    expect(body.categoryId).toBe('cat-1');
+    expect(body.updatedAt).toBeDefined();
   });
 
   it('stores Quill Delta content verbatim in the database', async () => {

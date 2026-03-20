@@ -44,7 +44,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
       result = result.filter(
         (e) =>
           e.title.toLowerCase().includes(q) ||
-          e.creator.full_name.toLowerCase().includes(q) ||
+          e.creator.fullName.toLowerCase().includes(q) ||
           (e.restrictedToFaculty?.toLowerCase().includes(q) ?? false) ||
           (e.restrictedToGroup?.toLowerCase().includes(q) ?? false),
       );

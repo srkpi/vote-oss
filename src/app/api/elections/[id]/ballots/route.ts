@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!election) return Errors.notFound('Election not found');
 
-  // ── Access control (mirrors election detail endpoint) ─────────────────────
+  // ── Access control ────────────────────────────────────────────────────────
   const { user } = auth;
 
   if (user.is_admin && !user.restricted_to_faculty) {
@@ -59,7 +59,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({
     election: { id: election.id, title: election.title },
-    ballots,
+    ballots: ballots.map((b) => ({
+      id: b.id,
+      encryptedBallot: b.encrypted_ballot,
+      createdAt: b.created_at.toISOString(),
+      signature: b.signature,
+      previousHash: b.previous_hash,
+      currentHash: b.current_hash,
+    })),
     total: ballots.length,
   });
 }

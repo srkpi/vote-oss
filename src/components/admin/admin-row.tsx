@@ -22,11 +22,11 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-3">
           <div className="navy-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white">
-            {admin.full_name.charAt(0)}
+            {admin.fullName.charAt(0)}
           </div>
           <div>
-            <p className="font-body text-sm font-medium text-(--foreground)">{admin.full_name}</p>
-            <p className="font-body text-xs text-(--muted-foreground)">{admin.user_id}</p>
+            <p className="font-body text-sm font-medium text-(--foreground)">{admin.fullName}</p>
+            <p className="font-body text-xs text-(--muted-foreground)">{admin.userId}</p>
           </div>
         </div>
       </td>
@@ -38,27 +38,25 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
       </td>
       <td className="px-4 py-3.5">
         <div>
-          <p className="font-body text-sm text-(--foreground)">{formatDate(admin.promoted_at)}</p>
+          <p className="font-body text-sm text-(--foreground)">{formatDate(admin.promotedAt)}</p>
           {admin.promoter && (
-            <p className="font-body text-xs text-(--muted-foreground)">
-              {admin.promoter.full_name}
-            </p>
+            <p className="font-body text-xs text-(--muted-foreground)">{admin.promoter.fullName}</p>
           )}
         </div>
       </td>
       <td className="px-4 py-3.5">
         <div className="flex flex-wrap gap-1.5">
-          {admin.manage_admins && (
+          {admin.manageAdmins && (
             <Badge variant="info" size="sm">
               Керування адмінами
             </Badge>
           )}
-          {admin.restricted_to_faculty && (
+          {admin.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
               Обмежений до підрозділу
             </Badge>
           )}
-          {!admin.manage_admins && !admin.restricted_to_faculty && (
+          {!admin.manageAdmins && !admin.restrictedToFaculty && (
             <Badge variant="default" size="sm">
               Базові
             </Badge>

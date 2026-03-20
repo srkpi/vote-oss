@@ -13,7 +13,7 @@ interface TokenRowProps {
 export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
   const fraction = tokenUsageFraction(token);
   const usageColor = tokenUsageColor(fraction);
-  const { text: expiresText, urgent } = tokenExpiresLabel(token.valid_due);
+  const { text: expiresText, urgent } = tokenExpiresLabel(token.validDue);
 
   return (
     <div
@@ -26,12 +26,12 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="navy-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold text-white">
-            {token.creator.full_name.charAt(0)}
+            {token.creator.fullName.charAt(0)}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-body text-sm font-semibold text-(--foreground)">
-                {token.creator.full_name}
+                {token.creator.fullName}
               </p>
             </div>
           </div>
@@ -50,17 +50,17 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1">
-          {token.manage_admins && (
+          {token.manageAdmins && (
             <Badge variant="info" size="sm">
               Керування адмінами
             </Badge>
           )}
-          {token.restricted_to_faculty && (
+          {token.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
               Обмежений підрозділом
             </Badge>
           )}
-          {!token.manage_admins && !token.restricted_to_faculty && (
+          {!token.manageAdmins && !token.restrictedToFaculty && (
             <Badge variant="default" size="sm">
               Базові
             </Badge>
@@ -70,8 +70,8 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
         <div className="flex shrink-0 items-center gap-1.5">
           <Users className="h-3.5 w-3.5 text-(--muted-foreground)" />
           <span className="font-body text-xs text-(--foreground)">
-            <span className="font-semibold">{token.current_usage}</span>
-            <span className="text-(--muted-foreground)"> / {token.max_usage}</span>
+            <span className="font-semibold">{token.currentUsage}</span>
+            <span className="text-(--muted-foreground)"> / {token.maxUsage}</span>
           </span>
         </div>
       </div>

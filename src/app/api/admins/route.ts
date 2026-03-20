@@ -5,21 +5,10 @@ import { getCachedAdmins, setCachedAdmins } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
+import type { Admin } from '@/types/admin';
 
 // ---------------------------------------------------------------------------
 // Helper: compute the set of active admin IDs that `currentUserId` may delete.
-//
-// Takes the FULL hierarchy graph (including soft-deleted nodes) so that
-// transitive chains through removed intermediaries are preserved:
-//
-//   A → B[deleted] → C
-//
-// Without the deleted B in the graph, C would appear un-deletable by A even
-// though A is C's transitive root.  By walking the full graph we correctly
-// resolve C as deletable.
-//
-// Only IDs present in `activeAdminIds` are ever added to the result set —
-// deleted admins are never surfaced to callers.
 // ---------------------------------------------------------------------------
 function computeDeletableIds(
   graph: Map<string, string | null>,
@@ -37,12 +26,6 @@ function computeDeletableIds(
 
 // ---------------------------------------------------------------------------
 // GET /api/admins
-// Returns only active (non-deleted) admins.
-// Served from a 30-second Redis cache (invalidated on mutations).
-//
-// The deletable flag is always computed against the FULL hierarchy graph
-// (one lightweight query, no joins) so deleted intermediaries do not break
-// transitive chains.  Even on a cache hit we issue this cheap query.
 // ---------------------------------------------------------------------------
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -59,10 +42,10 @@ export async function GET(req: NextRequest) {
 
   const cached = await getCachedAdmins();
   if (cached) {
-    const activeIds = cached.map((a) => a.user_id);
+    const activeIds = cached.map((a) => a.userId);
     const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
     return NextResponse.json(
-      cached.map((admin) => ({ ...admin, deletable: deletableIds.has(admin.user_id) })),
+      cached.map((admin) => ({ ...admin, deletable: deletableIds.has(admin.userId) })),
     );
   }
 
@@ -81,15 +64,26 @@ export async function GET(req: NextRequest) {
     orderBy: { promoted_at: 'asc' },
   });
 
-  await setCachedAdmins(admins);
+  const camelAdmins: Admin[] = admins.map((a) => ({
+    userId: a.user_id,
+    fullName: a.full_name,
+    group: a.group,
+    faculty: a.faculty,
+    promoter: a.promoter ? { userId: a.promoter.user_id, fullName: a.promoter.full_name } : null,
+    promotedAt: a.promoted_at.toISOString(),
+    manageAdmins: a.manage_admins,
+    restrictedToFaculty: a.restricted_to_faculty,
+  }));
 
-  const activeIds = admins.map((a) => a.user_id);
+  await setCachedAdmins(camelAdmins);
+
+  const activeIds = camelAdmins.map((a) => a.userId);
   const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
 
   return NextResponse.json(
-    admins.map((admin) => ({
+    camelAdmins.map((admin) => ({
       ...admin,
-      deletable: deletableIds.has(admin.user_id),
+      deletable: deletableIds.has(admin.userId),
     })),
   );
 }

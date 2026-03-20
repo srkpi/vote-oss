@@ -73,7 +73,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
         await Promise.all(
           ballots.slice(i, i + BATCH).map(async (ballot) => {
             const [decryptedRaw, hashValid] = await Promise.all([
-              decryptBallotData(key, ballot.encrypted_ballot),
+              decryptBallotData(key, ballot.encryptedBallot),
               verifyBallotHash(ballot, electionId),
             ]);
             let choiceId: string | null = null;
@@ -114,7 +114,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     const q = trimmedQuery.toLowerCase();
     return ballots.filter(
       (b) =>
-        b.current_hash.includes(q) ||
+        b.currentHash.includes(q) ||
         (decryptionDone &&
           (decryptedMap.get(b.id)?.choiceLabel?.toLowerCase().includes(q) ?? false)),
     );
@@ -131,7 +131,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
   useEffect(() => {
     if (!myVoteRecord) return;
-    const idx = filteredBallots.findIndex((b) => b.current_hash === myVoteRecord.ballotHash);
+    const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
       setPage(Math.floor(idx / PAGE_SIZE) + 1);
     }
@@ -154,7 +154,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     : 0;
 
   const myBallot = myVoteRecord
-    ? (ballots.find((b) => b.current_hash === myVoteRecord.ballotHash) ?? null)
+    ? (ballots.find((b) => b.currentHash === myVoteRecord.ballotHash) ?? null)
     : null;
 
   const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
@@ -296,7 +296,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           <div className="divide-y divide-(--border-subtle)">
             {pagedBallots.map((ballot, index) => {
               const isMyBallot =
-                myVoteRecord !== null && ballot.current_hash === myVoteRecord.ballotHash;
+                myVoteRecord !== null && ballot.currentHash === myVoteRecord.ballotHash;
               return (
                 <div
                   key={ballot.id}

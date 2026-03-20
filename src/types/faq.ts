@@ -16,32 +16,32 @@ export interface FaqCategoryCreated {
   id: string;
   title: string;
   position: number;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FaqCategoryUpdated {
   id: string;
   title: string;
   position: number;
-  updated_at: string;
+  updatedAt: string;
 }
 
 export interface FaqItemCreated {
   id: string;
-  category_id: string;
+  categoryId: string;
   title: string;
   content: string;
   position: number;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FaqItemUpdated {
   id: string;
-  category_id: string;
+  categoryId: string;
   title: string;
   content: string;
   position: number;
-  updated_at: string;
+  updatedAt: string;
 }

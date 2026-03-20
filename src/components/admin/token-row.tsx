@@ -13,7 +13,7 @@ interface TokenRowProps {
 export function TokenRow({ token, onDelete }: TokenRowProps) {
   const fraction = tokenUsageFraction(token);
   const usageColor = tokenUsageColor(fraction);
-  const { text: expiresText, urgent } = tokenExpiresLabel(token.valid_due);
+  const { text: expiresText, urgent } = tokenExpiresLabel(token.validDue);
 
   return (
     <tr
@@ -27,28 +27,28 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-2">
           <div className="navy-gradient flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white">
-            {token.creator.full_name.charAt(0)}
+            {token.creator.fullName.charAt(0)}
           </div>
           <div>
-            <p className="font-body text-sm text-(--foreground)">{token.creator.full_name}</p>
-            <p className="font-body text-xs text-(--muted-foreground)">{token.creator.user_id}</p>
+            <p className="font-body text-sm text-(--foreground)">{token.creator.fullName}</p>
+            <p className="font-body text-xs text-(--muted-foreground)">{token.creator.userId}</p>
           </div>
         </div>
       </td>
 
       <td className="px-4 py-3.5">
         <div className="flex flex-wrap gap-1.5">
-          {token.manage_admins && (
+          {token.manageAdmins && (
             <Badge variant="info" size="sm">
               Керування адмінами
             </Badge>
           )}
-          {token.restricted_to_faculty && (
+          {token.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
               Обмежений до підрозділу
             </Badge>
           )}
-          {!token.manage_admins && !token.restricted_to_faculty && (
+          {!token.manageAdmins && !token.restrictedToFaculty && (
             <Badge variant="default" size="sm">
               Базові
             </Badge>
@@ -59,8 +59,8 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
       <td className="px-4 py-3.5">
         <div className="w-24 space-y-1.5">
           <p className="font-body text-sm text-(--foreground)">
-            <span className="font-semibold">{token.current_usage}</span>
-            <span className="text-(--muted-foreground)"> / {token.max_usage}</span>
+            <span className="font-semibold">{token.currentUsage}</span>
+            <span className="text-(--muted-foreground)"> / {token.maxUsage}</span>
           </p>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-(--border-color)">
             <div

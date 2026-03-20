@@ -23,7 +23,7 @@ export function ElectionMobileCard({ election, canDelete, onDelete }: ElectionMo
               {election.title}
             </p>
             <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">
-              {election.creator.full_name}
+              {election.creator.fullName}
             </p>
           </div>
         </Link>

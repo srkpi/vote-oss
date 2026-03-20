@@ -158,15 +158,15 @@ export async function verifyBallotHash(ballot: Ballot, electionId: string): Prom
   try {
     const raw = JSON.stringify({
       electionId,
-      encryptedBallot: ballot.encrypted_ballot,
+      encryptedBallot: ballot.encryptedBallot,
       signature: ballot.signature,
-      previousHash: ballot.previous_hash,
+      previousHash: ballot.previousHash,
     });
     const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
     const computed = Array.from(new Uint8Array(buf))
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
-    return computed === ballot.current_hash;
+    return computed === ballot.currentHash;
   } catch {
     return false;
   }

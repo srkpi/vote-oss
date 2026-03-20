@@ -7,7 +7,7 @@ export interface ElectionChoice {
 }
 
 export interface ElectionCreator {
-  full_name: string;
+  fullName: string;
   faculty: string;
 }
 

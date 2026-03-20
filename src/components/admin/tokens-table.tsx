@@ -33,14 +33,14 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteInviteToken(deleteTarget.token_hash);
+    const result = await api.deleteInviteToken(deleteTarget.tokenHash);
     if (result.success) {
       toast({
         title: 'Токен видалено',
         description: 'Посилання запрошення більше не діє.',
         variant: 'success',
       });
-      onDelete(deleteTarget.token_hash);
+      onDelete(deleteTarget.tokenHash);
       setDeleteTarget(null);
     } else {
       toast({ title: 'Помилка', description: result.error, variant: 'error' });
@@ -75,7 +75,7 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
           <tbody className="divide-y divide-(--border-subtle)">
             {tokens.map((token) => (
               <TokenRow
-                key={token.token_hash}
+                key={token.tokenHash}
                 token={token}
                 onDelete={() => setDeleteTarget(token)}
               />
@@ -87,7 +87,7 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
       <div className="space-y-3 md:hidden">
         {tokens.map((token) => (
           <TokenMobileCard
-            key={token.token_hash}
+            key={token.tokenHash}
             token={token}
             onDelete={() => setDeleteTarget(token)}
           />

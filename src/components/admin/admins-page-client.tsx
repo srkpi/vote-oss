@@ -31,7 +31,7 @@ export function AdminsPageClient({
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const handleDelete = (userId: string) => {
-    setAdmins((prev) => prev.filter((a) => a.user_id !== userId));
+    setAdmins((prev) => prev.filter((a) => a.userId !== userId));
   };
 
   return (
@@ -77,13 +77,13 @@ export function AdminsPageClient({
             </span>
             <span>
               <strong className="text-(--foreground)">
-                {admins.filter((a) => a.manage_admins).length}
+                {admins.filter((a) => a.manageAdmins).length}
               </strong>{' '}
               з правом керування
             </span>
             <span>
               <strong className="text-(--foreground)">
-                {admins.filter((a) => a.restricted_to_faculty).length}
+                {admins.filter((a) => a.restrictedToFaculty).length}
               </strong>{' '}
               обмежених до підрозділу
             </span>

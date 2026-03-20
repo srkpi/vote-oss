@@ -59,7 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     restrictedToGroup: election.restricted_to_group,
     publicKey: election.public_key,
     privateKey: isClosed ? election.private_key : undefined,
-    creator: election.creator,
+    creator: { fullName: election.creator.full_name, faculty: election.creator.faculty },
     choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
     ballotCount: election._count.ballots,
   });

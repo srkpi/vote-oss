@@ -77,7 +77,7 @@ export function BallotRow({
         </span>
 
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="truncate font-mono text-xs text-(--foreground)">{ballot.current_hash}</p>
+          <p className="truncate font-mono text-xs text-(--foreground)">{ballot.currentHash}</p>
           {decryption && (
             <p
               className={cn(
@@ -259,7 +259,7 @@ export function BallotRow({
               </p>
               <div className="overflow-x-auto rounded-(--radius) border border-(--border-subtle) bg-white p-3">
                 <p className="font-mono text-[10px] leading-relaxed break-all text-(--foreground)">
-                  {ballot.encrypted_ballot}
+                  {ballot.encryptedBallot}
                 </p>
               </div>
             </div>
@@ -275,14 +275,14 @@ export function BallotRow({
               </div>
             </div>
 
-            {ballot.previous_hash && (
+            {ballot.previousHash && (
               <div>
                 <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
                   Попередній хеш
                 </p>
                 <div className="rounded-(--radius) border border-(--border-subtle) bg-white p-3">
                   <p className="font-mono text-[10px] break-all text-(--foreground)">
-                    {ballot.previous_hash}
+                    {ballot.previousHash}
                   </p>
                 </div>
               </div>

@@ -33,7 +33,7 @@ export function TokensPageClient({
   }, [initialTokens]);
 
   const handleDelete = (tokenHash: string) => {
-    setTokens((prev) => prev.filter((t) => t.token_hash !== tokenHash));
+    setTokens((prev) => prev.filter((t) => t.tokenHash !== tokenHash));
   };
 
   // When the create dialog closes (regardless of whether a token was created),

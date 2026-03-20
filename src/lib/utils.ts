@@ -148,8 +148,8 @@ export function isAncestorInGraph(
 }
 
 export function tokenUsageFraction(token: InviteToken): number {
-  if (token.max_usage === 0) return 0;
-  return token.current_usage / token.max_usage;
+  if (token.maxUsage === 0) return 0;
+  return token.currentUsage / token.maxUsage;
 }
 
 export function tokenUsageColor(fraction: number): string {

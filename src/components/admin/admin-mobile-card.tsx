@@ -23,12 +23,12 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="navy-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold text-white">
-            {admin.full_name.charAt(0)}
+            {admin.fullName.charAt(0)}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-body text-sm font-semibold text-(--foreground)">
-                {admin.full_name}
+                {admin.fullName}
               </p>
             </div>
             <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">
@@ -49,17 +49,17 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
       </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
-        {admin.manage_admins && (
+        {admin.manageAdmins && (
           <Badge variant="info" size="sm">
             Керування адмінами
           </Badge>
         )}
-        {admin.restricted_to_faculty && (
+        {admin.restrictedToFaculty && (
           <Badge variant="warning" size="sm">
             Обмежений до підрозділу
           </Badge>
         )}
-        {!admin.manage_admins && !admin.restricted_to_faculty && (
+        {!admin.manageAdmins && !admin.restrictedToFaculty && (
           <Badge variant="default" size="sm">
             Базові
           </Badge>
@@ -67,10 +67,10 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
       </div>
 
       <p className="font-body mt-2 text-xs text-(--muted-foreground)">
-        Призначено: {formatDate(admin.promoted_at)}
+        Призначено: {formatDate(admin.promotedAt)}
       </p>
       {admin.promoter && (
-        <p className="font-body text-xs text-(--muted-foreground)">{admin.promoter.full_name}</p>
+        <p className="font-body text-xs text-(--muted-foreground)">{admin.promoter.fullName}</p>
       )}
     </div>
   );

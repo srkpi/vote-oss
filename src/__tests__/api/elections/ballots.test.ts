@@ -103,7 +103,7 @@ describe('GET /api/elections/[id]/ballots', () => {
     );
   });
 
-  it('exposes encrypted ballot, signature and hash chain', async () => {
+  it('exposes encryptedBallot, signature and hash chain in camelCase', async () => {
     const req = await authReq();
 
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
@@ -114,10 +114,10 @@ describe('GET /api/elections/[id]/ballots', () => {
 
     const ballot = body.ballots[0];
 
-    expect(ballot.encrypted_ballot).toBeDefined();
+    expect(ballot.encryptedBallot).toBeDefined();
     expect(ballot.signature).toBeDefined();
-    expect(ballot.current_hash).toBeDefined();
-    expect(ballot.previous_hash).toBeDefined();
+    expect(ballot.currentHash).toBeDefined();
+    expect(ballot.previousHash).toBeDefined();
   });
 
   it('returns empty ballots array when no votes exist', async () => {
