@@ -25,9 +25,8 @@ export default async function FaqPage() {
   return (
     <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
       <div className="container py-10 sm:py-16 max-w-3xl mx-auto">
-        {/* Header */}
         <div className="mb-10 sm:mb-14 text-center">
-          <h1 className="font-display text-4xl sm:text-5xl font-bold text-[var(--kpi-navy)] mb-3">
+          <h1 className="font-display text-3xl sm:text-5xl font-bold text-[var(--kpi-navy)] mb-2 sm:mb-3">
             Часті запитання
           </h1>
           <p className="text-[var(--muted-foreground)] font-body text-base sm:text-lg max-w-xl mx-auto">
