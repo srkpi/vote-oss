@@ -1,0 +1,1 @@
+{"id":"ed1b21edb5efb5a7c6790f3a45bffcca","fullName":"src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) stores created_by from the authenticated user","name":"stores created_by from the authenticated user","status":"passed","testResultsByEnv":{"default":"149937618ed34a49d0bbdeadafb99c44"}}

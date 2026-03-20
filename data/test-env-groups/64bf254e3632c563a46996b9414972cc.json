@@ -1,0 +1,1 @@
+{"id":"64bf254e3632c563a46996b9414972cc","fullName":"src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 403 when admin is not a root admin (has promoted_by)","name":"returns 403 when admin is not a root admin (has promoted_by)","status":"passed","testResultsByEnv":{"default":"4add5ac92ff599d7cd7752ecead21e82"}}

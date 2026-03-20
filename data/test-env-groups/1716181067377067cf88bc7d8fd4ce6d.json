@@ -1,0 +1,1 @@
+{"id":"1716181067377067cf88bc7d8fd4ce6d","fullName":"src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) appends new category after the last one (position = last.position + 1)","name":"appends new category after the last one (position = last.position + 1)","status":"passed","testResultsByEnv":{"default":"d33ed7e3dc2e6d97a15bbb8dda122e93"}}

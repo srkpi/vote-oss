@@ -1,0 +1,1 @@
+{"id":"61b7de92e6cea67c0b4b7669b8d9607e","fullName":"src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/categories/[id] returns 403 when restricted admin","name":"returns 403 when restricted admin","status":"passed","testResultsByEnv":{"default":"fb4d69f1a9a31d889629f3e77a13200f"}}

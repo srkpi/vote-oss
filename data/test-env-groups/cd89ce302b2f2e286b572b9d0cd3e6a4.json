@@ -1,1 +1,1 @@
-{"id":"cd89ce302b2f2e286b572b9d0cd3e6a4","fullName":"src/__tests__/lib/cache.test.ts#cache invalidateElections does not throw when Redis is unavailable","name":"does not throw when Redis is unavailable","status":"passed","testResultsByEnv":{"default":"397e90ad4ccdeb53f23d75928d613bed"}}
+{"id":"cd89ce302b2f2e286b572b9d0cd3e6a4","fullName":"src/__tests__/lib/cache.test.ts#cache invalidateElections does not throw when Redis is unavailable","name":"does not throw when Redis is unavailable","status":"passed","testResultsByEnv":{"default":"c626ab4f98dcb2f98665edffbc0cab65"}}
