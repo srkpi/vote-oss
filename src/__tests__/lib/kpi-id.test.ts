@@ -1,6 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import { resolveTicket } from '@/lib/kpi-id';
+import { NotStudentError, resolveTicket } from '@/lib/kpi-id';
 
 describe('kpi-id', () => {
   beforeEach(() => {
@@ -101,6 +101,42 @@ describe('kpi-id', () => {
       const user = await resolveTicket('');
       expect(user).toBeNull();
       expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('allows access if both STUDENT_ID and EMPLOYEE_ID are present', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            STUDENT_ID: 'student-123',
+            EMPLOYEE_ID: 'employee-456',
+            NAME: 'Ivan Petrenko',
+          },
+        }),
+      });
+
+      const user = await resolveTicket('ticket-with-both');
+
+      expect(user).toEqual({
+        userId: 'student-123',
+        fullName: 'Ivan Petrenko',
+        faculty: 'TEST',
+        group: 'IP-24',
+      });
+    });
+
+    it('throws NotStudentError if only EMPLOYEE_ID is present', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            EMPLOYEE_ID: 'employee-456',
+            NAME: 'Petro Shevchenko',
+          },
+        }),
+      });
+
+      await expect(resolveTicket('employee-only-ticket')).rejects.toThrow(NotStudentError);
     });
   });
 });

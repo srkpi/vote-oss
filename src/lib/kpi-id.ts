@@ -2,6 +2,13 @@ import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
 import { KPI_APP_SECRET } from '@/lib/config/server';
 import type { TicketUserInfo, UserInfo } from '@/types/auth';
 
+export class NotStudentError extends Error {
+  constructor() {
+    super('Platform is only available for students');
+    this.name = 'NotStudentError';
+  }
+}
+
 export async function resolveTicket(ticketId: string): Promise<UserInfo | null> {
   if (!ticketId) {
     return null;
@@ -27,6 +34,10 @@ export async function resolveTicket(ticketId: string): Promise<UserInfo | null> 
 
   if (!ticket?.data) {
     return null;
+  }
+
+  if (ticket.data.EMPLOYEE_ID && !ticket.data.STUDENT_ID) {
+    throw new NotStudentError();
   }
 
   const userId = ticket.data.STUDENT_ID;

@@ -57,7 +57,13 @@ export default function CallbackPage() {
           router.refresh();
         }, 1200);
       } else {
-        setErrorMessage(result.error);
+        if (result.error === 'Platform is only available for students') {
+          setErrorMessage('Платформа доступна лише студентам');
+        } else if (result.error === 'Invalid or expired ticketId') {
+          setErrorMessage('Не валідний або прострочений ticketId');
+        } else {
+          setErrorMessage(result.error);
+        }
         setStatus('error');
       }
     };
