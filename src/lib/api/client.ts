@@ -1,3 +1,4 @@
+import type { FaqCategoryData } from '@/components/faq/faq-accordion';
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
 import type { BallotResponse, BallotsResponse } from '@/types/ballot';
@@ -78,6 +79,9 @@ export function createApiClient(fetcher: Fetcher) {
         restrictedToFaculty: boolean;
         promotedBy: string;
       }>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
+
+    // FAQ
+    getFaq: () => fetcher<FaqCategoryData[]>('/faq'),
   };
 }
 
