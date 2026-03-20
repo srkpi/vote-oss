@@ -390,7 +390,7 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
   return (
     <canvas
       ref={canvasRef}
-      className={cn('absolute inset-0 w-full h-full pointer-events-none', className)}
+      className={cn('pointer-events-none absolute inset-0 h-full w-full', className)}
       aria-hidden="true"
     />
   );

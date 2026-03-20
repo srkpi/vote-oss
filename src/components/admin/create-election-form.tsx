@@ -195,7 +195,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       )}
 
       <section>
-        <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-4">
+        <h2 className="font-display mb-4 text-xl font-semibold text-(--foreground)">
           Створення голосування
         </h2>
         <div className="space-y-5">
@@ -214,7 +214,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             </div>
           </FormField>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <FormField label="Початок" required error={fieldErrors.opensAt} htmlFor="opensAt">
               <Input
                 id="opensAt"
@@ -243,10 +243,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       </section>
 
       <section>
-        <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-1">
+        <h2 className="font-display mb-1 text-xl font-semibold text-(--foreground)">
           Варіанти відповідей
         </h2>
-        <p className="text-sm text-[var(--muted-foreground)] font-body mb-4">
+        <p className="font-body mb-4 text-sm text-(--muted-foreground)">
           Додайте від {ELECTION_CHOICES_MIN} до {ELECTION_CHOICES_MAX} варіантів
         </p>
 
@@ -261,8 +261,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             const isOverLimit = choice.length > ELECTION_CHOICE_MAX_LENGTH;
             return (
               <div key={index} className="flex items-start gap-3">
-                <div className="w-8 h-10 flex items-center justify-center shrink-0">
-                  <span className="w-7 h-7 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body">
+                <div className="flex h-10 w-8 shrink-0 items-center justify-center">
+                  <span className="navy-gradient font-body flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold text-white">
                     {String.fromCharCode(65 + index)}
                   </span>
                 </div>
@@ -275,9 +275,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                   />
                   <div className="flex items-center justify-between">
                     {fieldErrors[`choice_${index}`] ? (
-                      <p className="text-xs text-[var(--error)]">
-                        {fieldErrors[`choice_${index}`]}
-                      </p>
+                      <p className="text-xs text-(--error)">{fieldErrors[`choice_${index}`]}</p>
                     ) : (
                       <span />
                     )}
@@ -289,13 +287,13 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                     type="button"
                     onClick={() => removeChoice(index)}
                     className={cn(
-                      'w-10 h-10 flex items-center justify-center shrink-0 rounded-[var(--radius)]',
-                      'text-[var(--muted-foreground)] hover:text-[var(--error)] hover:bg-[var(--error-bg)]',
+                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-(--radius)',
+                      'text-(--muted-foreground) hover:bg-(--error-bg) hover:text-(--error)',
                       'transition-colors duration-150',
                     )}
                     aria-label="Видалити варіант"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 )}
               </div>
@@ -310,7 +308,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             size="sm"
             className="mt-4"
             onClick={addChoice}
-            icon={<Plus className="w-4 h-4" />}
+            icon={<Plus className="h-4 w-4" />}
           >
             Додати варіант
           </Button>
@@ -318,10 +316,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       </section>
 
       <section>
-        <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-1">
+        <h2 className="font-display mb-1 text-xl font-semibold text-(--foreground)">
           Обмеження доступу
         </h2>
-        <p className="text-sm text-[var(--muted-foreground)] font-body mb-4">
+        <p className="font-body mb-4 text-sm text-(--muted-foreground)">
           Залиште порожнім для всіх студентів. Групу можна вибрати лише після вибору підрозділу.
         </p>
 
@@ -331,7 +329,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormField
             label="Обмежити підрозділом"
             htmlFor="faculty"
@@ -348,10 +346,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                   id="faculty"
                   value={form.restrictedToFaculty}
                   readOnly
-                  className="bg-[var(--surface)] cursor-not-allowed pr-9"
+                  className="cursor-not-allowed bg-(--surface) pr-9"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
-                  <Lock className="w-4 h-4" />
+                <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-(--kpi-gray-mid)">
+                  <Lock className="h-4 w-4" />
                 </div>
               </div>
             ) : (
@@ -397,7 +395,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </div>
       </section>
 
-      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-[var(--border-subtle)]">
+      <div className="flex flex-col-reverse gap-3 border-t border-(--border-subtle) pt-4 sm:flex-row">
         <Button
           type="button"
           variant="secondary"

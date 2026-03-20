@@ -17,21 +17,21 @@ export const metadata: Metadata = {
 const statusConfig = {
   open: {
     label: 'Активне',
-    dot: 'bg-[var(--success)]',
-    text: 'text-[var(--success)]',
-    bg: 'bg-[var(--success-bg)]',
+    dot: 'bg-(--success)',
+    text: 'text-(--success)',
+    bg: 'bg-(--success-bg)',
   },
   upcoming: {
     label: 'Очікується',
-    dot: 'bg-[var(--kpi-orange)]',
-    text: 'text-[var(--kpi-orange)]',
-    bg: 'bg-[var(--warning-bg)]',
+    dot: 'bg-(--kpi-orange)',
+    text: 'text-(--kpi-orange)',
+    bg: 'bg-(--warning-bg)',
   },
   closed: {
     label: 'Завершено',
-    dot: 'bg-[var(--kpi-gray-light)]',
-    text: 'text-[var(--muted-foreground)]',
-    bg: 'bg-[var(--surface)]',
+    dot: 'bg-(--kpi-gray-light)',
+    text: 'text-(--muted-foreground)',
+    bg: 'bg-(--surface)',
   },
 };
 
@@ -64,55 +64,55 @@ export default async function AdminDashboardPage() {
       >
         <Button variant="accent" size="sm" asChild>
           <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Нове голосування</span>
           </Link>
         </Button>
       </PageHeader>
 
-      <div className="p-4 sm:p-8 space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="space-y-6 p-4 sm:p-8">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
             label="Активних"
             value={openElections.length.toLocaleString('uk-UA')}
             accent="success"
-            icon={<CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />}
+            icon={<CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
             label="Голосувань"
             value={elections.length.toLocaleString('uk-UA')}
             accent="navy"
-            icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
+            icon={<FileText className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
             label="Бюлетенів"
             value={totalBallots.toLocaleString('uk-UA')}
             accent="orange"
-            icon={<CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />}
+            icon={<CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
             label="Адміністраторів"
             value={admins.length.toLocaleString('uk-UA')}
             accent="info"
-            icon={<Users className="w-4 h-4 sm:w-5 sm:h-5" />}
+            icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-            <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)] px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
+          <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-card)">
+            <h2 className="font-display border-b border-(--border-subtle) px-4 py-4 text-base font-semibold text-(--foreground) sm:px-6 sm:text-lg">
               Нещодавні голосування
             </h2>
 
             {recentElections.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-                <div className="w-14 h-14 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] flex items-center justify-center mb-4">
-                  <FileText className="w-7 h-7 text-[var(--kpi-gray-mid)]" strokeWidth={1.5} />
+              <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-(--border-subtle) bg-(--surface)">
+                  <FileText className="h-7 w-7 text-(--kpi-gray-mid)" strokeWidth={1.5} />
                 </div>
-                <p className="font-display text-base font-semibold text-[var(--foreground)]">
+                <p className="font-display text-base font-semibold text-(--foreground)">
                   Голосувань поки немає
                 </p>
-                <p className="text-sm text-[var(--muted-foreground)] font-body mt-1 mb-4">
+                <p className="font-body mt-1 mb-4 text-sm text-(--muted-foreground)">
                   Створіть перше голосування для вашого підрозділу
                 </p>
                 <Button variant="accent" size="sm" asChild>
@@ -120,33 +120,33 @@ export default async function AdminDashboardPage() {
                 </Button>
               </div>
             ) : (
-              <div className="divide-y divide-[var(--border-subtle)]">
+              <div className="divide-y divide-(--border-subtle)">
                 {recentElections.map((election) => {
                   const status = statusConfig[election.status];
                   return (
                     <Link
                       key={election.id}
                       href={`/admin/elections/${election.id}`}
-                      className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-[var(--surface)] transition-colors group"
+                      className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-(--surface) sm:gap-4 sm:px-6 sm:py-4"
                     >
                       <div
-                        className={`w-2 h-2 rounded-full shrink-0 ${status.dot} ${election.status === 'open' ? 'animate-pulse' : ''}`}
+                        className={`h-2 w-2 shrink-0 rounded-full ${status.dot} ${election.status === 'open' ? 'animate-pulse' : ''}`}
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium font-body text-[var(--foreground)] truncate group-hover:text-[var(--kpi-navy)] transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-body truncate text-sm font-medium text-(--foreground) transition-colors group-hover:text-(--kpi-navy)">
                           {election.title}
                         </p>
-                        <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5 hidden sm:block">
+                        <p className="font-body mt-0.5 hidden text-xs text-(--muted-foreground) sm:block">
                           {formatDateTime(election.opensAt)} — {formatDateTime(election.closesAt)}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                         <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${status.bg} ${status.text}`}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.bg} ${status.text}`}
                         >
                           {status.label}
                         </span>
-                        <span className="text-xs font-body text-[var(--muted-foreground)] hidden sm:inline">
+                        <span className="font-body hidden text-xs text-(--muted-foreground) sm:inline">
                           {election.ballotCount} голосів
                         </span>
                       </div>

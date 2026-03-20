@@ -32,7 +32,7 @@ export default async function AdminFaqPage() {
       />
 
       <div className="p-4 sm:p-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="mx-auto max-w-3xl">
           <FaqManager initialCategories={categories ?? []} />
         </div>
       </div>

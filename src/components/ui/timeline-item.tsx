@@ -9,15 +9,15 @@ export function TimelineItem({ label, value, icon, status }: TimelineItemProps) 
   return (
     <div className="flex items-start gap-3">
       <div
-        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${status === 'done' ? 'bg-[var(--kpi-navy)] text-white' : 'bg-[var(--surface)] text-[var(--kpi-gray-mid)] border border-[var(--border-subtle)]'}`}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${status === 'done' ? 'bg-(--kpi-navy) text-white' : 'border border-(--border-subtle) bg-(--surface) text-(--kpi-gray-mid)'}`}
       >
         {icon}
       </div>
       <div>
-        <p className="text-[10px] text-[var(--muted-foreground)] uppercase tracking-wider font-body font-semibold">
+        <p className="font-body text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
           {label}
         </p>
-        <p className="text-sm font-body text-[var(--foreground)] mt-0.5">{value}</p>
+        <p className="font-body mt-0.5 text-sm text-(--foreground)">{value}</p>
       </div>
     </div>
   );

@@ -20,20 +20,18 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
       className={cn(
         'transition-colors duration-150',
         token.isOwn
-          ? 'bg-[var(--kpi-blue-light)]/5 hover:bg-[var(--kpi-blue-light)]/10'
-          : 'hover:bg-[var(--surface)]',
+          ? 'bg-(--kpi-blue-light)/5 hover:bg-(--kpi-blue-light)/10'
+          : 'hover:bg-(--surface)',
       )}
     >
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full navy-gradient flex items-center justify-center text-white text-xs font-semibold shrink-0">
+          <div className="navy-gradient flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white">
             {token.creator.full_name.charAt(0)}
           </div>
           <div>
-            <p className="text-sm font-body text-[var(--foreground)]">{token.creator.full_name}</p>
-            <p className="text-xs font-body text-[var(--muted-foreground)]">
-              {token.creator.user_id}
-            </p>
+            <p className="font-body text-sm text-(--foreground)">{token.creator.full_name}</p>
+            <p className="font-body text-xs text-(--muted-foreground)">{token.creator.user_id}</p>
           </div>
         </div>
       </td>
@@ -59,12 +57,12 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
       </td>
 
       <td className="px-4 py-3.5">
-        <div className="space-y-1.5 w-24">
-          <p className="text-sm font-body text-[var(--foreground)]">
+        <div className="w-24 space-y-1.5">
+          <p className="font-body text-sm text-(--foreground)">
             <span className="font-semibold">{token.current_usage}</span>
-            <span className="text-[var(--muted-foreground)]"> / {token.max_usage}</span>
+            <span className="text-(--muted-foreground)"> / {token.max_usage}</span>
           </p>
-          <div className="h-1.5 w-full rounded-full bg-[var(--border-color)] overflow-hidden">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-(--border-color)">
             <div
               className={cn('h-full rounded-full transition-all', usageColor)}
               style={{ width: `${Math.min(fraction * 100, 100)}%` }}
@@ -75,11 +73,11 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
 
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-1.5">
-          {urgent && <Clock className="w-3.5 h-3.5 text-[var(--kpi-orange)] shrink-0" />}
+          {urgent && <Clock className="h-3.5 w-3.5 shrink-0 text-(--kpi-orange)" />}
           <span
             className={cn(
-              'text-sm font-body',
-              urgent ? 'text-[var(--kpi-orange)] font-medium' : 'text-[var(--foreground)]',
+              'font-body text-sm',
+              urgent ? 'font-medium text-(--kpi-orange)' : 'text-(--foreground)',
             )}
           >
             {expiresText}
@@ -93,10 +91,10 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
             variant="ghost"
             size="md"
             onClick={onDelete}
-            className="text-[var(--error)] hover:bg-[var(--error-bg)]"
+            className="text-(--error) hover:bg-(--error-bg)"
             title="Видалити токен"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </td>

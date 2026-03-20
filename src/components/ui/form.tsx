@@ -11,15 +11,12 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
   ({ className, required, children, ...props }, ref) => (
     <label
       ref={ref}
-      className={cn(
-        'block text-sm font-medium text-[var(--foreground)] mb-1.5 font-body',
-        className,
-      )}
+      className={cn('font-body mb-1.5 block text-sm font-medium text-(--foreground)', className)}
       {...props}
     >
       {children}
       {required && (
-        <span className="ml-1 text-[var(--error)]" aria-hidden="true">
+        <span className="ml-1 text-(--error)" aria-hidden="true">
           *
         </span>
       )}
@@ -40,32 +37,31 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       return (
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none">
+            <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-(--muted-foreground)">
               {leftIcon}
             </div>
           )}
           <input
             type={type}
             className={cn(
-              'flex h-10 w-full rounded-[var(--radius)] bg-white',
-              'border border-[var(--border-color)]',
-              'px-3 py-2 text-sm font-body text-[var(--foreground)]',
-              'placeholder:text-[var(--subtle)]',
+              'flex h-10 w-full rounded-(--radius) bg-white',
+              'border border-(--border-color)',
+              'font-body px-3 py-2 text-sm text-(--foreground)',
+              'placeholder:text-(--subtle)',
               'transition-colors duration-150',
-              'hover:border-[var(--kpi-blue-light)]',
-              'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
+              'hover:border-(--kpi-blue-light)',
+              'focus:border-(--kpi-blue-light) focus:ring-2 focus:ring-(--kpi-blue-light)/20 focus:outline-none',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
-              error &&
-                'border-[var(--error)] focus:border-[var(--error)] focus:ring-[var(--error)]/20',
-              'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[var(--surface)]',
+              error && 'border-(--error) focus:border-(--error) focus:ring-(--error)/20',
+              'disabled:cursor-not-allowed disabled:bg-(--surface) disabled:opacity-50',
               className,
             )}
             ref={ref}
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none">
+            <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-(--muted-foreground)">
               {rightIcon}
             </div>
           )}
@@ -77,15 +73,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          'flex h-10 w-full rounded-[var(--radius)] bg-white',
-          'border border-[var(--border-color)]',
-          'px-3 py-2 text-sm font-body text-[var(--foreground)]',
-          'placeholder:text-[var(--subtle)]',
+          'flex h-10 w-full rounded-(--radius) bg-white',
+          'border border-(--border-color)',
+          'font-body px-3 py-2 text-sm text-(--foreground)',
+          'placeholder:text-(--subtle)',
           'transition-colors duration-150',
-          'hover:border-[var(--kpi-blue-light)]',
-          'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-          error && 'border-[var(--error)] focus:border-[var(--error)] focus:ring-[var(--error)]/20',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[var(--surface)]',
+          'hover:border-(--kpi-blue-light)',
+          'focus:border-(--kpi-blue-light) focus:ring-2 focus:ring-(--kpi-blue-light)/20 focus:outline-none',
+          error && 'border-(--error) focus:border-(--error) focus:ring-(--error)/20',
+          'disabled:cursor-not-allowed disabled:bg-(--surface) disabled:opacity-50',
           className,
         )}
         ref={ref}
@@ -104,16 +100,16 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, error, ...props }, ref) => (
     <textarea
       className={cn(
-        'flex min-h-[80px] w-full rounded-[var(--radius)] bg-white',
-        'border border-[var(--border-color)]',
-        'px-3 py-2 text-sm font-body text-[var(--foreground)]',
-        'placeholder:text-[var(--subtle)]',
+        'flex min-h-[80px] w-full rounded-(--radius) bg-white',
+        'border border-(--border-color)',
+        'font-body px-3 py-2 text-sm text-(--foreground)',
+        'placeholder:text-(--subtle)',
         'resize-y',
         'transition-colors duration-150',
-        'hover:border-[var(--kpi-blue-light)]',
-        'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-        error && 'border-[var(--error)] focus:border-[var(--error)] focus:ring-[var(--error)]/20',
-        'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[var(--surface)]',
+        'hover:border-(--kpi-blue-light)',
+        'focus:border-(--kpi-blue-light) focus:ring-2 focus:ring-(--kpi-blue-light)/20 focus:outline-none',
+        error && 'border-(--error) focus:border-(--error) focus:ring-(--error)/20',
+        'disabled:cursor-not-allowed disabled:bg-(--surface) disabled:opacity-50',
         className,
       )}
       ref={ref}
@@ -131,19 +127,19 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, error, children, ...props }, ref) => (
     <select
       className={cn(
-        'flex h-10 w-full rounded-[var(--radius)] bg-white',
-        'border border-[var(--border-color)]',
-        'px-3 py-2 text-sm font-body text-[var(--foreground)]',
+        'flex h-10 w-full rounded-(--radius) bg-white',
+        'border border-(--border-color)',
+        'font-body px-3 py-2 text-sm text-(--foreground)',
         'appearance-none',
         "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")]",
-        'bg-no-repeat bg-[right_12px_center]',
+        'bg-position-[right_12px_center] bg-no-repeat',
         'pr-10',
         'cursor-pointer',
         'transition-colors duration-150',
-        'hover:border-[var(--kpi-blue-light)]',
-        'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-        error && 'border-[var(--error)] focus:border-[var(--error)] focus:ring-[var(--error)]/20',
-        'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[var(--surface)]',
+        'hover:border-(--kpi-blue-light)',
+        'focus:border-(--kpi-blue-light) focus:ring-2 focus:ring-(--kpi-blue-light)/20 focus:outline-none',
+        error && 'border-(--error) focus:border-(--error) focus:ring-(--error)/20',
+        'disabled:cursor-not-allowed disabled:bg-(--surface) disabled:opacity-50',
         className,
       )}
       ref={ref}
@@ -182,10 +178,10 @@ export function FormField({
         </Label>
       )}
       {children}
-      {hint && !error && <p className="text-xs text-[var(--muted-foreground)]">{hint}</p>}
+      {hint && !error && <p className="text-xs text-(--muted-foreground)">{hint}</p>}
       {error && (
-        <p className="text-xs text-[var(--error)] flex items-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+        <p className="flex items-center gap-1 text-xs text-(--error)">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {error}
         </p>
       )}

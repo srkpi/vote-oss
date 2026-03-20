@@ -156,20 +156,18 @@ export function Combobox({
         onClick={() => (open ? closeDropdown() : openDropdown())}
         onKeyDown={handleTriggerKeyDown}
         className={cn(
-          'flex h-10 w-full items-center gap-2 rounded-[var(--radius)] bg-white',
-          'border border-[var(--border-color)]',
-          'px-3 text-sm font-body text-left',
+          'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-white',
+          'border border-(--border-color)',
+          'font-body px-3 text-left text-sm',
           'transition-colors duration-150',
-          !disabled && 'hover:border-[var(--kpi-blue-light)] cursor-pointer',
-          open && 'border-[var(--kpi-blue-light)] ring-2 ring-[var(--kpi-blue-light)]/20',
-          error &&
-            !open &&
-            'border-[var(--error)] focus:border-[var(--error)] focus:ring-[var(--error)]/20',
-          disabled && 'opacity-50 cursor-not-allowed bg-[var(--surface)]',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--kpi-blue-light)]',
+          !disabled && 'cursor-pointer hover:border-(--kpi-blue-light)',
+          open && 'border-(--kpi-blue-light) ring-2 ring-(--kpi-blue-light)/20',
+          error && !open && 'border-(--error) focus:border-(--error) focus:ring-(--error)/20',
+          disabled && 'cursor-not-allowed bg-(--surface) opacity-50',
+          'focus-visible:ring-2 focus-visible:ring-(--kpi-blue-light) focus-visible:outline-none',
         )}
       >
-        <span className={cn('flex-1 truncate', !value && 'text-[var(--subtle)]')}>
+        <span className={cn('flex-1 truncate', !value && 'text-(--subtle)')}>
           {value || placeholder}
         </span>
 
@@ -184,8 +182,8 @@ export function Combobox({
             }}
             className={cn(
               'flex h-5 w-5 shrink-0 items-center justify-center rounded',
-              'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
-              'hover:bg-[var(--surface)] transition-colors',
+              'text-(--muted-foreground) hover:text-(--foreground)',
+              'transition-colors hover:bg-(--surface)',
             )}
           >
             <X className="h-3 w-3" />
@@ -193,7 +191,7 @@ export function Combobox({
         )}
         <ChevronDown
           className={cn(
-            'h-4 w-4 shrink-0 text-[var(--muted-foreground)] transition-transform duration-150',
+            'h-4 w-4 shrink-0 text-(--muted-foreground) transition-transform duration-150',
             open && (openUpward ? '-rotate-180' : 'rotate-180'),
           )}
         />
@@ -204,16 +202,16 @@ export function Combobox({
           ref={dropdownCallbackRef}
           className={cn(
             'absolute z-50 w-full min-w-[200px]',
-            'overflow-hidden rounded-[var(--radius-lg)]',
-            'border border-[var(--border-color)] bg-white',
-            'shadow-[var(--shadow-lg)]',
+            'overflow-hidden rounded-lg',
+            'border border-(--border-color) bg-white',
+            'shadow-(--shadow-lg)',
             'animate-scale-in',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
-          <div className="border-b border-[var(--border-subtle)] p-2">
+          <div className="border-b border-(--border-subtle) p-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none" />
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-(--muted-foreground)" />
               <input
                 ref={searchRef}
                 value={search}
@@ -224,11 +222,11 @@ export function Combobox({
                 onKeyDown={handleSearchKeyDown}
                 placeholder={searchPlaceholder}
                 className={cn(
-                  'h-8 w-full rounded-[var(--radius-sm)] bg-[var(--surface)]',
-                  'pl-8 pr-3 text-sm font-body text-[var(--foreground)]',
-                  'placeholder:text-[var(--subtle)]',
+                  'h-8 w-full rounded-sm bg-(--surface)',
+                  'font-body pr-3 pl-8 text-sm text-(--foreground)',
+                  'placeholder:text-(--subtle)',
                   'border border-transparent',
-                  'focus:outline-none focus:border-[var(--kpi-blue-light)]',
+                  'focus:border-(--kpi-blue-light) focus:outline-none',
                   'transition-colors duration-150',
                   search && 'pr-7',
                 )}
@@ -238,7 +236,7 @@ export function Combobox({
                   type="button"
                   tabIndex={-1}
                   onClick={() => setSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                  className="absolute top-1/2 right-2 -translate-y-1/2 text-(--muted-foreground) hover:text-(--foreground)"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -252,7 +250,7 @@ export function Combobox({
             className="max-h-60 overflow-y-auto overscroll-contain py-1"
           >
             {filtered.length === 0 ? (
-              <div className="px-3 py-6 text-center text-sm font-body text-[var(--muted-foreground)]">
+              <div className="font-body px-3 py-6 text-center text-sm text-(--muted-foreground)">
                 {emptyText}
               </div>
             ) : (
@@ -268,19 +266,17 @@ export function Combobox({
                     onClick={() => selectOption(option)}
                     onMouseEnter={() => setActiveIndex(index)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 px-3 py-2 text-sm font-body text-left',
+                      'font-body flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm',
                       'transition-colors duration-75',
-                      isSelected
-                        ? 'text-[var(--kpi-navy)] font-medium'
-                        : 'text-[var(--foreground)]',
-                      isActive && !isSelected ? 'bg-[var(--surface)]' : '',
-                      isSelected ? 'bg-[var(--kpi-navy)]/5' : '',
-                      isActive && isSelected ? 'bg-[var(--kpi-navy)]/10' : '',
+                      isSelected ? 'font-medium text-(--kpi-navy)' : 'text-(--foreground)',
+                      isActive && !isSelected ? 'bg-(--surface)' : '',
+                      isSelected ? 'bg-(--kpi-navy)/5' : '',
+                      isActive && isSelected ? 'bg-(--kpi-navy)/10' : '',
                     )}
                   >
                     <Check
                       className={cn(
-                        'h-3.5 w-3.5 shrink-0 text-[var(--kpi-navy)]',
+                        'h-3.5 w-3.5 shrink-0 text-(--kpi-navy)',
                         isSelected ? 'opacity-100' : 'opacity-0',
                       )}
                     />

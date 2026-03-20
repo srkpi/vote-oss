@@ -20,16 +20,16 @@ export function ErrorState({
     <div
       className={cn(
         'flex flex-col items-center justify-center text-center',
-        'py-16 px-8',
+        'px-8 py-16',
         className,
       )}
     >
-      <div className="w-16 h-16 rounded-2xl bg-[var(--error-bg)] border border-[var(--error)]/20 flex items-center justify-center mb-5">
-        <AlertTriangle className="w-8 h-8 text-[var(--error)]" />
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-(--error)/20 bg-(--error-bg)">
+        <AlertTriangle className="h-8 w-8 text-(--error)" />
       </div>
-      <h3 className="font-display text-xl font-semibold text-[var(--foreground)] mb-2">{title}</h3>
+      <h3 className="font-display mb-2 text-xl font-semibold text-(--foreground)">{title}</h3>
       {description && (
-        <p className="text-sm text-[var(--muted-foreground)] max-w-sm font-body">{description}</p>
+        <p className="font-body max-w-sm text-sm text-(--muted-foreground)">{description}</p>
       )}
       {onRetry && (
         <Button variant="outline" size="md" className="mt-6" onClick={onRetry}>

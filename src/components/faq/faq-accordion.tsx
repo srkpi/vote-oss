@@ -28,9 +28,9 @@ export function FaqAccordion({ categories }: FaqAccordionProps) {
 
   if (categories.length === 0) {
     return (
-      <div className="bg-[var(--surface)] flex items-center justify-center p-4">
-        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden w-full max-w-md">
-          <EmptyState icon={<CircleSlash2 className="w-8 h-8" />} title="FAQ поки порожній" />
+      <div className="flex items-center justify-center bg-(--surface) p-4">
+        <div className="w-full max-w-md overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-sm)">
+          <EmptyState icon={<CircleSlash2 className="h-8 w-8" />} title="FAQ поки порожній" />
         </div>
       </div>
     );
@@ -40,7 +40,7 @@ export function FaqAccordion({ categories }: FaqAccordionProps) {
     <div className="space-y-10">
       {categories.map((category) => (
         <section key={category.id}>
-          <h2 className="font-display text-xl sm:text-2xl font-semibold text-[var(--foreground)] mb-4 break-words">
+          <h2 className="font-display mb-4 text-xl font-semibold wrap-break-word text-(--foreground) sm:text-2xl">
             {category.title}
           </h2>
           <div className="space-y-2">
@@ -53,7 +53,7 @@ export function FaqAccordion({ categories }: FaqAccordionProps) {
               />
             ))}
             {category.items.length === 0 && (
-              <p className="text-sm text-[var(--muted-foreground)] font-body px-1">
+              <p className="font-body px-1 text-sm text-(--muted-foreground)">
                 Питань у цій категорії ще немає.
               </p>
             )}

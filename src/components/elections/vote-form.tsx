@@ -129,13 +129,13 @@ export function VoteForm({ election }: VoteFormProps) {
             fullWidth
             disabled={!selectedChoice}
             onClick={() => setStep('confirm')}
-            icon={<ChevronRight className="w-4 h-4" />}
+            icon={<ChevronRight className="h-4 w-4" />}
             iconPosition="right"
           >
             Продовжити
           </Button>
 
-          <p className="text-xs text-[var(--muted-foreground)] text-center font-body leading-relaxed">
+          <p className="font-body text-center text-xs leading-relaxed text-(--muted-foreground)">
             Ваш голос зашифровано та анонімізовано. Після подання змінити вибір неможливо.
           </p>
         </>
@@ -152,12 +152,12 @@ export function VoteForm({ election }: VoteFormProps) {
 
       {step === 'submitting' && (
         <div className="flex flex-col items-center gap-6 py-8">
-          <Loader2 className="w-16 h-16 text-[var(--kpi-navy)] animate-spin" />
+          <Loader2 className="h-16 w-16 animate-spin text-(--kpi-navy)" />
           <div className="text-center">
-            <p className="font-display text-lg font-semibold text-[var(--foreground)]">
+            <p className="font-display text-lg font-semibold text-(--foreground)">
               Обробка голосу…
             </p>
-            <p className="text-sm text-[var(--muted-foreground)] font-body mt-1">
+            <p className="font-body mt-1 text-sm text-(--muted-foreground)">
               Шифруємо та записуємо ваш голос
             </p>
           </div>

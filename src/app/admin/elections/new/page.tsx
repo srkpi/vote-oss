@@ -28,8 +28,8 @@ export default async function NewElectionPage() {
       />
 
       <div className="p-4 sm:p-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-5 sm:p-8">
+        <div className="mx-auto max-w-2xl space-y-6">
+          <div className="rounded-xl border border-(--border-color) bg-white p-5 shadow-(--shadow-card) sm:p-8">
             <CreateElectionForm
               restrictedToFaculty={session.restrictedToFaculty ? session.faculty : null}
             />

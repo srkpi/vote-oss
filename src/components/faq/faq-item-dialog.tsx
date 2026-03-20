@@ -25,7 +25,7 @@ const QuillEditor = dynamic(() => import('@/components/ui/quill/quill-editor'), 
   loading: () => (
     <div
       style={{ minHeight: '180px' }}
-      className="border border-[var(--border-color)] rounded-[var(--radius)] bg-[var(--surface)] animate-pulse"
+      className="animate-pulse rounded-(--radius) border border-(--border-color) bg-(--surface)"
     />
   ),
 });

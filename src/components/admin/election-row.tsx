@@ -17,57 +17,53 @@ export function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps)
   const router = useRouter();
 
   return (
-    <tr className="hover:bg-[var(--surface)] transition-colors duration-150 group">
+    <tr className="group transition-colors duration-150 hover:bg-(--surface)">
       <td
-        className="px-4 py-3.5 max-w-xs cursor-pointer"
+        className="max-w-xs cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
         <div>
-          <p className="text-sm font-medium font-body text-[var(--foreground)] truncate group-hover:text-[var(--kpi-navy)] transition-colors">
+          <p className="font-body truncate text-sm font-medium text-(--foreground) transition-colors group-hover:text-(--kpi-navy)">
             {election.title}
           </p>
-          <p className="text-xs font-body text-[var(--muted-foreground)] mt-0.5 truncate">
+          <p className="font-body mt-0.5 truncate text-xs text-(--muted-foreground)">
             {election.creator.full_name}
           </p>
         </div>
       </td>
       <td
-        className="px-4 py-3.5 cursor-pointer"
+        className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
         <ElectionStatusBadge status={election.status} size="md" />
       </td>
       <td
-        className="px-4 py-3.5 cursor-pointer"
+        className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
-        <p className="text-xs font-body text-[var(--foreground)]">
-          {formatDateTime(election.opensAt)}
-        </p>
+        <p className="font-body text-xs text-(--foreground)">{formatDateTime(election.opensAt)}</p>
       </td>
       <td
-        className="px-4 py-3.5 cursor-pointer"
+        className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
-        <p className="text-xs font-body text-[var(--foreground)]">
-          {formatDateTime(election.closesAt)}
-        </p>
+        <p className="font-body text-xs text-(--foreground)">{formatDateTime(election.closesAt)}</p>
       </td>
       <td
-        className="px-4 py-3.5 cursor-pointer"
+        className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
         <div className="flex items-center gap-1.5">
-          <span className="font-display text-xl font-bold text-[var(--foreground)]">
+          <span className="font-display text-xl font-bold text-(--foreground)">
             {election.ballotCount.toLocaleString('uk-UA')}
           </span>
           {election.status === 'open' && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse shrink-0" />
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-(--success)" />
           )}
         </div>
       </td>
       <td
-        className="px-4 py-3.5 cursor-pointer"
+        className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
         <div className="flex flex-col gap-1">
@@ -100,9 +96,9 @@ export function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps)
               e.stopPropagation();
               onDelete();
             }}
-            className="text-[var(--error)] hover:bg-[var(--error-bg)] transition-opacity"
+            className="text-(--error) transition-opacity hover:bg-(--error-bg)"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </td>

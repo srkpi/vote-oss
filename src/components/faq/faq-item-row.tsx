@@ -66,7 +66,7 @@ export function FaqItemRow({
     >
       {/* Drop indicator – above */}
       {isDragOver && dragOverPosition === 'above' && (
-        <div className="absolute top-0 left-4 right-4 h-0.5 bg-[var(--kpi-blue-light)] rounded-full z-10 pointer-events-none" />
+        <div className="pointer-events-none absolute top-0 right-4 left-4 z-10 h-0.5 rounded-full bg-(--kpi-blue-light)" />
       )}
 
       <div
@@ -85,66 +85,66 @@ export function FaqItemRow({
         }}
         onDragEnd={onDragEnd}
         className={[
-          'flex items-start gap-2 px-4 sm:px-5 py-3 group transition-all duration-150',
-          isDragging ? 'opacity-40 bg-[var(--surface)]' : '',
+          'group flex items-start gap-2 px-4 py-3 transition-all duration-150 sm:px-5',
+          isDragging ? 'bg-(--surface) opacity-40' : '',
         ]
           .filter(Boolean)
           .join(' ')}
       >
-        <GripVertical className="w-4 h-4 text-[var(--kpi-gray-light)] hover:text-[var(--muted-foreground)] shrink-0 mt-0.5 cursor-grab active:cursor-grabbing transition-colors" />
+        <GripVertical className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-(--kpi-gray-light) transition-colors hover:text-(--muted-foreground) active:cursor-grabbing" />
 
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-body font-medium text-[var(--foreground)] leading-snug break-words">
+        <div className="min-w-0 flex-1">
+          <p className="font-body text-sm leading-snug font-medium wrap-break-word text-(--foreground)">
             {item.title}
           </p>
           {preview && (
-            <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5 line-clamp-1 break-words">
+            <p className="font-body mt-0.5 line-clamp-1 text-xs wrap-break-word text-(--muted-foreground)">
               {preview}
             </p>
           )}
         </div>
 
-        <div className="flex items-center gap-0.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
+        <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
           <button
             type="button"
             onClick={onMoveUp}
             disabled={isFirst}
             title="Вгору"
-            className="w-6 h-6 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
+            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground) disabled:opacity-30"
           >
-            <ChevronUp className="w-3.5 h-3.5" />
+            <ChevronUp className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={onMoveDown}
             disabled={isLast}
             title="Вниз"
-            className="w-6 h-6 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
+            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground) disabled:opacity-30"
           >
-            <ChevronDown className="w-3.5 h-3.5" />
+            <ChevronDown className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={onEdit}
             title="Редагувати"
-            className="w-6 h-6 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground)"
           >
-            <Edit2 className="w-3 h-3" />
+            <Edit2 className="h-3 w-3" />
           </button>
           <button
             type="button"
             onClick={onDelete}
             title="Видалити"
-            className="w-6 h-6 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--error)] transition-colors"
+            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--error)"
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="h-3 w-3" />
           </button>
         </div>
       </div>
 
       {/* Drop indicator – below */}
       {isDragOver && dragOverPosition === 'below' && (
-        <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[var(--kpi-blue-light)] rounded-full z-10 pointer-events-none" />
+        <div className="pointer-events-none absolute right-4 bottom-0 left-4 z-10 h-0.5 rounded-full bg-(--kpi-blue-light)" />
       )}
     </div>
   );

@@ -77,7 +77,7 @@ function renderText(text: string): React.ReactNode[] {
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[var(--kpi-blue-light)] underline underline-offset-2 hover:text-[var(--kpi-blue-dark)] transition-colors break-all"
+          className="break-all text-(--kpi-blue-light) underline underline-offset-2 transition-colors hover:text-(--kpi-blue-dark)"
         >
           {part}
         </a>
@@ -89,21 +89,21 @@ function renderText(text: string): React.ReactNode[] {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
-      <div className="container py-10 sm:py-16 max-w-3xl mx-auto">
-        <div className="mb-10 sm:mb-14 text-center">
-          <h1 className="font-display text-3xl sm:text-5xl font-bold text-[var(--kpi-navy)] mb-2 sm:mb-3">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-(--surface)">
+      <div className="container mx-auto max-w-3xl py-10 sm:py-16">
+        <div className="mb-10 text-center sm:mb-14">
+          <h1 className="font-display mb-2 text-3xl font-bold text-(--kpi-navy) sm:mb-3 sm:text-5xl">
             Політика конфіденційності
           </h1>
-          <p className="text-[var(--muted-foreground)] font-body text-base sm:text-lg max-w-xl mx-auto">
+          <p className="font-body mx-auto max-w-xl text-base text-(--muted-foreground) sm:text-lg">
             Останнє оновлення: {lastUpdated}
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden">
-            <div className="px-6 sm:px-12 pt-8 pb-6 border-b border-[var(--border-subtle)]">
-              <p className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-3">
+        <div className="mx-auto max-w-3xl">
+          <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-sm)">
+            <div className="border-b border-(--border-subtle) px-6 pt-8 pb-6 sm:px-12">
+              <p className="font-body mb-3 text-sm font-semibold tracking-wider text-(--muted-foreground) uppercase">
                 Зміст
               </p>
               <ol className="space-y-1.5">
@@ -113,9 +113,9 @@ export default function PrivacyPage() {
                     <li key={section.id}>
                       <a
                         href={`#${section.id}`}
-                        className="flex items-center gap-2.5 text-sm font-body text-[var(--muted-foreground)] hover:text-[var(--kpi-navy)] transition-colors group"
+                        className="font-body group flex items-center gap-2.5 text-sm text-(--muted-foreground) transition-colors hover:text-(--kpi-navy)"
                       >
-                        <span className="w-5 h-5 rounded-md bg-[var(--surface)] border border-[var(--border-subtle)] flex items-center justify-center text-[10px] font-semibold text-[var(--kpi-navy)] shrink-0 group-hover:bg-[var(--kpi-navy)] group-hover:text-white group-hover:border-[var(--kpi-navy)] transition-colors">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-(--border-subtle) bg-(--surface) text-[10px] font-semibold text-(--kpi-navy) transition-colors group-hover:border-(--kpi-navy) group-hover:bg-(--kpi-navy) group-hover:text-white">
                           {index + 1}
                         </span>
                         {section.title}
@@ -125,15 +125,15 @@ export default function PrivacyPage() {
               </ol>
             </div>
 
-            <div className="px-6 sm:px-12 py-8 space-y-10">
+            <div className="space-y-10 px-6 py-8 sm:px-12">
               {sections.map((section, index) => (
                 <section key={section.id} id={section.id}>
                   {section.title && (
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="w-7 h-7 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
+                    <div className="mb-4 flex items-center gap-3">
+                      <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white">
                         {index}
                       </span>
-                      <h2 className="font-display text-xl font-semibold text-[var(--foreground)]">
+                      <h2 className="font-display text-xl font-semibold text-(--foreground)">
                         {section.title}
                       </h2>
                     </div>
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
                     {section.paragraphs.map((para, i) => (
                       <p
                         key={i}
-                        className="font-body text-sm sm:text-base leading-relaxed text-[var(--foreground)] text-justify"
+                        className="font-body text-justify text-sm leading-relaxed text-(--foreground) sm:text-base"
                       >
                         {renderText(para)}
                       </p>
@@ -153,8 +153,8 @@ export default function PrivacyPage() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 sm:px-8 py-5 bg-[var(--surface)] border-t border-[var(--border-subtle)]">
-              <p className="text-xs font-body text-[var(--muted-foreground)] text-center">
+            <div className="border-t border-(--border-subtle) bg-(--surface) px-6 py-5 sm:px-8">
+              <p className="font-body text-center text-xs text-(--muted-foreground)">
                 © {new Date().getFullYear()} {APP_NAME} · КПІ ім. Ігоря Сікорського
               </p>
             </div>

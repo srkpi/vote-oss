@@ -28,7 +28,7 @@ export default async function ElectionsPage() {
   const closed = (elections ?? []).filter((e) => e.status === 'closed').length;
 
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-(--surface)">
       <PageHeader
         title="Голосування"
         description="Всі доступні вам голосування в одному місці"
@@ -37,7 +37,7 @@ export default async function ElectionsPage() {
         {session.isAdmin && (
           <Button variant="accent" size="sm" asChild>
             <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Нове голосування</span>
             </Link>
           </Button>
@@ -46,7 +46,7 @@ export default async function ElectionsPage() {
 
       <div className="container py-8">
         {error ? (
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden">
+          <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-sm)">
             <ErrorState title="Не вдалося завантажити голосування" description={error} />
           </div>
         ) : (

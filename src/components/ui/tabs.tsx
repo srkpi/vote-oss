@@ -15,7 +15,7 @@ export type TabsProps<T extends string> = {
 export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount }: TabsProps<T>) {
   return (
     <div
-      className="overflow-x-auto no-scrollbar p-1 bg-white border border-[var(--border-subtle)] rounded-[var(--radius-lg)] shadow-[var(--shadow-xs)]"
+      className="no-scrollbar overflow-x-auto rounded-lg border border-(--border-subtle) bg-white p-1 shadow-(--shadow-xs)"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       <div className="flex min-w-full gap-1">
@@ -28,21 +28,19 @@ export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount 
               key={tab.key}
               onClick={() => onTabChange(tab.key)}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] text-sm font-medium font-body transition-all duration-150 whitespace-nowrap',
+                'font-body flex items-center gap-1.5 rounded-(--radius) px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150',
                 // Stretch evenly if container has extra space, shrink only if needed
-                'flex-1 flex-shrink-0 justify-center',
+                'flex-1 shrink-0 justify-center',
                 isActive
-                  ? 'bg-[var(--kpi-navy)] text-white shadow-[var(--shadow-sm)]'
-                  : 'text-[var(--muted-foreground)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+                  ? 'bg-(--kpi-navy) text-white shadow-(--shadow-sm)'
+                  : 'text-(--muted-foreground) hover:bg-(--surface) hover:text-(--foreground)',
               )}
             >
               {tab.label}
               <span
                 className={cn(
-                  'inline-flex items-center justify-center h-[18px] rounded-full text-[10px] font-semibold px-1',
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : 'bg-[var(--surface)] text-[var(--muted-foreground)]',
+                  'inline-flex h-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold',
+                  isActive ? 'bg-white/20 text-white' : 'bg-(--surface) text-(--muted-foreground)',
                 )}
               >
                 {count}

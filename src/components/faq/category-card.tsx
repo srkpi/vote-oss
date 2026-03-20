@@ -94,14 +94,14 @@ export function CategoryCard({
   return (
     <div className="relative">
       {isDragOver && (
-        <div className="absolute -top-px left-0 right-0 h-0.5 bg-[var(--kpi-blue-light)] rounded-full z-20 pointer-events-none" />
+        <div className="pointer-events-none absolute -top-px right-0 left-0 z-20 h-0.5 rounded-full bg-(--kpi-blue-light)" />
       )}
 
       <div
         className={[
-          'bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden transition-all duration-150',
-          isDragging ? 'opacity-40 scale-[0.995]' : '',
-          isDragOver ? 'ring-1 ring-[var(--kpi-blue-light)]' : '',
+          'overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-card) transition-all duration-150',
+          isDragging ? 'scale-[0.995] opacity-40' : '',
+          isDragOver ? 'ring-1 ring-(--kpi-blue-light)' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -112,7 +112,7 @@ export function CategoryCard({
           onCategoryDrop?.();
         }}
       >
-        <div className="flex items-center gap-2 px-4 sm:px-5 py-3.5 border-b border-[var(--border-subtle)] bg-[var(--surface)]">
+        <div className="flex items-center gap-2 border-b border-(--border-subtle) bg-(--surface) px-4 py-3.5 sm:px-5">
           <div
             draggable
             onDragStart={(e) => {
@@ -133,16 +133,16 @@ export function CategoryCard({
             }}
             className="shrink-0 cursor-grab active:cursor-grabbing"
           >
-            <GripVertical className="w-4 h-4 text-[var(--kpi-gray-light)] hover:text-[var(--muted-foreground)] transition-colors pointer-events-none" />
+            <GripVertical className="pointer-events-none h-4 w-4 text-(--kpi-gray-light) transition-colors hover:text-(--muted-foreground)" />
           </div>
 
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="flex-1 min-w-0 text-left font-display text-base font-semibold text-[var(--foreground)] hover:text-[var(--kpi-navy)] transition-colors"
+            className="font-display min-w-0 flex-1 text-left text-base font-semibold text-(--foreground) transition-colors hover:text-(--kpi-navy)"
           >
-            <span className="break-words">{category.title}</span>
-            <span className="ml-2 text-xs font-body font-normal text-[var(--muted-foreground)]">
+            <span className="wrap-break-word">{category.title}</span>
+            <span className="font-body ml-2 text-xs font-normal text-(--muted-foreground)">
               ({category.items.length})
             </span>
           </button>
@@ -153,18 +153,18 @@ export function CategoryCard({
               onClick={onMoveUp}
               disabled={isFirst}
               title="Вгору"
-              className="w-7 h-7 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground) disabled:opacity-30"
             >
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={onMoveDown}
               disabled={isLast}
               title="Вниз"
-              className="w-7 h-7 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-30 transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground) disabled:opacity-30"
             >
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="h-4 w-4" />
             </button>
           </div>
 
@@ -172,22 +172,22 @@ export function CategoryCard({
             type="button"
             onClick={onRename}
             title="Перейменувати"
-            className="w-7 h-7 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:bg-(--surface-hover) hover:text-(--foreground)"
           >
-            <Edit2 className="w-3.5 h-3.5" />
+            <Edit2 className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={onDelete}
             title="Видалити"
-            className="w-7 h-7 flex items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:bg-(--error-bg) hover:text-(--error)"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
 
         {!isCollapsed && (
-          <div className="divide-y divide-[var(--border-subtle)]">
+          <div className="divide-y divide-(--border-subtle)">
             {category.items.map((item, idx) => (
               <FaqItemRow
                 key={item.id}
@@ -210,13 +210,13 @@ export function CategoryCard({
               />
             ))}
 
-            <div className="px-4 sm:px-5 py-2.5">
+            <div className="px-4 py-2.5 sm:px-5">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onAddItem}
-                icon={<Plus className="w-3.5 h-3.5" />}
-                className="text-[var(--kpi-blue-light)] hover:bg-[var(--info-bg)]"
+                icon={<Plus className="h-3.5 w-3.5" />}
+                className="text-(--kpi-blue-light) hover:bg-(--info-bg)"
               >
                 Додати пункт
               </Button>

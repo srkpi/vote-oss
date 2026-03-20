@@ -153,9 +153,9 @@ export function tokenUsageFraction(token: InviteToken): number {
 }
 
 export function tokenUsageColor(fraction: number): string {
-  if (fraction >= 1) return 'bg-[var(--error)]';
-  if (fraction >= 0.8) return 'bg-[var(--kpi-orange)]';
-  return 'bg-[var(--success)]';
+  if (fraction >= 1) return 'bg-(--error)';
+  if (fraction >= 0.8) return 'bg-(--kpi-orange)';
+  return 'bg-(--success)';
 }
 
 export function tokenExpiresLabel(validDue: string): { text: string; urgent: boolean } {

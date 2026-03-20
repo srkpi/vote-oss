@@ -28,23 +28,21 @@ export function CopyButton({ text, label = 'Копіювати', size = 'sm' }: 
     <button
       onClick={handleCopy}
       className={cn(
-        'flex items-center gap-1 font-body transition-colors rounded-[var(--radius-sm)]',
-        'hover:bg-[var(--surface)]',
-        size === 'sm' ? 'text-xs px-2 py-1' : 'text-sm px-3 py-1.5',
-        copied
-          ? 'text-[var(--success)]'
-          : 'text-[var(--muted-foreground)] hover:text-[var(--kpi-navy)]',
+        'font-body flex items-center gap-1 rounded-sm transition-colors',
+        'hover:bg-(--surface)',
+        size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm',
+        copied ? 'text-(--success)' : 'text-(--muted-foreground) hover:text-(--kpi-navy)',
       )}
       title={label}
     >
       {copied ? (
         <>
-          <Check className="w-3.5 h-3.5" />
+          <Check className="h-3.5 w-3.5" />
           Скопійовано
         </>
       ) : (
         <>
-          <Copy className="w-3.5 h-3.5" />
+          <Copy className="h-3.5 w-3.5" />
           {label}
         </>
       )}

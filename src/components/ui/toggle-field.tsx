@@ -18,7 +18,7 @@ export function ToggleField({
   return (
     <label
       className={cn(
-        'flex items-start gap-3 group',
+        'group flex items-start gap-3',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
       )}
     >
@@ -33,13 +33,13 @@ export function ToggleField({
 
         <div
           className={cn(
-            'w-10 h-6 rounded-full transition-all duration-200',
-            checked ? 'bg-[var(--kpi-navy)]' : 'bg-[var(--border-color)]',
+            'h-6 w-10 rounded-full transition-all duration-200',
+            checked ? 'bg-(--kpi-navy)' : 'bg-(--border-color)',
           )}
         >
           <div
             className={cn(
-              'absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-200',
+              'absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all duration-200',
               checked ? 'left-5' : 'left-1',
             )}
           />
@@ -47,9 +47,9 @@ export function ToggleField({
       </div>
 
       <div>
-        <p className="text-sm font-medium text-[var(--foreground)] font-body">{label}</p>
+        <p className="font-body text-sm font-medium text-(--foreground)">{label}</p>
         {description && (
-          <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">{description}</p>
+          <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">{description}</p>
         )}
       </div>
     </label>

@@ -20,10 +20,10 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       href={`/elections/${election.id}`}
       className={cn(
         'group block',
-        'bg-white rounded-[var(--radius-xl)]',
-        'border border-[var(--border-color)]',
-        'shadow-[var(--shadow-card)]',
-        'hover:shadow-[var(--shadow-card-hover)]',
+        'rounded-xl bg-white',
+        'border border-(--border-color)',
+        'shadow-(--shadow-card)',
+        'hover:shadow-(--shadow-card-hover)',
         'hover:-translate-y-1',
         'transition-all duration-300',
         'overflow-hidden',
@@ -34,18 +34,18 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       <div
         className={cn(
           'h-1',
-          isOpen && 'bg-gradient-to-r from-[var(--success)] to-emerald-400',
-          isUpcoming && 'bg-gradient-to-r from-[var(--kpi-orange)] to-amber-400',
-          isClosed && 'bg-gradient-to-r from-[var(--kpi-gray-light)] to-[var(--border-color)]',
+          isOpen && 'bg-linear-to-r from-(--success) to-emerald-400',
+          isUpcoming && 'bg-linear-to-r from-(--kpi-orange) to-amber-400',
+          isClosed && 'bg-linear-to-r from-(--kpi-gray-light) to-(--border-color)',
         )}
       />
 
       <div className="p-6">
-        <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <ElectionStatusBadge status={election.status} />
           {(election.restrictedToFaculty || election.restrictedToGroup) && (
-            <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
-              <Lock className="w-3.5 h-3.5 shrink-0" />
+            <div className="flex items-center gap-1 text-xs text-(--muted-foreground)">
+              <Lock className="h-3.5 w-3.5 shrink-0" />
               <span>
                 {election.restrictedToGroup
                   ? election.restrictedToGroup
@@ -57,16 +57,16 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 
         <h3
           className={cn(
-            'font-display text-xl font-semibold text-[var(--foreground)] leading-snug mb-3',
-            'group-hover:text-[var(--kpi-navy)] transition-colors duration-200 line-clamp-2 break-words',
+            'font-display mb-3 text-xl leading-snug font-semibold text-(--foreground)',
+            'line-clamp-2 wrap-break-word transition-colors duration-200 group-hover:text-(--kpi-navy)',
           )}
         >
           {election.title}
         </h3>
 
-        <div className="space-y-2 mb-5">
-          <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-            <Calendar className="w-4 h-4 shrink-0 text-[var(--kpi-gray-mid)]" />
+        <div className="mb-5 space-y-2">
+          <div className="flex items-center gap-2 text-sm text-(--muted-foreground)">
+            <Calendar className="h-4 w-4 shrink-0 text-(--kpi-gray-mid)" />
             <span>
               {isOpen && <>Діє до {formatDateTime(election.closesAt)}</>}
               {isUpcoming && <>Починається {formatDateTime(election.opensAt)}</>}
@@ -74,47 +74,47 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
-            <User className="w-4 h-4 shrink-0 text-[var(--kpi-gray-mid)]" />
+          <div className="flex items-center gap-2 text-sm text-(--muted-foreground)">
+            <User className="h-4 w-4 shrink-0 text-(--kpi-gray-mid)" />
             <span>{election.creator.full_name}</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-5">
+        <div className="mb-5 flex flex-wrap gap-2">
           {election.choices.slice(0, 3).map((choice) => (
             <span
               key={choice.id}
               className={cn(
-                'text-xs px-2.5 py-1 rounded-full font-body',
-                'bg-[var(--surface)] text-[var(--muted-foreground)]',
-                'border border-[var(--border-subtle)] truncate',
+                'font-body rounded-full px-2.5 py-1 text-xs',
+                'bg-(--surface) text-(--muted-foreground)',
+                'truncate border border-(--border-subtle)',
               )}
             >
               {choice.choice}
             </span>
           ))}
           {election.choices.length > 3 && (
-            <span className="text-xs px-2.5 py-1 rounded-full bg-[var(--surface)] text-[var(--muted-foreground)] border border-[var(--border-subtle)]">
+            <span className="rounded-full border border-(--border-subtle) bg-(--surface) px-2.5 py-1 text-xs text-(--muted-foreground)">
               +{election.choices.length - 3}
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
-          <div className="flex items-center gap-1.5 text-sm text-[var(--muted-foreground)]">
-            <FileText className="w-4 h-4 text-[var(--kpi-gray-mid)]" />
+        <div className="flex items-center justify-between border-t border-(--border-subtle) pt-4">
+          <div className="flex items-center gap-1.5 text-sm text-(--muted-foreground)">
+            <FileText className="h-4 w-4 text-(--kpi-gray-mid)" />
             <span>{pluralize(election.ballotCount, ['голос', 'голоси', 'голосів'])}</span>
           </div>
 
           <div
             className={cn(
               'flex items-center gap-1.5 text-sm font-medium',
-              'text-[var(--kpi-navy)] opacity-0 group-hover:opacity-100',
+              'text-(--kpi-navy) opacity-0 group-hover:opacity-100',
               'transition-opacity duration-200',
             )}
           >
             <span>{isOpen ? 'Проголосувати' : 'Переглянути'}</span>
-            <ChevronRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+            <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </div>
         </div>
       </div>
@@ -125,11 +125,11 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 export function ElectionCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
-      className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] overflow-hidden animate-fade-up"
+      className="animate-fade-up overflow-hidden rounded-xl border border-(--border-color) bg-white"
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
-      <div className="h-1 skeleton" />
-      <div className="p-6 space-y-4">
+      <div className="skeleton h-1" />
+      <div className="space-y-4 p-6">
         <div className="skeleton h-5 w-24 rounded-full" />
         <div className="space-y-2">
           <div className="skeleton h-6 w-3/4 rounded" />

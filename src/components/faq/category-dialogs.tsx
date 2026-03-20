@@ -89,8 +89,8 @@ export function DeleteCategoryDialog({
         </DialogHeader>
         <DialogBody>
           <Alert variant="warning">
-            Категорія <strong className="break-words">«{category?.title}»</strong> та всі її пункти
-            будуть видалені. Цю дію неможливо скасувати.
+            Категорія <strong className="wrap-break-word">«{category?.title}»</strong> та всі її
+            пункти будуть видалені. Цю дію неможливо скасувати.
           </Alert>
         </DialogBody>
         <DialogFooter>
@@ -128,7 +128,7 @@ export function DeleteItemDialog({ target, onConfirm, onClose, loading }: Delete
         </DialogHeader>
         <DialogBody>
           <Alert variant="warning">
-            Пункт <strong className="break-words">«{target?.item.title}»</strong> буде видалено
+            Пункт <strong className="wrap-break-word">«{target?.item.title}»</strong> буде видалено
             назавжди.
           </Alert>
         </DialogBody>

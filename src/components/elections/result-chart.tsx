@@ -6,16 +6,16 @@ import { calculateVotePercentage, cn } from '@/lib/utils';
 import type { TallyResult } from '@/types/tally';
 
 const colors = [
-  { bar: 'from-[var(--kpi-navy)] to-[var(--kpi-blue-mid)]', badge: 'bg-[var(--kpi-navy)]' },
+  { bar: 'from-(--kpi-navy) to-(--kpi-blue-mid)', badge: 'bg-(--kpi-navy)' },
   {
-    bar: 'from-[var(--kpi-orange)] to-[var(--kpi-orange-dark)]',
-    badge: 'bg-[var(--kpi-orange)]',
+    bar: 'from-(--kpi-orange) to-(--kpi-orange-dark)',
+    badge: 'bg-(--kpi-orange)',
   },
   {
-    bar: 'from-[var(--kpi-blue-light)] to-[var(--kpi-blue-mid)]',
-    badge: 'bg-[var(--kpi-blue-light)]',
+    bar: 'from-(--kpi-blue-light) to-(--kpi-blue-mid)',
+    badge: 'bg-(--kpi-blue-light)',
   },
-  { bar: 'from-[var(--kpi-wine)] to-[var(--kpi-wine-deep)]', badge: 'bg-[var(--kpi-wine)]' },
+  { bar: 'from-(--kpi-wine) to-(--kpi-wine-deep)', badge: 'bg-(--kpi-wine)' },
   { bar: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-500' },
 ];
 
@@ -58,17 +58,17 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
             <div
               key={result.choiceId}
               className={cn(
-                'p-4 rounded-[var(--radius-lg)] border transition-all duration-300',
+                'rounded-lg border p-4 transition-all duration-300',
                 isWinner
-                  ? 'border-[var(--kpi-navy)]/30 bg-[var(--kpi-navy)]/3'
-                  : 'border-[var(--border-subtle)] bg-white',
+                  ? 'border-(--kpi-navy)/30 bg-(--kpi-navy)/3'
+                  : 'border-(--border-subtle) bg-white',
               )}
             >
-              <div className="flex items-center justify-between mb-3">
+              <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
                     className={cn(
-                      'w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-bold font-body shrink-0',
+                      'font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white',
                       color.badge,
                     )}
                   >
@@ -77,31 +77,31 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
                   <span
                     className={cn(
                       'font-body text-sm font-medium',
-                      isWinner ? 'text-[var(--kpi-navy)]' : 'text-[var(--foreground)]',
+                      isWinner ? 'text-(--kpi-navy)' : 'text-(--foreground)',
                     )}
                   >
                     {result.choice}
                   </span>
                   {isWinner && totalBallots > 0 && (
-                    <span className="text-[10px] font-semibold text-white bg-[var(--kpi-orange)] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                    <span className="rounded-full bg-(--kpi-orange) px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
                       {winnerLabel}
                     </span>
                   )}
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="font-display text-xl font-bold text-[var(--foreground)]">
+                <div className="shrink-0 text-right">
+                  <span className="font-display text-xl font-bold text-(--foreground)">
                     {animated ? pct : 0}%
                   </span>
-                  <p className="text-xs text-[var(--muted-foreground)] font-body">
+                  <p className="font-body text-xs text-(--muted-foreground)">
                     {result.votes} {result.votes === 1 ? 'голос' : 'голосів'}
                   </p>
                 </div>
               </div>
 
-              <div className="h-2 w-full rounded-full bg-[var(--border-subtle)] overflow-hidden">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-(--border-subtle)">
                 <div
                   className={cn(
-                    'h-full rounded-full bg-gradient-to-r transition-all ease-out duration-1000',
+                    'h-full rounded-full bg-linear-to-r transition-all duration-1000 ease-out',
                     color.bar,
                   )}
                   style={{
@@ -116,7 +116,7 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
       </div>
 
       {totalBallots === 0 && (
-        <p className="text-center text-sm text-[var(--muted-foreground)] font-body py-4">
+        <p className="font-body py-4 text-center text-sm text-(--muted-foreground)">
           Поки що голосів немає
         </p>
       )}

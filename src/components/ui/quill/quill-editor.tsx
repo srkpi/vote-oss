@@ -213,8 +213,8 @@ export default function QuillEditor({
     <>
       <div
         className={cn(
-          'flex flex-col rounded-[var(--radius)] border',
-          error || isOverLimit ? 'border-[var(--error)]' : 'border-[var(--border-color)]',
+          'flex flex-col rounded-(--radius) border',
+          error || isOverLimit ? 'border-(--error)' : 'border-(--border-color)',
           className,
         )}
         onClick={() => quillRef.current?.focus()}
@@ -228,9 +228,9 @@ export default function QuillEditor({
             } as React.CSSProperties
           }
           className={cn(
-            '[&_.ql-editor]:min-h-[var(--editor-min-height)] [&_.ql-editor]:px-3 [&_.ql-editor]:py-2.5',
+            '[&_.ql-editor]:min-h-(--editor-min-height) [&_.ql-editor]:px-3 [&_.ql-editor]:py-2.5',
             maxHeight &&
-              '[&_.ql-editor]:max-h-[var(--editor-max-height)] [&_.ql-editor]:overflow-y-auto',
+              '[&_.ql-editor]:max-h-(--editor-max-height) [&_.ql-editor]:overflow-y-auto',
           )}
         />
 
@@ -239,7 +239,7 @@ export default function QuillEditor({
             value={charCount}
             max={maxLength}
             threshold={0}
-            className="px-3 py-1.5 border-t border-[var(--border-subtle)] bg-[var(--surface)] flex justify-end rounded-b-[var(--radius)]"
+            className="flex justify-end rounded-b-(--radius) border-t border-(--border-subtle) bg-(--surface) px-3 py-1.5"
           />
         )}
       </div>

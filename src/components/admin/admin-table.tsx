@@ -51,7 +51,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
 
   if (admins.length === 0) {
     return (
-      <div className="text-center py-12 text-[var(--muted-foreground)] font-body text-sm">
+      <div className="font-body py-12 text-center text-sm text-(--muted-foreground)">
         Адміністраторів не знайдено
       </div>
     );
@@ -59,21 +59,21 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
 
   return (
     <>
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[var(--border-subtle)]">
+            <tr className="border-b border-(--border-subtle)">
               {['Користувач', 'Підрозділ', 'Група', 'Призначено', 'Права', ''].map((h) => (
                 <th
                   key={h}
-                  className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
+                  className="font-body px-4 py-3 text-left text-xs font-semibold tracking-wider text-(--muted-foreground) uppercase"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border-subtle)]">
+          <tbody className="divide-y divide-(--border-subtle)">
             {admins.map((admin) => (
               <AdminRow
                 key={admin.user_id}
@@ -86,7 +86,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
         </table>
       </div>
 
-      <div className="md:hidden space-y-3">
+      <div className="space-y-3 md:hidden">
         {admins.map((admin) => (
           <AdminMobileCard
             key={admin.user_id}

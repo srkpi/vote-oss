@@ -68,45 +68,45 @@ export default function CallbackPage() {
   const config = STATUS_CONFIG[status];
 
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] flex items-center justify-center p-8">
+    <div className="flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-8">
       {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[var(--kpi-navy)]/5 blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-[var(--kpi-orange)]/8 blur-3xl" />
-        <div className="absolute inset-0 pattern-grid opacity-[0.03]" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-(--kpi-navy)/5 blur-3xl" />
+        <div className="absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full bg-(--kpi-orange)/8 blur-3xl" />
+        <div className="pattern-grid absolute inset-0 opacity-[0.03]" />
       </div>
 
       <div className="relative w-full max-w-md">
-        <div className="bg-white rounded-[var(--radius-2xl)] border border-[var(--border-color)] shadow-[var(--shadow-xl)] overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-(--border-color) bg-white shadow-(--shadow-xl)">
           {/* Top accent */}
           <div
             className={`h-1.5 w-full transition-all duration-700 ${
               status === 'loading'
-                ? 'bg-gradient-to-r from-[var(--kpi-navy)] via-[var(--kpi-blue-light)] to-[var(--kpi-navy)] bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite]'
+                ? 'animate-[shimmer_2s_linear_infinite] bg-linear-to-r from-(--kpi-navy) via-(--kpi-blue-light) to-(--kpi-navy) bg-size-[200%_100%]'
                 : status === 'success'
-                  ? 'bg-gradient-to-r from-[var(--success)] to-emerald-400'
-                  : 'bg-gradient-to-r from-[var(--error)] to-rose-400'
+                  ? 'bg-linear-to-r from-(--success) to-emerald-400'
+                  : 'bg-linear-to-r from-(--error) to-rose-400'
             }`}
           />
 
           <div className="p-10 text-center">
             {/* Status icon */}
-            <div className="flex justify-center mb-6">
+            <div className="mb-6 flex justify-center">
               {status === 'loading' && (
-                <div className="relative w-20 h-20">
-                  <div className="absolute inset-0 rounded-full border-4 border-[var(--border-color)]" />
-                  <div className="absolute inset-0 rounded-full border-4 border-[var(--kpi-navy)] border-t-transparent animate-spin" />
+                <div className="relative h-20 w-20">
+                  <div className="absolute inset-0 rounded-full border-4 border-(--border-color)" />
+                  <div className="absolute inset-0 animate-spin rounded-full border-4 border-(--kpi-navy) border-t-transparent" />
                   <div
-                    className="absolute inset-3 rounded-full border-2 border-[var(--kpi-orange)]/30 border-b-[var(--kpi-orange)] animate-spin"
+                    className="absolute inset-3 animate-spin rounded-full border-2 border-(--kpi-orange)/30 border-b-(--kpi-orange)"
                     style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}
                   />
                 </div>
               )}
 
               {status === 'success' && (
-                <div className="w-20 h-20 rounded-full bg-[var(--success-bg)] border-2 border-[var(--success)]/30 flex items-center justify-center animate-scale-in">
+                <div className="animate-scale-in flex h-20 w-20 items-center justify-center rounded-full border-2 border-(--success)/30 bg-(--success-bg)">
                   <svg
-                    className="w-10 h-10 text-[var(--success)]"
+                    className="h-10 w-10 text-(--success)"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -122,9 +122,9 @@ export default function CallbackPage() {
               )}
 
               {status === 'error' && (
-                <div className="w-20 h-20 rounded-full bg-[var(--error-bg)] border-2 border-[var(--error)]/30 flex items-center justify-center animate-scale-in">
+                <div className="animate-scale-in flex h-20 w-20 items-center justify-center rounded-full border-2 border-(--error)/30 bg-(--error-bg)">
                   <svg
-                    className="w-10 h-10 text-[var(--error)]"
+                    className="h-10 w-10 text-(--error)"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -141,10 +141,10 @@ export default function CallbackPage() {
             </div>
 
             {/* Text */}
-            <h1 className="font-display text-2xl font-bold text-[var(--foreground)] mb-2">
+            <h1 className="font-display mb-2 text-2xl font-bold text-(--foreground)">
               {config.title}
             </h1>
-            <p className="font-body text-[var(--muted-foreground)] text-sm leading-relaxed">
+            <p className="font-body text-sm leading-relaxed text-(--muted-foreground)">
               {status === 'error' && errorMessage ? errorMessage : config.description}
             </p>
 
@@ -153,7 +153,7 @@ export default function CallbackPage() {
               <div className="mt-8 flex flex-col gap-3">
                 <button
                   onClick={() => router.push('/auth/login')}
-                  className="w-full h-10 px-4 rounded-[var(--radius)] bg-[var(--kpi-navy)] text-white text-sm font-medium font-body hover:bg-[var(--kpi-navy-hover)] transition-colors"
+                  className="font-body h-10 w-full rounded-(--radius) bg-(--kpi-navy) px-4 text-sm font-medium text-white transition-colors hover:bg-(--kpi-navy-hover)"
                 >
                   Повернутися до входу
                 </button>
@@ -164,7 +164,7 @@ export default function CallbackPage() {
                     calledRef.current = false;
                     window.location.reload();
                   }}
-                  className="w-full h-10 px-4 rounded-[var(--radius)] bg-[var(--surface)] text-[var(--foreground)] text-sm font-medium font-body border border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors"
+                  className="font-body h-10 w-full rounded-(--radius) border border-(--border-color) bg-(--surface) px-4 text-sm font-medium text-(--foreground) transition-colors hover:bg-(--surface-hover)"
                 >
                   Спробувати знову
                 </button>
