@@ -240,6 +240,16 @@ export default async function HomePage() {
               <FeatureCard key={feat.title} {...feat} />
             ))}
           </div>
+
+          <p className="text-center text-xs font-body text-[var(--muted-foreground)] mt-8">
+            Використовуючи платформу, ви погоджуєтесь з{' '}
+            <Link
+              href="/privacy"
+              className="underline underline-offset-2 hover:text-[var(--kpi-navy)] transition-colors"
+            >
+              Політикою конфіденційності
+            </Link>
+          </p>
         </div>
       </section>
 
