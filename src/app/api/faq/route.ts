@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { getCachedFaq, invalidateFaq, setCachedFaq } from '@/lib/cache';
 import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
@@ -10,6 +11,11 @@ import { prisma } from '@/lib/prisma';
 // ---------------------------------------------------------------------------
 
 export async function GET() {
+  const cached = await getCachedFaq();
+  if (cached) {
+    return NextResponse.json(cached);
+  }
+
   const categories = await prisma.faqCategory.findMany({
     orderBy: { position: 'asc' },
     select: {
@@ -27,6 +33,8 @@ export async function GET() {
       },
     },
   });
+
+  await setCachedFaq(categories);
 
   return NextResponse.json(categories);
 }
@@ -82,6 +90,8 @@ export async function POST(req: NextRequest) {
       updated_at: true,
     },
   });
+
+  await invalidateFaq();
 
   return NextResponse.json(
     {

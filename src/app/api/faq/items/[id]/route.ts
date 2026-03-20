@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { invalidateFaq } from '@/lib/cache';
 import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
@@ -76,6 +77,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   });
 
+  await invalidateFaq();
+
   return NextResponse.json({
     id: updated.id,
     categoryId: updated.category_id,
@@ -109,6 +112,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!existing) return Errors.notFound('FAQ item not found');
 
   await prisma.faqItem.delete({ where: { id } });
+
+  await invalidateFaq();
 
   return NextResponse.json({ ok: true, deletedId: id });
 }

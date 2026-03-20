@@ -18,16 +18,18 @@ export const FAQ_ITEM_TITLE_MAX_LENGTH = 128;
 export const FAQ_ITEM_CONTENT_MAX_LENGTH = 2048;
 
 // Cache TTLs (seconds)
-export const CACHE_TTL_ELECTIONS_SECS = 60;
-export const CACHE_TTL_ADMINS_SECS = 30;
-export const CACHE_TTL_INVITE_TOKENS_SECS = 60;
+export const CACHE_TTL_ELECTIONS_SECS = 5 * 60;
+export const CACHE_TTL_ADMINS_SECS = 5 * 60;
+export const CACHE_TTL_INVITE_TOKENS_SECS = 5 * 60;
 export const CACHE_TTL_CAMPUS_GROUPS_SECS = 60 * 60;
+export const CACHE_TTL_FAQ_SECS = 5 * 60;
 
 // Cache keys
 export const CACHE_KEY_ELECTIONS = 'cache:elections';
 export const CACHE_KEY_ADMINS = 'cache:admins';
 export const CACHE_KEY_INVITE_TOKENS = 'cache:invite-tokens';
 export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
+export const CACHE_KEY_FAQ = 'cache:faq';
 
 // JWT
 export const COOKIE_ACCESS = 'access_token';
