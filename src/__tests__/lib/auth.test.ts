@@ -62,7 +62,7 @@ describe('auth', () => {
       if (result.ok) {
         expect(result.user.sub).toBe(USER_PAYLOAD.sub);
         expect(result.user.faculty).toBe(USER_PAYLOAD.faculty);
-        expect(result.user.is_admin).toBe(false);
+        expect(result.user.isAdmin).toBe(false);
         expect(typeof result.user.jti).toBe('string');
       }
     });
@@ -133,7 +133,7 @@ describe('auth', () => {
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.user.sub).toBe(USER_PAYLOAD.sub);
-        expect(result.user.token_type).toBe('refresh');
+        expect(result.user.tokenType).toBe('refresh');
       }
     });
 

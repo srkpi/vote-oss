@@ -8,39 +8,40 @@ import {
 } from '@/lib/crypto';
 import { signAccessToken, signRefreshToken } from '@/lib/jwt';
 import type { Admin } from '@/types/admin';
+import type { TokenPayload } from '@/types/auth';
 
 // ---------------------------------------------------------------------------
 // JWT payload fixtures
 // ---------------------------------------------------------------------------
 
-export const USER_PAYLOAD = {
+export const USER_PAYLOAD: TokenPayload = {
   sub: 'user-001',
   faculty: 'FICE',
   group: 'KV-91',
-  full_name: 'Ivan Petrenko',
-  is_admin: false,
-  restricted_to_faculty: false,
-  manage_admins: false,
+  fullName: 'Ivan Petrenko',
+  isAdmin: false,
+  restrictedToFaculty: false,
+  manageAdmins: false,
 };
 
-export const ADMIN_PAYLOAD = {
+export const ADMIN_PAYLOAD: TokenPayload = {
   sub: 'superadmin-001',
   faculty: 'FICE',
   group: 'KV-11',
-  full_name: 'Super Admin User',
-  is_admin: true,
-  restricted_to_faculty: false,
-  manage_admins: true,
+  fullName: 'Super Admin User',
+  isAdmin: true,
+  restrictedToFaculty: false,
+  manageAdmins: true,
 };
 
-export const OTHER_FACULTY_PAYLOAD = {
+export const OTHER_FACULTY_PAYLOAD: TokenPayload = {
   sub: 'user-002',
   faculty: 'FEL',
   group: 'EL-21',
-  full_name: 'Olena Kovalchuk',
-  is_admin: false,
-  restricted_to_faculty: false,
-  manage_admins: false,
+  fullName: 'Olena Kovalchuk',
+  isAdmin: false,
+  restrictedToFaculty: false,
+  manageAdmins: false,
 };
 
 // ---------------------------------------------------------------------------

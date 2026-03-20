@@ -3,22 +3,7 @@ import { jwtVerify, SignJWT } from 'jose';
 
 import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, NODE_ENV } from '@/lib/config/server';
 import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
-
-export interface TokenPayload {
-  sub: string;
-  faculty: string;
-  group: string;
-  full_name: string;
-  is_admin?: boolean;
-  restricted_to_faculty?: boolean;
-  manage_admins?: boolean;
-}
-
-export interface VerifiedPayload extends TokenPayload {
-  jti: string;
-  iat: number;
-  token_type: 'access' | 'refresh';
-}
+import type { TokenPayload, VerifiedPayload } from '@/types/auth';
 
 const ACCESS_SECRET_ENCODED = new TextEncoder().encode(JWT_ACCESS_SECRET);
 const REFRESH_SECRET_ENCODED = new TextEncoder().encode(JWT_REFRESH_SECRET);
@@ -28,7 +13,7 @@ export async function signAccessToken(
 ): Promise<{ token: string; jti: string }> {
   const jti = randomUUID();
   const expirationTime = Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECS;
-  const token = await new SignJWT({ ...payload, token_type: 'access' })
+  const token = await new SignJWT({ ...payload, tokenType: 'access' })
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(jti)
     .setIssuedAt()
@@ -43,7 +28,7 @@ export async function signRefreshToken(
 ): Promise<{ token: string; jti: string }> {
   const jti = randomUUID();
   const expirationTime = Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL_SECS;
-  const token = await new SignJWT({ ...payload, token_type: 'refresh' })
+  const token = await new SignJWT({ ...payload, tokenType: 'refresh' })
     .setProtectedHeader({ alg: 'HS256' })
     .setJti(jti)
     .setIssuedAt()
@@ -56,7 +41,7 @@ export async function signRefreshToken(
 export async function verifyAccessToken(token: string): Promise<VerifiedPayload> {
   const { payload } = await jwtVerify(token, ACCESS_SECRET_ENCODED);
 
-  if (payload['token_type'] !== 'access') {
+  if (payload['tokenType'] !== 'access') {
     throw new Error('Invalid token type');
   }
 
@@ -64,32 +49,32 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
     sub: payload.sub as string,
     faculty: payload['faculty'] as string,
     group: payload['group'] as string,
-    full_name: payload['full_name'] as string,
-    is_admin: (payload['is_admin'] as boolean) ?? false,
-    restricted_to_faculty: (payload['restricted_to_faculty'] as boolean) ?? true,
-    manage_admins: (payload['manage_admins'] as boolean) ?? false,
+    fullName: payload['fullName'] as string,
+    isAdmin: (payload['isAdmin'] as boolean) ?? false,
+    restrictedToFaculty: (payload['restrictedToFaculty'] as boolean) ?? true,
+    manageAdmins: (payload['manageAdmins'] as boolean) ?? false,
     jti: payload.jti as string,
     iat: payload.iat as number,
-    token_type: 'access',
+    tokenType: 'access',
   };
 }
 
 export async function verifyRefreshToken(token: string): Promise<VerifiedPayload> {
   const { payload } = await jwtVerify(token, REFRESH_SECRET_ENCODED);
 
-  if (payload['token_type'] !== 'refresh') throw new Error('Invalid token type');
+  if (payload['tokenType'] !== 'refresh') throw new Error('Invalid token type');
 
   return {
     sub: payload.sub as string,
     faculty: payload['faculty'] as string,
     group: payload['group'] as string,
-    full_name: payload['full_name'] as string,
-    is_admin: (payload['is_admin'] as boolean) ?? false,
-    restricted_to_faculty: (payload['restricted_to_faculty'] as boolean) ?? true,
-    manage_admins: (payload['manage_admins'] as boolean) ?? false,
+    fullName: payload['fullName'] as string,
+    isAdmin: (payload['isAdmin'] as boolean) ?? false,
+    restrictedToFaculty: (payload['restrictedToFaculty'] as boolean) ?? true,
+    manageAdmins: (payload['manageAdmins'] as boolean) ?? false,
     jti: payload.jti as string,
     iat: payload.iat as number,
-    token_type: 'refresh',
+    tokenType: 'refresh',
   };
 }
 

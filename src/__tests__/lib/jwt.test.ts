@@ -8,13 +8,14 @@ import {
   verifyAccessToken,
   verifyRefreshToken,
 } from '@/lib/jwt';
+import type { TokenPayload } from '@/types/auth';
 
-const BASE_PAYLOAD = {
+const BASE_PAYLOAD: TokenPayload = {
   sub: 'user-001',
   faculty: 'FICE',
   group: 'KV-91',
-  full_name: 'Ivan Petrenko',
-  is_admin: false,
+  fullName: 'Ivan Petrenko',
+  isAdmin: false,
 };
 
 describe('jwt', () => {
@@ -50,9 +51,9 @@ describe('jwt', () => {
       expect(payload.sub).toBe(BASE_PAYLOAD.sub);
       expect(payload.faculty).toBe(BASE_PAYLOAD.faculty);
       expect(payload.group).toBe(BASE_PAYLOAD.group);
-      expect(payload.full_name).toBe(BASE_PAYLOAD.full_name);
-      expect(payload.is_admin).toBe(BASE_PAYLOAD.is_admin);
-      expect(payload.token_type).toBe('access');
+      expect(payload.fullName).toBe(BASE_PAYLOAD.fullName);
+      expect(payload.isAdmin).toBe(BASE_PAYLOAD.isAdmin);
+      expect(payload.tokenType).toBe('access');
     });
 
     it('includes a numeric iat claim', async () => {
@@ -91,7 +92,7 @@ describe('jwt', () => {
       const before = Math.floor(Date.now() / 1_000);
       const { token } = await signRefreshToken(BASE_PAYLOAD);
       const payload = await verifyRefreshToken(token);
-      expect(payload.token_type).toBe('refresh');
+      expect(payload.tokenType).toBe('refresh');
       expect(payload.sub).toBe(BASE_PAYLOAD.sub);
       expect(payload.iat).toBeGreaterThanOrEqual(before);
     });

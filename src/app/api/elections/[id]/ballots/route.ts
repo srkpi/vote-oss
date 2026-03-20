@@ -29,9 +29,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // ── Access control ────────────────────────────────────────────────────────
   const { user } = auth;
 
-  if (user.is_admin && !user.restricted_to_faculty) {
+  if (user.isAdmin && !user.restrictedToFaculty) {
     // Unrestricted admin can view ballots for any election
-  } else if (user.is_admin && user.restricted_to_faculty) {
+  } else if (user.isAdmin && user.restrictedToFaculty) {
     if (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) {
       return Errors.forbidden('You are not eligible to view this election');
     }

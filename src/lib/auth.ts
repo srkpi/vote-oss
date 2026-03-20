@@ -2,9 +2,10 @@ import type { Admin } from '@prisma/client';
 import { NextRequest } from 'next/server';
 
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
-import { type VerifiedPayload, verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
+import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
 import { isAccessTokenValid, isRefreshTokenValid } from '@/lib/token-store';
+import type { VerifiedPayload } from '@/types/auth';
 
 export type AuthFailure = {
   ok: false;
@@ -71,7 +72,7 @@ export async function requireAdmin(req: NextRequest): Promise<AuthFailure | Admi
 
   const { user } = auth;
 
-  if (!user.is_admin) {
+  if (!user.isAdmin) {
     return { ok: false, error: 'Admin access required', status: 403 };
   }
 
