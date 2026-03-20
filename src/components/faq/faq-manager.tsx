@@ -317,10 +317,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       ))}
 
       {addingCat ? (
-        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-5">
-          <p className="text-sm font-semibold font-body text-[var(--foreground)] mb-3">
-            Нова категорія
-          </p>
+        <div className="border-border-color shadow-shadow-card rounded-xl border bg-white p-4 sm:p-5">
+          <p className="font-body text-foreground mb-3 text-sm font-semibold">Нова категорія</p>
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-1">
               <Input
@@ -355,9 +353,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
                 setAddingCat(false);
                 setNewCatTitle('');
               }}
-              className="w-9 h-10 flex items-center justify-center rounded-[var(--radius)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+              className="text-muted-foreground hover:text-foreground flex h-10 w-9 items-center justify-center rounded-(--radius) transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -366,7 +364,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
           variant="secondary"
           size="md"
           onClick={() => setAddingCat(true)}
-          icon={<Plus className="w-4 h-4" />}
+          icon={<Plus className="h-4 w-4" />}
         >
           Додати категорію
         </Button>

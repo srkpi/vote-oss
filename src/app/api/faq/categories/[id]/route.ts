@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { invalidateFaq } from '@/lib/cache';
 import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
 // ---------------------------------------------------------------------------
 // PUT /api/faq/categories/[id]  — root admin only
-// Updates the title of a FAQ category.
 // ---------------------------------------------------------------------------
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -57,12 +57,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   });
 
-  return NextResponse.json(updated);
+  await invalidateFaq();
+
+  return NextResponse.json({
+    id: updated.id,
+    title: updated.title,
+    position: updated.position,
+    updatedAt: updated.updated_at.toISOString(),
+  });
 }
 
 // ---------------------------------------------------------------------------
 // DELETE /api/faq/categories/[id]  — root admin only
-// Deletes a FAQ category and all its items (cascade).
 // ---------------------------------------------------------------------------
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -84,6 +90,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!existing) return Errors.notFound('FAQ category not found');
 
   await prisma.faqCategory.delete({ where: { id } });
+
+  await invalidateFaq();
 
   return NextResponse.json({ ok: true, deletedId: id });
 }

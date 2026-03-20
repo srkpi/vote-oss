@@ -24,37 +24,37 @@ export function MyVoteBanner({
   return (
     <div
       className={cn(
-        'rounded-[var(--radius-xl)] border p-5',
-        matchesDecryption === true && 'bg-[var(--success-bg)] border-[var(--success)]/30',
-        matchesDecryption === false && 'bg-[var(--error-bg)] border-[var(--error)]/30',
-        matchesDecryption === null && 'bg-[var(--info-bg)] border-[var(--kpi-blue-light)]/30',
+        'rounded-xl border p-5',
+        matchesDecryption === true && 'border-success/30 bg-success-bg',
+        matchesDecryption === false && 'border-error/30 bg-error-bg',
+        matchesDecryption === null && 'border-kpi-blue-light/30 bg-info-bg',
       )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div
           className={cn(
-            'w-10 h-10 rounded-[var(--radius-lg)] flex items-center justify-center shrink-0',
-            matchesDecryption === true && 'bg-[var(--success)]/15',
-            matchesDecryption === false && 'bg-[var(--error)]/15',
-            matchesDecryption === null && 'bg-[var(--kpi-blue-light)]/15',
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+            matchesDecryption === true && 'bg-success/15',
+            matchesDecryption === false && 'bg-error/15',
+            matchesDecryption === null && 'bg-kpi-blue-light/15',
           )}
         >
           {matchesDecryption === true ? (
-            <CheckCircle className="w-5 h-5 text-[var(--success)]" />
+            <CheckCircle className="text-success h-5 w-5" />
           ) : matchesDecryption === false ? (
-            <AlertTriangle className="w-5 h-5 text-[var(--error)]" />
+            <AlertTriangle className="text-error h-5 w-5" />
           ) : (
-            <UserCheck className="w-5 h-5 text-[var(--kpi-blue-light)]" />
+            <UserCheck className="text-kpi-blue-light h-5 w-5" />
           )}
         </div>
 
-        <div className="flex-1 min-w-0 space-y-2">
+        <div className="min-w-0 flex-1 space-y-2">
           <p
             className={cn(
-              'text-sm font-body font-semibold',
-              matchesDecryption === true && 'text-[var(--success)]',
-              matchesDecryption === false && 'text-[var(--error)]',
-              matchesDecryption === null && 'text-[var(--kpi-blue-mid)]',
+              'font-body text-sm font-semibold',
+              matchesDecryption === true && 'text-success',
+              matchesDecryption === false && 'text-error',
+              matchesDecryption === null && 'text-kpi-blue-mid',
             )}
           >
             {matchesDecryption === true
@@ -64,22 +64,21 @@ export function MyVoteBanner({
                 : 'Ваш голос збережено локально'}
           </p>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-body">
-            <span className="text-[var(--muted-foreground)] min-w-0 break-words">
-              Збережений вибір:{' '}
-              <strong className="text-[var(--foreground)]">{record.choiceLabel}</strong>
+          <div className="font-body flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <span className="text-muted-foreground min-w-0 wrap-break-word">
+              Збережений вибір: <strong className="text-foreground">{record.choiceLabel}</strong>
             </span>
 
             {decryptionDone && decryptedChoiceLabel && matchesDecryption === false && (
-              <span className="text-[var(--error)] break-words">
+              <span className="text-error wrap-break-word">
                 Розшифровано: <strong>{decryptedChoiceLabel}</strong>
               </span>
             )}
           </div>
 
           {!found && (
-            <p className="text-xs text-[var(--muted-foreground)] font-body flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-[var(--kpi-orange)]" />
+            <p className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
+              <AlertTriangle className="text-kpi-orange h-3.5 w-3.5" />
               Бюлетень з таким хешем не знайдено на цій сторінці. Можливо, він ще не завантажений.
             </p>
           )}

@@ -35,58 +35,58 @@ export function JoinPageContent({
   initialToken?: string;
 }) {
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] flex items-center justify-center p-6 bg-[var(--surface)]">
+    <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-6">
       {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[var(--kpi-navy)]/5 blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-[var(--kpi-orange)]/8 blur-3xl" />
-        <div className="absolute inset-0 pattern-grid opacity-[0.03]" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="bg-kpi-navy/5 absolute top-1/4 left-1/4 h-96 w-96 rounded-full blur-3xl" />
+        <div className="bg-kpi-orange/8 absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full blur-3xl" />
+        <div className="pattern-grid absolute inset-0 opacity-[0.03]" />
       </div>
 
       <div className="relative w-full max-w-lg">
         <Link
           href="/elections"
-          className="inline-flex items-center gap-1.5 text-sm font-body text-[var(--muted-foreground)] hover:text-[var(--kpi-navy)] transition-colors mb-6"
+          className="font-body text-muted-foreground hover:text-kpi-navy mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="h-4 w-4" />
           Назад до голосувань
         </Link>
 
-        <div className="bg-white rounded-[var(--radius-2xl)] border border-[var(--border-color)] shadow-[var(--shadow-xl)] overflow-hidden">
+        <div className="border-border-color shadow-shadow-xl overflow-hidden rounded-2xl border bg-white">
           {/* Top accent bar */}
-          <div className="h-1.5 w-full navy-gradient" />
+          <div className="navy-gradient h-1.5 w-full" />
 
           {/* Card header */}
-          <div className="px-8 pt-8 pb-6 border-b border-[var(--border-subtle)]">
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-2xl navy-gradient flex items-center justify-center shadow-[var(--shadow-md)]">
-                <ShieldCheck className="w-7 h-7 text-white" />
+          <div className="border-border-subtle border-b px-8 pt-8 pb-6">
+            <div className="mb-5 flex items-center gap-4">
+              <div className="navy-gradient shadow-shadow-md flex h-14 w-14 items-center justify-center rounded-2xl">
+                <ShieldCheck className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="font-display text-2xl font-bold text-[var(--foreground)] leading-tight">
+                <h1 className="font-display text-foreground text-2xl leading-tight font-bold">
                   Приєднатися як адміністратор
                 </h1>
-                <p className="text-sm font-body text-[var(--muted-foreground)] mt-0.5">
+                <p className="font-body text-muted-foreground mt-0.5 text-sm">
                   {APP_NAME} · Система голосування
                 </p>
               </div>
             </div>
 
             {/* User info banner */}
-            <div className="flex items-center gap-3 p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]">
-              <div className="w-9 h-9 rounded-full navy-gradient flex items-center justify-center text-white text-sm font-semibold shrink-0">
+            <div className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3.5">
+              <div className="navy-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white">
                 {session.fullName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold font-body text-[var(--foreground)] truncate">
+                <p className="font-body text-foreground truncate text-sm font-semibold">
                   {session.fullName}
                 </p>
-                <p className="text-xs font-body text-[var(--muted-foreground)]">
+                <p className="font-body text-muted-foreground text-xs">
                   {session.faculty} · {session.group}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-body text-[var(--success)] bg-[var(--success-bg)] px-2 py-1 rounded-full border border-[var(--success)]/20 shrink-0">
-                <CheckCircle2 className="w-3 h-3" />
+              <div className="font-body border-success/20 bg-success-bg text-success flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-xs">
+                <CheckCircle2 className="h-3 w-3" />
                 Авторизовано
               </div>
             </div>

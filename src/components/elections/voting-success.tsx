@@ -12,32 +12,28 @@ export function VotingSuccess({ hash, electionId }: VotingSuccessProps) {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center text-center gap-6 py-4 animate-scale-in">
+    <div className="animate-scale-in flex flex-col items-center gap-6 py-4 text-center">
       <div className="relative">
-        <div className="w-20 h-20 rounded-full bg-[var(--success-bg)] border-2 border-[var(--success)]/30 flex items-center justify-center">
-          <Check className="w-10 h-10 text-[var(--success)]" />
+        <div className="border-success/30 bg-success-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
+          <Check className="text-success h-10 w-10" />
         </div>
       </div>
 
       <div className="space-y-2">
-        <h4 className="font-display text-2xl font-semibold text-[var(--foreground)]">
-          Голос зараховано!
-        </h4>
-        <p className="text-sm text-[var(--muted-foreground)] font-body">
+        <h4 className="font-display text-foreground text-2xl font-semibold">Голос зараховано!</h4>
+        <p className="font-body text-muted-foreground text-sm">
           Ваш голос успішно зафіксовано. Вибір та хеш збережено у вашому браузері.
         </p>
       </div>
 
-      <div className="w-full p-4 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]">
-        <p className="text-xs text-[var(--muted-foreground)] mb-1.5 font-body">
+      <div className="border-border-subtle bg-surface w-full rounded-lg border p-4">
+        <p className="font-body text-muted-foreground mb-1.5 text-xs">
           Хеш бюлетеня (для перевірки):
         </p>
-        <p className="font-mono text-xs text-[var(--foreground)] break-all leading-relaxed">
-          {hash}
-        </p>
+        <p className="text-foreground font-mono text-xs leading-relaxed break-all">{hash}</p>
       </div>
 
-      <div className="flex flex-col gap-3 w-full">
+      <div className="flex w-full flex-col gap-3">
         <Button variant="primary" fullWidth onClick={() => router.push(`/elections`)}>
           До сторінки опитувань
         </Button>

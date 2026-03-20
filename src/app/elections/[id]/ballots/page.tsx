@@ -32,8 +32,8 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
   if (!data) {
     if (status === 403) {
       return (
-        <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden w-full max-w-md">
+        <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
+          <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
             <ErrorState
               title="Доступ обмежено"
               description="У вас немає доступу до бюлетенів цього голосування"
@@ -46,7 +46,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
   }
 
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
+    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       <PageHeader
         nav={[
           { label: 'Голосування', href: '/elections' },
@@ -57,7 +57,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
         isContainer
       />
 
-      <div className="container py-8 space-y-6">
+      <div className="container space-y-6 py-8">
         {error ? (
           <Alert variant="error" title="Помилка завантаження">
             {error}

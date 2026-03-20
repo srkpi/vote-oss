@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { APP_URL } from '@/lib/config/server';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
-import { type VerifiedPayload, verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
+import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
+import type { VerifiedPayload } from '@/types/auth';
 
 const PROTECTED_PATHS = ['/elections', '/admin', '/join'];
 const GUEST_ONLY_PATHS = ['/auth/login'];
@@ -34,18 +35,22 @@ export async function proxy(req: NextRequest) {
 
   // Try access token (signature only — no DB round-trip)
   if (accessCookie) {
-    const payload = await verifyAccessToken(accessCookie);
-    if (payload?.token_type === 'access') {
-      user = payload;
+    try {
+      const payload = await verifyAccessToken(accessCookie);
+      if (payload?.tokenType === 'access') {
+        user = payload;
+      }
+    } catch {
+      // Invalid token → try refresh or treat as unauthenticated
     }
   }
 
   // If no valid access token, attempt a silent refresh
   if (!user && refreshCookie) {
     // Pre-check signature to avoid a useless HTTP call for garbage tokens
-    const refreshPayload = await verifyRefreshToken(refreshCookie);
-    if (refreshPayload?.token_type === 'refresh') {
-      try {
+    try {
+      const refreshPayload = await verifyRefreshToken(refreshCookie);
+      if (refreshPayload?.tokenType === 'refresh') {
         const refreshRes = await fetch(`${APP_URL}/api/auth/refresh`, {
           method: 'POST',
           headers: { cookie: `${COOKIE_REFRESH}=${refreshCookie}` },
@@ -64,9 +69,9 @@ export async function proxy(req: NextRequest) {
             if (raw) newSetCookies = [raw];
           }
         }
-      } catch {
-        // Network failure or refresh endpoint error → treat as unauthenticated
       }
+    } catch {
+      // Network failure or refresh endpoint error → treat as unauthenticated
     }
   }
 
@@ -83,12 +88,12 @@ export async function proxy(req: NextRequest) {
   }
 
   // Authenticated non-admin hitting an admin route
-  if (user && isAdminOnly && !user.is_admin) {
+  if (user && isAdminOnly && !user.isAdmin) {
     return NextResponse.redirect(new URL('/', req.nextUrl.origin));
   }
 
   // Admin hitting /join → they already have admin, send them to admin panel
-  if (user && user.is_admin && pathname.startsWith('/join')) {
+  if (user && user.isAdmin && pathname.startsWith('/join')) {
     return NextResponse.redirect(new URL('/admin', req.nextUrl.origin));
   }
 
@@ -96,17 +101,14 @@ export async function proxy(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   if (user) {
     requestHeaders.set('x-user-id', user.sub);
-    requestHeaders.set('x-user-name', Buffer.from(user.full_name, 'utf8').toString('base64'));
+    requestHeaders.set('x-user-name', Buffer.from(user.fullName, 'utf8').toString('base64'));
     requestHeaders.set('x-user-faculty', Buffer.from(user.faculty, 'utf8').toString('base64'));
     requestHeaders.set('x-user-group', Buffer.from(user.group, 'utf8').toString('base64'));
-    requestHeaders.set('x-user-is-admin', String(user.is_admin));
+    requestHeaders.set('x-user-is-admin', String(user.isAdmin));
 
-    if (user.is_admin) {
-      requestHeaders.set(
-        'x-user-restricted-to-facutly',
-        String(user.restricted_to_faculty ?? true),
-      );
-      requestHeaders.set('x-user-manage-admins', String(user.manage_admins ?? false));
+    if (user.isAdmin) {
+      requestHeaders.set('x-user-restricted-to-facutly', String(user.restrictedToFaculty ?? true));
+      requestHeaders.set('x-user-manage-admins', String(user.manageAdmins ?? false));
     }
   }
 

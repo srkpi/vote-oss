@@ -14,9 +14,9 @@ export function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemPro
   return (
     <div
       className={cn(
-        'border border-[var(--border-color)] rounded-[var(--radius-lg)] overflow-hidden',
+        'border-border-color overflow-hidden rounded-lg border',
         'transition-shadow duration-200',
-        isOpen && 'shadow-[var(--shadow-card)]',
+        isOpen && 'shadow-shadow-card',
       )}
     >
       <button
@@ -24,24 +24,24 @@ export function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemPro
         onClick={onToggle}
         aria-expanded={isOpen}
         className={cn(
-          'w-full flex items-center justify-between gap-3',
-          'px-4 sm:px-5 py-3.5 sm:py-4',
-          'text-left font-body font-medium text-sm sm:text-base text-[var(--foreground)]',
-          'bg-white hover:bg-[var(--surface)] transition-colors duration-150',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--kpi-blue-light)]',
+          'flex w-full items-center justify-between gap-3',
+          'px-4 py-3.5 sm:px-5 sm:py-4',
+          'font-body text-foreground text-left text-sm font-medium sm:text-base',
+          'hover:bg-surface bg-white transition-colors duration-150',
+          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
         )}
       >
-        <span className="flex-1 min-w-0 break-words">{item.title}</span>
+        <span className="min-w-0 flex-1 wrap-break-word">{item.title}</span>
         <ChevronDown
           className={cn(
-            'w-4 h-4 shrink-0 text-[var(--muted-foreground)] transition-transform duration-200',
+            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-200',
             isOpen && 'rotate-180',
           )}
         />
       </button>
 
       {isOpen && (
-        <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-[var(--border-subtle)] bg-white">
+        <div className="border-border-subtle border-t bg-white px-4 py-3 sm:px-5 sm:py-4">
           <QuillRenderer content={item.content} />
         </div>
       )}

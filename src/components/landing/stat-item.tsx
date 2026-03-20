@@ -6,8 +6,8 @@ interface StatItemProps {
 export function StatItem({ value, label }: StatItemProps) {
   return (
     <div className="text-center">
-      <div className="font-display text-4xl font-bold text-white mb-2">{value}</div>
-      <div className="text-sm text-white/60 font-body uppercase tracking-wider">{label}</div>
+      <div className="font-display mb-2 text-4xl font-bold text-white">{value}</div>
+      <div className="font-body text-sm tracking-wider text-white/60 uppercase">{label}</div>
     </div>
   );
 }

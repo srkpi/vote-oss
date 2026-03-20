@@ -40,11 +40,11 @@ export function Dialog({ open, onClose, children }: DialogProps) {
       aria-modal="true"
     >
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+        className="animate-fade-in absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative z-10 w-full animate-scale-in">{children}</div>
+      <div className="animate-scale-in relative z-10 w-full">{children}</div>
     </div>
   );
 }
@@ -67,8 +67,8 @@ export function DialogPanel({ className, maxWidth = 'md', children, ...props }: 
       className={cn(
         'mx-auto w-full',
         maxWidths[maxWidth],
-        'bg-white rounded-[var(--radius-xl)]',
-        'shadow-[var(--shadow-xl)]',
+        'rounded-xl bg-white',
+        'shadow-shadow-xl',
         'overflow-hidden',
         className,
       )}
@@ -97,10 +97,7 @@ export function DialogTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h2
-      className={cn('font-display text-2xl font-semibold text-[var(--foreground)]', className)}
-      {...props}
-    >
+    <h2 className={cn('font-display text-foreground text-2xl font-semibold', className)} {...props}>
       {children}
     </h2>
   );
@@ -112,7 +109,7 @@ export function DialogDescription({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('text-sm text-[var(--muted-foreground)] mt-1', className)} {...props}>
+    <p className={cn('text-muted-foreground mt-1 text-sm', className)} {...props}>
       {children}
     </p>
   );
@@ -138,7 +135,7 @@ export function DialogFooter({
   return (
     <div
       className={cn(
-        'flex flex-col-reverse sm:flex-row sm:justify-end gap-3',
+        'flex flex-col-reverse gap-3 sm:flex-row sm:justify-end',
         'p-6 pt-0',
         className,
       )}
@@ -158,15 +155,15 @@ export function DialogCloseButton({ onClose }: DialogCloseButtonProps) {
     <button
       onClick={onClose}
       className={cn(
-        'rounded-[var(--radius-sm)] p-1.5 shrink-0 mt-0.5',
-        'text-[var(--muted-foreground)]',
-        'hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+        'mt-0.5 shrink-0 rounded-sm p-1.5',
+        'text-muted-foreground',
+        'hover:bg-surface hover:text-foreground',
         'transition-colors duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--kpi-blue-light)]',
+        'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
       )}
       aria-label="Закрити"
     >
-      <X className="w-4 h-4" />
+      <X className="h-4 w-4" />
     </button>
   );
 }

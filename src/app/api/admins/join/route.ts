@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       prisma.admin.create({
         data: {
           user_id: user.sub,
-          full_name: user.full_name,
+          full_name: user.fullName,
           group: user.group,
           faculty: user.faculty,
           promoted_by: inviteToken.created_by,
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(
     {
       userId: user.sub,
-      fullName: user.full_name,
+      fullName: user.fullName,
       faculty: user.faculty,
       group: user.group,
       manageAdmins: inviteToken.manage_admins,

@@ -32,7 +32,7 @@ export default async function TokensPage() {
         <div id="tokens-header-actions" />
       </PageHeader>
 
-      <div className="p-4 sm:p-8 space-y-6">
+      <div className="space-y-6 p-4 sm:p-8">
         <TokensPageClient
           initialTokens={tokens ?? []}
           canGrantManageAdmins={session.manageAdmins}

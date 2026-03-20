@@ -76,7 +76,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
       result = result.filter(
         (e) =>
           e.title.toLowerCase().includes(q) ||
-          e.creator.full_name.toLowerCase().includes(q) ||
+          e.creator.fullName.toLowerCase().includes(q) ||
           (e.restrictedToFaculty?.toLowerCase().includes(q) ?? false) ||
           (e.restrictedToGroup?.toLowerCase().includes(q) ?? false),
       );
@@ -106,7 +106,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
 
   if (error) {
     return (
-      <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
+      <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
         <ErrorState title="Помилка завантаження" description={error} />
       </div>
     );
@@ -115,7 +115,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
   return (
     <>
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Tabs
             tabs={TABS}
             activeTab={activeTab}
@@ -125,31 +125,31 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
           <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
 
           {(search || activeTab !== 'all') && filtered.length > 0 && (
-            <p className="text-xs text-[var(--muted-foreground)] font-body shrink-0">
+            <p className="font-body text-muted-foreground shrink-0 text-xs">
               {filtered.length} з {items.length}
             </p>
           )}
         </div>
 
         {filtered.length === 0 ? (
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)]">
+          <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
             <EmptyState
-              icon={<FileText className="w-8 h-8" />}
+              icon={<FileText className="h-8 w-8" />}
               title={search ? 'Голосувань не знайдено' : 'Голосувань немає'}
               description={search ? `За запитом «${search}» нічого не знайдено` : undefined}
             />
           </div>
         ) : (
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-            <div className="hidden lg:block overflow-x-auto">
+          <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+            <div className="hidden overflow-x-auto lg:block">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[var(--border-subtle)]">
+                  <tr className="border-border-subtle border-b">
                     {['Назва', 'Статус', 'Початок', 'Завершення', 'Голоси', 'Доступ', ''].map(
                       (h) => (
                         <th
                           key={h}
-                          className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
+                          className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
                         >
                           {h}
                         </th>
@@ -157,7 +157,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[var(--border-subtle)]">
+                <tbody className="divide-border-subtle divide-y">
                   {filtered.map((election) => (
                     <ElectionRow
                       key={election.id}
@@ -170,7 +170,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
               </table>
             </div>
 
-            <div className="lg:hidden divide-y divide-[var(--border-subtle)]">
+            <div className="divide-border-subtle divide-y lg:hidden">
               {filtered.map((election) => (
                 <ElectionMobileCard
                   key={election.id}
@@ -192,8 +192,8 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              Голосування <strong className="break-words">«{deleteTarget?.title}»</strong> та всі
-              пов&apos;язані бюлетені будуть видалені. Цю дію неможливо скасувати.
+              Голосування <strong className="wrap-break-word">«{deleteTarget?.title}»</strong> та
+              всі пов&apos;язані бюлетені будуть видалені. Цю дію неможливо скасувати.
             </Alert>
           </DialogBody>
           <DialogFooter>

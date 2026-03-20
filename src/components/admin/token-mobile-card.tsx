@@ -13,25 +13,25 @@ interface TokenRowProps {
 export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
   const fraction = tokenUsageFraction(token);
   const usageColor = tokenUsageColor(fraction);
-  const { text: expiresText, urgent } = tokenExpiresLabel(token.valid_due);
+  const { text: expiresText, urgent } = tokenExpiresLabel(token.validDue);
 
   return (
     <div
       className={cn(
-        'p-4 rounded-[var(--radius-lg)] border border-[var(--border-color)]',
-        'bg-white shadow-[var(--shadow-sm)]',
-        token.isOwn && 'border-[var(--kpi-navy)]',
+        'border-border-color rounded-lg border p-4',
+        'shadow-shadow-sm bg-white',
+        token.isOwn && 'border-kpi-navy',
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full navy-gradient flex items-center justify-center text-white font-semibold shrink-0">
-            {token.creator.full_name.charAt(0)}
+          <div className="navy-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold text-white">
+            {token.creator.fullName.charAt(0)}
           </div>
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-sm font-semibold text-[var(--foreground)] font-body">
-                {token.creator.full_name}
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-body text-foreground text-sm font-semibold">
+                {token.creator.fullName}
               </p>
             </div>
           </div>
@@ -41,59 +41,59 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
             variant="ghost"
             size="xs"
             onClick={onDelete}
-            className="text-[var(--error)] hover:bg-[var(--error-bg)]"
+            className="text-error hover:bg-error-bg"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 mt-3">
+      <div className="mt-3 flex items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1">
-          {token.manage_admins && (
+          {token.manageAdmins && (
             <Badge variant="info" size="sm">
               Керування адмінами
             </Badge>
           )}
-          {token.restricted_to_faculty && (
+          {token.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
               Обмежений підрозділом
             </Badge>
           )}
-          {!token.manage_admins && !token.restricted_to_faculty && (
+          {!token.manageAdmins && !token.restrictedToFaculty && (
             <Badge variant="default" size="sm">
               Базові
             </Badge>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          <Users className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
-          <span className="text-xs font-body text-[var(--foreground)]">
-            <span className="font-semibold">{token.current_usage}</span>
-            <span className="text-[var(--muted-foreground)]"> / {token.max_usage}</span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Users className="text-muted-foreground h-3.5 w-3.5" />
+          <span className="font-body text-foreground text-xs">
+            <span className="font-semibold">{token.currentUsage}</span>
+            <span className="text-muted-foreground"> / {token.maxUsage}</span>
           </span>
         </div>
       </div>
 
-      <div className="h-1.5 w-full rounded-full bg-[var(--border-color)] overflow-hidden mt-3">
+      <div className="bg-border-color mt-3 h-1.5 w-full overflow-hidden rounded-full">
         <div
           className={cn('h-full rounded-full transition-all', usageColor)}
           style={{ width: `${Math.min(fraction * 100, 100)}%` }}
         />
       </div>
 
-      <div className="flex items-center gap-1.5 mt-3">
+      <div className="mt-3 flex items-center gap-1.5">
         <Clock
           className={cn(
-            'w-3.5 h-3.5 shrink-0',
-            urgent ? 'text-[var(--kpi-orange)]' : 'text-[var(--muted-foreground)]',
+            'h-3.5 w-3.5 shrink-0',
+            urgent ? 'text-kpi-orange' : 'text-muted-foreground',
           )}
         />
         <span
           className={cn(
-            'text-xs font-body',
-            urgent ? 'text-[var(--kpi-orange)] font-medium' : 'text-[var(--muted-foreground)]',
+            'font-body text-xs',
+            urgent ? 'text-kpi-orange font-medium' : 'text-muted-foreground',
           )}
         >
           Дійсний до: {expiresText}

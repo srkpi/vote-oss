@@ -12,19 +12,19 @@ const BASE_NAV_ITEMS = [
     label: 'Огляд',
     href: '/admin',
     exact: true,
-    icon: <LayoutGrid className="w-4 h-4" />,
+    icon: <LayoutGrid className="h-4 w-4" />,
   },
   {
     label: 'Голосування',
     href: '/admin/elections',
     exact: false,
-    icon: <FileText className="w-4 h-4" />,
+    icon: <FileText className="h-4 w-4" />,
   },
   {
     label: 'Адміністратори',
     href: '/admin/admins',
     exact: true,
-    icon: <Users className="w-4 h-4" />,
+    icon: <Users className="h-4 w-4" />,
   },
 ];
 
@@ -32,14 +32,14 @@ const TOKENS_NAV_ITEM = {
   label: 'Токени',
   href: '/admin/tokens',
   exact: true,
-  icon: <Key className="w-4 h-4" />,
+  icon: <Key className="h-4 w-4" />,
 };
 
 const FAQ_NAV_ITEM = {
   label: 'FAQ',
   href: '/admin/faq',
   exact: true,
-  icon: <CircleQuestionMark className="w-4 h-4" />,
+  icon: <CircleQuestionMark className="h-4 w-4" />,
 };
 
 interface AdminSidebarProps {
@@ -67,25 +67,25 @@ export function AdminSidebar({
 
   return (
     <>
-      <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-[var(--border-subtle)] bg-white">
-        <div className="p-5 border-b border-[var(--border-subtle)]">
+      <aside className="border-border-subtle hidden w-60 shrink-0 flex-col border-r bg-white lg:flex">
+        <div className="border-border-subtle border-b p-5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[var(--kpi-orange)] flex items-center justify-center shadow-[var(--shadow-sm)]">
-              <Settings className="w-5 h-5 text-white" />
+            <div className="bg-kpi-orange shadow-shadow-sm flex h-9 w-9 items-center justify-center rounded-lg">
+              <Settings className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="font-display text-sm font-semibold text-[var(--foreground)] leading-tight">
+              <p className="font-display text-foreground text-sm leading-tight font-semibold">
                 Адмін-панель
               </p>
-              <p className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-wider">
+              <p className="font-body text-muted-foreground text-[10px] tracking-wider uppercase">
                 {APP_NAME}
               </p>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 p-3 space-y-0.5">
-          <p className="px-3 pt-3 pb-2 text-[10px] font-semibold text-[var(--muted-foreground)] uppercase tracking-widest font-body">
+        <nav className="flex-1 space-y-0.5 p-3">
+          <p className="font-body text-muted-foreground px-3 pt-3 pb-2 text-[10px] font-semibold tracking-widest uppercase">
             Навігація
           </p>
           {navItems.map((item) => (
@@ -93,11 +93,11 @@ export function AdminSidebar({
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius)] text-sm font-medium font-body',
+                'font-body flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium',
                 'transition-all duration-150',
                 isActive(item.href, item.exact)
-                  ? 'bg-[var(--kpi-navy)] text-white shadow-[var(--shadow-sm)]'
-                  : 'text-[var(--muted-foreground)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+                  ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                  : 'text-muted-foreground hover:bg-surface hover:text-foreground',
               )}
             >
               {item.icon}
@@ -107,7 +107,7 @@ export function AdminSidebar({
         </nav>
       </aside>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[var(--border-subtle)] shadow-[0_-4px_12px_rgb(28_57_110/0.08)] safe-area-pb">
+      <div className="safe-area-pb border-border-subtle fixed right-0 bottom-0 left-0 z-40 border-t bg-white shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden">
         <div className="flex items-stretch">
           {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
@@ -116,22 +116,20 @@ export function AdminSidebar({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex-1 flex flex-col items-center justify-center gap-1 py-2.5 px-1 text-center',
-                  'transition-all duration-150 min-h-[56px]',
-                  active
-                    ? 'text-[var(--kpi-navy)]'
-                    : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
+                  'flex flex-1 flex-col items-center justify-center gap-1 px-1 py-2.5 text-center',
+                  'min-h-14 transition-all duration-150',
+                  active ? 'text-kpi-navy' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 <span
                   className={cn(
-                    'flex items-center justify-center w-8 h-6 rounded-lg transition-all duration-150',
-                    active && 'bg-[var(--kpi-navy)]/10',
+                    'flex h-6 w-8 items-center justify-center rounded-lg transition-all duration-150',
+                    active && 'bg-kpi-navy/10',
                   )}
                 >
                   {item.icon}
                 </span>
-                <span className="text-[10px] font-body font-medium leading-tight">
+                <span className="font-body text-[10px] leading-tight font-medium">
                   {item.label}
                 </span>
               </Link>

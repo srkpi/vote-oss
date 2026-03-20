@@ -20,16 +20,17 @@ import { GET } from '@/app/api/admins/invite/route';
 
 const FUTURE = new Date(Date.now() + 86_400_000);
 
+// These records are in camelCase (matching the cache/API response shape)
 function makeTokenRecord(overrides: Partial<Record<string, unknown>> = {}) {
   return {
-    token_hash: 'hash-abc',
-    max_usage: 5,
-    current_usage: 0,
-    manage_admins: false,
-    restricted_to_faculty: true,
-    valid_due: FUTURE,
-    created_at: new Date(),
-    creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+    tokenHash: 'hash-abc',
+    maxUsage: 5,
+    currentUsage: 0,
+    manageAdmins: false,
+    restrictedToFaculty: true,
+    validDue: FUTURE.toISOString(),
+    createdAt: new Date().toISOString(),
+    creator: { userId: 'superadmin-001', fullName: 'Super Admin User' },
     ...overrides,
   };
 }
@@ -99,21 +100,44 @@ describe('GET /api/admins/invite', () => {
       { user_id: 'superadmin-001', promoted_by: null },
     ]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
-    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([makeTokenRecord()]);
+    // DB returns snake_case; the route transforms to camelCase before caching
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([
+      {
+        token_hash: 'hash-abc',
+        max_usage: 5,
+        current_usage: 0,
+        manage_admins: false,
+        restricted_to_faculty: true,
+        valid_due: FUTURE,
+        created_at: new Date(),
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+      },
+    ]);
 
     const res = await GET(req);
     const { status, body } = await parseJson<any[]>(res);
 
     expect(status).toBe(200);
     expect(body).toHaveLength(1);
-    expect(body[0].token_hash).toBe('hash-abc');
+    expect(body[0].tokenHash).toBe('hash-abc');
   });
 
   it('calls setCachedInviteTokens after a DB fetch', async () => {
     const req = await adminReq();
     prismaMock.admin.findMany.mockResolvedValueOnce([]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
-    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([makeTokenRecord()]);
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([
+      {
+        token_hash: 'hash-abc',
+        max_usage: 5,
+        current_usage: 0,
+        manage_admins: false,
+        restricted_to_faculty: true,
+        valid_due: FUTURE,
+        created_at: new Date(),
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+      },
+    ]);
 
     await GET(req);
 
@@ -158,7 +182,7 @@ describe('GET /api/admins/invite', () => {
       { user_id: 'admin-002', promoted_by: 'superadmin-001' },
     ]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce([
-      makeTokenRecord({ creator: { user_id: 'admin-002', full_name: 'Test Admin' } }),
+      makeTokenRecord({ creator: { userId: 'admin-002', fullName: 'Test Admin' } }),
     ] as any);
 
     const { body } = await parseJson<any[]>(await GET(req));
@@ -176,7 +200,7 @@ describe('GET /api/admins/invite', () => {
       { user_id: 'other-leaf', promoted_by: 'other-root' },
     ]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce([
-      makeTokenRecord({ creator: { user_id: 'other-leaf', full_name: 'Other Admin' } }),
+      makeTokenRecord({ creator: { userId: 'other-leaf', fullName: 'Other Admin' } }),
     ] as any);
 
     const { body } = await parseJson<any[]>(await GET(req));
@@ -191,7 +215,7 @@ describe('GET /api/admins/invite', () => {
       { user_id: 'admin-003', promoted_by: 'admin-002' },
     ]);
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce([
-      makeTokenRecord({ creator: { user_id: 'admin-003', full_name: 'Test Admin' } }),
+      makeTokenRecord({ creator: { userId: 'admin-003', fullName: 'Test Admin' } }),
     ] as any);
 
     const { body } = await parseJson<any[]>(await GET(req));
@@ -217,17 +241,23 @@ describe('GET /api/admins/invite', () => {
   it('deletes expired tokens with deleteMany, invalidates cache, and returns empty list', async () => {
     const req = await adminReq();
 
-    const expired = makeTokenRecord({
-      token_hash: 'expired-hash',
-      valid_due: new Date(Date.now() - 60_000),
-    });
-
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
     ]);
 
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
-    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([expired] as any);
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([
+      {
+        token_hash: 'expired-hash',
+        max_usage: 5,
+        current_usage: 0,
+        manage_admins: false,
+        restricted_to_faculty: true,
+        valid_due: new Date(Date.now() - 60_000),
+        created_at: new Date(),
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+      },
+    ] as any);
     prismaMock.adminInviteToken.deleteMany.mockResolvedValueOnce({ count: 1 });
 
     const res = await GET(req);
@@ -248,18 +278,23 @@ describe('GET /api/admins/invite', () => {
   it('deletes exhausted tokens with deleteMany and returns empty list', async () => {
     const req = await adminReq();
 
-    const exhausted = makeTokenRecord({
-      token_hash: 'exhausted-hash',
-      current_usage: 5,
-      max_usage: 5,
-    });
-
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
     ]);
 
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
-    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([exhausted] as any);
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([
+      {
+        token_hash: 'exhausted-hash',
+        max_usage: 5,
+        current_usage: 5,
+        manage_admins: false,
+        restricted_to_faculty: true,
+        valid_due: FUTURE,
+        created_at: new Date(),
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+      },
+    ] as any);
     prismaMock.adminInviteToken.deleteMany.mockResolvedValueOnce({ count: 1 });
 
     const res = await GET(req);
@@ -280,27 +315,43 @@ describe('GET /api/admins/invite', () => {
   it('deletes multiple stale tokens in one deleteMany call', async () => {
     const req = await adminReq();
 
-    const expired = makeTokenRecord({
-      token_hash: 'expired-hash',
-      valid_due: new Date(Date.now() - 60_000),
-    });
-
-    const exhausted = makeTokenRecord({
-      token_hash: 'exhausted-hash',
-      current_usage: 5,
-      max_usage: 5,
-    });
-
-    const valid = makeTokenRecord({
-      token_hash: 'valid-hash',
-    });
-
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
     ]);
 
     cacheMock.getCachedInviteTokens.mockResolvedValueOnce(null);
-    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([expired, exhausted, valid] as any);
+    prismaMock.adminInviteToken.findMany.mockResolvedValueOnce([
+      {
+        token_hash: 'expired-hash',
+        max_usage: 5,
+        current_usage: 0,
+        manage_admins: false,
+        restricted_to_faculty: true,
+        valid_due: new Date(Date.now() - 60_000),
+        created_at: new Date(),
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+      },
+      {
+        token_hash: 'exhausted-hash',
+        max_usage: 5,
+        current_usage: 5,
+        manage_admins: false,
+        restricted_to_faculty: true,
+        valid_due: FUTURE,
+        created_at: new Date(),
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+      },
+      {
+        token_hash: 'valid-hash',
+        max_usage: 5,
+        current_usage: 0,
+        manage_admins: false,
+        restricted_to_faculty: true,
+        valid_due: FUTURE,
+        created_at: new Date(),
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
+      },
+    ] as any);
     prismaMock.adminInviteToken.deleteMany.mockResolvedValueOnce({ count: 2 });
 
     const res = await GET(req);
@@ -308,7 +359,7 @@ describe('GET /api/admins/invite', () => {
 
     expect(status).toBe(200);
     expect(body).toHaveLength(1);
-    expect(body[0].token_hash).toBe('valid-hash');
+    expect(body[0].tokenHash).toBe('valid-hash');
 
     expect(prismaMock.adminInviteToken.deleteMany).toHaveBeenCalledWith({
       where: {

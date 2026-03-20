@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { getCachedFaq, invalidateFaq, setCachedFaq } from '@/lib/cache';
 import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
 // ---------------------------------------------------------------------------
 // GET /api/faq  — public, no authentication required
-// Returns all FAQ categories with their items ordered by position.
 // ---------------------------------------------------------------------------
 
 export async function GET() {
+  const cached = await getCachedFaq();
+  if (cached) {
+    return NextResponse.json(cached);
+  }
+
   const categories = await prisma.faqCategory.findMany({
     orderBy: { position: 'asc' },
     select: {
@@ -29,12 +34,13 @@ export async function GET() {
     },
   });
 
+  await setCachedFaq(categories);
+
   return NextResponse.json(categories);
 }
 
 // ---------------------------------------------------------------------------
 // POST /api/faq  — root admin only
-// Creates a new FAQ category appended at the end.
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest) {
@@ -85,5 +91,16 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(category, { status: 201 });
+  await invalidateFaq();
+
+  return NextResponse.json(
+    {
+      id: category.id,
+      title: category.title,
+      position: category.position,
+      createdAt: category.created_at.toISOString(),
+      updatedAt: category.updated_at.toISOString(),
+    },
+    { status: 201 },
+  );
 }

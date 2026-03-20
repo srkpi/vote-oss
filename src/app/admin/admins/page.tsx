@@ -31,7 +31,7 @@ export default async function AdminsPage() {
         description="Керування правами та запрошення нових адміністраторів"
       />
 
-      <div className="p-4 sm:p-8 space-y-6">
+      <div className="space-y-6 p-4 sm:p-8">
         <AdminsPageClient
           initialAdmins={all}
           currentUser={session}

@@ -39,6 +39,22 @@ async function restrictedAdminReq(body?: object) {
   return makeAuthRequest(access.token, { method: 'POST', body });
 }
 
+// ---------------------------------------------------------------------------
+// Sample FAQ fixture
+// ---------------------------------------------------------------------------
+
+const SAMPLE_FAQ_CATEGORIES = [
+  {
+    id: 'cat-1',
+    title: 'General',
+    position: 0,
+    items: [
+      { id: 'item-1', title: 'Q1', content: makeQuillContent('A1'), position: 0 },
+      { id: 'item-2', title: 'Q2', content: makeQuillContent('A2'), position: 1 },
+    ],
+  },
+];
+
 describe('GET /api/faq', () => {
   beforeEach(() => {
     resetPrismaMock();
@@ -56,27 +72,7 @@ describe('GET /api/faq', () => {
   });
 
   it('returns categories with nested items ordered by position', async () => {
-    prismaMock.faqCategory.findMany.mockResolvedValueOnce([
-      {
-        id: 'cat-1',
-        title: 'General',
-        position: 0,
-        items: [
-          {
-            id: 'item-1',
-            title: 'Q1',
-            content: makeQuillContent('A1'),
-            position: 0,
-          },
-          {
-            id: 'item-2',
-            title: 'Q2',
-            content: makeQuillContent('A2'),
-            position: 1,
-          },
-        ],
-      },
-    ]);
+    prismaMock.faqCategory.findMany.mockResolvedValueOnce(SAMPLE_FAQ_CATEGORIES);
 
     const { status, body } = await parseJson<any[]>(await GET());
 
@@ -90,9 +86,39 @@ describe('GET /api/faq', () => {
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([]);
     const res = await GET();
     expect(res.status).toBe(200);
-    // No auth headers needed — no jwtToken or admin lookup should occur
     expect(prismaMock.jwtToken.findFirst).not.toHaveBeenCalled();
     expect(prismaMock.admin.findUnique).not.toHaveBeenCalled();
+  });
+
+  // ── Cache behaviour ───────────────────────────────────────────────────────
+
+  it('returns cached data without hitting the database on a cache hit', async () => {
+    cacheMock.getCachedFaq.mockResolvedValueOnce(SAMPLE_FAQ_CATEGORIES as any);
+
+    const { status, body } = await parseJson<any[]>(await GET());
+
+    expect(status).toBe(200);
+    expect(body).toHaveLength(1);
+    expect(body[0].title).toBe('General');
+    expect(prismaMock.faqCategory.findMany).not.toHaveBeenCalled();
+  });
+
+  it('calls setCachedFaq with the DB result on a cache miss', async () => {
+    cacheMock.getCachedFaq.mockResolvedValueOnce(null);
+    prismaMock.faqCategory.findMany.mockResolvedValueOnce(SAMPLE_FAQ_CATEGORIES);
+
+    await GET();
+
+    expect(cacheMock.setCachedFaq).toHaveBeenCalledWith(SAMPLE_FAQ_CATEGORIES);
+  });
+
+  it('queries the database when the cache is empty', async () => {
+    cacheMock.getCachedFaq.mockResolvedValueOnce(null);
+    prismaMock.faqCategory.findMany.mockResolvedValueOnce([]);
+
+    await GET();
+
+    expect(prismaMock.faqCategory.findMany).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -167,7 +193,7 @@ describe('POST /api/faq (create category)', () => {
 
   it('returns 201 with category data on success', async () => {
     const req = await unrestrictedAdminReq({ title: 'General' });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null); // no existing categories
+    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
     prismaMock.faqCategory.create.mockResolvedValueOnce({
       id: 'cat-1',
       title: 'General',
@@ -184,7 +210,7 @@ describe('POST /api/faq (create category)', () => {
 
   it('appends new category after the last one (position = last.position + 1)', async () => {
     const req = await unrestrictedAdminReq({ title: 'New Cat' });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce({ position: 3 }); // last has position 3
+    prismaMock.faqCategory.findFirst.mockResolvedValueOnce({ position: 3 });
     prismaMock.faqCategory.create.mockResolvedValueOnce({
       id: 'cat-5',
       title: 'New Cat',
@@ -240,5 +266,29 @@ describe('POST /api/faq (create category)', () => {
         data: expect.objectContaining({ title: 'General' }),
       }),
     );
+  });
+
+  // ── Cache invalidation ────────────────────────────────────────────────────
+
+  it('invalidates the FAQ cache after creating a category', async () => {
+    const req = await unrestrictedAdminReq({ title: 'New' });
+    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
+    prismaMock.faqCategory.create.mockResolvedValueOnce({
+      id: 'cat-1',
+      title: 'New',
+      position: 0,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    await POST(req);
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not invalidate the cache when validation fails', async () => {
+    const req = await unrestrictedAdminReq({ title: '' });
+    await POST(req);
+    expect(cacheMock.invalidateFaq).not.toHaveBeenCalled();
   });
 });

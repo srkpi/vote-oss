@@ -73,7 +73,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
         await Promise.all(
           ballots.slice(i, i + BATCH).map(async (ballot) => {
             const [decryptedRaw, hashValid] = await Promise.all([
-              decryptBallotData(key, ballot.encrypted_ballot),
+              decryptBallotData(key, ballot.encryptedBallot),
               verifyBallotHash(ballot, electionId),
             ]);
             let choiceId: string | null = null;
@@ -114,7 +114,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     const q = trimmedQuery.toLowerCase();
     return ballots.filter(
       (b) =>
-        b.current_hash.includes(q) ||
+        b.currentHash.includes(q) ||
         (decryptionDone &&
           (decryptedMap.get(b.id)?.choiceLabel?.toLowerCase().includes(q) ?? false)),
     );
@@ -131,7 +131,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
   useEffect(() => {
     if (!myVoteRecord) return;
-    const idx = filteredBallots.findIndex((b) => b.current_hash === myVoteRecord.ballotHash);
+    const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
       setPage(Math.floor(idx / PAGE_SIZE) + 1);
     }
@@ -154,7 +154,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     : 0;
 
   const myBallot = myVoteRecord
-    ? (ballots.find((b) => b.current_hash === myVoteRecord.ballotHash) ?? null)
+    ? (ballots.find((b) => b.currentHash === myVoteRecord.ballotHash) ?? null)
     : null;
 
   const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
@@ -191,9 +191,9 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
         />
       )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] shrink-0">
-          <FileText className="w-4 h-4 text-[var(--kpi-gray-mid)]" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
+          <FileText className="text-kpi-gray-mid h-4 w-4" />
           <span>
             {trimmedQuery
               ? `${filteredBallots.length} з ${ballots.length} бюлетенів`
@@ -201,9 +201,9 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           </span>
         </div>
 
-        <div className="relative flex-1 max-w-md">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--kpi-gray-mid)] pointer-events-none">
-            <Search className="w-4 h-4" />
+        <div className="relative max-w-md flex-1">
+          <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
+            <Search className="h-4 w-4" />
           </div>
           <input
             type="text"
@@ -215,19 +215,19 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
                 : 'Пошук за хешем бюлетеня…'
             }
             className={cn(
-              'w-full h-9 pl-9 pr-9 text-sm font-mono',
-              'bg-white border border-[var(--border-color)] rounded-[var(--radius-lg)]',
-              'placeholder:text-[var(--subtle)] placeholder:font-body',
-              'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-              'transition-colors duration-150 shadow-[var(--shadow-xs)]',
+              'h-9 w-full pr-9 pl-9 font-mono text-sm',
+              'border-border-color rounded-lg border bg-white',
+              'placeholder:font-body placeholder:text-subtle',
+              'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
+              'shadow-shadow-xs transition-colors duration-150',
             )}
           />
           {searchQuery && (
             <button
               onClick={() => handleSearch('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
@@ -236,20 +236,20 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       {trimmedQuery && (
         <div
           className={cn(
-            'p-4 rounded-[var(--radius-lg)] border text-sm font-body',
+            'font-body rounded-lg border p-4 text-sm',
             filteredBallots.length > 0
-              ? 'bg-[var(--success-bg)] border-[var(--success)]/30 text-[var(--success)]'
-              : 'bg-[var(--error-bg)] border-[var(--error)]/30 text-[var(--error)]',
+              ? 'border-success/30 bg-success-bg text-success'
+              : 'border-error/30 bg-error-bg text-error',
           )}
         >
           {filteredBallots.length > 0 ? (
             <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 shrink-0" />
+              <CheckCircle className="h-4 w-4 shrink-0" />
               Знайдено {filteredBallots.length} бюлетень(ів) серед {ballots.length}
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              <XCircle className="w-4 h-4 shrink-0" />
+              <XCircle className="h-4 w-4 shrink-0" />
               Жодного бюлетеня не знайдено серед {ballots.length}
             </span>
           )}
@@ -257,31 +257,25 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       )}
 
       {ballots.length === 0 ? (
-        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-7 h-7 text-[var(--kpi-gray-mid)]" />
+        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+          <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
+            <FileText className="text-kpi-gray-mid h-7 w-7" />
           </div>
-          <p className="font-display text-lg font-semibold text-[var(--foreground)]">
-            Бюлетенів поки немає
-          </p>
-          <p className="text-sm text-[var(--muted-foreground)] font-body mt-1">
-            Голосів ще не подано
-          </p>
+          <p className="font-display text-foreground text-lg font-semibold">Бюлетенів поки немає</p>
+          <p className="font-body text-muted-foreground mt-1 text-sm">Голосів ще не подано</p>
         </div>
       ) : pagedBallots.length === 0 ? (
-        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-12 text-center">
-          <p className="font-display text-lg font-semibold text-[var(--foreground)]">
-            Нічого не знайдено
-          </p>
-          <p className="text-sm text-[var(--muted-foreground)] font-body mt-1">
+        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+          <p className="font-display text-foreground text-lg font-semibold">Нічого не знайдено</p>
+          <p className="font-body text-muted-foreground mt-1 text-sm">
             Спробуйте змінити пошуковий запит
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden">
+        <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
           {decryptionDone && invalidHashCount > 0 && (
-            <div className="px-5 py-3 bg-[var(--error-bg)] border-b border-[var(--error)]/20 flex items-center gap-2 text-sm font-body text-[var(--error)]">
-              <ShieldAlert className="w-4 h-4 shrink-0" />
+            <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 border-b px-5 py-3 text-sm">
+              <ShieldAlert className="h-4 w-4 shrink-0" />
               <span>
                 <strong>{invalidHashCount}</strong> бюлетень(ів) мають некоректний хеш — можливе
                 втручання в ланцюжок
@@ -289,23 +283,22 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
             </div>
           )}
           {decryptionDone && invalidHashCount === 0 && (
-            <div className="px-5 py-3 bg-[var(--success-bg)] border-b border-[var(--success)]/20 flex items-center gap-2 text-sm font-body text-[var(--success)]">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
+            <div className="font-body border-success/20 bg-success-bg text-success flex items-center gap-2 border-b px-5 py-3 text-sm">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
               <span>Ланцюжок бюлетенів цілісний — усі хеші вірні</span>
             </div>
           )}
 
-          <div className="divide-y divide-[var(--border-subtle)]">
+          <div className="divide-border-subtle divide-y">
             {pagedBallots.map((ballot, index) => {
               const isMyBallot =
-                myVoteRecord !== null && ballot.current_hash === myVoteRecord.ballotHash;
+                myVoteRecord !== null && ballot.currentHash === myVoteRecord.ballotHash;
               return (
                 <div
                   key={ballot.id}
                   ref={isMyBallot ? myBallotRef : undefined}
                   className={cn(
-                    isMyBallot &&
-                      'ring-2 ring-inset ring-[var(--kpi-blue-light)] rounded-none relative',
+                    isMyBallot && 'ring-kpi-blue-light relative rounded-none ring-2 ring-inset',
                   )}
                 >
                   <BallotRow
@@ -329,7 +322,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between py-2">
-          <p className="text-sm text-[var(--muted-foreground)] font-body">
+          <p className="font-body text-muted-foreground text-sm">
             Сторінка {safePage} з {totalPages}
           </p>
           <div className="flex items-center gap-2">
@@ -338,7 +331,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
               size="sm"
               disabled={safePage <= 1}
               onClick={() => setPage((p) => p - 1)}
-              icon={<ChevronLeft className="w-4 h-4" />}
+              icon={<ChevronLeft className="h-4 w-4" />}
             >
               Назад
             </Button>
@@ -355,10 +348,10 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
                     key={p}
                     onClick={() => setPage(p)}
                     className={cn(
-                      'w-8 h-8 rounded-[var(--radius)] text-sm font-body font-medium transition-all duration-150',
+                      'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
                       p === safePage
-                        ? 'bg-[var(--kpi-navy)] text-white shadow-[var(--shadow-sm)]'
-                        : 'text-[var(--muted-foreground)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+                        ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                        : 'text-muted-foreground hover:bg-surface hover:text-foreground',
                     )}
                   >
                     {p}
@@ -372,7 +365,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
               size="sm"
               disabled={safePage >= totalPages}
               onClick={() => setPage((p) => p + 1)}
-              icon={<ChevronRight className="w-4 h-4" />}
+              icon={<ChevronRight className="h-4 w-4" />}
               iconPosition="right"
             >
               Вперед

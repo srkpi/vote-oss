@@ -62,13 +62,13 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
         <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" asChild>
             <Link href={`/elections/${id}/ballots`}>
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="h-3.5 w-3.5" />
               Бюлетені
             </Link>
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/elections/${id}`}>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Публічна сторінка</span>
             </Link>
           </Button>
@@ -77,37 +77,37 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
       </PageHeader>
 
       <div className="p-4 sm:p-8">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <div className="space-y-6 xl:col-span-2">
             {isOpen && (
-              <div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-[var(--radius-xl)] bg-[var(--success-bg)] border border-[var(--success)]/20">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[var(--success)] flex items-center justify-center shrink-0">
+              <div className="border-success/20 bg-success-bg flex items-center gap-3 rounded-xl border p-4 sm:gap-4 sm:p-5">
+                <div className="bg-success flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12">
                   <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
                   </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-display text-sm sm:text-base font-semibold text-[var(--success)]">
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-success text-sm font-semibold sm:text-base">
                     Голосування активне
                   </p>
-                  <p className="text-xs sm:text-sm font-body text-[var(--success)]/80 mt-0.5">
+                  <p className="font-body text-success/80 mt-0.5 text-xs sm:text-sm">
                     Завершується {formatDateTime(election.closesAt)}
                   </p>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="font-display text-2xl sm:text-3xl font-bold text-[var(--success)]">
+                <div className="shrink-0 text-right">
+                  <p className="font-display text-success text-2xl font-bold sm:text-3xl">
                     {election.ballotCount.toLocaleString('uk-UA')}
                   </p>
-                  <p className="text-xs font-body text-[var(--success)]/70">бюлетенів подано</p>
+                  <p className="font-body text-success/70 text-xs">бюлетенів подано</p>
                 </div>
               </div>
             )}
 
             {isClosed && tally && (
-              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
-                  <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
+              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+                <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
+                  <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
                     Результати голосування
                   </h2>
                   <Badge variant="secondary" size="md">
@@ -121,22 +121,22 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             )}
 
             {!isClosed && (
-              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-[var(--border-subtle)]">
-                  <h2 className="font-display text-base sm:text-lg font-semibold text-[var(--foreground)]">
+              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+                <div className="border-border-subtle border-b px-4 py-4 sm:px-6">
+                  <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
                     Варіанти відповідей
                   </h2>
                 </div>
-                <div className="p-4 sm:p-6 space-y-3">
+                <div className="space-y-3 p-4 sm:p-6">
                   {election.choices.map((choice, index) => (
                     <div
                       key={choice.id}
-                      className="flex items-center gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
+                      className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3 sm:gap-4 sm:p-3.5"
                     >
-                      <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
+                      <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white sm:h-8 sm:w-8">
                         {String.fromCharCode(65 + index)}
                       </span>
-                      <span className="flex-1 text-sm font-body text-[var(--foreground)] min-w-0 break-words">
+                      <span className="font-body text-foreground min-w-0 flex-1 text-sm wrap-break-word">
                         {choice.choice}
                       </span>
                     </div>
@@ -147,40 +147,36 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           </div>
 
           <div className="space-y-5">
-            <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-              <div className="p-4 sm:p-5 space-y-4">
+            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+              <div className="space-y-4 p-4 sm:p-5">
                 <TimelineItem
                   label="Створено"
                   value={formatDateTime(election.createdAt)}
-                  icon={<Plus className="w-4 h-4" />}
+                  icon={<Plus className="h-4 w-4" />}
                   status="done"
                 />
                 <TimelineItem
                   label="Початок"
                   value={formatDateTime(election.opensAt)}
-                  icon={<Play className="w-4 h-4" />}
+                  icon={<Play className="h-4 w-4" />}
                   status={election.status === 'upcoming' ? 'pending' : 'done'}
                 />
                 <TimelineItem
                   label="Завершення"
                   value={formatDateTime(election.closesAt)}
-                  icon={<StopCircle className="w-4 h-4" />}
+                  icon={<StopCircle className="h-4 w-4" />}
                   status={isClosed ? 'done' : 'pending'}
                 />
               </div>
             </div>
 
-            <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] overflow-hidden">
-              <div className="px-4 sm:px-5 py-4 border-b border-[var(--border-subtle)]">
-                <h3 className="font-display text-base font-semibold text-[var(--foreground)]">
-                  Доступ
-                </h3>
+            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+              <div className="border-border-subtle border-b px-4 py-4 sm:px-5">
+                <h3 className="font-display text-foreground text-base font-semibold">Доступ</h3>
               </div>
-              <div className="p-4 sm:p-5 space-y-3">
+              <div className="space-y-3 p-4 sm:p-5">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-body text-[var(--muted-foreground)]">
-                    Підрозділ
-                  </span>
+                  <span className="font-body text-muted-foreground text-sm">Підрозділ</span>
                   {election.restrictedToFaculty ? (
                     <Badge variant="info" size="md">
                       {election.restrictedToFaculty}
@@ -192,7 +188,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-body text-[var(--muted-foreground)]">Група</span>
+                  <span className="font-body text-muted-foreground text-sm">Група</span>
                   {election.restrictedToGroup ? (
                     <Badge variant="secondary" size="md">
                       {election.restrictedToGroup}

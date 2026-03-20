@@ -2,10 +2,12 @@ import * as allure from 'allure-js-commons';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
+  ADMIN_API,
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
   JWT_TOKEN_RECORD,
   makeTokenPair,
+  RESTRICTED_ADMIN_RECORD,
   USER_PAYLOAD,
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
@@ -81,9 +83,9 @@ describe('GET /api/admins/[userId]', () => {
 
     expect(status).toBe(200);
     expect(body).toMatchObject({
-      user_id: ADMIN_RECORD.user_id,
-      full_name: ADMIN_RECORD.full_name,
-      promoter: ADMIN_RECORD.promoter,
+      userId: ADMIN_RECORD.user_id,
+      fullName: ADMIN_RECORD.full_name,
+      promoter: null,
     });
   });
 
@@ -103,13 +105,13 @@ describe('GET /api/admins/[userId]', () => {
 
   it('returns 200 and the admin from cache without hitting the DB', async () => {
     const req = await adminReq(ADMIN_RECORD);
-    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_RECORD] as any);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API] as any);
 
-    const res = await GET(req, { params: Promise.resolve({ userId: ADMIN_RECORD.user_id }) });
+    const res = await GET(req, { params: Promise.resolve({ userId: ADMIN_API.userId }) });
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    expect(body.user_id).toBe(ADMIN_RECORD.user_id);
+    expect(body.userId).toBe(ADMIN_API.userId);
     // DB must NOT have been consulted for the lookup (only for requireAdmin's auth check)
     expect(prismaMock.admin.findUnique).toHaveBeenCalledTimes(1); // only requireAdmin call
   });
@@ -117,7 +119,7 @@ describe('GET /api/admins/[userId]', () => {
   it('returns 404 when cache is populated but target admin is absent', async () => {
     const req = await adminReq(ADMIN_RECORD);
     // Cache has records, but not the one we're looking for
-    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_RECORD] as any);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API] as any);
 
     const res = await GET(req, { params: Promise.resolve({ userId: 'nonexistent-admin' }) });
 
@@ -126,11 +128,9 @@ describe('GET /api/admins/[userId]', () => {
     expect(prismaMock.admin.findUnique).toHaveBeenCalledTimes(1); // only requireAdmin
   });
 
-  it('returns promoter as an object with user_id and full_name', async () => {
+  it('returns promoter as an object with userId and fullName', async () => {
     const req = await adminReq(ADMIN_RECORD);
     cacheMock.getCachedAdmins.mockResolvedValueOnce(null);
-    // Use a record that has a real promoter
-    const { RESTRICTED_ADMIN_RECORD } = await import('@/__tests__/helpers/fixtures');
     prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
 
     const res = await GET(req, {
@@ -140,8 +140,8 @@ describe('GET /api/admins/[userId]', () => {
 
     expect(status).toBe(200);
     expect(body.promoter).toEqual({
-      user_id: 'superadmin-001',
-      full_name: 'Super Admin User',
+      userId: 'superadmin-001',
+      fullName: 'Super Admin User',
     });
   });
 });

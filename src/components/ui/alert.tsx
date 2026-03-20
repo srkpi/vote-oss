@@ -7,20 +7,17 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const alertVariants = cva(
-  'relative flex w-full gap-3 rounded-[var(--radius-lg)] border p-4 text-sm font-body transition-all duration-200',
+  'relative flex w-full gap-3 rounded-lg border p-4 text-sm font-body transition-all duration-200',
   {
     variants: {
       variant: {
-        default: 'bg-white border-[var(--border-color)] text-[var(--foreground)]',
-        success:
-          'bg-[var(--success-bg)] border-[var(--success)]/30 text-[var(--foreground)] [&_.alert-icon]:text-[var(--success)]',
+        default: 'bg-white border-border-color text-foreground',
+        success: 'bg-success-bg border-success/30 text-foreground [&_.alert-icon]:text-success',
         warning:
-          'bg-[var(--warning-bg)] border-[var(--kpi-orange)]/30 text-[var(--foreground)] [&_.alert-icon]:text-[var(--kpi-orange)]',
-        error:
-          'bg-[var(--error-bg)] border-[var(--error)]/30 text-[var(--foreground)] [&_.alert-icon]:text-[var(--error)]',
-        info: 'bg-[var(--info-bg)] border-[var(--kpi-blue-light)]/30 text-[var(--foreground)] [&_.alert-icon]:text-[var(--kpi-blue-light)]',
-        destructive:
-          'bg-[var(--error-bg)] border-[var(--error)]/30 text-[var(--foreground)] [&_.alert-icon]:text-[var(--error)]',
+          'bg-warning-bg border-kpi-orange/30 text-foreground [&_.alert-icon]:text-kpi-orange',
+        error: 'bg-error-bg border-error/30 text-foreground [&_.alert-icon]:text-error',
+        info: 'bg-info-bg border-kpi-blue-light/30 text-foreground [&_.alert-icon]:text-kpi-blue-light',
+        destructive: 'bg-error-bg border-error/30 text-foreground [&_.alert-icon]:text-error',
       },
     },
     defaultVariants: {
@@ -30,12 +27,12 @@ const alertVariants = cva(
 );
 
 const ALERT_ICONS: Record<string, React.ReactNode> = {
-  default: <Info className="w-4 h-4 shrink-0 mt-0.5" />,
-  success: <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />,
-  warning: <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />,
-  error: <XCircle className="w-4 h-4 shrink-0 mt-0.5" />,
-  info: <Info className="w-4 h-4 shrink-0 mt-0.5" />,
-  destructive: <XCircle className="w-4 h-4 shrink-0 mt-0.5" />,
+  default: <Info className="mt-0.5 h-4 w-4 shrink-0" />,
+  success: <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" />,
+  warning: <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />,
+  error: <XCircle className="mt-0.5 h-4 w-4 shrink-0" />,
+  info: <Info className="mt-0.5 h-4 w-4 shrink-0" />,
+  destructive: <XCircle className="mt-0.5 h-4 w-4 shrink-0" />,
 };
 
 export type AlertVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'destructive';
@@ -60,12 +57,10 @@ export function Alert({
   return (
     <div role="alert" className={cn(alertVariants({ variant }), className)} {...props}>
       {showIcon && <span className="alert-icon">{ALERT_ICONS[variant ?? 'default']}</span>}
-      <div className="flex-1 min-w-0">
-        {title && <p className="font-semibold text-sm leading-tight mb-0.5 font-body">{title}</p>}
+      <div className="min-w-0 flex-1">
+        {title && <p className="font-body mb-0.5 text-sm leading-tight font-semibold">{title}</p>}
         {children && (
-          <div className="text-sm text-[var(--foreground)]/80 font-body leading-relaxed">
-            {children}
-          </div>
+          <div className="font-body text-foreground/80 text-sm leading-relaxed">{children}</div>
         )}
       </div>
       {onDismiss && (
@@ -73,14 +68,14 @@ export function Alert({
           type="button"
           onClick={onDismiss}
           className={cn(
-            'shrink-0 self-start p-0.5 rounded-md',
-            'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
-            'hover:bg-black/5 transition-colors duration-150',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--kpi-blue-light)]',
+            'shrink-0 self-start rounded-md p-0.5',
+            'text-muted-foreground hover:text-foreground',
+            'transition-colors duration-150 hover:bg-black/5',
+            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
           )}
           aria-label="Закрити"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
     </div>
@@ -90,7 +85,7 @@ export function Alert({
 export function AlertTitle({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('font-semibold text-sm leading-tight mb-0.5 font-body', className)}
+      className={cn('font-body mb-0.5 text-sm leading-tight font-semibold', className)}
       {...props}
     />
   );
@@ -99,7 +94,7 @@ export function AlertTitle({ className, ...props }: React.HTMLAttributes<HTMLDiv
 export function AlertDescription({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('text-sm text-[var(--foreground)]/80 font-body leading-relaxed', className)}
+      className={cn('font-body text-foreground/80 text-sm leading-relaxed', className)}
       {...props}
     />
   );
@@ -116,27 +111,27 @@ export interface ToastItemProps {
 }
 
 const toastAccentColors: Record<ToastVariant, string> = {
-  default: 'bg-[var(--kpi-navy)]',
-  success: 'bg-[var(--success)]',
-  warning: 'bg-[var(--kpi-orange)]',
-  error: 'bg-[var(--error)]',
-  info: 'bg-[var(--kpi-blue-light)]',
+  default: 'bg-kpi-navy',
+  success: 'bg-success',
+  warning: 'bg-kpi-orange',
+  error: 'bg-error',
+  info: 'bg-kpi-blue-light',
 };
 
 const toastIconColors: Record<ToastVariant, string> = {
-  default: 'text-[var(--kpi-navy)]',
-  success: 'text-[var(--success)]',
-  warning: 'text-[var(--kpi-orange)]',
-  error: 'text-[var(--error)]',
-  info: 'text-[var(--kpi-blue-light)]',
+  default: 'text-kpi-navy',
+  success: 'text-success',
+  warning: 'text-kpi-orange',
+  error: 'text-error',
+  info: 'text-kpi-blue-light',
 };
 
 const TOAST_ICONS: Record<ToastVariant, React.ReactNode> = {
-  default: <Info className="w-4 h-4" />,
-  success: <CheckCircle className="w-4 h-4" />,
-  warning: <AlertTriangle className="w-4 h-4" />,
-  error: <XCircle className="w-4 h-4" />,
-  info: <Info className="w-4 h-4" />,
+  default: <Info className="h-4 w-4" />,
+  success: <CheckCircle className="h-4 w-4" />,
+  warning: <AlertTriangle className="h-4 w-4" />,
+  error: <XCircle className="h-4 w-4" />,
+  info: <Info className="h-4 w-4" />,
 };
 
 export function ToastItem({
@@ -151,9 +146,9 @@ export function ToastItem({
       className={cn(
         'relative flex items-start gap-3',
         'w-80 overflow-hidden',
-        'bg-white rounded-[var(--radius-xl)]',
-        'border border-[var(--border-color)]',
-        'shadow-[var(--shadow-xl)]',
+        'rounded-xl bg-white',
+        'border-border-color border',
+        'shadow-shadow-xl',
         'p-4',
         'animate-slide-right',
       )}
@@ -161,19 +156,17 @@ export function ToastItem({
     >
       <div
         className={cn(
-          'absolute left-0 top-0 bottom-0 w-1 rounded-l-[var(--radius-xl)]',
+          'absolute top-0 bottom-0 left-0 w-1 rounded-l-xl',
           toastAccentColors[variant],
         )}
       />
 
-      <div className={cn('shrink-0 mt-0.5', toastIconColors[variant])}>{TOAST_ICONS[variant]}</div>
+      <div className={cn('mt-0.5 shrink-0', toastIconColors[variant])}>{TOAST_ICONS[variant]}</div>
 
-      <div className="flex-1 min-w-0 pr-1">
-        <p className="font-semibold text-sm text-[var(--foreground)] font-body leading-tight">
-          {title}
-        </p>
+      <div className="min-w-0 flex-1 pr-1">
+        <p className="font-body text-foreground text-sm leading-tight font-semibold">{title}</p>
         {description && (
-          <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5 leading-relaxed">
+          <p className="font-body text-muted-foreground mt-0.5 text-xs leading-relaxed">
             {description}
           </p>
         )}
@@ -183,13 +176,13 @@ export function ToastItem({
         type="button"
         onClick={() => onDismiss(id)}
         className={cn(
-          'shrink-0 p-0.5 rounded-md self-start',
-          'text-[var(--muted-foreground)] hover:text-[var(--foreground)]',
-          'hover:bg-[var(--surface)] transition-colors duration-150',
+          'shrink-0 self-start rounded-md p-0.5',
+          'text-muted-foreground hover:text-foreground',
+          'hover:bg-surface transition-colors duration-150',
         )}
         aria-label="Закрити"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="h-3.5 w-3.5" />
       </button>
     </div>
   );

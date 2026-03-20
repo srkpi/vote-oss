@@ -34,14 +34,14 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteAdmin(deleteTarget.user_id);
+    const result = await api.deleteAdmin(deleteTarget.userId);
     if (result.success) {
       toast({
         title: 'Адміністратора видалено',
-        description: `${deleteTarget.full_name} більше не є адміністратором.`,
+        description: `${deleteTarget.fullName} більше не є адміністратором.`,
         variant: 'success',
       });
-      onDelete(deleteTarget.user_id);
+      onDelete(deleteTarget.userId);
       setDeleteTarget(null);
     } else {
       toast({ title: 'Помилка', description: result.error, variant: 'error' });
@@ -51,7 +51,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
 
   if (admins.length === 0) {
     return (
-      <div className="text-center py-12 text-[var(--muted-foreground)] font-body text-sm">
+      <div className="font-body text-muted-foreground py-12 text-center text-sm">
         Адміністраторів не знайдено
       </div>
     );
@@ -59,26 +59,26 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
 
   return (
     <>
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[var(--border-subtle)]">
+            <tr className="border-border-subtle border-b">
               {['Користувач', 'Підрозділ', 'Група', 'Призначено', 'Права', ''].map((h) => (
                 <th
                   key={h}
-                  className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
+                  className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border-subtle)]">
+          <tbody className="divide-border-subtle divide-y">
             {admins.map((admin) => (
               <AdminRow
-                key={admin.user_id}
+                key={admin.userId}
                 admin={admin}
-                isCurrentUser={admin.user_id === currentUserId}
+                isCurrentUser={admin.userId === currentUserId}
                 onDelete={() => setDeleteTarget(admin)}
               />
             ))}
@@ -86,12 +86,12 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
         </table>
       </div>
 
-      <div className="md:hidden space-y-3">
+      <div className="space-y-3 md:hidden">
         {admins.map((admin) => (
           <AdminMobileCard
-            key={admin.user_id}
+            key={admin.userId}
             admin={admin}
-            isCurrentUser={admin.user_id === currentUserId}
+            isCurrentUser={admin.userId === currentUserId}
             onDelete={() => setDeleteTarget(admin)}
           />
         ))}
@@ -105,7 +105,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              <strong>{deleteTarget?.full_name}</strong> втратить доступ до адмін-панелі.
+              <strong>{deleteTarget?.fullName}</strong> втратить доступ до адмін-панелі.
             </Alert>
           </DialogBody>
           <DialogFooter>

@@ -23,19 +23,19 @@ export function NotFound({
     <div
       role="alert"
       className={cn(
-        'flex flex-col items-center justify-center text-center py-24 px-4 sm:px-8',
+        'flex flex-col items-center justify-center px-4 py-24 text-center sm:px-8',
         className,
       )}
     >
-      <div className="font-display text-7xl sm:text-8xl font-bold text-[var(--kpi-navy)] mb-6 select-none">
+      <div className="font-display text-kpi-navy mb-6 text-7xl font-bold select-none sm:text-8xl">
         404
       </div>
-      <h1 className="font-display text-2xl sm:text-3xl font-semibold text-[var(--foreground)] mb-3">
+      <h1 className="font-display text-foreground mb-3 text-2xl font-semibold sm:text-3xl">
         {title}
       </h1>
-      <p className="text-[var(--muted-foreground)] max-w-md font-body mb-8">{description}</p>
+      <p className="font-body text-muted-foreground mb-8 max-w-md">{description}</p>
       <Link href={backHref} passHref>
-        <Button variant="primary" size="lg" icon={<ChevronLeft className="w-5 h-5" />}>
+        <Button variant="primary" size="lg" icon={<ChevronLeft className="h-5 w-5" />}>
           {backLabel}
         </Button>
       </Link>

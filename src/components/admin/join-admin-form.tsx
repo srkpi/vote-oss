@@ -55,15 +55,13 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
 
   if (success) {
     return (
-      <div className="flex flex-col items-center text-center gap-6 py-4">
-        <div className="w-20 h-20 rounded-full bg-[var(--success-bg)] border-2 border-[var(--success)]/30 flex items-center justify-center">
-          <Check className="w-10 h-10 text-[var(--success)]" />
+      <div className="flex flex-col items-center gap-6 py-4 text-center">
+        <div className="border-success/30 bg-success-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
+          <Check className="text-success h-10 w-10" />
         </div>
         <div className="space-y-2">
-          <h3 className="font-display text-2xl font-semibold text-[var(--foreground)]">
-            Ласкаво просимо!
-          </h3>
-          <p className="text-sm text-[var(--muted-foreground)] font-body">
+          <h3 className="font-display text-foreground text-2xl font-semibold">Ласкаво просимо!</h3>
+          <p className="font-body text-muted-foreground text-sm">
             Перенаправляємо вас до адмін-панелі…
           </p>
         </div>
@@ -80,18 +78,15 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
       )}
 
       <div className="space-y-2">
-        <label
-          htmlFor="token"
-          className="block text-sm font-medium font-body text-[var(--foreground)]"
-        >
+        <label htmlFor="token" className="font-body text-foreground block text-sm font-medium">
           Токен запрошення
-          <span className="ml-1 text-[var(--error)]" aria-hidden="true">
+          <span className="text-error ml-1" aria-hidden="true">
             *
           </span>
         </label>
         <div className="relative">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] pointer-events-none">
-            <Key className="w-4 h-4" />
+          <div className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
+            <Key className="h-4 w-4" />
           </div>
           <input
             id="token"
@@ -103,15 +98,14 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
             }}
             placeholder="Вставте токен запрошення"
             className={cn(
-              'flex h-10 w-full rounded-[var(--radius)] bg-white',
-              'border border-[var(--border-color)]',
-              'pl-10 pr-3 py-2 text-sm font-mono text-[var(--foreground)]',
-              'placeholder:text-[var(--subtle)] placeholder:font-body',
+              'flex h-10 w-full rounded-(--radius) bg-white',
+              'border-border-color border',
+              'text-foreground py-2 pr-3 pl-10 font-mono text-sm',
+              'placeholder:font-body placeholder:text-subtle',
               'transition-colors duration-150',
-              'hover:border-[var(--kpi-blue-light)]',
-              'focus:outline-none focus:border-[var(--kpi-blue-light)] focus:ring-2 focus:ring-[var(--kpi-blue-light)]/20',
-              error &&
-                'border-[var(--error)] focus:border-[var(--error)] focus:ring-[var(--error)]/20',
+              'hover:border-kpi-blue-light',
+              'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
+              error && 'border-error focus:border-error focus:ring-error/20',
             )}
             autoComplete="off"
             spellCheck={false}
@@ -120,13 +114,13 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
             <button
               type="button"
               onClick={() => setToken('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
-        <p className="text-xs text-[var(--muted-foreground)] font-body">
+        <p className="font-body text-muted-foreground text-xs">
           Токен видається чинним адміністратором системи
         </p>
       </div>
@@ -138,12 +132,12 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
         fullWidth
         loading={loading}
         disabled={!token.trim()}
-        icon={<Shield className="w-4 h-4" />}
+        icon={<Shield className="h-4 w-4" />}
       >
         Приєднатися як адміністратор
       </Button>
 
-      <div className="pt-2 border-t border-[var(--border-subtle)]">
+      <div className="border-border-subtle border-t pt-2">
         <div className="space-y-2">
           {[
             'Токен є одноразовим або має обмежену кількість використань',
@@ -152,9 +146,9 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
           ].map((item) => (
             <div
               key={item}
-              className="flex items-start gap-2 text-xs text-[var(--muted-foreground)] font-body"
+              className="font-body text-muted-foreground flex items-start gap-2 text-xs"
             >
-              <CheckCircle className="w-3.5 h-3.5 text-[var(--kpi-blue-light)] shrink-0 mt-0.5" />
+              <CheckCircle className="text-kpi-blue-light mt-0.5 h-3.5 w-3.5 shrink-0" />
               {item}
             </div>
           ))}

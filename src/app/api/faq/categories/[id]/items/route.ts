@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { invalidateFaq } from '@/lib/cache';
 import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
@@ -8,9 +9,6 @@ import { deltaToPlainText, parseQuillDelta } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // POST /api/faq/categories/[id]/items  — root admin only
-// Creates a new FAQ item inside the given category.
-// `content` must be a JSON string of a Quill Delta ({ ops: [...] }).
-// The plain-text length of the content is validated, not the raw JSON length.
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -51,12 +49,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.badRequest('content is required');
   }
 
-  // Content must be a valid Quill Delta JSON string
   if (!parseQuillDelta(content)) {
     return Errors.badRequest('content must be a valid Quill Delta JSON string');
   }
 
-  // Enforce the limit on readable plain text, not the raw JSON envelope
   const plainText = deltaToPlainText(content);
   if (plainText.length > FAQ_ITEM_CONTENT_MAX_LENGTH) {
     return Errors.badRequest(
@@ -90,5 +86,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   });
 
-  return NextResponse.json(item, { status: 201 });
+  await invalidateFaq();
+
+  return NextResponse.json(
+    {
+      id: item.id,
+      categoryId: item.category_id,
+      title: item.title,
+      content: item.content,
+      position: item.position,
+      createdAt: item.created_at.toISOString(),
+      updatedAt: item.updated_at.toISOString(),
+    },
+    { status: 201 },
+  );
 }

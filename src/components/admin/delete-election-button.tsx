@@ -54,9 +54,9 @@ export function DeleteElectionButton({ electionId, electionTitle }: DeleteElecti
         variant="ghost"
         size="sm"
         onClick={() => setOpen(true)}
-        className="text-[var(--error)] hover:bg-[var(--error-bg)]"
+        className="text-error hover:bg-error-bg"
       >
-        <Trash2 className="w-3.5 h-3.5" />
+        <Trash2 className="h-3.5 w-3.5" />
         <span className="hidden sm:inline">Видалити</span>
       </Button>
 
@@ -68,7 +68,7 @@ export function DeleteElectionButton({ electionId, electionTitle }: DeleteElecti
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              Голосування <strong className="break-words">«{electionTitle}»</strong> та всі
+              Голосування <strong className="wrap-break-word">«{electionTitle}»</strong> та всі
               пов&apos;язані бюлетені будуть видалені. Цю дію неможливо скасувати.
             </Alert>
           </DialogBody>

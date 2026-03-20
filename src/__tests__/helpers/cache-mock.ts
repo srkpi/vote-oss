@@ -11,6 +11,7 @@
  */
 
 import type { CachedElection } from '@/lib/cache';
+import type { FaqCategoryData } from '@/types/faq';
 
 export const cacheMock = {
   getCachedElections: jest.fn<Promise<null>, []>(),
@@ -22,6 +23,9 @@ export const cacheMock = {
   getCachedInviteTokens: jest.fn<Promise<null>, []>(),
   setCachedInviteTokens: jest.fn<Promise<void>, [unknown[]]>(),
   invalidateInviteTokens: jest.fn<Promise<void>, []>(),
+  getCachedFaq: jest.fn<Promise<null>, []>(),
+  setCachedFaq: jest.fn<Promise<void>, [FaqCategoryData[]]>(),
+  invalidateFaq: jest.fn<Promise<void>, []>(),
 };
 
 export function resetCacheMock(): void {
@@ -34,4 +38,7 @@ export function resetCacheMock(): void {
   cacheMock.getCachedInviteTokens.mockReset().mockResolvedValue(null);
   cacheMock.setCachedInviteTokens.mockReset().mockResolvedValue(undefined);
   cacheMock.invalidateInviteTokens.mockReset().mockResolvedValue(undefined);
+  cacheMock.getCachedFaq.mockReset().mockResolvedValue(null);
+  cacheMock.setCachedFaq.mockReset().mockResolvedValue(undefined);
+  cacheMock.invalidateFaq.mockReset().mockResolvedValue(undefined);
 }

@@ -47,37 +47,37 @@ export function Header({ session }: HeaderProps) {
   return (
     <header
       className={cn(
-        'fixed top-0 left-0 right-0 z-40',
+        'fixed top-0 right-0 left-0 z-40',
         'glass border-b border-white/60',
-        'h-[var(--header-height)]',
+        'h-(--header-height)',
       )}
     >
-      <div className="container h-full flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group shrink-0">
-          <div className="w-8 h-8 rounded-lg navy-gradient flex items-center justify-center">
-            <CheckCircle className="w-4 h-4 text-white" />
+      <div className="container flex h-full items-center justify-between">
+        <Link href="/" className="group flex shrink-0 items-center gap-3">
+          <div className="navy-gradient flex h-8 w-8 items-center justify-center rounded-lg">
+            <CheckCircle className="h-4 w-4 text-white" />
           </div>
           <div className="flex flex-col justify-center">
-            <span className="font-display text-lg font-semibold text-[var(--kpi-navy)] leading-tight">
+            <span className="font-display text-kpi-navy text-lg leading-tight font-semibold">
               {APP_NAME}
             </span>
-            <span className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-widest">
+            <span className="font-body text-muted-foreground text-[10px] tracking-widest uppercase">
               Система голосування
             </span>
           </div>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-2">
+        <nav className="hidden items-center gap-2 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                'px-4 py-2 rounded-[var(--radius)] text-sm font-medium font-body',
+                'font-body rounded-(--radius) px-4 py-2 text-sm font-medium',
                 'transition-all duration-150',
                 pathname.startsWith(link.href)
-                  ? 'bg-[var(--kpi-navy)]/10 text-[var(--kpi-navy)]'
-                  : 'text-[var(--muted-foreground)] hover:bg-[var(--surface)] hover:text-[var(--foreground)]',
+                  ? 'bg-kpi-navy/10 text-kpi-navy'
+                  : 'text-muted-foreground hover:bg-surface hover:text-foreground',
               )}
             >
               {link.label}
@@ -91,31 +91,31 @@ export function Header({ session }: HeaderProps) {
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-lg)]',
-                  'hover:bg-[var(--surface)] transition-colors duration-150',
-                  'text-sm font-medium font-body',
+                  'flex items-center gap-2 rounded-lg px-3 py-1.5',
+                  'hover:bg-surface transition-colors duration-150',
+                  'font-body text-sm font-medium',
                 )}
               >
                 <div
                   className={cn(
-                    'w-7 h-7 rounded-full navy-gradient',
+                    'navy-gradient h-7 w-7 rounded-full',
                     'flex items-center justify-center',
-                    'text-white text-xs font-semibold',
+                    'text-xs font-semibold text-white',
                   )}
                 >
                   {session.fullName.charAt(0).toUpperCase()}
                 </div>
-                <div className="hidden sm:block text-left">
-                  <p className="text-xs font-semibold text-[var(--foreground)] leading-tight">
+                <div className="hidden text-left sm:block">
+                  <p className="text-foreground text-xs leading-tight font-semibold">
                     {session.fullName.split(' ')[0]}
                   </p>
-                  <p className="text-[10px] text-[var(--muted-foreground)] leading-tight">
+                  <p className="text-muted-foreground text-[10px] leading-tight">
                     {session.faculty} · {session.group}
                   </p>
                 </div>
                 <ChevronDown
                   className={cn(
-                    'w-4 h-4 text-[var(--muted-foreground)] transition-transform duration-200',
+                    'text-muted-foreground h-4 w-4 transition-transform duration-200',
                     userMenuOpen && 'rotate-180',
                   )}
                 />
@@ -126,22 +126,22 @@ export function Header({ session }: HeaderProps) {
                   <div className="fixed inset-0" onClick={() => setUserMenuOpen(false)} />
                   <div
                     className={cn(
-                      'absolute right-0 top-full mt-2 w-56',
-                      'bg-white rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)]',
-                      'border border-[var(--border-color)]',
+                      'absolute top-full right-0 mt-2 w-56',
+                      'shadow-shadow-xl rounded-xl bg-white',
+                      'border-border-color border',
                       'overflow-hidden',
                       'origin-top-right',
                     )}
                   >
-                    <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
-                      <p className="text-sm font-semibold text-[var(--foreground)] break-words">
+                    <div className="border-border-subtle border-b px-4 py-3">
+                      <p className="text-foreground text-sm font-semibold wrap-break-word">
                         {session.fullName}
                       </p>
-                      <p className="text-sm text-[var(--muted-foreground)] leading-tight mt-1">
+                      <p className="text-muted-foreground mt-1 text-sm leading-tight">
                         {session.faculty} · {session.group}
                       </p>
                       {session.isAdmin && (
-                        <span className="inline-block mt-1 text-[10px] font-semibold text-white bg-[var(--kpi-orange)] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                        <span className="bg-kpi-orange mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
                           Адміністратор
                         </span>
                       )}
@@ -151,9 +151,9 @@ export function Header({ session }: HeaderProps) {
                       <button
                         onClick={handleLogout}
                         disabled={loggingOut}
-                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--error)] hover:bg-[var(--error-bg)] transition-colors disabled:opacity-50"
+                        className="text-error hover:bg-error-bg flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
                       >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="h-4 w-4" />
                         {loggingOut ? 'Виходимо…' : 'Вийти'}
                       </button>
                     </div>
@@ -170,13 +170,13 @@ export function Header({ session }: HeaderProps) {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
-              'md:hidden p-2 rounded-[var(--radius)]',
-              'text-[var(--muted-foreground)] hover:bg-[var(--surface)]',
+              'rounded-(--radius) p-2 md:hidden',
+              'text-muted-foreground hover:bg-surface',
               'transition-colors',
             )}
             aria-label="Меню"
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
@@ -189,24 +189,24 @@ export function Header({ session }: HeaderProps) {
           />
           <div
             className={cn(
-              'absolute top-full left-0 right-0 md:hidden',
-              'bg-white border-b border-[var(--border-color)]',
-              'shadow-[var(--shadow-lg)]',
+              'absolute top-full right-0 left-0 md:hidden',
+              'border-border-color border-b bg-white',
+              'shadow-shadow-lg',
               'animate-fade-down',
             )}
           >
-            <nav className="container py-3 flex flex-col gap-1">
+            <nav className="container flex flex-col gap-1 py-3">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    'px-4 py-3 rounded-[var(--radius)] text-sm font-medium font-body',
+                    'font-body rounded-(--radius) px-4 py-3 text-sm font-medium',
                     'transition-colors duration-150',
                     pathname.startsWith(link.href)
-                      ? 'bg-[var(--kpi-navy)]/10 text-[var(--kpi-navy)]'
-                      : 'text-[var(--foreground)] hover:bg-[var(--surface)]',
+                      ? 'bg-kpi-navy/10 text-kpi-navy'
+                      : 'text-foreground hover:bg-surface',
                   )}
                 >
                   {link.label}

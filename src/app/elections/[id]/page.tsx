@@ -44,8 +44,8 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   if (!election) {
     if (status === 403) {
       return (
-        <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] overflow-hidden w-full max-w-md">
+        <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
+          <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
             <ErrorState
               title={status === 403 ? 'Доступ обмежено' : 'Помилка завантаження'}
               description={
@@ -73,19 +73,19 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   const isClosed = election.status === 'closed';
 
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] bg-[var(--surface)]">
-      <div className="bg-white border-b border-[var(--border-subtle)]">
+    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+      <div className="border-border-subtle border-b bg-white">
         <div className="container py-6">
-          <nav className="flex items-center gap-2 text-sm font-body text-[var(--muted-foreground)] mb-4">
-            <Link href="/elections" className="hover:text-[var(--kpi-navy)] transition-colors">
+          <nav className="font-body text-muted-foreground mb-4 flex items-center gap-2 text-sm">
+            <Link href="/elections" className="hover:text-kpi-navy transition-colors">
               Голосування
             </Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[var(--foreground)] truncate max-w-xs">{election.title}</span>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="text-foreground max-w-xs truncate">{election.title}</span>
           </nav>
 
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div className="space-y-3 min-w-0">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+            <div className="min-w-0 space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <ElectionStatusBadge status={election.status} size="md" />
                 {election.restrictedToFaculty && (
@@ -99,18 +99,18 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   </Badge>
                 )}
               </div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-[var(--foreground)] leading-tight break-words">
+              <h1 className="font-display text-foreground text-3xl leading-tight font-bold wrap-break-word md:text-4xl">
                 {election.title}
               </h1>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--muted-foreground)] font-body">
+              <div className="font-body text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
                 <span className="flex items-center gap-1.5">
-                  <User className="w-4 h-4" />
-                  {election.creator.full_name}
+                  <User className="h-4 w-4" />
+                  {election.creator.fullName}
                 </span>
 
                 <Button variant="secondary" size="sm" asChild>
                   <Link href={`/elections/${id}/ballots`}>
-                    <FileText className="w-3.5 h-3.5" />
+                    <FileText className="h-3.5 w-3.5" />
                     {election.ballotCount} бюлетенів
                   </Link>
                 </Button>
@@ -121,11 +121,11 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
       </div>
 
       <div className="container py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
             {(isOpen || isUpcoming) && (
-              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
-                <p className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body mb-4">
+              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+                <p className="font-body text-muted-foreground mb-4 text-xs font-semibold tracking-wider uppercase">
                   {isOpen ? 'Залишилось часу' : 'Починається через'}
                 </p>
                 <CountdownTimer targetDate={isOpen ? election.closesAt : election.opensAt} />
@@ -133,14 +133,14 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
 
             {isOpen && (
-              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
+              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
                 {(election.restrictedToFaculty &&
                   session.faculty != election.restrictedToFaculty) ||
                 (election.restrictedToGroup && session.group != election.restrictedToGroup) ? (
                   <ErrorState title="Ви не можете брати участь у цьому опитуванні" />
                 ) : (
                   <>
-                    <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
+                    <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
                       Ваш голос
                     </h2>
                     <VoteStatusWrapper election={election} />
@@ -150,8 +150,8 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
 
             {isClosed && tally && (
-              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
-                <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-5">
+              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+                <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
                   Результати
                 </h2>
                 <ResultsChart results={tally.results} totalBallots={tally.totalBallots} />
@@ -159,27 +159,25 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
 
             {isUpcoming && (
-              <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-6">
-                <h2 className="font-display text-xl font-semibold text-[var(--foreground)] mb-4">
+              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+                <h2 className="font-display text-foreground mb-4 text-xl font-semibold">
                   Варіанти відповідей
                 </h2>
                 <div className="space-y-2.5">
                   {election.choices.map((choice, index) => (
                     <div
                       key={choice.id}
-                      className="flex items-center gap-3 p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border-subtle)]"
+                      className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3.5"
                     >
-                      <span className="w-7 h-7 rounded-lg navy-gradient flex items-center justify-center text-white text-xs font-bold font-body shrink-0">
+                      <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white">
                         {String.fromCharCode(65 + index)}
                       </span>
-                      <span className="text-sm font-body text-[var(--foreground)]">
-                        {choice.choice}
-                      </span>
+                      <span className="font-body text-foreground text-sm">{choice.choice}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-[var(--muted-foreground)] font-body mt-4 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
+                <p className="font-body text-muted-foreground mt-4 flex items-center gap-1.5 text-xs">
+                  <Clock className="h-3.5 w-3.5" />
                   Голосування розпочнеться {formatDateTime(election.opensAt)}
                 </p>
               </div>
@@ -187,31 +185,31 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
           </div>
 
           <div className="space-y-5">
-            <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)] p-5">
-              <h3 className="font-display text-base font-semibold text-[var(--foreground)] mb-4">
+            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
+              <h3 className="font-display text-foreground mb-4 text-base font-semibold">
                 Деталі голосування
               </h3>
               <div className="space-y-3.5">
                 <InfoRow
-                  icon={<Calendar className="w-4 h-4" />}
+                  icon={<Calendar className="h-4 w-4" />}
                   label="Початок"
                   value={formatDateTime(election.opensAt)}
                 />
                 <InfoRow
-                  icon={<Clock className="w-4 h-4" />}
+                  icon={<Clock className="h-4 w-4" />}
                   label="Завершення"
                   value={formatDateTime(election.closesAt)}
                 />
                 {election.restrictedToFaculty && (
                   <InfoRow
-                    icon={<GraduationCap className="w-4 h-4" />}
+                    icon={<GraduationCap className="h-4 w-4" />}
                     label="Підрозділ"
                     value={election.restrictedToFaculty}
                   />
                 )}
                 {election.restrictedToGroup && (
                   <InfoRow
-                    icon={<Users className="w-4 h-4" />}
+                    icon={<Users className="h-4 w-4" />}
                     label="Група"
                     value={election.restrictedToGroup}
                   />

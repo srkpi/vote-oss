@@ -86,8 +86,8 @@ export async function GET(req: NextRequest) {
         cached,
         user.faculty,
         user.group,
-        user.is_admin ?? false,
-        user.restricted_to_faculty ?? true,
+        user.isAdmin ?? false,
+        user.restrictedToFaculty ?? true,
       ),
     );
   }
@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
     restrictedToGroup: e.restricted_to_group,
     publicKey: e.public_key,
     privateKey: e.private_key,
-    creator: e.creator,
+    creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
     choices: e.choices,
     ballotCount: e._count.ballots,
   }));
@@ -135,8 +135,8 @@ export async function GET(req: NextRequest) {
       rawResult,
       user.faculty,
       user.group,
-      user.is_admin ?? false,
-      user.restricted_to_faculty ?? true,
+      user.isAdmin ?? false,
+      user.restrictedToFaculty ?? true,
     ),
   );
 }

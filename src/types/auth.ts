@@ -14,6 +14,22 @@ export interface TicketUserInfo {
   traceId: string;
 }
 
+export interface TokenPayload {
+  sub: string;
+  faculty: string;
+  group: string;
+  fullName: string;
+  isAdmin?: boolean;
+  restrictedToFaculty?: boolean;
+  manageAdmins?: boolean;
+}
+
+export interface VerifiedPayload extends TokenPayload {
+  jti: string;
+  iat: number;
+  tokenType: 'access' | 'refresh';
+}
+
 export interface UserInfo {
   userId: string;
   fullName: string;

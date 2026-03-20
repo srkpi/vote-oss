@@ -21,23 +21,23 @@ export function TokenResult({ token, copied, copiedLink, onCopy, onCopyLink }: T
         Скопіюйте токен або поділіться посиланням.
       </Alert>
 
-      <p className="text-xs font-semibold uppercase mb-2">Посилання запрошення</p>
+      <p className="mb-2 text-xs font-semibold uppercase">Посилання запрошення</p>
       <div className="flex items-center gap-2">
-        <div className="flex-1 p-3 rounded bg-[var(--surface)] border overflow-hidden">
+        <div className="bg-surface flex-1 overflow-hidden rounded border p-3">
           <p className="font-mono text-xs break-all select-all">{inviteLink}</p>
         </div>
         <Button variant={copiedLink ? 'secondary' : 'outline'} size="icon" onClick={onCopyLink}>
-          {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
         </Button>
       </div>
 
-      <p className="text-xs font-semibold uppercase mb-2">Токен запрошення</p>
+      <p className="mb-2 text-xs font-semibold uppercase">Токен запрошення</p>
       <div className="flex items-center gap-2">
-        <div className="flex-1 p-3 rounded bg-[var(--surface)] border overflow-hidden">
+        <div className="bg-surface flex-1 overflow-hidden rounded border p-3">
           <p className="font-mono text-xs break-all select-all">{token}</p>
         </div>
         <Button variant={copied ? 'secondary' : 'outline'} size="icon" onClick={onCopy}>
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
         </Button>
       </div>
     </div>

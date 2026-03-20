@@ -44,7 +44,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
       result = result.filter(
         (e) =>
           e.title.toLowerCase().includes(q) ||
-          e.creator.full_name.toLowerCase().includes(q) ||
+          e.creator.fullName.toLowerCase().includes(q) ||
           (e.restrictedToFaculty?.toLowerCase().includes(q) ?? false) ||
           (e.restrictedToGroup?.toLowerCase().includes(q) ?? false),
       );
@@ -63,21 +63,21 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center">
         <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} tabCount={tabCount} />
         <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
       </div>
 
       {(search || activeTab !== 'all') && filtered.length > 0 && (
-        <p className="text-xs text-[var(--muted-foreground)] font-body">
+        <p className="font-body text-muted-foreground text-xs">
           Знайдено: {filtered.length} голосувань
         </p>
       )}
 
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-sm)]">
+        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white">
           <EmptyState
-            icon={<FileText className="w-8 h-8" />}
+            icon={<FileText className="h-8 w-8" />}
             title={search ? 'Голосувань не знайдено' : 'Голосувань поки що немає'}
             description={
               search
@@ -87,7 +87,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((election, index) => (
             <ElectionCard key={election.id} election={election} index={index} />
           ))}
@@ -101,10 +101,10 @@ export function ElectionsFilterSkeleton() {
   return (
     <div className="space-y-6">
       <div className="flex gap-3">
-        <div className="skeleton h-9 w-64 rounded-[var(--radius-lg)]" />
-        <div className="skeleton h-9 w-48 rounded-[var(--radius-lg)]" />
+        <div className="skeleton h-9 w-64 rounded-lg" />
+        <div className="skeleton h-9 w-48 rounded-lg" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <ElectionCardSkeleton key={i} index={i - 1} />
         ))}

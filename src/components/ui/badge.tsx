@@ -9,20 +9,18 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-[var(--border-color)] text-[var(--foreground)] border-[var(--border-color)]',
-        secondary:
-          'bg-[var(--surface)] text-[var(--muted-foreground)] border-[var(--border-subtle)]',
-        outline: 'bg-transparent text-[var(--foreground)] border-[var(--border-color)]',
-        navy: 'bg-[var(--kpi-navy)] text-white border-[var(--kpi-navy)]',
-        primary: 'bg-[var(--kpi-navy)] text-white border-[var(--kpi-navy)]',
-        success: 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]/30',
-        warning: 'bg-[var(--warning-bg)] text-[var(--kpi-orange)] border-[var(--kpi-orange)]/30',
-        error: 'bg-[var(--error-bg)] text-[var(--error)] border-[var(--error)]/30',
-        destructive: 'bg-[var(--error-bg)] text-[var(--error)] border-[var(--error)]/30',
-        info: 'bg-[var(--info-bg)] text-[var(--kpi-blue-light)] border-[var(--kpi-blue-light)]/30',
-        accent: 'bg-[var(--kpi-orange)] text-white border-[var(--kpi-orange)]',
-        ghost:
-          'bg-transparent text-[var(--muted-foreground)] border-transparent hover:bg-[var(--surface)]',
+        default: 'bg-border-color text-foreground border-border-color',
+        secondary: 'bg-surface text-muted-foreground border-border-subtle',
+        outline: 'bg-transparent text-foreground border-border-color',
+        navy: 'bg-kpi-navy text-white border-kpi-navy',
+        primary: 'bg-kpi-navy text-white border-kpi-navy',
+        success: 'bg-success-bg text-success border-success/30',
+        warning: 'bg-warning-bg text-kpi-orange border-kpi-orange/30',
+        error: 'bg-error-bg text-error border-error/30',
+        destructive: 'bg-error-bg text-error border-error/30',
+        info: 'bg-info-bg text-kpi-blue-light border-kpi-blue-light/30',
+        accent: 'bg-kpi-orange text-white border-kpi-orange',
+        ghost: 'bg-transparent text-muted-foreground border-transparent hover:bg-surface',
       },
       size: {
         sm: 'h-4 px-1.5 text-[10px]',
@@ -38,18 +36,18 @@ const badgeVariants = cva(
 );
 
 const dotColors: Record<string, string> = {
-  default: 'bg-[var(--kpi-gray-mid)]',
-  secondary: 'bg-[var(--kpi-gray-mid)]',
-  outline: 'bg-[var(--kpi-gray-mid)]',
+  default: 'bg-kpi-gray-mid',
+  secondary: 'bg-kpi-gray-mid',
+  outline: 'bg-kpi-gray-mid',
   navy: 'bg-white',
   primary: 'bg-white',
-  success: 'bg-[var(--success)]',
-  warning: 'bg-[var(--kpi-orange)]',
-  error: 'bg-[var(--error)]',
-  destructive: 'bg-[var(--error)]',
-  info: 'bg-[var(--kpi-blue-light)]',
+  success: 'bg-success',
+  warning: 'bg-kpi-orange',
+  error: 'bg-error',
+  destructive: 'bg-error',
+  info: 'bg-kpi-blue-light',
   accent: 'bg-white',
-  ghost: 'bg-[var(--kpi-gray-mid)]',
+  ghost: 'bg-kpi-gray-mid',
 };
 
 export type BadgeVariant =
@@ -92,8 +90,8 @@ function Badge({
       {dot && (
         <span
           className={cn(
-            'inline-block rounded-full shrink-0',
-            size === 'sm' ? 'w-1 h-1' : 'w-1.5 h-1.5',
+            'inline-block shrink-0 rounded-full',
+            size === 'sm' ? 'h-1 w-1' : 'h-1.5 w-1.5',
             dotColors[variant ?? 'default'],
           )}
         />

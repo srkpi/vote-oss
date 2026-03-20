@@ -15,54 +15,48 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
   return (
     <tr
       className={cn(
-        'hover:bg-[var(--surface)] transition-colors duration-150',
-        isCurrentUser && 'bg-[var(--kpi-blue-light)]/10',
+        'hover:bg-surface transition-colors duration-150',
+        isCurrentUser && 'bg-kpi-blue-light/10',
       )}
     >
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full navy-gradient flex items-center justify-center text-white text-sm font-semibold shrink-0">
-            {admin.full_name.charAt(0)}
+          <div className="navy-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white">
+            {admin.fullName.charAt(0)}
           </div>
           <div>
-            <p className="text-sm font-medium text-[var(--foreground)] font-body">
-              {admin.full_name}
-            </p>
-            <p className="text-xs text-[var(--muted-foreground)] font-body">{admin.user_id}</p>
+            <p className="font-body text-foreground text-sm font-medium">{admin.fullName}</p>
+            <p className="font-body text-muted-foreground text-xs">{admin.userId}</p>
           </div>
         </div>
       </td>
       <td className="px-4 py-3.5">
-        <span className="text-sm font-body text-[var(--foreground)]">{admin.faculty}</span>
+        <span className="font-body text-foreground text-sm">{admin.faculty}</span>
       </td>
       <td className="px-4 py-3.5">
-        <span className="text-sm font-body text-[var(--foreground)]">{admin.group}</span>
+        <span className="font-body text-foreground text-sm">{admin.group}</span>
       </td>
       <td className="px-4 py-3.5">
         <div>
-          <p className="text-sm font-body text-[var(--foreground)]">
-            {formatDate(admin.promoted_at)}
-          </p>
+          <p className="font-body text-foreground text-sm">{formatDate(admin.promotedAt)}</p>
           {admin.promoter && (
-            <p className="text-xs text-[var(--muted-foreground)] font-body">
-              {admin.promoter.full_name}
-            </p>
+            <p className="font-body text-muted-foreground text-xs">{admin.promoter.fullName}</p>
           )}
         </div>
       </td>
       <td className="px-4 py-3.5">
         <div className="flex flex-wrap gap-1.5">
-          {admin.manage_admins && (
+          {admin.manageAdmins && (
             <Badge variant="info" size="sm">
               Керування адмінами
             </Badge>
           )}
-          {admin.restricted_to_faculty && (
+          {admin.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
               Обмежений до підрозділу
             </Badge>
           )}
-          {!admin.manage_admins && !admin.restricted_to_faculty && (
+          {!admin.manageAdmins && !admin.restrictedToFaculty && (
             <Badge variant="default" size="sm">
               Базові
             </Badge>
@@ -75,9 +69,9 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
             variant="ghost"
             size="md"
             onClick={onDelete}
-            className="text-[var(--error)] hover:bg-[var(--error-bg)]"
+            className="text-error hover:bg-error-bg"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         )}
       </td>

@@ -14,16 +14,6 @@ import { isAncestorInGraph } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // GET /api/admins/invite
-// Returns invite tokens visible to the caller based on the admin hierarchy.
-//
-// Before returning, stale tokens (expired or exhausted) are hard-deleted from
-// the database so the list stays clean without a background job.
-//
-// Visibility rule: a caller can see a token if they created it OR they are
-// a transitive ancestor of the token's creator in the admin hierarchy.
-//
-// The cache stores ALL tokens (caller-agnostic); hierarchy filtering and
-// stale-cleanup both happen in-memory so the cache is shared across callers.
 // ---------------------------------------------------------------------------
 
 export async function GET(req: NextRequest) {
@@ -63,26 +53,24 @@ export async function GET(req: NextRequest) {
     });
 
     allTokens = dbTokens.map((t) => ({
-      token_hash: t.token_hash,
-      max_usage: t.max_usage,
-      current_usage: t.current_usage,
-      manage_admins: t.manage_admins,
-      restricted_to_faculty: t.restricted_to_faculty,
-      valid_due: t.valid_due.toISOString(),
-      created_at: t.created_at.toISOString(),
-      creator: { user_id: t.creator.user_id, full_name: t.creator.full_name },
+      tokenHash: t.token_hash,
+      maxUsage: t.max_usage,
+      currentUsage: t.current_usage,
+      manageAdmins: t.manage_admins,
+      restrictedToFaculty: t.restricted_to_faculty,
+      validDue: t.valid_due.toISOString(),
+      createdAt: t.created_at.toISOString(),
+      creator: { userId: t.creator.user_id, fullName: t.creator.full_name },
     }));
 
     await setCachedInviteTokens(allTokens);
   }
 
   // ── Purge stale tokens (expired or exhausted) from DB ────────────────────
-  // This keeps the list self-cleaning without a background job. We derive
-  // "stale" from the in-memory list so a single DB call covers all cases.
   const now = new Date();
   const staleHashes = allTokens
-    .filter((t) => new Date(t.valid_due) < now || t.current_usage >= t.max_usage)
-    .map((t) => t.token_hash);
+    .filter((t) => new Date(t.validDue) < now || t.currentUsage >= t.maxUsage)
+    .map((t) => t.tokenHash);
 
   if (staleHashes.length > 0) {
     await prisma.adminInviteToken.deleteMany({
@@ -93,19 +81,17 @@ export async function GET(req: NextRequest) {
 
   // ── Keep only fresh tokens ────────────────────────────────────────────────
   const freshTokens = allTokens.filter(
-    (t) => new Date(t.valid_due) >= now && t.current_usage < t.max_usage,
+    (t) => new Date(t.validDue) >= now && t.currentUsage < t.maxUsage,
   );
 
   // ── Filter by caller's hierarchy and attach computed flags ────────────────
   const visible = freshTokens
     .filter(
-      (t) =>
-        t.creator.user_id === user.sub || isAncestorInGraph(graph, user.sub, t.creator.user_id),
+      (t) => t.creator.userId === user.sub || isAncestorInGraph(graph, user.sub, t.creator.userId),
     )
     .map((t) => ({
       ...t,
-      isOwn: t.creator.user_id === user.sub,
-      // If you can see it, you can delete it (you're either the owner or an ancestor)
+      isOwn: t.creator.userId === user.sub,
       deletable: true,
     }));
 
@@ -114,14 +100,6 @@ export async function GET(req: NextRequest) {
 
 // ---------------------------------------------------------------------------
 // POST /api/admins/invite
-// Creates a new invite token.
-//
-// Limits enforced:
-//   • Caller must have manage_admins.
-//   • Active (non-expired) token count for this admin must be < INVITE_TOKEN_MAX_COUNT.
-//   • validDue must be in the future and at most INVITE_TOKEN_MAX_VALID_DAYS away.
-//   • Faculty-restricted admins always produce faculty-restricted tokens.
-//   • Callers cannot grant permissions they don't have.
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest) {
@@ -170,17 +148,15 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('maxUsage must be between 1 and 100');
   }
 
-  // Admins cannot grant more than they have
   if (manageAdmins && !admin.manage_admins) {
     return Errors.forbidden('Cannot grant manage_admins permission you do not have');
   }
 
-  // If creating admin is faculty-restricted, the new admin must also be restricted
   if (admin.restricted_to_faculty) {
     restrictedToFaculty = true;
   }
 
-  // ── Enforce per-admin active token limit (single COUNT query, no N+1) ─────
+  // ── Enforce per-admin active token limit ──────────────────────────────────
   const now = new Date();
   const activeTokenCount = await prisma.adminInviteToken.count({
     where: {

@@ -19,14 +19,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] flex bg-[var(--surface)]">
+    <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))]">
       <AdminSidebar
         manageAdmins={session.manageAdmins}
         restrictedToFaculty={session.restrictedToFaculty}
       />
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {children}
-        <div className="lg:hidden h-[56px] w-full" aria-hidden="true" />
+        <div className="h-14 w-full lg:hidden" aria-hidden="true" />
       </div>
     </div>
   );

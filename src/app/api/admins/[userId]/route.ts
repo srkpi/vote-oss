@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   // ── Fast path: serve from cache when available ───────────────────────────
   const cached = await getCachedAdmins();
   if (cached) {
-    const admin = cached.find((a) => a.user_id === userId);
+    const admin = cached.find((a) => a.userId === userId);
     if (!admin) return Errors.notFound('Admin not found');
     return NextResponse.json(admin);
   }
@@ -44,7 +44,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
 
   if (!admin) return Errors.notFound('Admin not found');
 
-  return NextResponse.json(admin);
+  return NextResponse.json({
+    userId: admin.user_id,
+    fullName: admin.full_name,
+    group: admin.group,
+    faculty: admin.faculty,
+    promoter: admin.promoter
+      ? { userId: admin.promoter.user_id, fullName: admin.promoter.full_name }
+      : null,
+    promotedAt: admin.promoted_at.toISOString(),
+    manageAdmins: admin.manage_admins,
+    restrictedToFaculty: admin.restricted_to_faculty,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -85,8 +96,6 @@ export async function DELETE(
   }
 
   // Soft-delete the admin AND hard-delete all their invite tokens atomically.
-  // Invite tokens are revoked because a deleted admin can no longer vouch for
-  // new admins — keeping their tokens would be a privilege escalation bypass.
   await prisma.$transaction([
     prisma.admin.update({
       where: { user_id: targetUserId },

@@ -14,32 +14,27 @@ interface ConfirmationStepProps {
 export function ConfirmChoice({ choice, onBack, onConfirm, loading }: ConfirmationStepProps) {
   return (
     <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <div className="w-16 h-16 rounded-full bg-[var(--kpi-navy)]/10 border-2 border-[var(--kpi-navy)]/20 flex items-center justify-center mx-auto mb-4">
-          <HelpCircle className="w-8 h-8 text-[var(--kpi-navy)]" />
+      <div className="space-y-2 text-center">
+        <div className="border-kpi-navy/20 bg-kpi-navy/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2">
+          <HelpCircle className="text-kpi-navy h-8 w-8" />
         </div>
-        <h4 className="font-display text-xl font-semibold text-[var(--foreground)]">
+        <h4 className="font-display text-foreground text-xl font-semibold">
           Підтвердіть свій вибір
         </h4>
-        <p className="text-sm text-[var(--muted-foreground)] font-body">
+        <p className="font-body text-muted-foreground text-sm">
           Після підтвердження змінити голос неможливо
         </p>
       </div>
 
-      <div
-        className={cn(
-          'p-5 rounded-[var(--radius-lg)]',
-          'bg-[var(--kpi-navy)]/5 border-2 border-[var(--kpi-navy)]/20',
-        )}
-      >
-        <p className="text-xs text-[var(--muted-foreground)] mb-1 font-body uppercase tracking-wider">
+      <div className={cn('rounded-lg p-5', 'border-kpi-navy/20 bg-kpi-navy/5 border-2')}>
+        <p className="font-body text-muted-foreground mb-1 text-xs tracking-wider uppercase">
           Ваш вибір:
         </p>
         <div className="flex items-center gap-3">
-          <span className="w-8 h-8 rounded-lg bg-[var(--kpi-navy)] text-white flex items-center justify-center font-display font-bold text-base shrink-0">
+          <span className="font-display bg-kpi-navy flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white">
             {String.fromCharCode(65 + choice.position)}
           </span>
-          <span className="font-body font-semibold text-[var(--kpi-navy)] min-w-0 break-words">
+          <span className="font-body text-kpi-navy min-w-0 font-semibold wrap-break-word">
             {choice.choice}
           </span>
         </div>
@@ -55,7 +50,7 @@ export function ConfirmChoice({ choice, onBack, onConfirm, loading }: Confirmati
           fullWidth
           onClick={onConfirm}
           loading={loading}
-          icon={<Check className="w-4 h-4" />}
+          icon={<Check className="h-4 w-4" />}
         >
           Підтвердити голос
         </Button>

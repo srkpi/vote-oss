@@ -7,46 +7,23 @@ interface StatCardProps {
 
 const accentStyles = {
   navy: 'navy-gradient',
-  orange: 'bg-[var(--kpi-orange)]',
-  success: 'bg-[var(--success)]',
-  info: 'bg-[var(--kpi-blue-light)]',
+  orange: 'bg-kpi-orange',
+  success: 'bg-success',
+  info: 'bg-kpi-blue-light',
 };
 
 export function StatCard({ label, value, accent, icon }: StatCardProps) {
   return (
-    <div
-      className="
-        group
-        flex items-center gap-3 sm:gap-4
-        bg-white
-        rounded-[var(--radius-xl)]
-        border border-[var(--border-color)]
-        shadow-[var(--shadow-card)]
-        p-3 sm:p-5
-        transition-all duration-200
-        hover:shadow-lg hover:-translate-y-[2px]
-      "
-    >
+    <div className="group border-border-color shadow-shadow-card flex items-center gap-3 rounded-xl border bg-white p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:gap-4 sm:p-5">
       <div
-        className={`
-          w-8 h-8
-          sm:w-10 sm:h-10
-          rounded-xl
-          ${accentStyles[accent]}
-          flex items-center justify-center
-          text-white
-          shadow-[var(--shadow-sm)]
-          shrink-0
-        `}
+        className={`h-8 w-8 rounded-xl sm:h-10 sm:w-10 ${accentStyles[accent]} shadow-shadow-sm flex shrink-0 items-center justify-center text-white`}
       >
         {icon}
       </div>
 
       <div className="flex flex-col leading-tight">
-        <p className="font-display text-xl sm:text-2xl font-bold text-[var(--foreground)]">
-          {value}
-        </p>
-        <p className="text-xs font-body text-[var(--muted-foreground)]">{label}</p>
+        <p className="font-display text-foreground text-xl font-bold sm:text-2xl">{value}</p>
+        <p className="font-body text-muted-foreground text-xs">{label}</p>
       </div>
     </div>
   );

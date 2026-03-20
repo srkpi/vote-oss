@@ -48,7 +48,7 @@ export function KpiIdLogin({
       fullWidth={fullWidth}
       className={cn(
         SIZE_PADDING[size],
-        'bg-[var(--color-kpi-blue-mid)] hover:bg-[#0061a0] active:bg-[var(--color-kpi-blue-mid)]',
+        'bg-kpi-blue-mid active:bg-kpi-blue-mid hover:bg-[#0061a0]',
         logoAlignment === 'right' ? 'flex-row-reverse' : 'flex-row',
         className,
       )}

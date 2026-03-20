@@ -7,40 +7,41 @@ import {
   signVoteToken,
 } from '@/lib/crypto';
 import { signAccessToken, signRefreshToken } from '@/lib/jwt';
-import type { AdminPromoter } from '@/types/admin';
+import type { Admin } from '@/types/admin';
+import type { TokenPayload } from '@/types/auth';
 
 // ---------------------------------------------------------------------------
 // JWT payload fixtures
 // ---------------------------------------------------------------------------
 
-export const USER_PAYLOAD = {
+export const USER_PAYLOAD: TokenPayload = {
   sub: 'user-001',
   faculty: 'FICE',
   group: 'KV-91',
-  full_name: 'Ivan Petrenko',
-  is_admin: false,
-  restricted_to_faculty: false,
-  manage_admins: false,
+  fullName: 'Ivan Petrenko',
+  isAdmin: false,
+  restrictedToFaculty: false,
+  manageAdmins: false,
 };
 
-export const ADMIN_PAYLOAD = {
+export const ADMIN_PAYLOAD: TokenPayload = {
   sub: 'superadmin-001',
   faculty: 'FICE',
   group: 'KV-11',
-  full_name: 'Super Admin User',
-  is_admin: true,
-  restricted_to_faculty: false,
-  manage_admins: true,
+  fullName: 'Super Admin User',
+  isAdmin: true,
+  restrictedToFaculty: false,
+  manageAdmins: true,
 };
 
-export const OTHER_FACULTY_PAYLOAD = {
+export const OTHER_FACULTY_PAYLOAD: TokenPayload = {
   sub: 'user-002',
   faculty: 'FEL',
   group: 'EL-21',
-  full_name: 'Olena Kovalchuk',
-  is_admin: false,
-  restricted_to_faculty: false,
-  manage_admins: false,
+  fullName: 'Olena Kovalchuk',
+  isAdmin: false,
+  restrictedToFaculty: false,
+  manageAdmins: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -57,10 +58,7 @@ export async function makeTokenPair(payload = USER_PAYLOAD) {
 }
 
 // ---------------------------------------------------------------------------
-// Admin DB fixtures
-// All records include the soft-delete columns (null = active).
-// `promoter` is the hydrated relation; `promoted_by` FK is intentionally
-// absent from the public shape to avoid redundancy.
+// Admin DB fixtures (snake_case — these mock Prisma return values)
 // ---------------------------------------------------------------------------
 
 export const ADMIN_RECORD = {
@@ -69,7 +67,7 @@ export const ADMIN_RECORD = {
   group: 'KV-11',
   faculty: 'FICE',
   /** Root admin — no promoter. */
-  promoter: null as AdminPromoter | null,
+  promoter: null as null | { user_id: string; full_name: string },
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
   restricted_to_faculty: false,
@@ -82,7 +80,10 @@ export const RESTRICTED_ADMIN_RECORD = {
   full_name: 'Faculty Admin FICE',
   group: 'KV-12',
   faculty: 'FICE',
-  promoter: { user_id: 'superadmin-001', full_name: 'Super Admin User' } as AdminPromoter | null,
+  promoter: { user_id: 'superadmin-001', full_name: 'Super Admin User' } as null | {
+    user_id: string;
+    full_name: string;
+  },
   promoted_at: new Date('2024-01-02'),
   manage_admins: true,
   restricted_to_faculty: true,
@@ -92,7 +93,6 @@ export const RESTRICTED_ADMIN_RECORD = {
 
 /**
  * A previously-active admin who has been soft-deleted.
- * `promoter` is intentionally preserved to keep the hierarchy chain intact.
  */
 export const DELETED_ADMIN_RECORD = {
   ...RESTRICTED_ADMIN_RECORD,
@@ -102,8 +102,33 @@ export const DELETED_ADMIN_RECORD = {
 };
 
 // ---------------------------------------------------------------------------
+// Admin API response fixtures (camelCase — use these when mocking the cache)
+// ---------------------------------------------------------------------------
+
+export const ADMIN_API: Admin = {
+  userId: 'superadmin-001',
+  fullName: 'Super Admin User',
+  group: 'KV-11',
+  faculty: 'FICE',
+  promoter: null,
+  promotedAt: new Date('2024-01-01').toISOString(),
+  manageAdmins: true,
+  restrictedToFaculty: false,
+};
+
+export const RESTRICTED_ADMIN_API: Admin = {
+  userId: 'admin-002',
+  fullName: 'Faculty Admin FICE',
+  group: 'KV-12',
+  faculty: 'FICE',
+  promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+  promotedAt: new Date('2024-01-02').toISOString(),
+  manageAdmins: true,
+  restrictedToFaculty: true,
+};
+
+// ---------------------------------------------------------------------------
 // jwt_tokens DB record fixture
-// Used in token-store DB-fallback tests and as a reference shape.
 // ---------------------------------------------------------------------------
 
 export const JWT_TOKEN_RECORD = {

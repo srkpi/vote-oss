@@ -33,14 +33,14 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteInviteToken(deleteTarget.token_hash);
+    const result = await api.deleteInviteToken(deleteTarget.tokenHash);
     if (result.success) {
       toast({
         title: 'Токен видалено',
         description: 'Посилання запрошення більше не діє.',
         variant: 'success',
       });
-      onDelete(deleteTarget.token_hash);
+      onDelete(deleteTarget.tokenHash);
       setDeleteTarget(null);
     } else {
       toast({ title: 'Помилка', description: result.error, variant: 'error' });
@@ -50,7 +50,7 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
 
   if (tokens.length === 0) {
     return (
-      <div className="text-center py-12 text-[var(--muted-foreground)] font-body text-sm">
+      <div className="font-body text-muted-foreground py-12 text-center text-sm">
         Активних токенів запрошення немає
       </div>
     );
@@ -58,24 +58,24 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
 
   return (
     <>
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[var(--border-subtle)]">
+            <tr className="border-border-subtle border-b">
               {['Видавець', 'Права', 'Використання', 'Дійсний до', ''].map((h) => (
                 <th
                   key={h}
-                  className="px-4 py-3 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider font-body"
+                  className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border-subtle)]">
+          <tbody className="divide-border-subtle divide-y">
             {tokens.map((token) => (
               <TokenRow
-                key={token.token_hash}
+                key={token.tokenHash}
                 token={token}
                 onDelete={() => setDeleteTarget(token)}
               />
@@ -84,10 +84,10 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
         </table>
       </div>
 
-      <div className="md:hidden space-y-3">
+      <div className="space-y-3 md:hidden">
         {tokens.map((token) => (
           <TokenMobileCard
-            key={token.token_hash}
+            key={token.tokenHash}
             token={token}
             onDelete={() => setDeleteTarget(token)}
           />

@@ -16,12 +16,9 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
   if (expired) {
     return (
       <div
-        className={cn(
-          'flex items-center gap-2 text-[var(--muted-foreground)] font-body text-sm',
-          className,
-        )}
+        className={cn('font-body text-muted-foreground flex items-center gap-2 text-sm', className)}
       >
-        <Clock className="w-4 h-4" />
+        <Clock className="h-4 w-4" />
         <span>Час минув</span>
       </div>
     );
@@ -44,21 +41,21 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
           <div className="text-center">
             <div
               className={cn(
-                'min-w-[52px] h-14 flex items-center justify-center',
-                'navy-gradient rounded-[var(--radius-lg)]',
-                'shadow-[var(--shadow-md)]',
+                'flex h-14 min-w-13 items-center justify-center',
+                'navy-gradient rounded-lg',
+                'shadow-shadow-md',
               )}
             >
-              <span className="font-display text-2xl font-bold text-white tabular-nums leading-none">
+              <span className="font-display text-2xl leading-none font-bold text-white tabular-nums">
                 {String(value).padStart(2, '0')}
               </span>
             </div>
-            <span className="text-[10px] font-body text-[var(--muted-foreground)] uppercase tracking-widest mt-1.5 block">
+            <span className="font-body text-muted-foreground mt-1.5 block text-[10px] tracking-widest uppercase">
               {label}
             </span>
           </div>
           {i < visibleUnits.length - 1 && (
-            <span className="font-display text-xl font-bold text-[var(--kpi-gray-mid)] mb-4 select-none">
+            <span className="font-display text-kpi-gray-mid mb-4 text-xl font-bold select-none">
               :
             </span>
           )}

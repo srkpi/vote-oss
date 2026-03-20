@@ -31,14 +31,12 @@ import { DELETE as deleteItem, PUT as putItem } from '@/app/api/faq/items/[id]/r
 // Quill Delta content helpers
 // ---------------------------------------------------------------------------
 
-/** Build a minimal valid Quill Delta JSON string with the given plain text. */
 function makeQuillContent(text: string): string {
   return JSON.stringify({ ops: [{ insert: text + '\n' }] });
 }
 
 const VALID_CONTENT = makeQuillContent('Click vote.');
 
-/** Plain-text content that exceeds the allowed limit by 1 character. */
 const OVER_LIMIT_CONTENT = makeQuillContent('X'.repeat(FAQ_ITEM_CONTENT_MAX_LENGTH + 1));
 
 // ---------------------------------------------------------------------------
@@ -123,6 +121,7 @@ describe('PUT /api/faq/categories/[id]', () => {
     const { status, body } = await parseJson<any>(await putCategory(req, catParams('cat-1')));
     expect(status).toBe(200);
     expect(body.title).toBe('Updated Title');
+    expect(body.updatedAt).toBeDefined();
   });
 
   it('stores updated_by from authenticated user', async () => {
@@ -142,6 +141,28 @@ describe('PUT /api/faq/categories/[id]', () => {
         data: expect.objectContaining({ updated_by: 'superadmin-001' }),
       }),
     );
+  });
+
+  it('invalidates the FAQ cache after updating a category', async () => {
+    const req = await unrestrictedAdminReq('PUT', { title: 'New' });
+    prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
+    prismaMock.faqCategory.update.mockResolvedValueOnce({
+      id: 'cat-1',
+      title: 'New',
+      position: 0,
+      updated_at: new Date(),
+    });
+
+    await putCategory(req, catParams('cat-1'));
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not invalidate the cache when validation fails', async () => {
+    const req = await unrestrictedAdminReq('PUT', { title: '' });
+    prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
+    await putCategory(req, catParams('cat-1'));
+    expect(cacheMock.invalidateFaq).not.toHaveBeenCalled();
   });
 });
 
@@ -196,6 +217,16 @@ describe('DELETE /api/faq/categories/[id]', () => {
     await deleteCategory(req, catParams('cat-99'));
 
     expect(prismaMock.faqCategory.delete).toHaveBeenCalledWith({ where: { id: 'cat-99' } });
+  });
+
+  it('invalidates the FAQ cache after deleting a category', async () => {
+    const req = await unrestrictedAdminReq('DELETE');
+    prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
+    prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-1' });
+
+    await deleteCategory(req, catParams('cat-1'));
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -291,7 +322,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: VALID_CONTENT,
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    prismaMock.faqItem.findFirst.mockResolvedValueOnce(null); // no existing items
+    prismaMock.faqItem.findFirst.mockResolvedValueOnce(null);
     prismaMock.faqItem.create.mockResolvedValueOnce({
       id: 'item-1',
       category_id: 'cat-1',
@@ -305,7 +336,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
     const { status, body } = await parseJson<any>(await postItem(req, catParams('cat-1')));
     expect(status).toBe(201);
     expect(body.title).toBe('How to vote?');
-    expect(body.category_id).toBe('cat-1');
+    expect(body.categoryId).toBe('cat-1');
   });
 
   it('stores Quill Delta content verbatim in the database', async () => {
@@ -337,7 +368,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
   it('appends item after the last one in the category', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    prismaMock.faqItem.findFirst.mockResolvedValueOnce({ position: 2 }); // last item at position 2
+    prismaMock.faqItem.findFirst.mockResolvedValueOnce({ position: 2 });
     prismaMock.faqItem.create.mockResolvedValueOnce({
       id: 'item-3',
       category_id: 'cat-1',
@@ -355,6 +386,25 @@ describe('POST /api/faq/categories/[id]/items', () => {
         data: expect.objectContaining({ position: 3 }),
       }),
     );
+  });
+
+  it('invalidates the FAQ cache after creating an item', async () => {
+    const req = await unrestrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
+    prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
+    prismaMock.faqItem.findFirst.mockResolvedValueOnce(null);
+    prismaMock.faqItem.create.mockResolvedValueOnce({
+      id: 'item-1',
+      category_id: 'cat-1',
+      title: 'Q',
+      content: VALID_CONTENT,
+      position: 0,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    await postItem(req, catParams('cat-1'));
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -453,6 +503,8 @@ describe('PUT /api/faq/items/[id]', () => {
     const { status, body } = await parseJson<any>(await putItem(req, itemParams('item-1')));
     expect(status).toBe(200);
     expect(body.title).toBe('Updated Q');
+    expect(body.categoryId).toBe('cat-1');
+    expect(body.updatedAt).toBeDefined();
   });
 
   it('stores Quill Delta content verbatim in the database', async () => {
@@ -496,6 +548,23 @@ describe('PUT /api/faq/items/[id]', () => {
         data: expect.objectContaining({ updated_by: 'superadmin-001' }),
       }),
     );
+  });
+
+  it('invalidates the FAQ cache after updating an item', async () => {
+    const req = await unrestrictedAdminReq('PUT', { title: 'Q', content: VALID_CONTENT });
+    prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
+    prismaMock.faqItem.update.mockResolvedValueOnce({
+      id: 'item-1',
+      category_id: 'cat-1',
+      title: 'Q',
+      content: VALID_CONTENT,
+      position: 0,
+      updated_at: new Date(),
+    });
+
+    await putItem(req, itemParams('item-1'));
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -551,6 +620,16 @@ describe('DELETE /api/faq/items/[id]', () => {
 
     expect(prismaMock.faqItem.delete).toHaveBeenCalledWith({ where: { id: 'item-99' } });
   });
+
+  it('invalidates the FAQ cache after deleting an item', async () => {
+    const req = await unrestrictedAdminReq('DELETE');
+    prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
+    prismaMock.faqItem.delete.mockResolvedValueOnce({ id: 'item-1' });
+
+    await deleteItem(req, itemParams('item-1'));
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
+  });
 });
 
 // ===========================================================================
@@ -600,6 +679,16 @@ describe('PATCH /api/faq/categories/reorder', () => {
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('invalidates the FAQ cache after reordering categories', async () => {
+    const req = await unrestrictedAdminReq('PATCH', { order: ['cat-2', 'cat-1'] });
+    prismaMock.faqCategory.findMany.mockResolvedValueOnce([{ id: 'cat-1' }, { id: 'cat-2' }]);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    await reorderCategories(req);
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -652,5 +741,16 @@ describe('PATCH /api/faq/categories/[id]/items/reorder', () => {
     const { status, body } = await parseJson<any>(await reorderItems(req, catParams('cat-1')));
     expect(status).toBe(200);
     expect(body.ok).toBe(true);
+  });
+
+  it('invalidates the FAQ cache after reordering items', async () => {
+    const req = await unrestrictedAdminReq('PATCH', { order: ['item-2', 'item-1'] });
+    prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
+    prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    await reorderItems(req, catParams('cat-1'));
+
+    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
 });

@@ -25,8 +25,8 @@ export function VoteStatusWrapper({ election }: VoteStatusWrapperProps) {
   // Avoid flash of wrong content during hydration
   if (record === undefined) {
     return (
-      <div className="h-24 flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 border-[var(--kpi-navy)] border-t-transparent animate-spin" />
+      <div className="flex h-24 items-center justify-center">
+        <div className="border-kpi-navy h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     );
   }

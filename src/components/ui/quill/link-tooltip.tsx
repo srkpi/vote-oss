@@ -38,17 +38,17 @@ function IconButton({
       title={title}
       disabled={disabled}
       className={cn(
-        'flex items-center justify-center w-6 h-6 rounded-[var(--radius-sm)]',
-        'focus:outline-none transition-colors',
+        'flex h-6 w-6 items-center justify-center rounded-sm',
+        'transition-colors focus:outline-none',
         disabled
-          ? 'text-[var(--subtle)] cursor-not-allowed'
+          ? 'text-subtle cursor-not-allowed'
           : cn(
               'cursor-pointer',
               accent
-                ? 'text-[var(--kpi-blue-light,#3b82f6)] hover:bg-[var(--surface-hover)]'
+                ? 'text-kpi-blue-light,#3b82f6 hover:bg-surface-hover'
                 : danger
-                  ? 'text-[var(--error,#ef4444)] hover:bg-[var(--surface-hover)]'
-                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)]',
+                  ? 'text-error,#ef4444 hover:bg-surface-hover'
+                  : 'text-muted-foreground hover:bg-surface-hover hover:text-foreground',
             ),
       )}
     >
@@ -99,12 +99,7 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
     <div
       ref={panelRef}
       style={{ position: 'absolute', top, left, zIndex: 99999 }}
-      className="
-        flex items-center gap-2 px-3 py-2
-        bg-[var(--surface)] border border-[var(--border-color)]
-        rounded-[var(--radius)] shadow-lg text-sm
-        text-[var(--foreground)] whitespace-nowrap
-      "
+      className="border-border-color bg-surface text-foreground flex items-center gap-2 rounded-(--radius) border px-3 py-2 text-sm whitespace-nowrap shadow-lg"
       onMouseDown={(e) => {
         // Prevent the editor from losing its selection when the user clicks
         // anywhere on the tooltip — EXCEPT on the input itself, which needs
@@ -128,13 +123,7 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
               }
             }}
             placeholder="https://example.com"
-            className="
-              w-56 px-2 py-0.5 text-sm
-              bg-[var(--surface)] border border-[var(--border-subtle)]
-              rounded-[var(--radius-sm)] outline-none
-              text-[var(--foreground)] placeholder:text-[var(--subtle)]
-              focus:border-[var(--border-color)]
-            "
+            className="border-border-subtle bg-surface text-foreground placeholder:text-subtle focus:border-border-color w-56 rounded-sm border px-2 py-0.5 text-sm outline-none"
           />
           <IconButton onClick={handleSave} title="Save" accent disabled={!input.trim()}>
             <Check size={14} />
@@ -150,12 +139,12 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
             target="_blank"
             rel="noreferrer"
             title={href}
-            className="max-w-[240px] truncate text-[var(--kpi-blue-light,#3b82f6)] hover:underline"
+            className="text-kpi-blue-light,#3b82f6 max-w-60 truncate hover:underline"
           >
-            <ExternalLink size={13} className="inline mr-1 -mt-0.5" />
+            <ExternalLink size={13} className="-mt-0.5 mr-1 inline" />
             {href}
           </a>
-          <span className="text-[var(--border-subtle)] select-none mx-0.5">|</span>
+          <span className="text-border-subtle mx-0.5 select-none">|</span>
           <IconButton
             onClick={() => {
               setInput(href);

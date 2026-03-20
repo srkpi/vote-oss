@@ -1,10 +1,10 @@
 export interface Ballot {
   id: string;
-  encrypted_ballot: string;
-  created_at: string;
+  encryptedBallot: string;
+  createdAt: string;
   signature: string;
-  previous_hash: string | null;
-  current_hash: string;
+  previousHash: string | null;
+  currentHash: string;
 }
 
 export interface BallotsResponse {

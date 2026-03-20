@@ -30,45 +30,45 @@ export function DecryptionPanel({
   return (
     <div
       className={cn(
-        'rounded-[var(--radius-xl)] border p-5',
-        isClean && 'bg-[var(--success-bg)] border-[var(--success)]/30',
-        hasProblem && 'bg-[var(--error-bg)] border-[var(--error)]/30',
-        !decryptionDone && 'bg-white border-[var(--kpi-orange)]/30',
+        'rounded-xl border p-5',
+        isClean && 'border-success/30 bg-success-bg',
+        hasProblem && 'border-error/30 bg-error-bg',
+        !decryptionDone && 'border-kpi-orange/30 bg-white',
       )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <div
             className={cn(
-              'w-10 h-10 rounded-[var(--radius-lg)] flex items-center justify-center shrink-0',
-              isClean && 'bg-[var(--success)]/15',
-              hasProblem && 'bg-[var(--error)]/15',
-              !decryptionDone && 'bg-[var(--kpi-orange)]/15',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+              isClean && 'bg-success/15',
+              hasProblem && 'bg-error/15',
+              !decryptionDone && 'bg-kpi-orange/15',
             )}
           >
             {isDecrypting ? (
-              <Loader2 className="w-5 h-5 text-[var(--kpi-navy)] animate-spin" />
+              <Loader2 className="text-kpi-navy h-5 w-5 animate-spin" />
             ) : isClean ? (
-              <ShieldCheck className="w-5 h-5 text-[var(--success)]" />
+              <ShieldCheck className="text-success h-5 w-5" />
             ) : hasProblem ? (
-              <ShieldAlert className="w-5 h-5 text-[var(--error)]" />
+              <ShieldAlert className="text-error h-5 w-5" />
             ) : (
-              <Unlock className="w-5 h-5 text-[var(--kpi-orange)]" />
+              <Unlock className="text-kpi-orange h-5 w-5" />
             )}
           </div>
 
           <div className="min-w-0">
             {isDecrypting && (
-              <p className="text-sm font-body font-medium text-[var(--foreground)]">
+              <p className="font-body text-foreground text-sm font-medium">
                 Розшифрування {ballotCount} бюлетенів…
               </p>
             )}
             {!isDecrypting && !decryptionDone && (
               <>
-                <p className="text-sm font-body font-medium text-[var(--foreground)]">
+                <p className="font-body text-foreground text-sm font-medium">
                   Розшифрувати бюлетені локально
                 </p>
-                <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+                <p className="font-body text-muted-foreground mt-0.5 text-xs">
                   Голосування закрито — приватний ключ відкрито. Розшифрування відбувається у вашому
                   браузері, дані нікуди не передаються.
                 </p>
@@ -78,15 +78,15 @@ export function DecryptionPanel({
               <>
                 <p
                   className={cn(
-                    'text-sm font-body font-medium',
-                    isClean ? 'text-[var(--success)]' : 'text-[var(--error)]',
+                    'font-body text-sm font-medium',
+                    isClean ? 'text-success' : 'text-error',
                   )}
                 >
                   {isClean
                     ? `Усі ${ballotCount} бюлетенів успішно розшифровано та верифіковано`
                     : `${malformedCount} зіпсованих · ${invalidHashCount} з некоректним хешем`}
                 </p>
-                <p className="text-xs text-[var(--muted-foreground)] font-body mt-0.5">
+                <p className="font-body text-muted-foreground mt-0.5 text-xs">
                   Розшифровано локально у вашому браузері
                 </p>
               </>
@@ -94,14 +94,14 @@ export function DecryptionPanel({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           {decryptionDone && (
             <Button
               variant="secondary"
               size="sm"
               onClick={onToggleShow}
               icon={
-                showDecrypted ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />
+                showDecrypted ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />
               }
             >
               {showDecrypted ? 'Сховати' : 'Показати'}
@@ -114,7 +114,7 @@ export function DecryptionPanel({
               onClick={onDecrypt}
               loading={isDecrypting}
               disabled={isDecrypting}
-              icon={<Unlock className="w-3.5 h-3.5" />}
+              icon={<Unlock className="h-3.5 w-3.5" />}
             >
               Розшифрувати
             </Button>

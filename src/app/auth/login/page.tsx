@@ -13,26 +13,26 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-dvh flex">
-      <div className="hidden lg:flex flex-col justify-between w-1/2 navy-gradient-subtle p-12 relative overflow-hidden">
+    <div className="flex min-h-dvh">
+      <div className="navy-gradient-subtle relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 lg:flex">
         <AnimatedGrid variant="dark" cellSize={44} />
 
         {/* Atmospheric glow orbs */}
         <div
-          className="absolute -top-32 -right-32 w-[28rem] h-[28rem] rounded-full animate-glow-breathe"
+          className="animate-glow-breathe absolute -top-32 -right-32 h-112 w-md rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(0,138,207,0.25) 0%, transparent 70%)',
           }}
         />
         <div
-          className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full animate-glow-breathe-orange"
+          className="animate-glow-breathe-orange absolute -bottom-24 -left-24 h-80 w-80 rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(240,125,0,0.18) 0%, transparent 70%)',
             animationDelay: '2s',
           }}
         />
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full"
+          className="absolute top-1/2 left-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(0,138,207,0.08) 0%, transparent 60%)',
             animation: 'glow-breathe 9s ease-in-out infinite',
@@ -41,7 +41,7 @@ export default function LoginPage() {
         />
 
         {/* Radar / sonar rings — centered in panel */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           {[0, 1, 2, 3].map((i) => (
             <div
               key={i}
@@ -59,15 +59,15 @@ export default function LoginPage() {
           ))}
           {/* Center dot */}
           <div
-            className="w-2 h-2 rounded-full bg-[var(--kpi-blue-light)] -translate-x-1/2 -translate-y-1/2 absolute top-0 left-0"
+            className="bg-kpi-blue-light absolute top-0 left-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
             style={{ boxShadow: '0 0 8px 2px rgba(0,138,207,0.6)' }}
           />
         </div>
 
         {/* Scanning beam */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
-            className="absolute left-0 right-0 h-px animate-scan-down"
+            className="animate-scan-down absolute right-0 left-0 h-px"
             style={{
               background:
                 'linear-gradient(90deg, transparent 0%, rgba(0,138,207,0.4) 30%, rgba(0,138,207,0.7) 50%, rgba(0,138,207,0.4) 70%, transparent 100%)',
@@ -80,14 +80,14 @@ export default function LoginPage() {
 
         {/* Floating wireframe diamond */}
         <div
-          className="absolute right-10 top-1/4 w-20 h-20 animate-float-slow"
+          className="animate-float-slow absolute top-1/4 right-10 h-20 w-20"
           style={{ animationDuration: '8s', animationDelay: '1s' }}
         >
           <svg
             viewBox="0 0 80 80"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-full opacity-20"
+            className="h-full w-full opacity-20"
           >
             <polygon
               points="40,2 78,40 40,78 2,40"
@@ -108,14 +108,14 @@ export default function LoginPage() {
 
         {/* Floating small hexagon */}
         <div
-          className="absolute left-10 bottom-1/4 w-12 h-12 animate-float"
+          className="animate-float absolute bottom-1/4 left-10 h-12 w-12"
           style={{ animationDuration: '6s', animationDelay: '3s' }}
         >
           <svg
             viewBox="0 0 50 50"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-full opacity-15"
+            className="h-full w-full opacity-15"
           >
             <polygon
               points="25,2 47,13.5 47,36.5 25,48 3,36.5 3,13.5"
@@ -133,7 +133,7 @@ export default function LoginPage() {
         </div>
 
         {/* Corner crosshair TL */}
-        <div className="absolute top-8 left-8 opacity-30 animate-crosshair-blink">
+        <div className="animate-crosshair-blink absolute top-8 left-8 opacity-30">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <line x1="10" y1="0" x2="10" y2="7" stroke="rgba(0,138,207,1)" strokeWidth="1" />
             <line x1="10" y1="13" x2="10" y2="20" stroke="rgba(0,138,207,1)" strokeWidth="1" />
@@ -151,7 +151,7 @@ export default function LoginPage() {
         </div>
         {/* Corner crosshair BR */}
         <div
-          className="absolute bottom-8 right-8 opacity-30 animate-crosshair-blink"
+          className="animate-crosshair-blink absolute right-8 bottom-8 opacity-30"
           style={{ animationDelay: '1s' }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -171,15 +171,15 @@ export default function LoginPage() {
         </div>
 
         {/* Logo */}
-        <Link className="relative flex items-center gap-3 z-10" href="/">
-          <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center">
-            <CheckCircle className="w-4 h-4 text-white" />
+        <Link className="relative z-10 flex items-center gap-3" href="/">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/15">
+            <CheckCircle className="h-4 w-4 text-white" />
           </div>
           <div>
-            <span className="font-display text-xl font-bold text-white leading-tight block">
+            <span className="font-display block text-xl leading-tight font-bold text-white">
               {APP_NAME}
             </span>
-            <span className="text-[10px] font-body text-white/50 uppercase tracking-widest">
+            <span className="font-body text-[10px] tracking-widest text-white/50 uppercase">
               Система голосування
             </span>
           </div>
@@ -187,16 +187,16 @@ export default function LoginPage() {
 
         {/* Main text */}
         <div className="relative z-10">
-          <h2 className="font-display text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
+          <h2 className="font-display mb-4 text-4xl leading-tight font-bold text-white xl:text-5xl">
             Ваш голос — ваша{' '}
             <span
-              className="text-transparent bg-clip-text"
+              className="bg-clip-text text-transparent"
               style={{ backgroundImage: 'linear-gradient(90deg, #f07d00, #fbbf24)' }}
             >
               відповідальність
             </span>
           </h2>
-          <p className="font-body text-white/65 leading-relaxed text-md xl:text-xl">
+          <p className="font-body text-md leading-relaxed text-white/65 xl:text-xl">
             Використовуйте систему KPI ID для безпечного та верифікованого входу до платформи
             голосування
           </p>
@@ -207,11 +207,11 @@ export default function LoginPage() {
           {['RSA-2048', 'Анонімно', 'Верифіковано'].map((badge, i) => (
             <div
               key={badge}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 border border-white/12 animate-badge-pop"
+              className="animate-badge-pop flex items-center gap-1.5 rounded-full border border-white/12 bg-white/8 px-3 py-1.5"
               style={{ animationDelay: `${400 + i * 80}ms` }}
             >
               <svg
-                className="w-3.5 h-3.5 text-[var(--kpi-blue-light)]"
+                className="text-kpi-blue-light h-3.5 w-3.5"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -221,33 +221,31 @@ export default function LoginPage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-xs font-body text-white/75">{badge}</span>
+              <span className="font-body text-xs text-white/75">{badge}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8 relative">
+      <div className="relative flex flex-1 items-center justify-center p-8">
         {/* Subtle background for the form side on mobile */}
-        <div className="absolute inset-0 lg:hidden overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden lg:hidden">
           <AnimatedGrid variant="light" cellSize={52} />
           <div className="absolute inset-0 bg-white/75" />
         </div>
 
-        <div className="w-full max-w-sm relative z-10">
+        <div className="relative z-10 w-full max-w-sm">
           {/* Mobile logo */}
-          <div className="flex justify-center items-center">
-            <Link className="lg:hidden flex items-center gap-3 mb-8" href="/">
-              <div className="w-9 h-9 rounded-xl navy-gradient flex items-center justify-center shadow-[var(--shadow-button)]">
-                <CheckCircle className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-center">
+            <Link className="mb-8 flex items-center gap-3 lg:hidden" href="/">
+              <div className="navy-gradient shadow-shadow-button flex h-9 w-9 items-center justify-center rounded-xl">
+                <CheckCircle className="h-4 w-4 text-white" />
               </div>
-              <span className="font-display text-2xl font-bold text-[var(--kpi-navy)]">
-                {APP_NAME}
-              </span>
+              <span className="font-display text-kpi-navy text-2xl font-bold">{APP_NAME}</span>
             </Link>
           </div>
 
-          <h1 className="font-display text-center text-3xl sm:text-4xl font-bold text-[var(--foreground)] mb-8">
+          <h1 className="font-display text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
             Ласкаво просимо
           </h1>
 
@@ -256,16 +254,16 @@ export default function LoginPage() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[var(--border-subtle)]" />
+                <div className="border-border-subtle w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-[var(--muted-foreground)] font-body">
+                <span className="font-body text-muted-foreground bg-white px-3">
                   Авторизація через офіційний портал КПІ
                 </span>
               </div>
             </div>
 
-            <div className="space-y-3 w-full">
+            <div className="w-full space-y-3">
               {[
                 'Голосують лише справжні студенти',
                 'Твій голос анонімний та захищений',
@@ -273,10 +271,10 @@ export default function LoginPage() {
               ].map((item, i) => (
                 <div
                   key={item}
-                  className="flex justify-center items-center gap-2.5 text-sm text-[var(--muted-foreground)] font-body opacity-0 animate-fade-up"
+                  className="font-body animate-fade-up text-muted-foreground flex items-center justify-center gap-2.5 text-sm opacity-0"
                   style={{ animationDelay: `${200 + i * 80}ms` }}
                 >
-                  <Check color="var(--success)" className="w-4 h-4 shrink-0" />
+                  <Check color="var(--success)" className="h-4 w-4 shrink-0" />
                   {item}
                 </div>
               ))}
