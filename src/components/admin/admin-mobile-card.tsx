@@ -15,9 +15,9 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
   return (
     <div
       className={cn(
-        'rounded-lg border border-(--border-color) p-4',
-        'bg-white shadow-(--shadow-sm)',
-        isCurrentUser && 'border-(--kpi-navy)',
+        'border-border-color rounded-lg border p-4',
+        'shadow-shadow-sm bg-white',
+        isCurrentUser && 'border-kpi-navy',
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -27,11 +27,9 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-body text-sm font-semibold text-(--foreground)">
-                {admin.fullName}
-              </p>
+              <p className="font-body text-foreground text-sm font-semibold">{admin.fullName}</p>
             </div>
-            <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">
+            <p className="font-body text-muted-foreground mt-0.5 text-xs">
               {admin.faculty} · {admin.group}
             </p>
           </div>
@@ -41,7 +39,7 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
             variant="ghost"
             size="xs"
             onClick={onDelete}
-            className="text-(--error) hover:bg-(--error-bg)"
+            className="text-error hover:bg-error-bg"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -66,11 +64,11 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
         )}
       </div>
 
-      <p className="font-body mt-2 text-xs text-(--muted-foreground)">
+      <p className="font-body text-muted-foreground mt-2 text-xs">
         Призначено: {formatDate(admin.promotedAt)}
       </p>
       {admin.promoter && (
-        <p className="font-body text-xs text-(--muted-foreground)">{admin.promoter.fullName}</p>
+        <p className="font-body text-muted-foreground text-xs">{admin.promoter.fullName}</p>
       )}
     </div>
   );

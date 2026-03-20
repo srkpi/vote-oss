@@ -15,8 +15,8 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
   return (
     <tr
       className={cn(
-        'transition-colors duration-150 hover:bg-(--surface)',
-        isCurrentUser && 'bg-(--kpi-blue-light)/10',
+        'hover:bg-surface transition-colors duration-150',
+        isCurrentUser && 'bg-kpi-blue-light/10',
       )}
     >
       <td className="px-4 py-3.5">
@@ -25,22 +25,22 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
             {admin.fullName.charAt(0)}
           </div>
           <div>
-            <p className="font-body text-sm font-medium text-(--foreground)">{admin.fullName}</p>
-            <p className="font-body text-xs text-(--muted-foreground)">{admin.userId}</p>
+            <p className="font-body text-foreground text-sm font-medium">{admin.fullName}</p>
+            <p className="font-body text-muted-foreground text-xs">{admin.userId}</p>
           </div>
         </div>
       </td>
       <td className="px-4 py-3.5">
-        <span className="font-body text-sm text-(--foreground)">{admin.faculty}</span>
+        <span className="font-body text-foreground text-sm">{admin.faculty}</span>
       </td>
       <td className="px-4 py-3.5">
-        <span className="font-body text-sm text-(--foreground)">{admin.group}</span>
+        <span className="font-body text-foreground text-sm">{admin.group}</span>
       </td>
       <td className="px-4 py-3.5">
         <div>
-          <p className="font-body text-sm text-(--foreground)">{formatDate(admin.promotedAt)}</p>
+          <p className="font-body text-foreground text-sm">{formatDate(admin.promotedAt)}</p>
           {admin.promoter && (
-            <p className="font-body text-xs text-(--muted-foreground)">{admin.promoter.fullName}</p>
+            <p className="font-body text-muted-foreground text-xs">{admin.promoter.fullName}</p>
           )}
         </div>
       </td>
@@ -69,7 +69,7 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
             variant="ghost"
             size="md"
             onClick={onDelete}
-            className="text-(--error) hover:bg-(--error-bg)"
+            className="text-error hover:bg-error-bg"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

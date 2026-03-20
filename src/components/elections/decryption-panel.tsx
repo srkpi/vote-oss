@@ -31,9 +31,9 @@ export function DecryptionPanel({
     <div
       className={cn(
         'rounded-xl border p-5',
-        isClean && 'border-(--success)/30 bg-(--success-bg)',
-        hasProblem && 'border-(--error)/30 bg-(--error-bg)',
-        !decryptionDone && 'border-(--kpi-orange)/30 bg-white',
+        isClean && 'border-success/30 bg-success-bg',
+        hasProblem && 'border-error/30 bg-error-bg',
+        !decryptionDone && 'border-kpi-orange/30 bg-white',
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -41,34 +41,34 @@ export function DecryptionPanel({
           <div
             className={cn(
               'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-              isClean && 'bg-(--success)/15',
-              hasProblem && 'bg-(--error)/15',
-              !decryptionDone && 'bg-(--kpi-orange)/15',
+              isClean && 'bg-success/15',
+              hasProblem && 'bg-error/15',
+              !decryptionDone && 'bg-kpi-orange/15',
             )}
           >
             {isDecrypting ? (
-              <Loader2 className="h-5 w-5 animate-spin text-(--kpi-navy)" />
+              <Loader2 className="text-kpi-navy h-5 w-5 animate-spin" />
             ) : isClean ? (
-              <ShieldCheck className="h-5 w-5 text-(--success)" />
+              <ShieldCheck className="text-success h-5 w-5" />
             ) : hasProblem ? (
-              <ShieldAlert className="h-5 w-5 text-(--error)" />
+              <ShieldAlert className="text-error h-5 w-5" />
             ) : (
-              <Unlock className="h-5 w-5 text-(--kpi-orange)" />
+              <Unlock className="text-kpi-orange h-5 w-5" />
             )}
           </div>
 
           <div className="min-w-0">
             {isDecrypting && (
-              <p className="font-body text-sm font-medium text-(--foreground)">
+              <p className="font-body text-foreground text-sm font-medium">
                 Розшифрування {ballotCount} бюлетенів…
               </p>
             )}
             {!isDecrypting && !decryptionDone && (
               <>
-                <p className="font-body text-sm font-medium text-(--foreground)">
+                <p className="font-body text-foreground text-sm font-medium">
                   Розшифрувати бюлетені локально
                 </p>
-                <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">
+                <p className="font-body text-muted-foreground mt-0.5 text-xs">
                   Голосування закрито — приватний ключ відкрито. Розшифрування відбувається у вашому
                   браузері, дані нікуди не передаються.
                 </p>
@@ -79,14 +79,14 @@ export function DecryptionPanel({
                 <p
                   className={cn(
                     'font-body text-sm font-medium',
-                    isClean ? 'text-(--success)' : 'text-(--error)',
+                    isClean ? 'text-success' : 'text-error',
                   )}
                 >
                   {isClean
                     ? `Усі ${ballotCount} бюлетенів успішно розшифровано та верифіковано`
                     : `${malformedCount} зіпсованих · ${invalidHashCount} з некоректним хешем`}
                 </p>
-                <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">
+                <p className="font-body text-muted-foreground mt-0.5 text-xs">
                   Розшифровано локально у вашому браузері
                 </p>
               </>

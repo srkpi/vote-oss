@@ -14,25 +14,23 @@ export function VotingSuccess({ hash, electionId }: VotingSuccessProps) {
   return (
     <div className="animate-scale-in flex flex-col items-center gap-6 py-4 text-center">
       <div className="relative">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-(--success)/30 bg-(--success-bg)">
-          <Check className="h-10 w-10 text-(--success)" />
+        <div className="border-success/30 bg-success-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
+          <Check className="text-success h-10 w-10" />
         </div>
       </div>
 
       <div className="space-y-2">
-        <h4 className="font-display text-2xl font-semibold text-(--foreground)">
-          Голос зараховано!
-        </h4>
-        <p className="font-body text-sm text-(--muted-foreground)">
+        <h4 className="font-display text-foreground text-2xl font-semibold">Голос зараховано!</h4>
+        <p className="font-body text-muted-foreground text-sm">
           Ваш голос успішно зафіксовано. Вибір та хеш збережено у вашому браузері.
         </p>
       </div>
 
-      <div className="w-full rounded-lg border border-(--border-subtle) bg-(--surface) p-4">
-        <p className="font-body mb-1.5 text-xs text-(--muted-foreground)">
+      <div className="border-border-subtle bg-surface w-full rounded-lg border p-4">
+        <p className="font-body text-muted-foreground mb-1.5 text-xs">
           Хеш бюлетеня (для перевірки):
         </p>
-        <p className="font-mono text-xs leading-relaxed break-all text-(--foreground)">{hash}</p>
+        <p className="text-foreground font-mono text-xs leading-relaxed break-all">{hash}</p>
       </div>
 
       <div className="flex w-full flex-col gap-3">

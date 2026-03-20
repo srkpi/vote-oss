@@ -67,17 +67,17 @@ export function AdminSidebar({
 
   return (
     <>
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-(--border-subtle) bg-white lg:flex">
-        <div className="border-b border-(--border-subtle) p-5">
+      <aside className="border-border-subtle hidden w-60 shrink-0 flex-col border-r bg-white lg:flex">
+        <div className="border-border-subtle border-b p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-(--kpi-orange) shadow-(--shadow-sm)">
+            <div className="bg-kpi-orange shadow-shadow-sm flex h-9 w-9 items-center justify-center rounded-lg">
               <Settings className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="font-display text-sm leading-tight font-semibold text-(--foreground)">
+              <p className="font-display text-foreground text-sm leading-tight font-semibold">
                 Адмін-панель
               </p>
-              <p className="font-body text-[10px] tracking-wider text-(--muted-foreground) uppercase">
+              <p className="font-body text-muted-foreground text-[10px] tracking-wider uppercase">
                 {APP_NAME}
               </p>
             </div>
@@ -85,7 +85,7 @@ export function AdminSidebar({
         </div>
 
         <nav className="flex-1 space-y-0.5 p-3">
-          <p className="font-body px-3 pt-3 pb-2 text-[10px] font-semibold tracking-widest text-(--muted-foreground) uppercase">
+          <p className="font-body text-muted-foreground px-3 pt-3 pb-2 text-[10px] font-semibold tracking-widest uppercase">
             Навігація
           </p>
           {navItems.map((item) => (
@@ -96,8 +96,8 @@ export function AdminSidebar({
                 'font-body flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium',
                 'transition-all duration-150',
                 isActive(item.href, item.exact)
-                  ? 'bg-(--kpi-navy) text-white shadow-(--shadow-sm)'
-                  : 'text-(--muted-foreground) hover:bg-(--surface) hover:text-(--foreground)',
+                  ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                  : 'text-muted-foreground hover:bg-surface hover:text-foreground',
               )}
             >
               {item.icon}
@@ -107,7 +107,7 @@ export function AdminSidebar({
         </nav>
       </aside>
 
-      <div className="safe-area-pb fixed right-0 bottom-0 left-0 z-40 border-t border-(--border-subtle) bg-white shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden">
+      <div className="safe-area-pb border-border-subtle fixed right-0 bottom-0 left-0 z-40 border-t bg-white shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden">
         <div className="flex items-stretch">
           {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
@@ -118,15 +118,13 @@ export function AdminSidebar({
                 className={cn(
                   'flex flex-1 flex-col items-center justify-center gap-1 px-1 py-2.5 text-center',
                   'min-h-14 transition-all duration-150',
-                  active
-                    ? 'text-(--kpi-navy)'
-                    : 'text-(--muted-foreground) hover:text-(--foreground)',
+                  active ? 'text-kpi-navy' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 <span
                   className={cn(
                     'flex h-6 w-8 items-center justify-center rounded-lg transition-all duration-150',
-                    active && 'bg-(--kpi-navy)/10',
+                    active && 'bg-kpi-navy/10',
                   )}
                 >
                   {item.icon}

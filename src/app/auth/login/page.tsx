@@ -59,7 +59,7 @@ export default function LoginPage() {
           ))}
           {/* Center dot */}
           <div
-            className="absolute top-0 left-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--kpi-blue-light)"
+            className="bg-kpi-blue-light absolute top-0 left-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
             style={{ boxShadow: '0 0 8px 2px rgba(0,138,207,0.6)' }}
           />
         </div>
@@ -211,7 +211,7 @@ export default function LoginPage() {
               style={{ animationDelay: `${400 + i * 80}ms` }}
             >
               <svg
-                className="h-3.5 w-3.5 text-(--kpi-blue-light)"
+                className="text-kpi-blue-light h-3.5 w-3.5"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -238,14 +238,14 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="flex items-center justify-center">
             <Link className="mb-8 flex items-center gap-3 lg:hidden" href="/">
-              <div className="navy-gradient flex h-9 w-9 items-center justify-center rounded-xl shadow-(--shadow-button)">
+              <div className="navy-gradient shadow-shadow-button flex h-9 w-9 items-center justify-center rounded-xl">
                 <CheckCircle className="h-4 w-4 text-white" />
               </div>
-              <span className="font-display text-2xl font-bold text-(--kpi-navy)">{APP_NAME}</span>
+              <span className="font-display text-kpi-navy text-2xl font-bold">{APP_NAME}</span>
             </Link>
           </div>
 
-          <h1 className="font-display mb-8 text-center text-3xl font-bold text-(--foreground) sm:text-4xl">
+          <h1 className="font-display text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
             Ласкаво просимо
           </h1>
 
@@ -254,10 +254,10 @@ export default function LoginPage() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-(--border-subtle)" />
+                <div className="border-border-subtle w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="font-body bg-white px-3 text-(--muted-foreground)">
+                <span className="font-body text-muted-foreground bg-white px-3">
                   Авторизація через офіційний портал КПІ
                 </span>
               </div>
@@ -271,7 +271,7 @@ export default function LoginPage() {
               ].map((item, i) => (
                 <div
                   key={item}
-                  className="font-body animate-fade-up flex items-center justify-center gap-2.5 text-sm text-(--muted-foreground) opacity-0"
+                  className="font-body animate-fade-up text-muted-foreground flex items-center justify-center gap-2.5 text-sm opacity-0"
                   style={{ animationDelay: `${200 + i * 80}ms` }}
                 >
                   <Check color="var(--success)" className="h-4 w-4 shrink-0" />

@@ -135,7 +135,7 @@ export function VoteForm({ election }: VoteFormProps) {
             Продовжити
           </Button>
 
-          <p className="font-body text-center text-xs leading-relaxed text-(--muted-foreground)">
+          <p className="font-body text-muted-foreground text-center text-xs leading-relaxed">
             Ваш голос зашифровано та анонімізовано. Після подання змінити вибір неможливо.
           </p>
         </>
@@ -152,12 +152,10 @@ export function VoteForm({ election }: VoteFormProps) {
 
       {step === 'submitting' && (
         <div className="flex flex-col items-center gap-6 py-8">
-          <Loader2 className="h-16 w-16 animate-spin text-(--kpi-navy)" />
+          <Loader2 className="text-kpi-navy h-16 w-16 animate-spin" />
           <div className="text-center">
-            <p className="font-display text-lg font-semibold text-(--foreground)">
-              Обробка голосу…
-            </p>
-            <p className="font-body mt-1 text-sm text-(--muted-foreground)">
+            <p className="font-display text-foreground text-lg font-semibold">Обробка голосу…</p>
+            <p className="font-body text-muted-foreground mt-1 text-sm">
               Шифруємо та записуємо ваш голос
             </p>
           </div>

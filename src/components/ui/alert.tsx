@@ -11,16 +11,13 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-white border-(--border-color) text-(--foreground)',
-        success:
-          'bg-(--success-bg) border-(--success)/30 text-(--foreground) [&_.alert-icon]:text-(--success)',
+        default: 'bg-white border-border-color text-foreground',
+        success: 'bg-success-bg border-success/30 text-foreground [&_.alert-icon]:text-success',
         warning:
-          'bg-(--warning-bg) border-(--kpi-orange)/30 text-(--foreground) [&_.alert-icon]:text-(--kpi-orange)',
-        error:
-          'bg-(--error-bg) border-(--error)/30 text-(--foreground) [&_.alert-icon]:text-(--error)',
-        info: 'bg-(--info-bg) border-(--kpi-blue-light)/30 text-(--foreground) [&_.alert-icon]:text-(--kpi-blue-light)',
-        destructive:
-          'bg-(--error-bg) border-(--error)/30 text-(--foreground) [&_.alert-icon]:text-(--error)',
+          'bg-warning-bg border-kpi-orange/30 text-foreground [&_.alert-icon]:text-kpi-orange',
+        error: 'bg-error-bg border-error/30 text-foreground [&_.alert-icon]:text-error',
+        info: 'bg-info-bg border-kpi-blue-light/30 text-foreground [&_.alert-icon]:text-kpi-blue-light',
+        destructive: 'bg-error-bg border-error/30 text-foreground [&_.alert-icon]:text-error',
       },
     },
     defaultVariants: {
@@ -63,7 +60,7 @@ export function Alert({
       <div className="min-w-0 flex-1">
         {title && <p className="font-body mb-0.5 text-sm leading-tight font-semibold">{title}</p>}
         {children && (
-          <div className="font-body text-sm leading-relaxed text-(--foreground)/80">{children}</div>
+          <div className="font-body text-foreground/80 text-sm leading-relaxed">{children}</div>
         )}
       </div>
       {onDismiss && (
@@ -72,9 +69,9 @@ export function Alert({
           onClick={onDismiss}
           className={cn(
             'shrink-0 self-start rounded-md p-0.5',
-            'text-(--muted-foreground) hover:text-(--foreground)',
+            'text-muted-foreground hover:text-foreground',
             'transition-colors duration-150 hover:bg-black/5',
-            'focus-visible:ring-2 focus-visible:ring-(--kpi-blue-light) focus-visible:outline-none',
+            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
           )}
           aria-label="Закрити"
         >
@@ -97,7 +94,7 @@ export function AlertTitle({ className, ...props }: React.HTMLAttributes<HTMLDiv
 export function AlertDescription({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('font-body text-sm leading-relaxed text-(--foreground)/80', className)}
+      className={cn('font-body text-foreground/80 text-sm leading-relaxed', className)}
       {...props}
     />
   );
@@ -114,19 +111,19 @@ export interface ToastItemProps {
 }
 
 const toastAccentColors: Record<ToastVariant, string> = {
-  default: 'bg-(--kpi-navy)',
-  success: 'bg-(--success)',
-  warning: 'bg-(--kpi-orange)',
-  error: 'bg-(--error)',
-  info: 'bg-(--kpi-blue-light)',
+  default: 'bg-kpi-navy',
+  success: 'bg-success',
+  warning: 'bg-kpi-orange',
+  error: 'bg-error',
+  info: 'bg-kpi-blue-light',
 };
 
 const toastIconColors: Record<ToastVariant, string> = {
-  default: 'text-(--kpi-navy)',
-  success: 'text-(--success)',
-  warning: 'text-(--kpi-orange)',
-  error: 'text-(--error)',
-  info: 'text-(--kpi-blue-light)',
+  default: 'text-kpi-navy',
+  success: 'text-success',
+  warning: 'text-kpi-orange',
+  error: 'text-error',
+  info: 'text-kpi-blue-light',
 };
 
 const TOAST_ICONS: Record<ToastVariant, React.ReactNode> = {
@@ -150,8 +147,8 @@ export function ToastItem({
         'relative flex items-start gap-3',
         'w-80 overflow-hidden',
         'rounded-xl bg-white',
-        'border border-(--border-color)',
-        'shadow-(--shadow-xl)',
+        'border-border-color border',
+        'shadow-shadow-xl',
         'p-4',
         'animate-slide-right',
       )}
@@ -167,9 +164,9 @@ export function ToastItem({
       <div className={cn('mt-0.5 shrink-0', toastIconColors[variant])}>{TOAST_ICONS[variant]}</div>
 
       <div className="min-w-0 flex-1 pr-1">
-        <p className="font-body text-sm leading-tight font-semibold text-(--foreground)">{title}</p>
+        <p className="font-body text-foreground text-sm leading-tight font-semibold">{title}</p>
         {description && (
-          <p className="font-body mt-0.5 text-xs leading-relaxed text-(--muted-foreground)">
+          <p className="font-body text-muted-foreground mt-0.5 text-xs leading-relaxed">
             {description}
           </p>
         )}
@@ -180,8 +177,8 @@ export function ToastItem({
         onClick={() => onDismiss(id)}
         className={cn(
           'shrink-0 self-start rounded-md p-0.5',
-          'text-(--muted-foreground) hover:text-(--foreground)',
-          'transition-colors duration-150 hover:bg-(--surface)',
+          'text-muted-foreground hover:text-foreground',
+          'hover:bg-surface transition-colors duration-150',
         )}
         aria-label="Закрити"
       >

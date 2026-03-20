@@ -23,7 +23,7 @@ export function TokenResult({ token, copied, copiedLink, onCopy, onCopyLink }: T
 
       <p className="mb-2 text-xs font-semibold uppercase">Посилання запрошення</p>
       <div className="flex items-center gap-2">
-        <div className="flex-1 overflow-hidden rounded border bg-(--surface) p-3">
+        <div className="bg-surface flex-1 overflow-hidden rounded border p-3">
           <p className="font-mono text-xs break-all select-all">{inviteLink}</p>
         </div>
         <Button variant={copiedLink ? 'secondary' : 'outline'} size="icon" onClick={onCopyLink}>
@@ -33,7 +33,7 @@ export function TokenResult({ token, copied, copiedLink, onCopy, onCopyLink }: T
 
       <p className="mb-2 text-xs font-semibold uppercase">Токен запрошення</p>
       <div className="flex items-center gap-2">
-        <div className="flex-1 overflow-hidden rounded border bg-(--surface) p-3">
+        <div className="bg-surface flex-1 overflow-hidden rounded border p-3">
           <p className="font-mono text-xs break-all select-all">{token}</p>
         </div>
         <Button variant={copied ? 'secondary' : 'outline'} size="icon" onClick={onCopy}>

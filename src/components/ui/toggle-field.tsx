@@ -34,7 +34,7 @@ export function ToggleField({
         <div
           className={cn(
             'h-6 w-10 rounded-full transition-all duration-200',
-            checked ? 'bg-(--kpi-navy)' : 'bg-(--border-color)',
+            checked ? 'bg-kpi-navy' : 'bg-border-color',
           )}
         >
           <div
@@ -47,9 +47,9 @@ export function ToggleField({
       </div>
 
       <div>
-        <p className="font-body text-sm font-medium text-(--foreground)">{label}</p>
+        <p className="font-body text-foreground text-sm font-medium">{label}</p>
         {description && (
-          <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">{description}</p>
+          <p className="font-body text-muted-foreground mt-0.5 text-xs">{description}</p>
         )}
       </div>
     </label>

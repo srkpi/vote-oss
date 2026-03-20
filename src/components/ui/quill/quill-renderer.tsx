@@ -97,7 +97,7 @@ function renderSegment(seg: InlineSegment, idx: number): React.ReactNode {
         href={a.link as string}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-(--kpi-blue-light) underline transition-colors hover:text-(--kpi-blue-dark)"
+        className="text-kpi-blue-light hover:text-kpi-blue-dark underline transition-colors"
       >
         {node}
       </a>
@@ -105,7 +105,7 @@ function renderSegment(seg: InlineSegment, idx: number): React.ReactNode {
   }
   if (a.code) {
     node = (
-      <code className="rounded border border-(--border-subtle) bg-(--surface) px-1 py-0.5 font-mono text-[0.8em]">
+      <code className="border-border-subtle bg-surface rounded border px-1 py-0.5 font-mono text-[0.8em]">
         {node}
       </code>
     );
@@ -113,7 +113,7 @@ function renderSegment(seg: InlineSegment, idx: number): React.ReactNode {
   if (a.bold) node = <strong className="font-semibold">{node}</strong>;
   if (a.italic) node = <em>{node}</em>;
   if (a.underline) node = <u>{node}</u>;
-  if (a.strike) node = <s className="text-(--muted-foreground)">{node}</s>;
+  if (a.strike) node = <s className="text-muted-foreground">{node}</s>;
 
   return <React.Fragment key={idx}>{node}</React.Fragment>;
 }
@@ -164,7 +164,7 @@ function groupLines(lines: Line[]): Group[] {
 function renderGroup(group: Group, idx: number): React.ReactNode {
   if (group.kind === 'ul') {
     return (
-      <ul key={`ul-${idx}`} className="my-1.5 list-disc space-y-0.5 pl-5 text-(--foreground)/80">
+      <ul key={`ul-${idx}`} className="text-foreground/80 my-1.5 list-disc space-y-0.5 pl-5">
         {group.lines.map((l, li) => (
           <li key={li}>{renderLineContent(l.segments)}</li>
         ))}
@@ -174,7 +174,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
 
   if (group.kind === 'ol') {
     return (
-      <ol key={`ol-${idx}`} className="my-1.5 list-decimal space-y-0.5 pl-5 text-(--foreground)/80">
+      <ol key={`ol-${idx}`} className="text-foreground/80 my-1.5 list-decimal space-y-0.5 pl-5">
         {group.lines.map((l, li) => (
           <li key={li}>{renderLineContent(l.segments)}</li>
         ))}
@@ -191,11 +191,11 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
         key={`code-${idx}`}
         className={cn(
           'my-2 rounded-sm',
-          'border border-(--border-subtle) bg-(--surface)',
+          'border-border-subtle bg-surface border',
           'px-3.5 py-2.5',
           'font-mono text-[0.8125rem] leading-relaxed',
           'overflow-x-auto whitespace-pre',
-          'text-(--foreground)',
+          'text-foreground',
         )}
       >
         {raw}
@@ -213,7 +213,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h1
           key={idx}
-          className="mt-3 mb-1.5 text-2xl leading-tight font-bold text-(--foreground) first:mt-0"
+          className="text-foreground mt-3 mb-1.5 text-2xl leading-tight font-bold first:mt-0"
         >
           {content}
         </h1>
@@ -222,7 +222,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h2
           key={idx}
-          className="mt-2.5 mb-1 text-xl leading-snug font-semibold text-(--foreground) first:mt-0"
+          className="text-foreground mt-2.5 mb-1 text-xl leading-snug font-semibold first:mt-0"
         >
           {content}
         </h2>
@@ -231,7 +231,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h3
           key={idx}
-          className="mt-2 mb-1 text-base leading-snug font-semibold text-(--foreground) first:mt-0"
+          className="text-foreground mt-2 mb-1 text-base leading-snug font-semibold first:mt-0"
         >
           {content}
         </h3>
@@ -240,7 +240,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h4
           key={idx}
-          className="mt-1.5 mb-0.5 text-sm leading-snug font-semibold text-(--muted-foreground) first:mt-0"
+          className="text-muted-foreground mt-1.5 mb-0.5 text-sm leading-snug font-semibold first:mt-0"
         >
           {content}
         </h4>
@@ -249,7 +249,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <blockquote
           key={idx}
-          className="my-1.5 border-l-[3px] border-(--border-color) pl-3 text-(--muted-foreground) italic"
+          className="border-border-color text-muted-foreground my-1.5 border-l-[3px] pl-3 italic"
         >
           {content}
         </blockquote>
@@ -284,7 +284,7 @@ export function QuillRenderer({ content, className }: QuillRendererProps) {
   return (
     <div
       className={cn(
-        'font-body text-sm leading-relaxed wrap-break-word text-(--foreground)/80',
+        'font-body text-foreground/80 text-sm leading-relaxed wrap-break-word',
         className,
       )}
     >

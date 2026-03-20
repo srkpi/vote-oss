@@ -77,7 +77,7 @@ function renderText(text: string): React.ReactNode[] {
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="break-all text-(--kpi-blue-light) underline underline-offset-2 transition-colors hover:text-(--kpi-blue-dark)"
+          className="text-kpi-blue-light hover:text-kpi-blue-dark break-all underline underline-offset-2 transition-colors"
         >
           {part}
         </a>
@@ -89,21 +89,21 @@ function renderText(text: string): React.ReactNode[] {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] bg-(--surface)">
+    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       <div className="container mx-auto max-w-3xl py-10 sm:py-16">
         <div className="mb-10 text-center sm:mb-14">
-          <h1 className="font-display mb-2 text-3xl font-bold text-(--kpi-navy) sm:mb-3 sm:text-5xl">
+          <h1 className="font-display text-kpi-navy mb-2 text-3xl font-bold sm:mb-3 sm:text-5xl">
             Політика конфіденційності
           </h1>
-          <p className="font-body mx-auto max-w-xl text-base text-(--muted-foreground) sm:text-lg">
+          <p className="font-body text-muted-foreground mx-auto max-w-xl text-base sm:text-lg">
             Останнє оновлення: {lastUpdated}
           </p>
         </div>
 
         <div className="mx-auto max-w-3xl">
-          <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-sm)">
-            <div className="border-b border-(--border-subtle) px-6 pt-8 pb-6 sm:px-12">
-              <p className="font-body mb-3 text-sm font-semibold tracking-wider text-(--muted-foreground) uppercase">
+          <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+            <div className="border-border-subtle border-b px-6 pt-8 pb-6 sm:px-12">
+              <p className="font-body text-muted-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
                 Зміст
               </p>
               <ol className="space-y-1.5">
@@ -113,9 +113,9 @@ export default function PrivacyPage() {
                     <li key={section.id}>
                       <a
                         href={`#${section.id}`}
-                        className="font-body group flex items-center gap-2.5 text-sm text-(--muted-foreground) transition-colors hover:text-(--kpi-navy)"
+                        className="font-body group text-muted-foreground hover:text-kpi-navy flex items-center gap-2.5 text-sm transition-colors"
                       >
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-(--border-subtle) bg-(--surface) text-[10px] font-semibold text-(--kpi-navy) transition-colors group-hover:border-(--kpi-navy) group-hover:bg-(--kpi-navy) group-hover:text-white">
+                        <span className="border-border-subtle bg-surface text-kpi-navy group-hover:border-kpi-navy group-hover:bg-kpi-navy flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-[10px] font-semibold transition-colors group-hover:text-white">
                           {index + 1}
                         </span>
                         {section.title}
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
                       <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white">
                         {index}
                       </span>
-                      <h2 className="font-display text-xl font-semibold text-(--foreground)">
+                      <h2 className="font-display text-foreground text-xl font-semibold">
                         {section.title}
                       </h2>
                     </div>
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
                     {section.paragraphs.map((para, i) => (
                       <p
                         key={i}
-                        className="font-body text-justify text-sm leading-relaxed text-(--foreground) sm:text-base"
+                        className="font-body text-foreground text-justify text-sm leading-relaxed sm:text-base"
                       >
                         {renderText(para)}
                       </p>
@@ -153,8 +153,8 @@ export default function PrivacyPage() {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-(--border-subtle) bg-(--surface) px-6 py-5 sm:px-8">
-              <p className="font-body text-center text-xs text-(--muted-foreground)">
+            <div className="border-border-subtle bg-surface border-t px-6 py-5 sm:px-8">
+              <p className="font-body text-muted-foreground text-center text-xs">
                 © {new Date().getFullYear()} {APP_NAME} · КПІ ім. Ігоря Сікорського
               </p>
             </div>

@@ -26,7 +26,7 @@ export function VoteStatusWrapper({ election }: VoteStatusWrapperProps) {
   if (record === undefined) {
     return (
       <div className="flex h-24 items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--kpi-navy) border-t-transparent" />
+        <div className="border-kpi-navy h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
       </div>
     );
   }

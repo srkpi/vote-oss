@@ -214,7 +214,7 @@ export default function QuillEditor({
       <div
         className={cn(
           'flex flex-col rounded-(--radius) border',
-          error || isOverLimit ? 'border-(--error)' : 'border-(--border-color)',
+          error || isOverLimit ? 'border-error' : 'border-border-color',
           className,
         )}
         onClick={() => quillRef.current?.focus()}
@@ -239,7 +239,7 @@ export default function QuillEditor({
             value={charCount}
             max={maxLength}
             threshold={0}
-            className="flex justify-end rounded-b-(--radius) border-t border-(--border-subtle) bg-(--surface) px-3 py-1.5"
+            className="border-border-subtle bg-surface flex justify-end rounded-b-(--radius) border-t px-3 py-1.5"
           />
         )}
       </div>

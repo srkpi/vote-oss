@@ -80,34 +80,34 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <div className="space-y-6 xl:col-span-2">
             {isOpen && (
-              <div className="flex items-center gap-3 rounded-xl border border-(--success)/20 bg-(--success-bg) p-4 sm:gap-4 sm:p-5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-(--success) sm:h-12 sm:w-12">
+              <div className="border-success/20 bg-success-bg flex items-center gap-3 rounded-xl border p-4 sm:gap-4 sm:p-5">
+                <div className="bg-success flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12">
                   <span className="relative flex h-3 w-3">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                     <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-display text-sm font-semibold text-(--success) sm:text-base">
+                  <p className="font-display text-success text-sm font-semibold sm:text-base">
                     Голосування активне
                   </p>
-                  <p className="font-body mt-0.5 text-xs text-(--success)/80 sm:text-sm">
+                  <p className="font-body text-success/80 mt-0.5 text-xs sm:text-sm">
                     Завершується {formatDateTime(election.closesAt)}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-display text-2xl font-bold text-(--success) sm:text-3xl">
+                  <p className="font-display text-success text-2xl font-bold sm:text-3xl">
                     {election.ballotCount.toLocaleString('uk-UA')}
                   </p>
-                  <p className="font-body text-xs text-(--success)/70">бюлетенів подано</p>
+                  <p className="font-body text-success/70 text-xs">бюлетенів подано</p>
                 </div>
               </div>
             )}
 
             {isClosed && tally && (
-              <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-card)">
-                <div className="flex items-center justify-between border-b border-(--border-subtle) px-4 py-4 sm:px-6">
-                  <h2 className="font-display text-base font-semibold text-(--foreground) sm:text-lg">
+              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+                <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
+                  <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
                     Результати голосування
                   </h2>
                   <Badge variant="secondary" size="md">
@@ -121,9 +121,9 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             )}
 
             {!isClosed && (
-              <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-card)">
-                <div className="border-b border-(--border-subtle) px-4 py-4 sm:px-6">
-                  <h2 className="font-display text-base font-semibold text-(--foreground) sm:text-lg">
+              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+                <div className="border-border-subtle border-b px-4 py-4 sm:px-6">
+                  <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
                     Варіанти відповідей
                   </h2>
                 </div>
@@ -131,12 +131,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   {election.choices.map((choice, index) => (
                     <div
                       key={choice.id}
-                      className="flex items-center gap-3 rounded-lg border border-(--border-subtle) bg-(--surface) p-3 sm:gap-4 sm:p-3.5"
+                      className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3 sm:gap-4 sm:p-3.5"
                     >
                       <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white sm:h-8 sm:w-8">
                         {String.fromCharCode(65 + index)}
                       </span>
-                      <span className="font-body min-w-0 flex-1 text-sm wrap-break-word text-(--foreground)">
+                      <span className="font-body text-foreground min-w-0 flex-1 text-sm wrap-break-word">
                         {choice.choice}
                       </span>
                     </div>
@@ -147,7 +147,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           </div>
 
           <div className="space-y-5">
-            <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-card)">
+            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
               <div className="space-y-4 p-4 sm:p-5">
                 <TimelineItem
                   label="Створено"
@@ -170,13 +170,13 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-card)">
-              <div className="border-b border-(--border-subtle) px-4 py-4 sm:px-5">
-                <h3 className="font-display text-base font-semibold text-(--foreground)">Доступ</h3>
+            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+              <div className="border-border-subtle border-b px-4 py-4 sm:px-5">
+                <h3 className="font-display text-foreground text-base font-semibold">Доступ</h3>
               </div>
               <div className="space-y-3 p-4 sm:p-5">
                 <div className="flex items-center justify-between">
-                  <span className="font-body text-sm text-(--muted-foreground)">Підрозділ</span>
+                  <span className="font-body text-muted-foreground text-sm">Підрозділ</span>
                   {election.restrictedToFaculty ? (
                     <Badge variant="info" size="md">
                       {election.restrictedToFaculty}
@@ -188,7 +188,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-body text-sm text-(--muted-foreground)">Група</span>
+                  <span className="font-body text-muted-foreground text-sm">Група</span>
                   {election.restrictedToGroup ? (
                     <Badge variant="secondary" size="md">
                       {election.restrictedToGroup}

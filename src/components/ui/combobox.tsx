@@ -157,17 +157,17 @@ export function Combobox({
         onKeyDown={handleTriggerKeyDown}
         className={cn(
           'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-white',
-          'border border-(--border-color)',
+          'border-border-color border',
           'font-body px-3 text-left text-sm',
           'transition-colors duration-150',
-          !disabled && 'cursor-pointer hover:border-(--kpi-blue-light)',
-          open && 'border-(--kpi-blue-light) ring-2 ring-(--kpi-blue-light)/20',
-          error && !open && 'border-(--error) focus:border-(--error) focus:ring-(--error)/20',
-          disabled && 'cursor-not-allowed bg-(--surface) opacity-50',
-          'focus-visible:ring-2 focus-visible:ring-(--kpi-blue-light) focus-visible:outline-none',
+          !disabled && 'hover:border-kpi-blue-light cursor-pointer',
+          open && 'border-kpi-blue-light ring-kpi-blue-light/20 ring-2',
+          error && !open && 'border-error focus:border-error focus:ring-error/20',
+          disabled && 'bg-surface cursor-not-allowed opacity-50',
+          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
         )}
       >
-        <span className={cn('flex-1 truncate', !value && 'text-(--subtle)')}>
+        <span className={cn('flex-1 truncate', !value && 'text-subtle')}>
           {value || placeholder}
         </span>
 
@@ -182,8 +182,8 @@ export function Combobox({
             }}
             className={cn(
               'flex h-5 w-5 shrink-0 items-center justify-center rounded',
-              'text-(--muted-foreground) hover:text-(--foreground)',
-              'transition-colors hover:bg-(--surface)',
+              'text-muted-foreground hover:text-foreground',
+              'hover:bg-surface transition-colors',
             )}
           >
             <X className="h-3 w-3" />
@@ -191,7 +191,7 @@ export function Combobox({
         )}
         <ChevronDown
           className={cn(
-            'h-4 w-4 shrink-0 text-(--muted-foreground) transition-transform duration-150',
+            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-150',
             open && (openUpward ? '-rotate-180' : 'rotate-180'),
           )}
         />
@@ -203,15 +203,15 @@ export function Combobox({
           className={cn(
             'absolute z-50 w-full min-w-50',
             'overflow-hidden rounded-lg',
-            'border border-(--border-color) bg-white',
-            'shadow-(--shadow-lg)',
+            'border-border-color border bg-white',
+            'shadow-shadow-lg',
             'animate-scale-in',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
-          <div className="border-b border-(--border-subtle) p-2">
+          <div className="border-border-subtle border-b p-2">
             <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-(--muted-foreground)" />
+              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
               <input
                 ref={searchRef}
                 value={search}
@@ -222,11 +222,11 @@ export function Combobox({
                 onKeyDown={handleSearchKeyDown}
                 placeholder={searchPlaceholder}
                 className={cn(
-                  'h-8 w-full rounded-sm bg-(--surface)',
-                  'font-body pr-3 pl-8 text-sm text-(--foreground)',
-                  'placeholder:text-(--subtle)',
+                  'bg-surface h-8 w-full rounded-sm',
+                  'font-body text-foreground pr-3 pl-8 text-sm',
+                  'placeholder:text-subtle',
                   'border border-transparent',
-                  'focus:border-(--kpi-blue-light) focus:outline-none',
+                  'focus:border-kpi-blue-light focus:outline-none',
                   'transition-colors duration-150',
                   search && 'pr-7',
                 )}
@@ -236,7 +236,7 @@ export function Combobox({
                   type="button"
                   tabIndex={-1}
                   onClick={() => setSearch('')}
-                  className="absolute top-1/2 right-2 -translate-y-1/2 text-(--muted-foreground) hover:text-(--foreground)"
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -250,7 +250,7 @@ export function Combobox({
             className="max-h-60 overflow-y-auto overscroll-contain py-1"
           >
             {filtered.length === 0 ? (
-              <div className="font-body px-3 py-6 text-center text-sm text-(--muted-foreground)">
+              <div className="font-body text-muted-foreground px-3 py-6 text-center text-sm">
                 {emptyText}
               </div>
             ) : (
@@ -268,15 +268,15 @@ export function Combobox({
                     className={cn(
                       'font-body flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm',
                       'transition-colors duration-75',
-                      isSelected ? 'font-medium text-(--kpi-navy)' : 'text-(--foreground)',
-                      isActive && !isSelected ? 'bg-(--surface)' : '',
-                      isSelected ? 'bg-(--kpi-navy)/5' : '',
-                      isActive && isSelected ? 'bg-(--kpi-navy)/10' : '',
+                      isSelected ? 'text-kpi-navy font-medium' : 'text-foreground',
+                      isActive && !isSelected ? 'bg-surface' : '',
+                      isSelected ? 'bg-kpi-navy/5' : '',
+                      isActive && isSelected ? 'bg-kpi-navy/10' : '',
                     )}
                   >
                     <Check
                       className={cn(
-                        'h-3.5 w-3.5 shrink-0 text-(--kpi-navy)',
+                        'text-kpi-navy h-3.5 w-3.5 shrink-0',
                         isSelected ? 'opacity-100' : 'opacity-0',
                       )}
                     />

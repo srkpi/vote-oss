@@ -155,7 +155,7 @@ export default async function HomePage() {
         <div className="relative z-10 container py-16 md:py-32">
           <div className="max-w-3xl">
             <div className="font-body mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs tracking-widest text-white/90 uppercase">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-(--kpi-orange)" />
+              <span className="bg-kpi-orange h-1.5 w-1.5 animate-pulse rounded-full" />
               КПІ ім. Ігоря Сікорського
             </div>
 
@@ -168,7 +168,7 @@ export default async function HomePage() {
                 >
                   важливий
                 </span>
-                <span className="absolute right-0 -bottom-1 left-0 h-0.5 rounded-full bg-linear-to-r from-(--kpi-orange) to-amber-400 opacity-60" />
+                <span className="from-kpi-orange absolute right-0 -bottom-1 left-0 h-0.5 rounded-full bg-linear-to-r to-amber-400 opacity-60" />
               </span>
             </h1>
 
@@ -200,7 +200,7 @@ export default async function HomePage() {
                   style={{ animationDelay: `${400 + i * 80}ms` }}
                 >
                   <svg
-                    className="h-3 w-3 text-(--kpi-blue-light)"
+                    className="text-kpi-blue-light h-3 w-3"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -231,7 +231,7 @@ export default async function HomePage() {
       {/* Features */}
       <section className="bg-white py-20">
         <div className="container">
-          <h2 className="font-display mb-8 text-center text-4xl font-bold text-(--foreground)">
+          <h2 className="font-display text-foreground mb-8 text-center text-4xl font-bold">
             Чому {APP_NAME}?
           </h2>
 
@@ -241,11 +241,11 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <p className="font-body mt-8 text-center text-xs text-(--muted-foreground)">
+          <p className="font-body text-muted-foreground mt-8 text-center text-xs">
             Використовуючи платформу, ви погоджуєтесь з{' '}
             <Link
               href="/privacy"
-              className="underline underline-offset-2 transition-colors hover:text-(--kpi-navy)"
+              className="hover:text-kpi-navy underline underline-offset-2 transition-colors"
             >
               Політикою конфіденційності
             </Link>
@@ -255,14 +255,14 @@ export default async function HomePage() {
 
       {/* Active elections */}
       {session && featuredElections.length > 0 && (
-        <section className="bg-(--surface) py-20">
+        <section className="bg-surface py-20">
           <div className="container">
             <div className="mb-10 flex items-center justify-between">
               <div>
-                <h2 className="font-display text-3xl font-bold text-(--foreground)">
+                <h2 className="font-display text-foreground text-3xl font-bold">
                   Активні голосування
                 </h2>
-                <p className="font-body mt-1 text-(--muted-foreground)">
+                <p className="font-body text-muted-foreground mt-1">
                   Доступні зараз для вашого підрозділу
                 </p>
               </div>
@@ -281,7 +281,7 @@ export default async function HomePage() {
       )}
 
       {/* Stats */}
-      <section className="relative overflow-hidden bg-(--kpi-navy) py-20">
+      <section className="bg-kpi-navy relative overflow-hidden py-20">
         <AnimatedGrid variant="dark" cellSize={56} />
 
         {/* Breathing orbs */}

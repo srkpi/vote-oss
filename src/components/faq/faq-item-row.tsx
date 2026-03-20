@@ -66,7 +66,7 @@ export function FaqItemRow({
     >
       {/* Drop indicator – above */}
       {isDragOver && dragOverPosition === 'above' && (
-        <div className="pointer-events-none absolute top-0 right-4 left-4 z-10 h-0.5 rounded-full bg-(--kpi-blue-light)" />
+        <div className="bg-kpi-blue-light pointer-events-none absolute top-0 right-4 left-4 z-10 h-0.5 rounded-full" />
       )}
 
       <div
@@ -86,19 +86,19 @@ export function FaqItemRow({
         onDragEnd={onDragEnd}
         className={[
           'group flex items-start gap-2 px-4 py-3 transition-all duration-150 sm:px-5',
-          isDragging ? 'bg-(--surface) opacity-40' : '',
+          isDragging ? 'bg-surface opacity-40' : '',
         ]
           .filter(Boolean)
           .join(' ')}
       >
-        <GripVertical className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-(--kpi-gray-light) transition-colors hover:text-(--muted-foreground) active:cursor-grabbing" />
+        <GripVertical className="text-kpi-gray-light hover:text-muted-foreground mt-0.5 h-4 w-4 shrink-0 cursor-grab transition-colors active:cursor-grabbing" />
 
         <div className="min-w-0 flex-1">
-          <p className="font-body text-sm leading-snug font-medium wrap-break-word text-(--foreground)">
+          <p className="font-body text-foreground text-sm leading-snug font-medium wrap-break-word">
             {item.title}
           </p>
           {preview && (
-            <p className="font-body mt-0.5 line-clamp-1 text-xs wrap-break-word text-(--muted-foreground)">
+            <p className="font-body text-muted-foreground mt-0.5 line-clamp-1 text-xs wrap-break-word">
               {preview}
             </p>
           )}
@@ -110,7 +110,7 @@ export function FaqItemRow({
             onClick={onMoveUp}
             disabled={isFirst}
             title="Вгору"
-            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground) disabled:opacity-30"
+            className="text-muted-foreground hover:text-foreground flex h-6 w-6 items-center justify-center rounded transition-colors disabled:opacity-30"
           >
             <ChevronUp className="h-3.5 w-3.5" />
           </button>
@@ -119,7 +119,7 @@ export function FaqItemRow({
             onClick={onMoveDown}
             disabled={isLast}
             title="Вниз"
-            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground) disabled:opacity-30"
+            className="text-muted-foreground hover:text-foreground flex h-6 w-6 items-center justify-center rounded transition-colors disabled:opacity-30"
           >
             <ChevronDown className="h-3.5 w-3.5" />
           </button>
@@ -127,7 +127,7 @@ export function FaqItemRow({
             type="button"
             onClick={onEdit}
             title="Редагувати"
-            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--foreground)"
+            className="text-muted-foreground hover:text-foreground flex h-6 w-6 items-center justify-center rounded transition-colors"
           >
             <Edit2 className="h-3 w-3" />
           </button>
@@ -135,7 +135,7 @@ export function FaqItemRow({
             type="button"
             onClick={onDelete}
             title="Видалити"
-            className="flex h-6 w-6 items-center justify-center rounded text-(--muted-foreground) transition-colors hover:text-(--error)"
+            className="text-muted-foreground hover:text-error flex h-6 w-6 items-center justify-center rounded transition-colors"
           >
             <Trash2 className="h-3 w-3" />
           </button>
@@ -144,7 +144,7 @@ export function FaqItemRow({
 
       {/* Drop indicator – below */}
       {isDragOver && dragOverPosition === 'below' && (
-        <div className="pointer-events-none absolute right-4 bottom-0 left-4 z-10 h-0.5 rounded-full bg-(--kpi-blue-light)" />
+        <div className="bg-kpi-blue-light pointer-events-none absolute right-4 bottom-0 left-4 z-10 h-0.5 rounded-full" />
       )}
     </div>
   );

@@ -18,9 +18,9 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
   return (
     <div
       className={cn(
-        'rounded-lg border border-(--border-color) p-4',
-        'bg-white shadow-(--shadow-sm)',
-        token.isOwn && 'border-(--kpi-navy)',
+        'border-border-color rounded-lg border p-4',
+        'shadow-shadow-sm bg-white',
+        token.isOwn && 'border-kpi-navy',
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -30,7 +30,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-body text-sm font-semibold text-(--foreground)">
+              <p className="font-body text-foreground text-sm font-semibold">
                 {token.creator.fullName}
               </p>
             </div>
@@ -41,7 +41,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
             variant="ghost"
             size="xs"
             onClick={onDelete}
-            className="text-(--error) hover:bg-(--error-bg)"
+            className="text-error hover:bg-error-bg"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -68,15 +68,15 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <Users className="h-3.5 w-3.5 text-(--muted-foreground)" />
-          <span className="font-body text-xs text-(--foreground)">
+          <Users className="text-muted-foreground h-3.5 w-3.5" />
+          <span className="font-body text-foreground text-xs">
             <span className="font-semibold">{token.currentUsage}</span>
-            <span className="text-(--muted-foreground)"> / {token.maxUsage}</span>
+            <span className="text-muted-foreground"> / {token.maxUsage}</span>
           </span>
         </div>
       </div>
 
-      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-(--border-color)">
+      <div className="bg-border-color mt-3 h-1.5 w-full overflow-hidden rounded-full">
         <div
           className={cn('h-full rounded-full transition-all', usageColor)}
           style={{ width: `${Math.min(fraction * 100, 100)}%` }}
@@ -87,13 +87,13 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
         <Clock
           className={cn(
             'h-3.5 w-3.5 shrink-0',
-            urgent ? 'text-(--kpi-orange)' : 'text-(--muted-foreground)',
+            urgent ? 'text-kpi-orange' : 'text-muted-foreground',
           )}
         />
         <span
           className={cn(
             'font-body text-xs',
-            urgent ? 'font-medium text-(--kpi-orange)' : 'text-(--muted-foreground)',
+            urgent ? 'text-kpi-orange font-medium' : 'text-muted-foreground',
           )}
         >
           Дійсний до: {expiresText}

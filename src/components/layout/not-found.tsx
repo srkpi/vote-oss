@@ -27,13 +27,13 @@ export function NotFound({
         className,
       )}
     >
-      <div className="font-display mb-6 text-7xl font-bold text-(--kpi-navy) select-none sm:text-8xl">
+      <div className="font-display text-kpi-navy mb-6 text-7xl font-bold select-none sm:text-8xl">
         404
       </div>
-      <h1 className="font-display mb-3 text-2xl font-semibold text-(--foreground) sm:text-3xl">
+      <h1 className="font-display text-foreground mb-3 text-2xl font-semibold sm:text-3xl">
         {title}
       </h1>
-      <p className="font-body mb-8 max-w-md text-(--muted-foreground)">{description}</p>
+      <p className="font-body text-muted-foreground mb-8 max-w-md">{description}</p>
       <Link href={backHref} passHref>
         <Button variant="primary" size="lg" icon={<ChevronLeft className="h-5 w-5" />}>
           {backLabel}

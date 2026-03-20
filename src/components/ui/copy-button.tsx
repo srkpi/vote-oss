@@ -29,9 +29,9 @@ export function CopyButton({ text, label = 'Копіювати', size = 'sm' }: 
       onClick={handleCopy}
       className={cn(
         'font-body flex items-center gap-1 rounded-sm transition-colors',
-        'hover:bg-(--surface)',
+        'hover:bg-surface',
         size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm',
-        copied ? 'text-(--success)' : 'text-(--muted-foreground) hover:text-(--kpi-navy)',
+        copied ? 'text-success' : 'text-muted-foreground hover:text-kpi-navy',
       )}
       title={label}
     >

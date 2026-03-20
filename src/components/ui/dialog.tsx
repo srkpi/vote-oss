@@ -68,7 +68,7 @@ export function DialogPanel({ className, maxWidth = 'md', children, ...props }: 
         'mx-auto w-full',
         maxWidths[maxWidth],
         'rounded-xl bg-white',
-        'shadow-(--shadow-xl)',
+        'shadow-shadow-xl',
         'overflow-hidden',
         className,
       )}
@@ -97,10 +97,7 @@ export function DialogTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h2
-      className={cn('font-display text-2xl font-semibold text-(--foreground)', className)}
-      {...props}
-    >
+    <h2 className={cn('font-display text-foreground text-2xl font-semibold', className)} {...props}>
       {children}
     </h2>
   );
@@ -112,7 +109,7 @@ export function DialogDescription({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('mt-1 text-sm text-(--muted-foreground)', className)} {...props}>
+    <p className={cn('text-muted-foreground mt-1 text-sm', className)} {...props}>
       {children}
     </p>
   );
@@ -159,10 +156,10 @@ export function DialogCloseButton({ onClose }: DialogCloseButtonProps) {
       onClick={onClose}
       className={cn(
         'mt-0.5 shrink-0 rounded-sm p-1.5',
-        'text-(--muted-foreground)',
-        'hover:bg-(--surface) hover:text-(--foreground)',
+        'text-muted-foreground',
+        'hover:bg-surface hover:text-foreground',
         'transition-colors duration-150',
-        'focus-visible:ring-2 focus-visible:ring-(--kpi-blue-light) focus-visible:outline-none',
+        'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
       )}
       aria-label="Закрити"
     >

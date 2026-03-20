@@ -51,7 +51,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
 
   if (admins.length === 0) {
     return (
-      <div className="font-body py-12 text-center text-sm text-(--muted-foreground)">
+      <div className="font-body text-muted-foreground py-12 text-center text-sm">
         Адміністраторів не знайдено
       </div>
     );
@@ -62,18 +62,18 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-(--border-subtle)">
+            <tr className="border-border-subtle border-b">
               {['Користувач', 'Підрозділ', 'Група', 'Призначено', 'Права', ''].map((h) => (
                 <th
                   key={h}
-                  className="font-body px-4 py-3 text-left text-xs font-semibold tracking-wider text-(--muted-foreground) uppercase"
+                  className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-(--border-subtle)">
+          <tbody className="divide-border-subtle divide-y">
             {admins.map((admin) => (
               <AdminRow
                 key={admin.userId}

@@ -71,21 +71,21 @@ export default function CallbackPage() {
     <div className="flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-8">
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-(--kpi-navy)/5 blur-3xl" />
-        <div className="absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full bg-(--kpi-orange)/8 blur-3xl" />
+        <div className="bg-kpi-navy/5 absolute top-1/4 left-1/4 h-96 w-96 rounded-full blur-3xl" />
+        <div className="bg-kpi-orange/8 absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full blur-3xl" />
         <div className="pattern-grid absolute inset-0 opacity-[0.03]" />
       </div>
 
       <div className="relative w-full max-w-md">
-        <div className="overflow-hidden rounded-2xl border border-(--border-color) bg-white shadow-(--shadow-xl)">
+        <div className="border-border-color shadow-shadow-xl overflow-hidden rounded-2xl border bg-white">
           {/* Top accent */}
           <div
             className={`h-1.5 w-full transition-all duration-700 ${
               status === 'loading'
-                ? 'animate-[shimmer_2s_linear_infinite] bg-linear-to-r from-(--kpi-navy) via-(--kpi-blue-light) to-(--kpi-navy) bg-size-[200%_100%]'
+                ? 'from-kpi-navy via-kpi-blue-light to-kpi-navy animate-[shimmer_2s_linear_infinite] bg-linear-to-r bg-size-[200%_100%]'
                 : status === 'success'
-                  ? 'bg-linear-to-r from-(--success) to-emerald-400'
-                  : 'bg-linear-to-r from-(--error) to-rose-400'
+                  ? 'from-success bg-linear-to-r to-emerald-400'
+                  : 'from-error bg-linear-to-r to-rose-400'
             }`}
           />
 
@@ -94,19 +94,19 @@ export default function CallbackPage() {
             <div className="mb-6 flex justify-center">
               {status === 'loading' && (
                 <div className="relative h-20 w-20">
-                  <div className="absolute inset-0 rounded-full border-4 border-(--border-color)" />
-                  <div className="absolute inset-0 animate-spin rounded-full border-4 border-(--kpi-navy) border-t-transparent" />
+                  <div className="border-border-color absolute inset-0 rounded-full border-4" />
+                  <div className="border-kpi-navy absolute inset-0 animate-spin rounded-full border-4 border-t-transparent" />
                   <div
-                    className="absolute inset-3 animate-spin rounded-full border-2 border-(--kpi-orange)/30 border-b-(--kpi-orange)"
+                    className="border-kpi-orange/30 border-b-accent absolute inset-3 animate-spin rounded-full border-2"
                     style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}
                   />
                 </div>
               )}
 
               {status === 'success' && (
-                <div className="animate-scale-in flex h-20 w-20 items-center justify-center rounded-full border-2 border-(--success)/30 bg-(--success-bg)">
+                <div className="animate-scale-in border-success/30 bg-success-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
                   <svg
-                    className="h-10 w-10 text-(--success)"
+                    className="text-success h-10 w-10"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -122,9 +122,9 @@ export default function CallbackPage() {
               )}
 
               {status === 'error' && (
-                <div className="animate-scale-in flex h-20 w-20 items-center justify-center rounded-full border-2 border-(--error)/30 bg-(--error-bg)">
+                <div className="animate-scale-in border-error/30 bg-error-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
                   <svg
-                    className="h-10 w-10 text-(--error)"
+                    className="text-error h-10 w-10"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -141,10 +141,8 @@ export default function CallbackPage() {
             </div>
 
             {/* Text */}
-            <h1 className="font-display mb-2 text-2xl font-bold text-(--foreground)">
-              {config.title}
-            </h1>
-            <p className="font-body text-sm leading-relaxed text-(--muted-foreground)">
+            <h1 className="font-display text-foreground mb-2 text-2xl font-bold">{config.title}</h1>
+            <p className="font-body text-muted-foreground text-sm leading-relaxed">
               {status === 'error' && errorMessage ? errorMessage : config.description}
             </p>
 
@@ -153,7 +151,7 @@ export default function CallbackPage() {
               <div className="mt-8 flex flex-col gap-3">
                 <button
                   onClick={() => router.push('/auth/login')}
-                  className="font-body h-10 w-full rounded-(--radius) bg-(--kpi-navy) px-4 text-sm font-medium text-white transition-colors hover:bg-(--kpi-navy-hover)"
+                  className="font-body bg-kpi-navy hover:bg-kpi-navy-hover h-10 w-full rounded-(--radius) px-4 text-sm font-medium text-white transition-colors"
                 >
                   Повернутися до входу
                 </button>
@@ -164,7 +162,7 @@ export default function CallbackPage() {
                     calledRef.current = false;
                     window.location.reload();
                   }}
-                  className="font-body h-10 w-full rounded-(--radius) border border-(--border-color) bg-(--surface) px-4 text-sm font-medium text-(--foreground) transition-colors hover:bg-(--surface-hover)"
+                  className="font-body border-border-color bg-surface text-foreground hover:bg-surface-hover h-10 w-full rounded-(--radius) border px-4 text-sm font-medium transition-colors"
                 >
                   Спробувати знову
                 </button>

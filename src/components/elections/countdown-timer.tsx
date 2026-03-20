@@ -16,10 +16,7 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
   if (expired) {
     return (
       <div
-        className={cn(
-          'font-body flex items-center gap-2 text-sm text-(--muted-foreground)',
-          className,
-        )}
+        className={cn('font-body text-muted-foreground flex items-center gap-2 text-sm', className)}
       >
         <Clock className="h-4 w-4" />
         <span>Час минув</span>
@@ -46,19 +43,19 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
               className={cn(
                 'flex h-14 min-w-13 items-center justify-center',
                 'navy-gradient rounded-lg',
-                'shadow-(--shadow-md)',
+                'shadow-shadow-md',
               )}
             >
               <span className="font-display text-2xl leading-none font-bold text-white tabular-nums">
                 {String(value).padStart(2, '0')}
               </span>
             </div>
-            <span className="font-body mt-1.5 block text-[10px] tracking-widest text-(--muted-foreground) uppercase">
+            <span className="font-body text-muted-foreground mt-1.5 block text-[10px] tracking-widest uppercase">
               {label}
             </span>
           </div>
           {i < visibleUnits.length - 1 && (
-            <span className="font-display mb-4 text-xl font-bold text-(--kpi-gray-mid) select-none">
+            <span className="font-display text-kpi-gray-mid mb-4 text-xl font-bold select-none">
               :
             </span>
           )}

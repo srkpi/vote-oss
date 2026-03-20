@@ -317,8 +317,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       ))}
 
       {addingCat ? (
-        <div className="rounded-xl border border-(--border-color) bg-white p-4 shadow-(--shadow-card) sm:p-5">
-          <p className="font-body mb-3 text-sm font-semibold text-(--foreground)">Нова категорія</p>
+        <div className="border-border-color shadow-shadow-card rounded-xl border bg-white p-4 sm:p-5">
+          <p className="font-body text-foreground mb-3 text-sm font-semibold">Нова категорія</p>
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-1">
               <Input
@@ -353,7 +353,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
                 setAddingCat(false);
                 setNewCatTitle('');
               }}
-              className="flex h-10 w-9 items-center justify-center rounded-(--radius) text-(--muted-foreground) transition-colors hover:text-(--foreground)"
+              className="text-muted-foreground hover:text-foreground flex h-10 w-9 items-center justify-center rounded-(--radius) transition-colors"
             >
               <X className="h-4 w-4" />
             </button>

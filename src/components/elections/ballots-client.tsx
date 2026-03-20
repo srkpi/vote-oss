@@ -192,8 +192,8 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       )}
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="font-body flex shrink-0 items-center gap-2 text-sm text-(--muted-foreground)">
-          <FileText className="h-4 w-4 text-(--kpi-gray-mid)" />
+        <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
+          <FileText className="text-kpi-gray-mid h-4 w-4" />
           <span>
             {trimmedQuery
               ? `${filteredBallots.length} з ${ballots.length} бюлетенів`
@@ -202,7 +202,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
         </div>
 
         <div className="relative max-w-md flex-1">
-          <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-(--kpi-gray-mid)">
+          <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
             <Search className="h-4 w-4" />
           </div>
           <input
@@ -216,16 +216,16 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
             }
             className={cn(
               'h-9 w-full pr-9 pl-9 font-mono text-sm',
-              'rounded-lg border border-(--border-color) bg-white',
-              'placeholder:font-body placeholder:text-(--subtle)',
-              'focus:border-(--kpi-blue-light) focus:ring-2 focus:ring-(--kpi-blue-light)/20 focus:outline-none',
-              'shadow-(--shadow-xs) transition-colors duration-150',
+              'border-border-color rounded-lg border bg-white',
+              'placeholder:font-body placeholder:text-subtle',
+              'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
+              'shadow-shadow-xs transition-colors duration-150',
             )}
           />
           {searchQuery && (
             <button
               onClick={() => handleSearch('')}
-              className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-(--muted-foreground) transition-colors hover:text-(--foreground)"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 transition-colors"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -238,8 +238,8 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           className={cn(
             'font-body rounded-lg border p-4 text-sm',
             filteredBallots.length > 0
-              ? 'border-(--success)/30 bg-(--success-bg) text-(--success)'
-              : 'border-(--error)/30 bg-(--error-bg) text-(--error)',
+              ? 'border-success/30 bg-success-bg text-success'
+              : 'border-error/30 bg-error-bg text-error',
           )}
         >
           {filteredBallots.length > 0 ? (
@@ -257,28 +257,24 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       )}
 
       {ballots.length === 0 ? (
-        <div className="rounded-xl border border-(--border-color) bg-white p-12 text-center shadow-(--shadow-sm)">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-(--border-subtle) bg-(--surface)">
-            <FileText className="h-7 w-7 text-(--kpi-gray-mid)" />
+        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+          <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
+            <FileText className="text-kpi-gray-mid h-7 w-7" />
           </div>
-          <p className="font-display text-lg font-semibold text-(--foreground)">
-            Бюлетенів поки немає
-          </p>
-          <p className="font-body mt-1 text-sm text-(--muted-foreground)">Голосів ще не подано</p>
+          <p className="font-display text-foreground text-lg font-semibold">Бюлетенів поки немає</p>
+          <p className="font-body text-muted-foreground mt-1 text-sm">Голосів ще не подано</p>
         </div>
       ) : pagedBallots.length === 0 ? (
-        <div className="rounded-xl border border-(--border-color) bg-white p-12 text-center shadow-(--shadow-sm)">
-          <p className="font-display text-lg font-semibold text-(--foreground)">
-            Нічого не знайдено
-          </p>
-          <p className="font-body mt-1 text-sm text-(--muted-foreground)">
+        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+          <p className="font-display text-foreground text-lg font-semibold">Нічого не знайдено</p>
+          <p className="font-body text-muted-foreground mt-1 text-sm">
             Спробуйте змінити пошуковий запит
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-(--border-color) bg-white shadow-(--shadow-sm)">
+        <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
           {decryptionDone && invalidHashCount > 0 && (
-            <div className="font-body flex items-center gap-2 border-b border-(--error)/20 bg-(--error-bg) px-5 py-3 text-sm text-(--error)">
+            <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 border-b px-5 py-3 text-sm">
               <ShieldAlert className="h-4 w-4 shrink-0" />
               <span>
                 <strong>{invalidHashCount}</strong> бюлетень(ів) мають некоректний хеш — можливе
@@ -287,13 +283,13 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
             </div>
           )}
           {decryptionDone && invalidHashCount === 0 && (
-            <div className="font-body flex items-center gap-2 border-b border-(--success)/20 bg-(--success-bg) px-5 py-3 text-sm text-(--success)">
+            <div className="font-body border-success/20 bg-success-bg text-success flex items-center gap-2 border-b px-5 py-3 text-sm">
               <ShieldCheck className="h-4 w-4 shrink-0" />
               <span>Ланцюжок бюлетенів цілісний — усі хеші вірні</span>
             </div>
           )}
 
-          <div className="divide-y divide-(--border-subtle)">
+          <div className="divide-border-subtle divide-y">
             {pagedBallots.map((ballot, index) => {
               const isMyBallot =
                 myVoteRecord !== null && ballot.currentHash === myVoteRecord.ballotHash;
@@ -302,7 +298,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
                   key={ballot.id}
                   ref={isMyBallot ? myBallotRef : undefined}
                   className={cn(
-                    isMyBallot && 'relative rounded-none ring-2 ring-(--kpi-blue-light) ring-inset',
+                    isMyBallot && 'ring-kpi-blue-light relative rounded-none ring-2 ring-inset',
                   )}
                 >
                   <BallotRow
@@ -326,7 +322,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between py-2">
-          <p className="font-body text-sm text-(--muted-foreground)">
+          <p className="font-body text-muted-foreground text-sm">
             Сторінка {safePage} з {totalPages}
           </p>
           <div className="flex items-center gap-2">
@@ -354,8 +350,8 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
                     className={cn(
                       'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
                       p === safePage
-                        ? 'bg-(--kpi-navy) text-white shadow-(--shadow-sm)'
-                        : 'text-(--muted-foreground) hover:bg-(--surface) hover:text-(--foreground)',
+                        ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                        : 'text-muted-foreground hover:bg-surface hover:text-foreground',
                     )}
                   >
                     {p}

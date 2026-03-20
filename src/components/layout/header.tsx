@@ -58,10 +58,10 @@ export function Header({ session }: HeaderProps) {
             <CheckCircle className="h-4 w-4 text-white" />
           </div>
           <div className="flex flex-col justify-center">
-            <span className="font-display text-lg leading-tight font-semibold text-(--kpi-navy)">
+            <span className="font-display text-kpi-navy text-lg leading-tight font-semibold">
               {APP_NAME}
             </span>
-            <span className="font-body text-[10px] tracking-widest text-(--muted-foreground) uppercase">
+            <span className="font-body text-muted-foreground text-[10px] tracking-widest uppercase">
               Система голосування
             </span>
           </div>
@@ -76,8 +76,8 @@ export function Header({ session }: HeaderProps) {
                 'font-body rounded-(--radius) px-4 py-2 text-sm font-medium',
                 'transition-all duration-150',
                 pathname.startsWith(link.href)
-                  ? 'bg-(--kpi-navy)/10 text-(--kpi-navy)'
-                  : 'text-(--muted-foreground) hover:bg-(--surface) hover:text-(--foreground)',
+                  ? 'bg-kpi-navy/10 text-kpi-navy'
+                  : 'text-muted-foreground hover:bg-surface hover:text-foreground',
               )}
             >
               {link.label}
@@ -92,7 +92,7 @@ export function Header({ session }: HeaderProps) {
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className={cn(
                   'flex items-center gap-2 rounded-lg px-3 py-1.5',
-                  'transition-colors duration-150 hover:bg-(--surface)',
+                  'hover:bg-surface transition-colors duration-150',
                   'font-body text-sm font-medium',
                 )}
               >
@@ -106,16 +106,16 @@ export function Header({ session }: HeaderProps) {
                   {session.fullName.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden text-left sm:block">
-                  <p className="text-xs leading-tight font-semibold text-(--foreground)">
+                  <p className="text-foreground text-xs leading-tight font-semibold">
                     {session.fullName.split(' ')[0]}
                   </p>
-                  <p className="text-[10px] leading-tight text-(--muted-foreground)">
+                  <p className="text-muted-foreground text-[10px] leading-tight">
                     {session.faculty} · {session.group}
                   </p>
                 </div>
                 <ChevronDown
                   className={cn(
-                    'h-4 w-4 text-(--muted-foreground) transition-transform duration-200',
+                    'text-muted-foreground h-4 w-4 transition-transform duration-200',
                     userMenuOpen && 'rotate-180',
                   )}
                 />
@@ -127,21 +127,21 @@ export function Header({ session }: HeaderProps) {
                   <div
                     className={cn(
                       'absolute top-full right-0 mt-2 w-56',
-                      'rounded-xl bg-white shadow-(--shadow-xl)',
-                      'border border-(--border-color)',
+                      'shadow-shadow-xl rounded-xl bg-white',
+                      'border-border-color border',
                       'overflow-hidden',
                       'origin-top-right',
                     )}
                   >
-                    <div className="border-b border-(--border-subtle) px-4 py-3">
-                      <p className="text-sm font-semibold wrap-break-word text-(--foreground)">
+                    <div className="border-border-subtle border-b px-4 py-3">
+                      <p className="text-foreground text-sm font-semibold wrap-break-word">
                         {session.fullName}
                       </p>
-                      <p className="mt-1 text-sm leading-tight text-(--muted-foreground)">
+                      <p className="text-muted-foreground mt-1 text-sm leading-tight">
                         {session.faculty} · {session.group}
                       </p>
                       {session.isAdmin && (
-                        <span className="mt-1 inline-block rounded-full bg-(--kpi-orange) px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
+                        <span className="bg-kpi-orange mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
                           Адміністратор
                         </span>
                       )}
@@ -151,7 +151,7 @@ export function Header({ session }: HeaderProps) {
                       <button
                         onClick={handleLogout}
                         disabled={loggingOut}
-                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-(--error) transition-colors hover:bg-(--error-bg) disabled:opacity-50"
+                        className="text-error hover:bg-error-bg flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
                       >
                         <LogOut className="h-4 w-4" />
                         {loggingOut ? 'Виходимо…' : 'Вийти'}
@@ -171,7 +171,7 @@ export function Header({ session }: HeaderProps) {
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
               'rounded-(--radius) p-2 md:hidden',
-              'text-(--muted-foreground) hover:bg-(--surface)',
+              'text-muted-foreground hover:bg-surface',
               'transition-colors',
             )}
             aria-label="Меню"
@@ -190,8 +190,8 @@ export function Header({ session }: HeaderProps) {
           <div
             className={cn(
               'absolute top-full right-0 left-0 md:hidden',
-              'border-b border-(--border-color) bg-white',
-              'shadow-(--shadow-lg)',
+              'border-border-color border-b bg-white',
+              'shadow-shadow-lg',
               'animate-fade-down',
             )}
           >
@@ -205,8 +205,8 @@ export function Header({ session }: HeaderProps) {
                     'font-body rounded-(--radius) px-4 py-3 text-sm font-medium',
                     'transition-colors duration-150',
                     pathname.startsWith(link.href)
-                      ? 'bg-(--kpi-navy)/10 text-(--kpi-navy)'
-                      : 'text-(--foreground) hover:bg-(--surface)',
+                      ? 'bg-kpi-navy/10 text-kpi-navy'
+                      : 'text-foreground hover:bg-surface',
                   )}
                 >
                   {link.label}

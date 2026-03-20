@@ -47,47 +47,47 @@ export function BallotRow({
     <div
       className={cn(
         'transition-colors duration-200',
-        isMyBallot && 'bg-(--info-bg)/40',
-        isAnomalous && 'bg-(--error-bg)',
+        isMyBallot && 'bg-info-bg/40',
+        isAnomalous && 'bg-error-bg',
       )}
     >
       <button
         onClick={onToggle}
         className={cn(
           'flex w-full items-center gap-3 px-5 py-4 text-left',
-          'transition-colors duration-150 hover:bg-(--surface)',
-          isAnomalous && 'hover:bg-(--error-bg)/80',
-          isMyBallot && !isAnomalous && 'hover:bg-(--info-bg)/60',
+          'hover:bg-surface transition-colors duration-150',
+          isAnomalous && 'hover:bg-error-bg/80',
+          isMyBallot && !isAnomalous && 'hover:bg-info-bg/60',
         )}
       >
-        <span className="font-body w-8 shrink-0 text-right text-xs text-(--muted-foreground) tabular-nums">
+        <span className="font-body text-muted-foreground w-8 shrink-0 text-right text-xs tabular-nums">
           {index}
         </span>
 
         <span className="shrink-0">
           {isBadHash ? (
-            <ShieldAlert className="h-4 w-4 text-(--error)" />
+            <ShieldAlert className="text-error h-4 w-4" />
           ) : isMalformed ? (
-            <AlertTriangle className="h-4 w-4 text-(--error)" />
+            <AlertTriangle className="text-error h-4 w-4" />
           ) : decryption !== undefined ? (
-            <ShieldCheck className="h-4 w-4 text-(--success)" />
+            <ShieldCheck className="text-success h-4 w-4" />
           ) : (
-            <LinkIcon className="h-4 w-4 text-(--kpi-gray-light)" />
+            <LinkIcon className="text-kpi-gray-light h-4 w-4" />
           )}
         </span>
 
         <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="truncate font-mono text-xs text-(--foreground)">{ballot.currentHash}</p>
+          <p className="text-foreground truncate font-mono text-xs">{ballot.currentHash}</p>
           {decryption && (
             <p
               className={cn(
                 'font-body text-xs font-medium',
-                decryption.valid ? 'text-(--kpi-navy)' : 'text-(--error)',
+                decryption.valid ? 'text-kpi-navy' : 'text-error',
               )}
             >
               {decryption.valid && decryption.choiceLabel ? (
                 <>
-                  <span className="font-normal text-(--muted-foreground)">Вибір: </span>
+                  <span className="text-muted-foreground font-normal">Вибір: </span>
                   {decryption.choiceLabel}
                 </>
               ) : (
@@ -105,9 +105,9 @@ export function BallotRow({
             <span
               className={cn(
                 'flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase',
-                myChoiceVerified === true && 'bg-(--success)',
-                myChoiceVerified === false && 'bg-(--error)',
-                myChoiceVerified === null && 'bg-(--kpi-blue-light)',
+                myChoiceVerified === true && 'bg-success',
+                myChoiceVerified === false && 'bg-error',
+                myChoiceVerified === null && 'bg-kpi-blue-light',
               )}
             >
               <UserCheck className="h-3 w-3" />
@@ -120,7 +120,7 @@ export function BallotRow({
           )}
 
           {isAnomalous && (
-            <span className="rounded-full bg-(--error) px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
+            <span className="bg-error rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
               {isBadHash ? 'Хеш ≠' : 'Зіпсований'}
             </span>
           )}
@@ -128,53 +128,53 @@ export function BallotRow({
 
         <ChevronDown
           className={cn(
-            'h-4 w-4 shrink-0 text-(--muted-foreground) transition-transform duration-200',
+            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-200',
             isExpanded && 'rotate-180',
           )}
         />
       </button>
 
       {isExpanded && (
-        <div className="border-t border-(--border-subtle) bg-(--surface)/50 px-5 pb-4">
+        <div className="border-border-subtle bg-surface/50 border-t px-5 pb-4">
           <div className="ml-13 space-y-4 pt-4">
             {isMyBallot && (
               <div>
-                <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
+                <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                   Верифікація вашого голосу
                 </p>
                 {myChoiceVerified === null ? (
-                  <div className="flex items-center gap-2 rounded-(--radius) border border-(--kpi-blue-light)/30 bg-(--info-bg) p-3">
-                    <UserCheck className="h-4 w-4 shrink-0 text-(--kpi-blue-light)" />
+                  <div className="border-kpi-blue-light/30 bg-info-bg flex items-center gap-2 rounded-(--radius) border p-3">
+                    <UserCheck className="text-kpi-blue-light h-4 w-4 shrink-0" />
                     <div className="min-w-0">
-                      <p className="font-body text-sm font-semibold wrap-break-word text-(--foreground)">
+                      <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
                         Ваш збережений вибір: {myStoredChoiceLabel}
                       </p>
-                      <p className="font-body mt-0.5 text-xs text-(--muted-foreground)">
+                      <p className="font-body text-muted-foreground mt-0.5 text-xs">
                         Розшифруйте бюлетені, щоб верифікувати
                       </p>
                     </div>
                   </div>
                 ) : myChoiceVerified === true ? (
-                  <div className="flex items-center gap-2 rounded-(--radius) border border-(--success)/30 bg-(--success-bg) p-3">
-                    <CheckCircle className="h-4 w-4 shrink-0 text-(--success)" />
+                  <div className="border-success/30 bg-success-bg flex items-center gap-2 rounded-(--radius) border p-3">
+                    <CheckCircle className="text-success h-4 w-4 shrink-0" />
                     <div className="min-w-0">
-                      <p className="font-body text-sm font-semibold text-(--success)">
+                      <p className="font-body text-success text-sm font-semibold">
                         Голос верифіковано
                       </p>
-                      <p className="font-body mt-0.5 text-xs wrap-break-word text-(--muted-foreground)">
+                      <p className="font-body text-muted-foreground mt-0.5 text-xs wrap-break-word">
                         Розшифрований вибір збігається з локальним записом:{' '}
                         <strong>{myStoredChoiceLabel}</strong>
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 rounded-(--radius) border border-(--error)/30 bg-(--error-bg) p-3">
-                    <XCircle className="h-4 w-4 shrink-0 text-(--error)" />
+                  <div className="border-error/30 bg-error-bg flex items-center gap-2 rounded-(--radius) border p-3">
+                    <XCircle className="text-error h-4 w-4 shrink-0" />
                     <div>
-                      <p className="font-body text-sm font-semibold text-(--error)">
+                      <p className="font-body text-error text-sm font-semibold">
                         Розбіжність виборів!
                       </p>
-                      <p className="font-body mt-0.5 text-xs wrap-break-word text-(--muted-foreground)">
+                      <p className="font-body text-muted-foreground mt-0.5 text-xs wrap-break-word">
                         Збережено: <strong>{myStoredChoiceLabel}</strong> · Розшифровано:{' '}
                         <strong>{decryption?.choiceLabel ?? '?'}</strong>
                       </p>
@@ -186,33 +186,33 @@ export function BallotRow({
 
             {decryption && (
               <div>
-                <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
+                <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                   Розшифрований вибір
                 </p>
                 <div
                   className={cn(
                     'flex items-center gap-2 rounded-(--radius) border p-3',
                     decryption.valid
-                      ? 'border-(--success)/30 bg-(--success-bg)'
-                      : 'border-(--error)/30 bg-(--error-bg)',
+                      ? 'border-success/30 bg-success-bg'
+                      : 'border-error/30 bg-error-bg',
                   )}
                 >
                   {decryption.valid ? (
                     <>
-                      <CheckCircle className="h-4 w-4 shrink-0 text-(--success)" />
+                      <CheckCircle className="text-success h-4 w-4 shrink-0" />
                       <div>
-                        <p className="font-body text-sm font-semibold text-(--foreground)">
+                        <p className="font-body text-foreground text-sm font-semibold">
                           {decryption.choiceLabel}
                         </p>
-                        <p className="font-body text-xs text-(--muted-foreground)">
+                        <p className="font-body text-muted-foreground text-xs">
                           ID варіанту: {decryption.choiceId}
                         </p>
                       </div>
                     </>
                   ) : (
                     <>
-                      <XCircle className="h-4 w-4 shrink-0 text-(--error)" />
-                      <p className="font-body text-sm text-(--error)">
+                      <XCircle className="text-error h-4 w-4 shrink-0" />
+                      <p className="font-body text-error text-sm">
                         Бюлетень не вдалося розшифрувати або він містить невалідний ID
                       </p>
                     </>
@@ -223,28 +223,28 @@ export function BallotRow({
 
             {decryption && (
               <div>
-                <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
+                <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                   Цілісність хешу
                 </p>
                 <div
                   className={cn(
                     'flex items-center gap-2 rounded-(--radius) border p-3',
                     decryption.hashValid
-                      ? 'border-(--success)/30 bg-(--success-bg)'
-                      : 'border-(--error)/30 bg-(--error-bg)',
+                      ? 'border-success/30 bg-success-bg'
+                      : 'border-error/30 bg-error-bg',
                   )}
                 >
                   {decryption.hashValid ? (
                     <>
-                      <ShieldCheck className="h-4 w-4 shrink-0 text-(--success)" />
-                      <p className="font-body text-xs text-(--success)">
+                      <ShieldCheck className="text-success h-4 w-4 shrink-0" />
+                      <p className="font-body text-success text-xs">
                         SHA-256 збігається — бюлетень не змінювався
                       </p>
                     </>
                   ) : (
                     <>
-                      <ShieldAlert className="h-4 w-4 shrink-0 text-(--error)" />
-                      <p className="font-body text-xs text-(--error)">
+                      <ShieldAlert className="text-error h-4 w-4 shrink-0" />
+                      <p className="font-body text-error text-xs">
                         SHA-256 НЕ збігається — можливе втручання
                       </p>
                     </>
@@ -254,22 +254,22 @@ export function BallotRow({
             )}
 
             <div>
-              <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
+              <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                 Зашифрований бюлетень
               </p>
-              <div className="overflow-x-auto rounded-(--radius) border border-(--border-subtle) bg-white p-3">
-                <p className="font-mono text-[10px] leading-relaxed break-all text-(--foreground)">
+              <div className="border-border-subtle overflow-x-auto rounded-(--radius) border bg-white p-3">
+                <p className="text-foreground font-mono text-[10px] leading-relaxed break-all">
                   {ballot.encryptedBallot}
                 </p>
               </div>
             </div>
 
             <div>
-              <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
+              <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                 Підпис
               </p>
-              <div className="overflow-x-auto rounded-(--radius) border border-(--border-subtle) bg-white p-3">
-                <p className="font-mono text-[10px] leading-relaxed break-all text-(--foreground)">
+              <div className="border-border-subtle overflow-x-auto rounded-(--radius) border bg-white p-3">
+                <p className="text-foreground font-mono text-[10px] leading-relaxed break-all">
                   {ballot.signature}
                 </p>
               </div>
@@ -277,11 +277,11 @@ export function BallotRow({
 
             {ballot.previousHash && (
               <div>
-                <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-(--muted-foreground) uppercase">
+                <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                   Попередній хеш
                 </p>
-                <div className="rounded-(--radius) border border-(--border-subtle) bg-white p-3">
-                  <p className="font-mono text-[10px] break-all text-(--foreground)">
+                <div className="border-border-subtle rounded-(--radius) border bg-white p-3">
+                  <p className="text-foreground font-mono text-[10px] break-all">
                     {ballot.previousHash}
                   </p>
                 </div>

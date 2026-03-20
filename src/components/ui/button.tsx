@@ -10,26 +10,25 @@ const buttonVariants = cva(
     'inline-flex items-center justify-center gap-2 font-medium font-body',
     'whitespace-nowrap rounded-(--radius) border border-transparent',
     'transition-all duration-150 select-none cursor-pointer',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--kpi-blue-light) focus-visible:ring-offset-1',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:ring-offset-1',
     'disabled:pointer-events-none disabled:opacity-50',
     '[&_svg]:pointer-events-none [&_svg]:shrink-0',
   ].join(' '),
   {
     variants: {
       variant: {
-        default: 'bg-(--kpi-navy) text-white hover:bg-(--kpi-navy-hover) shadow-(--shadow-button)',
-        primary: 'bg-(--kpi-navy) text-white hover:bg-(--kpi-navy-hover) shadow-(--shadow-button)',
-        accent:
-          'bg-(--kpi-orange) text-white hover:bg-(--kpi-orange-dark) shadow-(--shadow-button-accent)',
+        default: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-shadow-button',
+        primary: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-shadow-button',
+        accent: 'bg-kpi-orange text-white hover:bg-kpi-orange-dark shadow-shadow-button-accent',
         secondary:
-          'bg-(--surface) text-(--foreground) border-(--border-color) hover:bg-(--surface-hover) hover:border-(--kpi-blue-light)/40',
-        ghost: 'bg-transparent text-(--foreground) hover:bg-(--surface) border-transparent',
+          'bg-surface text-foreground border-border-color hover:bg-surface-hover hover:border-kpi-blue-light/40',
+        ghost: 'bg-transparent text-foreground hover:bg-surface border-transparent',
         outline:
-          'bg-transparent text-(--foreground) border-(--border-color) hover:bg-(--surface) hover:border-(--kpi-blue-light)/50',
+          'bg-transparent text-foreground border-border-color hover:bg-surface hover:border-kpi-blue-light/50',
         danger:
-          'bg-(--error-bg) text-(--error) border-(--error)/20 hover:bg-(--error) hover:text-white hover:border-(--error)',
-        destructive: 'bg-(--error) text-white hover:bg-(--error)/90 shadow-(--shadow-sm)',
-        link: 'bg-transparent text-(--kpi-navy) underline-offset-4 hover:underline border-transparent p-0 h-auto',
+          'bg-error-bg text-error border-error/20 hover:bg-error hover:text-white hover:border-error',
+        destructive: 'bg-error text-white hover:bg-error/90 shadow-shadow-sm',
+        link: 'bg-transparent text-kpi-navy underline-offset-4 hover:underline border-transparent p-0 h-auto',
       },
       size: {
         xs: 'h-6 px-2 text-xs rounded-md gap-1 [&_svg]:w-3 [&_svg]:h-3',

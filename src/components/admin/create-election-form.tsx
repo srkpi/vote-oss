@@ -195,7 +195,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       )}
 
       <section>
-        <h2 className="font-display mb-4 text-xl font-semibold text-(--foreground)">
+        <h2 className="font-display text-foreground mb-4 text-xl font-semibold">
           Створення голосування
         </h2>
         <div className="space-y-5">
@@ -243,10 +243,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       </section>
 
       <section>
-        <h2 className="font-display mb-1 text-xl font-semibold text-(--foreground)">
+        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
           Варіанти відповідей
         </h2>
-        <p className="font-body mb-4 text-sm text-(--muted-foreground)">
+        <p className="font-body text-muted-foreground mb-4 text-sm">
           Додайте від {ELECTION_CHOICES_MIN} до {ELECTION_CHOICES_MAX} варіантів
         </p>
 
@@ -275,7 +275,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                   />
                   <div className="flex items-center justify-between">
                     {fieldErrors[`choice_${index}`] ? (
-                      <p className="text-xs text-(--error)">{fieldErrors[`choice_${index}`]}</p>
+                      <p className="text-error text-xs">{fieldErrors[`choice_${index}`]}</p>
                     ) : (
                       <span />
                     )}
@@ -288,7 +288,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                     onClick={() => removeChoice(index)}
                     className={cn(
                       'flex h-10 w-10 shrink-0 items-center justify-center rounded-(--radius)',
-                      'text-(--muted-foreground) hover:bg-(--error-bg) hover:text-(--error)',
+                      'text-muted-foreground hover:bg-error-bg hover:text-error',
                       'transition-colors duration-150',
                     )}
                     aria-label="Видалити варіант"
@@ -316,10 +316,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       </section>
 
       <section>
-        <h2 className="font-display mb-1 text-xl font-semibold text-(--foreground)">
+        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
           Обмеження доступу
         </h2>
-        <p className="font-body mb-4 text-sm text-(--muted-foreground)">
+        <p className="font-body text-muted-foreground mb-4 text-sm">
           Залиште порожнім для всіх студентів. Групу можна вибрати лише після вибору підрозділу.
         </p>
 
@@ -346,9 +346,9 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                   id="faculty"
                   value={form.restrictedToFaculty}
                   readOnly
-                  className="cursor-not-allowed bg-(--surface) pr-9"
+                  className="bg-surface cursor-not-allowed pr-9"
                 />
-                <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-(--kpi-gray-mid)">
+                <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
                   <Lock className="h-4 w-4" />
                 </div>
               </div>
@@ -395,7 +395,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </div>
       </section>
 
-      <div className="flex flex-col-reverse gap-3 border-t border-(--border-subtle) pt-4 sm:flex-row">
+      <div className="border-border-subtle flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row">
         <Button
           type="button"
           variant="secondary"

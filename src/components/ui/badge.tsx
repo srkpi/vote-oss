@@ -9,18 +9,18 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-(--border-color) text-(--foreground) border-(--border-color)',
-        secondary: 'bg-(--surface) text-(--muted-foreground) border-(--border-subtle)',
-        outline: 'bg-transparent text-(--foreground) border-(--border-color)',
-        navy: 'bg-(--kpi-navy) text-white border-(--kpi-navy)',
-        primary: 'bg-(--kpi-navy) text-white border-(--kpi-navy)',
-        success: 'bg-(--success-bg) text-(--success) border-(--success)/30',
-        warning: 'bg-(--warning-bg) text-(--kpi-orange) border-(--kpi-orange)/30',
-        error: 'bg-(--error-bg) text-(--error) border-(--error)/30',
-        destructive: 'bg-(--error-bg) text-(--error) border-(--error)/30',
-        info: 'bg-(--info-bg) text-(--kpi-blue-light) border-(--kpi-blue-light)/30',
-        accent: 'bg-(--kpi-orange) text-white border-(--kpi-orange)',
-        ghost: 'bg-transparent text-(--muted-foreground) border-transparent hover:bg-(--surface)',
+        default: 'bg-border-color text-foreground border-border-color',
+        secondary: 'bg-surface text-muted-foreground border-border-subtle',
+        outline: 'bg-transparent text-foreground border-border-color',
+        navy: 'bg-kpi-navy text-white border-kpi-navy',
+        primary: 'bg-kpi-navy text-white border-kpi-navy',
+        success: 'bg-success-bg text-success border-success/30',
+        warning: 'bg-warning-bg text-kpi-orange border-kpi-orange/30',
+        error: 'bg-error-bg text-error border-error/30',
+        destructive: 'bg-error-bg text-error border-error/30',
+        info: 'bg-info-bg text-kpi-blue-light border-kpi-blue-light/30',
+        accent: 'bg-kpi-orange text-white border-kpi-orange',
+        ghost: 'bg-transparent text-muted-foreground border-transparent hover:bg-surface',
       },
       size: {
         sm: 'h-4 px-1.5 text-[10px]',
@@ -36,18 +36,18 @@ const badgeVariants = cva(
 );
 
 const dotColors: Record<string, string> = {
-  default: 'bg-(--kpi-gray-mid)',
-  secondary: 'bg-(--kpi-gray-mid)',
-  outline: 'bg-(--kpi-gray-mid)',
+  default: 'bg-kpi-gray-mid',
+  secondary: 'bg-kpi-gray-mid',
+  outline: 'bg-kpi-gray-mid',
   navy: 'bg-white',
   primary: 'bg-white',
-  success: 'bg-(--success)',
-  warning: 'bg-(--kpi-orange)',
-  error: 'bg-(--error)',
-  destructive: 'bg-(--error)',
-  info: 'bg-(--kpi-blue-light)',
+  success: 'bg-success',
+  warning: 'bg-kpi-orange',
+  error: 'bg-error',
+  destructive: 'bg-error',
+  info: 'bg-kpi-blue-light',
   accent: 'bg-white',
-  ghost: 'bg-(--kpi-gray-mid)',
+  ghost: 'bg-kpi-gray-mid',
 };
 
 export type BadgeVariant =

@@ -69,13 +69,13 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
       </div>
 
       {(search || activeTab !== 'all') && filtered.length > 0 && (
-        <p className="font-body text-xs text-(--muted-foreground)">
+        <p className="font-body text-muted-foreground text-xs">
           Знайдено: {filtered.length} голосувань
         </p>
       )}
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-(--border-color) bg-white shadow-(--shadow-sm)">
+        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white">
           <EmptyState
             icon={<FileText className="h-8 w-8" />}
             title={search ? 'Голосувань не знайдено' : 'Голосувань поки що немає'}

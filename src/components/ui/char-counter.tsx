@@ -26,7 +26,7 @@ export function CharCounter({
     <span
       className={cn(
         'font-body text-xs tabular-nums',
-        isOver ? 'font-semibold text-(--error)' : 'text-(--muted-foreground)',
+        isOver ? 'text-error font-semibold' : 'text-muted-foreground',
         className,
       )}
       aria-live="polite"

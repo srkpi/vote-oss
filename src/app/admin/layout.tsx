@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-var(--header-height))] bg-(--surface)">
+    <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))]">
       <AdminSidebar
         manageAdmins={session.manageAdmins}
         restrictedToFaculty={session.restrictedToFaculty}

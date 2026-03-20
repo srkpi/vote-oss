@@ -15,26 +15,26 @@ export function ConfirmChoice({ choice, onBack, onConfirm, loading }: Confirmati
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-(--kpi-navy)/20 bg-(--kpi-navy)/10">
-          <HelpCircle className="h-8 w-8 text-(--kpi-navy)" />
+        <div className="border-kpi-navy/20 bg-kpi-navy/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2">
+          <HelpCircle className="text-kpi-navy h-8 w-8" />
         </div>
-        <h4 className="font-display text-xl font-semibold text-(--foreground)">
+        <h4 className="font-display text-foreground text-xl font-semibold">
           Підтвердіть свій вибір
         </h4>
-        <p className="font-body text-sm text-(--muted-foreground)">
+        <p className="font-body text-muted-foreground text-sm">
           Після підтвердження змінити голос неможливо
         </p>
       </div>
 
-      <div className={cn('rounded-lg p-5', 'border-2 border-(--kpi-navy)/20 bg-(--kpi-navy)/5')}>
-        <p className="font-body mb-1 text-xs tracking-wider text-(--muted-foreground) uppercase">
+      <div className={cn('rounded-lg p-5', 'border-kpi-navy/20 bg-kpi-navy/5 border-2')}>
+        <p className="font-body text-muted-foreground mb-1 text-xs tracking-wider uppercase">
           Ваш вибір:
         </p>
         <div className="flex items-center gap-3">
-          <span className="font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--kpi-navy) text-base font-bold text-white">
+          <span className="font-display bg-kpi-navy flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white">
             {String.fromCharCode(65 + choice.position)}
           </span>
-          <span className="font-body min-w-0 font-semibold wrap-break-word text-(--kpi-navy)">
+          <span className="font-body text-kpi-navy min-w-0 font-semibold wrap-break-word">
             {choice.choice}
           </span>
         </div>
