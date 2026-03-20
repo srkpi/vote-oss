@@ -16,8 +16,6 @@ import { Input } from '@/components/ui/form';
 import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import type { FaqCategoryData, FaqItemData } from '@/types/faq';
 
-// ─── Rename category ─────────────────────────────────────────────────────────
-
 export interface RenameCategoryDialogProps {
   category: FaqCategoryData | null;
   title: string;
@@ -69,8 +67,6 @@ export function RenameCategoryDialog({
   );
 }
 
-// ─── Delete category ──────────────────────────────────────────────────────────
-
 export interface DeleteCategoryDialogProps {
   category: FaqCategoryData | null;
   onConfirm: () => void;
@@ -93,8 +89,8 @@ export function DeleteCategoryDialog({
         </DialogHeader>
         <DialogBody>
           <Alert variant="warning">
-            Категорія <strong>«{category?.title}»</strong> та всі її пункти будуть видалені. Цю дію
-            неможливо скасувати.
+            Категорія <strong className="break-words">«{category?.title}»</strong> та всі її пункти
+            будуть видалені. Цю дію неможливо скасувати.
           </Alert>
         </DialogBody>
         <DialogFooter>
@@ -109,8 +105,6 @@ export function DeleteCategoryDialog({
     </Dialog>
   );
 }
-
-// ─── Delete item ──────────────────────────────────────────────────────────────
 
 export interface DeleteItemTarget {
   item: FaqItemData;
@@ -134,7 +128,8 @@ export function DeleteItemDialog({ target, onConfirm, onClose, loading }: Delete
         </DialogHeader>
         <DialogBody>
           <Alert variant="warning">
-            Пункт <strong>«{target?.item.title}»</strong> буде видалено назавжди.
+            Пункт <strong className="break-words">«{target?.item.title}»</strong> буде видалено
+            назавжди.
           </Alert>
         </DialogBody>
         <DialogFooter>

@@ -4,12 +4,12 @@ import { requireAdmin } from '@/lib/auth';
 import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import { draftToPlainText, parseDraftContent } from '@/lib/utils';
+import { deltaToPlainText, parseQuillDelta } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
 // PUT /api/faq/items/[id]  — root admin only
 // Updates title and/or content of a FAQ item.
-// `content` must be a JSON string of RawDraftContentState.
+// `content` must be a JSON string of a Quill Delta ({ ops: [...] }).
 // The plain-text length of the content is validated, not the raw JSON length.
 // ---------------------------------------------------------------------------
 
@@ -51,13 +51,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return Errors.badRequest('content is required');
   }
 
-  // Content must be valid Draft.js raw JSON
-  if (!parseDraftContent(content)) {
-    return Errors.badRequest('content must be a valid Draft.js raw content JSON string');
+  // Content must be a valid Quill Delta JSON string
+  if (!parseQuillDelta(content)) {
+    return Errors.badRequest('content must be a valid Quill Delta JSON string');
   }
 
-  // Enforce the limit on readable plain text, not the JSON envelope
-  const plainText = draftToPlainText(content);
+  // Enforce the limit on readable plain text, not the raw JSON envelope
+  const plainText = deltaToPlainText(content);
   if (plainText.length > FAQ_ITEM_CONTENT_MAX_LENGTH) {
     return Errors.badRequest(
       `content plain text must be at most ${FAQ_ITEM_CONTENT_MAX_LENGTH} characters`,

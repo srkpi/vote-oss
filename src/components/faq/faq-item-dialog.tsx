@@ -17,10 +17,10 @@ import {
 } from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
 import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
-import { draftToPlainText } from '@/lib/utils';
+import { deltaToPlainText } from '@/lib/utils';
 
-// Dynamically imported — Draft.js is browser-only
-const DraftEditor = dynamic(() => import('@/components/ui/draft-editor'), {
+// Quill is browser-only
+const QuillEditor = dynamic(() => import('@/components/ui/quill/quill-editor'), {
   ssr: false,
   loading: () => (
     <div
@@ -30,32 +30,31 @@ const DraftEditor = dynamic(() => import('@/components/ui/draft-editor'), {
   ),
 });
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface ItemDialogProps {
+export interface FaqItemDialogProps {
   open: boolean;
   onClose: () => void;
-  /** Called when the user confirms. Returning a string signals an error. */
   onSave: (title: string, content: string) => Promise<void>;
   initial?: { title: string; content: string };
   loading: boolean;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
-
-export function ItemDialog({ open, onClose, onSave, initial, loading }: ItemDialogProps) {
+export function FaqItemDialog({ open, onClose, onSave, initial, loading }: FaqItemDialogProps) {
   const [title, setTitle] = useState(initial?.title ?? '');
   const [content, setContent] = useState(initial?.content ?? '');
   const [error, setError] = useState<string | null>(null);
+
+  // Incremented every time the dialog opens to force QuillEditor to remount,
+  // which guarantees its internal Quill state is fully reset.
+  const [editorKey, setEditorKey] = useState(0);
   const prevOpen = useRef(false);
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (open && !prevOpen.current) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(initial?.title ?? '');
       setContent(initial?.content ?? '');
       setError(null);
+      setEditorKey((k) => k + 1);
     }
     prevOpen.current = open;
   }, [open, initial]);
@@ -72,8 +71,8 @@ export function ItemDialog({ open, onClose, onSave, initial, loading }: ItemDial
       return;
     }
 
-    // Measure plain-text length from the Draft.js JSON
-    const plainLength = draftToPlainText(content).length;
+    // Measure plain-text length from the Delta JSON
+    const plainLength = deltaToPlainText(content).length;
     if (plainLength > FAQ_ITEM_CONTENT_MAX_LENGTH) {
       setError(`Текст відповіді — максимум ${FAQ_ITEM_CONTENT_MAX_LENGTH} символів`);
       return;
@@ -116,12 +115,14 @@ export function ItemDialog({ open, onClose, onSave, initial, loading }: ItemDial
           </FormField>
 
           <FormField label="Відповідь" required>
-            <DraftEditor
+            <QuillEditor
+              key={editorKey}
               value={content}
               onChange={setContent}
               placeholder="Введіть відповідь…"
               maxLength={FAQ_ITEM_CONTENT_MAX_LENGTH}
               minHeight="180px"
+              maxHeight="300px"
             />
           </FormField>
         </DialogBody>

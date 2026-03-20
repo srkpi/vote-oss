@@ -27,25 +27,23 @@ import { DELETE as deleteCategory, PUT as putCategory } from '@/app/api/faq/cate
 import { PATCH as reorderCategories } from '@/app/api/faq/categories/reorder/route';
 import { DELETE as deleteItem, PUT as putItem } from '@/app/api/faq/items/[id]/route';
 
-function makeDraftContent(text: string): string {
-  return JSON.stringify({
-    blocks: [
-      {
-        key: 'test1',
-        text,
-        type: 'unstyled',
-        depth: 0,
-        inlineStyleRanges: [],
-        entityRanges: [],
-        data: {},
-      },
-    ],
-    entityMap: {},
-  });
+// ---------------------------------------------------------------------------
+// Quill Delta content helpers
+// ---------------------------------------------------------------------------
+
+/** Build a minimal valid Quill Delta JSON string with the given plain text. */
+function makeQuillContent(text: string): string {
+  return JSON.stringify({ ops: [{ insert: text + '\n' }] });
 }
 
-const VALID_CONTENT = makeDraftContent('Click vote.');
-const OVER_LIMIT_CONTENT = makeDraftContent('X'.repeat(FAQ_ITEM_CONTENT_MAX_LENGTH + 1));
+const VALID_CONTENT = makeQuillContent('Click vote.');
+
+/** Plain-text content that exceeds the allowed limit by 1 character. */
+const OVER_LIMIT_CONTENT = makeQuillContent('X'.repeat(FAQ_ITEM_CONTENT_MAX_LENGTH + 1));
+
+// ---------------------------------------------------------------------------
+// Auth helpers
+// ---------------------------------------------------------------------------
 
 async function unrestrictedAdminReq(method: string, body?: object) {
   const { access } = await makeTokenPair(ADMIN_PAYLOAD);
@@ -257,7 +255,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is not valid Draft.js JSON', async () => {
+  it('returns 400 when content is not valid Quill Delta JSON', async () => {
     const req = await unrestrictedAdminReq('POST', {
       title: 'Q',
       content: '<p>plain html is rejected</p>',
@@ -267,7 +265,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is JSON but not a Draft.js ContentState', async () => {
+  it('returns 400 when content is JSON but not a Quill Delta', async () => {
     const req = await unrestrictedAdminReq('POST', {
       title: 'Q',
       content: JSON.stringify({ text: 'hello' }),
@@ -310,7 +308,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
     expect(body.category_id).toBe('cat-1');
   });
 
-  it('stores Draft.js content verbatim in the database', async () => {
+  it('stores Quill Delta content verbatim in the database', async () => {
     const req = await unrestrictedAdminReq('POST', {
       title: 'Q',
       content: VALID_CONTENT,
@@ -406,7 +404,7 @@ describe('PUT /api/faq/items/[id]', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is not valid Draft.js JSON', async () => {
+  it('returns 400 when content is not valid Quill Delta JSON', async () => {
     const req = await unrestrictedAdminReq('PUT', {
       title: 'Q',
       content: '<p>html is rejected</p>',
@@ -416,7 +414,7 @@ describe('PUT /api/faq/items/[id]', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is JSON but not a Draft.js ContentState', async () => {
+  it('returns 400 when content is JSON but not a Quill Delta', async () => {
     const req = await unrestrictedAdminReq('PUT', {
       title: 'Q',
       content: JSON.stringify({ text: 'hello' }),
@@ -437,7 +435,7 @@ describe('PUT /api/faq/items/[id]', () => {
   });
 
   it('returns 200 with updated item on success', async () => {
-    const updatedContent = makeDraftContent('Updated answer.');
+    const updatedContent = makeQuillContent('Updated answer.');
     const req = await unrestrictedAdminReq('PUT', {
       title: 'Updated Q',
       content: updatedContent,
@@ -457,8 +455,8 @@ describe('PUT /api/faq/items/[id]', () => {
     expect(body.title).toBe('Updated Q');
   });
 
-  it('stores Draft.js content verbatim in the database', async () => {
-    const richContent = makeDraftContent('Bold answer with details.');
+  it('stores Quill Delta content verbatim in the database', async () => {
+    const richContent = makeQuillContent('Bold answer with details.');
     const req = await unrestrictedAdminReq('PUT', { title: 'Q', content: richContent });
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     prismaMock.faqItem.update.mockResolvedValueOnce({

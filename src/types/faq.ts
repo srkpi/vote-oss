@@ -1,27 +1,3 @@
-// Matches the raw Draft.js ContentState format stored in the database
-export interface RawDraftBlock {
-  key: string;
-  text: string;
-  type: string;
-  depth: number;
-  inlineStyleRanges: Array<{ offset: number; length: number; style: string }>;
-  entityRanges: Array<{ offset: number; length: number; key: number }>;
-  data?: Record<string, unknown>;
-}
-
-export interface RawDraftEntity {
-  type: string;
-  mutability: string;
-  data: Record<string, unknown>;
-}
-
-export interface RawDraftContent {
-  blocks: RawDraftBlock[];
-  entityMap: Record<string | number, RawDraftEntity>;
-}
-
-// ─── Domain types ───────────────────────────────────────────────────────────
-
 export interface FaqItemData {
   id: string;
   title: string;
@@ -35,8 +11,6 @@ export interface FaqCategoryData {
   position: number;
   items: FaqItemData[];
 }
-
-// ─── API response shapes ─────────────────────────────────────────────────────
 
 export interface FaqCategoryCreated {
   id: string;

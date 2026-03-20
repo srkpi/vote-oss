@@ -2,7 +2,7 @@
 
 import { HelpCircle, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { CategoryCard } from '@/components/faq/category-card';
 import {
@@ -11,7 +11,7 @@ import {
   type DeleteItemTarget,
   RenameCategoryDialog,
 } from '@/components/faq/category-dialogs';
-import { ItemDialog } from '@/components/faq/item-dialog';
+import { FaqItemDialog } from '@/components/faq/faq-item-dialog';
 import { Button } from '@/components/ui/button';
 import { CharCounter } from '@/components/ui/char-counter';
 import { Input } from '@/components/ui/form';
@@ -53,6 +53,12 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
   const [deleteItem, setDeleteItem] = useState<DeleteItemTarget | null>(null);
   const [deleteItemLoading, setDeleteItemLoading] = useState(false);
+
+  const [catDragIndex, setCatDragIndex] = useState<number | null>(null);
+  const [catDragOverIndex, setCatDragOverIndex] = useState<number | null>(null);
+
+  // Keep a snapshot of categories before the drag so we can revert on API failure
+  const categoriesBeforeDragRef = useRef<FaqCategoryData[]>([]);
 
   const err = (e: unknown) =>
     toast({
@@ -129,9 +135,49 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     const swapWith = direction === 'up' ? index - 1 : index + 1;
     [next[index], next[swapWith]] = [next[swapWith], next[index]];
 
-    setCategories(next); // optimistic
+    setCategories(next);
     const { error } = await api.reorderFaqCategories(next.map((c) => c.id));
-    if (error !== null) setCategories(categories); // revert on failure
+    if (error !== null) setCategories(categories);
+  };
+
+  const moveCategoryTo = async (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+
+    const next = [...categories];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+
+    const snapshot = categories;
+    setCategories(next);
+    const { error } = await api.reorderFaqCategories(next.map((c) => c.id));
+    if (error !== null) setCategories(snapshot);
+  };
+
+  const handleCatDragStart = (index: number) => {
+    categoriesBeforeDragRef.current = categories;
+    setCatDragIndex(index);
+  };
+
+  const handleCatDragEnter = (index: number) => {
+    setCatDragOverIndex(index);
+  };
+
+  const handleCatDragEnd = () => {
+    setCatDragIndex(null);
+    setCatDragOverIndex(null);
+  };
+
+  const handleCatDrop = (toIndex: number) => {
+    if (catDragIndex === null) {
+      handleCatDragEnd();
+      return;
+    }
+
+    // Always insert before the hovered card — one unambiguous drop position per card
+    let target = toIndex;
+    if (catDragIndex < target) target -= 1;
+    if (target !== catDragIndex) moveCategoryTo(catDragIndex, target);
+    handleCatDragEnd();
   };
 
   const handleSaveItem = async (title: string, content: string) => {
@@ -209,10 +255,26 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       categoryId,
       next.map((i) => i.id),
     );
-    if (error !== null) setCategories(categories); // revert
+    if (error !== null) setCategories(categories);
   };
 
-  // ── Collapse ──────────────────────────────────────────────────────────────
+  /** Arbitrary reorder (drag) */
+  const moveItemTo = async (categoryId: string, fromIndex: number, toIndex: number) => {
+    const cat = categories.find((c) => c.id === categoryId);
+    if (!cat || fromIndex === toIndex) return;
+
+    const next = [...cat.items];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+
+    const snapshot = categories;
+    setCategories((prev) => prev.map((c) => (c.id === categoryId ? { ...c, items: next } : c)));
+    const { error } = await api.reorderFaqItems(
+      categoryId,
+      next.map((i) => i.id),
+    );
+    if (error !== null) setCategories(snapshot);
+  };
 
   const toggleCollapse = (id: string) =>
     setCollapsed((prev) => {
@@ -222,15 +284,11 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       } else {
         next.add(id);
       }
-
       return next;
     });
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-4">
-      {/* Category list */}
       {categories.map((cat, catIdx) => (
         <CategoryCard
           key={cat.id}
@@ -238,6 +296,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
           isFirst={catIdx === 0}
           isLast={catIdx === categories.length - 1}
           isCollapsed={collapsed.has(cat.id)}
+          isDragging={catDragIndex === catIdx}
+          isDragOver={catDragOverIndex === catIdx}
           onToggleCollapse={() => toggleCollapse(cat.id)}
           onMoveUp={() => moveCategory(catIdx, 'up')}
           onMoveDown={() => moveCategory(catIdx, 'down')}
@@ -248,10 +308,14 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
           onDeleteItem={(item) => setDeleteItem({ item, categoryId: cat.id })}
           onMoveItemUp={(idx) => moveItem(cat.id, idx, 'up')}
           onMoveItemDown={(idx) => moveItem(cat.id, idx, 'down')}
+          onMoveItemTo={(from, to) => moveItemTo(cat.id, from, to)}
+          onCategoryDragStart={() => handleCatDragStart(catIdx)}
+          onCategoryDragEnter={() => handleCatDragEnter(catIdx)}
+          onCategoryDragEnd={handleCatDragEnd}
+          onCategoryDrop={() => handleCatDrop(catIdx)}
         />
       ))}
 
-      {/* Add category */}
       {addingCat ? (
         <div className="bg-white rounded-[var(--radius-xl)] border border-[var(--border-color)] shadow-[var(--shadow-card)] p-4 sm:p-5">
           <p className="text-sm font-semibold font-body text-[var(--foreground)] mb-3">
@@ -324,7 +388,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
         loading={deleteCatLoading}
       />
 
-      <ItemDialog
+      <FaqItemDialog
         open={itemDialog.open}
         onClose={() => setItemDialog({ open: false, categoryId: '' })}
         onSave={handleSaveItem}

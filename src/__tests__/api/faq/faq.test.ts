@@ -20,6 +20,11 @@ jest.mock('@/lib/cache', () => cacheMock);
 
 import { GET, POST } from '@/app/api/faq/route';
 
+/** Minimal valid Quill Delta JSON string. */
+function makeQuillContent(text: string): string {
+  return JSON.stringify({ ops: [{ insert: text + '\n' }] });
+}
+
 async function unrestrictedAdminReq(body?: object) {
   const { access } = await makeTokenPair(ADMIN_PAYLOAD);
   prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
@@ -57,8 +62,18 @@ describe('GET /api/faq', () => {
         title: 'General',
         position: 0,
         items: [
-          { id: 'item-1', title: 'Q1', content: '<p>A1</p>', position: 0 },
-          { id: 'item-2', title: 'Q2', content: '<p>A2</p>', position: 1 },
+          {
+            id: 'item-1',
+            title: 'Q1',
+            content: makeQuillContent('A1'),
+            position: 0,
+          },
+          {
+            id: 'item-2',
+            title: 'Q2',
+            content: makeQuillContent('A2'),
+            position: 1,
+          },
         ],
       },
     ]);

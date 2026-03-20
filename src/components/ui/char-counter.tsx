@@ -2,7 +2,7 @@ import { CHAR_COUNTER_THRESHOLD } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 interface CharCounterProps {
-  value: string;
+  value: string | number;
   max: number;
   className?: string;
   threshold?: number;
@@ -14,7 +14,7 @@ export function CharCounter({
   className,
   threshold = CHAR_COUNTER_THRESHOLD,
 }: CharCounterProps) {
-  const used = value.length;
+  const used = typeof value === 'string' ? value.length : value;
   const remaining = max - used;
   const ratio = used / max;
 

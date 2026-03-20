@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge';
 
 import type { InviteToken } from '@/types/admin';
 import type { ElectionStatus } from '@/types/election';
-import type { RawDraftContent } from '@/types/faq';
+import type { QuillDelta } from '@/types/quill';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -165,36 +165,34 @@ export function tokenExpiresLabel(validDue: string): { text: string; urgent: boo
   return { text: formatDateTime(validDue), urgent: days < 3 };
 }
 
-/**
- * Parse a Draft.js raw content JSON string.
- * Returns null if the string is not valid Draft.js content.
- */
-export function parseDraftContent(content: string): RawDraftContent | null {
+export function parseQuillDelta(content: string): QuillDelta | null {
   try {
     const raw = JSON.parse(content) as unknown;
-    if (
-      !raw ||
-      typeof raw !== 'object' ||
-      !Array.isArray((raw as RawDraftContent).blocks) ||
-      typeof (raw as RawDraftContent).entityMap !== 'object'
-    ) {
+    if (!raw || typeof raw !== 'object' || !Array.isArray((raw as QuillDelta).ops)) {
       return null;
     }
-    return raw as RawDraftContent;
+    return raw as QuillDelta;
   } catch {
     return null;
   }
 }
 
 /**
- * Extract plain text from a Draft.js raw content JSON string.
+ * Extract plain text from a Quill Delta JSON string.
  * Used server-side to validate content length and client-side for previews.
+ *
+ * Quill always appends a trailing "\n" to every document; we strip it so
+ * that length checks match the visible character count.
  */
-export function draftToPlainText(content: string): string {
-  const raw = parseDraftContent(content);
-  if (!raw) return '';
-  return raw.blocks
-    .map((b) => b.text ?? '')
-    .join('\n')
-    .trim();
+export function deltaToPlainText(content: string): string {
+  const delta = parseQuillDelta(content);
+  if (!delta) return '';
+
+  const text = delta.ops
+    .filter((op) => typeof op.insert === 'string')
+    .map((op) => op.insert as string)
+    .join('');
+
+  // Strip the single trailing newline Quill always appends
+  return text.endsWith('\n') ? text.slice(0, -1) : text;
 }

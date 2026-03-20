@@ -1,57 +1,11 @@
 'use client';
 
-import { ChevronDown, CircleSlash2 } from 'lucide-react';
+import { CircleSlash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
-import { DraftRenderer } from '@/components/ui/draft-renderer';
-import { cn } from '@/lib/utils';
-import type { FaqCategoryData, FaqItemData } from '@/types/faq';
-
-interface FaqAccordionItemProps {
-  item: FaqItemData;
-  isOpen: boolean;
-  onToggle: () => void;
-}
-
-function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemProps) {
-  return (
-    <div
-      className={cn(
-        'border border-[var(--border-color)] rounded-[var(--radius-lg)] overflow-hidden',
-        'transition-shadow duration-200',
-        isOpen && 'shadow-[var(--shadow-card)]',
-      )}
-    >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        className={cn(
-          'w-full flex items-center justify-between gap-3',
-          'px-4 sm:px-5 py-3.5 sm:py-4',
-          'text-left font-body font-medium text-sm sm:text-base text-[var(--foreground)]',
-          'bg-white hover:bg-[var(--surface)] transition-colors duration-150',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--kpi-blue-light)]',
-        )}
-      >
-        <span className="flex-1 min-w-0 break-words">{item.title}</span>
-        <ChevronDown
-          className={cn(
-            'w-4 h-4 shrink-0 text-[var(--muted-foreground)] transition-transform duration-200',
-            isOpen && 'rotate-180',
-          )}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="px-4 sm:px-5 py-3 sm:py-4 border-t border-[var(--border-subtle)] bg-white">
-          <DraftRenderer content={item.content} />
-        </div>
-      )}
-    </div>
-  );
-}
+import { FaqAccordionItem } from '@/components/faq/faq-accordion-item';
+import type { FaqCategoryData } from '@/types/faq';
 
 interface FaqAccordionProps {
   categories: FaqCategoryData[];
@@ -68,7 +22,6 @@ export function FaqAccordion({ categories }: FaqAccordionProps) {
       } else {
         next.add(id);
       }
-
       return next;
     });
   };
