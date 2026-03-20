@@ -15,18 +15,13 @@ import { CharCounter } from '@/components/ui/char-counter';
 import { LinkTooltip } from '@/components/ui/quill/link-tooltip';
 import { cn } from '@/lib/utils';
 
-// ---------------------------------------------------------------------------
-// Toolbar
-// ---------------------------------------------------------------------------
 const TOOLBAR_CONFIG = [
   [{ header: [1, 2, 3, 4, false] }],
   ['bold', 'italic', 'underline', 'strike'],
-  ['link', 'blockquote', { list: 'ordered' }, { list: 'bullet' }],
+  ['link', 'blockquote', 'code-block'],
+  [{ list: 'ordered' }, { list: 'bullet' }],
+  ['clean'],
 ];
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 /**
  * Given a cursor position inside a link, scan outward to find the full
@@ -50,10 +45,6 @@ function getLinkRange(quill: Quill, cursorIndex: number): QuillRange {
   return { index: start, length: end - start };
 }
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 export interface QuillEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -72,10 +63,6 @@ interface TooltipState {
   /** The cursor/selection range that triggered the tooltip. */
   range: QuillRange;
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export default function QuillEditor({
   value,

@@ -1,6 +1,6 @@
 'use client';
 
-import { HelpCircle, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -366,7 +366,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
           variant="secondary"
           size="md"
           onClick={() => setAddingCat(true)}
-          icon={<HelpCircle className="w-4 h-4" />}
+          icon={<Plus className="w-4 h-4" />}
         >
           Додати категорію
         </Button>
