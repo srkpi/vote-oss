@@ -105,4 +105,99 @@ describe('GET /api/elections/[id]', () => {
     const { body } = await parseJson<any>(res);
     expect(body.privateKey).toBeDefined();
   });
+
+  // ── hasVoted ──────────────────────────────────────────────────────────────
+
+  it('returns hasVoted false for an open election when no token has been issued', async () => {
+    const req = await authRequest();
+    prismaMock.election.findUnique.mockResolvedValueOnce(makeElection()); // open
+
+    const res = await GET(req, PARAMS);
+    const { body } = await parseJson<any>(res);
+    expect(body.hasVoted).toBe(false);
+  });
+
+  it('returns hasVoted true for an open election when the user has an issued token', async () => {
+    const req = await authRequest();
+    prismaMock.election.findUnique.mockResolvedValueOnce(makeElection()); // open
+    prismaMock.issuedToken.findUnique.mockResolvedValueOnce({
+      id: 'tok-1',
+      election_id: MOCK_ELECTION_ID,
+      user_id: USER_PAYLOAD.sub,
+    });
+
+    const res = await GET(req, PARAMS);
+    const { body } = await parseJson<any>(res);
+    expect(body.hasVoted).toBe(true);
+  });
+
+  it('queries issuedToken with the correct election_id and user_id', async () => {
+    const req = await authRequest();
+    prismaMock.election.findUnique.mockResolvedValueOnce(makeElection()); // open
+
+    await GET(req, PARAMS);
+
+    expect(prismaMock.issuedToken.findUnique).toHaveBeenCalledWith({
+      where: {
+        election_id_user_id: {
+          election_id: MOCK_ELECTION_ID,
+          user_id: USER_PAYLOAD.sub,
+        },
+      },
+    });
+  });
+
+  it('does not include hasVoted for an upcoming election', async () => {
+    const req = await authRequest();
+    prismaMock.election.findUnique.mockResolvedValueOnce(
+      makeElection({
+        opens_at: new Date(Date.now() + 3_600_000),
+        closes_at: new Date(Date.now() + 7_200_000),
+      }),
+    );
+
+    const res = await GET(req, PARAMS);
+    const { body } = await parseJson<any>(res);
+    expect(body.hasVoted).toBeUndefined();
+  });
+
+  it('does not include hasVoted for a closed election', async () => {
+    const req = await authRequest();
+    prismaMock.election.findUnique.mockResolvedValueOnce(
+      makeElection({
+        opens_at: new Date(Date.now() - 7_200_000),
+        closes_at: new Date(Date.now() - 100),
+      }),
+    );
+
+    const res = await GET(req, PARAMS);
+    const { body } = await parseJson<any>(res);
+    expect(body.hasVoted).toBeUndefined();
+  });
+
+  it('does not call issuedToken.findUnique for upcoming elections', async () => {
+    const req = await authRequest();
+    prismaMock.election.findUnique.mockResolvedValueOnce(
+      makeElection({
+        opens_at: new Date(Date.now() + 3_600_000),
+        closes_at: new Date(Date.now() + 7_200_000),
+      }),
+    );
+
+    await GET(req, PARAMS);
+    expect(prismaMock.issuedToken.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('does not call issuedToken.findUnique for closed elections', async () => {
+    const req = await authRequest();
+    prismaMock.election.findUnique.mockResolvedValueOnce(
+      makeElection({
+        opens_at: new Date(Date.now() - 7_200_000),
+        closes_at: new Date(Date.now() - 100),
+      }),
+    );
+
+    await GET(req, PARAMS);
+    expect(prismaMock.issuedToken.findUnique).not.toHaveBeenCalled();
+  });
 });

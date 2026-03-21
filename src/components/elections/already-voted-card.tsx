@@ -1,17 +1,21 @@
-import { Check, CheckCircle, Copy, Hash } from 'lucide-react';
+import { Check, CheckCircle, Copy, Hash, MonitorSmartphone } from 'lucide-react';
 import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import type { VoteRecord } from '@/types/vote';
 
 interface AlreadyVotedCardProps {
-  record: VoteRecord;
+  /** Local vote record from localStorage. Null when the user voted on another
+   *  device or cleared their browser data; in that case a simplified card is
+   *  shown without choice/hash details. */
+  record: VoteRecord | null;
 }
 
 export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
   const [copied, setCopied] = useState(false);
 
   const copyHash = async () => {
+    if (!record) return;
     try {
       await navigator.clipboard.writeText(record.ballotHash);
       setCopied(true);
@@ -20,6 +24,33 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
       // ignore
     }
   };
+
+  if (!record) {
+    return (
+      <div className="space-y-4">
+        <div className="border-success/30 bg-success-bg flex items-center gap-3 rounded-lg border p-4">
+          <div className="bg-success/15 flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+            <CheckCircle className="text-success h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-body text-success text-sm font-semibold">Ви вже проголосували</p>
+            <p className="font-body text-muted-foreground mt-0.5 text-xs">
+              Ваш голос зафіксовано системою
+            </p>
+          </div>
+        </div>
+
+        <div className="border-border-subtle bg-surface flex items-start gap-3 rounded-lg border p-4">
+          <MonitorSmartphone className="text-kpi-gray-mid mt-0.5 h-4 w-4 shrink-0" />
+          <p className="font-body text-muted-foreground text-xs leading-relaxed">
+            Деталі бюлетеня недоступні. Вони зберігаються локально в браузері, де ви голосували, та
+            автоматично видаляються при виході з акаунту. Щоб перевірити свій голос, перейдіть до
+            публічних бюлетенів.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
