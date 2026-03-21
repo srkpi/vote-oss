@@ -25,7 +25,7 @@ const config: Config = {
     ],
     '^.+\\.js$': 'babel-jest',
   },
-  transformIgnorePatterns: ['/node_modules/(?!(jose)/)'],
+  transformIgnorePatterns: ['/node_modules/.pnpm/(?!(jose))', '/node_modules/(?!(.pnpm|jose)/)'],
   collectCoverageFrom: ['src/lib/**/*.ts', 'src/app/api/**/*.ts', '!src/**/*.d.ts'],
   coverageDirectory: 'coverage',
   testPathIgnorePatterns: ['/node_modules/', '/.next/'],
