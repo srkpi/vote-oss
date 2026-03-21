@@ -1,1 +1,1 @@
-{"id":"21457e43d5aed186cffad030c4f62eea","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 429 when rate limit is exceeded","name":"returns 429 when rate limit is exceeded","status":"passed","testResultsByEnv":{"default":"afd19eb366398da117f9f3d1f9b4b4b9"}}
+{"id":"21457e43d5aed186cffad030c4f62eea","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 429 when rate limit is exceeded","name":"returns 429 when rate limit is exceeded","status":"passed","testResultsByEnv":{"default":"3dda9512be68ba1b867f1263e65c020b"}}

@@ -1,0 +1,4 @@
+
+> vote-oss@0.1.0 test /home/runner/work/vote-oss/vote-oss
+> jest
+
