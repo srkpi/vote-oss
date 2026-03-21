@@ -30,6 +30,7 @@ export const CACHE_KEY_ADMINS = 'cache:admins';
 export const CACHE_KEY_INVITE_TOKENS = 'cache:invite-tokens';
 export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
 export const CACHE_KEY_FAQ = 'cache:faq';
+export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
 
 // JWT
 export const COOKIE_ACCESS = 'access_token';

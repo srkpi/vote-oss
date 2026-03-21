@@ -13,17 +13,15 @@ interface VoteStatusWrapperProps {
 }
 
 export function VoteStatusWrapper({ election }: VoteStatusWrapperProps) {
-  // undefined = not yet checked (avoids SSR mismatch), null = not voted, record = voted
-  const [record, setRecord] = useState<VoteRecord | null | undefined>(undefined);
+  const [localRecord, setLocalRecord] = useState<VoteRecord | null | undefined>(undefined);
 
   useEffect(() => {
-    (async () => {
-      setRecord(getVote(election.id));
-    })();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocalRecord(getVote(election.id));
   }, [election.id]);
 
   // Avoid flash of wrong content during hydration
-  if (record === undefined) {
+  if (localRecord === undefined) {
     return (
       <div className="flex h-24 items-center justify-center">
         <div className="border-kpi-navy h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
@@ -31,8 +29,8 @@ export function VoteStatusWrapper({ election }: VoteStatusWrapperProps) {
     );
   }
 
-  if (record) {
-    return <AlreadyVotedCard record={record} />;
+  if (election.hasVoted || localRecord) {
+    return <AlreadyVotedCard record={localRecord ?? null} />;
   }
 
   return <VoteForm election={election} />;

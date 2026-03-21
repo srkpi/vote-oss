@@ -47,6 +47,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const now = new Date();
   const isClosed = now > election.closes_at;
+  const isOpen = now >= election.opens_at && now <= election.closes_at;
+
+  // For open elections, check whether this user has already been issued a vote
+  // token — a reliable server-side "already voted" signal. IssuedToken records
+  // are deleted when tallies are computed after close, so this check is only
+  // meaningful while the election is open.
+  let hasVoted: boolean | undefined;
+  if (isOpen) {
+    const issuedToken = await prisma.issuedToken.findUnique({
+      where: {
+        election_id_user_id: { election_id: electionId, user_id: user.sub },
+      },
+    });
+    hasVoted = issuedToken !== null;
+  }
 
   return NextResponse.json({
     id: election.id,
@@ -62,6 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     creator: { fullName: election.creator.full_name, faculty: election.creator.faculty },
     choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
     ballotCount: election._count.ballots,
+    hasVoted,
   });
 }
 

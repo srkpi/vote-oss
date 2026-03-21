@@ -103,4 +103,5 @@ export function resetPrismaMock() {
   prismaMock.faqCategory.update.mockImplementation((args: unknown) => args);
   prismaMock.faqItem.create.mockImplementation((args: unknown) => args);
   prismaMock.faqItem.update.mockImplementation((args: unknown) => args);
+  prismaMock.issuedToken.findUnique.mockResolvedValue(null);
 }

@@ -1,9 +1,8 @@
+import { LOCAL_STORAGE_VOTE_KEY_PREFIX } from '@/lib/constants';
 import type { VoteRecord } from '@/types/vote';
 
-const KEY_PREFIX = 'kpi_vote_';
-
 function key(electionId: string): string {
-  return `${KEY_PREFIX}${electionId}`;
+  return `${LOCAL_STORAGE_VOTE_KEY_PREFIX}${electionId}`;
 }
 
 export function saveVote(record: VoteRecord): void {
@@ -29,7 +28,9 @@ export function getVote(electionId: string): VoteRecord | null {
 export function clearAllVotes(): void {
   if (typeof window === 'undefined') return;
   try {
-    const toRemove = Object.keys(localStorage).filter((k) => k.startsWith(KEY_PREFIX));
+    const toRemove = Object.keys(localStorage).filter((k) =>
+      k.startsWith(LOCAL_STORAGE_VOTE_KEY_PREFIX),
+    );
     toRemove.forEach((k) => localStorage.removeItem(k));
   } catch {
     // ignore

@@ -29,6 +29,7 @@ export interface Election {
 
 export interface ElectionDetail extends Election {
   privateKey?: string;
+  hasVoted?: boolean;
 }
 
 export interface ElectionFilters {
