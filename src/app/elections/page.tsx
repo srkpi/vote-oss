@@ -31,7 +31,7 @@ export default async function ElectionsPage() {
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       <PageHeader
         title="Голосування"
-        description="Всі доступні вам голосування в одному місці"
+        description="Усі доступні вам голосування в одному місці"
         isContainer
       >
         {session.isAdmin && (
