@@ -6,6 +6,63 @@ import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
+/**
+ * @swagger
+ * /api/admins/join:
+ *   post:
+ *     summary: Become an admin via invite token
+ *     description: >
+ *       Redeems a valid invite token for the currently authenticated user,
+ *       creating or reactivating their admin record. If the token reaches its
+ *       maximum usage after this redemption it is automatically deleted.
+ *       Any logged-in user (non-admin included) may call this endpoint.
+ *     tags:
+ *       - Admins
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Raw (unhashed) invite token received from an existing admin
+ *     responses:
+ *       201:
+ *         description: Admin record created or reactivated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: string
+ *                 fullName:
+ *                   type: string
+ *                 faculty:
+ *                   type: string
+ *                 group:
+ *                   type: string
+ *                 manageAdmins:
+ *                   type: boolean
+ *                 restrictedToFaculty:
+ *                   type: boolean
+ *                 promotedBy:
+ *                   type: string
+ *       400:
+ *         description: Missing token, expired token, or token usage limit reached
+ *       401:
+ *         description: Unauthorized – user is not logged in
+ *       404:
+ *         description: Invalid invite token
+ *       409:
+ *         description: User is already an active admin
+ */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

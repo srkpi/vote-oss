@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/header';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types/auth';
 
-const hideHeaderPaths = ['/auth/login'];
+const hideHeaderPaths = ['/docs', '/auth/login'];
 
 interface PageLayoutProps {
   session: User | null;

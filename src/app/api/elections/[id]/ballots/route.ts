@@ -5,6 +5,74 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils';
 
+/**
+ * @swagger
+ * /api/elections/{id}/ballots:
+ *   get:
+ *     summary: List all ballots for an election
+ *     description: >
+ *       Returns the full ordered ballot chain for the given election.
+ *       Access is subject to faculty/group eligibility rules identical to
+ *       those applied when viewing the election itself. The encrypted ballot
+ *       payload and chain hashes are included so clients can independently
+ *       verify integrity.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     responses:
+ *       200:
+ *         description: Election metadata and ballot list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 election:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                 ballots:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       encryptedBallot:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       signature:
+ *                         type: string
+ *                       previousHash:
+ *                         type: string
+ *                         nullable: true
+ *                       currentHash:
+ *                         type: string
+ *                 total:
+ *                   type: integer
+ *       400:
+ *         description: Invalid election UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: User is not eligible to view this election
+ *       404:
+ *         description: Election not found
+ */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
@@ -26,7 +94,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!election) return Errors.notFound('Election not found');
 
-  // ── Access control ────────────────────────────────────────────────────────
   const { user } = auth;
 
   if (user.isAdmin && !user.restrictedToFaculty) {

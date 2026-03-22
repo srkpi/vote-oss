@@ -6,6 +6,52 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils';
 
+/**
+ * @swagger
+ * /api/elections/{id}/token:
+ *   post:
+ *     summary: Request a vote token
+ *     description: >
+ *       Issues a one-time, signed vote token to the authenticated user for
+ *       the specified open election. Enforces faculty/group eligibility and
+ *       prevents issuing more than one token per user per election.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     responses:
+ *       200:
+ *         description: Vote token issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: Unique vote token to be used when submitting a ballot
+ *                 signature:
+ *                   type: string
+ *                   description: ECDSA signature of the token, verifiable with the election public key
+ *       400:
+ *         description: Invalid UUID or election not open
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: User is not eligible for this election (faculty or group restriction)
+ *       404:
+ *         description: Election not found
+ *       409:
+ *         description: Vote token already issued for this user/election pair
+ */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);

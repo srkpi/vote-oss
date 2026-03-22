@@ -6,10 +6,39 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
 
-// ---------------------------------------------------------------------------
-// GET /api/admins/[userId]
-// ---------------------------------------------------------------------------
-
+/**
+ * @swagger
+ * /api/admins/{userId}:
+ *   get:
+ *     summary: Get a single admin by user ID
+ *     description: Returns full admin details for the given user ID. Served from cache when available. Requires admin authentication.
+ *     tags:
+ *       - Admins
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID of the admin to retrieve
+ *     responses:
+ *       200:
+ *         description: Admin record
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Admin'
+ *       400:
+ *         description: Missing userId
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – caller is not an admin
+ *       404:
+ *         description: Admin not found
+ */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -19,7 +48,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   const { userId } = await params;
   if (!userId) return Errors.badRequest('userId is required');
 
-  // ── Fast path: serve from cache when available ───────────────────────────
+  // Serve from cache when available
   const cached = await getCachedAdmins();
   if (cached) {
     const admin = cached.find((a) => a.userId === userId);
@@ -27,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     return NextResponse.json(admin);
   }
 
-  // ── Cache miss: fall through to DB ───────────────────────────────────────
+  // Cache miss: fall through to DB
   const admin = await prisma.admin.findUnique({
     where: { user_id: userId },
     select: {
@@ -58,10 +87,49 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   });
 }
 
-// ---------------------------------------------------------------------------
-// DELETE /api/admins/[userId]
-// ---------------------------------------------------------------------------
-
+/**
+ * @swagger
+ * /api/admins/{userId}:
+ *   delete:
+ *     summary: Remove an admin
+ *     description: >
+ *       Soft-deletes the target admin and hard-deletes all invite tokens they
+ *       created. The caller must have `manage_admins` and be a transitive
+ *       ancestor of the target in the admin hierarchy. A caller cannot remove
+ *       themselves.
+ *     tags:
+ *       - Admins
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID of the admin to remove
+ *     responses:
+ *       200:
+ *         description: Admin successfully removed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 removedUserId:
+ *                   type: string
+ *       400:
+ *         description: Missing userId or attempting to remove self
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – no manage_admins permission or target is outside caller's hierarchy branch
+ *       404:
+ *         description: Target admin not found
+ */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> },

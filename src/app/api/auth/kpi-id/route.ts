@@ -10,6 +10,67 @@ import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
 import type { TokenPayload } from '@/types/auth';
 
+/**
+ * @swagger
+ * /api/auth/kpi-id:
+ *   post:
+ *     summary: Authenticate via KPI-ID ticket
+ *     description: >
+ *       Exchanges a KPI-ID CAS ticket for a pair of HTTP-only JWT cookies
+ *       (access + refresh). If the user already has a valid session it is
+ *       revoked first. Non-student accounts are rejected. Rate-limited per IP.
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - ticketId
+ *             properties:
+ *               ticketId:
+ *                 type: string
+ *                 description: CAS service ticket obtained from the KPI-ID provider
+ *     responses:
+ *       200:
+ *         description: Authentication successful; JWT cookies set
+ *         headers:
+ *           Set-Cookie:
+ *             description: HTTP-only access and refresh token cookies
+ *             schema:
+ *               type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: string
+ *                 fullName:
+ *                   type: string
+ *                 faculty:
+ *                   type: string
+ *                 group:
+ *                   type: string
+ *                 isAdmin:
+ *                   type: boolean
+ *       400:
+ *         description: Missing or invalid ticketId
+ *       401:
+ *         description: Ticket is invalid or expired
+ *       403:
+ *         description: Account is not a student
+ *       429:
+ *         description: Too many login attempts – retry after the indicated delay
+ *         headers:
+ *           Retry-After:
+ *             schema:
+ *               type: integer
+ *       500:
+ *         description: Failed to contact the KPI-ID auth provider
+ */
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const rl = await rateLimitLogin(ip);

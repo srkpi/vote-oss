@@ -70,9 +70,32 @@ function toClientElections(
     }));
 }
 
-// ---------------------------------------------------------------------------
-// GET /api/elections
-// ---------------------------------------------------------------------------
+/**
+ * @swagger
+ * /api/elections:
+ *   get:
+ *     summary: List elections visible to the caller
+ *     description: >
+ *       Returns all elections the caller is eligible to see, filtered by
+ *       their faculty/group and admin status. Results are served from cache
+ *       when available. The private key is included only for closed elections.
+ *       Status (`upcoming` | `open` | `closed`) is computed at response time.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of elections
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Election'
+ *       401:
+ *         description: Unauthorized
+ */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
@@ -141,9 +164,97 @@ export async function GET(req: NextRequest) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// POST /api/elections
-// ---------------------------------------------------------------------------
+/**
+ * @swagger
+ * /api/elections:
+ *   post:
+ *     summary: Create an election
+ *     description: >
+ *       Creates a new election with an auto-generated RSA key pair. The
+ *       `opensAt` date is clamped to `now` if it is in the past. Faculty and
+ *       group values are validated against the campus API. Faculty-restricted
+ *       admins may only create elections for their own faculty. Requires admin
+ *       authentication.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - opensAt
+ *               - closesAt
+ *               - choices
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 255
+ *               opensAt:
+ *                 type: string
+ *                 format: date-time
+ *               closesAt:
+ *                 type: string
+ *                 format: date-time
+ *               choices:
+ *                 type: array
+ *                 minItems: 2
+ *                 maxItems: 10
+ *                 items:
+ *                   type: string
+ *                   maxLength: 100
+ *               restrictedToFaculty:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Limit election to a specific faculty (null = all faculties)
+ *               restrictedToGroup:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Limit election to a specific group within the faculty
+ *     responses:
+ *       201:
+ *         description: Election created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 title:
+ *                   type: string
+ *                 opensAt:
+ *                   type: string
+ *                   format: date-time
+ *                 closesAt:
+ *                   type: string
+ *                   format: date-time
+ *                 publicKey:
+ *                   type: string
+ *                 choices:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       choice:
+ *                         type: string
+ *                       position:
+ *                         type: integer
+ *       400:
+ *         description: Validation error (missing fields, date constraints, unknown faculty/group)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – caller is not an admin
+ *       500:
+ *         description: Campus API unavailable for faculty/group validation
+ */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) return Errors.forbidden(auth.error);
@@ -216,12 +327,12 @@ export async function POST(req: NextRequest) {
     restrictedToFaculty = admin.faculty;
   }
 
-  // ── Validate group is not set without faculty ────────────────────────────
+  // Validate group is not set without faculty
   if (restrictedToGroup && !restrictedToFaculty) {
     return Errors.badRequest('restrictedToGroup requires restrictedToFaculty to be set');
   }
 
-  // ── Validate faculty / group against campus API ──────────────────────────
+  // Validate faculty / group against campus API
   if (restrictedToFaculty) {
     let facultyGroups: Record<string, string[]>;
     try {
