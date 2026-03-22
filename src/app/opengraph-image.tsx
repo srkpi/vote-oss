@@ -1,4 +1,6 @@
+import fs from 'fs';
 import { ImageResponse } from 'next/og';
+import path from 'path';
 
 import { APP_NAME } from '@/lib/config/client';
 
@@ -16,6 +18,11 @@ const ORANGE_CX = 150;
 const ORANGE_CY = 520;
 
 export default function OgImage() {
+  const [onest, bitter] = [
+    fs.readFileSync(path.join(process.cwd(), 'public/fonts/Onest/Onest-Bold.ttf')),
+    fs.readFileSync(path.join(process.cwd(), 'public/fonts/Bitter/Bitter-Bold.ttf')),
+  ];
+
   return new ImageResponse(
     <div
       style={{
@@ -168,7 +175,7 @@ export default function OgImage() {
             color: '#ffffff',
             letterSpacing: '-3px',
             lineHeight: 1,
-            fontFamily: 'Georgia, serif',
+            fontFamily: 'Bitter, serif',
           }}
         >
           {APP_NAME}
@@ -180,13 +187,19 @@ export default function OgImage() {
             color: 'rgba(255,255,255,0.55)',
             letterSpacing: '8px',
             textTransform: 'uppercase',
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: 'Onest, sans-serif',
           }}
         >
           Система голосування
         </span>
       </div>
     </div>,
-    { ...size },
+    {
+      ...size,
+      fonts: [
+        { name: 'Onest', data: onest, weight: 700, style: 'normal' },
+        { name: 'Bitter', data: bitter, weight: 700, style: 'normal' },
+      ],
+    },
   );
 }
