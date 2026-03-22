@@ -12,10 +12,33 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
 
-// ---------------------------------------------------------------------------
-// GET /api/admins/invite
-// ---------------------------------------------------------------------------
-
+/**
+ * @swagger
+ * /api/admins/invite:
+ *   get:
+ *     summary: List visible invite tokens
+ *     description: >
+ *       Returns all non-expired, non-exhausted invite tokens that the caller
+ *       owns or was created by an admin in their hierarchy. Stale tokens are
+ *       purged from the database as a side-effect. Requires `manage_admins`.
+ *     tags:
+ *       - Admin Invites
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of visible invite tokens
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/InviteToken'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – no manage_admins permission
+ */
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -28,13 +51,13 @@ export async function GET(req: NextRequest) {
     return Errors.forbidden('You do not have permission to view invite tokens');
   }
 
-  // ── Load hierarchy graph (single query, includes soft-deleted nodes) ──────
+  // Load hierarchy graph (single query, includes soft-deleted nodes)
   const graphNodes = await prisma.admin.findMany({
     select: { user_id: true, promoted_by: true },
   });
   const graph = new Map(graphNodes.map((n) => [n.user_id, n.promoted_by]));
 
-  // ── Resolve token list from cache or DB ───────────────────────────────────
+  // Resolve token list from cache or DB
   let allTokens = await getCachedInviteTokens();
 
   if (!allTokens) {
@@ -66,7 +89,7 @@ export async function GET(req: NextRequest) {
     await setCachedInviteTokens(allTokens);
   }
 
-  // ── Purge stale tokens (expired or exhausted) from DB ────────────────────
+  // Purge stale tokens (expired or exhausted) from DB
   const now = new Date();
   const staleHashes = allTokens
     .filter((t) => new Date(t.validDue) < now || t.currentUsage >= t.maxUsage)
@@ -79,12 +102,11 @@ export async function GET(req: NextRequest) {
     await invalidateInviteTokens();
   }
 
-  // ── Keep only fresh tokens ────────────────────────────────────────────────
   const freshTokens = allTokens.filter(
     (t) => new Date(t.validDue) >= now && t.currentUsage < t.maxUsage,
   );
 
-  // ── Filter by caller's hierarchy and attach computed flags ────────────────
+  // Filter by caller's hierarchy and attach computed flags
   const visible = freshTokens
     .filter(
       (t) => t.creator.userId === user.sub || isAncestorInGraph(graph, user.sub, t.creator.userId),
@@ -98,10 +120,74 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(visible);
 }
 
-// ---------------------------------------------------------------------------
-// POST /api/admins/invite
-// ---------------------------------------------------------------------------
-
+/**
+ * @swagger
+ * /api/admins/invite:
+ *   post:
+ *     summary: Create an admin invite token
+ *     description: >
+ *       Generates a new single-use or multi-use admin invite token. The raw
+ *       token is returned once and never stored in plain text. Requires
+ *       `manage_admins`. A caller may have at most `INVITE_TOKEN_MAX_COUNT`
+ *       active tokens at a time.
+ *     tags:
+ *       - Admin Invites
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - validDue
+ *             properties:
+ *               maxUsage:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 100
+ *                 default: 1
+ *                 description: Maximum number of times the token can be used
+ *               manageAdmins:
+ *                 type: boolean
+ *                 default: false
+ *                 description: Whether the invited admin receives manage_admins permission
+ *               restrictedToFaculty:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Whether the invited admin is restricted to the creator's faculty
+ *               validDue:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Expiry timestamp; must be in the future and within INVITE_TOKEN_MAX_VALID_DAYS
+ *     responses:
+ *       201:
+ *         description: Token created – raw token returned here only
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: Raw (unhashed) invite token; share this with the invitee
+ *                 maxUsage:
+ *                   type: integer
+ *                 manageAdmins:
+ *                   type: boolean
+ *                 restrictedToFaculty:
+ *                   type: boolean
+ *                 validDue:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Validation error (missing/invalid fields or token limit reached)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – no manage_admins or attempting to grant permissions not held
+ */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -156,7 +242,7 @@ export async function POST(req: NextRequest) {
     restrictedToFaculty = true;
   }
 
-  // ── Enforce per-admin active token limit ──────────────────────────────────
+  // Enforce per-admin active token limit
   const now = new Date();
   const activeTokenCount = await prisma.adminInviteToken.count({
     where: {

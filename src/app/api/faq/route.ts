@@ -6,10 +6,27 @@ import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
-// ---------------------------------------------------------------------------
-// GET /api/faq  — public, no authentication required
-// ---------------------------------------------------------------------------
-
+/**
+ * @swagger
+ * /api/faq:
+ *   get:
+ *     summary: List all FAQ categories with their items
+ *     description: >
+ *       Public endpoint – no authentication required. Returns the full FAQ
+ *       tree ordered by category position, with each category's items ordered
+ *       by item position. Results are served from cache when available.
+ *     tags:
+ *       - FAQ
+ *     responses:
+ *       200:
+ *         description: Array of FAQ categories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/FaqCategory'
+ */
 export async function GET() {
   const cached = await getCachedFaq();
   if (cached) {
@@ -39,10 +56,44 @@ export async function GET() {
   return NextResponse.json(categories);
 }
 
-// ---------------------------------------------------------------------------
-// POST /api/faq  — root admin only
-// ---------------------------------------------------------------------------
-
+/**
+ * @swagger
+ * /api/faq:
+ *   post:
+ *     summary: Create a FAQ category
+ *     description: >
+ *       Creates a new FAQ category appended at the end of the existing order.
+ *       Restricted to non-faculty-restricted (root) admins.
+ *     tags:
+ *       - FAQ
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 100
+ *     responses:
+ *       201:
+ *         description: Category created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FaqCategoryMeta'
+ *       400:
+ *         description: Missing or invalid title
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – restricted admins cannot manage FAQ
+ */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

@@ -13,3 +13,4 @@ export const KPI_APP_SECRET = env.KPI_APP_SECRET;
 export const TRUSTED_PROXY_COUNT = env.TRUSTED_PROXY_COUNT;
 export const NODE_ENV = env.NODE_ENV;
 export const CRON_SECRET = env.CRON_SECRET;
+export const APP_VERSION = env.APP_VERSION;

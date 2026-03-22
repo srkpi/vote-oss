@@ -9,6 +9,47 @@ import { getClientIp, rateLimitRefresh } from '@/lib/rate-limit';
 import { persistTokenPair, revokeByRefreshJti } from '@/lib/token-store';
 import type { TokenPayload } from '@/types/auth';
 
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh the access token
+ *     description: >
+ *       Issues a new access + refresh token pair using the caller's valid
+ *       refresh token cookie (token rotation). The old refresh token is
+ *       revoked immediately. Admin status is re-evaluated against the database
+ *       on every refresh. Rate-limited per IP.
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: New token pair issued; cookies updated
+ *         headers:
+ *           Set-Cookie:
+ *             description: Rotated HTTP-only access and refresh token cookies
+ *             schema:
+ *               type: string
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 isAdmin:
+ *                   type: boolean
+ *       401:
+ *         description: Refresh token is missing, invalid, or already revoked
+ *       429:
+ *         description: Too many refresh requests
+ *         headers:
+ *           Retry-After:
+ *             schema:
+ *               type: integer
+ */
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const rl = await rateLimitRefresh(ip);

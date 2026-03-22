@@ -6,6 +6,70 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils';
 
+/**
+ * @swagger
+ * /api/elections/{id}/tally:
+ *   get:
+ *     summary: Get election results
+ *     description: >
+ *       Returns the vote tally for a closed election. If a pre-computed tally
+ *       exists it is returned immediately; otherwise all ballots are decrypted,
+ *       counted, and the tally is persisted for future requests. Issued tokens
+ *       and nullifiers are also cleaned up on first tally computation.
+ *       The election private key is included so clients can independently
+ *       verify the result.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     responses:
+ *       200:
+ *         description: Tally results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 electionId:
+ *                   type: string
+ *                 title:
+ *                   type: string
+ *                 closedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 privateKey:
+ *                   type: string
+ *                   description: Election private key for independent verification
+ *                 results:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       choiceId:
+ *                         type: string
+ *                       choice:
+ *                         type: string
+ *                       position:
+ *                         type: integer
+ *                       votes:
+ *                         type: integer
+ *                 totalBallots:
+ *                   type: integer
+ *       400:
+ *         description: Election has not closed yet or invalid UUID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Election not found
+ */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);

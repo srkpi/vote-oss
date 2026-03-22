@@ -5,15 +5,35 @@ import { fetchFacultyGroups } from '@/lib/campus-api';
 import { Errors } from '@/lib/errors';
 
 /**
- * GET /api/campus/groups
- *
- * Returns the full faculty → groups mapping used to populate the
- * faculty/group pickers in the election creation form.
- *
- * Response shape: `Record<string, string[]>`
- * Keys are sorted faculty names; values are groups sorted alphabetically.
- *
- * Requires authentication (any logged-in user).
+ * @swagger
+ * /api/campus/groups:
+ *   get:
+ *     summary: Get faculty to groups mapping
+ *     description: >
+ *       Returns the full faculty-to-groups mapping sourced from the campus API.
+ *       Used to populate faculty/group pickers in the election creation form.
+ *       Requires any authenticated user.
+ *     tags:
+ *       - Campus
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Faculty to groups mapping
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               example:
+ *                 "Faculty of Engineering": ["Group A", "Group B"]
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to fetch data from the campus API
  */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);

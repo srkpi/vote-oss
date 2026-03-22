@@ -6,6 +6,45 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils';
 
+/**
+ * @swagger
+ * /api/elections/{id}:
+ *   get:
+ *     summary: Get a single election
+ *     description: >
+ *       Returns full election details including choices and ballot count.
+ *       Access is subject to faculty/group eligibility. The private key is
+ *       only included after the election has closed. For open elections a
+ *       `hasVoted` flag indicates whether the caller has already been issued
+ *       a vote token.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     responses:
+ *       200:
+ *         description: Election details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ElectionDetail'
+ *       400:
+ *         description: Invalid UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: User is not eligible for this election
+ *       404:
+ *         description: Election not found
+ */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
@@ -26,7 +65,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { user } = auth;
 
-  // ── Access control ────────────────────────────────────────────────────────
   // Unrestricted admins may view any election.
   // Faculty-restricted admins may view global elections + their own faculty.
   // Regular users must match both faculty and group restrictions.
@@ -81,6 +119,49 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 }
 
+/**
+ * @swagger
+ * /api/elections/{id}:
+ *   delete:
+ *     summary: Delete an election
+ *     description: >
+ *       Permanently deletes an election and all related data. Requires admin
+ *       authentication. Faculty-restricted admins may only delete elections
+ *       scoped to their own faculty.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     responses:
+ *       200:
+ *         description: Election deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 deletedId:
+ *                   type: string
+ *       400:
+ *         description: Invalid UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – not an admin or election belongs to a different faculty
+ *       404:
+ *         description: Election not found
+ */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

@@ -5,11 +5,50 @@ import { invalidateFaq } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
-// ---------------------------------------------------------------------------
-// PATCH /api/faq/categories/reorder  — root admin only
-// Body: { order: string[] }  — array of category IDs in desired order
-// ---------------------------------------------------------------------------
-
+/**
+ * @swagger
+ * /api/faq/categories/reorder:
+ *   patch:
+ *     summary: Reorder FAQ categories
+ *     description: >
+ *       Accepts a complete ordered array of category IDs and updates their
+ *       `position` values atomically. Root admins only.
+ *     tags:
+ *       - FAQ
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - order
+ *             properties:
+ *               order:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Complete ordered list of all category IDs
+ *     responses:
+ *       200:
+ *         description: Categories reordered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Invalid order array or unknown category IDs
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

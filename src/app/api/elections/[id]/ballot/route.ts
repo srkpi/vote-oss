@@ -12,6 +12,76 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils';
 
+/**
+ * @swagger
+ * /api/elections/{id}/ballot:
+ *   post:
+ *     summary: Cast a ballot in an election
+ *     description: >
+ *       Submits an encrypted ballot for an open election. The endpoint
+ *       verifies the vote token signature, checks that the nullifier has not
+ *       been used before (replay protection), decrypts the ballot to validate
+ *       the selected choice, and appends the ballot to the hash chain. Requires
+ *       any authenticated user.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - signature
+ *               - encryptedBallot
+ *               - nullifier
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Vote token issued by POST /api/elections/{id}/token
+ *               signature:
+ *                 type: string
+ *                 description: ECDSA signature of the vote token
+ *               encryptedBallot:
+ *                 type: string
+ *                 description: RSA-encrypted choice ID
+ *               nullifier:
+ *                 type: string
+ *                 description: SHA-256 hash of the vote token (prevents double-voting)
+ *     responses:
+ *       201:
+ *         description: Ballot recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 ballotHash:
+ *                   type: string
+ *                   description: Current hash in the ballot chain for this ballot
+ *       400:
+ *         description: Validation error (bad UUID, invalid signature, bad nullifier, bad ballot, election not open)
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Election not found
+ *       409:
+ *         description: This vote token has already been used
+ */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
