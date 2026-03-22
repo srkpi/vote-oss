@@ -104,4 +104,5 @@ export const env = {
   CRON_SECRET: getSecret('CRON_SECRET'),
   TRUSTED_PROXY_COUNT: getNumberEnv('TRUSTED_PROXY_COUNT', 1),
   NODE_ENV: getOptionalEnv('NODE_ENV', 'production'),
+  APP_VERSION: getOptionalEnv('npm_package_version', '1.0.0'),
 };
