@@ -259,10 +259,14 @@ export default async function HomePage() {
           <div className="container">
             <div className="mb-10 flex items-center justify-between">
               <h2 className="font-display text-foreground text-3xl font-bold">
-                Активні голосування
+                <span className="md:hidden">Голосування</span>
+                <span className="hidden sm:inline">Активні голосування</span>
               </h2>
               <Button variant="secondary" asChild>
-                <Link href="/elections">Усі голосування</Link>
+                <Link href="/elections">
+                  <span className="md:hidden">Усі</span>
+                  <span className="hidden sm:inline">Усі голосування</span>
+                </Link>
               </Button>
             </div>
 

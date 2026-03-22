@@ -1,7 +1,7 @@
 import './globals.css';
 
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Bitter, Onest } from 'next/font/google';
 
 import { PageLayout } from '@/components/layout/page-layout';
 import { APP_NAME } from '@/lib/config/client';
@@ -10,7 +10,19 @@ import { getServerSession } from '@/lib/server-auth';
 import { cn } from '@/lib/utils';
 import { ToastProvider } from '@/providers/toast-provider';
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
+const onest = Onest({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-sans',
+});
+
+const bitter = Bitter({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-display',
+});
+
 const title = `${APP_NAME} — Система електронного голосування`;
 const description =
   'Безпечна система електронного голосування для студентів КПІ ім. Ігоря Сікорського.';
@@ -47,10 +59,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession();
 
   return (
-    <html lang="uk" className={cn('font-sans', geist.variable)}>
+    <html lang="uk" className={cn('font-sans', onest.variable, bitter.variable)}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
       </head>
       <body>
