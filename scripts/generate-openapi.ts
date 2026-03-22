@@ -320,6 +320,6 @@ const spec = createSwaggerSpec({
 
 const outputPath = path.join(process.cwd(), 'public', 'openapi.json');
 
-fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
+fs.writeFileSync(outputPath, JSON.stringify(spec));
 
 console.log('✅ OpenAPI spec generated at public/openapi.json');
