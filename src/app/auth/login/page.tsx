@@ -1,5 +1,6 @@
 import { Check, CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { KpiIdLogin } from '@/components/auth/kpi-id-login';
@@ -175,8 +176,8 @@ export default function LoginPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/15">
             <CheckCircle className="h-4 w-4 text-white" />
           </div>
-          <div>
-            <span className="font-display block text-xl leading-tight font-bold text-white">
+          <div className="flex flex-col justify-center">
+            <span className="font-display text-lg leading-tight font-semibold text-white">
               {APP_NAME}
             </span>
             <span className="font-body text-[10px] tracking-widest text-white/50 uppercase">
@@ -238,9 +239,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="flex items-center justify-center">
             <Link className="mb-8 flex items-center gap-3 lg:hidden" href="/">
-              <div className="navy-gradient shadow-shadow-button flex h-9 w-9 items-center justify-center rounded-xl">
-                <CheckCircle className="h-4 w-4 text-white" />
-              </div>
+              <Image src="/logo.svg" alt="Logo" height={36} width={36} preload />
               <span className="font-display text-kpi-navy text-2xl font-bold">{APP_NAME}</span>
             </Link>
           </div>

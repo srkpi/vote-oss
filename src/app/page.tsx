@@ -258,14 +258,9 @@ export default async function HomePage() {
         <section className="bg-surface py-20">
           <div className="container">
             <div className="mb-10 flex items-center justify-between">
-              <div>
-                <h2 className="font-display text-foreground text-3xl font-bold">
-                  Активні голосування
-                </h2>
-                <p className="font-body text-muted-foreground mt-1">
-                  Доступні зараз для вашого підрозділу
-                </p>
-              </div>
+              <h2 className="font-display text-foreground text-3xl font-bold">
+                Активні голосування
+              </h2>
               <Button variant="secondary" asChild>
                 <Link href="/elections">Усі голосування</Link>
               </Button>
