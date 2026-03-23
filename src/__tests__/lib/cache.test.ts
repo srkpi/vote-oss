@@ -32,6 +32,7 @@ import {
   CACHE_TTL_ADMINS_SECS,
   CACHE_TTL_ELECTIONS_SECS,
 } from '@/lib/constants';
+import { CachedAdmin } from '@/types/admin';
 
 // ---------------------------------------------------------------------------
 // Sample fixtures
@@ -47,20 +48,20 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
   restrictedToGroup: null,
   publicKey: '-----BEGIN PUBLIC KEY-----\nfake\n-----END PUBLIC KEY-----',
   privateKey: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----',
-  creator: { full_name: 'Admin', faculty: 'FICE' },
+  creator: { fullName: 'Admin', faculty: 'FICE' },
   choices: [],
   ballotCount: 0,
 };
 
-const SAMPLE_ADMIN = {
-  user_id: 'admin-001',
-  full_name: 'Admin',
+const SAMPLE_ADMIN: CachedAdmin = {
+  userId: 'admin-001',
+  fullName: 'Admin',
   group: 'KV-11',
   faculty: 'FICE',
-  promoted_by: null,
-  promoted_at: new Date('2024-01-01'),
-  manage_admins: true,
-  restricted_to_faculty: false,
+  promoter: null,
+  promotedAt: new Date('2024-01-01').toISOString(),
+  manageAdmins: true,
+  restrictedToFaculty: false,
 };
 
 describe('cache', () => {
@@ -155,7 +156,7 @@ describe('cache', () => {
       redisMock.get.mockResolvedValueOnce(JSON.stringify([SAMPLE_ADMIN]));
       const result = await getCachedAdmins();
       expect(result).toHaveLength(1);
-      expect(result![0].user_id).toBe('admin-001');
+      expect(result![0].userId).toBe('admin-001');
     });
 
     it('uses the correct cache key', async () => {

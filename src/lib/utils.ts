@@ -83,14 +83,27 @@ export function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength - 3) + '…';
 }
 
-export function pluralize(count: number, forms: [string, string, string]): string {
+export function pluralize(
+  count: number,
+  forms: [string, string, string],
+  returnCount: boolean = true,
+): string {
   const mod10 = count % 10;
   const mod100 = count % 100;
 
-  if (mod100 >= 11 && mod100 <= 14) return `${count} ${forms[2]}`;
-  if (mod10 === 1) return `${count} ${forms[0]}`;
-  if (mod10 >= 2 && mod10 <= 4) return `${count} ${forms[1]}`;
-  return `${count} ${forms[2]}`;
+  let word: string;
+
+  if (mod100 >= 11 && mod100 <= 14) {
+    word = forms[2];
+  } else if (mod10 === 1) {
+    word = forms[0];
+  } else if (mod10 >= 2 && mod10 <= 4) {
+    word = forms[1];
+  } else {
+    word = forms[2];
+  }
+
+  return returnCount ? `${count} ${word}` : word;
 }
 
 export function calculateVotePercentage(votes: number, total: number): number {

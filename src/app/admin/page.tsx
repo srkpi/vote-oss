@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, pluralize } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Адмін панель',
@@ -79,19 +79,23 @@ export default async function AdminDashboardPage() {
             icon={<CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
-            label="Голосувань"
+            label={pluralize(elections.length, ['Голосування', 'Голосування', 'Голосувань'], false)}
             value={elections.length.toLocaleString('uk-UA')}
             accent="navy"
             icon={<FileText className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
-            label="Бюлетенів"
+            label={pluralize(totalBallots, ['Бюлетень', 'Бюлетені', 'Бюлетенів'], false)}
             value={totalBallots.toLocaleString('uk-UA')}
             accent="orange"
             icon={<CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
-            label="Адміністраторів"
+            label={pluralize(
+              admins.length,
+              ['Адміністратор', 'Адміністратори', 'Адміністраторів'],
+              false,
+            )}
             value={admins.length.toLocaleString('uk-UA')}
             accent="info"
             icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}

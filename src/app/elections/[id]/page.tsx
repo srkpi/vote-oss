@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, pluralize } from '@/lib/utils';
 import type { TallyResponse } from '@/types/tally';
 
 interface ElectionPageProps {
@@ -111,7 +111,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 <Button variant="secondary" size="sm" asChild>
                   <Link href={`/elections/${id}/ballots`}>
                     <FileText className="h-3.5 w-3.5" />
-                    {election.ballotCount} бюлетенів
+                    {pluralize(election.ballotCount, ['бюлетень', 'бюлетені', 'бюлетенів'])}
                   </Link>
                 </Button>
               </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { calculateVotePercentage, cn } from '@/lib/utils';
+import { calculateVotePercentage, cn, pluralize } from '@/lib/utils';
 import type { TallyResult } from '@/types/tally';
 
 const colors = [
@@ -91,7 +91,7 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
                     {animated ? pct : 0}%
                   </span>
                   <p className="font-body text-muted-foreground text-xs">
-                    {result.votes} {result.votes === 1 ? 'голос' : 'голосів'}
+                    {pluralize(result.votes, ['голос', 'голоси', 'голосів'])}
                   </p>
                 </div>
               </div>

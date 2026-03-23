@@ -336,7 +336,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             hint={
               restrictedToFaculty
                 ? 'Акаунт обмежений одним підрозділом'
-                : 'Наприклад: FICE, ФЕЛ, ФІОТ'
+                : 'Наприклад: ФІОТ, ФЕЛ, ФАПІЕ'
             }
           >
             {restrictedToFaculty ? (
