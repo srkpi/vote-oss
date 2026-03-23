@@ -1,1 +1,1 @@
-{"id":"da45d8c99e4cdaddcdd6fc43a9383f08","fullName":"src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/items/[id] returns 200 with deletedId on success","name":"returns 200 with deletedId on success","status":"passed","testResultsByEnv":{"default":"d014930cd69ae4e5858f4f2d3ebfd568"}}
+{"id":"da45d8c99e4cdaddcdd6fc43a9383f08","fullName":"src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/items/[id] returns 200 with deletedId on success","name":"returns 200 with deletedId on success","status":"passed","testResultsByEnv":{"default":"0aae5c051c5399b524312ce8087d3551"}}
