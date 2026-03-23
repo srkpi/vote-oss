@@ -18,7 +18,7 @@ import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { Button } from '@/components/ui/button';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
-import { cn } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils';
 import { getVote } from '@/lib/vote-storage';
 import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
 import type { ElectionChoice, ElectionDetail } from '@/types/election';
@@ -196,8 +196,8 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           <FileText className="text-kpi-gray-mid h-4 w-4" />
           <span>
             {trimmedQuery
-              ? `${filteredBallots.length} з ${ballots.length} бюлетенів`
-              : `${ballots.length} бюлетенів`}
+              ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
+              : pluralize(ballots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])}
           </span>
         </div>
 
@@ -245,7 +245,11 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           {filteredBallots.length > 0 ? (
             <span className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 shrink-0" />
-              Знайдено {filteredBallots.length} бюлетень(ів) серед {ballots.length}
+              Знайдено {pluralize(filteredBallots.length, [
+                'бюлетень',
+                'бюлетені',
+                'бюлетенів',
+              ])} з {ballots.length}
             </span>
           ) : (
             <span className="flex items-center gap-2">

@@ -60,7 +60,7 @@ export function DecryptionPanel({
           <div className="min-w-0">
             {isDecrypting && (
               <p className="font-body text-foreground text-sm font-medium">
-                Розшифрування {ballotCount} бюлетенів…
+                Розшифрування бюлетенів…
               </p>
             )}
             {!isDecrypting && !decryptionDone && (

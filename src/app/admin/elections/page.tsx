@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
+import { pluralize } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Голосування',
@@ -64,7 +65,7 @@ export default async function AdminElectionsPage() {
             icon={<Clock className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
-            label="Бюлетенів"
+            label={pluralize(totalBallots, ['Бюлетень', 'Бюлетені', 'Бюлетенів'], false)}
             value={totalBallots.toLocaleString('uk-UA')}
             accent="info"
             icon={<CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />}

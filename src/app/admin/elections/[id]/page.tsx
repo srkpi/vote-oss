@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { TimelineItem } from '@/components/ui/timeline-item';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, pluralize } from '@/lib/utils';
 import type { TallyResponse } from '@/types/tally';
 
 interface AdminElectionPageProps {
@@ -99,7 +99,10 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   <p className="font-display text-success text-2xl font-bold sm:text-3xl">
                     {election.ballotCount.toLocaleString('uk-UA')}
                   </p>
-                  <p className="font-body text-success/70 text-xs">бюлетенів подано</p>
+                  <p className="font-body text-success/70 text-xs">
+                    {pluralize(election.ballotCount, ['бюлетень', 'бюлетені', 'бюлетенів'], false)}{' '}
+                    подано
+                  </p>
                 </div>
               </div>
             )}
@@ -111,7 +114,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                     Результати голосування
                   </h2>
                   <Badge variant="secondary" size="md">
-                    {tally.totalBallots} бюлетенів
+                    {pluralize(tally.totalBallots, ['бюлетень', 'бюлетені', 'бюлетенів'])}
                   </Badge>
                 </div>
                 <div className="p-4 sm:p-6">

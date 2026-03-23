@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
+import { pluralize } from '@/lib/utils';
 import type { Election, ElectionStatus } from '@/types/election';
 
 interface ElectionsFilterProps {
@@ -70,7 +71,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
 
       {(search || activeTab !== 'all') && filtered.length > 0 && (
         <p className="font-body text-muted-foreground text-xs">
-          Знайдено: {filtered.length} голосувань
+          Знайдено: {pluralize(filtered.length, ['голосування', 'голосування', 'голосувань'])}
         </p>
       )}
 
