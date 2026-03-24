@@ -1,1 +1,1 @@
-{"id":"f97d7d8f1410844a8fa2d4860daab692","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimitLogin uses limit 20 with 60-second window","name":"uses limit 20 with 60-second window","status":"passed","testResultsByEnv":{"default":"5c48996f57c01c419ea2f77522ff2f2f"}}
+{"id":"f97d7d8f1410844a8fa2d4860daab692","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimitLogin uses limit 20 with 60-second window","name":"uses limit 20 with 60-second window","status":"passed","testResultsByEnv":{"default":"aea1693c9cae2ba423941a160c3d673c"}}
