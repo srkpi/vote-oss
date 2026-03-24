@@ -19,7 +19,7 @@ interface Props {
 export default async function JoinPage({ searchParams }: Props) {
   const session = await getServerSession();
   if (!session) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   const { token } = await searchParams;

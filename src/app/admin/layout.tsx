@@ -15,11 +15,11 @@ export const metadata: Metadata = {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession();
   if (!session) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   return (
-    <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))]">
+    <div className="bg-surface flex min-h-dvh">
       <AdminSidebar
         manageAdmins={session.manageAdmins}
         restrictedToFaculty={session.restrictedToFaculty}

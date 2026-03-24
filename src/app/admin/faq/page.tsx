@@ -14,7 +14,7 @@ export default async function AdminFaqPage() {
   const session = await getServerSession();
 
   if (!session) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   if (session.restrictedToFaculty) {

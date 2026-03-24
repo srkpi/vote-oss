@@ -6,7 +6,7 @@ import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import type { VerifiedPayload } from '@/types/auth';
 
 const PROTECTED_PATHS = ['/elections', '/admin', '/join'];
-const GUEST_ONLY_PATHS = ['/auth/login'];
+const GUEST_ONLY_PATHS = ['/login'];
 const ADMIN_ONLY_PATHS = ['/admin'];
 
 function parseSetCookie(cookieStr: string): { name: string; value: string } | null {
@@ -78,7 +78,7 @@ export async function proxy(req: NextRequest) {
   // Non-authenticated user hitting a protected route
   if (!user && isProtected) {
     const loginUrl = req.nextUrl.clone();
-    loginUrl.pathname = '/auth/login';
+    loginUrl.pathname = '/login';
     return NextResponse.redirect(loginUrl);
   }
 
