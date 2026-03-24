@@ -15,8 +15,6 @@ export interface Admin {
   deletable?: boolean;
 }
 
-export type CachedAdmin = Admin;
-
 export interface InviteTokenRequest {
   validDue: string;
   maxUsage?: number;

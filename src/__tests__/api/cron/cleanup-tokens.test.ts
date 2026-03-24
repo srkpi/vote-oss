@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { POST } from '@/app/api/cron/cleanup-tokens/route';

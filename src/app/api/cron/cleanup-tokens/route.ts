@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { CRON_SECRET } from '@/lib/config/server';
 import { REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';

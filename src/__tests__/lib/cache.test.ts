@@ -1,7 +1,7 @@
 import * as allure from 'allure-js-commons';
 
 import { redisMock, resetRedisMock } from '@/__tests__/helpers/redis-mock';
-import type { CachedElection } from '@/lib/cache';
+import type { CachedElection } from '@/types/election';
 
 // ---------------------------------------------------------------------------
 // Module mock
@@ -32,7 +32,7 @@ import {
   CACHE_TTL_ADMINS_SECS,
   CACHE_TTL_ELECTIONS_SECS,
 } from '@/lib/constants';
-import { CachedAdmin } from '@/types/admin';
+import type { Admin } from '@/types/admin';
 
 // ---------------------------------------------------------------------------
 // Sample fixtures
@@ -53,7 +53,7 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
   ballotCount: 0,
 };
 
-const SAMPLE_ADMIN: CachedAdmin = {
+const SAMPLE_ADMIN: Admin = {
   userId: 'admin-001',
   fullName: 'Admin',
   group: 'KV-11',

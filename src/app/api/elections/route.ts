@@ -1,12 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
-import {
-  type CachedElection,
-  getCachedElections,
-  invalidateElections,
-  setCachedElections,
-} from '@/lib/cache';
+import { getCachedElections, invalidateElections, setCachedElections } from '@/lib/cache';
 import { fetchFacultyGroups } from '@/lib/campus-api';
 import {
   ELECTION_CHOICE_MAX_LENGTH,
@@ -18,7 +14,7 @@ import {
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import type { Election, ElectionStatus } from '@/types/election';
+import type { CachedElection, Election, ElectionStatus } from '@/types/election';
 
 function computeStatus(opensAt: string, closesAt: string): ElectionStatus {
   const now = Date.now();

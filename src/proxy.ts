@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 import { APP_URL } from '@/lib/config/server';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';

@@ -24,22 +24,9 @@ import {
   CACHE_TTL_INVITE_TOKENS_SECS,
 } from '@/lib/constants';
 import { redis, safeRedis } from '@/lib/redis';
-import type { CachedAdmin, CachedInviteToken } from '@/types/admin';
-import type { Election } from '@/types/election';
+import type { Admin, CachedInviteToken } from '@/types/admin';
+import type { CachedElection } from '@/types/election';
 import type { FaqCategoryData } from '@/types/faq';
-
-/**
- * Shape stored in Redis for each election.
- *
- * `status` is intentionally absent – it is derived from `opensAt`/`closesAt`
- * at serve time so cached entries never return a stale status.
- *
- * `privateKey` is always stored so we can expose it once the election closes
- * without a cache miss, but route handlers must strip it for open elections.
- */
-export type CachedElection = Omit<Election, 'status'> & {
-  privateKey: string; // always present in cache; conditionally exposed to clients
-};
 
 /** Return cached elections, or null if not cached / Redis down. */
 export async function getCachedElections(): Promise<CachedElection[] | null> {
@@ -65,18 +52,18 @@ export async function invalidateElections(): Promise<void> {
 }
 
 /** Return cached admin list, or null if not cached / Redis down. */
-export async function getCachedAdmins(): Promise<CachedAdmin[] | null> {
+export async function getCachedAdmins(): Promise<Admin[] | null> {
   const raw = await safeRedis(() => redis.get(CACHE_KEY_ADMINS));
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as CachedAdmin[];
+    return JSON.parse(raw) as Admin[];
   } catch {
     return null;
   }
 }
 
 /** Store admin list in cache. */
-export async function setCachedAdmins(data: CachedAdmin[]): Promise<void> {
+export async function setCachedAdmins(data: Admin[]): Promise<void> {
   await safeRedis(() =>
     redis.set(CACHE_KEY_ADMINS, JSON.stringify(data), 'EX', CACHE_TTL_ADMINS_SECS),
   );
