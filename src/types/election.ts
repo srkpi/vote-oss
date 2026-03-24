@@ -32,6 +32,19 @@ export interface ElectionDetail extends Election {
   hasVoted?: boolean;
 }
 
+/**
+ * Shape stored in Redis for each election.
+ *
+ * `status` is intentionally absent – it is derived from `opensAt`/`closesAt`
+ * at serve time so cached entries never return a stale status.
+ *
+ * `privateKey` is always stored so we can expose it once the election closes
+ * without a cache miss, but route handlers must strip it for open elections.
+ */
+export type CachedElection = Omit<Election, 'status'> & {
+  privateKey: string; // always present in cache; conditionally exposed to clients
+};
+
 export interface ElectionFilters {
   status?: ElectionStatus | 'all';
   search?: string;

@@ -27,6 +27,13 @@ const eslintConfig = defineConfig([
           calleeFunctions: ['cn', 'clsx'],
         },
       ],
+      '@typescript-eslint/consistent-type-imports': [
+        'warn',
+        {
+          prefer: 'type-imports',
+          disallowTypeAnnotations: true,
+        },
+      ],
     },
   },
   {

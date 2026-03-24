@@ -1,3 +1,5 @@
+import type { Admin } from '@prisma/client';
+
 export interface TicketUserInfo {
   id: string;
   created: string;
@@ -46,3 +48,20 @@ export interface User {
   restrictedToFaculty: boolean;
   manageAdmins: boolean;
 }
+
+export type AuthFailure = {
+  ok: false;
+  error: string;
+  status: 401 | 403;
+};
+
+export type AuthSuccess = {
+  ok: true;
+  user: VerifiedPayload;
+};
+
+export type AuthAdminSuccess = {
+  ok: true;
+  user: VerifiedPayload;
+  admin: Admin;
+};

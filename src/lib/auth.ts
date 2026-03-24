@@ -1,28 +1,10 @@
-import type { Admin } from '@prisma/client';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
 import { isAccessTokenValid, isRefreshTokenValid } from '@/lib/token-store';
-import type { VerifiedPayload } from '@/types/auth';
-
-export type AuthFailure = {
-  ok: false;
-  error: string;
-  status: 401 | 403;
-};
-
-export type AuthSuccess = {
-  ok: true;
-  user: VerifiedPayload;
-};
-
-export type AdminSuccess = {
-  ok: true;
-  user: VerifiedPayload;
-  admin: Admin;
-};
+import type { AuthAdminSuccess, AuthFailure, AuthSuccess, VerifiedPayload } from '@/types/auth';
 
 export async function requireAuth(req: NextRequest): Promise<AuthFailure | AuthSuccess> {
   const token = req.cookies.get(COOKIE_ACCESS)?.value;
@@ -66,7 +48,7 @@ export async function requireRefreshAuth(req: NextRequest): Promise<AuthFailure 
   return { ok: true, user: payload };
 }
 
-export async function requireAdmin(req: NextRequest): Promise<AuthFailure | AdminSuccess> {
+export async function requireAdmin(req: NextRequest): Promise<AuthFailure | AuthAdminSuccess> {
   const auth = await requireAuth(req);
   if (!auth.ok) return auth;
 

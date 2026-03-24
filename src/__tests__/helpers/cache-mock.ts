@@ -10,7 +10,7 @@
  * resolve with undefined.
  */
 
-import type { CachedElection } from '@/lib/cache';
+import type { CachedElection } from '@/types/election';
 import type { FaqCategoryData } from '@/types/faq';
 
 export const cacheMock = {

@@ -1,7 +1,7 @@
 'use client';
 
 import { createApiClient } from '@/lib/api/client';
-import { ApiError, ApiResult } from '@/types/api';
+import type { ApiError, ApiResult } from '@/types/api';
 
 const BASE_URL = '/api';
 

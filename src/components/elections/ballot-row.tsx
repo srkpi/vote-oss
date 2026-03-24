@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { Ballot, DecryptionResult } from '@/types/ballot';
-import { ElectionChoice } from '@/types/election';
+import type { Ballot, DecryptionResult } from '@/types/ballot';
+import type { ElectionChoice } from '@/types/election';
 
 interface BallotRowProps {
   ballot: Ballot;

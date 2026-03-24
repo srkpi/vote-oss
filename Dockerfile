@@ -12,9 +12,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY prisma ./prisma
-
-ARG DATABASE_URL="file:./dev.db"
-ENV DATABASE_URL=${DATABASE_URL}
 RUN pnpm db:generate
 
 # builder
