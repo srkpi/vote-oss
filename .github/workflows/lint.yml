@@ -24,8 +24,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+
       - name: Run TypeScript type check
-        run: pnpm tsc --noEmit
+        run: pnpm type-check
 
       - name: Run ESLint
         run: pnpm lint
