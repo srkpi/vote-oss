@@ -36,7 +36,7 @@ export function Header({ session }: HeaderProps) {
     const result = await api.logout();
     if (result.success) {
       toast({ title: 'Вихід виконано', description: 'До побачення!', variant: 'success' });
-      router.push('/auth/login');
+      router.push('/login');
       router.refresh();
     } else {
       toast({ title: 'Помилка виходу', description: result.error, variant: 'error' });
@@ -162,7 +162,7 @@ export function Header({ session }: HeaderProps) {
             </div>
           ) : (
             <Button variant="primary" size="sm" asChild>
-              <Link href="/auth/login">Увійти</Link>
+              <Link href="/login">Увійти</Link>
             </Button>
           )}
 
