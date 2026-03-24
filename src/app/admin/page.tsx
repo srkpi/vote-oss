@@ -38,7 +38,7 @@ const statusConfig = {
 export default async function AdminDashboardPage() {
   const session = await getServerSession();
   if (!session) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   const [electionsResult, adminsResult] = await Promise.all([
@@ -61,6 +61,8 @@ export default async function AdminDashboardPage() {
       <PageHeader
         title={`Добрий день, ${session?.fullName.split(' ')[1] ?? session?.fullName}!`}
         description="Ось короткий огляд системи голосування"
+        backHref="/"
+        backClassName="lg:hidden"
       >
         <Button variant="accent" size="sm" asChild>
           <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">

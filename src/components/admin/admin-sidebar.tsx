@@ -1,6 +1,14 @@
 'use client';
 
-import { CircleQuestionMark, FileText, Key, LayoutGrid, Settings, Users } from 'lucide-react';
+import {
+  CircleQuestionMark,
+  FileText,
+  Key,
+  LayoutGrid,
+  LogOut,
+  Settings,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -105,6 +113,17 @@ export function AdminSidebar({
             </Link>
           ))}
         </nav>
+
+        <div className="mt-auto p-3">
+          <hr className="border-border-subtle mb-3" />
+          <Link
+            href="/"
+            className="font-body text-muted-foreground flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium transition-all duration-150 hover:bg-red-50 hover:text-red-600"
+          >
+            <LogOut className="h-4 w-4" />
+            На головну
+          </Link>
+        </div>
       </aside>
 
       <div className="safe-area-pb border-border-subtle fixed right-0 bottom-0 left-0 z-40 border-t bg-white shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden">

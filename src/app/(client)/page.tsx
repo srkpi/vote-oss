@@ -184,7 +184,7 @@ export default async function HomePage() {
                 </Button>
               ) : (
                 <Button variant="accent" size="xl" asChild>
-                  <Link href="/auth/login">Увійти через KPI ID</Link>
+                  <Link href="/login">Увійти через KPI ID</Link>
                 </Button>
               )}
             </div>

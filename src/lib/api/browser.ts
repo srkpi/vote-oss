@@ -70,7 +70,7 @@ async function rawFetch<T>(path: string, options: RequestInit = {}): Promise<Api
 /**
  * Fetch with automatic token refresh.
  * On a 401, attempts one silent refresh then retries.
- * If the refresh also fails the user is redirected to /auth/login.
+ * If the refresh also fails the user is redirected to /login.
  */
 async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
   const result = await rawFetch<T>(path, options);
@@ -90,7 +90,7 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<Api
   }
 
   if (typeof window !== 'undefined') {
-    window.location.href = '/auth/login';
+    window.location.href = '/login';
   }
 
   return {

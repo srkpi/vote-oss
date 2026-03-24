@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default async function AdminElectionsPage() {
   const session = await getServerSession();
   if (!session) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   const { data: elections, error } = await serverApi.getElections();

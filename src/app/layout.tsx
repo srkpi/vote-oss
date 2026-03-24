@@ -3,10 +3,8 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Bitter, Onest } from 'next/font/google';
 
-import { PageLayout } from '@/components/layout/page-layout';
 import { APP_NAME } from '@/lib/config/client';
 import { APP_URL } from '@/lib/config/server';
-import { getServerSession } from '@/lib/server-auth';
 import { cn } from '@/lib/utils';
 import { ToastProvider } from '@/providers/toast-provider';
 
@@ -56,17 +54,13 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession();
-
   return (
     <html lang="uk" className={cn('font-sans', onest.variable, bitter.variable)}>
       <head>
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
       </head>
       <body>
-        <ToastProvider>
-          <PageLayout session={session}>{children}</PageLayout>
-        </ToastProvider>
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

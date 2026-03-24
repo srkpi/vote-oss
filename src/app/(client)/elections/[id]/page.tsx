@@ -36,7 +36,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   ]);
 
   if (!session) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   if (status === 404) notFound();

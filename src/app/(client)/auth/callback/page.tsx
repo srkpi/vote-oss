@@ -156,7 +156,7 @@ export default function CallbackPage() {
             {status === 'error' && (
               <div className="mt-8 flex flex-col gap-3">
                 <button
-                  onClick={() => router.push('/auth/login')}
+                  onClick={() => router.push('/login')}
                   className="font-body bg-kpi-navy hover:bg-kpi-navy-hover h-10 w-full rounded-(--radius) px-4 text-sm font-medium text-white transition-colors"
                 >
                   Повернутися до входу
