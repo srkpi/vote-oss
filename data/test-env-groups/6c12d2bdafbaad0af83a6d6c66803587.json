@@ -1,1 +1,1 @@
-{"id":"6c12d2bdafbaad0af83a6d6c66803587","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"65f7a7047b6f206d61027cc284bf00ac"}}
+{"id":"6c12d2bdafbaad0af83a6d6c66803587","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"8f6f20d2cb39f675808e4a26508701cf"}}
