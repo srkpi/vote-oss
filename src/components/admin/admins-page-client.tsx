@@ -7,6 +7,7 @@ import { AdminTable } from '@/components/admin/admin-table';
 import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { pluralize } from '@/lib/utils';
 import type { Admin } from '@/types/admin';
 import type { User } from '@/types/auth';
 
@@ -33,6 +34,10 @@ export function AdminsPageClient({
   const handleDelete = (userId: string) => {
     setAdmins((prev) => prev.filter((a) => a.userId !== userId));
   };
+
+  const adminsCount = admins.length;
+  const resctrictedCount = admins.filter((a) => a.restrictedToFaculty).length;
+  const canInviteCount = admins.filter((a) => a.manageAdmins).length;
 
   return (
     <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
@@ -72,20 +77,20 @@ export function AdminsPageClient({
         <div className="space-y-5 p-4 sm:p-6">
           <div className="font-body text-muted-foreground flex flex-col gap-2 px-1 text-sm sm:flex-row sm:items-center sm:gap-4">
             <span>
-              <strong className="text-foreground">{admins.length}</strong> адміністратор
-              {admins.length === 1 ? '' : admins.length < 5 ? 'и' : 'ів'}
+              <strong className="text-foreground">{adminsCount}</strong>{' '}
+              {pluralize(
+                adminsCount,
+                ['адміністратор', 'адміністратори', 'адміністраторів'],
+                false,
+              )}
             </span>
             <span>
-              <strong className="text-foreground">
-                {admins.filter((a) => a.manageAdmins).length}
-              </strong>{' '}
-              з правом керування
+              <strong className="text-foreground">{canInviteCount}</strong> з правом керування
             </span>
             <span>
-              <strong className="text-foreground">
-                {admins.filter((a) => a.restrictedToFaculty).length}
-              </strong>{' '}
-              обмежених до підрозділу
+              <strong className="text-foreground">{resctrictedCount}</strong>{' '}
+              {pluralize(resctrictedCount, ['обмежений', 'обмежені', 'обмежених'], false)} до
+              підрозділу
             </span>
           </div>
           <AdminTable admins={admins} currentUserId={currentUser.userId} onDelete={handleDelete} />

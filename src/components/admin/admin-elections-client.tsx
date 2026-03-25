@@ -56,6 +56,8 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
   const [deleteTarget, setDeleteTarget] = useState<Election | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const searchTrimmed = search.length > 100 ? search.substring(0, 100) + '...' : search;
+
   const counts: Record<TabKey, number> = useMemo(
     () => ({
       all: items.length,
@@ -136,7 +138,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
             <EmptyState
               icon={<FileText className="h-8 w-8" />}
               title={search ? 'Голосувань не знайдено' : 'Голосувань немає'}
-              description={search ? `За запитом «${search}» нічого не знайдено` : undefined}
+              description={search ? `За запитом «${searchTrimmed}» нічого не знайдено` : undefined}
             />
           </div>
         ) : (

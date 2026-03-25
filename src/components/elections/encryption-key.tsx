@@ -21,7 +21,9 @@ export function EncryptionKey({
   const icon = isPrivate ? <Unlock className="text-kpi-orange h-4 w-4" /> : null;
 
   return (
-    <div className={`rounded-xl bg-white ${containerBorder} shadow-shadow-card overflow-hidden`}>
+    <div
+      className={`rounded-xl bg-white ${containerBorder} shadow-shadow-card border-border-color shadow-shadow-sm overflow-hidden border`}
+    >
       <div
         className={`border-b px-4 py-4 sm:px-5 ${headerBorder} flex items-center justify-between ${headerBg}`}
       >

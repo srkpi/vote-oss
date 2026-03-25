@@ -18,7 +18,11 @@ import { FormField, Input } from '@/components/ui/form';
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { INVITE_TOKEN_MAX_USAGE_MAX, INVITE_TOKEN_MAX_USAGE_MIN } from '@/lib/constants';
+import {
+  INVITE_TOKEN_MAX_USAGE_MAX,
+  INVITE_TOKEN_MAX_USAGE_MIN,
+  INVITE_TOKEN_MAX_VALID_DAYS,
+} from '@/lib/constants';
 import type { InviteTokenResponse } from '@/types/admin';
 
 interface InviteAdminDialogProps {
@@ -46,6 +50,9 @@ export function InviteAdminDialog({
   const [renderTime] = useState(() => Date.now());
   const tomorrow = new Date(renderTime + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
   const oneMinuteAhead = new Date(renderTime + 60000).toISOString().slice(0, 16);
+  const maxValidDate = new Date(renderTime + INVITE_TOKEN_MAX_VALID_DAYS * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 16);
 
   const [form, setForm] = useState({
     validDue: tomorrow,
@@ -145,6 +152,7 @@ export function InviteAdminDialog({
                   type="datetime-local"
                   value={form.validDue}
                   min={oneMinuteAhead}
+                  max={maxValidDate}
                   onChange={(e) => setForm((p) => ({ ...p, validDue: e.target.value }))}
                 />
               </FormField>

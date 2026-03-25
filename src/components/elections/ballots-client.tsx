@@ -1,15 +1,14 @@
 'use client';
 
 import {
-  CheckCircle,
   ChevronLeft,
   ChevronRight,
+  CircleSlash2,
   FileText,
   Search,
   ShieldAlert,
   ShieldCheck,
   X,
-  XCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -233,33 +232,6 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
         </div>
       </div>
 
-      {trimmedQuery && (
-        <div
-          className={cn(
-            'font-body rounded-lg border p-4 text-sm',
-            filteredBallots.length > 0
-              ? 'border-success/30 bg-success-bg text-success'
-              : 'border-error/30 bg-error-bg text-error',
-          )}
-        >
-          {filteredBallots.length > 0 ? (
-            <span className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 shrink-0" />
-              Знайдено {pluralize(filteredBallots.length, [
-                'бюлетень',
-                'бюлетені',
-                'бюлетенів',
-              ])} з {ballots.length}
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <XCircle className="h-4 w-4 shrink-0" />
-              Жодного бюлетеня не знайдено серед {ballots.length}
-            </span>
-          )}
-        </div>
-      )}
-
       {ballots.length === 0 ? (
         <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
           <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
@@ -270,6 +242,9 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
         </div>
       ) : pagedBallots.length === 0 ? (
         <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+          <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
+            <CircleSlash2 className="text-kpi-gray-mid h-7 w-7" />
+          </div>
           <p className="font-display text-foreground text-lg font-semibold">Нічого не знайдено</p>
           <p className="font-body text-muted-foreground mt-1 text-sm">
             Спробуйте змінити пошуковий запит
@@ -281,8 +256,9 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
             <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 border-b px-5 py-3 text-sm">
               <ShieldAlert className="h-4 w-4 shrink-0" />
               <span>
-                <strong>{invalidHashCount}</strong> бюлетень(ів) мають некоректний хеш — можливе
-                втручання в ланцюжок
+                <strong>{invalidHashCount}</strong>{' '}
+                {pluralize(invalidHashCount, ['бюлетень', 'бюлетені', 'бюлетенів'], false)} мають
+                некоректний хеш
               </span>
             </div>
           )}

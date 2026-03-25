@@ -33,6 +33,8 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [search, setSearch] = useState('');
 
+  const searchTrimmed = search.length > 100 ? search.substring(0, 100) + '...' : search;
+
   const filtered = useMemo(() => {
     let result = elections;
 
@@ -82,7 +84,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
             title={search ? 'Голосувань не знайдено' : 'Голосувань поки що немає'}
             description={
               search
-                ? `За запитом "${search}" нічого не знайдено`
+                ? `За запитом "${searchTrimmed}" нічого не знайдено`
                 : 'У цій категорії немає жодного голосування'
             }
           />
