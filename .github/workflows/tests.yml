@@ -42,7 +42,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Allure
-        run: npm install -g allure-commandline
+        run: npm install -g allure
 
       - name: Generate Prisma Client
         run: pnpm db:generate
