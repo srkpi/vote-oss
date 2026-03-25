@@ -9,7 +9,8 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
 COPY prisma ./prisma
 RUN pnpm db:generate
@@ -32,7 +33,8 @@ ENV NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME} \
     NEXT_PUBLIC_KPI_APP_ID=${NEXT_PUBLIC_KPI_APP_ID} \
     CI=true
 
-RUN pnpm build
+RUN --mount=type=cache,id=nextjs-cache,target=/app/.next/cache \
+    pnpm build
 
 # runner
 FROM base AS runner
