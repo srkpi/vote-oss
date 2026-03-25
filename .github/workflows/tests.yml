@@ -14,10 +14,6 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
 
-    env:
-      JWT_ACCESS_SECRET: test-access-secret-that-is-long-enough-32chars
-      JWT_REFRESH_SECRET: test-refresh-secret-that-is-long-enough-32chars
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -29,13 +25,24 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'pnpm'
+
+      - name: Get pnpm store path
+        id: pnpm-cache
+        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Install Allure
-        run: pnpm add -g allure
+        run: npm install -g allure-commandline
 
       - name: Generate Prisma Client
         run: pnpm db:generate
