@@ -1,1 +1,1 @@
-{"id":"474c10d25911b9a31dd829481e3b1d31","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimitInvite uses limit 10 with 3600-second window","name":"uses limit 10 with 3600-second window","status":"passed","testResultsByEnv":{"default":"ea642fee610e87d0036c974627cb2d5e"}}
+{"id":"474c10d25911b9a31dd829481e3b1d31","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimitInvite uses limit 10 with 3600-second window","name":"uses limit 10 with 3600-second window","status":"passed","testResultsByEnv":{"default":"2f64e4cc8de2cb096964d1ddffcbf851"}}
