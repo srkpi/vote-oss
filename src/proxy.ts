@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { APP_URL } from '@/lib/config/server';
+import { APP_URL } from '@/lib/config/client';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import type { VerifiedPayload } from '@/types/auth';

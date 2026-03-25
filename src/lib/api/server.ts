@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 
 import { createApiClient } from '@/lib/api/client';
-import { APP_URL } from '@/lib/config/server';
+import { APP_URL } from '@/lib/config/client';
 import type { ApiResult } from '@/types/api';
 
 const BASE_URL = `${APP_URL}/api`;

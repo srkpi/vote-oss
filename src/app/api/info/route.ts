@@ -1,5 +1,5 @@
-import { APP_NAME } from '@/lib/config/client';
-import { APP_URL, APP_VERSION, NODE_ENV } from '@/lib/config/server';
+import { APP_NAME, APP_URL } from '@/lib/config/client';
+import { APP_VERSION, NODE_ENV } from '@/lib/config/server';
 
 /**
  * @swagger

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: `Політика конфіденційності системи електронного голосування ${APP_NAME}`,
 };
 
-const lastUpdated = '20.03.2026';
+export const lastUpdated = '20.03.2026';
 const sections = [
   {
     id: 'intro',

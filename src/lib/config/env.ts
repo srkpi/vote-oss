@@ -96,8 +96,6 @@ export const env = {
 
   JWT_ACCESS_SECRET: getSecret('JWT_ACCESS_SECRET'),
   JWT_REFRESH_SECRET: getSecret('JWT_REFRESH_SECRET'),
-
-  APP_URL: getUrlEnv('APP_URL', `http://localhost:${process.env.PORT ?? 3000}`),
   CAMPUS_API_URL: getEnv('CAMPUS_API_URL'),
 
   KPI_APP_SECRET: getEnv('KPI_APP_SECRET'),
