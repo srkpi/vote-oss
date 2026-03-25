@@ -1,7 +1,7 @@
 import { Header } from '@/components/layout/header';
 import { getServerSession } from '@/lib/server-auth';
 
-export default async function UserLayout({ children }: { children: React.ReactNode }) {
+export default async function ClientLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession();
 
   return (

@@ -46,5 +46,6 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_APP_NAME=${{ vars.NEXT_PUBLIC_APP_NAME }}
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
             NEXT_PUBLIC_KPI_AUTH_URL=${{ vars.NEXT_PUBLIC_KPI_AUTH_URL }}
             NEXT_PUBLIC_KPI_APP_ID=${{ vars.NEXT_PUBLIC_KPI_APP_ID }}

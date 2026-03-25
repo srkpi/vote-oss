@@ -1,4 +1,5 @@
 process.env.NEXT_PUBLIC_APP_NAME = 'Test';
+process.env.NEXT_PUBLIC_APP_URL = 'https://example.com';
 process.env.DATABASE_URL = 'test-db';
 process.env.REDIS_URL = 'test-redis';
 process.env.JWT_ACCESS_SECRET = 'test-access-secret-that-is-long-enough-32chars';
