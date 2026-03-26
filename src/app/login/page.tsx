@@ -18,11 +18,11 @@ export default function LoginPage() {
       <div className="navy-gradient-subtle relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 lg:flex">
         <AnimatedGrid variant="dark" cellSize={44} />
 
-        {/* Atmospheric glow orbs */}
         <div
           className="animate-glow-breathe absolute -top-32 -right-32 h-112 w-md rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(0,138,207,0.25) 0%, transparent 70%)',
+            willChange: 'opacity, filter',
           }}
         />
         <div
@@ -30,6 +30,8 @@ export default function LoginPage() {
           style={{
             background: 'radial-gradient(circle, rgba(240,125,0,0.18) 0%, transparent 70%)',
             animationDelay: '2s',
+            animationFillMode: 'backwards',
+            willChange: 'opacity, filter',
           }}
         />
         <div
@@ -38,10 +40,11 @@ export default function LoginPage() {
             background: 'radial-gradient(circle, rgba(0,138,207,0.08) 0%, transparent 60%)',
             animation: 'glow-breathe 9s ease-in-out infinite',
             animationDelay: '4s',
+            animationFillMode: 'backwards',
+            willChange: 'opacity, filter',
           }}
         />
 
-        {/* Radar / sonar rings — centered in panel */}
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
           {[0, 1, 2, 3].map((i) => (
             <div
@@ -55,34 +58,19 @@ export default function LoginPage() {
                 animation: `ring-expand 4s ease-out infinite`,
                 animationDelay: `${i * 1}s`,
                 animationFillMode: 'both',
+                willChange: 'transform, opacity',
               }}
             />
           ))}
-          {/* Center dot */}
           <div
             className="bg-kpi-blue-light absolute top-0 left-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
             style={{ boxShadow: '0 0 8px 2px rgba(0,138,207,0.6)' }}
           />
         </div>
 
-        {/* Scanning beam */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div
-            className="animate-scan-down absolute right-0 left-0 h-px"
-            style={{
-              background:
-                'linear-gradient(90deg, transparent 0%, rgba(0,138,207,0.4) 30%, rgba(0,138,207,0.7) 50%, rgba(0,138,207,0.4) 70%, transparent 100%)',
-              top: '0',
-              animationDuration: '7s',
-              animationDelay: '1.5s',
-            }}
-          />
-        </div>
-
-        {/* Floating wireframe diamond */}
         <div
           className="animate-float-slow absolute top-1/4 right-10 h-20 w-20"
-          style={{ animationDuration: '8s', animationDelay: '1s' }}
+          style={{ animationDuration: '8s', animationDelay: '1s', willChange: 'transform' }}
         >
           <svg
             viewBox="0 0 80 80"
@@ -107,10 +95,9 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* Floating small hexagon */}
         <div
           className="animate-float absolute bottom-1/4 left-10 h-12 w-12"
-          style={{ animationDuration: '6s', animationDelay: '3s' }}
+          style={{ animationDuration: '6s', animationDelay: '3s', willChange: 'transform' }}
         >
           <svg
             viewBox="0 0 50 50"
@@ -133,8 +120,10 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* Corner crosshair TL */}
-        <div className="animate-crosshair-blink absolute top-8 left-8 opacity-30">
+        <div
+          className="animate-crosshair-blink absolute top-8 left-8 opacity-30"
+          style={{ willChange: 'opacity' }}
+        >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <line x1="10" y1="0" x2="10" y2="7" stroke="rgba(0,138,207,1)" strokeWidth="1" />
             <line x1="10" y1="13" x2="10" y2="20" stroke="rgba(0,138,207,1)" strokeWidth="1" />
@@ -150,10 +139,9 @@ export default function LoginPage() {
             />
           </svg>
         </div>
-        {/* Corner crosshair BR */}
         <div
           className="animate-crosshair-blink absolute right-8 bottom-8 opacity-30"
-          style={{ animationDelay: '1s' }}
+          style={{ animationDelay: '1s', willChange: 'opacity' }}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <line x1="10" y1="0" x2="10" y2="7" stroke="rgba(0,138,207,1)" strokeWidth="1" />
@@ -171,7 +159,6 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* Logo */}
         <Link className="relative z-10 flex items-center gap-3" href="/">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/15">
             <CheckCircle className="h-4 w-4 text-white" />
@@ -186,7 +173,6 @@ export default function LoginPage() {
           </div>
         </Link>
 
-        {/* Main text */}
         <div className="relative z-10">
           <h2 className="font-display mb-4 text-4xl leading-tight font-bold text-white xl:text-5xl">
             Ваш голос — ваша{' '}
@@ -203,13 +189,12 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Security badges */}
         <div className="relative z-10 flex flex-wrap gap-3">
           {['RSA-2048', 'Анонімно', 'Верифіковано'].map((badge, i) => (
             <div
               key={badge}
               className="animate-badge-pop flex items-center gap-1.5 rounded-full border border-white/12 bg-white/8 px-3 py-1.5"
-              style={{ animationDelay: `${400 + i * 80}ms` }}
+              style={{ animationDelay: `${400 + i * 80}ms`, willChange: 'transform, opacity' }}
             >
               <svg
                 className="text-kpi-blue-light h-3.5 w-3.5"
@@ -229,14 +214,12 @@ export default function LoginPage() {
       </div>
 
       <div className="relative flex flex-1 items-center justify-center p-8">
-        {/* Subtle background for the form side on mobile */}
         <div className="absolute inset-0 overflow-hidden lg:hidden">
           <AnimatedGrid variant="light" cellSize={52} />
           <div className="absolute inset-0 bg-white/75" />
         </div>
 
         <div className="relative z-10 w-full max-w-sm">
-          {/* Mobile logo */}
           <div className="flex items-center justify-center">
             <Link className="mb-8 flex items-center gap-3 lg:hidden" href="/">
               <Image src="/logo.svg" alt="Logo" height={36} width={36} preload />
@@ -271,7 +254,10 @@ export default function LoginPage() {
                 <div
                   key={item}
                   className="font-body animate-fade-up text-muted-foreground flex items-center justify-center gap-2.5 text-sm opacity-0"
-                  style={{ animationDelay: `${200 + i * 80}ms` }}
+                  style={{
+                    animationDelay: `${200 + i * 80}ms`,
+                    willChange: 'transform, opacity',
+                  }}
                 >
                   <Check color="var(--success)" className="h-4 w-4 shrink-0" />
                   {item}

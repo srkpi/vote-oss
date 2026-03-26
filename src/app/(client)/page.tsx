@@ -67,33 +67,36 @@ export default async function HomePage() {
         <div className="navy-gradient-subtle absolute inset-0" />
         <AnimatedGrid variant="dark" cellSize={48} />
 
-        {/* Breathing glow orbs */}
         <div
-          className="animate-glow-breathe pointer-events-none absolute -top-24 -right-24 h-112 w-md rounded-full"
+          className="animate-glow-breathe absolute -top-32 -right-32 h-112 w-md rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(0,138,207,0.22) 0%, transparent 65%)',
+            background: 'radial-gradient(circle, rgba(0,138,207,0.25) 0%, transparent 70%)',
+            willChange: 'opacity, filter',
           }}
         />
         <div
-          className="animate-glow-breathe-orange pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full"
+          className="animate-glow-breathe-orange absolute -bottom-24 -left-24 h-80 w-80 rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(240,125,0,0.16) 0%, transparent 65%)',
-            animationDelay: '3s',
+            background: 'radial-gradient(circle, rgba(240,125,0,0.18) 0%, transparent 70%)',
+            animationDelay: '2s',
+            animationFillMode: 'backwards',
+            willChange: 'opacity, filter',
           }}
         />
         <div
-          className="pointer-events-none absolute top-1/3 right-1/3 h-64 w-64 rounded-full"
+          className="absolute top-1/2 left-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(0,80,127,0.15) 0%, transparent 60%)',
-            animation: 'glow-breathe 10s ease-in-out infinite',
-            animationDelay: '6s',
+            background: 'radial-gradient(circle, rgba(0,138,207,0.08) 0%, transparent 60%)',
+            animation: 'glow-breathe 9s ease-in-out infinite',
+            animationDelay: '4s',
+            animationFillMode: 'backwards',
+            willChange: 'opacity, filter',
           }}
         />
 
-        {/* Floating geometric accents */}
         <div
           className="animate-float-slow pointer-events-none absolute top-20 right-24 hidden h-16 w-16 lg:block"
-          style={{ animationDuration: '9s', animationDelay: '1s' }}
+          style={{ animationDuration: '9s', animationDelay: '1s', willChange: 'transform' }}
         >
           <svg viewBox="0 0 64 64" fill="none" className="h-full w-full opacity-15">
             <polygon
@@ -113,7 +116,7 @@ export default async function HomePage() {
 
         <div
           className="animate-rotate-slow pointer-events-none absolute right-16 bottom-20 hidden h-10 w-10 lg:block"
-          style={{ opacity: 0.12 }}
+          style={{ opacity: 0.12, willChange: 'transform' }}
         >
           <svg viewBox="0 0 40 40" fill="none" className="h-full w-full">
             <rect
@@ -137,19 +140,6 @@ export default async function HomePage() {
               transform="rotate(45 20 20)"
             />
           </svg>
-        </div>
-
-        {/* Scanning beam */}
-        <div className="pointer-events-none absolute inset-0 hidden overflow-hidden lg:block">
-          <div
-            className="animate-scan-down absolute right-0 left-0 h-px"
-            style={{
-              background:
-                'linear-gradient(90deg, transparent 0%, rgba(0,138,207,0.3) 25%, rgba(0,138,207,0.5) 50%, rgba(0,138,207,0.3) 75%, transparent 100%)',
-              top: '0',
-              animationDuration: '9s',
-            }}
-          />
         </div>
 
         <div className="relative z-10 container py-16 md:py-32">
@@ -191,13 +181,13 @@ export default async function HomePage() {
 
             <div
               className="animate-fade-up mt-8 flex flex-wrap gap-3"
-              style={{ animationDelay: '320ms' }}
+              style={{ animationDelay: '320ms', willChange: 'transform, opacity' }}
             >
               {['RSA-2048', 'Анонімно', 'Верифіковано'].map((chip, i) => (
                 <div
                   key={chip}
                   className="animate-badge-pop flex items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3 py-1"
-                  style={{ animationDelay: `${400 + i * 80}ms` }}
+                  style={{ animationDelay: `${400 + i * 80}ms`, willChange: 'transform, opacity' }}
                 >
                   <svg
                     className="text-kpi-blue-light h-3 w-3"
@@ -283,11 +273,11 @@ export default async function HomePage() {
       <section className="bg-kpi-navy relative overflow-hidden py-20">
         <AnimatedGrid variant="dark" cellSize={56} />
 
-        {/* Breathing orbs */}
         <div
           className="animate-glow-breathe pointer-events-none absolute -top-16 right-0 h-64 w-64 rounded-full"
           style={{
             background: 'radial-gradient(circle, rgba(0,138,207,0.15) 0%, transparent 60%)',
+            willChange: 'opacity, filter',
           }}
         />
         <div
@@ -295,6 +285,8 @@ export default async function HomePage() {
           style={{
             background: 'radial-gradient(circle, rgba(240,125,0,0.10) 0%, transparent 60%)',
             animationDelay: '4s',
+            animationFillMode: 'backwards',
+            willChange: 'opacity, filter',
           }}
         />
 
