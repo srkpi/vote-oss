@@ -1,1 +1,1 @@
-{"id":"c7a66165ed95b98117d922d888e9172a","fullName":"src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns 400 when invite token is expired","name":"returns 400 when invite token is expired","status":"passed","testResultsByEnv":{"default":"4a1536625a63ace4afbd71788e983fae"}}
+{"id":"c7a66165ed95b98117d922d888e9172a","fullName":"src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns 400 when invite token is expired","name":"returns 400 when invite token is expired","status":"passed","testResultsByEnv":{"default":"76a3c37d5447f1ab9d1d229c84c73f82"}}
