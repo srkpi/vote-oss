@@ -60,10 +60,10 @@ const DARK = {
   gridOpacity: 0.07,
   lineOpacity: 0.22,
   nodes: [
-    [0, 138, 207] as const, // kpi-blue-light
-    [255, 255, 255] as const, // white
-    [240, 125, 0] as const, // kpi-orange
-    [16, 98, 163] as const, // kpi-blue-mid
+    [0, 138, 207] as const,
+    [255, 255, 255] as const,
+    [240, 125, 0] as const,
+    [16, 98, 163] as const,
   ],
   particles: [[0, 138, 207] as const, [255, 255, 255] as const, [16, 98, 163] as const],
   activeLine: [0, 138, 207] as const,
@@ -112,7 +112,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
       canvas.height = H * dpr;
       ctx.scale(dpr, dpr);
 
-      // Coarser grid on small screens for performance
       effectiveCell = W < 640 ? cellSize * 1.25 : cellSize;
 
       cols = Math.ceil(W / effectiveCell);
@@ -166,7 +165,7 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
     const spawnParticle = (randomPos = false) => {
       const horiz = Math.random() > 0.5;
       const dir = Math.random() > 0.5 ? 1 : -1;
-      const speed = Math.random() * 1.4 + 0.5; // px/frame
+      const speed = Math.random() * 1.4 + 0.5;
       const pick = C.particles[Math.floor(Math.random() * C.particles.length)];
       const maxLife = Math.floor(Math.random() * 200 + 120);
 
@@ -230,7 +229,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
       const [aR, aG, aB] = C.activeLine;
       const cs = effectiveCell;
 
-      // Base grid
       ctx.lineWidth = 0.5;
       ctx.strokeStyle = `rgba(${gR},${gG},${gB},${C.gridOpacity})`;
       ctx.beginPath();
@@ -244,7 +242,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
       }
       ctx.stroke();
 
-      // Flash cells
       for (let i = flashCells.length - 1; i >= 0; i--) {
         const f = flashCells[i];
         f.opacity -= 0.003;
@@ -257,11 +254,9 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
       }
       maybeFlash();
 
-      // Active glowing lines
       activeLines.forEach((line) => {
         const pulse = Math.sin(time * 0.018 + line.phase) * 0.35 + 0.65;
 
-        // Slow random drift of target opacity
         if (Math.random() < 0.004) {
           line.targetOpacity = Math.random() * C.lineOpacity + 0.015;
         }
@@ -297,7 +292,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
         }
       });
 
-      // Stream particles
       const dead: number[] = [];
       particles.forEach((p, i) => {
         p.x += p.vx;
@@ -308,7 +302,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
         const fade = lr < 0.1 ? lr / 0.1 : lr > 0.8 ? (1 - lr) / 0.2 : 1;
         const op = p.opacity * fade;
 
-        // Tail
         const tx = p.x - (p.vx / p.norm) * p.tailLength;
         const ty = p.y - (p.vy / p.norm) * p.tailLength;
         const tg = ctx.createLinearGradient(tx, ty, p.x, p.y);
@@ -322,7 +315,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
 
-        // Head glow
         const hr = p.size * 5;
         const hg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, hr);
         hg.addColorStop(0, `rgba(${p.r},${p.g},${p.b},${op * 0.8})`);
@@ -340,7 +332,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
         if (particles.length < maxParticles()) spawnParticle();
       }
 
-      // Intersection nodes
       nodes.forEach((node) => {
         const pulse = Math.sin(time * 0.022 * node.pulseSpeed + node.phase) * 0.3 + 0.7;
         node.opacity += (node.targetOpacity - node.opacity) * 0.012;
@@ -355,7 +346,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
         const x = node.col * cs;
         const y = node.row * cs;
 
-        // Soft halo
         const rOuter = 9;
         const og = ctx.createRadialGradient(x, y, 0, x, y, rOuter);
         og.addColorStop(0, `rgba(${node.r},${node.g},${node.b},${op * 0.35})`);
@@ -365,7 +355,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
         ctx.arc(x, y, rOuter, 0, Math.PI * 2);
         ctx.fill();
 
-        // Core dot
         ctx.fillStyle = `rgba(${node.r},${node.g},${node.b},${Math.min(1, op * 1.4)})`;
         ctx.beginPath();
         ctx.arc(x, y, 1.5, 0, Math.PI * 2);
@@ -375,7 +364,6 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
       animId = requestAnimationFrame(draw);
     };
 
-    // Boot
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
@@ -391,6 +379,7 @@ export function AnimatedGrid({ className, variant = 'dark', cellSize = 44 }: Ani
     <canvas
       ref={canvasRef}
       className={cn('pointer-events-none absolute inset-0 h-full w-full', className)}
+      style={{ willChange: 'transform' }}
       aria-hidden="true"
     />
   );

@@ -380,11 +380,11 @@ html {
 @keyframes glow-breathe {
   0%,
   100% {
-    opacity: 0.12;
+    opacity: 0.4;
     filter: blur(40px);
   }
   50% {
-    opacity: 0.3;
+    opacity: 1;
     filter: blur(55px);
   }
 }
@@ -392,11 +392,11 @@ html {
 @keyframes glow-breathe-orange {
   0%,
   100% {
-    opacity: 0.1;
+    opacity: 0.35;
     filter: blur(35px);
   }
   50% {
-    opacity: 0.22;
+    opacity: 0.9;
     filter: blur(45px);
   }
 }
@@ -417,24 +417,6 @@ html {
   }
   to {
     transform: rotate(-360deg);
-  }
-}
-
-/* Scanning beam */
-@keyframes scan-down {
-  0% {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  5% {
-    opacity: 0.6;
-  }
-  95% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(120%);
-    opacity: 0;
   }
 }
 
@@ -496,9 +478,6 @@ html {
 }
 .animate-rotate-slow-reverse {
   animation: rotate-slow-reverse 25s linear infinite;
-}
-.animate-scan-down {
-  animation: scan-down 5s ease-in-out infinite;
 }
 .animate-badge-pop {
   animation: badge-pop 0.5s var(--ease-bounce) both;
