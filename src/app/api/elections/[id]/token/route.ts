@@ -5,7 +5,9 @@ import { requireAuth } from '@/lib/auth';
 import { generateVoteToken, signVoteToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { checkRestrictions } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
+import type { ElectionRestriction } from '@/types/election';
 
 /**
  * @swagger
@@ -63,17 +65,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { user } = auth;
   const now = new Date();
 
-  const election = await prisma.election.findUnique({ where: { id: electionId } });
+  const election = await prisma.election.findUnique({
+    where: { id: electionId },
+    include: { restrictions: { select: { type: true, value: true } } },
+  });
   if (!election) return Errors.notFound('Election not found');
 
   if (now < election.opens_at) return Errors.badRequest('Election has not started yet');
   if (now > election.closes_at) return Errors.badRequest('Election has already closed');
 
-  if (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) {
-    return Errors.forbidden('You are not eligible for this election (faculty restriction)');
-  }
-  if (election.restricted_to_group && election.restricted_to_group !== user.group) {
-    return Errors.forbidden('You are not eligible for this election (group restriction)');
+  const restrictions = election.restrictions as ElectionRestriction[];
+  if (!checkRestrictions(restrictions, user)) {
+    return Errors.forbidden('You are not eligible for this election');
   }
 
   const existingToken = await prisma.issuedToken.findUnique({
@@ -84,9 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { token } = generateVoteToken(electionId);
   const signature = signVoteToken(election.private_key, token);
 
-  await prisma.issuedToken.create({
-    data: { election_id: electionId, user_id: user.sub },
-  });
+  await prisma.issuedToken.create({ data: { election_id: electionId, user_id: user.sub } });
 
   return NextResponse.json({ token, signature }, { status: 200 });
 }

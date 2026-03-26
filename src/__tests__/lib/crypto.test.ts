@@ -144,17 +144,17 @@ describe('crypto', () => {
       ({ publicKey, privateKey } = generateElectionKeyPair());
     });
 
-    function encrypt(plaintext: string): string {
+    function encrypt(plaintext: string[]): string {
       const buf = publicEncrypt(
         { key: publicKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
-        Buffer.from(plaintext),
+        Buffer.from(JSON.stringify(plaintext)),
       );
       return buf.toString('base64');
     }
 
     it('decrypts a value correctly encrypted with the matching public key', () => {
-      const enc = encrypt('42');
-      expect(decryptBallot(privateKey, enc)).toBe('42');
+      const enc = encrypt(['42']);
+      expect(decryptBallot(privateKey, enc)).toEqual(['42']);
     });
 
     it('throws on invalid base64 input', () => {
@@ -163,7 +163,7 @@ describe('crypto', () => {
 
     it('throws when decrypting with wrong private key', () => {
       const { privateKey: otherKey } = generateElectionKeyPair();
-      const enc = encrypt('10');
+      const enc = encrypt(['10']);
       expect(() => decryptBallot(otherKey, enc)).toThrow();
     });
   });

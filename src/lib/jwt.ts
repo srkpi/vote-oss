@@ -1,3 +1,4 @@
+// src/lib/jwt.ts
 import { randomUUID } from 'crypto';
 import { jwtVerify, SignJWT } from 'jose';
 
@@ -19,7 +20,6 @@ export async function signAccessToken(
     .setIssuedAt()
     .setExpirationTime(expirationTime)
     .sign(ACCESS_SECRET_ENCODED);
-
   return { token, jti };
 }
 
@@ -34,22 +34,21 @@ export async function signRefreshToken(
     .setIssuedAt()
     .setExpirationTime(expirationTime)
     .sign(REFRESH_SECRET_ENCODED);
-
   return { token, jti };
 }
 
 export async function verifyAccessToken(token: string): Promise<VerifiedPayload> {
   const { payload } = await jwtVerify(token, ACCESS_SECRET_ENCODED);
-
-  if (payload['tokenType'] !== 'access') {
-    throw new Error('Invalid token type');
-  }
+  if (payload['tokenType'] !== 'access') throw new Error('Invalid token type');
 
   return {
     sub: payload.sub as string,
     faculty: payload['faculty'] as string,
     group: payload['group'] as string,
     fullName: payload['fullName'] as string,
+    speciality: payload['speciality'] as string | undefined,
+    studyYear: payload['studyYear'] as number | undefined,
+    studyForm: payload['studyForm'] as string | undefined,
     isAdmin: (payload['isAdmin'] as boolean) ?? false,
     restrictedToFaculty: (payload['restrictedToFaculty'] as boolean) ?? true,
     manageAdmins: (payload['manageAdmins'] as boolean) ?? false,
@@ -61,7 +60,6 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
 
 export async function verifyRefreshToken(token: string): Promise<VerifiedPayload> {
   const { payload } = await jwtVerify(token, REFRESH_SECRET_ENCODED);
-
   if (payload['tokenType'] !== 'refresh') throw new Error('Invalid token type');
 
   return {
@@ -69,6 +67,9 @@ export async function verifyRefreshToken(token: string): Promise<VerifiedPayload
     faculty: payload['faculty'] as string,
     group: payload['group'] as string,
     fullName: payload['fullName'] as string,
+    speciality: payload['speciality'] as string | undefined,
+    studyYear: payload['studyYear'] as number | undefined,
+    studyForm: payload['studyForm'] as string | undefined,
     isAdmin: (payload['isAdmin'] as boolean) ?? false,
     restrictedToFaculty: (payload['restrictedToFaculty'] as boolean) ?? true,
     manageAdmins: (payload['manageAdmins'] as boolean) ?? false,

@@ -4,6 +4,8 @@ export const ELECTION_CHOICES_MIN = 2;
 export const ELECTION_CHOICES_MAX = 20;
 export const ELECTION_CHOICE_MAX_LENGTH = 100;
 export const ELECTION_MAX_CLOSES_AT_DAYS = 30;
+export const ELECTION_MIN_CHOICES_MIN = 1;
+export const ELECTION_MAX_CHOICES_MAX = 4;
 
 // Admin invite token limits
 export const INVITE_TOKEN_LENGTH = 16;
@@ -55,3 +57,40 @@ export const RATE_LIMIT_REFRESH_MAX = 20;
 
 // UI
 export const CHAR_COUNTER_THRESHOLD = 0.6;
+
+// Study restrictions
+export const STUDY_FORMS = [
+  'None',
+  'Evening',
+  'FullTime',
+  'Remote',
+  'Extern',
+  'Correspondence',
+  'Shortened',
+  'OutOfPostgraduate',
+  'Other',
+] as const;
+export type StudyFormValue = (typeof STUDY_FORMS)[number];
+
+export const STUDY_FORM_LABELS: Record<StudyFormValue, string> = {
+  None: 'Не вказано',
+  Evening: 'Вечірня',
+  FullTime: 'Денна',
+  Remote: 'Дистанційна',
+  Extern: 'Екстернат',
+  Correspondence: 'Заочна',
+  Shortened: 'Скорочена',
+  OutOfPostgraduate: 'Поза аспірантурою',
+  Other: 'Інша',
+};
+
+export const STUDY_YEARS = [1, 2, 3, 4, 5, 6, 7] as const;
+export type StudyYearValue = (typeof STUDY_YEARS)[number];
+
+export const RESTRICTION_TYPE_LABELS: Record<string, string> = {
+  FACULTY: 'Факультет',
+  GROUP: 'Група',
+  STUDY_YEAR: 'Рік навчання',
+  STUDY_FORM: 'Форма навчання',
+  SPECIALITY: 'Спеціальність',
+};

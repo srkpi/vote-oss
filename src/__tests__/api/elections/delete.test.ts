@@ -77,9 +77,7 @@ describe('DELETE /api/elections/[id]', () => {
   it('returns 403 when restricted admin tries to delete an unrestricted election', async () => {
     const req = await restrictedAdminReq(); // faculty=FICE, restricted_to_faculty=true
     // Election open to everyone (no faculty restriction)
-    prismaMock.election.findUnique.mockResolvedValueOnce(
-      makeElection({ restricted_to_faculty: null }),
-    );
+    prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
     const res = await DELETE(req, PARAMS);
     expect(res.status).toBe(403);
   });
@@ -87,7 +85,7 @@ describe('DELETE /api/elections/[id]', () => {
   it('returns 403 when restricted admin tries to delete another faculty election', async () => {
     const req = await restrictedAdminReq(); // faculty=FICE
     prismaMock.election.findUnique.mockResolvedValueOnce(
-      makeElection({ restricted_to_faculty: 'FEL' }),
+      makeElection({ restrictions: [{ type: 'FACULTY', value: 'FEL' }] }),
     );
     const res = await DELETE(req, PARAMS);
     expect(res.status).toBe(403);
@@ -96,7 +94,7 @@ describe('DELETE /api/elections/[id]', () => {
   it('returns 200 when restricted admin deletes an election from their own faculty', async () => {
     const req = await restrictedAdminReq(); // faculty=FICE
     prismaMock.election.findUnique.mockResolvedValueOnce(
-      makeElection({ restricted_to_faculty: 'FICE' }),
+      makeElection({ restrictions: [{ type: 'FACULTY', value: 'FICE' }] }),
     );
     prismaMock.$transaction.mockResolvedValueOnce([]);
 

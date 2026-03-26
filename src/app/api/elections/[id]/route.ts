@@ -5,7 +5,13 @@ import { requireAdmin, requireAuth } from '@/lib/auth';
 import { invalidateElections } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import {
+  adminCanAccessElection,
+  adminCanDeleteElection,
+  checkRestrictions,
+} from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
+import type { ElectionRestriction } from '@/types/election';
 
 /**
  * @swagger
@@ -58,6 +64,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     include: {
       choices: { orderBy: { position: 'asc' } },
       creator: { select: { full_name: true, faculty: true } },
+      restrictions: { select: { type: true, value: true } },
       _count: { select: { ballots: true } },
     },
   });
@@ -65,21 +72,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!election) return Errors.notFound('Election not found');
 
   const { user } = auth;
+  const restrictions = election.restrictions as ElectionRestriction[];
 
-  // Unrestricted admins may view any election.
-  // Faculty-restricted admins may view global elections + their own faculty.
-  // Regular users must match both faculty and group restrictions.
   if (user.isAdmin && !user.restrictedToFaculty) {
-    // Unrestricted admin — no restriction check needed
+    // unrestricted admin – pass
   } else if (user.isAdmin && user.restrictedToFaculty) {
-    if (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) {
+    if (!adminCanAccessElection(user.faculty, restrictions)) {
       return Errors.forbidden('You are not eligible for this election');
     }
   } else {
-    if (
-      (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) ||
-      (election.restricted_to_group && election.restricted_to_group !== user.group)
-    ) {
+    if (!checkRestrictions(restrictions, user)) {
       return Errors.forbidden('You are not eligible for this election');
     }
   }
@@ -88,16 +90,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const isClosed = now > election.closes_at;
   const isOpen = now >= election.opens_at && now <= election.closes_at;
 
-  // For open elections, check whether this user has already been issued a vote
-  // token — a reliable server-side "already voted" signal. IssuedToken records
-  // are deleted when tallies are computed after close, so this check is only
-  // meaningful while the election is open.
   let hasVoted: boolean | undefined;
   if (isOpen) {
     const issuedToken = await prisma.issuedToken.findUnique({
-      where: {
-        election_id_user_id: { election_id: electionId, user_id: user.sub },
-      },
+      where: { election_id_user_id: { election_id: electionId, user_id: user.sub } },
     });
     hasVoted = issuedToken !== null;
   }
@@ -109,8 +105,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     opensAt: election.opens_at,
     closesAt: election.closes_at,
     status: now < election.opens_at ? 'upcoming' : now <= election.closes_at ? 'open' : 'closed',
-    restrictedToFaculty: election.restricted_to_faculty,
-    restrictedToGroup: election.restricted_to_group,
+    restrictions,
+    minChoices: election.min_choices,
+    maxChoices: election.max_choices,
     publicKey: election.public_key,
     privateKey: isClosed ? election.private_key : undefined,
     creator: { fullName: election.creator.full_name, faculty: election.creator.faculty },
@@ -174,11 +171,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { admin } = auth;
 
-  const election = await prisma.election.findUnique({ where: { id: electionId } });
+  const election = await prisma.election.findUnique({
+    where: { id: electionId },
+    include: { restrictions: { select: { type: true, value: true } } },
+  });
   if (!election) return Errors.notFound('Election not found');
 
-  // Faculty-restricted admins may only delete elections scoped to their own faculty
-  if (admin.restricted_to_faculty && election.restricted_to_faculty !== admin.faculty) {
+  const restrictions = election.restrictions as ElectionRestriction[];
+
+  if (admin.restricted_to_faculty && !adminCanDeleteElection(admin.faculty, restrictions)) {
     return Errors.forbidden('You can only delete elections of your own faculty');
   }
 

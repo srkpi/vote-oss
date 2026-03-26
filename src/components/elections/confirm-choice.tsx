@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ElectionChoice } from '@/types/election';
 
-interface ConfirmationStepProps {
-  choice: ElectionChoice;
+interface ConfirmChoiceProps {
+  choices: ElectionChoice[];
   onBack: () => void;
   onConfirm: () => void;
   loading: boolean;
 }
 
-export function ConfirmChoice({ choice, onBack, onConfirm, loading }: ConfirmationStepProps) {
+export function ConfirmChoice({ choices, onBack, onConfirm, loading }: ConfirmChoiceProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
@@ -26,18 +26,20 @@ export function ConfirmChoice({ choice, onBack, onConfirm, loading }: Confirmati
         </p>
       </div>
 
-      <div className={cn('rounded-lg p-5', 'border-kpi-navy/20 bg-kpi-navy/5 border-2')}>
-        <p className="font-body text-muted-foreground mb-1 text-xs tracking-wider uppercase">
-          Ваш вибір:
+      <div className="space-y-2">
+        <p className="font-body text-muted-foreground text-xs tracking-wider uppercase">
+          {choices.length > 1 ? 'Ваші вибори:' : 'Ваш вибір:'}
         </p>
-        <div className="flex items-center gap-3">
-          <span className="font-display bg-kpi-navy flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white">
-            {String.fromCharCode(65 + choice.position)}
-          </span>
-          <span className="font-body text-kpi-navy min-w-0 font-semibold wrap-break-word">
-            {choice.choice}
-          </span>
-        </div>
+        {choices.map((choice) => (
+          <div
+            key={choice.id}
+            className={cn('rounded-lg p-4', 'border-kpi-navy/20 bg-kpi-navy/5 border-2')}
+          >
+            <span className="font-body text-kpi-navy min-w-0 font-semibold wrap-break-word">
+              {choice.choice}
+            </span>
+          </div>
+        ))}
       </div>
 
       <div className="flex gap-3">

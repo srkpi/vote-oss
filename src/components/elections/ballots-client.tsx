@@ -71,22 +71,22 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       for (let i = 0; i < ballots.length; i += BATCH) {
         await Promise.all(
           ballots.slice(i, i + BATCH).map(async (ballot) => {
-            const [decryptedRaw, hashValid] = await Promise.all([
+            const [decryptedIds, hashValid] = await Promise.all([
               decryptBallotData(key, ballot.encryptedBallot),
               verifyBallotHash(ballot, electionId),
             ]);
-            let choiceId: string | null = null;
-            let choiceLabel: string | null = null;
+            let choiceIds: string[] | null = null;
+            let choiceLabels: string[] | null = null;
             let valid = false;
-            if (decryptedRaw !== null) {
-              const match = choices.find((c) => c.id === decryptedRaw);
-              if (match) {
-                choiceId = decryptedRaw;
-                choiceLabel = match.choice;
+            if (decryptedIds !== null) {
+              const validIds = decryptedIds.filter((id) => choices.some((c) => c.id === id));
+              if (validIds.length === decryptedIds.length && validIds.length > 0) {
+                choiceIds = validIds;
+                choiceLabels = validIds.map((id) => choices.find((c) => c.id === id)?.choice ?? id);
                 valid = true;
               }
             }
-            map.set(ballot.id, { choiceId, choiceLabel, valid, hashValid });
+            map.set(ballot.id, { choiceIds, choiceLabels, valid, hashValid });
           }),
         );
         await new Promise((r) => setTimeout(r, 0));
@@ -111,12 +111,16 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const filteredBallots = useMemo(() => {
     if (!trimmedQuery) return ballots;
     const q = trimmedQuery.toLowerCase();
-    return ballots.filter(
-      (b) =>
-        b.currentHash.includes(q) ||
-        (decryptionDone &&
-          (decryptedMap.get(b.id)?.choiceLabel?.toLowerCase().includes(q) ?? false)),
-    );
+
+    return ballots.filter((b) => {
+      const isHashMatch = b.currentHash.includes(q);
+      const decryption = decryptedMap.get(b.id);
+      const isLabelMatch =
+        decryptionDone &&
+        decryption?.choiceLabels?.some((label) => label.toLowerCase().includes(q));
+
+      return isHashMatch || isLabelMatch;
+    });
   }, [ballots, trimmedQuery, decryptionDone, decryptedMap]);
 
   const handleSearch = (value: string) => {
@@ -157,10 +161,19 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     : null;
 
   const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
-  const myVoteMatchesDecryption =
-    myDecryption !== undefined && myVoteRecord !== null
-      ? myDecryption.valid && myDecryption.choiceId === myVoteRecord.choiceId
-      : null;
+
+  const myVoteMatchesDecryption = useMemo(() => {
+    if (!myDecryption || !myVoteRecord || !myDecryption.valid) return null;
+
+    const decryptedIds = myDecryption.choiceIds || [];
+    const storedIds = Array.isArray(myVoteRecord.choiceIds)
+      ? myVoteRecord.choiceIds
+      : [myVoteRecord.choiceIds];
+
+    if (decryptedIds.length !== storedIds.length) return false;
+
+    return storedIds.every((id) => decryptedIds.includes(id));
+  }, [myDecryption, myVoteRecord]);
 
   return (
     <div className="space-y-5">
@@ -170,7 +183,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           found={myBallot !== null}
           decryptionDone={decryptionDone}
           matchesDecryption={myVoteMatchesDecryption}
-          decryptedChoiceLabel={myDecryption?.choiceLabel ?? null}
+          decryptedChoiceLabels={myDecryption?.choiceLabels ?? null}
           onScrollTo={() =>
             myBallotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }
@@ -291,7 +304,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
                     }
                     choices={choices}
                     isMyBallot={isMyBallot}
-                    myStoredChoiceLabel={isMyBallot ? myVoteRecord!.choiceLabel : undefined}
+                    myStoredChoiceLabels={isMyBallot ? myVoteRecord!.choiceLabels : undefined}
                   />
                 </div>
               );

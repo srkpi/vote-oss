@@ -21,7 +21,7 @@ interface BallotRowProps {
   decryption?: DecryptionResult;
   choices: ElectionChoice[];
   isMyBallot?: boolean;
-  myStoredChoiceLabel?: string;
+  myStoredChoiceLabels?: string[];
 }
 
 export function BallotRow({
@@ -31,7 +31,7 @@ export function BallotRow({
   onToggle,
   decryption,
   isMyBallot = false,
-  myStoredChoiceLabel,
+  myStoredChoiceLabels,
 }: BallotRowProps) {
   const isMalformed = decryption !== undefined && !decryption.valid;
   const isBadHash = decryption !== undefined && !decryption.hashValid;
@@ -39,8 +39,10 @@ export function BallotRow({
 
   // Compare locally-stored choice with the decrypted one
   const myChoiceVerified =
-    isMyBallot && decryption !== undefined && myStoredChoiceLabel !== undefined
-      ? decryption.valid && decryption.choiceLabel === myStoredChoiceLabel
+    isMyBallot && decryption !== undefined && myStoredChoiceLabels !== undefined
+      ? decryption.valid &&
+        decryption.choiceLabels?.length === myStoredChoiceLabels.length &&
+        decryption.choiceLabels.every((l) => myStoredChoiceLabels.includes(l))
       : null;
 
   return (
@@ -85,10 +87,10 @@ export function BallotRow({
                 decryption.valid ? 'text-kpi-navy' : 'text-error',
               )}
             >
-              {decryption.valid && decryption.choiceLabel ? (
+              {decryption.valid && decryption.choiceLabels ? (
                 <>
                   <span className="text-muted-foreground font-normal">Вибір: </span>
-                  {decryption.choiceLabel}
+                  {decryption.choiceLabels.join(', ')}
                 </>
               ) : (
                 <span className="flex items-center gap-1">
@@ -147,7 +149,7 @@ export function BallotRow({
                     <UserCheck className="text-kpi-blue-light h-4 w-4 shrink-0" />
                     <div className="min-w-0">
                       <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
-                        Ваш збережений вибір: {myStoredChoiceLabel}
+                        Ваш збережений вибір: {myStoredChoiceLabels?.join(', ')}
                       </p>
                       <p className="font-body text-muted-foreground mt-0.5 text-xs">
                         Розшифруйте бюлетені, щоб верифікувати
@@ -163,7 +165,7 @@ export function BallotRow({
                       </p>
                       <p className="font-body text-muted-foreground mt-0.5 text-xs wrap-break-word">
                         Розшифрований вибір збігається з локальним записом:{' '}
-                        <strong>{myStoredChoiceLabel}</strong>
+                        <strong>{myStoredChoiceLabels?.join(', ')}</strong>
                       </p>
                     </div>
                   </div>
@@ -175,8 +177,8 @@ export function BallotRow({
                         Розбіжність виборів!
                       </p>
                       <p className="font-body text-muted-foreground mt-0.5 text-xs wrap-break-word">
-                        Збережено: <strong>{myStoredChoiceLabel}</strong> · Розшифровано:{' '}
-                        <strong>{decryption?.choiceLabel ?? '?'}</strong>
+                        Збережено: <strong>{myStoredChoiceLabels?.join(', ')}</strong> ·
+                        Розшифровано: <strong>{decryption?.choiceLabels?.join(', ') ?? '?'}</strong>
                       </p>
                     </div>
                   </div>
@@ -202,10 +204,14 @@ export function BallotRow({
                       <CheckCircle className="text-success h-4 w-4 shrink-0" />
                       <div>
                         <p className="font-body text-foreground text-sm font-semibold">
-                          {decryption.choiceLabel}
+                          {decryption.choiceLabels?.join(', ')}
                         </p>
                         <p className="font-body text-muted-foreground text-xs">
-                          ID варіанту: {decryption.choiceId}
+                          ID{' '}
+                          {decryption.choiceIds?.length && decryption.choiceIds?.length > 1
+                            ? 'варіанту'
+                            : 'варіантів'}
+                          : {decryption.choiceIds?.join(', ')}
                         </p>
                       </div>
                     </>

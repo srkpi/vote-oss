@@ -56,9 +56,9 @@ export function ElectionMobileCard({ election, canDelete, onDelete }: ElectionMo
             <FileText className="h-3.5 w-3.5 shrink-0" />
             <span className="text-foreground font-semibold">{election.ballotCount}</span>
             Голосів
-            {(election.restrictedToFaculty || election.restrictedToGroup) && (
+            {election.restrictions.length > 0 && (
               <Badge variant="info" size="sm" className="ml-2">
-                {election.restrictedToGroup ?? election.restrictedToFaculty}
+                Обмежено
               </Badge>
             )}
           </div>

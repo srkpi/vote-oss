@@ -76,16 +76,18 @@ export async function POST(req: NextRequest) {
     faculty: user.faculty,
     group: user.group,
     fullName: user.fullName,
+    speciality: user.speciality,
+    studyYear: user.studyYear,
+    studyForm: user.studyForm,
   };
-  const adminRecord = await prisma.admin.findUnique({
-    where: { user_id: user.sub },
-  });
+
+  const adminRecord = await prisma.admin.findUnique({ where: { user_id: user.sub } });
   const isAdmin = !!adminRecord;
 
   if (isAdmin) {
-    tokenPayload['isAdmin'] = true;
-    tokenPayload['manageAdmins'] = adminRecord.manage_admins;
-    tokenPayload['restrictedToFaculty'] = adminRecord.restricted_to_faculty;
+    tokenPayload.isAdmin = true;
+    tokenPayload.manageAdmins = adminRecord.manage_admins;
+    tokenPayload.restrictedToFaculty = adminRecord.restricted_to_faculty;
   }
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =

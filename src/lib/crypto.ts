@@ -5,8 +5,8 @@ import {
   createVerify,
   generateKeyPairSync,
   privateDecrypt,
+  randomBytes,
 } from 'crypto';
-import { randomBytes } from 'crypto';
 
 import type { Ballot } from '@/types/ballot';
 
@@ -51,48 +51,22 @@ export function computeNullifier(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-export async function computeNullifierClient(token: string): Promise<string> {
-  const encoded = new TextEncoder().encode(token);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', encoded);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-export async function encryptChoiceClient(publicKeyPem: string, choiceId: string): Promise<string> {
-  const pemHeader = '-----BEGIN PUBLIC KEY-----';
-  const pemFooter = '-----END PUBLIC KEY-----';
-  const pemContents = publicKeyPem
-    .replace(pemHeader, '')
-    .replace(pemFooter, '')
-    .replace(/\s+/g, '');
-
-  const binaryDer = atob(pemContents);
-  const binaryArray = new Uint8Array(binaryDer.length);
-  for (let i = 0; i < binaryDer.length; i++) {
-    binaryArray[i] = binaryDer.charCodeAt(i);
-  }
-
-  const key = await window.crypto.subtle.importKey(
-    'spki',
-    binaryArray.buffer,
-    { name: 'RSA-OAEP', hash: 'SHA-256' },
-    false,
-    ['encrypt'],
-  );
-
-  const encoded = new TextEncoder().encode(choiceId);
-  const encrypted = await window.crypto.subtle.encrypt({ name: 'RSA-OAEP' }, key, encoded);
-
-  return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
-}
-
-export function decryptBallot(privateKeyPem: string, encryptedBallotBase64: string): string {
+/** Decrypt an RSA-OAEP ballot. Returns an array of choice IDs. */
+export function decryptBallot(privateKeyPem: string, encryptedBallotBase64: string): string[] {
   const buffer = Buffer.from(encryptedBallotBase64, 'base64');
   const decrypted = privateDecrypt(
     { key: privateKeyPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
     buffer,
   );
-  return decrypted.toString('utf-8');
+  const text = decrypted.toString('utf-8');
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (Array.isArray(parsed)) return parsed as string[];
+    // Backward compat: single string
+    return [text];
+  } catch {
+    return [text];
+  }
 }
 
 export function signBallotEntry(
@@ -126,6 +100,42 @@ export function generateBase64Token(length: number): string {
   return token.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, length);
 }
 
+// ── Client-side (browser) crypto ─────────────────────────────────────────────
+
+export async function computeNullifierClient(token: string): Promise<string> {
+  const encoded = new TextEncoder().encode(token);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Encrypt an array of choice IDs with the election RSA public key. */
+export async function encryptChoiceClient(
+  publicKeyPem: string,
+  choiceIds: string[],
+): Promise<string> {
+  const pemContents = publicKeyPem
+    .replace('-----BEGIN PUBLIC KEY-----', '')
+    .replace('-----END PUBLIC KEY-----', '')
+    .replace(/\s+/g, '');
+
+  const binaryDer = atob(pemContents);
+  const binaryArray = new Uint8Array(binaryDer.length);
+  for (let i = 0; i < binaryDer.length; i++) binaryArray[i] = binaryDer.charCodeAt(i);
+
+  const key = await window.crypto.subtle.importKey(
+    'spki',
+    binaryArray.buffer,
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    false,
+    ['encrypt'],
+  );
+
+  const encoded = new TextEncoder().encode(JSON.stringify(choiceIds));
+  const encrypted = await window.crypto.subtle.encrypt({ name: 'RSA-OAEP' }, key, encoded);
+  return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+}
+
 export async function importPrivateKey(privateKeyPem: string): Promise<CryptoKey> {
   const pemContents = privateKeyPem
     .replace('-----BEGIN PRIVATE KEY-----', '')
@@ -141,14 +151,18 @@ export async function importPrivateKey(privateKeyPem: string): Promise<CryptoKey
   );
 }
 
+/** Returns array of decrypted choice IDs, or null on failure. */
 export async function decryptBallotData(
   key: CryptoKey,
   encryptedBase64: string,
-): Promise<string | null> {
+): Promise<string[] | null> {
   try {
     const buf = Uint8Array.from(atob(encryptedBase64), (c) => c.charCodeAt(0));
     const dec = await window.crypto.subtle.decrypt({ name: 'RSA-OAEP' }, key, buf);
-    return new TextDecoder().decode(dec);
+    const text = new TextDecoder().decode(dec);
+    const parsed: unknown = JSON.parse(text);
+    if (Array.isArray(parsed)) return parsed as string[];
+    return [text]; // backward compat
   } catch {
     return null;
   }

@@ -21,20 +21,37 @@ interface VoteFormProps {
 
 export function VoteForm({ election }: VoteFormProps) {
   const { toast } = useToast();
+  const isMultiple = election.maxChoices > 1;
 
-  const [selectedChoice, setSelectedChoice] = useState<ElectionChoice | null>(null);
+  const [selectedChoices, setSelectedChoices] = useState<ElectionChoice[]>([]);
   const [step, setStep] = useState<'select' | 'confirm' | 'submitting' | 'done'>('select');
   const [ballotHash, setBallotHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const voteTokenRef = useRef<VoteToken>(null);
 
+  const canProceed =
+    selectedChoices.length >= election.minChoices && selectedChoices.length <= election.maxChoices;
+
+  function handleSelect(choice: ElectionChoice) {
+    if (isMultiple) {
+      if (selectedChoices.length < election.maxChoices) {
+        setSelectedChoices((prev) => [...prev, choice]);
+      }
+    } else {
+      setSelectedChoices([choice]);
+    }
+  }
+
+  function handleDeselect(choice: ElectionChoice) {
+    setSelectedChoices((prev) => prev.filter((c) => c.id !== choice.id));
+  }
+
   const handleSubmit = async () => {
-    if (!selectedChoice) return;
+    if (!canProceed) return;
     setStep('submitting');
     setError(null);
 
-    // Get vote token from server
     if (!voteTokenRef.current) {
       const tokenResult = await api.getVoteToken(election.id);
       if (!tokenResult.success) {
@@ -42,19 +59,18 @@ export function VoteForm({ election }: VoteFormProps) {
         setStep('confirm');
         return;
       }
-
-      const voteToken = tokenResult.data;
-      voteTokenRef.current = voteToken;
+      voteTokenRef.current = tokenResult.data;
     }
 
     const { token, signature } = voteTokenRef.current;
 
-    // Encrypt the ballot and compute nullifier client-side.
     let encryptedBallot: string;
     let nullifier: string;
-
     try {
-      encryptedBallot = await encryptChoiceClient(election.publicKey, selectedChoice.id);
+      encryptedBallot = await encryptChoiceClient(
+        election.publicKey,
+        selectedChoices.map((c) => c.id),
+      );
       nullifier = await computeNullifierClient(token);
     } catch {
       setError('Помилка шифрування бюлетеня. Спробуйте знову.');
@@ -62,7 +78,6 @@ export function VoteForm({ election }: VoteFormProps) {
       return;
     }
 
-    // Submit the ballot
     const ballotResult = await api.submitBallot(election.id, {
       token,
       signature,
@@ -77,12 +92,10 @@ export function VoteForm({ election }: VoteFormProps) {
     }
 
     const hash = ballotResult.data.ballotHash;
-
-    // Persist vote locally so the user can see it on future visits
     saveVote({
       electionId: election.id,
-      choiceId: selectedChoice.id,
-      choiceLabel: selectedChoice.choice,
+      choiceIds: selectedChoices.map((c) => c.id),
+      choiceLabels: selectedChoices.map((c) => c.choice),
       ballotHash: hash,
       votedAt: new Date().toISOString(),
     });
@@ -101,6 +114,10 @@ export function VoteForm({ election }: VoteFormProps) {
     return <VotingSuccess hash={ballotHash} electionId={election.id} />;
   }
 
+  const selectionHint = isMultiple
+    ? `Оберіть від ${election.minChoices} до ${election.maxChoices} варіантів (обрано: ${selectedChoices.length})`
+    : 'Оберіть один варіант';
+
   return (
     <div className="space-y-6">
       {error && (
@@ -111,23 +128,32 @@ export function VoteForm({ election }: VoteFormProps) {
 
       {step === 'select' && (
         <>
+          <p className="font-body text-muted-foreground text-sm">{selectionHint}</p>
           <div className="space-y-3">
-            {election.choices.map((choice, index) => (
-              <ChoiceButton
-                key={choice.id}
-                choice={choice}
-                selected={selectedChoice?.id === choice.id}
-                onSelect={setSelectedChoice}
-                index={index}
-              />
-            ))}
+            {election.choices.map((choice, index) => {
+              const isSelected = selectedChoices.some((c) => c.id === choice.id);
+              const isDisabled =
+                !isSelected && isMultiple && selectedChoices.length >= election.maxChoices;
+              return (
+                <ChoiceButton
+                  key={choice.id}
+                  choice={choice}
+                  selected={isSelected}
+                  onSelect={handleSelect}
+                  onDeselect={handleDeselect}
+                  index={index}
+                  multiple={isMultiple}
+                  disabled={isDisabled}
+                />
+              );
+            })}
           </div>
 
           <Button
             variant="primary"
             size="lg"
             fullWidth
-            disabled={!selectedChoice}
+            disabled={!canProceed}
             onClick={() => setStep('confirm')}
             icon={<ChevronRight className="h-4 w-4" />}
             iconPosition="right"
@@ -141,9 +167,9 @@ export function VoteForm({ election }: VoteFormProps) {
         </>
       )}
 
-      {step === 'confirm' && selectedChoice && (
+      {step === 'confirm' && selectedChoices.length > 0 && (
         <ConfirmChoice
-          choice={selectedChoice}
+          choices={selectedChoices}
           onBack={() => setStep('select')}
           onConfirm={handleSubmit}
           loading={false}

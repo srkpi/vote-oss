@@ -67,18 +67,11 @@ export function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps)
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
         <div className="flex flex-col gap-1">
-          {election.restrictedToFaculty || election.restrictedToGroup ? (
+          {election.restrictions.length ? (
             <>
-              {election.restrictedToFaculty && (
-                <Badge variant="info" size="md">
-                  {election.restrictedToFaculty}
-                </Badge>
-              )}
-              {election.restrictedToGroup && (
-                <Badge variant="secondary" size="md">
-                  {election.restrictedToGroup}
-                </Badge>
-              )}
+              <Badge variant="info" size="md">
+                Обмежено
+              </Badge>
             </>
           ) : (
             <Badge variant="success" size="md">

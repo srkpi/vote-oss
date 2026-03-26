@@ -9,18 +9,26 @@ interface MyVoteBannerProps {
   found: boolean;
   decryptionDone: boolean;
   matchesDecryption: boolean | null;
-  decryptedChoiceLabel: string | null;
+  decryptedChoiceLabels?: string[] | null;
   onScrollTo: () => void;
 }
+
+const formatLabels = (labels: string | string[] | undefined | null) => {
+  if (!labels) return '';
+  return Array.isArray(labels) ? labels.join(', ') : labels;
+};
 
 export function MyVoteBanner({
   record,
   found,
   decryptionDone,
   matchesDecryption,
-  decryptedChoiceLabel,
+  decryptedChoiceLabels,
   onScrollTo,
 }: MyVoteBannerProps) {
+  const storedChoices = formatLabels(record.choiceLabels);
+  const decryptedChoices = formatLabels(decryptedChoiceLabels);
+
   return (
     <div
       className={cn(
@@ -66,12 +74,12 @@ export function MyVoteBanner({
 
           <div className="font-body flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <span className="text-muted-foreground min-w-0 wrap-break-word">
-              Збережений вибір: <strong className="text-foreground">{record.choiceLabel}</strong>
+              Збережений вибір: <strong className="text-foreground">{storedChoices}</strong>
             </span>
 
-            {decryptionDone && decryptedChoiceLabel && matchesDecryption === false && (
+            {decryptionDone && decryptedChoices && matchesDecryption === false && (
               <span className="text-error wrap-break-word">
-                Розшифровано: <strong>{decryptedChoiceLabel}</strong>
+                Розшифровано: <strong>{decryptedChoices}</strong>
               </span>
             )}
           </div>
@@ -87,6 +95,7 @@ export function MyVoteBanner({
         {found && (
           <Button
             variant="secondary"
+            size="sm"
             onClick={onScrollTo}
             icon={<ArrowDown />}
             iconPosition="right"

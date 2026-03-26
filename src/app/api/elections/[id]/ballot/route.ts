@@ -121,8 +121,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (now < election.opens_at) return Errors.badRequest('Election has not started yet');
   if (now > election.closes_at) return Errors.badRequest('Election has already closed');
 
-  const signatureValid = verifyVoteTokenSignature(election.public_key, token, signature);
-  if (!signatureValid) return Errors.badRequest('Invalid vote token signature');
+  if (!verifyVoteTokenSignature(election.public_key, token, signature)) {
+    return Errors.badRequest('Invalid vote token signature');
+  }
 
   const tokenElectionId = token.slice(0, token.indexOf(':'));
   if (tokenElectionId !== electionId) {
@@ -139,15 +140,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
   if (usedNullifier) return Errors.conflict('This vote token has already been used');
 
-  let choiceId: string;
+  let choiceIds: string[];
   try {
-    choiceId = decryptBallot(election.private_key, encryptedBallot);
+    choiceIds = decryptBallot(election.private_key, encryptedBallot);
   } catch {
     return Errors.badRequest('Failed to decrypt ballot – check encryption format');
   }
 
-  const validChoice = election.choices.find((c) => c.id === choiceId);
-  if (!validChoice) return Errors.badRequest('Decrypted ballot contains invalid choice');
+  if (choiceIds.length < election.min_choices || choiceIds.length > election.max_choices) {
+    return Errors.badRequest(
+      `Must select between ${election.min_choices} and ${election.max_choices} choices`,
+    );
+  }
+  if (new Set(choiceIds).size !== choiceIds.length) {
+    return Errors.badRequest('Duplicate choices are not allowed');
+  }
+  for (const choiceId of choiceIds) {
+    if (!election.choices.find((c) => c.id === choiceId)) {
+      return Errors.badRequest('Decrypted ballot contains invalid choice');
+    }
+  }
 
   const lastBallot = await prisma.ballot.findFirst({
     where: { election_id: electionId },

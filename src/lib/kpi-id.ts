@@ -21,20 +21,13 @@ export async function resolveTicket(ticketId: string): Promise<UserInfo | null> 
 
   const response = await fetch(url.toString(), {
     method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
+    headers: { Accept: 'application/json' },
   });
 
-  if (!response.ok) {
-    return null;
-  }
+  if (!response.ok) return null;
 
   const ticket: TicketUserInfo = await response.json();
-
-  if (!ticket?.data) {
-    return null;
-  }
+  if (!ticket?.data) return null;
 
   if (ticket.data.EMPLOYEE_ID && !ticket.data.STUDENT_ID) {
     throw new NotStudentError();
@@ -42,15 +35,15 @@ export async function resolveTicket(ticketId: string): Promise<UserInfo | null> 
 
   const userId = ticket.data.STUDENT_ID;
   const fullName = ticket.data.NAME;
-
-  if (!userId || !fullName) {
-    return null;
-  }
+  if (!userId || !fullName) return null;
 
   return {
     userId,
     fullName,
     group: 'IP-24',
     faculty: 'TEST',
+    speciality: undefined,
+    studyYear: undefined,
+    studyForm: undefined,
   };
 }

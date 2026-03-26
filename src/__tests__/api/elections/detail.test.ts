@@ -54,7 +54,9 @@ describe('GET /api/elections/[id]', () => {
 
   it('returns 403 when user faculty does not match restriction', async () => {
     const req = await authRequest(OTHER_FACULTY_PAYLOAD);
-    const election = makeElection({ restricted_to_faculty: 'FICE' });
+    const election = makeElection({
+      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(403);
@@ -62,7 +64,12 @@ describe('GET /api/elections/[id]', () => {
 
   it('returns 403 when user group does not match restriction', async () => {
     const req = await authRequest(USER_PAYLOAD); // group KV-91
-    const election = makeElection({ restricted_to_group: 'KV-99' });
+    const election = makeElection({
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'GROUP', value: 'KV-99' },
+      ],
+    });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(403);

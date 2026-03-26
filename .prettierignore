@@ -3,3 +3,4 @@ node_modules
 out
 allure-report
 allure-results
+pnpm-lock.yaml

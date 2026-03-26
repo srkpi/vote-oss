@@ -1,4 +1,4 @@
-import { Calendar, ChevronRight, FileText, Lock, User } from 'lucide-react';
+import { Calendar, ChevronRight, FileText, User } from 'lucide-react';
 import Link from 'next/link';
 
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
@@ -43,16 +43,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       <div className="p-6">
         <div className="mb-4 flex items-start justify-between gap-4">
           <ElectionStatusBadge status={election.status} />
-          {(election.restrictedToFaculty || election.restrictedToGroup) && (
-            <div className="text-muted-foreground flex items-center gap-1 text-xs">
-              <Lock className="h-3.5 w-3.5 shrink-0" />
-              <span>
-                {election.restrictedToGroup
-                  ? election.restrictedToGroup
-                  : election.restrictedToFaculty}
-              </span>
-            </div>
-          )}
         </div>
 
         <h3
