@@ -2,7 +2,7 @@ import * as allure from 'allure-js-commons';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
-  encryptChoice,
+  encryptBallot,
   JWT_TOKEN_RECORD,
   makeElection,
   makeTokenPair,
@@ -107,7 +107,11 @@ describe('POST /api/elections/[id]/ballot', () => {
     const { token: wrongToken } = generateVoteToken(MOCK_ELECTION_ID_NOT_EXISTING);
     const signature = signVoteToken(election.private_key, wrongToken);
     const nullifier = computeNullifier(wrongToken);
-    const encryptedBallot = encryptChoice(election.public_key, [election.choices[0].id]);
+    const encryptedBallot = encryptBallot(
+      election.public_key,
+      [election.choices[0].id],
+      election.max_choices,
+    );
     const req = await authReq({ token: wrongToken, signature, nullifier, encryptedBallot });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     const res = await POST(req, PARAMS);
@@ -138,7 +142,11 @@ describe('POST /api/elections/[id]/ballot', () => {
     const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
     const nullifier = computeNullifier(token);
-    const encryptedBallot = encryptChoice(election.public_key, [MOCK_ELECTION_INVALID_CHOICE_ID]);
+    const encryptedBallot = encryptBallot(
+      election.public_key,
+      [MOCK_ELECTION_INVALID_CHOICE_ID],
+      election.max_choices,
+    );
     const req = await authReq({ token, signature, nullifier, encryptedBallot });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     prismaMock.usedTokenNullifier.findUnique.mockResolvedValueOnce(null);
@@ -149,7 +157,7 @@ describe('POST /api/elections/[id]/ballot', () => {
   it('returns 400 when encrypted ballot is garbage', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
-    const req = await authReq({ ...ballot, encryptedBallot: 'not-valid-base64-rsa==' });
+    const req = await authReq({ ...ballot, encryptedBallot: 'bm90LXZhbGlkLWpzb24=' }); // base64 of "not-valid-json"
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     prismaMock.usedTokenNullifier.findUnique.mockResolvedValueOnce(null);
     const res = await POST(req, PARAMS);
@@ -161,11 +169,12 @@ describe('POST /api/elections/[id]/ballot', () => {
     const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
     const nullifier = computeNullifier(token);
-    // Encrypt 2 choices but max is 1
-    const encryptedBallot = encryptChoice(election.public_key, [
-      MOCK_ELECTION_CHOICES[0].id,
-      MOCK_ELECTION_CHOICES[1].id,
-    ]);
+    // Encrypt 2 choices but max is 1 — no padding applied since length >= maxChoices
+    const encryptedBallot = encryptBallot(
+      election.public_key,
+      [MOCK_ELECTION_CHOICES[0].id, MOCK_ELECTION_CHOICES[1].id],
+      election.max_choices,
+    );
     const req = await authReq({ token, signature, nullifier, encryptedBallot });
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     prismaMock.usedTokenNullifier.findUnique.mockResolvedValueOnce(null);
@@ -215,10 +224,11 @@ describe('POST /api/elections/[id]/ballot', () => {
     const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
     const nullifier = computeNullifier(token);
-    const encryptedBallot = encryptChoice(election.public_key, [
-      MOCK_ELECTION_CHOICES[0].id,
-      MOCK_ELECTION_CHOICES[1].id,
-    ]);
+    const encryptedBallot = encryptBallot(
+      election.public_key,
+      [MOCK_ELECTION_CHOICES[0].id, MOCK_ELECTION_CHOICES[1].id],
+      election.max_choices, // max_choices=2, no padding needed
+    );
     const req = await authReq({ token, signature, nullifier, encryptedBallot });
 
     prismaMock.election.findUnique.mockResolvedValueOnce(election);

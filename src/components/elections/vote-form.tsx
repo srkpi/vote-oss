@@ -10,7 +10,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { computeNullifierClient, encryptChoiceClient } from '@/lib/crypto';
+import { computeNullifierClient, encryptBallotClient } from '@/lib/crypto';
 import { saveVote } from '@/lib/vote-storage';
 import type { ElectionChoice, ElectionDetail } from '@/types/election';
 import type { VoteToken } from '@/types/vote';
@@ -67,9 +67,10 @@ export function VoteForm({ election }: VoteFormProps) {
     let encryptedBallot: string;
     let nullifier: string;
     try {
-      encryptedBallot = await encryptChoiceClient(
+      encryptedBallot = await encryptBallotClient(
         election.publicKey,
         selectedChoices.map((c) => c.id),
+        election.maxChoices,
       );
       nullifier = await computeNullifierClient(token);
     } catch {

@@ -57,10 +57,13 @@ import type { TokenPayload } from '@/types/auth';
  *                   type: string
  *                 speciality:
  *                   type: string
- *                 study_year:
+ *                   nullable: true
+ *                 studyYear:
  *                   type: string
- *                 study_form:
+ *                   nullable: true
+ *                 studyForm:
  *                   type: string
+ *                   nullable: true
  *                 isAdmin:
  *                   type: boolean
  *       400:

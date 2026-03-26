@@ -5,10 +5,8 @@ import {
   ChevronRight,
   CircleSlash2,
   FileText,
-  Search,
   ShieldAlert,
   ShieldCheck,
-  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -16,6 +14,7 @@ import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { Button } from '@/components/ui/button';
+import { SearchInput } from '@/components/ui/search-input';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { cn, pluralize } from '@/lib/utils';
 import { getVote } from '@/lib/vote-storage';
@@ -48,7 +47,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
   const isClosed = election?.status === 'closed';
   const privateKey = election?.privateKey;
-  const canDecrypt = isClosed && !!privateKey;
+  const canDecrypt = isClosed && !!privateKey && election.ballotCount > 0;
   const choices: ElectionChoice[] = election?.choices ?? [];
   const electionId = election?.id ?? electionMeta.id;
 
@@ -213,36 +212,18 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           </span>
         </div>
 
-        <div className="relative max-w-md flex-1">
-          <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
-            <Search className="h-4 w-4" />
-          </div>
-          <input
-            type="text"
+        {ballots.length > 0 && (
+          <SearchInput
             value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={handleSearch}
+            className="max-w-md"
             placeholder={
               decryptionDone
                 ? 'Пошук за хешем або варіантом відповіді…'
                 : 'Пошук за хешем бюлетеня…'
             }
-            className={cn(
-              'h-9 w-full pr-9 pl-9 font-mono text-sm',
-              'border-border-color rounded-lg border bg-white',
-              'placeholder:font-body placeholder:text-subtle',
-              'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
-              'shadow-shadow-xs transition-colors duration-150',
-            )}
           />
-          {searchQuery && (
-            <button
-              onClick={() => handleSearch('')}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {ballots.length === 0 ? (
@@ -250,8 +231,12 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
             <FileText className="text-kpi-gray-mid h-7 w-7" />
           </div>
-          <p className="font-display text-foreground text-lg font-semibold">Бюлетенів поки немає</p>
-          <p className="font-body text-muted-foreground mt-1 text-sm">Голосів ще не подано</p>
+          <p className="font-display text-foreground text-lg font-semibold">
+            {isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
+          </p>
+          <p className="font-body text-muted-foreground mt-1 text-sm">
+            {isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
+          </p>
         </div>
       ) : pagedBallots.length === 0 ? (
         <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">

@@ -104,12 +104,6 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
           );
         })}
       </div>
-
-      {totalBallots === 0 && (
-        <p className="font-body text-muted-foreground py-4 text-center text-sm">
-          Поки що голосів немає
-        </p>
-      )}
     </div>
   );
 }

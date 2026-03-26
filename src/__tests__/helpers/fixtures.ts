@@ -1,7 +1,6 @@
-import { constants, publicEncrypt } from 'crypto';
-
 import {
   computeNullifier,
+  encryptBallot,
   generateElectionKeyPair,
   generateVoteToken,
   signVoteToken,
@@ -187,24 +186,18 @@ export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBa
   return { ...makeElectionBase(keys), ...overrides };
 }
 
-/** Encrypt one or more choice IDs with the election RSA public key. */
-export function encryptChoice(publicKeyPem: string, choiceIds: string | string[]): string {
-  const ids = Array.isArray(choiceIds) ? choiceIds : [choiceIds];
-  const buf = publicEncrypt(
-    { key: publicKeyPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
-    Buffer.from(JSON.stringify(ids)),
-  );
-  return buf.toString('base64');
-}
+// Re-export the library function so tests can import it from one place.
+export { encryptBallot };
 
-/** Build a valid vote submission payload for a given election + choice. */
+/** Build a valid vote submission payload for a given election and choice(s). */
 export function makeVoteBallot(
   election: ReturnType<typeof makeElection>,
-  choiceId: string = MOCK_ELECTION_CHOICES[0].id,
+  choiceIds: string | string[] = MOCK_ELECTION_CHOICES[0].id,
 ) {
+  const ids = Array.isArray(choiceIds) ? choiceIds : [choiceIds];
   const { token } = generateVoteToken(election.id);
   const signature = signVoteToken(election.private_key, token);
   const nullifier = computeNullifier(token);
-  const encryptedBallot = encryptChoice(election.public_key, [choiceId]);
+  const encryptedBallot = encryptBallot(election.public_key, ids, election.max_choices);
   return { token, signature, nullifier, encryptedBallot };
 }

@@ -1,12 +1,14 @@
 import * as allure from 'allure-js-commons';
-import { constants, publicEncrypt } from 'crypto';
+import { randomUUID } from 'crypto';
 
 import { MOCK_ELECTION_ID } from '@/__tests__/helpers/fixtures';
 import { INVITE_TOKEN_LENGTH } from '@/lib/constants';
 import {
+  BALLOT_VERSION,
   computeBallotHash,
   computeNullifier,
   decryptBallot,
+  encryptBallot,
   generateBase64Token,
   generateElectionKeyPair,
   generateVoteToken,
@@ -131,40 +133,87 @@ describe('crypto', () => {
     });
   });
 
-  describe('decryptBallot', () => {
-    beforeEach(() => {
-      allure.feature('Crypto');
-      allure.story('Ballot Encryption');
-    });
-
+  describe('Ballot Encryption (Hybrid AES-GCM + RSA-OAEP)', () => {
     let publicKey: string;
     let privateKey: string;
+    const choices = [randomUUID(), randomUUID()];
+    const maxChoices = 5;
 
     beforeAll(() => {
       ({ publicKey, privateKey } = generateElectionKeyPair());
     });
 
-    function encrypt(plaintext: string[]): string {
-      const buf = publicEncrypt(
-        { key: publicKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
-        Buffer.from(JSON.stringify(plaintext)),
-      );
-      return buf.toString('base64');
-    }
-
-    it('decrypts a value correctly encrypted with the matching public key', () => {
-      const enc = encrypt(['42']);
-      expect(decryptBallot(privateKey, enc)).toEqual(['42']);
+    beforeEach(() => {
+      allure.feature('Crypto');
+      allure.story('Ballot Encryption Envelope');
     });
 
-    it('throws on invalid base64 input', () => {
-      expect(() => decryptBallot(privateKey, '!!!not-base64!!!')).toThrow();
+    it('encrypts and decrypts a ballot correctly', () => {
+      allure.description('Should recover original choices after round-trip encryption/decryption.');
+      const encryptedEnvelope = encryptBallot(publicKey, choices, maxChoices);
+      const decryptedChoices = decryptBallot(privateKey, encryptedEnvelope);
+
+      expect(decryptedChoices).toEqual(choices);
     });
 
-    it('throws when decrypting with wrong private key', () => {
-      const { privateKey: otherKey } = generateElectionKeyPair();
-      const enc = encrypt(['10']);
-      expect(() => decryptBallot(otherKey, enc)).toThrow();
+    it('produces a base64 encoded JSON envelope with expected version', () => {
+      const encryptedEnvelope = encryptBallot(publicKey, choices, maxChoices);
+      const json = Buffer.from(encryptedEnvelope, 'base64').toString('utf-8');
+      const envelope = JSON.parse(json);
+
+      expect(envelope).toMatchObject({
+        v: BALLOT_VERSION,
+        wrappedKey: expect.any(String),
+        iv: expect.any(String),
+        tag: expect.any(String),
+        ciphertext: expect.any(String),
+      });
+    });
+
+    it('pads ballots to the same length regardless of choice count', () => {
+      const maxChoices = 5;
+      const choice1 = randomUUID();
+      const choice2 = randomUUID();
+
+      const enc1 = encryptBallot(publicKey, [choice1, choice2], maxChoices);
+
+      // Voter 2 picks 0 options (blank ballot)
+      const enc2 = encryptBallot(publicKey, [], maxChoices);
+
+      const getCipherLen = (env: string) =>
+        JSON.parse(Buffer.from(env, 'base64').toString()).ciphertext.length;
+
+      expect(getCipherLen(enc1)).toBe(getCipherLen(enc2));
+    });
+
+    it('throws when trying to decrypt with the wrong private key', () => {
+      const { privateKey: wrongKey } = generateElectionKeyPair();
+      const encrypted = encryptBallot(publicKey, choices, maxChoices);
+
+      expect(() => decryptBallot(wrongKey, encrypted)).toThrow();
+    });
+
+    it('throws on tampered ciphertext (AES-GCM Auth Check)', () => {
+      const encrypted = encryptBallot(publicKey, choices, maxChoices);
+      const envelope = JSON.parse(Buffer.from(encrypted, 'base64').toString());
+
+      // Decode, flip the very first byte, and re-encode
+      const rawCiphertext = Buffer.from(envelope.ciphertext, 'base64');
+      rawCiphertext[0] = rawCiphertext[0] ^ 0xff; // Flip all bits in the first byte
+      envelope.ciphertext = rawCiphertext.toString('base64');
+
+      const tampered = Buffer.from(JSON.stringify(envelope)).toString('base64');
+      expect(() => decryptBallot(privateKey, tampered)).toThrow();
+    });
+
+    it('throws on invalid envelope version', () => {
+      const encrypted = encryptBallot(publicKey, choices, maxChoices);
+      const envelope = JSON.parse(Buffer.from(encrypted, 'base64').toString());
+
+      envelope.v = 999; // Future version
+      const tampered = Buffer.from(JSON.stringify(envelope)).toString('base64');
+
+      expect(() => decryptBallot(privateKey, tampered)).toThrow('Unsupported ballot version');
     });
   });
 

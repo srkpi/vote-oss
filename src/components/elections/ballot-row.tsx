@@ -94,7 +94,6 @@ export function BallotRow({
                 </>
               ) : (
                 <span className="flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" />
                   Неможливо розшифрувати або невалідний вибір
                 </span>
               )}
@@ -116,7 +115,7 @@ export function BallotRow({
               {myChoiceVerified === true
                 ? 'Верифіковано'
                 : myChoiceVerified === false
-                  ? 'Розбіжність!'
+                  ? 'Розбіжність'
                   : 'Ви'}
             </span>
           )}
@@ -203,14 +202,14 @@ export function BallotRow({
                     <>
                       <CheckCircle className="text-success h-4 w-4 shrink-0" />
                       <div>
-                        <p className="font-body text-foreground text-sm font-semibold">
+                        <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
                           {decryption.choiceLabels?.join(', ')}
                         </p>
-                        <p className="font-body text-muted-foreground text-xs">
+                        <p className="font-body text-muted-foreground text-xs wrap-break-word">
                           ID{' '}
                           {decryption.choiceIds?.length && decryption.choiceIds?.length > 1
-                            ? 'варіанту'
-                            : 'варіантів'}
+                            ? 'варіантів'
+                            : 'варіанту'}
                           : {decryption.choiceIds?.join(', ')}
                         </p>
                       </div>
