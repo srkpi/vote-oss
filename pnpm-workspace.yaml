@@ -10,3 +10,8 @@ allowBuilds:
   tree-sitter: true
   tree-sitter-json: true
   unrs-resolver: true
+overrides:
+  handlebars@>=4.0.0 <4.7.9: '>=4.7.9'
+  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
+  picomatch@<2.3.2: '>=2.3.2'
+  picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
