@@ -34,7 +34,7 @@ export function ToggleField({
         <div
           className={cn(
             'h-6 w-10 rounded-full transition-all duration-200',
-            checked ? 'bg-kpi-navy' : 'bg-border-color',
+            checked ? 'bg-kpi-navy' : 'bg-border',
           )}
         >
           <div

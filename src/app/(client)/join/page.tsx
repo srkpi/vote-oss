@@ -1,6 +1,5 @@
-import { CheckCircle2, ChevronLeft, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { JoinAdminForm } from '@/components/admin/join-admin-form';
@@ -44,14 +43,6 @@ export function JoinPageContent({
       </div>
 
       <div className="relative w-full max-w-lg">
-        <Link
-          href="/elections"
-          className="font-body text-muted-foreground hover:text-kpi-navy mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Назад до голосувань
-        </Link>
-
         <div className="border-border-color shadow-shadow-xl overflow-hidden rounded-2xl border bg-white">
           {/* Top accent bar */}
           <div className="navy-gradient h-1.5 w-full" />
