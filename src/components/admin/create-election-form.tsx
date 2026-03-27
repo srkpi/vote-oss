@@ -10,6 +10,7 @@ import { CharCounter } from '@/components/ui/char-counter';
 import { ChipSelect } from '@/components/ui/chip-select';
 import { FormField, Input } from '@/components/ui/form';
 import { MultiCombobox } from '@/components/ui/multi-combobox';
+import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
@@ -59,8 +60,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   }, []);
 
   const facultyOptions = Object.keys(facultyGroups).sort((a, b) => {
-    const aNN = a.startsWith('НН '),
-      bNN = b.startsWith('НН ');
+    const aNN = a.startsWith('НН ');
+    const bNN = b.startsWith('НН ');
     if (aNN !== bNN) return aNN ? 1 : -1;
     return a.localeCompare(b, 'uk');
   });
@@ -327,44 +328,46 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
 
         {/* Min/Max choices */}
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6">
           <FormField
-            label="Мінімум виборів"
+            label="Дозволено обирати варіантів"
             required
-            error={fieldErrors.minChoices}
-            htmlFor="minChoices"
-            hint={`Від ${ELECTION_MIN_CHOICES_MIN}`}
+            error={fieldErrors.minChoices || fieldErrors.maxChoices}
+            htmlFor="choices-slider"
           >
-            <Input
-              id="minChoices"
-              type="number"
+            <Slider
+              id="choices-slider"
               min={ELECTION_MIN_CHOICES_MIN}
-              max={form.maxChoices}
-              value={form.minChoices}
-              onChange={(e) =>
-                updateForm('minChoices', Math.max(ELECTION_MIN_CHOICES_MIN, Number(e.target.value)))
-              }
-              error={!!fieldErrors.minChoices}
+              max={Math.max(
+                ELECTION_MIN_CHOICES_MIN,
+                Math.min(ELECTION_MAX_CHOICES_MAX, Math.max(validChoicesCount, 2)),
+              )}
+              step={1}
+              value={[form.minChoices, form.maxChoices]}
+              onValueChange={([newMin, newMax]) => {
+                setForm((prev) => ({
+                  ...prev,
+                  minChoices: newMin,
+                  maxChoices: newMax,
+                }));
+                setFieldErrors((prev) => ({
+                  ...prev,
+                  minChoices: '',
+                  maxChoices: '',
+                }));
+              }}
+              className="my-5"
             />
-          </FormField>
-          <FormField
-            label="Максимум виборів"
-            required
-            error={fieldErrors.maxChoices}
-            htmlFor="maxChoices"
-            hint={`До ${Math.min(ELECTION_MAX_CHOICES_MAX, Math.max(validChoicesCount, 1))}`}
-          >
-            <Input
-              id="maxChoices"
-              type="number"
-              min={form.minChoices}
-              max={Math.min(ELECTION_MAX_CHOICES_MAX, Math.max(validChoicesCount, 1))}
-              value={form.maxChoices}
-              onChange={(e) =>
-                updateForm('maxChoices', Math.min(ELECTION_MAX_CHOICES_MAX, Number(e.target.value)))
-              }
-              error={!!fieldErrors.maxChoices}
-            />
+            <div className="font-body flex items-center justify-between text-sm font-medium">
+              <div className="flex flex-col items-start">
+                <span className="text-muted-foreground text-xs">Мінімум</span>
+                <span className="text-foreground">{form.minChoices}</span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-muted-foreground text-xs">Максимум</span>
+                <span className="text-foreground">{form.maxChoices}</span>
+              </div>
+            </div>
           </FormField>
         </div>
       </section>
