@@ -2,104 +2,107 @@
 
 import { CheckIcon } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DiiaLoginButton } from '@/components/auth/diia-login-button';
 import { DIIA_LINK_TTL_MS, DIIA_POLL_INTERVAL_MS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
-const TimerDisplay = memo(
-  ({ expiresAt, onExpire }: { expiresAt: number; onExpire: () => void }) => {
-    const barRef = useRef<HTMLDivElement>(null);
-    const textRef = useRef<HTMLSpanElement>(null);
-    const onExpireRef = useRef(onExpire);
-    const currentColorRef = useRef<'success' | 'orange' | 'error' | null>(null);
+interface TimerDisplayProps {
+  expiresAt: number;
+  onExpire: () => void;
+}
 
-    useEffect(() => {
-      onExpireRef.current = onExpire;
-    }, [onExpire]);
+const TimerDisplay = memo(({ expiresAt, onExpire }: TimerDisplayProps) => {
+  const barRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const onExpireRef = useRef(onExpire);
+  const currentColorRef = useRef<'success' | 'orange' | 'error' | null>(null);
 
-    useEffect(() => {
-      let frameId: number;
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
-      const update = () => {
-        const now = Date.now();
-        const timeLeft = Math.max(0, expiresAt - now);
-        const progressPercent = (timeLeft / DIIA_LINK_TTL_MS) * 100;
-        const progressScale = Math.max(0, Math.min(1, progressPercent / 100));
+  useEffect(() => {
+    let frameId: number;
 
-        if (barRef.current) {
-          barRef.current.style.transform = `scaleX(${progressScale})`;
+    const update = () => {
+      const now = Date.now();
+      const timeLeft = Math.max(0, expiresAt - now);
+      const progressPercent = (timeLeft / DIIA_LINK_TTL_MS) * 100;
+      const progressScale = Math.max(0, Math.min(1, progressPercent / 100));
+
+      if (barRef.current) {
+        barRef.current.style.transform = `scaleX(${progressScale})`;
+      }
+
+      let newColor: 'success' | 'orange' | 'error';
+      let hexColor: string;
+
+      if (progressPercent > 50) {
+        newColor = 'success';
+        hexColor = '#22c55e';
+      } else if (progressPercent > 20) {
+        newColor = 'orange';
+        hexColor = '#f97316';
+      } else {
+        newColor = 'error';
+        hexColor = '#ef4444';
+      }
+
+      if (currentColorRef.current !== newColor) {
+        currentColorRef.current = newColor;
+        if (barRef.current) barRef.current.style.backgroundColor = hexColor;
+        if (textRef.current) textRef.current.style.color = hexColor;
+      }
+
+      if (textRef.current) {
+        const totalSecs = Math.ceil(timeLeft / 1000);
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+        if (textRef.current.textContent !== timeStr) {
+          textRef.current.textContent = timeStr;
         }
+      }
 
-        let newColor: 'success' | 'orange' | 'error';
-        let hexColor: string;
-
-        if (progressPercent > 50) {
-          newColor = 'success';
-          hexColor = '#22c55e';
-        } else if (progressPercent > 20) {
-          newColor = 'orange';
-          hexColor = '#f97316';
-        } else {
-          newColor = 'error';
-          hexColor = '#ef4444';
-        }
-
-        if (currentColorRef.current !== newColor) {
-          currentColorRef.current = newColor;
-          if (barRef.current) barRef.current.style.backgroundColor = hexColor;
-          if (textRef.current) textRef.current.style.color = hexColor;
-        }
-
-        if (textRef.current) {
-          const totalSecs = Math.ceil(timeLeft / 1000);
-          const mins = Math.floor(totalSecs / 60);
-          const secs = totalSecs % 60;
-          const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-
-          if (textRef.current.textContent !== timeStr) {
-            textRef.current.textContent = timeStr;
-          }
-        }
-
-        if (timeLeft <= 0) {
-          onExpireRef.current();
-          return;
-        }
-
-        frameId = requestAnimationFrame(update);
-      };
+      if (timeLeft <= 0) {
+        onExpireRef.current();
+        return;
+      }
 
       frameId = requestAnimationFrame(update);
-      return () => cancelAnimationFrame(frameId);
-    }, [expiresAt]);
+    };
 
-    return (
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="font-body text-muted-foreground text-xs">Час дії</span>
-          <span
-            ref={textRef}
-            className="font-body text-xs font-medium tabular-nums transition-colors duration-300"
-          />
-        </div>
-        <div className="bg-border-subtle h-1.5 w-full overflow-hidden rounded-full">
-          <div
-            ref={barRef}
-            className="h-full w-full rounded-full transition-colors duration-300"
-            style={{
-              transformOrigin: 'left',
-              transform: 'scaleX(1)',
-              willChange: 'transform',
-            }}
-          />
-        </div>
+    frameId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frameId);
+  }, [expiresAt]);
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="font-body text-muted-foreground text-xs">Час дії</span>
+        <span
+          ref={textRef}
+          className="font-body text-xs font-medium tabular-nums transition-colors duration-300"
+        />
       </div>
-    );
-  },
-);
+      <div className="bg-border-subtle h-1.5 w-full overflow-hidden rounded-full">
+        <div
+          ref={barRef}
+          className="h-full w-full rounded-full transition-colors duration-300"
+          style={{
+            transformOrigin: 'left',
+            transform: 'scaleX(1)',
+            willChange: 'transform',
+          }}
+        />
+      </div>
+    </div>
+  );
+});
 
 TimerDisplay.displayName = 'TimerDisplay';
 
@@ -112,13 +115,15 @@ interface InitData {
   expiresAt: string;
 }
 
-export function DiiaLogin({
-  fullWidth = false,
-  className,
-}: {
+interface DiiaLoginProps {
   fullWidth?: boolean;
   className?: string;
-}) {
+}
+
+export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
+  const searchParams = useSearchParams();
+  const shouldAutoStart = searchParams.get('auto') === 'true';
+
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('idle');
   const [initData, setInitData] = useState<InitData | null>(null);
@@ -197,6 +202,11 @@ export function DiiaLogin({
   }, [stopPoll, startPolling]);
 
   useEffect(() => () => stopPoll(), [stopPoll]);
+  useEffect(() => {
+    if (shouldAutoStart && phase === 'idle') {
+      startFlow();
+    }
+  }, [shouldAutoStart, phase, startFlow]);
 
   if (phase === 'idle') {
     return <DiiaLoginButton onClick={startFlow} fullWidth />;

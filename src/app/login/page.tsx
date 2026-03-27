@@ -2,6 +2,7 @@ import { Check, CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import { DiiaLogin } from '@/components/auth/diia-login';
 import { AnimatedGrid } from '@/components/common/animated-grid';
@@ -232,7 +233,9 @@ export default function LoginPage() {
           </h1>
 
           <div className="space-y-6">
-            <DiiaLogin fullWidth />
+            <Suspense>
+              <DiiaLogin fullWidth />
+            </Suspense>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

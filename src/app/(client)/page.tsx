@@ -173,7 +173,7 @@ export default async function HomePage() {
                 </Button>
               ) : (
                 <Button variant="accent" size="xl" asChild>
-                  <Link href="/login">Увійти через Дія</Link>
+                  <Link href="/login?auto=true">Увійти через Дію</Link>
                 </Button>
               )}
             </div>

@@ -151,7 +151,7 @@ export default function CallbackPage() {
             {status === 'error' && (
               <div className="mt-8 flex flex-col gap-3">
                 {isDiiaError ? (
-                  <DiiaLoginButton onClick={() => router.push('/login')} fullWidth />
+                  <DiiaLoginButton onClick={() => router.push('/login?auto=true')} fullWidth />
                 ) : (
                   <>
                     <button
