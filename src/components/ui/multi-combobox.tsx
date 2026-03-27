@@ -40,7 +40,7 @@ export function MultiCombobox({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   const filtered = options.filter((opt) => opt.toLowerCase().includes(search.toLowerCase()));
 
@@ -86,16 +86,22 @@ export function MultiCombobox({
 
   return (
     <div ref={containerRef} className={cn('relative', className)}>
-      <button
+      <div
         ref={triggerRef}
         id={id}
-        type="button"
         role="combobox"
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={open ? listboxId : undefined}
-        disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
         onClick={() => !disabled && setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (disabled) return;
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
+        }}
         className={cn(
           'flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-(--radius) bg-white',
           'border-border-color border',
@@ -105,6 +111,8 @@ export function MultiCombobox({
           open && 'border-kpi-blue-light ring-kpi-blue-light/20 ring-2',
           error && !open && 'border-error',
           disabled && 'bg-surface cursor-not-allowed opacity-50',
+          'outline-none',
+          className,
         )}
       >
         {value.length === 0 ? (
@@ -135,7 +143,7 @@ export function MultiCombobox({
             open && 'rotate-180',
           )}
         />
-      </button>
+      </div>
 
       {open && (
         <div

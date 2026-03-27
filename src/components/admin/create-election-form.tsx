@@ -82,6 +82,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const [choices, setChoices] = useState(['', '']);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const validChoicesCount = choices.filter((c) => c.trim()).length;
+
   // Available groups = union of groups for all selected faculties
   const availableGroups = Array.from(
     new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? [])),
@@ -147,8 +149,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     if (form.maxChoices > ELECTION_MAX_CHOICES_MAX)
       errors.maxChoices = `Максимум ${ELECTION_MAX_CHOICES_MAX}`;
     if (form.maxChoices < form.minChoices) errors.maxChoices = 'Не менше за мінімум';
-    if (form.maxChoices > choices.filter((c) => c.trim()).length)
-      errors.maxChoices = 'Не більше за кількість варіантів';
+    if (form.maxChoices > validChoicesCount) errors.maxChoices = 'Не більше за кількість варіантів';
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -202,7 +203,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     .toISOString()
     .slice(0, 16);
 
-  const studyYearOptions = STUDY_YEARS.map((y) => ({ value: String(y), label: `${y} рік` }));
+  const studyYearOptions = STUDY_YEARS.map((y) => ({ value: String(y), label: String(y) }));
   const studyFormOptions = STUDY_FORMS.map((f) => ({ value: f, label: STUDY_FORM_LABELS[f] }));
 
   return (
@@ -351,13 +352,13 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             required
             error={fieldErrors.maxChoices}
             htmlFor="maxChoices"
-            hint={`До ${ELECTION_MAX_CHOICES_MAX}`}
+            hint={`До ${Math.min(ELECTION_MAX_CHOICES_MAX, Math.max(validChoicesCount, 1))}`}
           >
             <Input
               id="maxChoices"
               type="number"
               min={form.minChoices}
-              max={ELECTION_MAX_CHOICES_MAX}
+              max={Math.min(ELECTION_MAX_CHOICES_MAX, Math.max(validChoicesCount, 1))}
               value={form.maxChoices}
               onChange={(e) =>
                 updateForm('maxChoices', Math.min(ELECTION_MAX_CHOICES_MAX, Number(e.target.value)))

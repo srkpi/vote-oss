@@ -81,7 +81,7 @@ export const STUDY_FORM_LABELS: Record<StudyFormValue, string> = {
   Correspondence: 'Заочна',
   Shortened: 'Скорочена',
   OutOfPostgraduate: 'Поза аспірантурою',
-  Other: 'Інша',
+  Other: 'Інше',
 };
 
 export const STUDY_YEARS = [1, 2, 3, 4, 5, 6, 7] as const;
