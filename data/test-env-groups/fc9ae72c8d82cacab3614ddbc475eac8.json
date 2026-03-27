@@ -1,1 +1,1 @@
-{"id":"fc9ae72c8d82cacab3614ddbc475eac8","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check response includes userId and fullName","name":"response includes userId and fullName","status":"passed","testResultsByEnv":{"default":"1e8ec231b1bc00a5fbcecc8994a068ba"}}
+{"id":"fc9ae72c8d82cacab3614ddbc475eac8","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check response includes userId and fullName","name":"response includes userId and fullName","status":"passed","testResultsByEnv":{"default":"0d4b760c80a4299b936b2f57325aab0f"}}
