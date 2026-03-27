@@ -1,3 +1,4 @@
+import { calculateCourse, parseGroupLevel, parseGroupYearEnteredDigit } from '@/lib/group-utils';
 import type { ElectionRestriction } from '@/types/election';
 
 interface UserContext {
@@ -24,6 +25,7 @@ export function checkRestrictions(restrictions: ElectionRestriction[], user: Use
 
   for (const [type, values] of byType) {
     let userValue: string | undefined;
+
     switch (type) {
       case 'FACULTY':
         userValue = user.faculty;
@@ -40,9 +42,19 @@ export function checkRestrictions(restrictions: ElectionRestriction[], user: Use
       case 'STUDY_FORM':
         userValue = user.studyForm;
         break;
+      case 'LEVEL_COURSE': {
+        const yearDigit = parseGroupYearEnteredDigit(user.group);
+        if (yearDigit === null) return false;
+        const level = parseGroupLevel(user.group);
+        const course = calculateCourse(yearDigit);
+        userValue = `${level}${course}`;
+        break;
+      }
     }
+
     if (!userValue || !values.includes(userValue)) return false;
   }
+
   return true;
 }
 

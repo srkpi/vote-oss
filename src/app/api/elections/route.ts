@@ -15,6 +15,7 @@ import {
   ELECTION_TITLE_MAX_LENGTH,
   STUDY_FORMS,
   STUDY_YEARS,
+  VALID_LEVEL_COURSES,
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
@@ -353,6 +354,15 @@ export async function POST(req: NextRequest) {
     if (!STUDY_FORMS.includes(r.value as StudyFormValue)) {
       return Errors.badRequest(
         `Invalid study form "${r.value}". Must be one of: ${STUDY_FORMS.join(', ')}`,
+      );
+    }
+  }
+
+  // Validate LEVEL_COURSE values
+  for (const r of restrictions.filter((r) => r.type === 'LEVEL_COURSE')) {
+    if (!VALID_LEVEL_COURSES.includes(r.value)) {
+      return Errors.badRequest(
+        `Invalid level/course value "${r.value}". Must be one of: ${VALID_LEVEL_COURSES.join(', ')}`,
       );
     }
   }
