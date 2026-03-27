@@ -1,6 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import { NotStudentError, resolveTicket } from '@/lib/kpi-id';
+import { NotDiiaAuthError, NotStudentError, resolveTicket } from '@/lib/kpi-id';
 
 describe('kpi-id', () => {
   beforeEach(() => {
@@ -20,6 +20,7 @@ describe('kpi-id', () => {
         ok: true,
         json: async () => ({
           data: {
+            AUTH_METHOD: 'DIIA',
             STUDENT_ID: 'user-123',
             NAME: 'Ivan Petrenko',
           },
@@ -42,6 +43,7 @@ describe('kpi-id', () => {
         ok: true,
         json: async () => ({
           data: {
+            AUTH_METHOD: 'DIIA',
             STUDENT_ID: 'id',
             NAME: 'name',
           },
@@ -82,6 +84,7 @@ describe('kpi-id', () => {
         ok: true,
         json: async () => ({
           data: {
+            AUTH_METHOD: '',
             STUDENT_ID: '',
             NAME: '',
           },
@@ -108,6 +111,7 @@ describe('kpi-id', () => {
         ok: true,
         json: async () => ({
           data: {
+            AUTH_METHOD: 'DIIA',
             STUDENT_ID: 'student-123',
             EMPLOYEE_ID: 'employee-456',
             NAME: 'Ivan Petrenko',
@@ -130,6 +134,7 @@ describe('kpi-id', () => {
         ok: true,
         json: async () => ({
           data: {
+            AUTH_METHOD: 'DIIA',
             EMPLOYEE_ID: 'employee-456',
             NAME: 'Petro Shevchenko',
           },
@@ -137,6 +142,35 @@ describe('kpi-id', () => {
       });
 
       await expect(resolveTicket('employee-only-ticket')).rejects.toThrow(NotStudentError);
+    });
+
+    it('throws NotDiiaAuthError if only AUTH_METHOD is missing', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            STUDENT_ID: 'student-123',
+            NAME: 'Petro Shevchenko',
+          },
+        }),
+      });
+
+      await expect(resolveTicket('employee-only-ticket')).rejects.toThrow(NotDiiaAuthError);
+    });
+
+    it('throws NotDiiaAuthError if AUTH_METHOD is not DIIA', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            AUTH_METHOD: 'USER_ACCOUNT',
+            STUDENT_ID: 'student-123',
+            NAME: 'Petro Shevchenko',
+          },
+        }),
+      });
+
+      await expect(resolveTicket('employee-only-ticket')).rejects.toThrow(NotDiiaAuthError);
     });
   });
 });

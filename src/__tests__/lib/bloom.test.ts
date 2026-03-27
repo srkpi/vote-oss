@@ -33,7 +33,7 @@ import {
 } from '@/lib/bloom';
 
 const SAMPLE_JTI = 'aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb';
-const NOW_MS = Date.now();
+const NOW_MS = 1_700_000_000_000;
 const RESET_INTERVAL = 7 * 24 * 60 * 60 * 1_000;
 
 describe('bloom filter', () => {
@@ -41,6 +41,11 @@ describe('bloom filter', () => {
     resetRedisMock();
     invalidateResetAtCache();
     allure.feature('Bloom Filter');
+    jest.spyOn(Date, 'now').mockReturnValue(NOW_MS);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   // ── revokedKey ────────────────────────────────────────────────────────────
@@ -192,7 +197,7 @@ describe('bloom filter', () => {
       expect(keys).toBe(2); // numkeys
       expect(args[0]).toBe('bloom:bits');
       expect(args[1]).toBe('bloom:reset_at');
-      expect(Number(args[2])).toBeCloseTo(Date.now(), -2); // within ~100ms
+      expect(Number(args[2])).toBeCloseTo(NOW_MS, -2); // within ~100ms
       expect(Number(args[3])).toBe(RESET_INTERVAL);
     });
 

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: `Політика конфіденційності системи електронного голосування ${APP_NAME}`,
 };
 
-export const lastUpdated = '20.03.2026';
+export const lastUpdated = '27.03.2026';
 const sections = [
   {
     id: 'intro',
@@ -22,7 +22,7 @@ const sections = [
     title: 'Збір персональних даних',
     paragraphs: [
       `Під час використання системи можуть оброблятись такі персональні дані користувачів: прізвище, ім'я, по батькові, унікальний ідентифікатор облікового запису KPI ID, академічна група, а також факультет або інститут.`,
-      `Автентифікація здійснюється виключно через інформаційну систему «KPI ID». При використанні платформи ви погоджуєтесь з їх політикою конфіденційності (https://auth.kpi.ua/uk/privacy-policy).`,
+      `Автентифікація здійснюється виключно через інформаційні системи «KPI ID» та «Дія». При використанні платформи ви погоджуєтесь з їх політиками конфіденційності та умовами використання: https://auth.kpi.ua/uk/privacy-policy, https://diia.gov.ua/policy.`,
       `${APP_NAME} не зберігає ваші облікові дані, окрім унікального ідентифікатора в системі «KPI ID». Ми можемо збирати технічну інформацію про використання платформи: час входу у систему, факт участі у голосуванні без розкриття змісту вибору, IP адреси, інформацію про ваш пристрій, операційну систему та браузер. Також може збиратися інформація про відвідування і використання платформи, включаючи тривалість перебування, перегляди сторінок та шляхи навігації.`,
     ],
   },
@@ -66,8 +66,9 @@ const sections = [
   },
 ];
 
+const URL_REGEX = /(https?:\/\/[^\s)]+(?<![.,?!]))/g;
+
 function renderText(text: string): React.ReactNode[] {
-  const URL_REGEX = /(https?:\/\/[^\s)]+)/g;
   const parts = text.split(URL_REGEX);
   return parts.map((part, i) => {
     if (/^https?:\/\//.test(part)) {
@@ -77,7 +78,7 @@ function renderText(text: string): React.ReactNode[] {
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-kpi-blue-light hover:text-kpi-blue-dark break-all underline underline-offset-2 transition-colors"
+          className="text-kpi-blue-light hover:text-kpi-blue-dark wrap-break-word underline underline-offset-2 transition-colors"
         >
           {part}
         </a>

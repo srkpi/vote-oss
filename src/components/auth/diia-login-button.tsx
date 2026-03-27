@@ -1,21 +1,18 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
 import { cn } from '@/lib/utils';
 
 type Size = 'sm' | 'md' | 'lg';
 type LogoAlignment = 'left' | 'right';
 
 interface KpiIdLoginProps {
-  appId?: string;
+  onClick?: () => void;
   size?: Size;
   logoAlignment?: LogoAlignment;
   caption?: string;
   fullWidth?: boolean;
   className?: string;
-  authUrl?: string;
 }
 
 const SIZE_PADDING: Record<Size, string> = {
@@ -30,33 +27,29 @@ const LOGO_SIZES: Record<Size, number> = {
   lg: 32,
 };
 
-export function KpiIdLogin({
-  appId = KPI_APP_ID,
+export function DiiaLoginButton({
+  onClick,
   size = 'lg',
   logoAlignment = 'left',
-  caption = 'Увійти з KPI ID',
+  caption = 'Вхід через Дію',
   fullWidth = false,
   className = '',
-  authUrl = KPI_AUTH_URL,
 }: KpiIdLoginProps) {
   const logoSize = LOGO_SIZES[size];
-  const href = `${authUrl}?appId=${appId}`;
 
   return (
     <Button
-      asChild
+      onClick={onClick}
       fullWidth={fullWidth}
       className={cn(
         SIZE_PADDING[size],
-        'bg-kpi-blue-mid active:bg-kpi-blue-mid hover:bg-[#0061a0]',
+        'bg-black text-white hover:bg-neutral-800 active:bg-neutral-900',
         logoAlignment === 'right' ? 'flex-row-reverse' : 'flex-row',
         className,
       )}
     >
-      <Link href={href}>
-        <Image src="/kpi-logo.svg" alt="KPI Logo" width={logoSize} height={logoSize} preload />
-        <span>{caption}</span>
-      </Link>
+      <Image src="/diia-logo.svg" alt="Diia logo" width={logoSize} height={logoSize} preload />
+      <span>{caption}</span>
     </Button>
   );
 }

@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/auth';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
-import { NotStudentError, resolveTicket } from '@/lib/kpi-id';
+import { NotDiiaAuthError, NotStudentError, resolveTicket } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
@@ -18,8 +18,9 @@ import type { TokenPayload } from '@/types/auth';
  *     summary: Authenticate via KPI-ID ticket
  *     description: >
  *       Exchanges a KPI-ID CAS ticket for a pair of HTTP-only JWT cookies
- *       (access + refresh). If the user already has a valid session it is
- *       revoked first. Non-student accounts are rejected. Rate-limited per IP.
+ *       (access + refresh). The ticket must have been issued through Diia
+ *       authentication (AUTH_METHOD === "DIIA"). Non-student accounts and
+ *       tickets issued via other auth methods are rejected. Rate-limited per IP.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -71,9 +72,9 @@ import type { TokenPayload } from '@/types/auth';
  *       401:
  *         description: Ticket is invalid or expired
  *       403:
- *         description: Account is not a student
+ *         description: Account is not a student, or not authenticated through Diia
  *       429:
- *         description: Too many login attempts – retry after the indicated delay
+ *         description: Too many login attempts
  *         headers:
  *           Retry-After:
  *             schema:
@@ -91,7 +92,6 @@ export async function POST(req: NextRequest) {
         status: 429,
         headers: {
           'Retry-After': String(Math.ceil(rl.resetInMs / 1_000)),
-          'X-RateLimit-Remaining': '0',
         },
       },
     );
@@ -114,6 +114,7 @@ export async function POST(req: NextRequest) {
     userInfo = await resolveTicket(ticketId);
   } catch (err) {
     if (err instanceof NotStudentError) return Errors.forbidden(err.message);
+    if (err instanceof NotDiiaAuthError) return Errors.forbidden(err.message);
     console.error('[auth/kpi-id] resolveTicket error:', err);
     return Errors.internal('Failed to contact auth provider');
   }
