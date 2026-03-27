@@ -2,7 +2,7 @@
 
 import { Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -21,16 +21,26 @@ import {
   ELECTION_MAX_CLOSES_AT_DAYS,
   ELECTION_MIN_CHOICES_MIN,
   ELECTION_TITLE_MAX_LENGTH,
+  LEVEL_COURSE_BACHELOR_COURSES,
+  // LEVEL_COURSE_GRADUATE_COURSES,
+  LEVEL_COURSE_MASTER_COURSES,
   STUDY_FORM_LABELS,
-  STUDY_FORMS,
-  STUDY_YEARS,
+  UI_STUDY_FORMS,
+  //STUDY_YEARS,
 } from '@/lib/constants';
+import { filterGroupsByLevelCourses, filterGroupsByStudyForms } from '@/lib/group-utils';
 import { cn } from '@/lib/utils';
 import type { CreateElectionRestriction } from '@/types/election';
 
 interface CreateElectionFormProps {
   restrictedToFaculty: string | null;
 }
+
+const LEVEL_COLUMNS = [
+  { key: 'b', label: 'Бакалаври', courses: LEVEL_COURSE_BACHELOR_COURSES },
+  { key: 'm', label: 'Магістри', courses: LEVEL_COURSE_MASTER_COURSES },
+  // { key: 'g', label: 'Аспіранти', courses: LEVEL_COURSE_GRADUATE_COURSES },
+] as const;
 
 export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectionFormProps) {
   const router = useRouter();
@@ -78,23 +88,46 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     restrictedToFaculty ? [restrictedToFaculty] : [],
   );
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedForms, setSelectedForms] = useState<string[]>([]);
+  const [selectedLevelCourses, setSelectedLevelCourses] = useState<string[]>([]);
   const [choices, setChoices] = useState(['', '']);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const validChoicesCount = choices.filter((c) => c.trim()).length;
 
-  // Available groups = union of groups for all selected faculties
-  const availableGroups = Array.from(
-    new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? [])),
-  ).sort((a, b) => a.localeCompare(b, 'uk'));
+  // ── Available groups: filtered by faculties, study forms, and level courses ──
+  const availableGroups = useMemo(() => {
+    let groups = Array.from(new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? []))).sort(
+      (a, b) => a.localeCompare(b, 'uk'),
+    );
 
-  // When faculties change, filter out groups that no longer belong to any selected faculty
+    if (selectedForms.length > 0) {
+      groups = filterGroupsByStudyForms(groups, selectedForms);
+    }
+
+    if (selectedLevelCourses.length > 0) {
+      groups = filterGroupsByLevelCourses(groups, selectedLevelCourses);
+    }
+
+    return groups;
+  }, [selectedFaculties, facultyGroups, selectedForms, selectedLevelCourses]);
+
+  // Remove selected groups that no longer appear in the filtered list
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedGroups((prev) => prev.filter((g) => availableGroups.includes(g)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedFaculties.join(',')]);
+  }, [availableGroups]);
+
+  // True when faculties are chosen but active filters leave zero matching groups
+  const noGroupsMatchCriteria =
+    selectedFaculties.length > 0 &&
+    availableGroups.length === 0 &&
+    (selectedForms.length > 0 || selectedLevelCourses.length > 0) &&
+    !groupsLoading;
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
   function handleFacultiesChange(faculties: string[]) {
     if (restrictedToFaculty) return; // locked
@@ -119,15 +152,27 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const addChoice = () => {
     if (choices.length < ELECTION_CHOICES_MAX) setChoices((p) => [...p, '']);
   };
+
   const removeChoice = (index: number) => {
     if (choices.length > ELECTION_CHOICES_MIN) setChoices((p) => p.filter((_, i) => i !== index));
   };
 
+  const toggleLevelCourse = (value: string) => {
+    setSelectedLevelCourses((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+    setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
+  };
+
+  // ── Validation ────────────────────────────────────────────────────────────
+
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
+
     if (!form.title.trim()) errors.title = "Назва обов'язкова";
     else if (form.title.length > ELECTION_TITLE_MAX_LENGTH)
       errors.title = `Назва не може перевищувати ${ELECTION_TITLE_MAX_LENGTH} символів`;
+
     if (!form.opensAt) errors.opensAt = "Дата початку обов'язкова";
     if (!form.closesAt) errors.closesAt = "Дата завершення обов'язкова";
 
@@ -142,6 +187,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         errors[`choice_${i}`] =
           `Варіант не може перевищувати ${ELECTION_CHOICE_MAX_LENGTH} символів`;
     });
+
     if (new Set(choices.map((c) => c.trim().toLowerCase())).size !== choices.length)
       errors.choices = 'Варіанти не можуть повторюватися';
 
@@ -152,9 +198,16 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     if (form.maxChoices < form.minChoices) errors.maxChoices = 'Не менше за мінімум';
     if (form.maxChoices > validChoicesCount) errors.maxChoices = 'Не більше за кількість варіантів';
 
+    if (noGroupsMatchCriteria) {
+      errors.levelCourses =
+        'Жодна група не відповідає вибраним обмеженням. Змініть критерії або приберіть деякі фільтри.';
+    }
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
+  // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,6 +220,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       ...selectedGroups.map((v) => ({ type: 'GROUP' as const, value: v })),
       ...selectedYears.map((v) => ({ type: 'STUDY_YEAR' as const, value: v })),
       ...selectedForms.map((v) => ({ type: 'STUDY_FORM' as const, value: v })),
+      ...selectedLevelCourses.map((v) => ({ type: 'LEVEL_COURSE' as const, value: v })),
     ];
 
     const result = await api.createElection({
@@ -193,6 +247,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     setLoading(false);
   };
 
+  // ── Date helpers ──────────────────────────────────────────────────────────
+
   const [renderTime] = useState(() => Date.now());
   const minDateTime = new Date(renderTime + 60 * 1000).toISOString().slice(0, 16);
   const maxOpensAt = new Date(
@@ -204,8 +260,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     .toISOString()
     .slice(0, 16);
 
-  const studyYearOptions = STUDY_YEARS.map((y) => ({ value: String(y), label: String(y) }));
-  const studyFormOptions = STUDY_FORMS.map((f) => ({ value: f, label: STUDY_FORM_LABELS[f] }));
+  //const studyYearOptions = STUDY_YEARS.map((y) => ({ value: String(y), label: String(y) }));
+  const studyFormOptions = UI_STUDY_FORMS.map((f) => ({ value: f, label: STUDY_FORM_LABELS[f] }));
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -390,7 +448,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
         <div className="space-y-5">
           <FormField
-            label="Підрозділ (факультет)"
+            label="Підрозділ"
             htmlFor="faculties"
             hint={restrictedToFaculty ? 'Акаунт обмежений одним підрозділом' : undefined}
           >
@@ -419,10 +477,74 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             )}
           </FormField>
 
+          <FormField label="Форма навчання">
+            <ChipSelect
+              options={studyFormOptions}
+              value={selectedForms}
+              onChange={(forms) => {
+                setSelectedForms(forms);
+                setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
+              }}
+            />
+          </FormField>
+
+          <FormField label="Рівень та курс" error={fieldErrors.levelCourses}>
+            <div className={`grid grid-cols-1 gap-4 sm:grid-cols-${LEVEL_COLUMNS.length}`}>
+              {LEVEL_COLUMNS.map(({ key, label, courses }) => (
+                <div key={key} className="space-y-2">
+                  <p className="font-body text-foreground text-sm font-medium">{label}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {courses.map((course) => {
+                      const value = `${key}${course}`;
+                      const isSelected = selectedLevelCourses.includes(value);
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => toggleLevelCourse(value)}
+                          className={cn(
+                            'flex h-10 w-10 items-center justify-center rounded-(--radius) border',
+                            'font-body text-sm font-semibold transition-colors duration-150',
+                            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+                            isSelected
+                              ? 'border-kpi-navy bg-kpi-navy shadow-shadow-sm text-white'
+                              : 'border-border-color text-foreground hover:border-kpi-blue-light bg-white',
+                          )}
+                        >
+                          {course}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {noGroupsMatchCriteria && !fieldErrors.levelCourses && (
+              <p className="text-warning mt-2 text-sm">
+                Жодна група з обраних підрозділів не відповідає цим критеріям.
+              </p>
+            )}
+          </FormField>
+
+          {/* <FormField label="Рік навчання (загальний)">
+            <ChipSelect
+              options={studyYearOptions}
+              value={selectedYears}
+              onChange={setSelectedYears}
+            />
+          </FormField> */}
+
           <FormField
             label="Група"
             htmlFor="groups"
-            hint={selectedFaculties.length === 0 ? 'Спочатку оберіть підрозділ' : undefined}
+            hint={
+              selectedFaculties.length === 0
+                ? 'Спочатку оберіть підрозділ'
+                : noGroupsMatchCriteria
+                  ? 'Немає груп, що відповідають обраним критеріям'
+                  : undefined
+            }
           >
             <MultiCombobox
               id="groups"
@@ -431,24 +553,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
               onChange={setSelectedGroups}
               placeholder="Без обмеження"
               searchPlaceholder="Пошук групи…"
-              disabled={selectedFaculties.length === 0 || groupsLoading}
+              disabled={selectedFaculties.length === 0 || groupsLoading || noGroupsMatchCriteria}
               emptyText="Групу не знайдено"
-            />
-          </FormField>
-
-          <FormField label="Рік навчання">
-            <ChipSelect
-              options={studyYearOptions}
-              value={selectedYears}
-              onChange={setSelectedYears}
-            />
-          </FormField>
-
-          <FormField label="Форма навчання">
-            <ChipSelect
-              options={studyFormOptions}
-              value={selectedForms}
-              onChange={setSelectedForms}
             />
           </FormField>
         </div>

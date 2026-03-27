@@ -158,7 +158,7 @@ const spec = createSwaggerSpec({
 
         ElectionRestrictionType: {
           type: 'string',
-          enum: ['FACULTY', 'GROUP', 'SPECIALITY', 'STUDY_YEAR', 'STUDY_FORM'],
+          enum: ['FACULTY', 'GROUP', 'SPECIALITY', 'STUDY_YEAR', 'STUDY_FORM', 'LEVEL_COURSE'],
         },
 
         ElectionRestriction: {

@@ -87,6 +87,7 @@ enum RestrictionType {
   SPECIALITY
   STUDY_YEAR
   STUDY_FORM
+  LEVEL_COURSE
 }
 
 model ElectionRestriction {

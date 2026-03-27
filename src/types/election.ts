@@ -1,5 +1,11 @@
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';
-export type RestrictionType = 'FACULTY' | 'GROUP' | 'SPECIALITY' | 'STUDY_YEAR' | 'STUDY_FORM';
+export type RestrictionType =
+  | 'FACULTY'
+  | 'GROUP'
+  | 'SPECIALITY'
+  | 'STUDY_YEAR'
+  | 'STUDY_FORM'
+  | 'LEVEL_COURSE';
 
 export interface ElectionRestriction {
   type: RestrictionType;

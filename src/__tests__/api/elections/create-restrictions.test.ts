@@ -18,6 +18,11 @@ jest.mock('@/lib/cache', () => cacheMock);
 jest.mock('@/lib/campus-api', () => campusMock);
 
 import { POST } from '@/app/api/elections/route';
+import {
+  LEVEL_COURSE_BACHELOR_COURSES,
+  LEVEL_COURSE_GRADUATE_COURSES,
+  LEVEL_COURSE_MASTER_COURSES,
+} from '@/lib/constants';
 
 const FUTURE_OPEN = new Date(Date.now() + 3_600_000).toISOString();
 const FUTURE_CLOSE = new Date(Date.now() + 7_200_000).toISOString();
@@ -54,6 +59,8 @@ describe('POST /api/elections — restriction validation', () => {
     allure.feature('Elections');
     allure.story('Create Election – Restriction Validation');
   });
+
+  // ── Existing restriction tests ───────────────────────────────────────────
 
   it('creates election without any restriction (campus API not called)', async () => {
     const req = await makeAdminReq({ ...validBody, restrictions: [] });
@@ -140,8 +147,8 @@ describe('POST /api/elections — restriction validation', () => {
       restrictions: [
         { type: 'FACULTY', value: 'FICE' },
         { type: 'FACULTY', value: 'FEL' },
-        { type: 'GROUP', value: 'KV-91' }, // exists in FICE
-        { type: 'GROUP', value: 'EL-21' }, // exists in FEL
+        { type: 'GROUP', value: 'KV-91' },
+        { type: 'GROUP', value: 'EL-21' },
       ],
     });
     mockElectionCreate();
@@ -234,5 +241,168 @@ describe('POST /api/elections — restriction validation', () => {
     mockElectionCreate();
     const res = await POST(req);
     expect(res.status).toBe(201);
+  });
+
+  // ── LEVEL_COURSE restriction tests ───────────────────────────────────────
+
+  it('creates election with a valid bachelor LEVEL_COURSE restriction', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'b1' }],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+    // LEVEL_COURSE does not require campus API
+    expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
+  });
+
+  it('accepts all valid bachelor courses', async () => {
+    for (const course of LEVEL_COURSE_BACHELOR_COURSES) {
+      const req = await makeAdminReq({
+        ...validBody,
+        restrictions: [{ type: 'LEVEL_COURSE', value: `b${course}` }],
+      });
+      mockElectionCreate();
+      const res = await POST(req);
+      expect(res.status).toBe(201);
+    }
+  });
+
+  it('accepts all valid master courses', async () => {
+    for (const course of LEVEL_COURSE_MASTER_COURSES) {
+      const req = await makeAdminReq({
+        ...validBody,
+        restrictions: [{ type: 'LEVEL_COURSE', value: `m${course}` }],
+      });
+      mockElectionCreate();
+      const res = await POST(req);
+      expect(res.status).toBe(201);
+    }
+  });
+
+  it('accepts all valid graduate courses', async () => {
+    for (const course of LEVEL_COURSE_GRADUATE_COURSES) {
+      const req = await makeAdminReq({
+        ...validBody,
+        restrictions: [{ type: 'LEVEL_COURSE', value: `g${course}` }],
+      });
+      mockElectionCreate();
+      const res = await POST(req);
+      expect(res.status).toBe(201);
+    }
+  });
+
+  it('returns 400 for a completely invalid LEVEL_COURSE value', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'x9' }],
+    });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/x9/);
+  });
+
+  it('returns 400 for bachelor course out of range (b6)', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'b6' }],
+    });
+    const { status } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+  });
+
+  it('returns 400 for master course out of range (m4)', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'm4' }],
+    });
+    const { status } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+  });
+
+  it('returns 400 for graduate course out of range (g5)', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'g5' }],
+    });
+    const { status } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+  });
+
+  it('accepts multiple LEVEL_COURSE values (OR logic within type)', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'LEVEL_COURSE', value: 'b1' },
+        { type: 'LEVEL_COURSE', value: 'b2' },
+        { type: 'LEVEL_COURSE', value: 'm1' },
+      ],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it('accepts LEVEL_COURSE combined with FACULTY (AND logic)', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'LEVEL_COURSE', value: 'b2' },
+      ],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+    // Faculty was in restrictions, so campus API should have been called
+    expect(campusMock.fetchFacultyGroups).toHaveBeenCalledTimes(1);
+  });
+
+  it('accepts LEVEL_COURSE combined with STUDY_FORM (AND logic)', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'STUDY_FORM', value: 'FullTime' },
+        { type: 'LEVEL_COURSE', value: 'b3' },
+      ],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+    // No faculty/group restrictions → campus API not called
+    expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for an empty string LEVEL_COURSE value', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: '' }],
+    });
+    const { status } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+  });
+
+  it('includes valid values in the error message for invalid LEVEL_COURSE', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'z1' }],
+    });
+    const { body } = await parseJson<any>(await POST(req));
+    // Error should list valid values such as b1, m1, g1
+    expect(body.message).toMatch(/b1/);
+  });
+
+  it('does not call campus API for elections with only LEVEL_COURSE restrictions', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'LEVEL_COURSE', value: 'b1' },
+        { type: 'LEVEL_COURSE', value: 'm2' },
+      ],
+    });
+    mockElectionCreate();
+    await POST(req);
+    expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
   });
 });

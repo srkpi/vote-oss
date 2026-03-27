@@ -76,6 +76,8 @@ export const STUDY_FORMS = [
   'OutOfPostgraduate',
   'Other',
 ] as const;
+export const UI_STUDY_FORMS = ['FullTime', 'Remote', 'Correspondence', 'Shortened'] as const;
+
 export type StudyFormValue = (typeof STUDY_FORMS)[number];
 
 export const STUDY_FORM_LABELS: Record<StudyFormValue, string> = {
@@ -93,10 +95,32 @@ export const STUDY_FORM_LABELS: Record<StudyFormValue, string> = {
 export const STUDY_YEARS = [1, 2, 3, 4, 5, 6, 7] as const;
 export type StudyYearValue = (typeof STUDY_YEARS)[number];
 
+// Level/Course restriction
+export const LEVEL_COURSE_BACHELOR_COURSES = [1, 2, 3, 4] as const;
+export const LEVEL_COURSE_MASTER_COURSES = [1, 2] as const;
+export const LEVEL_COURSE_GRADUATE_COURSES = [1, 2, 3, 4] as const;
+
+export const LEVEL_COURSE_LEVEL_KEYS = ['b', 'm', 'g'] as const;
+export type LevelCourseLevel = (typeof LEVEL_COURSE_LEVEL_KEYS)[number];
+
+/** All valid LEVEL_COURSE restriction values, e.g. 'b1', 'm2', 'g3' */
+export const VALID_LEVEL_COURSES: string[] = [
+  ...LEVEL_COURSE_BACHELOR_COURSES.map((c) => `b${c}`),
+  ...LEVEL_COURSE_MASTER_COURSES.map((c) => `m${c}`),
+  ...LEVEL_COURSE_GRADUATE_COURSES.map((c) => `g${c}`),
+];
+
+export const LEVEL_COURSE_LEVEL_LABELS: Record<LevelCourseLevel, string> = {
+  b: 'Бакалаври',
+  m: 'Магістри',
+  g: 'Аспіранти',
+};
+
 export const RESTRICTION_TYPE_LABELS: Record<string, string> = {
   FACULTY: 'Факультет',
   GROUP: 'Група',
   STUDY_YEAR: 'Рік навчання',
   STUDY_FORM: 'Форма навчання',
   SPECIALITY: 'Спеціальність',
+  LEVEL_COURSE: 'Рівень та курс',
 };
