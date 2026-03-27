@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { APP_NAME } from '@/lib/config/client';
+import type { StudyFormValue } from '@/lib/constants';
+import { STUDY_FORM_LABELS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { User } from '@/types/auth';
 
@@ -125,37 +127,59 @@ export function Header({ session }: HeaderProps) {
                   <div className="fixed inset-0" onClick={() => setUserMenuOpen(false)} />
                   <div
                     className={cn(
-                      'absolute top-full right-0 mt-2 w-56',
+                      'absolute top-full right-0 mt-2 w-64',
                       'shadow-shadow-xl rounded-xl bg-white',
                       'border-border-color border',
                       'overflow-hidden',
                       'origin-top-right',
                     )}
                   >
-                    <div className="border-border-subtle border-b px-4 py-3">
-                      <p className="text-foreground text-sm font-semibold wrap-break-word">
-                        {session.fullName}
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-sm leading-tight">
-                        {session.faculty} · {session.group}
-                      </p>
+                    <div className="space-y-3 px-4 py-4">
+                      <div>
+                        <p className="text-foreground text-sm font-semibold wrap-break-word">
+                          {session.fullName}
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                          {session.faculty} · {session.group}
+                        </p>
+                      </div>
+
+                      {session.studyForm && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs">Форма навчання:</p>
+                          <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
+                            {STUDY_FORM_LABELS[session.studyForm as StudyFormValue]}
+                          </p>
+                        </div>
+                      )}
+
+                      {session.speciality && (
+                        <div>
+                          <p className="text-muted-foreground mb-1 text-xs">Спеціальність:</p>
+                          <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
+                            {session.speciality}
+                          </p>
+                        </div>
+                      )}
+
                       {session.isAdmin && (
-                        <span className="bg-kpi-orange mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
+                        <span className="bg-kpi-orange inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-wide text-white uppercase">
                           Адміністратор
                         </span>
                       )}
                     </div>
 
-                    <div className="py-1">
-                      <button
-                        onClick={handleLogout}
-                        disabled={loggingOut}
-                        className="text-error hover:bg-error-bg flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors disabled:opacity-50"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        {loggingOut ? 'Виходимо…' : 'Вийти'}
-                      </button>
-                    </div>
+                    <div className="border-border-subtle border-t" />
+
+                    <Button
+                      size="lg"
+                      onClick={handleLogout}
+                      disabled={loggingOut}
+                      className="text-error hover:bg-error-bg flex w-full items-center gap-2.5 bg-white text-sm transition-colors disabled:opacity-50"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {loggingOut ? 'Виходимо…' : 'Вийти'}
+                    </Button>
                   </div>
                 </>
               )}

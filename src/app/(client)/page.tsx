@@ -29,8 +29,8 @@ const features = [
   },
   {
     icon: <ShieldCheck className="h-6 w-6" />,
-    title: 'Авторизація через ДІЯ',
-    description: 'Вхід через застосунок ДІЯ гарантує, що голосує справжній студент.',
+    title: 'Авторизація через Дію',
+    description: 'Вхід через застосунок Дія гарантує, що голосує справжній студент.',
   },
   {
     icon: <UserCheck className="h-6 w-6" />,

@@ -36,7 +36,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           'h-1',
           isOpen && 'from-success bg-linear-to-r to-emerald-400',
           isUpcoming && 'from-kpi-orange bg-linear-to-r to-amber-400',
-          isClosed && 'from-kpi-gray-light to-border-color bg-linear-to-r',
+          isClosed && 'from-kpi-gray-light bg-linear-to-r to-gray-300',
         )}
       />
 
