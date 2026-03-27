@@ -1,8 +1,10 @@
 'use client';
 
+import { CheckIcon, Smartphone, TriangleAlert } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { DiiaLoginButton } from '@/components/auth/diia-login-button';
 import { api } from '@/lib/api/browser';
 
 type Status = 'loading' | 'success' | 'error';
@@ -30,6 +32,7 @@ export default function CallbackPage() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<Status>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isDiiaError, setIsDiiaError] = useState(false);
   const calledRef = useRef(false);
 
   const ticketId = searchParams.get('ticketId');
@@ -57,7 +60,13 @@ export default function CallbackPage() {
           router.refresh();
         }, 1200);
       } else {
-        if (result.error === 'Platform is only available for students') {
+        if (result.error === 'Authorization must be done through DIIA') {
+          // User authenticated with KPI ID but not via Diia — guide them.
+          setIsDiiaError(true);
+          setErrorMessage(
+            'Для верифікації, що голосує справжній студент, необхідно авторизуватись через застосунок Дія',
+          );
+        } else if (result.error === 'Platform is only available for students') {
           setErrorMessage('Платформа доступна лише студентам');
         } else if (result.error === 'Invalid or expired ticketId') {
           setErrorMessage('Не валідний або прострочений ticketId');
@@ -84,14 +93,16 @@ export default function CallbackPage() {
 
       <div className="relative w-full max-w-md">
         <div className="border-border-color shadow-shadow-xl overflow-hidden rounded-2xl border bg-white">
-          {/* Top accent */}
+          {/* Top accent bar */}
           <div
             className={`h-1.5 w-full transition-all duration-700 ${
               status === 'loading'
                 ? 'from-kpi-navy via-kpi-blue-light to-kpi-navy animate-[shimmer_2s_linear_infinite] bg-linear-to-r bg-size-[200%_100%]'
                 : status === 'success'
                   ? 'from-success bg-linear-to-r to-emerald-400'
-                  : 'from-error bg-linear-to-r to-rose-400'
+                  : isDiiaError
+                    ? 'bg-linear-to-r from-black to-neutral-600'
+                    : 'from-error bg-linear-to-r to-rose-400'
             }`}
           />
 
@@ -111,67 +122,57 @@ export default function CallbackPage() {
 
               {status === 'success' && (
                 <div className="animate-scale-in border-success/30 bg-success-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
-                  <svg
-                    className="text-success h-10 w-10"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
+                  <CheckIcon className="text-success h-10 w-10" />
                 </div>
               )}
 
               {status === 'error' && (
-                <div className="animate-scale-in border-error/30 bg-error-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
-                  <svg
-                    className="text-error h-10 w-10"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
+                <>
+                  {isDiiaError ? (
+                    <div className="animate-scale-in flex h-20 w-20 items-center justify-center rounded-full border-2 border-black/20 bg-black/5">
+                      <Smartphone className="h-10 w-10" />
+                    </div>
+                  ) : (
+                    <div className="animate-scale-in border-error/30 bg-error-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
+                      <TriangleAlert className="text-error h-10 w-10" />
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Text */}
-            <h1 className="font-display text-foreground mb-2 text-2xl font-bold">{config.title}</h1>
+            <h1 className="font-display text-foreground mb-2 text-2xl font-bold">
+              {isDiiaError ? 'Авторизуйтесь через Дію' : config.title}
+            </h1>
             <p className="font-body text-muted-foreground text-sm leading-relaxed">
               {status === 'error' && errorMessage ? errorMessage : config.description}
             </p>
 
-            {/* Error action */}
             {status === 'error' && (
               <div className="mt-8 flex flex-col gap-3">
-                <button
-                  onClick={() => router.push('/login')}
-                  className="font-body bg-kpi-navy hover:bg-kpi-navy-hover h-10 w-full rounded-(--radius) px-4 text-sm font-medium text-white transition-colors"
-                >
-                  Повернутися до входу
-                </button>
-                <button
-                  onClick={() => {
-                    setStatus('loading');
-                    setErrorMessage(null);
-                    calledRef.current = false;
-                    window.location.reload();
-                  }}
-                  className="font-body border-border-color bg-surface text-foreground hover:bg-surface-hover h-10 w-full rounded-(--radius) border px-4 text-sm font-medium transition-colors"
-                >
-                  Спробувати знову
-                </button>
+                {isDiiaError ? (
+                  <DiiaLoginButton onClick={() => router.push('/login?auto=true')} fullWidth />
+                ) : (
+                  <>
+                    <button
+                      onClick={() => router.push('/login')}
+                      className="font-body bg-kpi-navy hover:bg-kpi-navy-hover h-10 w-full rounded-(--radius) px-4 text-sm font-medium text-white transition-colors"
+                    >
+                      Повернутися до входу
+                    </button>
+                    <button
+                      onClick={() => {
+                        setStatus('loading');
+                        setErrorMessage(null);
+                        calledRef.current = false;
+                        window.location.reload();
+                      }}
+                      className="font-body border-border-color bg-surface text-foreground hover:bg-surface-hover h-10 w-full rounded-(--radius) border px-4 text-sm font-medium transition-colors"
+                    >
+                      Спробувати знову
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

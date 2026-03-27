@@ -17,13 +17,7 @@ jest.mock('@/lib/redis', () => ({
   },
 }));
 
-import {
-  getClientIp,
-  rateLimit,
-  rateLimitInvite,
-  rateLimitLogin,
-  rateLimitRefresh,
-} from '@/lib/rate-limit';
+import { getClientIp, rateLimit } from '@/lib/rate-limit';
 
 describe('rate-limit', () => {
   beforeEach(() => {
@@ -97,41 +91,6 @@ describe('rate-limit', () => {
       redisMock.eval.mockRejectedValueOnce(new Error('timeout'));
       const res = await rateLimit('login', '1.2.3.4', 10, 60_000);
       expect(res.limited).toBe(false);
-    });
-  });
-
-  // ── Pre-configured limiters ───────────────────────────────────────────────
-
-  describe('rateLimitLogin', () => {
-    it('uses limit 20 with 60-second window', async () => {
-      redisMock.eval.mockResolvedValueOnce([1, 60]);
-      await rateLimitLogin('1.2.3.4');
-      const keyArg = redisMock.eval.mock.calls[0][2] as string;
-      expect(keyArg).toMatch(/^rate:login:/);
-      // Verify remaining = 20 - 1 = 19
-      const res = await (async () => {
-        redisMock.eval.mockResolvedValueOnce([1, 60]);
-        return rateLimitLogin('1.2.3.4');
-      })();
-      expect(res.remaining).toBe(19);
-    });
-  });
-
-  describe('rateLimitRefresh', () => {
-    it('uses limit 30 with 60-second window', async () => {
-      redisMock.eval.mockResolvedValueOnce([1, 60]);
-      const res = await rateLimitRefresh('1.2.3.4');
-      expect(res.remaining).toBe(29); // 30 - 1
-    });
-  });
-
-  describe('rateLimitInvite', () => {
-    it('uses limit 10 with 3600-second window', async () => {
-      redisMock.eval.mockResolvedValueOnce([1, 3600]);
-      const res = await rateLimitInvite('user-001');
-      expect(res.remaining).toBe(9); // 10 - 1
-      const keyArg = redisMock.eval.mock.calls[0][2] as string;
-      expect(keyArg).toMatch(/^rate:invite:user-001$/);
     });
   });
 

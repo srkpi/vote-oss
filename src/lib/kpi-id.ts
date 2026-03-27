@@ -9,6 +9,13 @@ export class NotStudentError extends Error {
   }
 }
 
+export class NotDiiaAuthError extends Error {
+  constructor() {
+    super('Authorization must be done through DIIA');
+    this.name = 'NotDiiaAuthError';
+  }
+}
+
 export async function resolveTicket(ticketId: string): Promise<UserInfo | null> {
   if (!ticketId) {
     return null;
@@ -36,6 +43,10 @@ export async function resolveTicket(ticketId: string): Promise<UserInfo | null> 
   const userId = ticket.data.STUDENT_ID;
   const fullName = ticket.data.NAME;
   if (!userId || !fullName) return null;
+
+  if (!ticket.data.AUTH_METHOD || ticket.data.AUTH_METHOD !== 'DIIA') {
+    throw new NotDiiaAuthError();
+  }
 
   return {
     userId,

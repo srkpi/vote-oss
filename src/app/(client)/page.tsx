@@ -29,9 +29,8 @@ const features = [
   },
   {
     icon: <ShieldCheck className="h-6 w-6" />,
-    title: 'Авторизація KPI ID',
-    description:
-      'Вхід через офіційну систему ідентифікації КПІ гарантує, що голосує справжній студент.',
+    title: 'Авторизація через ДІЯ',
+    description: 'Вхід через застосунок ДІЯ гарантує, що голосує справжній студент.',
   },
   {
     icon: <UserCheck className="h-6 w-6" />,
@@ -41,7 +40,7 @@ const features = [
   {
     icon: <LayoutDashboard className="h-6 w-6" />,
     title: 'Адмін-панель',
-    description: 'Зручний інтерфейс для організаторів виборів з гнучкими налаштуваннями доступу.',
+    description: 'Зручний інтерфейс для організаторів виборів з гнучкими налаштуваннями опитувань.',
   },
 ];
 
@@ -174,7 +173,7 @@ export default async function HomePage() {
                 </Button>
               ) : (
                 <Button variant="accent" size="xl" asChild>
-                  <Link href="/login">Увійти через KPI ID</Link>
+                  <Link href="/login?auto=true">Увійти через Дію</Link>
                 </Button>
               )}
             </div>

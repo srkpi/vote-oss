@@ -12,6 +12,14 @@
  */
 
 import { TRUSTED_PROXY_COUNT } from '@/lib/config/server';
+import {
+  RATE_LIMIT_INVITE_MAX,
+  RATE_LIMIT_INVITE_WINDOW_MS,
+  RATE_LIMIT_LOGIN_MAX,
+  RATE_LIMIT_LOGIN_WINDOW_MS,
+  RATE_LIMIT_REFRESH_MAX,
+  RATE_LIMIT_REFRESH_WINDOW_MS,
+} from '@/lib/constants';
 import { redis, safeRedis } from '@/lib/redis';
 
 interface RateLimitResult {
@@ -75,19 +83,19 @@ export async function rateLimit(
 }
 
 // Pre-configured limiters for common endpoints
-/** Login via KPI ID ticket: 20 attempts per IP per minute. */
+/** Login via KPI ID ticket */
 export async function rateLimitLogin(ip: string): Promise<RateLimitResult> {
-  return rateLimit('login', ip, 20, 60_000);
+  return rateLimit('login', ip, RATE_LIMIT_LOGIN_MAX, RATE_LIMIT_LOGIN_WINDOW_MS);
 }
 
-/** Token refresh: 30 calls per IP per minute (handles tab storms). */
+/** Token refresh */
 export async function rateLimitRefresh(ip: string): Promise<RateLimitResult> {
-  return rateLimit('refresh', ip, 30, 60_000);
+  return rateLimit('refresh', ip, RATE_LIMIT_REFRESH_MAX, RATE_LIMIT_REFRESH_WINDOW_MS);
 }
 
-/** Admin invite-token creation: 10 per admin per hour. */
+/** Admin invite-token creation */
 export async function rateLimitInvite(userId: string): Promise<RateLimitResult> {
-  return rateLimit('invite', userId, 10, 60 * 60_000);
+  return rateLimit('invite', userId, RATE_LIMIT_INVITE_MAX, RATE_LIMIT_INVITE_WINDOW_MS);
 }
 
 /**
