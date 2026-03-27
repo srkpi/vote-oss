@@ -1,0 +1,1 @@
+{"id":"9e0eb8bd107a9067367ba578507236f0","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check returns 200 with status=success for a valid student","name":"returns 200 with status=success for a valid student","status":"passed","testResultsByEnv":{"default":"4421e3dcbd86e15c65ce0d7f4c86212c"}}

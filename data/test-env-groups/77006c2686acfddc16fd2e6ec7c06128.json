@@ -1,0 +1,1 @@
+{"id":"77006c2686acfddc16fd2e6ec7c06128","fullName":"src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — restriction validation creates election with a valid bachelor LEVEL_COURSE restriction","name":"creates election with a valid bachelor LEVEL_COURSE restriction","status":"passed","testResultsByEnv":{"default":"f3060e6d3ae0c870e0ea8b374d5a1acf"}}

@@ -1,0 +1,1 @@
+{"id":"ef4ffe84bedc28a64b2ddf7c073ea4ca","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check does not revoke when the existing access token is invalid/revoked","name":"does not revoke when the existing access token is invalid/revoked","status":"passed","testResultsByEnv":{"default":"61acf1ff164c45b6e31b8d0d09764aeb"}}

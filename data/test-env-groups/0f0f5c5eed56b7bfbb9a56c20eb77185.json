@@ -1,0 +1,1 @@
+{"id":"0f0f5c5eed56b7bfbb9a56c20eb77185","fullName":"src/__tests__/lib/kpi-id.test.ts#kpi-id resolveTicket throws NotDiiaAuthError if AUTH_METHOD is not DIIA","name":"throws NotDiiaAuthError if AUTH_METHOD is not DIIA","status":"passed","testResultsByEnv":{"default":"9b990e5085db233af2998416957a6483"}}

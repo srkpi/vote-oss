@@ -1,0 +1,1 @@
+{"id":"a324647130bf2b7531bec6ef7aed7074","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check returns 401 when NAME is missing from user data","name":"returns 401 when NAME is missing from user data","status":"passed","testResultsByEnv":{"default":"99188d05a313d008bb8768152dabeaf7"}}

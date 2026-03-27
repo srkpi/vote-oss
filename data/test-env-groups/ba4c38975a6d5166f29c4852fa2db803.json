@@ -1,0 +1,1 @@
+{"id":"ba4c38975a6d5166f29c4852fa2db803","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check returns isAdmin=true when user is found in the admins table","name":"returns isAdmin=true when user is found in the admins table","status":"passed","testResultsByEnv":{"default":"fbf46508f098e7de996061cf7707e3e3"}}

@@ -1,0 +1,1 @@
+{"id":"6be5668e7b5e5eb40d85178136831a89","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check does not revoke when no access token cookie is present","name":"does not revoke when no access token cookie is present","status":"passed","testResultsByEnv":{"default":"7c55ff39a7c6c595f9f6224be996df01"}}
