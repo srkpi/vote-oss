@@ -1,7 +1,6 @@
-import { constants, publicEncrypt } from 'crypto';
-
 import {
   computeNullifier,
+  encryptBallot,
   generateElectionKeyPair,
   generateVoteToken,
   signVoteToken,
@@ -10,15 +9,14 @@ import { signAccessToken, signRefreshToken } from '@/lib/jwt';
 import type { Admin } from '@/types/admin';
 import type { TokenPayload } from '@/types/auth';
 
-// ---------------------------------------------------------------------------
-// JWT payload fixtures
-// ---------------------------------------------------------------------------
-
 export const USER_PAYLOAD: TokenPayload = {
   sub: 'user-001',
   faculty: 'FICE',
   group: 'KV-91',
   fullName: 'Ivan Petrenko',
+  speciality: 'Computer Science',
+  studyYear: 3,
+  studyForm: 'FullTime',
   isAdmin: false,
   restrictedToFaculty: false,
   manageAdmins: false,
@@ -39,6 +37,9 @@ export const OTHER_FACULTY_PAYLOAD: TokenPayload = {
   faculty: 'FEL',
   group: 'EL-21',
   fullName: 'Olena Kovalchuk',
+  speciality: undefined,
+  studyYear: 2,
+  studyForm: 'FullTime',
   isAdmin: false,
   restrictedToFaculty: false,
   manageAdmins: false,
@@ -66,7 +67,6 @@ export const ADMIN_RECORD = {
   full_name: 'Super Admin User',
   group: 'KV-11',
   faculty: 'FICE',
-  /** Root admin — no promoter. */
   promoter: null as null | { user_id: string; full_name: string },
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
@@ -141,17 +141,22 @@ export const JWT_TOKEN_RECORD = {
 // Election helpers
 // ---------------------------------------------------------------------------
 
-export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBase>> = {}) {
-  const keys = generateElectionKeyPair();
-  return { ...makeElectionBase(keys), ...overrides };
-}
-
 export const MOCK_ELECTION_ID = '550e8400-e29b-41d4-a716-446655440000';
 export const MOCK_ELECTION_ID_NOT_EXISTING = '550e8400-e29b-41d4-a716-446655440999';
 
 export const MOCK_ELECTION_CHOICES = [
-  { id: '550e8400-e29b-41d4-a716-446655441000', election_id: 1, choice: 'Option A', position: 0 },
-  { id: '550e8400-e29b-41d4-a716-446655441001', election_id: 1, choice: 'Option B', position: 1 },
+  {
+    id: '550e8400-e29b-41d4-a716-446655441000',
+    election_id: MOCK_ELECTION_ID,
+    choice: 'Option A',
+    position: 0,
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655441001',
+    election_id: MOCK_ELECTION_ID,
+    choice: 'Option B',
+    position: 1,
+  },
 ];
 export const MOCK_ELECTION_INVALID_CHOICE_ID = '550e8400-e29b-41d4-a716-446655441999';
 
@@ -162,10 +167,11 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     title: 'Test Election',
     created_by: 'superadmin-001',
     created_at: new Date('2024-01-01'),
-    opens_at: new Date(now.getTime() - 60_000), // opened 1 min ago
-    closes_at: new Date(now.getTime() + 3_600_000), // closes in 1 hour
-    restricted_to_faculty: null as string | null,
-    restricted_to_group: null as string | null,
+    opens_at: new Date(now.getTime() - 60_000),
+    closes_at: new Date(now.getTime() + 3_600_000),
+    min_choices: 1,
+    max_choices: 1,
+    restrictions: [] as { type: string; value: string }[],
     public_key: keys.publicKey,
     private_key: keys.privateKey,
     creator: { full_name: 'Super Admin User', faculty: 'FICE' },
@@ -175,23 +181,23 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
   };
 }
 
-/** Encrypt a choice ID with the election's RSA public key (OAEP/SHA-256). */
-export function encryptChoice(publicKeyPem: string, choiceId: string): string {
-  const buf = publicEncrypt(
-    { key: publicKeyPem, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' },
-    Buffer.from(String(choiceId)),
-  );
-  return buf.toString('base64');
+export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBase>> = {}) {
+  const keys = generateElectionKeyPair();
+  return { ...makeElectionBase(keys), ...overrides };
 }
 
-/** Build a valid vote submission payload for a given election + choice. */
+// Re-export the library function so tests can import it from one place.
+export { encryptBallot };
+
+/** Build a valid vote submission payload for a given election and choice(s). */
 export function makeVoteBallot(
   election: ReturnType<typeof makeElection>,
-  choiceId: string = MOCK_ELECTION_CHOICES[0].id,
+  choiceIds: string | string[] = MOCK_ELECTION_CHOICES[0].id,
 ) {
+  const ids = Array.isArray(choiceIds) ? choiceIds : [choiceIds];
   const { token } = generateVoteToken(election.id);
   const signature = signVoteToken(election.private_key, token);
   const nullifier = computeNullifier(token);
-  const encryptedBallot = encryptChoice(election.public_key, choiceId);
+  const encryptedBallot = encryptBallot(election.public_key, ids, election.max_choices);
   return { token, signature, nullifier, encryptedBallot };
 }

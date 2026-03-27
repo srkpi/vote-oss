@@ -4,7 +4,9 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
+import type { ElectionRestriction } from '@/types/election';
 
 /**
  * @swagger
@@ -88,26 +90,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       title: true,
       opens_at: true,
       closes_at: true,
-      restricted_to_faculty: true,
-      restricted_to_group: true,
+      restrictions: { select: { type: true, value: true } },
     },
   });
 
   if (!election) return Errors.notFound('Election not found');
 
   const { user } = auth;
+  const restrictions = election.restrictions as ElectionRestriction[];
 
   if (user.isAdmin && !user.restrictedToFaculty) {
-    // Unrestricted admin can view ballots for any election
+    // pass
   } else if (user.isAdmin && user.restrictedToFaculty) {
-    if (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) {
+    if (!adminCanAccessElection(user.faculty, restrictions)) {
       return Errors.forbidden('You are not eligible to view this election');
     }
   } else {
-    if (
-      (election.restricted_to_faculty && election.restricted_to_faculty !== user.faculty) ||
-      (election.restricted_to_group && election.restricted_to_group !== user.group)
-    ) {
+    if (!checkRestrictions(restrictions, user)) {
       return Errors.forbidden('You are not eligible to view this election');
     }
   }

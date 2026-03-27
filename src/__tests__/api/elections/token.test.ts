@@ -79,7 +79,7 @@ describe('POST /api/elections/[id]/token', () => {
   it('returns 403 when user faculty does not match restriction', async () => {
     const req = await authReq(OTHER_FACULTY_PAYLOAD); // FEL
     prismaMock.election.findUnique.mockResolvedValueOnce(
-      makeElection({ restricted_to_faculty: 'FICE' }),
+      makeElection({ restrictions: [{ type: 'FACULTY', value: 'FICE' }] }),
     );
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(403);
@@ -88,7 +88,12 @@ describe('POST /api/elections/[id]/token', () => {
   it('returns 403 when user group does not match restriction', async () => {
     const req = await authReq(USER_PAYLOAD); // KV-91
     prismaMock.election.findUnique.mockResolvedValueOnce(
-      makeElection({ restricted_to_group: 'KV-99' }),
+      makeElection({
+        restrictions: [
+          { type: 'FACULTY', value: 'FICE' },
+          { type: 'GROUP', value: 'KV-99' },
+        ],
+      }),
     );
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(403);

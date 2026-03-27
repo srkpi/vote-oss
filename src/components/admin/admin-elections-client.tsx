@@ -23,6 +23,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
+import { adminCanDeleteElection } from '@/lib/restrictions';
 import type { User } from '@/types/auth';
 import type { Election, ElectionStatus } from '@/types/election';
 
@@ -40,12 +41,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'upcoming', label: 'Майбутні' },
   { key: 'closed', label: 'Завершені' },
 ];
-
-function canAdminDeleteElection(user: User, election: Election): boolean {
-  if (!user.isAdmin) return false;
-  if (!user.restrictedToFaculty) return true;
-  return election.restrictedToFaculty === user.faculty;
-}
 
 export function AdminElectionsClient({ elections, error, session }: AdminElectionsClientProps) {
   const { toast } = useToast();
@@ -76,11 +71,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
     if (search.trim()) {
       const q = search.toLowerCase().trim();
       result = result.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.creator.fullName.toLowerCase().includes(q) ||
-          (e.restrictedToFaculty?.toLowerCase().includes(q) ?? false) ||
-          (e.restrictedToGroup?.toLowerCase().includes(q) ?? false),
+        (e) => e.title.toLowerCase().includes(q) || e.creator.fullName.toLowerCase().includes(q),
       );
     }
     return result;
@@ -164,7 +155,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
                     <ElectionRow
                       key={election.id}
                       election={election}
-                      canDelete={canAdminDeleteElection(session, election)}
+                      canDelete={adminCanDeleteElection(session.faculty, election.restrictions)}
                       onDelete={() => setDeleteTarget(election)}
                     />
                   ))}
@@ -177,7 +168,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
                 <ElectionMobileCard
                   key={election.id}
                   election={election}
-                  canDelete={canAdminDeleteElection(session, election)}
+                  canDelete={adminCanDeleteElection(session.faculty, election.restrictions)}
                   onDelete={() => setDeleteTarget(election)}
                 />
               ))}

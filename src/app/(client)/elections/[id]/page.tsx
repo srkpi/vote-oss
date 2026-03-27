@@ -1,18 +1,19 @@
-import { Calendar, ChevronRight, Clock, FileText, GraduationCap, User, Users } from 'lucide-react';
+import { Calendar, ChevronRight, Clock, FileText, User } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
 import { ErrorState } from '@/components/common/error-state';
 import { CountdownTimer } from '@/components/elections/countdown-timer';
+import { AccessRestrictions } from '@/components/elections/election-restrictions';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { InfoRow } from '@/components/elections/info-row';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
+import { checkRestrictions } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime, pluralize } from '@/lib/utils';
 import type { TallyResponse } from '@/types/tally';
@@ -86,19 +87,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
             <div className="min-w-0 space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <ElectionStatusBadge status={election.status} size="md" />
-                {election.restrictedToFaculty && (
-                  <Badge variant="info" size="md">
-                    {election.restrictedToFaculty}
-                  </Badge>
-                )}
-                {election.restrictedToGroup && (
-                  <Badge variant="secondary" size="md">
-                    {election.restrictedToGroup}
-                  </Badge>
-                )}
-              </div>
+              <ElectionStatusBadge status={election.status} size="md" />
               <h1 className="font-display text-foreground text-3xl leading-tight font-bold wrap-break-word md:text-4xl">
                 {election.title}
               </h1>
@@ -134,17 +123,15 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
             {isOpen && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
-                {(election.restrictedToFaculty &&
-                  session.faculty != election.restrictedToFaculty) ||
-                (election.restrictedToGroup && session.group != election.restrictedToGroup) ? (
-                  <ErrorState title="Ви не можете брати участь у цьому опитуванні" />
-                ) : (
+                {checkRestrictions(election.restrictions, session) ? (
                   <>
                     <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
                       Ваш голос
                     </h2>
                     <VoteStatusWrapper election={election} />
                   </>
+                ) : (
+                  <ErrorState title="Ви не можете брати участь у цьому опитуванні" />
                 )}
               </div>
             )}
@@ -176,10 +163,6 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                     </div>
                   ))}
                 </div>
-                <p className="font-body text-muted-foreground mt-4 flex items-center gap-1.5 text-xs">
-                  <Clock className="h-3.5 w-3.5" />
-                  Голосування розпочнеться {formatDateTime(election.opensAt)}
-                </p>
               </div>
             )}
           </div>
@@ -200,22 +183,12 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   label="Завершення"
                   value={formatDateTime(election.closesAt)}
                 />
-                {election.restrictedToFaculty && (
-                  <InfoRow
-                    icon={<GraduationCap className="h-4 w-4" />}
-                    label="Підрозділ"
-                    value={election.restrictedToFaculty}
-                  />
-                )}
-                {election.restrictedToGroup && (
-                  <InfoRow
-                    icon={<Users className="h-4 w-4" />}
-                    label="Група"
-                    value={election.restrictedToGroup}
-                  />
-                )}
               </div>
             </div>
+
+            {election.restrictions.length > 0 && (
+              <AccessRestrictions restrictions={election.restrictions} />
+            )}
 
             <EncryptionKey
               title="Публічний ключ"

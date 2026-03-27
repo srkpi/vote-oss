@@ -156,6 +156,20 @@ const spec = createSwaggerSpec({
           enum: ['upcoming', 'open', 'closed'],
         },
 
+        ElectionRestrictionType: {
+          type: 'string',
+          enum: ['FACULTY', 'GROUP', 'SPECIALITY', 'STUDY_YEAR', 'STUDY_FORM'],
+        },
+
+        ElectionRestriction: {
+          type: 'object',
+          required: ['type', 'value'],
+          properties: {
+            type: { $ref: '#/components/schemas/ElectionRestrictionType' },
+            value: { type: 'string' },
+          },
+        },
+
         /** Returned by GET /api/elections (list view) */
         Election: {
           type: 'object',
@@ -165,6 +179,8 @@ const spec = createSwaggerSpec({
             'createdAt',
             'opensAt',
             'closesAt',
+            'minChoices',
+            'maxChoices',
             'status',
             'publicKey',
             'creator',
@@ -177,6 +193,12 @@ const spec = createSwaggerSpec({
             createdAt: { type: 'string', format: 'date-time' },
             opensAt: { type: 'string', format: 'date-time' },
             closesAt: { type: 'string', format: 'date-time' },
+            minChoices: { type: 'integer', minimun: 1 },
+            maxChoices: { type: 'integer', minimun: 1 },
+            restrictions: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ElectionRestriction' },
+            },
             status: { $ref: '#/components/schemas/ElectionStatus' },
             restrictedToFaculty: { type: 'string', nullable: true },
             restrictedToGroup: { type: 'string', nullable: true },

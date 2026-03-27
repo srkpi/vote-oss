@@ -15,7 +15,9 @@ import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
+  ELECTION_MAX_CHOICES_MAX,
   ELECTION_MAX_CLOSES_AT_DAYS,
+  ELECTION_MIN_CHOICES_MIN,
   ELECTION_TITLE_MAX_LENGTH,
   INVITE_TOKEN_MAX_USAGE_MAX,
   INVITE_TOKEN_MAX_USAGE_MIN,
@@ -35,6 +37,18 @@ describe('constants', () => {
 
     it('ELECTION_CHOICES_MIN is at least 2', () => {
       expect(ELECTION_CHOICES_MIN).toBeGreaterThanOrEqual(2);
+    });
+
+    it('ELECTION_MIN_CHOICES_MIN <= ELECTION_MAX_CHOICES_MAX', () => {
+      expect(ELECTION_MIN_CHOICES_MIN).toBeLessThanOrEqual(ELECTION_MAX_CHOICES_MAX);
+    });
+
+    it('ELECTION_MIN_CHOICES_MIN is at least 1', () => {
+      expect(ELECTION_MIN_CHOICES_MIN).toBeGreaterThanOrEqual(1);
+    });
+
+    it('ELECTION_MAX_CHOICES_MAX <= ELECTION_CHOICES_MAX', () => {
+      expect(ELECTION_MAX_CHOICES_MAX).toBeLessThanOrEqual(ELECTION_CHOICES_MAX);
     });
 
     it('ELECTION_CHOICE_MAX_LENGTH is a positive integer', () => {

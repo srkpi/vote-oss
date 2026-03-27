@@ -1,7 +1,7 @@
 import * as allure from 'allure-js-commons';
 
 import {
-  encryptChoice,
+  encryptBallot,
   JWT_TOKEN_RECORD,
   makeElection,
   makeTokenPair,
@@ -112,9 +112,17 @@ describe('GET /api/elections/[id]/tally', () => {
       tallies: [] as any,
     });
 
-    // Encrypt two ballots
-    const ballot1 = encryptChoice(election.public_key, MOCK_ELECTION_CHOICES[0].id);
-    const ballot2 = encryptChoice(election.public_key, MOCK_ELECTION_CHOICES[1].id);
+    // Encrypt each ballot using the hybrid scheme with the election's max_choices
+    const ballot1 = encryptBallot(
+      election.public_key,
+      [MOCK_ELECTION_CHOICES[0].id],
+      election.max_choices,
+    );
+    const ballot2 = encryptBallot(
+      election.public_key,
+      [MOCK_ELECTION_CHOICES[1].id],
+      election.max_choices,
+    );
 
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     prismaMock.ballot.findMany.mockResolvedValueOnce([
@@ -166,7 +174,7 @@ describe('GET /api/elections/[id]/tally', () => {
 
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     prismaMock.ballot.findMany.mockResolvedValueOnce([
-      { encrypted_ballot: 'corrupt-base64-data' }, // should be skipped
+      { encrypted_ballot: 'bm90LXZhbGlkLWpzb24=' }, // base64("not-valid-json") — should be skipped
     ]);
     prismaMock.electionTally.createMany.mockResolvedValueOnce({ count: 2 });
 

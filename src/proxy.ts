@@ -14,10 +14,7 @@ function parseSetCookie(cookieStr: string): { name: string; value: string } | nu
   const pair = semi === -1 ? cookieStr : cookieStr.slice(0, semi);
   const eq = pair.indexOf('=');
   if (eq === -1) return null;
-  return {
-    name: pair.slice(0, eq).trim(),
-    value: pair.slice(eq + 1).trim(),
-  };
+  return { name: pair.slice(0, eq).trim(), value: pair.slice(eq + 1).trim() };
 }
 
 export async function proxy(req: NextRequest) {
@@ -33,21 +30,16 @@ export async function proxy(req: NextRequest) {
   let user: VerifiedPayload | null = null;
   let newSetCookies: string[] = [];
 
-  // Try access token (signature only — no DB round-trip)
   if (accessCookie) {
     try {
       const payload = await verifyAccessToken(accessCookie);
-      if (payload?.tokenType === 'access') {
-        user = payload;
-      }
+      if (payload?.tokenType === 'access') user = payload;
     } catch {
-      // Invalid token → try refresh or treat as unauthenticated
+      // invalid token
     }
   }
 
-  // If no valid access token, attempt a silent refresh
   if (!user && refreshCookie) {
-    // Pre-check signature to avoid a useless HTTP call for garbage tokens
     try {
       const refreshPayload = await verifyRefreshToken(refreshCookie);
       if (refreshPayload?.tokenType === 'refresh') {
@@ -58,46 +50,31 @@ export async function proxy(req: NextRequest) {
 
         if (refreshRes.ok) {
           user = refreshPayload;
-
-          // Collect Set-Cookie strings so we can forward them to the client and
-          // also patch the request cookie header for same-request API calls.
           if (typeof refreshRes.headers.getSetCookie === 'function') {
             newSetCookies = refreshRes.headers.getSetCookie();
           } else {
-            // Fallback for environments without getSetCookie()
             const raw = refreshRes.headers.get('set-cookie');
             if (raw) newSetCookies = [raw];
           }
         }
       }
     } catch {
-      // Network failure or refresh endpoint error → treat as unauthenticated
+      // network failure
     }
   }
 
-  // Non-authenticated user hitting a protected route
   if (!user && isProtected) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/login';
     return NextResponse.redirect(loginUrl);
   }
 
-  // Authenticated user hitting a guest-only route
-  if (user && isGuestOnly) {
+  if (user && isGuestOnly) return NextResponse.redirect(new URL('/', req.nextUrl.origin));
+  if (user && isAdminOnly && !user.isAdmin)
     return NextResponse.redirect(new URL('/', req.nextUrl.origin));
-  }
-
-  // Authenticated non-admin hitting an admin route
-  if (user && isAdminOnly && !user.isAdmin) {
-    return NextResponse.redirect(new URL('/', req.nextUrl.origin));
-  }
-
-  // Admin hitting /join → they already have admin, send them to admin panel
-  if (user && user.isAdmin && pathname.startsWith('/join')) {
+  if (user && user.isAdmin && pathname.startsWith('/join'))
     return NextResponse.redirect(new URL('/admin', req.nextUrl.origin));
-  }
 
-  // Build enriched request headers for server components
   const requestHeaders = new Headers(req.headers);
   if (user) {
     requestHeaders.set('x-user-id', user.sub);
@@ -106,14 +83,28 @@ export async function proxy(req: NextRequest) {
     requestHeaders.set('x-user-group', Buffer.from(user.group, 'utf8').toString('base64'));
     requestHeaders.set('x-user-is-admin', String(user.isAdmin));
 
+    if (user.speciality) {
+      requestHeaders.set(
+        'x-user-speciality',
+        Buffer.from(user.speciality, 'utf8').toString('base64'),
+      );
+    }
+    if (user.studyYear != null) {
+      requestHeaders.set('x-user-study-year', String(user.studyYear));
+    }
+    if (user.studyForm) {
+      requestHeaders.set(
+        'x-user-study-form',
+        Buffer.from(user.studyForm, 'utf8').toString('base64'),
+      );
+    }
+
     if (user.isAdmin) {
-      requestHeaders.set('x-user-restricted-to-facutly', String(user.restrictedToFaculty ?? true));
+      requestHeaders.set('x-user-restricted-to-faculty', String(user.restrictedToFaculty ?? true));
       requestHeaders.set('x-user-manage-admins', String(user.manageAdmins ?? false));
     }
   }
 
-  // If tokens were refreshed, patch the cookie header so that
-  // server-component serverFetch() calls use the new access token
   if (newSetCookies.length > 0) {
     let newAccessValue = '';
     let newRefreshValue = '';
@@ -138,7 +129,6 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  // Build final response, forwarding any new Set-Cookie headers
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   for (const cookieStr of newSetCookies) {
     response.headers.append('set-cookie', cookieStr);

@@ -5,10 +5,8 @@ import {
   ChevronRight,
   CircleSlash2,
   FileText,
-  Search,
   ShieldAlert,
   ShieldCheck,
-  X,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -16,6 +14,7 @@ import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { Button } from '@/components/ui/button';
+import { SearchInput } from '@/components/ui/search-input';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { cn, pluralize } from '@/lib/utils';
 import { getVote } from '@/lib/vote-storage';
@@ -48,7 +47,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
   const isClosed = election?.status === 'closed';
   const privateKey = election?.privateKey;
-  const canDecrypt = isClosed && !!privateKey;
+  const canDecrypt = isClosed && !!privateKey && election.ballotCount > 0;
   const choices: ElectionChoice[] = election?.choices ?? [];
   const electionId = election?.id ?? electionMeta.id;
 
@@ -71,22 +70,22 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       for (let i = 0; i < ballots.length; i += BATCH) {
         await Promise.all(
           ballots.slice(i, i + BATCH).map(async (ballot) => {
-            const [decryptedRaw, hashValid] = await Promise.all([
+            const [decryptedIds, hashValid] = await Promise.all([
               decryptBallotData(key, ballot.encryptedBallot),
               verifyBallotHash(ballot, electionId),
             ]);
-            let choiceId: string | null = null;
-            let choiceLabel: string | null = null;
+            let choiceIds: string[] | null = null;
+            let choiceLabels: string[] | null = null;
             let valid = false;
-            if (decryptedRaw !== null) {
-              const match = choices.find((c) => c.id === decryptedRaw);
-              if (match) {
-                choiceId = decryptedRaw;
-                choiceLabel = match.choice;
+            if (decryptedIds !== null) {
+              const validIds = decryptedIds.filter((id) => choices.some((c) => c.id === id));
+              if (validIds.length === decryptedIds.length && validIds.length > 0) {
+                choiceIds = validIds;
+                choiceLabels = validIds.map((id) => choices.find((c) => c.id === id)?.choice ?? id);
                 valid = true;
               }
             }
-            map.set(ballot.id, { choiceId, choiceLabel, valid, hashValid });
+            map.set(ballot.id, { choiceIds, choiceLabels, valid, hashValid });
           }),
         );
         await new Promise((r) => setTimeout(r, 0));
@@ -111,12 +110,16 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const filteredBallots = useMemo(() => {
     if (!trimmedQuery) return ballots;
     const q = trimmedQuery.toLowerCase();
-    return ballots.filter(
-      (b) =>
-        b.currentHash.includes(q) ||
-        (decryptionDone &&
-          (decryptedMap.get(b.id)?.choiceLabel?.toLowerCase().includes(q) ?? false)),
-    );
+
+    return ballots.filter((b) => {
+      const isHashMatch = b.currentHash.includes(q);
+      const decryption = decryptedMap.get(b.id);
+      const isLabelMatch =
+        decryptionDone &&
+        decryption?.choiceLabels?.some((label) => label.toLowerCase().includes(q));
+
+      return isHashMatch || isLabelMatch;
+    });
   }, [ballots, trimmedQuery, decryptionDone, decryptedMap]);
 
   const handleSearch = (value: string) => {
@@ -157,10 +160,19 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
     : null;
 
   const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
-  const myVoteMatchesDecryption =
-    myDecryption !== undefined && myVoteRecord !== null
-      ? myDecryption.valid && myDecryption.choiceId === myVoteRecord.choiceId
-      : null;
+
+  const myVoteMatchesDecryption = useMemo(() => {
+    if (!myDecryption || !myVoteRecord || !myDecryption.valid) return null;
+
+    const decryptedIds = myDecryption.choiceIds || [];
+    const storedIds = Array.isArray(myVoteRecord.choiceIds)
+      ? myVoteRecord.choiceIds
+      : [myVoteRecord.choiceIds];
+
+    if (decryptedIds.length !== storedIds.length) return false;
+
+    return storedIds.every((id) => decryptedIds.includes(id));
+  }, [myDecryption, myVoteRecord]);
 
   return (
     <div className="space-y-5">
@@ -170,7 +182,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           found={myBallot !== null}
           decryptionDone={decryptionDone}
           matchesDecryption={myVoteMatchesDecryption}
-          decryptedChoiceLabel={myDecryption?.choiceLabel ?? null}
+          decryptedChoiceLabels={myDecryption?.choiceLabels ?? null}
           onScrollTo={() =>
             myBallotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
           }
@@ -200,36 +212,18 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           </span>
         </div>
 
-        <div className="relative max-w-md flex-1">
-          <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
-            <Search className="h-4 w-4" />
-          </div>
-          <input
-            type="text"
+        {ballots.length > 0 && (
+          <SearchInput
             value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={handleSearch}
+            className="max-w-md"
             placeholder={
               decryptionDone
                 ? 'Пошук за хешем або варіантом відповіді…'
                 : 'Пошук за хешем бюлетеня…'
             }
-            className={cn(
-              'h-9 w-full pr-9 pl-9 font-mono text-sm',
-              'border-border-color rounded-lg border bg-white',
-              'placeholder:font-body placeholder:text-subtle',
-              'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
-              'shadow-shadow-xs transition-colors duration-150',
-            )}
           />
-          {searchQuery && (
-            <button
-              onClick={() => handleSearch('')}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {ballots.length === 0 ? (
@@ -237,8 +231,12 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
             <FileText className="text-kpi-gray-mid h-7 w-7" />
           </div>
-          <p className="font-display text-foreground text-lg font-semibold">Бюлетенів поки немає</p>
-          <p className="font-body text-muted-foreground mt-1 text-sm">Голосів ще не подано</p>
+          <p className="font-display text-foreground text-lg font-semibold">
+            {isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
+          </p>
+          <p className="font-body text-muted-foreground mt-1 text-sm">
+            {isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
+          </p>
         </div>
       ) : pagedBallots.length === 0 ? (
         <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
@@ -291,7 +289,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
                     }
                     choices={choices}
                     isMyBallot={isMyBallot}
-                    myStoredChoiceLabel={isMyBallot ? myVoteRecord!.choiceLabel : undefined}
+                    myStoredChoiceLabels={isMyBallot ? myVoteRecord!.choiceLabels : undefined}
                   />
                 </div>
               );

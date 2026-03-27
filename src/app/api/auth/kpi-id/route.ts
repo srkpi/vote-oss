@@ -55,6 +55,15 @@ import type { TokenPayload } from '@/types/auth';
  *                   type: string
  *                 group:
  *                   type: string
+ *                 speciality:
+ *                   type: string
+ *                   nullable: true
+ *                 studyYear:
+ *                   type: string
+ *                   nullable: true
+ *                 studyForm:
+ *                   type: string
+ *                   nullable: true
  *                 isAdmin:
  *                   type: boolean
  *       400:
@@ -104,38 +113,35 @@ export async function POST(req: NextRequest) {
   try {
     userInfo = await resolveTicket(ticketId);
   } catch (err) {
-    if (err instanceof NotStudentError) {
-      return Errors.forbidden(err.message);
-    }
-
+    if (err instanceof NotStudentError) return Errors.forbidden(err.message);
     console.error('[auth/kpi-id] resolveTicket error:', err);
     return Errors.internal('Failed to contact auth provider');
   }
 
-  if (!userInfo) {
-    return Errors.unauthorized('Invalid or expired ticketId');
-  }
+  if (!userInfo) return Errors.unauthorized('Invalid or expired ticketId');
 
   const auth = await requireAuth(req);
-  if (auth.ok) {
-    await revokeByAccessJti(auth.user.jti, auth.user.iat);
-  }
+  if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
 
   const tokenPayload: TokenPayload = {
     sub: userInfo.userId,
     faculty: userInfo.faculty,
     group: userInfo.group,
     fullName: userInfo.fullName,
+    speciality: userInfo.speciality,
+    studyYear: userInfo.studyYear,
+    studyForm: userInfo.studyForm,
   };
+
   const adminRecord = await prisma.admin.findUnique({
     where: { user_id: userInfo.userId, deleted_at: null },
   });
   const isAdmin = !!adminRecord;
 
   if (isAdmin) {
-    tokenPayload['isAdmin'] = true;
-    tokenPayload['manageAdmins'] = adminRecord.manage_admins;
-    tokenPayload['restrictedToFaculty'] = adminRecord.restricted_to_faculty;
+    tokenPayload.isAdmin = true;
+    tokenPayload.manageAdmins = adminRecord.manage_admins;
+    tokenPayload.restrictedToFaculty = adminRecord.restricted_to_faculty;
   }
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
@@ -149,6 +155,9 @@ export async function POST(req: NextRequest) {
       fullName: userInfo.fullName,
       faculty: userInfo.faculty,
       group: userInfo.group,
+      speciality: userInfo.speciality,
+      studyYear: userInfo.studyYear,
+      studyForm: userInfo.studyForm,
       isAdmin,
     },
     { status: 200 },

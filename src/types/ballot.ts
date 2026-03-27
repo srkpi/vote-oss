@@ -14,8 +14,8 @@ export interface BallotsResponse {
 }
 
 export interface DecryptionResult {
-  choiceId: string | null;
-  choiceLabel: string | null;
+  choiceIds: string[] | null;
+  choiceLabels: string[] | null;
   valid: boolean;
   hashValid: boolean;
 }

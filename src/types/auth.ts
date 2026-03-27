@@ -21,6 +21,9 @@ export interface TokenPayload {
   faculty: string;
   group: string;
   fullName: string;
+  speciality?: string;
+  studyYear?: number;
+  studyForm?: string;
   isAdmin?: boolean;
   restrictedToFaculty?: boolean;
   manageAdmins?: boolean;
@@ -37,6 +40,9 @@ export interface UserInfo {
   fullName: string;
   faculty: string;
   group: string;
+  speciality?: string;
+  studyYear?: number;
+  studyForm?: string;
 }
 
 export interface User {
@@ -44,6 +50,9 @@ export interface User {
   fullName: string;
   faculty: string;
   group: string;
+  speciality?: string;
+  studyYear?: number;
+  studyForm?: string;
   isAdmin: boolean;
   restrictedToFaculty: boolean;
   manageAdmins: boolean;

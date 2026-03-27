@@ -64,14 +64,6 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    className={cn(
-                      'font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white',
-                      color.badge,
-                    )}
-                  >
-                    {String.fromCharCode(65 + result.position)}
-                  </div>
                   <span
                     className={cn(
                       'font-body text-sm font-medium',
@@ -112,12 +104,6 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
           );
         })}
       </div>
-
-      {totalBallots === 0 && (
-        <p className="font-body text-muted-foreground py-4 text-center text-sm">
-          Поки що голосів немає
-        </p>
-      )}
     </div>
   );
 }

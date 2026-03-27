@@ -56,25 +56,48 @@ model AdminInviteToken {
 }
 
 model Election {
-  id                    String   @id @default(uuid())
-  title                 String
-  created_by            String
-  creator               Admin    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
-  created_at            DateTime @default(now())
-  opens_at              DateTime
-  closes_at             DateTime
-  restricted_to_faculty String?
-  restricted_to_group   String?
-  public_key            String   @db.Text
-  private_key           String   @db.Text
+  id                 String   @id @default(uuid())
+  title              String
+  created_by         String
+  creator            Admin    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
+  created_at         DateTime @default(now())
+  opens_at           DateTime
+  closes_at          DateTime
 
-  choices       ElectionChoice[]
-  issued_tokens IssuedToken[]
-  ballots       Ballot[]
-  tallies       ElectionTally[]
-  nullifiers    UsedTokenNullifier[]
+  min_choices Int    @default(1)
+  max_choices Int    @default(1)
+
+  restrictions       ElectionRestriction[]
+
+  public_key  String @db.Text
+  private_key String @db.Text
+
+  choices            ElectionChoice[]
+  issued_tokens      IssuedToken[]
+  ballots            Ballot[]
+  tallies            ElectionTally[]
+  nullifiers         UsedTokenNullifier[]
 
   @@map("elections")
+}
+
+enum RestrictionType {
+  FACULTY
+  GROUP
+  SPECIALITY
+  STUDY_YEAR
+  STUDY_FORM
+}
+
+model ElectionRestriction {
+  id          String          @id @default(uuid())
+  election_id String
+  election    Election        @relation(fields: [election_id], references: [id], onDelete: Cascade)
+  type        RestrictionType
+  value       String
+
+  @@index([election_id, type])
+  @@map("election_restrictions")
 }
 
 model ElectionChoice {

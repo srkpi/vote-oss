@@ -36,7 +36,7 @@ async function makeAdminReq(body: object, adminRecord = ADMIN_RECORD) {
 }
 
 /** Build the shape that the route stores in cache (no `status` field). */
-function makeCachedElection(overrides = {}) {
+function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) {
   const e = makeElection(overrides);
   return {
     id: e.id,
@@ -44,8 +44,9 @@ function makeCachedElection(overrides = {}) {
     createdAt: e.created_at.toISOString(),
     opensAt: e.opens_at.toISOString(),
     closesAt: e.closes_at.toISOString(),
-    restrictedToFaculty: e.restricted_to_faculty,
-    restrictedToGroup: e.restricted_to_group,
+    restrictions: e.restrictions,
+    minChoices: e.min_choices,
+    maxChoices: e.max_choices,
     publicKey: e.public_key,
     privateKey: e.private_key, // always present in cache
     creator: e.creator,
@@ -133,28 +134,42 @@ describe('GET /api/elections', () => {
 
   it('filters cached elections by the requesting user faculty', async () => {
     const req = await makeAuthReq(); // USER_PAYLOAD.faculty = 'FICE'
-    const ficeElection = makeCachedElection({ restricted_to_faculty: 'FICE' });
-    const otherElection = makeCachedElection({ restricted_to_faculty: 'FEL' });
+    const ficeElection = makeCachedElection({
+      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    });
+    const otherElection = makeCachedElection({
+      restrictions: [{ type: 'FACULTY', value: 'FEL' }],
+    });
     cacheMock.getCachedElections.mockResolvedValueOnce([ficeElection, otherElection] as any);
 
     const res = await GET(req);
     const { body } = await parseJson<any[]>(res);
 
     expect(body).toHaveLength(1);
-    expect(body[0].restrictedToFaculty).toBe('FICE');
+    expect(body[0].restrictions).toContainEqual({ type: 'FACULTY', value: 'FICE' });
   });
 
   it('filters cached elections by the requesting user group', async () => {
     const req = await makeAuthReq(); // USER_PAYLOAD.group = 'KV-91'
-    const myGroup = makeCachedElection({ restricted_to_group: 'KV-91' });
-    const otherGroup = makeCachedElection({ restricted_to_group: 'EL-21' });
+    const myGroup = makeCachedElection({
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'GROUP', value: 'KV-91' },
+      ],
+    });
+    const otherGroup = makeCachedElection({
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'GROUP', value: 'EL-21' },
+      ],
+    });
     cacheMock.getCachedElections.mockResolvedValueOnce([myGroup, otherGroup] as any);
 
     const res = await GET(req);
     const { body } = await parseJson<any[]>(res);
 
     expect(body).toHaveLength(1);
-    expect(body[0].restrictedToGroup).toBe('KV-91');
+    expect(body[0].restrictions).toContainEqual({ type: 'GROUP', value: 'KV-91' });
   });
 
   it('does not expose privateKey for open elections', async () => {
@@ -359,7 +374,7 @@ describe('POST /api/elections', () => {
   it('enforces faculty restriction for restricted admins', async () => {
     const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
     const req = await makeAdminReq(
-      { ...validBody, restrictedToFaculty: null }, // tries to create unrestricted
+      { ...validBody, restrictions: [] }, // tries to create unrestricted
       restrictedAdmin,
     );
     const election = makeElection();
@@ -371,6 +386,6 @@ describe('POST /api/elections', () => {
 
     await POST(req);
     const createArgs = prismaMock.election.create.mock.calls[0][0].data;
-    expect(createArgs.restricted_to_faculty).toBe('FICE');
+    expect(createArgs.restrictions.create).toContainEqual({ type: 'FACULTY', value: 'FICE' });
   });
 });

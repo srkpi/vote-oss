@@ -80,10 +80,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const election = await prisma.election.findUnique({
     where: { id: electionId },
-    include: {
-      choices: { orderBy: { position: 'asc' } },
-      tallies: true,
-    },
+    include: { choices: { orderBy: { position: 'asc' } }, tallies: true },
   });
 
   if (!election) return Errors.notFound('Election not found');
@@ -128,9 +125,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   for (const ballot of ballots) {
     try {
-      const choiceId = decryptBallot(election.private_key, ballot.encrypted_ballot);
-      if (choiceId in tally) {
-        tally[choiceId]++;
+      const choiceIds = decryptBallot(election.private_key, ballot.encrypted_ballot);
+      for (const choiceId of choiceIds) {
+        if (choiceId in tally) {
+          tally[choiceId]++;
+        }
       }
     } catch {
       console.error(`[tally] Failed to decrypt ballot for election ${electionId}`);

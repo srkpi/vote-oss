@@ -5,12 +5,14 @@ import { notFound, redirect } from 'next/navigation';
 
 import { DeleteElectionButton } from '@/components/admin/delete-election-button';
 import { PageHeader } from '@/components/common/page-header';
+import { AccessRestrictions } from '@/components/elections/election-restrictions';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TimelineItem } from '@/components/ui/timeline-item';
 import { serverApi } from '@/lib/api/server';
+import { adminCanDeleteElection } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime, pluralize } from '@/lib/utils';
 import type { TallyResponse } from '@/types/tally';
@@ -38,7 +40,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
   if (status === 404 || !election) notFound();
 
   const canDelete =
-    !session.restrictedToFaculty || election.restrictedToFaculty === session.faculty;
+    !session.restrictedToFaculty || adminCanDeleteElection(session.faculty, election.restrictions);
 
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';
@@ -131,14 +133,11 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   </h2>
                 </div>
                 <div className="space-y-3 p-4 sm:p-6">
-                  {election.choices.map((choice, index) => (
+                  {election.choices.map((choice) => (
                     <div
                       key={choice.id}
                       className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3 sm:gap-4 sm:p-3.5"
                     >
-                      <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white sm:h-8 sm:w-8">
-                        {String.fromCharCode(65 + index)}
-                      </span>
                       <span className="font-body text-foreground min-w-0 flex-1 text-sm wrap-break-word">
                         {choice.choice}
                       </span>
@@ -173,37 +172,9 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             </div>
 
-            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
-              <div className="border-border-subtle border-b px-4 py-4 sm:px-5">
-                <h3 className="font-display text-foreground text-base font-semibold">Доступ</h3>
-              </div>
-              <div className="space-y-3 p-4 sm:p-5">
-                <div className="flex items-center justify-between">
-                  <span className="font-body text-muted-foreground text-sm">Підрозділ</span>
-                  {election.restrictedToFaculty ? (
-                    <Badge variant="info" size="md">
-                      {election.restrictedToFaculty}
-                    </Badge>
-                  ) : (
-                    <Badge variant="success" size="md">
-                      Всі
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-body text-muted-foreground text-sm">Група</span>
-                  {election.restrictedToGroup ? (
-                    <Badge variant="secondary" size="md">
-                      {election.restrictedToGroup}
-                    </Badge>
-                  ) : (
-                    <Badge variant="success" size="md">
-                      Всі
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
+            {election.restrictions.length > 0 && (
+              <AccessRestrictions restrictions={election.restrictions} />
+            )}
 
             <EncryptionKey
               title="Публічний ключ"
