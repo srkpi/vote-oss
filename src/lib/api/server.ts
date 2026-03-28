@@ -31,19 +31,36 @@ async function serverFetch<T>(path: string, options: RequestInit = {}): Promise<
       cache: 'no-store',
     });
 
-    if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}`;
-      try {
-        const body = (await response.json()) as { message?: string };
-        errorMessage = body.message ?? errorMessage;
-      } catch {
-        // ignore parse errors
+    const contentType = response.headers.get('content-type');
+    const hasBody =
+      response.status !== 204 &&
+      response.status !== 205 &&
+      response.headers.get('content-length') !== '0';
+
+    let parsedData: unknown = null;
+    if (hasBody) {
+      if (contentType?.includes('application/json')) {
+        parsedData = await response.json();
+      } else {
+        parsedData = await response.text();
       }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `Сталася помилка (${response.status})`;
+      if (
+        parsedData &&
+        typeof parsedData === 'object' &&
+        'message' in parsedData &&
+        typeof parsedData.message === 'string'
+      ) {
+        errorMessage = parsedData?.message;
+      }
+
       return { success: false, data: null, error: errorMessage, status: response.status };
     }
 
-    const data = (await response.json()) as T;
-    return { success: true, data, error: null, status: response.status };
+    return { success: true, data: parsedData as T, error: null, status: response.status };
   } catch (err) {
     return {
       success: false,

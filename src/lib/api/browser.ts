@@ -1,7 +1,7 @@
 'use client';
 
 import { createApiClient } from '@/lib/api/client';
-import type { ApiError, ApiResult } from '@/types/api';
+import type { ApiResult } from '@/types/api';
 
 const BASE_URL = '/api';
 
@@ -44,19 +44,36 @@ async function rawFetch<T>(path: string, options: RequestInit = {}): Promise<Api
       ...options,
     });
 
+    const contentType = response.headers.get('content-type');
+    const hasBody =
+      response.status !== 204 &&
+      response.status !== 205 &&
+      response.headers.get('content-length') !== '0';
+
+    let parsedData: unknown = null;
+    if (hasBody) {
+      if (contentType?.includes('application/json')) {
+        parsedData = await response.json();
+      } else {
+        parsedData = await response.text();
+      }
+    }
+
     if (!response.ok) {
       let errorMessage = `Сталася помилка (${response.status})`;
-      try {
-        const errorBody = (await response.json()) as ApiError;
-        errorMessage = errorBody.message || errorMessage;
-      } catch {
-        // ignore
+      if (
+        parsedData &&
+        typeof parsedData === 'object' &&
+        'message' in parsedData &&
+        typeof parsedData.message === 'string'
+      ) {
+        errorMessage = parsedData?.message;
       }
+
       return { success: false, data: null, error: errorMessage, status: response.status };
     }
 
-    const data = (await response.json()) as T;
-    return { success: true, data, error: null, status: response.status };
+    return { success: true, data: parsedData as T, error: null, status: response.status };
   } catch (err) {
     return {
       success: false,

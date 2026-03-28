@@ -133,14 +133,13 @@ describe('DELETE /api/admins/[userId]', () => {
 
   // ── Successful soft-delete ────────────────────────────────────────────────
 
-  it('returns 205 when hierarchy check passes', async () => {
+  it('returns 204 when hierarchy check passes', async () => {
     const req = await adminReq(ADMIN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'admin-002', promoted_by: 'superadmin-001' },
     ]);
-    prismaMock.admin.update.mockResolvedValueOnce({});
 
     const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
     expect(res.status).toBe(204);
@@ -153,7 +152,6 @@ describe('DELETE /api/admins/[userId]', () => {
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'admin-002', promoted_by: 'superadmin-001' },
     ]);
-    prismaMock.admin.update.mockResolvedValueOnce({});
 
     await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
 
@@ -175,7 +173,6 @@ describe('DELETE /api/admins/[userId]', () => {
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'admin-002', promoted_by: 'superadmin-001' },
     ]);
-    prismaMock.admin.update.mockResolvedValueOnce({});
 
     await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
 
@@ -189,7 +186,6 @@ describe('DELETE /api/admins/[userId]', () => {
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'admin-002', promoted_by: 'superadmin-001' },
     ]);
-    prismaMock.admin.update.mockResolvedValueOnce({});
 
     await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
 
@@ -203,11 +199,75 @@ describe('DELETE /api/admins/[userId]', () => {
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'admin-002', promoted_by: 'superadmin-001' },
     ]);
-    prismaMock.admin.update.mockResolvedValueOnce({});
 
     await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
 
     expect(cacheMock.invalidateAdmins).toHaveBeenCalledTimes(1);
+  });
+
+  it('invalidates the invite-tokens cache after a successful soft-delete', async () => {
+    const req = await adminReq(ADMIN_RECORD);
+    prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
+    prismaMock.admin.findMany.mockResolvedValueOnce([
+      { user_id: 'superadmin-001', promoted_by: null },
+      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
+    ]);
+
+    await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
+
+    expect(cacheMock.invalidateInviteTokens).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Children re-parenting ─────────────────────────────────────────────────
+
+  it('re-parents direct children of deleted admin to their grandparent (fills hierarchy gap)', async () => {
+    const req = await adminReq(ADMIN_RECORD);
+    prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD); // target: promoted_by = 'superadmin-001'
+    prismaMock.admin.findMany.mockResolvedValueOnce([
+      { user_id: 'superadmin-001', promoted_by: null },
+      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
+      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
+    ]);
+
+    await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
+
+    expect(prismaMock.admin.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { promoted_by: 'admin-002' },
+        data: { promoted_by: 'superadmin-001' }, // grandparent of the leaf
+      }),
+    );
+  });
+
+  it('returns 403 when attempting to delete a root admin (cannot be an ancestor of a root)', async () => {
+    const req = await adminReq(ADMIN_RECORD);
+    const rootTarget = { ...RESTRICTED_ADMIN_RECORD, promoted_by: null };
+    prismaMock.admin.findUnique.mockResolvedValueOnce(rootTarget);
+    prismaMock.admin.findMany.mockResolvedValueOnce([
+      { user_id: 'superadmin-001', promoted_by: null },
+      { user_id: 'admin-002', promoted_by: null },
+      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
+    ]);
+
+    const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
+
+    expect(res.status).toBe(403);
+    expect(prismaMock.admin.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('uses a single updateMany for child re-parenting (no N+1)', async () => {
+    const req = await adminReq(ADMIN_RECORD);
+    prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
+    prismaMock.admin.findMany.mockResolvedValueOnce([
+      { user_id: 'superadmin-001', promoted_by: null },
+      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
+      { user_id: 'admin-leaf-a', promoted_by: 'admin-002' },
+      { user_id: 'admin-leaf-b', promoted_by: 'admin-002' },
+    ]);
+
+    await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
+
+    expect(prismaMock.admin.updateMany).toHaveBeenCalledTimes(1);
   });
 
   // ── Hierarchy preservation ────────────────────────────────────────────────
@@ -226,7 +286,6 @@ describe('DELETE /api/admins/[userId]', () => {
       { user_id: 'admin-middle', promoted_by: 'superadmin-001' },
       { user_id: 'admin-leaf', promoted_by: 'admin-middle' },
     ]);
-    prismaMock.admin.update.mockResolvedValueOnce({});
 
     const req = makeAuthRequest(access.token, { method: 'DELETE' });
     const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-leaf' }) });
