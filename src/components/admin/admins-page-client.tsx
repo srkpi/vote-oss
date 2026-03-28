@@ -37,6 +37,23 @@ export function AdminsPageClient({
     setAdmins((prev) => prev.filter((a) => a.userId !== userId));
   };
 
+  const handleUpdate = (
+    userId: string,
+    updates: { manageAdmins: boolean; restrictedToFaculty: boolean },
+  ) => {
+    setAdmins((prev) =>
+      prev.map((a) =>
+        a.userId === userId
+          ? {
+              ...a,
+              manageAdmins: updates.manageAdmins,
+              restrictedToFaculty: updates.restrictedToFaculty,
+            }
+          : a,
+      ),
+    );
+  };
+
   const adminsCount = admins.length;
   const resctrictedCount = admins.filter((a) => a.restrictedToFaculty).length;
   const canInviteCount = admins.filter((a) => a.manageAdmins).length;
@@ -94,7 +111,14 @@ export function AdminsPageClient({
               підрозділу
             </span>
           </div>
-          <AdminTable admins={admins} currentUserId={currentUser.userId} onDelete={handleDelete} />
+          <AdminTable
+            admins={admins}
+            currentUserId={currentUser.userId}
+            canManageAdmins={canGrantManageAdmins}
+            callerRestrictedToFaculty={restrictedToFaculty}
+            onDelete={handleDelete}
+            onUpdate={handleUpdate}
+          />
         </div>
       )}
 

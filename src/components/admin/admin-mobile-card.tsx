@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,20 @@ import type { Admin } from '@/types/admin';
 interface AdminMobileCardProps {
   admin: Admin;
   isCurrentUser: boolean;
+  canManageAdmins: boolean;
   onDelete: () => void;
+  onEdit: () => void;
 }
 
-export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileCardProps) {
+export function AdminMobileCard({
+  admin,
+  isCurrentUser,
+  canManageAdmins,
+  onDelete,
+  onEdit,
+}: AdminMobileCardProps) {
+  const showActions = !isCurrentUser && admin.deletable;
+
   return (
     <div
       className={cn(
@@ -34,15 +44,30 @@ export function AdminMobileCard({ admin, isCurrentUser, onDelete }: AdminMobileC
             </p>
           </div>
         </div>
-        {!isCurrentUser && admin.deletable && (
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={onDelete}
-            className="text-error hover:bg-error-bg"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+
+        {showActions && (
+          <div className="flex items-center gap-1">
+            {canManageAdmins && (
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={onEdit}
+                className="text-muted-foreground hover:text-kpi-navy hover:bg-surface"
+                title="Редагувати права"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onDelete}
+              className="text-error hover:bg-error-bg"
+              title="Видалити адміністратора"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { AdminMobileCard } from '@/components/admin/admin-mobile-card';
 import { AdminRow } from '@/components/admin/admin-row';
+import { EditPermissionsDialog } from '@/components/admin/edit-permissions-dialog';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,12 +23,26 @@ import type { Admin } from '@/types/admin';
 interface AdminTableProps {
   admins: Admin[];
   currentUserId: string;
+  canManageAdmins: boolean;
+  callerRestrictedToFaculty: boolean;
   onDelete: (userId: string) => void;
+  onUpdate: (
+    userId: string,
+    updates: { manageAdmins: boolean; restrictedToFaculty: boolean },
+  ) => void;
 }
 
-export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps) {
+export function AdminTable({
+  admins,
+  currentUserId,
+  canManageAdmins,
+  callerRestrictedToFaculty,
+  onDelete,
+  onUpdate,
+}: AdminTableProps) {
   const { toast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<Admin | null>(null);
+  const [editTarget, setEditTarget] = useState<Admin | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -79,7 +94,9 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
                 key={admin.userId}
                 admin={admin}
                 isCurrentUser={admin.userId === currentUserId}
+                canManageAdmins={canManageAdmins}
                 onDelete={() => setDeleteTarget(admin)}
+                onEdit={() => setEditTarget(admin)}
               />
             ))}
           </tbody>
@@ -92,11 +109,14 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
             key={admin.userId}
             admin={admin}
             isCurrentUser={admin.userId === currentUserId}
+            canManageAdmins={canManageAdmins}
             onDelete={() => setDeleteTarget(admin)}
+            onEdit={() => setEditTarget(admin)}
           />
         ))}
       </div>
 
+      {/* Delete confirmation dialog */}
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
         <DialogPanel maxWidth="sm">
           <DialogHeader>
@@ -118,6 +138,19 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
           </DialogFooter>
         </DialogPanel>
       </Dialog>
+
+      {editTarget && (
+        <EditPermissionsDialog
+          open={!!editTarget}
+          onClose={() => setEditTarget(null)}
+          admin={editTarget}
+          callerRestrictedToFaculty={callerRestrictedToFaculty}
+          onUpdate={(userId, updates) => {
+            onUpdate(userId, updates);
+            setEditTarget(null);
+          }}
+        />
+      )}
     </>
   );
 }
