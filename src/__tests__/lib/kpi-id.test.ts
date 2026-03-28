@@ -1,6 +1,6 @@
 import * as allure from 'allure-js-commons';
 
-import { NotDiiaAuthError, NotStudentError, resolveTicket } from '@/lib/kpi-id';
+import { GraduateUserError, NotDiiaAuthError, NotStudentError, resolveTicket } from '@/lib/kpi-id';
 
 describe('kpi-id', () => {
   beforeEach(() => {
@@ -171,6 +171,100 @@ describe('kpi-id', () => {
       });
 
       await expect(resolveTicket('employee-only-ticket')).rejects.toThrow(NotDiiaAuthError);
+    });
+
+    it('throws GraduateUserError when the resolved group is a graduate group', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            AUTH_METHOD: 'DIIA',
+            STUDENT_ID: 'grad-001',
+            NAME: 'Petro Aspirant',
+            GROUP: 'FT-51ф', // graduate group — 'ф' suffix → level 'g'
+          },
+        }),
+      });
+
+      await expect(resolveTicket('ticket-grad')).rejects.toThrow(GraduateUserError);
+    });
+
+    it('throws GraduateUserError for all graduate group suffix patterns', async () => {
+      const graduateGroups = ['KV-11ф', 'FT-21ф', 'ІО-31фі'];
+
+      for (const group of graduateGroups) {
+        (fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            data: {
+              AUTH_METHOD: 'DIIA',
+              STUDENT_ID: 'grad-001',
+              NAME: 'Petro Aspirant',
+              GROUP: group,
+            },
+          }),
+        });
+
+        await expect(resolveTicket('ticket-grad')).rejects.toThrow(GraduateUserError);
+      }
+    });
+
+    it('does not throw GraduateUserError for bachelor groups', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            AUTH_METHOD: 'DIIA',
+            STUDENT_ID: 'user-001',
+            NAME: 'Ivan Student',
+            GROUP: 'KV-91',
+          },
+        }),
+      });
+
+      const user = await resolveTicket('ticket-bachelor');
+      expect(user).not.toBeNull();
+      expect(user?.group).toBe('KV-91');
+    });
+
+    it('does not throw GraduateUserError for master groups', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            AUTH_METHOD: 'DIIA',
+            STUDENT_ID: 'user-002',
+            NAME: 'Olena Master',
+            GROUP: 'KV-51мн',
+          },
+        }),
+      });
+
+      const user = await resolveTicket('ticket-master');
+      expect(user).not.toBeNull();
+      expect(user?.group).toBe('KV-51мн');
+    });
+
+    it('GraduateUserError has the correct name property', async () => {
+      (fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: {
+            AUTH_METHOD: 'DIIA',
+            STUDENT_ID: 'grad-001',
+            NAME: 'Petro Aspirant',
+            GROUP: 'FT-51ф',
+          },
+        }),
+      });
+
+      try {
+        await resolveTicket('ticket-grad');
+        fail('Expected GraduateUserError to be thrown');
+      } catch (err) {
+        expect(err).toBeInstanceOf(GraduateUserError);
+        expect((err as GraduateUserError).name).toBe('GraduateUserError');
+      }
     });
   });
 });

@@ -22,13 +22,16 @@ import {
   ELECTION_MIN_CHOICES_MIN,
   ELECTION_TITLE_MAX_LENGTH,
   LEVEL_COURSE_BACHELOR_COURSES,
-  // LEVEL_COURSE_GRADUATE_COURSES,
   LEVEL_COURSE_MASTER_COURSES,
   STUDY_FORM_LABELS,
   UI_STUDY_FORMS,
   //STUDY_YEARS,
 } from '@/lib/constants';
-import { filterGroupsByLevelCourses, filterGroupsByStudyForms } from '@/lib/group-utils';
+import {
+  filterGroupsByLevelCourses,
+  filterGroupsByStudyForms,
+  parseGroupLevel,
+} from '@/lib/group-utils';
 import { cn } from '@/lib/utils';
 import type { CreateElectionRestriction } from '@/types/election';
 
@@ -36,10 +39,11 @@ interface CreateElectionFormProps {
   restrictedToFaculty: string | null;
 }
 
+// Graduate level ('g') is intentionally excluded — graduate students cannot
+// participate in elections on this platform.
 const LEVEL_COLUMNS = [
   { key: 'b', label: 'Бакалаври', courses: LEVEL_COURSE_BACHELOR_COURSES },
   { key: 'm', label: 'Магістри', courses: LEVEL_COURSE_MASTER_COURSES },
-  // { key: 'g', label: 'Аспіранти', courses: LEVEL_COURSE_GRADUATE_COURSES },
 ] as const;
 
 export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectionFormProps) {
@@ -97,11 +101,15 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
   const validChoicesCount = choices.filter((c) => c.trim()).length;
 
-  // ── Available groups: filtered by faculties, study forms, and level courses ──
+  // Available groups: filtered by faculties, study forms, level courses,
+  // and with graduate groups always excluded
   const availableGroups = useMemo(() => {
     let groups = Array.from(new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? []))).sort(
       (a, b) => a.localeCompare(b, 'uk'),
     );
+
+    // Always exclude graduate groups — they cannot participate
+    groups = groups.filter((g) => parseGroupLevel(g) !== 'g');
 
     if (selectedForms.length > 0) {
       groups = filterGroupsByStudyForms(groups, selectedForms);
@@ -126,8 +134,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     availableGroups.length === 0 &&
     (selectedForms.length > 0 || selectedLevelCourses.length > 0) &&
     !groupsLoading;
-
-  // ── Handlers ─────────────────────────────────────────────────────────────
 
   function handleFacultiesChange(faculties: string[]) {
     if (restrictedToFaculty) return; // locked
@@ -163,8 +169,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     );
     setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
   };
-
-  // ── Validation ────────────────────────────────────────────────────────────
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -203,11 +207,20 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         'Жодна група не відповідає вибраним обмеженням. Змініть критерії або приберіть деякі фільтри.';
     }
 
+    if (selectedFaculties.length > 0 && selectedGroups.length > 0 && !groupsLoading) {
+      const redundantFaculties = selectedFaculties.filter((faculty) => {
+        const groupsInFaculty = facultyGroups[faculty] || [];
+        return !selectedGroups.some((g) => groupsInFaculty.includes(g));
+      });
+
+      if (redundantFaculties.length > 0) {
+        errors.faculties = `Зайві підрозділи (не містять обраних груп): ${redundantFaculties.join(', ')}`;
+      }
+    }
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
-  // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -247,8 +260,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     setLoading(false);
   };
 
-  // ── Date helpers ──────────────────────────────────────────────────────────
-
   const [renderTime] = useState(() => Date.now());
   const minDateTime = new Date(renderTime + 60 * 1000).toISOString().slice(0, 16);
   const maxOpensAt = new Date(
@@ -262,8 +273,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
   //const studyYearOptions = STUDY_YEARS.map((y) => ({ value: String(y), label: String(y) }));
   const studyFormOptions = UI_STUDY_FORMS.map((f) => ({ value: f, label: STUDY_FORM_LABELS[f] }));
-
-  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">

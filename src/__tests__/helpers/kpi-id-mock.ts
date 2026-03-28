@@ -1,5 +1,26 @@
 import type { UserInfo } from '@/types/auth';
 
+export class NotStudentError extends Error {
+  constructor(message = 'Platform is only available for students') {
+    super(message);
+    this.name = 'NotStudentError';
+  }
+}
+
+export class NotDiiaAuthError extends Error {
+  constructor(message = 'Authentication must be performed through Diia') {
+    super(message);
+    this.name = 'NotDiiaAuthError';
+  }
+}
+
+export class GraduateUserError extends Error {
+  constructor(message = 'Platform is not available for graduate (аспірант) students') {
+    super(message);
+    this.name = 'GraduateUserError';
+  }
+}
+
 export const TICKET_MAP: Record<string, UserInfo> = {
   'ticket-superadmin-1': {
     userId: 'superadmin-001',
@@ -50,6 +71,9 @@ export const TICKET_MAP: Record<string, UserInfo> = {
 
 export const kpiIdMock = {
   resolveTicket: jest.fn<Promise<UserInfo | null>, [string]>(),
+  NotStudentError,
+  NotDiiaAuthError,
+  GraduateUserError,
 };
 
 export function resetKpiIdMock(): void {

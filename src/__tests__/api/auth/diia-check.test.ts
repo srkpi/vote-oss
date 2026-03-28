@@ -244,6 +244,62 @@ describe('GET /api/auth/diia/check', () => {
     expect(res.status).toBe(401);
   });
 
+  // ── Graduate student restriction ──────────────────────────────────────────
+
+  it('returns 403 when the Diia user belongs to a graduate group', async () => {
+    fetchMock
+      .mockResolvedValueOnce(makeCheckFinished())
+      .mockResolvedValueOnce(makeInternalAuthOk())
+      // GROUP field contains a graduate group (ф suffix → level 'g')
+      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
+
+    const req = makeCheckRequest();
+    const res = await GET(req);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('includes a descriptive message in the 403 for graduate users', async () => {
+    fetchMock
+      .mockResolvedValueOnce(makeCheckFinished())
+      .mockResolvedValueOnce(makeInternalAuthOk())
+      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'KV-11ф' }));
+
+    const req = makeCheckRequest();
+    const { body } = await parseJson<any>(await GET(req));
+
+    expect(body.message).toMatch(/graduate/i);
+  });
+
+  it('does not set auth cookies when a graduate Diia user is rejected', async () => {
+    fetchMock
+      .mockResolvedValueOnce(makeCheckFinished())
+      .mockResolvedValueOnce(makeInternalAuthOk())
+      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
+
+    const req = makeCheckRequest();
+    const res = await GET(req);
+
+    const setCookies = res.headers.getSetCookie?.() ?? [];
+    expect(setCookies.some((c) => c.startsWith(`${COOKIE_ACCESS}=`))).toBe(false);
+    expect(setCookies.some((c) => c.startsWith(`${COOKIE_REFRESH}=`))).toBe(false);
+  });
+
+  it('still issues a fire-and-forget logout before the graduate check returns 403', async () => {
+    fetchMock
+      .mockResolvedValueOnce(makeCheckFinished())
+      .mockResolvedValueOnce(makeInternalAuthOk())
+      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
+
+    const req = makeCheckRequest();
+    await GET(req);
+
+    const logoutCall = fetchMock.mock.calls.find(([url]: [string]) =>
+      String(url).includes('/api/auth/logout'),
+    );
+    expect(logoutCall).toBeDefined();
+  });
+
   // ── Happy path ────────────────────────────────────────────────────────────
 
   it('returns 200 with status=success for a valid student', async () => {
@@ -350,8 +406,8 @@ describe('GET /api/auth/diia/check', () => {
 
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledTimes(1);
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledWith(
-      expect.any(String), // accessJti
-      expect.any(String), // refreshJti
+      expect.any(String),
+      expect.any(String),
     );
   });
 

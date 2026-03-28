@@ -1,7 +1,7 @@
 import * as allure from 'allure-js-commons';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
-import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
+import { campusMock, MOCK_FACULTY_GROUPS, resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -115,11 +115,17 @@ describe('POST /api/elections — restriction validation', () => {
   });
 
   it('returns 400 when group not in any specified faculty', async () => {
+    campusMock.fetchFacultyGroups.mockResolvedValueOnce({
+      FEL: ['EL-91'],
+      FICE: ['KV-91'],
+    });
+
     const req = await makeAdminReq({
       ...validBody,
       restrictions: [
         { type: 'FACULTY', value: 'FEL' },
-        { type: 'GROUP', value: 'KV-91' }, // KV-91 is in FICE, not FEL
+        { type: 'GROUP', value: 'EL-91' },
+        { type: 'GROUP', value: 'KV-91' },
       ],
     });
     const { status, body } = await parseJson<any>(await POST(req));
@@ -253,7 +259,6 @@ describe('POST /api/elections — restriction validation', () => {
     mockElectionCreate();
     const res = await POST(req);
     expect(res.status).toBe(201);
-    // LEVEL_COURSE does not require campus API
     expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
   });
 
@@ -274,18 +279,6 @@ describe('POST /api/elections — restriction validation', () => {
       const req = await makeAdminReq({
         ...validBody,
         restrictions: [{ type: 'LEVEL_COURSE', value: `m${course}` }],
-      });
-      mockElectionCreate();
-      const res = await POST(req);
-      expect(res.status).toBe(201);
-    }
-  });
-
-  it('accepts all valid graduate courses', async () => {
-    for (const course of LEVEL_COURSE_GRADUATE_COURSES) {
-      const req = await makeAdminReq({
-        ...validBody,
-        restrictions: [{ type: 'LEVEL_COURSE', value: `g${course}` }],
       });
       mockElectionCreate();
       const res = await POST(req);
@@ -355,7 +348,6 @@ describe('POST /api/elections — restriction validation', () => {
     mockElectionCreate();
     const res = await POST(req);
     expect(res.status).toBe(201);
-    // Faculty was in restrictions, so campus API should have been called
     expect(campusMock.fetchFacultyGroups).toHaveBeenCalledTimes(1);
   });
 
@@ -370,7 +362,6 @@ describe('POST /api/elections — restriction validation', () => {
     mockElectionCreate();
     const res = await POST(req);
     expect(res.status).toBe(201);
-    // No faculty/group restrictions → campus API not called
     expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
   });
 
@@ -389,7 +380,6 @@ describe('POST /api/elections — restriction validation', () => {
       restrictions: [{ type: 'LEVEL_COURSE', value: 'z1' }],
     });
     const { body } = await parseJson<any>(await POST(req));
-    // Error should list valid values such as b1, m1, g1
     expect(body.message).toMatch(/b1/);
   });
 
@@ -404,5 +394,167 @@ describe('POST /api/elections — restriction validation', () => {
     mockElectionCreate();
     await POST(req);
     expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
+  });
+
+  // ── Graduate LEVEL_COURSE restriction (blocked) ──────────────────────────
+
+  it('returns 400 for all graduate LEVEL_COURSE values (g prefix)', async () => {
+    for (const course of LEVEL_COURSE_GRADUATE_COURSES) {
+      const req = await makeAdminReq({
+        ...validBody,
+        restrictions: [{ type: 'LEVEL_COURSE', value: `g${course}` }],
+      });
+      const { status, body } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/graduate/i);
+    }
+  });
+
+  it('returns 400 for a valid graduate course value (g1)', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'g1' }],
+    });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/graduate/i);
+  });
+
+  it('returns 400 when mixing valid non-graduate and graduate LEVEL_COURSE values', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'LEVEL_COURSE', value: 'b1' },
+        { type: 'LEVEL_COURSE', value: 'g1' }, // this should cause 400
+      ],
+    });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/graduate/i);
+  });
+
+  it('does not call campus API when graduate LEVEL_COURSE is rejected', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [{ type: 'LEVEL_COURSE', value: 'g2' }],
+    });
+    await POST(req);
+    expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
+  });
+
+  // ── Graduate GROUP restriction (blocked) ─────────────────────────────────
+
+  it('returns 400 when GROUP restriction contains a graduate group', async () => {
+    // Add a graduate group to the campus mock for this test
+    campusMock.fetchFacultyGroups.mockResolvedValueOnce({
+      ...MOCK_FACULTY_GROUPS,
+      FICE: [...(MOCK_FACULTY_GROUPS.FICE ?? []), 'KV-11ф'],
+    });
+
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'GROUP', value: 'KV-11ф' },
+      ],
+    });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/graduate/i);
+  });
+
+  it('error message for graduate GROUP includes the group name', async () => {
+    campusMock.fetchFacultyGroups.mockResolvedValueOnce({
+      ...MOCK_FACULTY_GROUPS,
+      FICE: [...(MOCK_FACULTY_GROUPS.FICE ?? []), 'KV-11ф'],
+    });
+
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'GROUP', value: 'KV-11ф' },
+      ],
+    });
+    const { body } = await parseJson<any>(await POST(req));
+    expect(body.message).toMatch(/KV-11ф/);
+  });
+
+  it('returns 400 for any group with ф suffix regardless of faculty', async () => {
+    campusMock.fetchFacultyGroups.mockResolvedValueOnce({
+      ...MOCK_FACULTY_GROUPS,
+      FEL: [...(MOCK_FACULTY_GROUPS.FEL ?? []), 'EL-11ф'],
+    });
+
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FEL' },
+        { type: 'GROUP', value: 'EL-11ф' },
+      ],
+    });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/graduate/i);
+  });
+
+  it('still accepts non-graduate groups after the graduate check is in place', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'GROUP', value: 'KV-91' }, // bachelor group, not graduate
+      ],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it('still accepts master groups as GROUP restrictions', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'НН ІМЗ' },
+        { type: 'GROUP', value: 'ІМ-41мн' },
+      ],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it('returns 400 when a selected faculty has no corresponding selected groups', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'FACULTY', value: 'FEL' },
+        { type: 'GROUP', value: 'KV-91' }, // KV-91 belongs to FICE, making FEL redundant
+      ],
+    });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/Redundant faculty restrictions.*FEL/i);
+  });
+
+  it('creates election with a shared group spanning multiple faculties without triggering redundant error', async () => {
+    campusMock.fetchFacultyGroups.mockResolvedValueOnce({
+      ...MOCK_FACULTY_GROUPS,
+      FICE: [...(MOCK_FACULTY_GROUPS.FICE ?? []), 'SHARED-11'],
+      FEL: [...(MOCK_FACULTY_GROUPS.FEL ?? []), 'SHARED-11'],
+    });
+
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'FACULTY', value: 'FEL' },
+        { type: 'GROUP', value: 'SHARED-11' },
+      ],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201); // Both FICE and FEL contain SHARED-11, so neither is redundant
   });
 });

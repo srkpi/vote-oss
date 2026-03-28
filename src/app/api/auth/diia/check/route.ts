@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth';
 import { KPI_AUTH_URL } from '@/lib/config/client';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
+import { parseGroupLevel } from '@/lib/group-utils';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
@@ -22,6 +23,8 @@ interface KpiUserData {
     STUDENT_ID?: string;
     NAME?: string;
     AUTH_METHOD?: string;
+    GROUP?: string;
+    FACULTY?: string;
     [key: string]: string | undefined;
   };
 }
@@ -45,14 +48,12 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *   get:
  *     summary: Poll Diia authentication status
  *     description: >
- *       Checks whether the user has scanned and approved the Diia QR code for
- *       the given requestId.  Returns `{ status: "processing" }` while waiting.
- *       When the user completes Diia verification, this endpoint:
- *         1. Exchanges the sessionId for KPI-ID session cookies.
- *         2. Fetches the authenticated user profile.
- *         3. Issues a new JWT access + refresh token pair via HTTP-only cookies.
- *         4. Revokes any pre-existing session for the browser that made this call.
- *       Returns `{ status: "success", userId, fullName, isAdmin }` on completion.
+ *       Checks whether the user has scanned and approved the Diia QR code.
+ *       Returns `{ status: "processing" }` while waiting. When the user
+ *       completes Diia verification this endpoint exchanges the sessionId for
+ *       KPI-ID session cookies, fetches the authenticated user profile, and
+ *       issues a new JWT access + refresh token pair via HTTP-only cookies.
+ *       Graduate (аспірант) users are rejected with 403.
  *     tags:
  *       - Auth
  *     parameters:
@@ -63,11 +64,13 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *           type: string
  *     responses:
  *       200:
- *         description: Status response
+ *         description: Status response (processing or success)
  *       400:
  *         description: Missing requestId
+ *       401:
+ *         description: Incomplete user data returned by provider
  *       403:
- *         description: Account is not a student
+ *         description: Account is not a student or is a graduate student
  *       500:
  *         description: Provider error
  */
@@ -86,7 +89,6 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-      // Treat non-OK as still processing (the requestId may no longer exist).
       return NextResponse.json({ status: 'processing' });
     }
 
@@ -182,13 +184,23 @@ export async function GET(req: NextRequest) {
     return Errors.forbidden('Platform is only available for students');
   }
 
+  // In production GROUP comes from the KPI API; mocked for development
+  const group = data.GROUP ?? 'IP-24';
+
+  // Graduate (аспірант) students are not permitted to use the platform
+  if (parseGroupLevel(group) === 'g') {
+    return Errors.forbidden('Platform is not available for graduate students');
+  }
+
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
 
+  const faculty = data.FACULTY ?? 'TEST';
+
   const tokenPayload: TokenPayload = {
     sub: studentId,
-    faculty: 'TEST',
-    group: 'IP-24',
+    faculty,
+    group,
     fullName,
     speciality: undefined,
     studyYear: undefined,

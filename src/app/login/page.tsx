@@ -243,7 +243,7 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="font-body text-muted-foreground bg-white px-3">
-                  Авторизація через Дія
+                  Авторизація через Дію
                 </span>
               </div>
             </div>

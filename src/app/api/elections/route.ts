@@ -19,6 +19,7 @@ import {
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
+import { parseGroupLevel } from '@/lib/group-utils';
 import { prisma } from '@/lib/prisma';
 import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
 import type {
@@ -365,6 +366,12 @@ export async function POST(req: NextRequest) {
         `Invalid level/course value "${r.value}". Must be one of: ${VALID_LEVEL_COURSES.join(', ')}`,
       );
     }
+    // Graduate-level courses (g prefix) are not permitted on this platform
+    if (r.value.startsWith('g')) {
+      return Errors.badRequest(
+        `Graduate-level course restrictions are not permitted. Value "${r.value}" targets graduate students.`,
+      );
+    }
   }
 
   // Validate FACULTY and GROUP values via campus API
@@ -384,6 +391,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (groupRestrictions.length > 0) {
+      const selectedGroupValues = groupRestrictions.map((r) => r.value);
+      const redundantFaculties = facultyRestrictions.filter((f) => {
+        const groupsInFaculty = facultyGroups[f.value] ?? [];
+        return !selectedGroupValues.some((g) => groupsInFaculty.includes(g));
+      });
+
+      if (redundantFaculties.length > 0) {
+        const names = redundantFaculties.map((f) => f.value).join(', ');
+        return Errors.badRequest(
+          `Redundant faculty restrictions: no selected groups belong to ${names}`,
+        );
+      }
+    }
+
     for (const r of groupRestrictions) {
       const validFaculties = facultyRestrictions.map((f) => f.value);
       const groupExistsInFaculty = validFaculties.some((f) =>
@@ -391,6 +413,12 @@ export async function POST(req: NextRequest) {
       );
       if (!groupExistsInFaculty) {
         return Errors.badRequest(`Group "${r.value}" does not exist in the specified faculties`);
+      }
+      // Graduate groups are not permitted
+      if (parseGroupLevel(r.value) === 'g') {
+        return Errors.badRequest(
+          `Group "${r.value}" is a graduate group. Elections targeting graduate students are not permitted.`,
+        );
       }
     }
   }
