@@ -117,7 +117,7 @@ export const LEVEL_COURSE_LEVEL_LABELS: Record<LevelCourseLevel, string> = {
 };
 
 export const RESTRICTION_TYPE_LABELS: Record<string, string> = {
-  FACULTY: 'Факультет',
+  FACULTY: 'Підрозділ',
   GROUP: 'Група',
   STUDY_YEAR: 'Рік навчання',
   STUDY_FORM: 'Форма навчання',

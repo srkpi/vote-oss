@@ -399,10 +399,10 @@ export async function POST(req: NextRequest) {
       if (!groupExistsInFaculty) {
         return Errors.badRequest(`Group "${r.value}" does not exist in the specified faculties`);
       }
-      // Graduate (аспірант) groups are not permitted
+      // Graduate groups are not permitted
       if (parseGroupLevel(r.value) === 'g') {
         return Errors.badRequest(
-          `Group "${r.value}" is a graduate (аспірант) group. Elections targeting graduate students are not permitted.`,
+          `Group "${r.value}" is a graduate group. Elections targeting graduate students are not permitted.`,
         );
       }
     }
