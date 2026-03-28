@@ -71,7 +71,9 @@ export async function POST(req: NextRequest) {
     studyForm: user.studyForm,
   };
 
-  const adminRecord = await prisma.admin.findUnique({ where: { user_id: user.sub } });
+  const adminRecord = await prisma.admin.findUnique({
+    where: { user_id: user.sub, deleted_at: null },
+  });
   const isAdmin = !!adminRecord;
 
   if (isAdmin) {
