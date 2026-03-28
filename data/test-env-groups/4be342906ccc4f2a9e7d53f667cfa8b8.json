@@ -1,0 +1,1 @@
+{"id":"4be342906ccc4f2a9e7d53f667cfa8b8","fullName":"src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] does not call prisma.admin.findMany (graph is built from cache)","name":"does not call prisma.admin.findMany (graph is built from cache)","status":"passed","testResultsByEnv":{"default":"298059dea2a49f18aa6b94c7374e0f37"}}
