@@ -1,1 +1,1 @@
-{"id":"d10ba5fe67bbb50401a53783d1ab9e37","fullName":"src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/categories/[id] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"c27fbf929add629bb0d42a273bb1f750"}}
+{"id":"d10ba5fe67bbb50401a53783d1ab9e37","fullName":"src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/categories/[id] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"39b3ebe6458daa097a0b8cdbcfca9a29"}}

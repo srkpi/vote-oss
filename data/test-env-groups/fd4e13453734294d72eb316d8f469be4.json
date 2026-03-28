@@ -1,0 +1,1 @@
+{"id":"fd4e13453734294d72eb316d8f469be4","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id does not set auth cookies when a graduate user is rejected","name":"does not set auth cookies when a graduate user is rejected","status":"passed","testResultsByEnv":{"default":"530c58733e604860099104753d3a77f2"}}

@@ -1,0 +1,1 @@
+{"id":"71e4626bb8d96aeabd5d6c3cbcf38f0f","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check still issues a fire-and-forget logout before the graduate check returns 403","name":"still issues a fire-and-forget logout before the graduate check returns 403","status":"passed","testResultsByEnv":{"default":"28a3ea99231fd250269212a032d0c0e8"}}

@@ -1,0 +1,1 @@
+{"id":"74b8dd011200094369d6cf493f077217","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id does not call persistTokenPair when a graduate user is rejected","name":"does not call persistTokenPair when a graduate user is rejected","status":"passed","testResultsByEnv":{"default":"8354b2867f9e5323d2af2840b5c22462"}}
