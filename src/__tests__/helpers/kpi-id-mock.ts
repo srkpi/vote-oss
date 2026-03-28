@@ -1,31 +1,37 @@
 import type { UserInfo } from '@/types/auth';
 
-export class ResolveTicketError extends Error {
+export class ResolveUserDataError extends Error {
   constructor(message: string) {
     super(message);
     this.name = new.target.name;
   }
 }
 
-export class InvalidTicketError extends ResolveTicketError {
+export class InvalidTicketError extends ResolveUserDataError {
   constructor(message = 'Invalid or expired ticketId') {
     super(message);
   }
 }
 
-export class NotStudentError extends ResolveTicketError {
+export class InvalidUserDataError extends ResolveUserDataError {
+  constructor(message = 'Invalid user data retireved from KPI ID') {
+    super(message);
+  }
+}
+
+export class NotStudentError extends ResolveUserDataError {
   constructor(message = 'Platform is only available for students') {
     super(message);
   }
 }
 
-export class NotDiiaAuthError extends ResolveTicketError {
+export class NotDiiaAuthError extends ResolveUserDataError {
   constructor(message = 'Authentication must be performed through Diia') {
     super(message);
   }
 }
 
-export class GraduateUserError extends ResolveTicketError {
+export class GraduateUserError extends ResolveUserDataError {
   constructor(message = 'Platform is not available for graduate students') {
     super(message);
   }
@@ -81,8 +87,9 @@ export const TICKET_MAP: Record<string, UserInfo> = {
 
 export const kpiIdMock = {
   resolveTicket: jest.fn<Promise<UserInfo>, [string]>(),
-  ResolveTicketError,
+  ResolveUserDataError,
   InvalidTicketError,
+  InvalidUserDataError,
   NotStudentError,
   NotDiiaAuthError,
   GraduateUserError,

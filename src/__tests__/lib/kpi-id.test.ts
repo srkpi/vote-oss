@@ -3,6 +3,7 @@ import * as allure from 'allure-js-commons';
 import {
   GraduateUserError,
   InvalidTicketError,
+  InvalidUserDataError,
   NotDiiaAuthError,
   NotStudentError,
   resolveTicket,
@@ -83,7 +84,7 @@ describe('kpi-id', () => {
       await expect(resolveTicket('ticket')).rejects.toThrow(InvalidTicketError);
     });
 
-    it('throws InvalidTicketError if required fields are missing', async () => {
+    it('throws InvalidUserDataError if required fields are missing', async () => {
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -95,7 +96,7 @@ describe('kpi-id', () => {
         }),
       });
 
-      await expect(resolveTicket('ticket')).rejects.toThrow(InvalidTicketError);
+      await expect(resolveTicket('ticket')).rejects.toThrow(InvalidUserDataError);
     });
 
     it('throws an error if fetch fails', async () => {

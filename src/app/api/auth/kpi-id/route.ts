@@ -5,7 +5,12 @@ import { requireAuth } from '@/lib/auth';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
-import { InvalidTicketError, resolveTicket, ResolveTicketError } from '@/lib/kpi-id';
+import {
+  InvalidTicketError,
+  InvalidUserDataError,
+  resolveTicket,
+  ResolveUserDataError,
+} from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
@@ -90,10 +95,10 @@ export async function POST(req: NextRequest) {
   try {
     userInfo = await resolveTicket(ticketId);
   } catch (err) {
-    if (err instanceof InvalidTicketError) {
+    if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
       return Errors.unauthorized(err.message);
     }
-    if (err instanceof ResolveTicketError) {
+    if (err instanceof ResolveUserDataError) {
       return Errors.forbidden(err.message);
     }
     console.error('[auth/kpi-id] resolveTicket error:', err);

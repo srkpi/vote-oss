@@ -47,7 +47,7 @@ function makeUserDataOk(overrides: Record<string, unknown> = {}) {
       data: {
         STUDENT_ID: MOCK_STUDENT_ID,
         NAME: MOCK_FULL_NAME,
-        AUTH_METHOD: 'diia',
+        AUTH_METHOD: 'DIIA',
         ...overrides,
       },
     }),
