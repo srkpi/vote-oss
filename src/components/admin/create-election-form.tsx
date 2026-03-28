@@ -207,6 +207,17 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         'Жодна група не відповідає вибраним обмеженням. Змініть критерії або приберіть деякі фільтри.';
     }
 
+    if (selectedFaculties.length > 0 && selectedGroups.length > 0 && !groupsLoading) {
+      const redundantFaculties = selectedFaculties.filter((faculty) => {
+        const groupsInFaculty = facultyGroups[faculty] || [];
+        return !selectedGroups.some((g) => groupsInFaculty.includes(g));
+      });
+
+      if (redundantFaculties.length > 0) {
+        errors.faculties = `Зайві підрозділи (не містять обраних груп): ${redundantFaculties.join(', ')}`;
+      }
+    }
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };

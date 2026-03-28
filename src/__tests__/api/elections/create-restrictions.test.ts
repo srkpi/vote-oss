@@ -115,11 +115,17 @@ describe('POST /api/elections — restriction validation', () => {
   });
 
   it('returns 400 when group not in any specified faculty', async () => {
+    campusMock.fetchFacultyGroups.mockResolvedValueOnce({
+      FEL: ['EL-91'],
+      FICE: ['KV-91'],
+    });
+
     const req = await makeAdminReq({
       ...validBody,
       restrictions: [
         { type: 'FACULTY', value: 'FEL' },
-        { type: 'GROUP', value: 'KV-91' }, // KV-91 is in FICE, not FEL
+        { type: 'GROUP', value: 'EL-91' },
+        { type: 'GROUP', value: 'KV-91' },
       ],
     });
     const { status, body } = await parseJson<any>(await POST(req));
@@ -516,5 +522,39 @@ describe('POST /api/elections — restriction validation', () => {
     mockElectionCreate();
     const res = await POST(req);
     expect(res.status).toBe(201);
+  });
+
+  it('returns 400 when a selected faculty has no corresponding selected groups', async () => {
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'FACULTY', value: 'FEL' },
+        { type: 'GROUP', value: 'KV-91' }, // KV-91 belongs to FICE, making FEL redundant
+      ],
+    });
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/Redundant faculty restrictions.*FEL/i);
+  });
+
+  it('creates election with a shared group spanning multiple faculties without triggering redundant error', async () => {
+    campusMock.fetchFacultyGroups.mockResolvedValueOnce({
+      ...MOCK_FACULTY_GROUPS,
+      FICE: [...(MOCK_FACULTY_GROUPS.FICE ?? []), 'SHARED-11'],
+      FEL: [...(MOCK_FACULTY_GROUPS.FEL ?? []), 'SHARED-11'],
+    });
+
+    const req = await makeAdminReq({
+      ...validBody,
+      restrictions: [
+        { type: 'FACULTY', value: 'FICE' },
+        { type: 'FACULTY', value: 'FEL' },
+        { type: 'GROUP', value: 'SHARED-11' },
+      ],
+    });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201); // Both FICE and FEL contain SHARED-11, so neither is redundant
   });
 });

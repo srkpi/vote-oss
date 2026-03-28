@@ -391,6 +391,21 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (groupRestrictions.length > 0) {
+      const selectedGroupValues = groupRestrictions.map((r) => r.value);
+      const redundantFaculties = facultyRestrictions.filter((f) => {
+        const groupsInFaculty = facultyGroups[f.value] ?? [];
+        return !selectedGroupValues.some((g) => groupsInFaculty.includes(g));
+      });
+
+      if (redundantFaculties.length > 0) {
+        const names = redundantFaculties.map((f) => f.value).join(', ');
+        return Errors.badRequest(
+          `Redundant faculty restrictions: no selected groups belong to ${names}`,
+        );
+      }
+    }
+
     for (const r of groupRestrictions) {
       const validFaculties = facultyRestrictions.map((f) => f.value);
       const groupExistsInFaculty = validFaculties.some((f) =>
