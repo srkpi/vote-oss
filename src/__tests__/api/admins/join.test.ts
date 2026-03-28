@@ -9,7 +9,7 @@ import {
   USER_PAYLOAD,
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { generateBase64Token, hashToken } from '@/lib/crypto';
 
@@ -127,8 +127,7 @@ describe('POST /api/admins/join', () => {
 
     const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
     const res = await POST(req);
-    const { status } = await parseJson<any>(res);
-    expect(status).toBe(201);
+    expect(res.status).toBe(201);
   });
 
   it('looks up invite token using SHA-256 hash of provided raw token', async () => {
@@ -176,8 +175,7 @@ describe('POST /api/admins/join', () => {
 
     const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
     const res = await POST(req);
-    const { status } = await parseJson<any>(res);
-    expect(status).toBe(201);
+    expect(res.status).toBe(201);
   });
 
   it('uses admin.update (not admin.create) when a soft-deleted admin rejoins', async () => {

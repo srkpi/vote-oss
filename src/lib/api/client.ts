@@ -80,10 +80,7 @@ export function createApiClient(fetcher: Fetcher) {
           }),
       },
       join: (token: string) =>
-        fetcher<{
-          manageAdmins: boolean;
-          restrictedToFaculty: boolean;
-        }>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
+        fetcher<void>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
     },
 
     faq: {

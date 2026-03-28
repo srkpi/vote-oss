@@ -36,15 +36,6 @@ import { prisma } from '@/lib/prisma';
  *     responses:
  *       201:
  *         description: Admin record created or reactivated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 manageAdmins:
- *                   type: boolean
- *                 restrictedToFaculty:
- *                   type: boolean
  *       400:
  *         description: Missing token, expired token, or token usage limit reached
  *       401:
@@ -148,11 +139,5 @@ export async function POST(req: NextRequest) {
 
   await invalidateAdmins();
 
-  return NextResponse.json(
-    {
-      manageAdmins: inviteToken.manage_admins,
-      restrictedToFaculty: inviteToken.restricted_to_faculty,
-    },
-    { status: 201 },
-  );
+  return new NextResponse(null, { status: 201 });
 }
