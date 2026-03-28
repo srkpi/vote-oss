@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
-import { CreateElectionForm } from '@/components/admin/create-election-form';
 import { PageHeader } from '@/components/common/page-header';
+import { CreateElectionForm } from '@/components/elections/admin/create-election-form';
 import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {

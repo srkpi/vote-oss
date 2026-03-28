@@ -4,7 +4,7 @@ import { LogOut, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import { AdminTable } from '@/components/admin/admin-table';
-import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
+import { InviteAdminDialog } from '@/components/admin/invite/invite-admin-dialog';
 import { LeaveAdminDialog } from '@/components/admin/leave-admin-dialog';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
