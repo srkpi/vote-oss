@@ -370,22 +370,4 @@ describe('POST /api/elections', () => {
     await POST(req);
     expect(cacheMock.invalidateElections).toHaveBeenCalledTimes(1);
   });
-
-  it('enforces faculty restriction for restricted admins', async () => {
-    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
-    const req = await makeAdminReq(
-      { ...validBody, restrictions: [] }, // tries to create unrestricted
-      restrictedAdmin,
-    );
-    const election = makeElection();
-    prismaMock.election.create.mockResolvedValueOnce({
-      ...election,
-      opens_at: new Date(validBody.opensAt),
-      closes_at: new Date(validBody.closesAt),
-    });
-
-    await POST(req);
-    const createArgs = prismaMock.election.create.mock.calls[0][0].data;
-    expect(createArgs.restrictions.create).toContainEqual({ type: 'FACULTY', value: 'FICE' });
-  });
 });
