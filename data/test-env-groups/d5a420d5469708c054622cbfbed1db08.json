@@ -1,0 +1,1 @@
+{"id":"d5a420d5469708c054622cbfbed1db08","fullName":"src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] deletes ALL invite tokens when manage_admins changes (true → false)","name":"deletes ALL invite tokens when manage_admins changes (true → false)","status":"passed","testResultsByEnv":{"default":"557b5b3feac3e26f6ac43942d0cee535"}}
