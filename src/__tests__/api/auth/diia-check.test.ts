@@ -1,6 +1,5 @@
 import * as allure from 'allure-js-commons';
 
-import { ADMIN_RECORD } from '@/__tests__/helpers/fixtures';
 import { makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
@@ -13,7 +12,7 @@ jest.mock('@/lib/token-store', () => tokenStoreMock);
 const fetchMock = jest.fn();
 global.fetch = fetchMock;
 
-import { GET } from '@/app/api/auth/diia/check/route';
+import { POST } from '@/app/api/auth/diia/check/route';
 
 const MOCK_REQUEST_ID = 'req-uuid-001';
 const MOCK_SESSION_ID = 'session-uuid-001';
@@ -72,9 +71,9 @@ function mockFullHappyPath(userDataOverrides: Record<string, unknown> = {}) {
 
 function makeCheckRequest(requestId = MOCK_REQUEST_ID) {
   return makeRequest({
-    method: 'GET',
-    url: `http://localhost/api/auth/diia/check?requestId=${requestId}`,
-    searchParams: { requestId },
+    method: 'POST',
+    url: 'http://localhost/api/auth/diia/check',
+    body: { requestId },
   });
 }
 
@@ -95,7 +94,7 @@ describe('GET /api/auth/diia/check', () => {
 
   it('returns 400 when requestId query param is absent', async () => {
     const req = makeRequest({ method: 'GET', url: 'http://localhost/api/auth/diia/check' });
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(400);
   });
@@ -106,7 +105,7 @@ describe('GET /api/auth/diia/check', () => {
     fetchMock.mockResolvedValueOnce(makeCheckProcessing());
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
@@ -117,7 +116,7 @@ describe('GET /api/auth/diia/check', () => {
     fetchMock.mockResolvedValueOnce(new Response('gone', { status: 410 }));
 
     const req = makeCheckRequest();
-    const { body } = await parseJson<any>(await GET(req));
+    const { body } = await parseJson<any>(await POST(req));
 
     expect(body.status).toBe('processing');
   });
@@ -127,7 +126,7 @@ describe('GET /api/auth/diia/check', () => {
     fetchMock.mockRejectedValueOnce(new Error('ECONNREFUSED'));
 
     const req = makeCheckRequest();
-    const { body } = await parseJson<any>(await GET(req));
+    const { body } = await parseJson<any>(await POST(req));
 
     expect(body.status).toBe('processing');
     consoleSpy.mockRestore();
@@ -142,7 +141,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(makeInternalAuthError(401));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(500);
     consoleSpy.mockRestore();
@@ -155,7 +154,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockRejectedValueOnce(new Error('socket hang up'));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(500);
     consoleSpy.mockRestore();
@@ -168,7 +167,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(500);
     consoleSpy.mockRestore();
@@ -184,7 +183,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(new Response('Server Error', { status: 500 }));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(500);
     consoleSpy.mockRestore();
@@ -198,7 +197,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockRejectedValueOnce(new Error('timeout'));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(500);
     consoleSpy.mockRestore();
@@ -214,7 +213,7 @@ describe('GET /api/auth/diia/check', () => {
       );
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(500);
     consoleSpy.mockRestore();
@@ -227,7 +226,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(makeUserDataOk({ STUDENT_ID: undefined }));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(401);
   });
@@ -239,7 +238,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(makeUserDataOk({ NAME: undefined }));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(401);
   });
@@ -254,7 +253,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     expect(res.status).toBe(403);
   });
@@ -266,7 +265,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'KV-11ф' }));
 
     const req = makeCheckRequest();
-    const { body } = await parseJson<any>(await GET(req));
+    const { body } = await parseJson<any>(await POST(req));
 
     expect(body.message).toMatch(/graduate/i);
   });
@@ -278,7 +277,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     const setCookies = res.headers.getSetCookie?.() ?? [];
     expect(setCookies.some((c) => c.startsWith(`${COOKIE_ACCESS}=`))).toBe(false);
@@ -292,7 +291,7 @@ describe('GET /api/auth/diia/check', () => {
       .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
 
     const req = makeCheckRequest();
-    await GET(req);
+    await POST(req);
 
     const logoutCall = fetchMock.mock.calls.find(([url]: [string]) =>
       String(url).includes('/api/auth/logout'),
@@ -307,42 +306,11 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
     expect(body.status).toBe('success');
-  });
-
-  it('response includes userId and fullName', async () => {
-    mockFullHappyPath();
-    prismaMock.admin.findUnique.mockResolvedValueOnce(null);
-
-    const req = makeCheckRequest();
-    const { body } = await parseJson<any>(await GET(req));
-
-    expect(body.userId).toBe(MOCK_STUDENT_ID);
-    expect(body.fullName).toBe(MOCK_FULL_NAME);
-  });
-
-  it('returns isAdmin=false when user is not in the admins table', async () => {
-    mockFullHappyPath();
-    prismaMock.admin.findUnique.mockResolvedValueOnce(null);
-
-    const req = makeCheckRequest();
-    const { body } = await parseJson<any>(await GET(req));
-
-    expect(body.isAdmin).toBe(false);
-  });
-
-  it('returns isAdmin=true when user is found in the admins table', async () => {
-    mockFullHappyPath();
-    prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-
-    const req = makeCheckRequest();
-    const { body } = await parseJson<any>(await GET(req));
-
-    expect(body.isAdmin).toBe(true);
   });
 
   it('queries the admins table with the resolved studentId', async () => {
@@ -350,7 +318,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    await GET(req);
+    await POST(req);
 
     expect(prismaMock.admin.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { user_id: MOCK_STUDENT_ID, deleted_at: null } }),
@@ -364,7 +332,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     const setCookies = res.headers.getSetCookie?.() ?? [];
     const hasAccess = setCookies.some((c) => c.startsWith(`${COOKIE_ACCESS}=`));
@@ -376,7 +344,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     const setCookies = res.headers.getSetCookie?.() ?? [];
     const hasRefresh = setCookies.some((c) => c.startsWith(`${COOKIE_REFRESH}=`));
@@ -388,7 +356,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    const res = await GET(req);
+    const res = await POST(req);
 
     const setCookies = res.headers.getSetCookie?.() ?? [];
     const accessCookie = setCookies.find((c) => c.startsWith(`${COOKIE_ACCESS}=`));
@@ -402,7 +370,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    await GET(req);
+    await POST(req);
 
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledTimes(1);
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledWith(
@@ -420,11 +388,11 @@ describe('GET /api/auth/diia/check', () => {
 
     const { access } = await makeTokenPair(USER_PAYLOAD);
     const req = makeAuthRequest(access.token, {
-      method: 'GET',
-      url: `http://localhost/api/auth/diia/check?requestId=${MOCK_REQUEST_ID}`,
-      searchParams: { requestId: MOCK_REQUEST_ID },
+      method: 'POST',
+      url: 'http://localhost/api/auth/diia/check',
+      body: { requestId: MOCK_REQUEST_ID },
     });
-    await GET(req);
+    await POST(req);
 
     expect(tokenStoreMock.revokeByAccessJti).toHaveBeenCalledWith(access.jti, expect.any(Number));
   });
@@ -434,7 +402,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    await GET(req);
+    await POST(req);
 
     expect(tokenStoreMock.revokeByAccessJti).not.toHaveBeenCalled();
   });
@@ -446,11 +414,11 @@ describe('GET /api/auth/diia/check', () => {
 
     const { access } = await makeTokenPair(USER_PAYLOAD);
     const req = makeAuthRequest(access.token, {
-      method: 'GET',
-      url: `http://localhost/api/auth/diia/check?requestId=${MOCK_REQUEST_ID}`,
-      searchParams: { requestId: MOCK_REQUEST_ID },
+      method: 'POST',
+      url: 'http://localhost/api/auth/diia/check',
+      body: { requestId: MOCK_REQUEST_ID },
     });
-    await GET(req);
+    await POST(req);
 
     expect(tokenStoreMock.revokeByAccessJti).not.toHaveBeenCalled();
   });
@@ -462,7 +430,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    await GET(req);
+    await POST(req);
 
     const logoutCall = fetchMock.mock.calls.find(([url]: [string]) =>
       String(url).includes('/api/auth/logout'),
@@ -477,7 +445,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest('my-specific-request-id');
-    await GET(req);
+    await POST(req);
 
     const firstCallUrl: string = fetchMock.mock.calls[0][0];
     expect(firstCallUrl).toContain('requestId=my-specific-request-id');

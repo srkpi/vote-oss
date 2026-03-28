@@ -16,6 +16,20 @@ export interface TicketUserInfo {
   traceId: string;
 }
 
+export interface DiiaKpiIdResponse {
+  deepLink: string;
+  pageLink: string;
+  requestId: string;
+  createdAt: string;
+}
+
+export interface DiiaInitResponse {
+  deepLink: string;
+  requestId: string;
+  qrCode: string;
+  expiresAt: string;
+}
+
 export interface TokenPayload {
   sub: string;
   faculty: string;

@@ -1,6 +1,6 @@
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
-import type { UserInfo } from '@/types/auth';
+import type { DiiaInitResponse } from '@/types/auth';
 import type { BallotResponse, BallotsResponse } from '@/types/ballot';
 import type {
   CreateElectionRequest,
@@ -24,7 +24,13 @@ export function createApiClient(fetcher: Fetcher) {
   return {
     auth: {
       loginWithTicket: (ticketId: string) =>
-        fetcher<UserInfo>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
+        fetcher<void>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
+      diiaInit: () => fetcher<DiiaInitResponse>('/auth/diia/init', { method: 'POST' }),
+      diiaCheck: (requestId: string) =>
+        fetcher<{ status: 'success' | 'processing' }>('/auth/diia/check', {
+          method: 'POST',
+          body: JSON.stringify({ requestId }),
+        }),
       refresh: () => fetcher<void>('/auth/refresh', { method: 'POST' }),
       logout: () => fetcher<void>('/auth/logout', { method: 'POST' }),
     },

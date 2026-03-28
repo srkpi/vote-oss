@@ -6,13 +6,7 @@ import { KPI_AUTH_URL } from '@/lib/config/client';
 import { DIIA_LINK_TTL_MS } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
-
-interface DiiaAppLinkResponse {
-  deepLink: string;
-  pageLink: string;
-  requestId: string;
-  createdAt: string;
-}
+import type { DiiaKpiIdResponse } from '@/types/auth';
 
 /**
  * @swagger
@@ -66,7 +60,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let linkData: DiiaAppLinkResponse;
+  let linkData: DiiaKpiIdResponse;
   try {
     const url = new URL(`${KPI_AUTH_URL}/api/diia/app-link`);
     const res = await fetch(url.toString(), {
@@ -79,7 +73,7 @@ export async function POST(req: NextRequest) {
       return Errors.internal('Failed to get DIIA link from provider');
     }
 
-    linkData = (await res.json()) as DiiaAppLinkResponse;
+    linkData = (await res.json()) as DiiaKpiIdResponse;
   } catch (err) {
     console.error('[diia/init] fetch error:', err);
     return Errors.internal('Failed to contact auth provider');

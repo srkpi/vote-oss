@@ -44,30 +44,6 @@ import type { TokenPayload } from '@/types/auth';
  *             description: HTTP-only access and refresh token cookies
  *             schema:
  *               type: string
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 userId:
- *                   type: string
- *                 fullName:
- *                   type: string
- *                 faculty:
- *                   type: string
- *                 group:
- *                   type: string
- *                 speciality:
- *                   type: string
- *                   nullable: true
- *                 studyYear:
- *                   type: string
- *                   nullable: true
- *                 studyForm:
- *                   type: string
- *                   nullable: true
- *                 isAdmin:
- *                   type: boolean
  *       400:
  *         description: Missing or invalid ticketId
  *       401:
@@ -152,19 +128,7 @@ export async function POST(req: NextRequest) {
 
   await persistTokenPair(accessJti, refreshJti);
 
-  const response = NextResponse.json(
-    {
-      userId: userInfo.userId,
-      fullName: userInfo.fullName,
-      faculty: userInfo.faculty,
-      group: userInfo.group,
-      speciality: userInfo.speciality,
-      studyYear: userInfo.studyYear,
-      studyForm: userInfo.studyForm,
-      isAdmin,
-    },
-    { status: 200 },
-  );
+  const response = new NextResponse(null, { status: 200 });
 
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));

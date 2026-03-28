@@ -6,8 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { DiiaLoginButton } from '@/components/auth/diia-login-button';
+import { api } from '@/lib/api/browser';
 import { DIIA_LINK_TTL_MS, DIIA_POLL_INTERVAL_MS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import type { DiiaInitResponse } from '@/types/auth';
 
 interface TimerDisplayProps {
   expiresAt: number;
@@ -108,13 +110,6 @@ TimerDisplay.displayName = 'TimerDisplay';
 
 type Phase = 'idle' | 'loading' | 'waiting' | 'success' | 'error';
 
-interface InitData {
-  deepLink: string;
-  requestId: string;
-  qrCode: string;
-  expiresAt: string;
-}
-
 interface DiiaLoginProps {
   fullWidth?: boolean;
   className?: string;
@@ -126,7 +121,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
 
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('idle');
-  const [initData, setInitData] = useState<InitData | null>(null);
+  const [initData, setInitData] = useState<DiiaInitResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -143,18 +138,14 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
   const startPolling = useCallback(() => {
     stopPoll();
     pollTimerRef.current = setInterval(async () => {
-      const rid = requestIdRef.current;
-      if (!rid) return;
+      const requestId = requestIdRef.current;
+      if (!requestId) return;
 
       try {
-        const res = await fetch(`/api/auth/diia/check?requestId=${encodeURIComponent(rid)}`, {
-          credentials: 'include',
-        });
-        if (!res.ok) return;
+        const res = await api.auth.diiaCheck(requestId);
+        if (!res.success) return;
 
-        const result = (await res.json()) as { status: string };
-
-        if (result.status === 'success') {
+        if (res.data.status === 'success') {
           stopPoll();
           setPhase('success');
           setTimeout(() => {
@@ -177,19 +168,13 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/auth/diia/init', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message ?? `HTTP ${res.status}`);
+      const res = await api.auth.diiaInit();
+      if (!res.success) {
+        throw new Error(res.error);
       }
 
-      const data = (await res.json()) as InitData;
-      requestIdRef.current = data.requestId;
-      setInitData(data);
+      requestIdRef.current = res.data.requestId;
+      setInitData(res.data);
       setPhase('waiting');
       startPolling();
     } catch (err) {

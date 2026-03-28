@@ -45,7 +45,7 @@ function extractCookieValues(setCookieHeaders: string[]): string {
 /**
  * @swagger
  * /api/auth/diia/check:
- *   get:
+ *   post:
  *     summary: Poll Diia authentication status
  *     description: >
  *       Checks whether the user has scanned and approved the Diia QR code.
@@ -56,15 +56,28 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *       Graduate (аспірант) users are rejected with 403.
  *     tags:
  *       - Auth
- *     parameters:
- *       - in: query
- *         name: requestId
- *         required: true
- *         schema:
- *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - requestId
+ *             properties:
+ *               requestId:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Status response (processing or success)
+ *         description: Status response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success, processing]
  *       400:
  *         description: Missing requestId
  *       401:
@@ -74,8 +87,15 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *       500:
  *         description: Provider error
  */
-export async function GET(req: NextRequest) {
-  const requestId = req.nextUrl.searchParams.get('requestId');
+export async function POST(req: NextRequest) {
+  let body: { requestId?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return Errors.badRequest('Invalid JSON body');
+  }
+
+  const { requestId } = body;
   if (!requestId) return Errors.badRequest('requestId is required');
 
   let checkData: CheckResponse;
@@ -223,12 +243,7 @@ export async function GET(req: NextRequest) {
 
   await persistTokenPair(accessJti, refreshJti);
 
-  const response = NextResponse.json({
-    status: 'success',
-    userId: studentId,
-    fullName,
-    isAdmin,
-  });
+  const response = NextResponse.json({ status: 'success' });
 
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));
