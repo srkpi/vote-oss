@@ -214,18 +214,6 @@ describe('POST /api/elections — restriction validation', () => {
     expect(res.status).toBe(201);
   });
 
-  it('forces FACULTY restriction for faculty-restricted admin', async () => {
-    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
-    const req = await makeAdminReq({ ...validBody, restrictions: [] }, restrictedAdmin);
-    mockElectionCreate();
-    await POST(req);
-
-    const createData = prismaMock.election.create.mock.calls[0][0].data;
-    expect(createData.restrictions.create).toContainEqual(
-      expect.objectContaining({ type: 'FACULTY', value: 'FICE' }),
-    );
-  });
-
   it('returns 500 when campus API is unavailable during validation', async () => {
     campusMock.fetchFacultyGroups.mockRejectedValueOnce(new Error('campus down'));
     const req = await makeAdminReq({
@@ -244,6 +232,140 @@ describe('POST /api/elections — restriction validation', () => {
         { type: 'GROUP', value: 'ФТ-51' },
       ],
     });
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  // ── Faculty-restricted admin enforcement ─────────────────────────────────
+
+  it('creates election when restricted admin provides correct FACULTY restriction', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq(
+      {
+        ...validBody,
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      },
+      restrictedAdmin,
+    );
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it('stores exactly the restrictions sent by a restricted admin (no auto-append)', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq(
+      {
+        ...validBody,
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      },
+      restrictedAdmin,
+    );
+    mockElectionCreate();
+    await POST(req);
+
+    const createData = prismaMock.election.create.mock.calls[0][0].data;
+    const facultyRestrictions = createData.restrictions.create.filter(
+      (r: { type: string }) => r.type === 'FACULTY',
+    );
+    expect(facultyRestrictions).toHaveLength(1);
+    expect(facultyRestrictions[0].value).toBe('FICE');
+  });
+
+  it('returns 400 when faculty-restricted admin omits FACULTY restriction', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq({ ...validBody, restrictions: [] }, restrictedAdmin);
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/FICE/);
+  });
+
+  it('returns 400 when faculty-restricted admin targets a different faculty', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq(
+      {
+        ...validBody,
+        restrictions: [{ type: 'FACULTY', value: 'FEL' }],
+      },
+      restrictedAdmin,
+    );
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/FICE/);
+  });
+
+  it('returns 400 when faculty-restricted admin includes their own faculty plus another', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq(
+      {
+        ...validBody,
+        restrictions: [
+          { type: 'FACULTY', value: 'FICE' },
+          { type: 'FACULTY', value: 'FEL' },
+        ],
+      },
+      restrictedAdmin,
+    );
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/FICE/);
+  });
+
+  it('returns 400 when faculty-restricted admin sends no restrictions at all', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    // omit restrictions key entirely
+    const req = await makeAdminReq({ ...validBody }, restrictedAdmin);
+    const { status } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+  });
+
+  it('allows faculty-restricted admin to add GROUP restriction within their faculty', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq(
+      {
+        ...validBody,
+        restrictions: [
+          { type: 'FACULTY', value: 'FICE' },
+          { type: 'GROUP', value: 'KV-91' },
+        ],
+      },
+      restrictedAdmin,
+    );
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it('allows faculty-restricted admin to combine their FACULTY restriction with STUDY_FORM', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq(
+      {
+        ...validBody,
+        restrictions: [
+          { type: 'FACULTY', value: 'FICE' },
+          { type: 'STUDY_FORM', value: 'FullTime' },
+        ],
+      },
+      restrictedAdmin,
+    );
+    mockElectionCreate();
+    const res = await POST(req);
+    expect(res.status).toBe(201);
+  });
+
+  it('allows faculty-restricted admin to combine their FACULTY restriction with LEVEL_COURSE', async () => {
+    const restrictedAdmin = { ...ADMIN_RECORD, restricted_to_faculty: true, faculty: 'FICE' };
+    const req = await makeAdminReq(
+      {
+        ...validBody,
+        restrictions: [
+          { type: 'FACULTY', value: 'FICE' },
+          { type: 'LEVEL_COURSE', value: 'b2' },
+        ],
+      },
+      restrictedAdmin,
+    );
     mockElectionCreate();
     const res = await POST(req);
     expect(res.status).toBe(201);

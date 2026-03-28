@@ -174,8 +174,9 @@ export async function GET(req: NextRequest) {
  *       Creates a new election with an auto-generated RSA key pair. The
  *       `opensAt` date is clamped to `now` if it is in the past. Faculty and
  *       group values are validated against the campus API. Faculty-restricted
- *       admins may only create elections for their own faculty. Requires admin
- *       authentication.
+ *       admins must explicitly include exactly one FACULTY restriction matching
+ *       their own faculty — omitting it or targeting another faculty returns
+ *       400. Requires admin authentication.
  *     tags:
  *       - Elections
  *     security:
@@ -194,7 +195,9 @@ export async function GET(req: NextRequest) {
  *             schema:
  *               $ref: '#/components/schemas/Election'
  *       400:
- *         description: Validation error (missing fields, date constraints, unknown faculty/group)
+ *         description: >
+ *           Validation error (missing fields, date constraints, unknown faculty/group,
+ *           missing/wrong FACULTY restriction for restricted admin)
  *       401:
  *         description: Unauthorized
  *       403:
@@ -226,7 +229,7 @@ export async function POST(req: NextRequest) {
   const { title, opensAt, closesAt, choices } = body;
   const minChoices = body.minChoices ?? ELECTION_MIN_CHOICES_MIN;
   const maxChoices = body.maxChoices ?? ELECTION_MIN_CHOICES_MIN;
-  let restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
+  const restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
 
   if (!title || !opensAt || !closesAt || !choices?.length) {
     return Errors.badRequest('title, opensAt, closesAt, choices are required');
@@ -273,10 +276,25 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Faculty-restricted admin: force FACULTY restriction to their faculty
+  // Faculty-restricted admin: must include exactly one FACULTY restriction for their own faculty.
+  // Auto-appending is intentionally not done — the client is responsible for sending the correct
+  // restriction so the intent is explicit and auditable.
   if (admin.restricted_to_faculty) {
-    restrictions = restrictions.filter((r) => r.type !== 'FACULTY');
-    restrictions.push({ type: 'FACULTY', value: admin.faculty });
+    const facultyRestrictionsInBody = restrictions.filter((r) => r.type === 'FACULTY');
+
+    if (facultyRestrictionsInBody.length === 0) {
+      return Errors.badRequest(
+        `Faculty-restricted admins must include a FACULTY restriction for their faculty ("${admin.faculty}")`,
+      );
+    }
+    if (
+      facultyRestrictionsInBody.length > 1 ||
+      facultyRestrictionsInBody[0].value !== admin.faculty
+    ) {
+      return Errors.badRequest(
+        `Faculty-restricted admins may only restrict elections to their own faculty ("${admin.faculty}")`,
+      );
+    }
   }
 
   // Validate restrictions
