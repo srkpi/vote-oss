@@ -2,19 +2,10 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
-import { invalidateInviteTokens } from '@/lib/cache';
+import { getCachedAdmins, invalidateInviteTokens } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
-
-// ---------------------------------------------------------------------------
-// DELETE /api/admins/invite/[tokenHash]
-//
-// Deletes an invite token.  The caller must:
-//   1. Be an admin with manage_admins.
-//   2. Either own the token (created_by === caller) OR be a transitive
-//      ancestor of the token's creator in the admin hierarchy.
-// ---------------------------------------------------------------------------
 
 /**
  * @swagger
@@ -75,11 +66,17 @@ export async function DELETE(
 
   // Owner may always delete their own token without a graph query
   if (token.created_by !== user.sub) {
-    // Load the full hierarchy graph in one query, then resolve ancestry in memory
-    const graphNodes = await prisma.admin.findMany({
-      select: { user_id: true, promoted_by: true },
-    });
-    const graph = new Map(graphNodes.map((n) => [n.user_id, n.promoted_by]));
+    const cachedAdmins = await getCachedAdmins();
+    const graph: Map<string, string | null> = cachedAdmins
+      ? new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]))
+      : new Map(
+          (
+            await prisma.admin.findMany({
+              where: { deleted_at: null },
+              select: { user_id: true, promoted_by: true },
+            })
+          ).map((n) => [n.user_id, n.promoted_by]),
+        );
 
     if (!isAncestorInGraph(graph, user.sub, token.created_by)) {
       return Errors.forbidden(

@@ -2,11 +2,13 @@ import * as allure from 'allure-js-commons';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
+  ADMIN_API,
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
   DELETED_ADMIN_RECORD,
   JWT_TOKEN_RECORD,
   makeTokenPair,
+  RESTRICTED_ADMIN_API,
   USER_PAYLOAD,
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
@@ -65,9 +67,7 @@ describe('POST /api/admins/leave', () => {
 
   it('returns 400 when the caller is the only active admin on the platform', async () => {
     const req = await adminReq({});
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API] as any);
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
@@ -76,23 +76,39 @@ describe('POST /api/admins/leave', () => {
 
   it('returns 400 when admin has direct children but no replacementId is provided', async () => {
     const req = await adminReq({});
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-003', promoted_by: 'superadmin-001' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-002',
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-003',
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
 
   it('returns 400 when admin has indirect children only but no replacementId', async () => {
     const req = await adminReq({});
-    // Direct child is admin-002; superadmin-001 → admin-002 → admin-leaf
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
-    ]);
+    // superadmin-001 → admin-002 → admin-leaf (superadmin-001 has a direct child)
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-002',
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-leaf',
+        promoter: { userId: 'admin-002', fullName: 'Faculty Admin FICE' },
+      },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
@@ -101,22 +117,32 @@ describe('POST /api/admins/leave', () => {
 
   it('returns 404 when replacementId does not exist in active admins', async () => {
     const req = await adminReq({ replacementId: 'ghost-admin' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(404);
   });
 
   it('returns 400 when replacementId is not within the caller hierarchy branch', async () => {
     const req = await adminReq({ replacementId: 'other-admin' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'other-root', promoted_by: null },
-      { user_id: 'other-admin', promoted_by: 'other-root' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      { ...RESTRICTED_ADMIN_API, userId: 'other-root', promoter: null },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'other-admin',
+        promoter: { userId: 'other-root', fullName: 'Other Root' },
+      },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
@@ -125,30 +151,30 @@ describe('POST /api/admins/leave', () => {
 
   it('returns 204 when leaving with no children (replacementId null)', async () => {
     const req = await adminReq({ replacementId: null });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'another-root', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      { ...RESTRICTED_ADMIN_API, userId: 'another-root', promoter: null },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(204);
   });
 
   it('returns 204 when body is empty and admin has no children', async () => {
     const req = await adminReq({});
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'another-root', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      { ...RESTRICTED_ADMIN_API, userId: 'another-root', promoter: null },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(204);
   });
 
   it('soft-deletes self with deleted_by equal to own userId when no children', async () => {
     const req = await adminReq({ replacementId: null });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'another-root', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      { ...RESTRICTED_ADMIN_API, userId: 'another-root', promoter: null },
+    ] as any);
 
     await POST(req);
 
@@ -165,10 +191,10 @@ describe('POST /api/admins/leave', () => {
 
   it('does not call admin.updateMany when leaving with no children', async () => {
     const req = await adminReq({ replacementId: null });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'another-root', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      { ...RESTRICTED_ADMIN_API, userId: 'another-root', promoter: null },
+    ] as any);
 
     await POST(req);
 
@@ -179,11 +205,18 @@ describe('POST /api/admins/leave', () => {
 
   it('returns 204 when leaving with a direct child as replacement', async () => {
     const req = await adminReq({ replacementId: 'admin-002' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-003', promoted_by: 'superadmin-001' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-003',
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(204);
   });
@@ -191,10 +224,13 @@ describe('POST /api/admins/leave', () => {
   it('moves the replacement to the caller position when it is a direct child', async () => {
     const req = await adminReq({ replacementId: 'admin-002' });
     // superadmin-001 has promoted_by = null (root), so replacement moves to null
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -208,11 +244,18 @@ describe('POST /api/admins/leave', () => {
 
   it('re-parents sibling children under the replacement when it is a direct child', async () => {
     const req = await adminReq({ replacementId: 'admin-002' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-003', promoted_by: 'superadmin-001' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-003',
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -226,12 +269,23 @@ describe('POST /api/admins/leave', () => {
 
   it('uses a single updateMany (no N+1) when replacement is a direct child', async () => {
     const req = await adminReq({ replacementId: 'admin-002' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-003', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-004', promoted_by: 'superadmin-001' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-003',
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-004',
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -242,23 +296,37 @@ describe('POST /api/admins/leave', () => {
 
   it('returns 204 when leaving with an indirect child as replacement', async () => {
     const req = await adminReq({ replacementId: 'admin-leaf' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-leaf',
+        promoter: { userId: 'admin-002', fullName: 'Faculty Admin FICE' },
+      },
+    ] as any);
     const res = await POST(req);
     expect(res.status).toBe(204);
   });
 
   it('fills the replacement old spot by re-parenting its children upward (indirect case)', async () => {
     const req = await adminReq({ replacementId: 'admin-leaf' });
-    // admin-leaf has promoted_by = admin-002; its children should go to admin-002
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
-    ]);
+    // admin-leaf has promoter = admin-002; its children should go to admin-002
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-leaf',
+        promoter: { userId: 'admin-002', fullName: 'Faculty Admin FICE' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -272,11 +340,18 @@ describe('POST /api/admins/leave', () => {
 
   it('re-parents all caller direct children under the replacement (indirect case)', async () => {
     const req = await adminReq({ replacementId: 'admin-leaf' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-leaf',
+        promoter: { userId: 'admin-002', fullName: 'Faculty Admin FICE' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -290,11 +365,18 @@ describe('POST /api/admins/leave', () => {
 
   it('moves the replacement to the caller position (indirect case)', async () => {
     const req = await adminReq({ replacementId: 'admin-leaf' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-leaf',
+        promoter: { userId: 'admin-002', fullName: 'Faculty Admin FICE' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -308,11 +390,18 @@ describe('POST /api/admins/leave', () => {
 
   it('uses exactly two updateMany calls (no N+1) when replacement is indirect', async () => {
     const req = await adminReq({ replacementId: 'admin-leaf' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-      { user_id: 'admin-leaf', promoted_by: 'admin-002' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+      {
+        ...RESTRICTED_ADMIN_API,
+        userId: 'admin-leaf',
+        promoter: { userId: 'admin-002', fullName: 'Faculty Admin FICE' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -324,10 +413,13 @@ describe('POST /api/admins/leave', () => {
 
   it('always soft-deletes self with deleted_by equal to own userId', async () => {
     const req = await adminReq({ replacementId: 'admin-002' });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      {
+        ...RESTRICTED_ADMIN_API,
+        promoter: { userId: 'superadmin-001', fullName: 'Super Admin User' },
+      },
+    ] as any);
 
     await POST(req);
 
@@ -344,10 +436,10 @@ describe('POST /api/admins/leave', () => {
 
   it('deletes own invite tokens when leaving', async () => {
     const req = await adminReq({ replacementId: null });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'another-root', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      { ...RESTRICTED_ADMIN_API, userId: 'another-root', promoter: null },
+    ] as any);
 
     await POST(req);
 
@@ -360,10 +452,10 @@ describe('POST /api/admins/leave', () => {
 
   it('invalidates both the admins and invite-tokens cache after leaving', async () => {
     const req = await adminReq({ replacementId: null });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'another-root', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      { ...RESTRICTED_ADMIN_API, userId: 'another-root', promoter: null },
+    ] as any);
 
     await POST(req);
 
@@ -373,27 +465,30 @@ describe('POST /api/admins/leave', () => {
 
   // ── Query efficiency ──────────────────────────────────────────────────────
 
-  it('loads all active admins with a single findMany call (no N+1)', async () => {
+  it('does not call prisma.admin.findMany (active admins served from cache)', async () => {
     const req = await adminReq({ replacementId: null });
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'another-root', promoted_by: null },
-    ]);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([
+      ADMIN_API,
+      { ...RESTRICTED_ADMIN_API, userId: 'another-root', promoter: null },
+    ] as any);
 
     await POST(req);
 
-    expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.admin.findMany).not.toHaveBeenCalled();
   });
 
-  it('passes deleted_at: null filter to findMany to exclude soft-deleted admins', async () => {
+  it('falls back to prisma.admin.findMany when cache is empty', async () => {
     const req = await adminReq({ replacementId: null });
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null); // cache miss
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'another-root', promoted_by: null },
     ]);
 
-    await POST(req);
+    const res = await POST(req);
 
+    expect(res.status).toBe(204);
+    expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
     expect(prismaMock.admin.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { deleted_at: null } }),
     );

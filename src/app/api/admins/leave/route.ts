@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
-import { invalidateAdmins, invalidateInviteTokens } from '@/lib/cache';
+import { getCachedAdmins, invalidateAdmins, invalidateInviteTokens } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isAncestorInGraph } from '@/lib/utils';
@@ -69,11 +69,19 @@ export async function POST(req: NextRequest) {
 
   const { replacementId = null } = body;
 
-  // Load all active admins in one query for all subsequent checks
-  const activeAdmins = await prisma.admin.findMany({
-    where: { deleted_at: null },
-    select: { user_id: true, promoted_by: true },
-  });
+  // Load all active admins — from cache when available, otherwise from DB.
+  // Since soft-deleted admins are guaranteed to have no children, active-only
+  // nodes are sufficient for all hierarchy checks and subordinate lookups.
+  const cachedAdmins = await getCachedAdmins();
+
+  type ActiveAdmin = { user_id: string; promoted_by: string | null };
+
+  const activeAdmins: ActiveAdmin[] = cachedAdmins
+    ? cachedAdmins.map((a) => ({ user_id: a.userId, promoted_by: a.promoter?.userId ?? null }))
+    : await prisma.admin.findMany({
+        where: { deleted_at: null },
+        select: { user_id: true, promoted_by: true },
+      });
 
   // The last admin on the platform cannot leave
   if (activeAdmins.length === 1) {

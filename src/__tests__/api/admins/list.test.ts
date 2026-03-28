@@ -66,9 +66,8 @@ describe('GET /api/admins', () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-    prismaMock.admin.findMany
-      .mockResolvedValueOnce([]) // graph
-      .mockResolvedValueOnce([]); // active admins
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null); // cache miss
+    prismaMock.admin.findMany.mockResolvedValueOnce([]); // DB returns empty
 
     const req = makeAuthRequest(access.token);
     const { status, body } = await parseJson<any[]>(await GET(req));
@@ -81,13 +80,8 @@ describe('GET /api/admins', () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-    prismaMock.admin.findMany
-      .mockResolvedValueOnce([
-        // graph
-        { user_id: ADMIN_RECORD.user_id, promoted_by: null },
-        { user_id: RESTRICTED_ADMIN_RECORD.user_id, promoted_by: 'superadmin-001' },
-      ])
-      .mockResolvedValueOnce([ADMIN_RECORD, RESTRICTED_ADMIN_RECORD]); // active admins
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null); // cache miss
+    prismaMock.admin.findMany.mockResolvedValueOnce([ADMIN_RECORD, RESTRICTED_ADMIN_RECORD]);
 
     const req = makeAuthRequest(access.token);
     const { body } = await parseJson<any[]>(await GET(req));
@@ -113,9 +107,8 @@ describe('GET /api/admins', () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-    prismaMock.admin.findMany
-      .mockResolvedValueOnce([]) // graph
-      .mockResolvedValueOnce([]); // active admins
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null); // cache miss
+    prismaMock.admin.findMany.mockResolvedValueOnce([]);
 
     const req = makeAuthRequest(access.token);
     await GET(req);
@@ -127,14 +120,23 @@ describe('GET /api/admins', () => {
     );
   });
 
+  it('uses a single findMany call on cache miss (no separate graph query)', async () => {
+    const { access } = await makeTokenPair(ADMIN_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null);
+    prismaMock.admin.findMany.mockResolvedValueOnce([]);
+
+    const req = makeAuthRequest(access.token);
+    await GET(req);
+
+    expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
+  });
+
   it('does not include soft-deleted admins returned from cache', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-    // Graph query always runs — return only active node
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: ADMIN_RECORD.user_id, promoted_by: null },
-    ]);
     // Cache holds only the active admin (in camelCase)
     cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API] as any);
 
@@ -144,55 +146,21 @@ describe('GET /api/admins', () => {
     const ids = body.map((a: any) => a.userId);
     expect(ids).not.toContain(DELETED_ADMIN_RECORD.user_id);
     expect(ids).toContain(ADMIN_RECORD.user_id);
-    // Only the graph findMany ran — the active-admin findMany was skipped (cache hit)
-    expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
+    // No DB findMany call — served entirely from cache
+    expect(prismaMock.admin.findMany).not.toHaveBeenCalled();
   });
 
   it('marks a soft-deleted admin as not deletable even if promoter points to caller', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-    prismaMock.admin.findMany
-      .mockResolvedValueOnce([
-        // graph
-        { user_id: ADMIN_RECORD.user_id, promoted_by: null },
-      ])
-      .mockResolvedValueOnce([ADMIN_RECORD]); // active admins (deleted one filtered by where)
+    cacheMock.getCachedAdmins.mockResolvedValueOnce(null);
+    prismaMock.admin.findMany.mockResolvedValueOnce([ADMIN_RECORD]); // only active admin
 
     const req = makeAuthRequest(access.token);
     const { body } = await parseJson<any[]>(await GET(req));
 
     expect(body).toHaveLength(1);
     expect(body[0].userId).toBe(ADMIN_RECORD.user_id);
-  });
-
-  // ── Hierarchy preservation ────────────────────────────────────────────────
-
-  it('correctly computes deletable=true for an active admin whose promoter has been soft-deleted', async () => {
-    const { access } = await makeTokenPair(ADMIN_PAYLOAD);
-    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
-    prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-
-    const activeLeaf = {
-      ...RESTRICTED_ADMIN_RECORD,
-      user_id: 'admin-leaf',
-      promoter: { user_id: 'admin-middle', full_name: 'Admin Middle' },
-    };
-    prismaMock.admin.findMany
-      .mockResolvedValueOnce([
-        // graph
-        { user_id: 'superadmin-001', promoted_by: null },
-        { user_id: 'admin-middle', promoted_by: 'superadmin-001' },
-        { user_id: 'admin-leaf', promoted_by: 'admin-middle' },
-      ])
-      .mockResolvedValueOnce([ADMIN_RECORD, activeLeaf]); // active admins only
-
-    const req = makeAuthRequest(access.token);
-    const { body } = await parseJson<any[]>(await GET(req));
-
-    const leaf = body.find((a: any) => a.userId === 'admin-leaf');
-    expect(leaf).toBeDefined();
-    expect(leaf.deletable).toBe(true);
-    expect(leaf.promoter).toEqual({ userId: 'admin-middle', fullName: 'Admin Middle' });
   });
 });

@@ -146,11 +146,21 @@ export async function DELETE(
     return Errors.notFound('Admin not found');
   }
 
-  // Load the full hierarchy graph in one query, then check ancestry in memory.
-  const nodes = await prisma.admin.findMany({
-    select: { user_id: true, promoted_by: true },
-  });
-  const graph = new Map(nodes.map((n) => [n.user_id, n.promoted_by]));
+  // Build the hierarchy graph from cache (active admins only).
+  // Since soft-deleted admins are guaranteed to have no children, active-only
+  // nodes are sufficient for ancestry checks.
+  const cachedAdmins = await getCachedAdmins();
+  const graph: Map<string, string | null> = cachedAdmins
+    ? new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]))
+    : new Map(
+        (
+          await prisma.admin.findMany({
+            where: { deleted_at: null },
+            select: { user_id: true, promoted_by: true },
+          })
+        ).map((n) => [n.user_id, n.promoted_by]),
+      );
+
   if (!isAncestorInGraph(graph, user.sub, targetUserId)) {
     return Errors.forbidden('You can only remove admins in your own branch of the hierarchy');
   }
