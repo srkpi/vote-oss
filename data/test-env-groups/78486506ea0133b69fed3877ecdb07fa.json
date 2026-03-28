@@ -1,0 +1,1 @@
+{"id":"78486506ea0133b69fed3877ecdb07fa","fullName":"src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] returns 204 when unrestricted admin deletes any election","name":"returns 204 when unrestricted admin deletes any election","status":"passed","testResultsByEnv":{"default":"8a7672dc54c4b20a6d6cebd63d7ad58e"}}

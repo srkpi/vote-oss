@@ -1,0 +1,1 @@
+{"id":"81e8844e7f5be1b8579484480b88bdca","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave loads all active admins with a single findMany call (no N+1)","name":"loads all active admins with a single findMany call (no N+1)","status":"passed","testResultsByEnv":{"default":"5ddbe7f09078edb9e2e0729ef5257f78"}}

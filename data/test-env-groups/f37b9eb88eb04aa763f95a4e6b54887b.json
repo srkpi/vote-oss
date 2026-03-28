@@ -1,0 +1,1 @@
+{"id":"f37b9eb88eb04aa763f95a4e6b54887b","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave fills the replacement old spot by re-parenting its children upward (indirect case)","name":"fills the replacement old spot by re-parenting its children upward (indirect case)","status":"passed","testResultsByEnv":{"default":"5a07c6c8ab1d069097aba8c06d9348c0"}}

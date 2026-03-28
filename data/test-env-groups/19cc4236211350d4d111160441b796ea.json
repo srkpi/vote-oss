@@ -1,0 +1,1 @@
+{"id":"19cc4236211350d4d111160441b796ea","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 400 when admin has direct children but no replacementId is provided","name":"returns 400 when admin has direct children but no replacementId is provided","status":"passed","testResultsByEnv":{"default":"8eedf8f4ce0c560b14e095760050eeb9"}}

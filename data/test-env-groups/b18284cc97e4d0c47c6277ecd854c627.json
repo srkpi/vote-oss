@@ -1,0 +1,1 @@
+{"id":"b18284cc97e4d0c47c6277ecd854c627","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave passes deleted_at: null filter to findMany to exclude soft-deleted admins","name":"passes deleted_at: null filter to findMany to exclude soft-deleted admins","status":"passed","testResultsByEnv":{"default":"d54b174967e784f78588773cb6534857"}}

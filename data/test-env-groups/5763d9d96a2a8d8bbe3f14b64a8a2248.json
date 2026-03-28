@@ -1,1 +1,1 @@
-{"id":"5763d9d96a2a8d8bbe3f14b64a8a2248","fullName":"src/__tests__/api/health/check.test.ts#GET /api/health returns 503 when both DB and Redis fail","name":"returns 503 when both DB and Redis fail","status":"passed","testResultsByEnv":{"default":"720ea519e79f907bff383ac6e1e204bd"}}
+{"id":"5763d9d96a2a8d8bbe3f14b64a8a2248","fullName":"src/__tests__/api/health/check.test.ts#GET /api/health returns 503 when both DB and Redis fail","name":"returns 503 when both DB and Redis fail","status":"passed","testResultsByEnv":{"default":"ea12627cd6721230a4737470ef1a32d1"}}

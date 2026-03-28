@@ -1,0 +1,1 @@
+{"id":"11594f393e258c15df1141600e21f54c","fullName":"src/__tests__/lib/kpi-id.test.ts#kpi-id resolveTicket throws InvalidTicketError if response has no data field","name":"throws InvalidTicketError if response has no data field","status":"passed","testResultsByEnv":{"default":"625725e8f4e35f92aaf2536f704f7ffc"}}
