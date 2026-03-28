@@ -1,10 +1,11 @@
 'use client';
 
-import { UserPlus, Users } from 'lucide-react';
+import { LogOut, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import { AdminTable } from '@/components/admin/admin-table';
 import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
+import { LeaveAdminDialog } from '@/components/admin/leave-admin-dialog';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { pluralize } from '@/lib/utils';
@@ -30,6 +31,7 @@ export function AdminsPageClient({
 }: AdminsPageClientProps) {
   const [admins, setAdmins] = useState<Admin[]>(initialAdmins);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const handleDelete = (userId: string) => {
     setAdmins((prev) => prev.filter((a) => a.userId !== userId));
@@ -51,18 +53,17 @@ export function AdminsPageClient({
           </h2>
         </div>
 
-        {canGrantManageAdmins && (
-          <div className="flex items-center gap-3">
-            <Button
-              variant="accent"
-              size="sm"
-              onClick={() => setInviteOpen(true)}
-              icon={<UserPlus className="h-3.5 w-3.5" />}
-            >
-              <span className="hidden sm:inline">Запросити адміна</span>
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLeaveOpen(true)}
+            className="text-error hover:bg-error-bg"
+            icon={<LogOut className="h-3.5 w-3.5" />}
+          >
+            <span className="hidden sm:inline">Видалитись</span>
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -103,6 +104,15 @@ export function AdminsPageClient({
           onClose={() => setInviteOpen(false)}
           canGrantManageAdmins={canGrantManageAdmins}
           restrictedToFaculty={restrictedToFaculty}
+        />
+      )}
+
+      {currentUser && (
+        <LeaveAdminDialog
+          open={leaveOpen}
+          onClose={() => setLeaveOpen(false)}
+          admins={admins}
+          currentUserId={currentUser.userId}
         />
       )}
     </div>

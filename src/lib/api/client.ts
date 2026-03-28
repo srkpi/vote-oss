@@ -67,6 +67,11 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<void>(`/admins/${userId}`, {
           method: 'DELETE',
         }),
+      leave: (replacementId: string | null) =>
+        fetcher<void>('/admins/leave', {
+          method: 'POST',
+          body: JSON.stringify({ replacementId }),
+        }),
       invites: {
         list: () => fetcher<InviteToken[]>('/admins/invite'),
         create: (data: InviteTokenRequest) =>

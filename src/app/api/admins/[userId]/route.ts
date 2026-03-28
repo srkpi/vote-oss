@@ -95,9 +95,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
  *     summary: Remove an admin
  *     description: >
  *       Soft-deletes the target admin and hard-deletes all invite tokens they
- *       created. The caller must have `manage_admins` and be a transitive
- *       ancestor of the target in the admin hierarchy. A caller cannot remove
- *       themselves.
+ *       created. Direct children of the removed admin are re-parented to the
+ *       removed admin's own parent, keeping the hierarchy intact without gaps.
+ *       The caller must have `manage_admins` and be a transitive ancestor of
+ *       the target in the admin hierarchy. A caller cannot remove themselves.
  *     tags:
  *       - Admins
  *     security:
@@ -154,11 +155,18 @@ export async function DELETE(
     return Errors.forbidden('You can only remove admins in your own branch of the hierarchy');
   }
 
-  // Soft-delete the admin AND hard-delete all their invite tokens atomically.
+  // Soft-delete the admin, re-parent their direct children to the admin's own
+  // parent (fills the hierarchy gap), and hard-delete their invite tokens —
+  // all atomically in one transaction.
   await prisma.$transaction([
     prisma.admin.update({
       where: { user_id: targetUserId },
       data: { deleted_at: new Date(), deleted_by: user.sub },
+    }),
+    // Re-parent direct children so the hierarchy stays intact
+    prisma.admin.updateMany({
+      where: { promoted_by: targetUserId },
+      data: { promoted_by: graph.get(targetUserId) ?? null },
     }),
     prisma.adminInviteToken.deleteMany({
       where: { created_by: targetUserId },
