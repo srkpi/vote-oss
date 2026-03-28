@@ -53,7 +53,7 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *       completes Diia verification this endpoint exchanges the sessionId for
  *       KPI-ID session cookies, fetches the authenticated user profile, and
  *       issues a new JWT access + refresh token pair via HTTP-only cookies.
- *       Graduate (аспірант) users are rejected with 403.
+ *       Graduate users are rejected with 403.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -207,7 +207,7 @@ export async function POST(req: NextRequest) {
   // In production GROUP comes from the KPI API; mocked for development
   const group = data.GROUP ?? 'IP-24';
 
-  // Graduate (аспірант) students are not permitted to use the platform
+  // Graduate students are not permitted to use the platform
   if (parseGroupLevel(group) === 'g') {
     return Errors.forbidden('Platform is not available for graduate students');
   }

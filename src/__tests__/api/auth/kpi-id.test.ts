@@ -156,7 +156,7 @@ describe('POST /api/auth/kpi-id', () => {
   });
 
   it('includes the graduate error message in the 403 response', async () => {
-    const errorMessage = 'Platform is not available for graduate (аспірант) students';
+    const errorMessage = 'Platform is not available for graduate students';
     kpiIdMock.resolveTicket.mockRejectedValueOnce(new kpiIdMock.GraduateUserError(errorMessage));
 
     const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-grad-1' } });

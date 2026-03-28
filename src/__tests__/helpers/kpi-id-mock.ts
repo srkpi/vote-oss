@@ -15,7 +15,7 @@ export class NotDiiaAuthError extends Error {
 }
 
 export class GraduateUserError extends Error {
-  constructor(message = 'Platform is not available for graduate (аспірант) students') {
+  constructor(message = 'Platform is not available for graduate students') {
     super(message);
     this.name = 'GraduateUserError';
   }
