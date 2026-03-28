@@ -1,7 +1,7 @@
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
 import type { DiiaInitResponse } from '@/types/auth';
-import type { BallotResponse, BallotsResponse } from '@/types/ballot';
+import type { BallotsResponse } from '@/types/ballot';
 import type {
   CreateElectionRequest,
   CreateElectionResponse,
@@ -51,7 +51,7 @@ export function createApiClient(fetcher: Fetcher) {
         electionId: string,
         data: { token: string; signature: string; encryptedBallot: string; nullifier: string },
       ) =>
-        fetcher<BallotResponse>(`/elections/${electionId}/ballot`, {
+        fetcher<{ ballotHash: string }>(`/elections/${electionId}/ballot`, {
           method: 'POST',
           body: JSON.stringify(data),
         }),

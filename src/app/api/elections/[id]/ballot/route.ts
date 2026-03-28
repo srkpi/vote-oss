@@ -68,9 +68,6 @@ import { isValidUuid } from '@/lib/utils';
  *             schema:
  *               type: object
  *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
  *                 ballotHash:
  *                   type: string
  *                   description: Current hash in the ballot chain for this ballot
@@ -198,5 +195,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }),
   ]);
 
-  return NextResponse.json({ ok: true, ballotHash: currentHash }, { status: 201 });
+  return NextResponse.json({ ballotHash: currentHash }, { status: 201 });
 }

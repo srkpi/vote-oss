@@ -28,8 +28,3 @@ export interface BallotSubmission {
   encryptedBallot: string;
   nullifier: string;
 }
-
-export interface BallotResponse {
-  ok: boolean;
-  ballotHash: string;
-}
