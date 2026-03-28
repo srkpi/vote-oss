@@ -88,6 +88,10 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<void>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
     },
 
+    campus: {
+      getGroups: () => fetcher<Record<string, string[]>>('/campus/groups'),
+    },
+
     faq: {
       get: () => fetcher<FaqCategoryData[]>('/faq'),
       categories: {
