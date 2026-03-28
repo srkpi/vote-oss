@@ -139,18 +139,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *           format: uuid
  *         description: Election UUID
  *     responses:
- *       200:
+ *       204:
  *         description: Election deleted
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 deletedId:
- *                   type: string
  *       400:
  *         description: Invalid UUID
  *       401:
@@ -186,5 +176,5 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await prisma.election.delete({ where: { id: electionId } });
   await invalidateElections();
 
-  return NextResponse.json({ ok: true, deletedId: electionId });
+  return new NextResponse(null, { status: 204 });
 }

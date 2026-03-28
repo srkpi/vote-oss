@@ -25,9 +25,8 @@ export function createApiClient(fetcher: Fetcher) {
     auth: {
       loginWithTicket: (ticketId: string) =>
         fetcher<UserInfo>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
-      refresh: () =>
-        fetcher<{ ok: boolean; isAdmin: boolean }>('/auth/refresh', { method: 'POST' }),
-      logout: () => fetcher<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+      refresh: () => fetcher<void>('/auth/refresh', { method: 'POST' }),
+      logout: () => fetcher<void>('/auth/logout', { method: 'POST' }),
     },
 
     elections: {
@@ -38,8 +37,7 @@ export function createApiClient(fetcher: Fetcher) {
           method: 'POST',
           body: JSON.stringify(data),
         }),
-      delete: (id: string) =>
-        fetcher<{ ok: boolean; deletedId: string }>(`/elections/${id}`, { method: 'DELETE' }),
+      delete: (id: string) => fetcher<void>(`/elections/${id}`, { method: 'DELETE' }),
 
       getVoteToken: (electionId: string) =>
         fetcher<VoteToken>(`/elections/${electionId}/token`, { method: 'POST' }),
@@ -60,7 +58,7 @@ export function createApiClient(fetcher: Fetcher) {
     admins: {
       list: () => fetcher<Admin[]>('/admins'),
       delete: (userId: string) =>
-        fetcher<{ ok: boolean; removedUserId: string }>(`/admins/${userId}`, {
+        fetcher<void>(`/admins/${userId}`, {
           method: 'DELETE',
         }),
       invites: {
@@ -71,7 +69,7 @@ export function createApiClient(fetcher: Fetcher) {
             body: JSON.stringify(data),
           }),
         delete: (tokenHash: string) =>
-          fetcher<{ ok: boolean; deletedTokenHash: string }>(`/admins/invite/${tokenHash}`, {
+          fetcher<void>(`/admins/invite/${tokenHash}`, {
             method: 'DELETE',
           }),
       },
@@ -96,11 +94,11 @@ export function createApiClient(fetcher: Fetcher) {
             body: JSON.stringify({ title }),
           }),
         delete: (id: string) =>
-          fetcher<{ ok: boolean; deletedId: string }>(`/faq/categories/${id}`, {
+          fetcher<void>(`/faq/categories/${id}`, {
             method: 'DELETE',
           }),
         reorder: (order: string[]) =>
-          fetcher<{ ok: boolean }>('/faq/categories/reorder', {
+          fetcher<void>('/faq/categories/reorder', {
             method: 'PATCH',
             body: JSON.stringify({ order }),
           }),
@@ -117,11 +115,11 @@ export function createApiClient(fetcher: Fetcher) {
             body: JSON.stringify({ title, content }),
           }),
         delete: (id: string) =>
-          fetcher<{ ok: boolean; deletedId: string }>(`/faq/items/${id}`, {
+          fetcher<void>(`/faq/items/${id}`, {
             method: 'DELETE',
           }),
         reorder: (categoryId: string, order: string[]) =>
-          fetcher<{ ok: boolean }>(`/faq/categories/${categoryId}/items/reorder`, {
+          fetcher<void>(`/faq/categories/${categoryId}/items/reorder`, {
             method: 'PATCH',
             body: JSON.stringify({ order }),
           }),

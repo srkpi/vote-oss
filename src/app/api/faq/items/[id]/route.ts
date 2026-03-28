@@ -145,18 +145,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
  *           type: string
  *         description: FAQ item ID
  *     responses:
- *       200:
+ *       204:
  *         description: Item deleted
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 deletedId:
- *                   type: string
  *       401:
  *         description: Unauthorized
  *       403:
@@ -186,5 +176,5 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   await invalidateFaq();
 
-  return NextResponse.json({ ok: true, deletedId: id });
+  return new NextResponse(null, { status: 204 });
 }

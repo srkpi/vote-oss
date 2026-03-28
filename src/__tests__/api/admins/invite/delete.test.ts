@@ -9,7 +9,7 @@ import {
   USER_PAYLOAD,
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
@@ -89,7 +89,7 @@ describe('DELETE /api/admins/invite/[tokenHash]', () => {
 
   // ── Owner deletes own token (no graph query needed) ───────────────────────
 
-  it('returns 200 when owner deletes their own token', async () => {
+  it('returns 204 when owner deletes their own token', async () => {
     const req = await adminReq();
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
       makeTokenRecord({ created_by: 'superadmin-001' }),
@@ -97,11 +97,7 @@ describe('DELETE /api/admins/invite/[tokenHash]', () => {
     prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
 
     const res = await DELETE_BY_HASH(req, params('hash-abc'));
-    const { status, body } = await parseJson<any>(res);
-
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.deletedTokenHash).toBe('hash-abc');
+    expect(res.status).toBe(204);
   });
 
   it('skips the graph query when caller owns the token', async () => {
@@ -118,7 +114,7 @@ describe('DELETE /api/admins/invite/[tokenHash]', () => {
 
   // ── Ancestor deletes subordinate's token ──────────────────────────────────
 
-  it('returns 200 when ancestor deletes a subordinate token', async () => {
+  it('returns 204 when ancestor deletes a subordinate token', async () => {
     const req = await adminReq();
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
       makeTokenRecord({ created_by: 'admin-002' }),
@@ -130,7 +126,7 @@ describe('DELETE /api/admins/invite/[tokenHash]', () => {
     prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
 
     const res = await DELETE_BY_HASH(req, params('hash-abc'));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(204);
   });
 
   it('loads the hierarchy graph with a single findMany (no N+1)', async () => {
