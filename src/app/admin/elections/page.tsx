@@ -21,7 +21,7 @@ export default async function AdminElectionsPage() {
     redirect('/login');
   }
 
-  const { data: elections, error } = await serverApi.getElections();
+  const { data: elections, error } = await serverApi.elections.list();
 
   const all = elections ?? [];
   const openCount = all.filter((e) => e.status === 'open').length;

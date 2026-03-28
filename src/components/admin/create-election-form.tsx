@@ -236,7 +236,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       ...selectedLevelCourses.map((v) => ({ type: 'LEVEL_COURSE' as const, value: v })),
     ];
 
-    const result = await api.createElection({
+    const result = await api.elections.create({
       title: form.title.trim(),
       opensAt: new Date(form.opensAt).toISOString(),
       closesAt: new Date(form.closesAt).toISOString(),

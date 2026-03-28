@@ -22,102 +22,111 @@ type Fetcher = <T>(path: string, options?: RequestInit) => Promise<ApiResult<T>>
 
 export function createApiClient(fetcher: Fetcher) {
   return {
-    loginWithTicket: (ticketId: string) =>
-      fetcher<UserInfo>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
-    refreshToken: () =>
-      fetcher<{ ok: boolean; isAdmin: boolean }>('/auth/refresh', { method: 'POST' }),
-    logout: () => fetcher<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+    auth: {
+      loginWithTicket: (ticketId: string) =>
+        fetcher<UserInfo>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
+      refresh: () =>
+        fetcher<{ ok: boolean; isAdmin: boolean }>('/auth/refresh', { method: 'POST' }),
+      logout: () => fetcher<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+    },
 
-    getElections: () => fetcher<Election[]>('/elections'),
-    getElection: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
-    createElection: (data: CreateElectionRequest) =>
-      fetcher<CreateElectionResponse>('/elections', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    deleteElection: (id: string) =>
-      fetcher<{ ok: boolean; deletedId: string }>(`/elections/${id}`, { method: 'DELETE' }),
+    elections: {
+      list: () => fetcher<Election[]>('/elections'),
+      get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
+      create: (data: CreateElectionRequest) =>
+        fetcher<CreateElectionResponse>('/elections', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }),
+      delete: (id: string) =>
+        fetcher<{ ok: boolean; deletedId: string }>(`/elections/${id}`, { method: 'DELETE' }),
 
-    getVoteToken: (electionId: string) =>
-      fetcher<VoteToken>(`/elections/${electionId}/token`, { method: 'POST' }),
-    submitBallot: (
-      electionId: string,
-      data: { token: string; signature: string; encryptedBallot: string; nullifier: string },
-    ) =>
-      fetcher<BallotResponse>(`/elections/${electionId}/ballot`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+      getVoteToken: (electionId: string) =>
+        fetcher<VoteToken>(`/elections/${electionId}/token`, { method: 'POST' }),
+      submitBallot: (
+        electionId: string,
+        data: { token: string; signature: string; encryptedBallot: string; nullifier: string },
+      ) =>
+        fetcher<BallotResponse>(`/elections/${electionId}/ballot`, {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }),
 
-    getBallots: (electionId: string) =>
-      fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
-    getTally: (electionId: string) => fetcher<TallyResponse>(`/elections/${electionId}/tally`),
+      getBallots: (electionId: string) =>
+        fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
+      getTally: (electionId: string) => fetcher<TallyResponse>(`/elections/${electionId}/tally`),
+    },
 
-    getAdmins: () => fetcher<Admin[]>('/admins'),
-    deleteAdmin: (userId: string) =>
-      fetcher<{ ok: boolean; removedUserId: string }>(`/admins/${userId}`, {
-        method: 'DELETE',
-      }),
+    admins: {
+      list: () => fetcher<Admin[]>('/admins'),
+      delete: (userId: string) =>
+        fetcher<{ ok: boolean; removedUserId: string }>(`/admins/${userId}`, {
+          method: 'DELETE',
+        }),
+      invites: {
+        list: () => fetcher<InviteToken[]>('/admins/invite'),
+        create: (data: InviteTokenRequest) =>
+          fetcher<InviteTokenResponse>('/admins/invite', {
+            method: 'POST',
+            body: JSON.stringify(data),
+          }),
+        delete: (tokenHash: string) =>
+          fetcher<{ ok: boolean; deletedTokenHash: string }>(`/admins/invite/${tokenHash}`, {
+            method: 'DELETE',
+          }),
+      },
+      join: (token: string) =>
+        fetcher<{
+          manageAdmins: boolean;
+          restrictedToFaculty: boolean;
+        }>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
+    },
 
-    getInviteTokens: () => fetcher<InviteToken[]>('/admins/invite'),
-    createInviteToken: (data: InviteTokenRequest) =>
-      fetcher<InviteTokenResponse>('/admins/invite', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    deleteInviteToken: (tokenHash: string) =>
-      fetcher<{ ok: boolean; deletedTokenHash: string }>(`/admins/invite/${tokenHash}`, {
-        method: 'DELETE',
-      }),
-
-    joinAsAdmin: (token: string) =>
-      fetcher<{
-        manageAdmins: boolean;
-        restrictedToFaculty: boolean;
-      }>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
-
-    // FAQ
-    getFaq: () => fetcher<FaqCategoryData[]>('/faq'),
-
-    createFaqCategory: (title: string) =>
-      fetcher<FaqCategoryCreated>('/faq', {
-        method: 'POST',
-        body: JSON.stringify({ title }),
-      }),
-    updateFaqCategory: (id: string, title: string) =>
-      fetcher<FaqCategoryUpdated>(`/faq/categories/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ title }),
-      }),
-    deleteFaqCategory: (id: string) =>
-      fetcher<{ ok: boolean; deletedId: string }>(`/faq/categories/${id}`, {
-        method: 'DELETE',
-      }),
-    reorderFaqCategories: (order: string[]) =>
-      fetcher<{ ok: boolean }>('/faq/categories/reorder', {
-        method: 'PATCH',
-        body: JSON.stringify({ order }),
-      }),
-
-    createFaqItem: (categoryId: string, title: string, content: string) =>
-      fetcher<FaqItemCreated>(`/faq/categories/${categoryId}/items`, {
-        method: 'POST',
-        body: JSON.stringify({ title, content }),
-      }),
-    updateFaqItem: (id: string, title: string, content: string) =>
-      fetcher<FaqItemUpdated>(`/faq/items/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ title, content }),
-      }),
-    deleteFaqItem: (id: string) =>
-      fetcher<{ ok: boolean; deletedId: string }>(`/faq/items/${id}`, {
-        method: 'DELETE',
-      }),
-    reorderFaqItems: (categoryId: string, order: string[]) =>
-      fetcher<{ ok: boolean }>(`/faq/categories/${categoryId}/items/reorder`, {
-        method: 'PATCH',
-        body: JSON.stringify({ order }),
-      }),
+    faq: {
+      get: () => fetcher<FaqCategoryData[]>('/faq'),
+      categories: {
+        create: (title: string) =>
+          fetcher<FaqCategoryCreated>('/faq', {
+            method: 'POST',
+            body: JSON.stringify({ title }),
+          }),
+        update: (id: string, title: string) =>
+          fetcher<FaqCategoryUpdated>(`/faq/categories/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title }),
+          }),
+        delete: (id: string) =>
+          fetcher<{ ok: boolean; deletedId: string }>(`/faq/categories/${id}`, {
+            method: 'DELETE',
+          }),
+        reorder: (order: string[]) =>
+          fetcher<{ ok: boolean }>('/faq/categories/reorder', {
+            method: 'PATCH',
+            body: JSON.stringify({ order }),
+          }),
+      },
+      items: {
+        create: (categoryId: string, title: string, content: string) =>
+          fetcher<FaqItemCreated>(`/faq/categories/${categoryId}/items`, {
+            method: 'POST',
+            body: JSON.stringify({ title, content }),
+          }),
+        update: (id: string, title: string, content: string) =>
+          fetcher<FaqItemUpdated>(`/faq/items/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title, content }),
+          }),
+        delete: (id: string) =>
+          fetcher<{ ok: boolean; deletedId: string }>(`/faq/items/${id}`, {
+            method: 'DELETE',
+          }),
+        reorder: (categoryId: string, order: string[]) =>
+          fetcher<{ ok: boolean }>(`/faq/categories/${categoryId}/items/reorder`, {
+            method: 'PATCH',
+            body: JSON.stringify({ order }),
+          }),
+      },
+    },
   };
 }
 

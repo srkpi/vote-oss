@@ -33,7 +33,7 @@ export function TokensTable({ tokens, onDelete }: TokensTableProps) {
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteInviteToken(deleteTarget.tokenHash);
+    const result = await api.admins.invites.delete(deleteTarget.tokenHash);
     if (result.success) {
       toast({
         title: 'Токен видалено',

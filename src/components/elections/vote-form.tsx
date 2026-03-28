@@ -53,7 +53,7 @@ export function VoteForm({ election }: VoteFormProps) {
     setError(null);
 
     if (!voteTokenRef.current) {
-      const tokenResult = await api.getVoteToken(election.id);
+      const tokenResult = await api.elections.getVoteToken(election.id);
       if (!tokenResult.success) {
         setError(tokenResult.error);
         setStep('confirm');
@@ -79,7 +79,7 @@ export function VoteForm({ election }: VoteFormProps) {
       return;
     }
 
-    const ballotResult = await api.submitBallot(election.id, {
+    const ballotResult = await api.elections.submitBallot(election.id, {
       token,
       signature,
       encryptedBallot,

@@ -24,7 +24,7 @@ interface ElectionPageProps {
 
 export async function generateMetadata({ params }: ElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data } = await serverApi.getElection(id);
+  const { data } = await serverApi.elections.get(id);
   return { title: data?.title ?? 'Голосування' };
 }
 
@@ -33,7 +33,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
   const [session, { data: election, error, status }] = await Promise.all([
     getServerSession(),
-    serverApi.getElection(id),
+    serverApi.elections.get(id),
   ]);
 
   if (!session) {
@@ -65,7 +65,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   // Fetch tally only for closed elections
   let tally: TallyResponse | null = null;
   if (election.status === 'closed') {
-    const { data } = await serverApi.getTally(id);
+    const { data } = await serverApi.elections.getTally(id);
     tally = data;
   }
 

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function FaqPage() {
-  const { data } = await serverApi.getFaq();
+  const { data } = await serverApi.faq.get();
 
   if (data === null) {
     return (

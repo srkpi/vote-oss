@@ -81,7 +81,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteElection(deleteTarget.id);
+    const result = await api.elections.delete(deleteTarget.id);
     if (result.success) {
       toast({
         title: 'Голосування видалено',

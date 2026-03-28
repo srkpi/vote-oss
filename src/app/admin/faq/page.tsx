@@ -21,7 +21,7 @@ export default async function AdminFaqPage() {
     redirect('/admin');
   }
 
-  const { data: categories } = await serverApi.getFaq();
+  const { data: categories } = await serverApi.faq.get();
 
   return (
     <div className="flex-1 overflow-auto">

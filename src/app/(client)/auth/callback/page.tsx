@@ -51,7 +51,7 @@ export default function CallbackPage() {
         return;
       }
 
-      const result = await api.loginWithTicket(ticketId);
+      const result = await api.auth.loginWithTicket(ticketId);
 
       if (result.success) {
         setStatus('success');

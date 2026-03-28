@@ -31,7 +31,7 @@ export function DeleteElectionButton({ electionId, electionTitle }: DeleteElecti
 
   const handleDelete = async () => {
     setDeleting(true);
-    const result = await api.deleteElection(electionId);
+    const result = await api.elections.delete(electionId);
 
     if (result.success) {
       toast({

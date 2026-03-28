@@ -23,7 +23,7 @@ interface AdminElectionPageProps {
 
 export async function generateMetadata({ params }: AdminElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data } = await serverApi.getElection(id);
+  const { data } = await serverApi.elections.get(id);
   return { title: data?.title ? `${data.title} — Деталі` : 'Деталі голосування' };
 }
 
@@ -35,7 +35,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   const { id } = await params;
 
-  const { data: election, status } = await serverApi.getElection(id);
+  const { data: election, status } = await serverApi.elections.get(id);
 
   if (status === 404 || !election) notFound();
 
@@ -50,7 +50,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   let tally: TallyResponse | null = null;
   if (isClosed) {
-    const { data } = await serverApi.getTally(id);
+    const { data } = await serverApi.elections.getTally(id);
     tally = data;
   }
 

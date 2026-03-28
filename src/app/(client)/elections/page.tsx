@@ -21,7 +21,7 @@ export default async function ElectionsPage() {
     redirect('/login');
   }
 
-  const { data: elections, error } = await serverApi.getElections();
+  const { data: elections, error } = await serverApi.elections.list();
 
   const open = (elections ?? []).filter((e) => e.status === 'open').length;
   const upcoming = (elections ?? []).filter((e) => e.status === 'upcoming').length;

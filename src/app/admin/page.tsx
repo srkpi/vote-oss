@@ -50,8 +50,8 @@ export default async function AdminDashboardPage() {
   }
 
   const [electionsResult, adminsResult] = await Promise.all([
-    serverApi.getElections(),
-    serverApi.getAdmins(),
+    serverApi.elections.list(),
+    serverApi.admins.list(),
   ]);
 
   const elections = electionsResult.data ?? [];

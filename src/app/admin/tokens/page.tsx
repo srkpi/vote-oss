@@ -20,7 +20,7 @@ export default async function TokensPage() {
     redirect('/admin');
   }
 
-  const { data: tokens, error } = await serverApi.getInviteTokens();
+  const { data: tokens, error } = await serverApi.admins.invites.list();
 
   return (
     <div className="flex-1 overflow-auto">

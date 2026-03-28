@@ -65,7 +65,7 @@ export function InviteAdminDialog({
     setError(null);
     setLoading(true);
 
-    const result = await api.createInviteToken({
+    const result = await api.admins.invites.create({
       validDue: new Date(form.validDue).toISOString(),
       maxUsage: parseInt(form.maxUsage, 10),
       manageAdmins: form.manageAdmins,
