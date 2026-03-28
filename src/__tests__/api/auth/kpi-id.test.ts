@@ -144,8 +144,8 @@ describe('POST /api/auth/kpi-id', () => {
 
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledTimes(1);
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledWith(
-      expect.any(String), // accessJti
-      expect.any(String), // refreshJti
+      expect.any(String),
+      expect.any(String),
     );
   });
 
@@ -167,5 +167,45 @@ describe('POST /api/auth/kpi-id', () => {
     await POST(req);
 
     expect(rateLimitMock.getClientIp).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 403 when resolveTicket throws GraduateUserError', async () => {
+    kpiIdMock.resolveTicket.mockRejectedValueOnce(
+      new kpiIdMock.GraduateUserError('Platform is not available for graduate students'),
+    );
+
+    const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-grad-1' } });
+    const res = await POST(req);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('includes the graduate error message in the 403 response', async () => {
+    const errorMessage = 'Platform is not available for graduate (аспірант) students';
+    kpiIdMock.resolveTicket.mockRejectedValueOnce(new kpiIdMock.GraduateUserError(errorMessage));
+
+    const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-grad-1' } });
+    const { body } = await parseJson<any>(await POST(req));
+
+    expect(body.message).toBe(errorMessage);
+  });
+
+  it('does not set auth cookies when a graduate user is rejected', async () => {
+    kpiIdMock.resolveTicket.mockRejectedValueOnce(new kpiIdMock.GraduateUserError());
+
+    const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-grad-1' } });
+    const res = await POST(req);
+
+    expect(getResponseCookie(res, COOKIE_ACCESS)).toBeNull();
+    expect(getResponseCookie(res, COOKIE_REFRESH)).toBeNull();
+  });
+
+  it('does not call persistTokenPair when a graduate user is rejected', async () => {
+    kpiIdMock.resolveTicket.mockRejectedValueOnce(new kpiIdMock.GraduateUserError());
+
+    const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-grad-1' } });
+    await POST(req);
+
+    expect(tokenStoreMock.persistTokenPair).not.toHaveBeenCalled();
   });
 });

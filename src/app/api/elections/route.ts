@@ -19,6 +19,7 @@ import {
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
+import { parseGroupLevel } from '@/lib/group-utils';
 import { prisma } from '@/lib/prisma';
 import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
 import type {
@@ -365,6 +366,12 @@ export async function POST(req: NextRequest) {
         `Invalid level/course value "${r.value}". Must be one of: ${VALID_LEVEL_COURSES.join(', ')}`,
       );
     }
+    // Graduate-level courses (g prefix) are not permitted on this platform
+    if (r.value.startsWith('g')) {
+      return Errors.badRequest(
+        `Graduate-level course restrictions are not permitted. Value "${r.value}" targets graduate students.`,
+      );
+    }
   }
 
   // Validate FACULTY and GROUP values via campus API
@@ -391,6 +398,12 @@ export async function POST(req: NextRequest) {
       );
       if (!groupExistsInFaculty) {
         return Errors.badRequest(`Group "${r.value}" does not exist in the specified faculties`);
+      }
+      // Graduate (аспірант) groups are not permitted
+      if (parseGroupLevel(r.value) === 'g') {
+        return Errors.badRequest(
+          `Group "${r.value}" is a graduate (аспірант) group. Elections targeting graduate students are not permitted.`,
+        );
       }
     }
   }
