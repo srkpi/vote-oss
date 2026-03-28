@@ -2,6 +2,21 @@ import fs from 'fs';
 import { createSwaggerSpec } from 'next-swagger-doc';
 import path from 'path';
 
+import {
+  ELECTION_CHOICE_MAX_LENGTH,
+  ELECTION_CHOICES_MAX,
+  ELECTION_CHOICES_MIN,
+  ELECTION_MAX_CHOICES_MAX,
+  ELECTION_MIN_CHOICES_MIN,
+  ELECTION_TITLE_MAX_LENGTH,
+  FAQ_CATEGORY_TITLE_MAX_LENGTH,
+  FAQ_ITEM_CONTENT_MAX_LENGTH,
+  FAQ_ITEM_TITLE_MAX_LENGTH,
+  INVITE_TOKEN_MAX_USAGE_MAX,
+  INVITE_TOKEN_MAX_USAGE_MIN,
+  INVITE_TOKEN_MAX_VALID_DAYS,
+} from '../src/lib/constants';
+
 const spec = createSwaggerSpec({
   apiFolder: 'src/app/api',
   definition: {
@@ -88,6 +103,32 @@ const spec = createSwaggerSpec({
           },
         },
 
+        InviteTokenCreateBody: {
+          type: 'object',
+          required: ['validDue'],
+          properties: {
+            maxUsage: {
+              type: 'integer',
+              minimum: INVITE_TOKEN_MAX_USAGE_MIN,
+              maximum: INVITE_TOKEN_MAX_USAGE_MAX,
+              description: 'Maximum number of times the token can be used',
+            },
+            manageAdmins: {
+              type: 'boolean',
+              description: 'Whether redeeming this token grants manage admins permission.',
+            },
+            restrictedToFaculty: {
+              type: 'boolean',
+              description: "Whether the invited admin is restricted to the creator's faculty.",
+            },
+            validDue: {
+              type: 'string',
+              format: 'date-time',
+              description: `Expiry timestamp; must be in the future and within ${INVITE_TOKEN_MAX_VALID_DAYS} days.`,
+            },
+          },
+        },
+
         InviteToken: {
           type: 'object',
           description: 'A non-expired, non-exhausted admin invite token visible to the caller.',
@@ -108,11 +149,16 @@ const spec = createSwaggerSpec({
               type: 'string',
               description: 'SHA-256 hex digest of the raw token; used as the resource ID.',
             },
-            maxUsage: { type: 'integer', minimum: 1, maximum: 100 },
+            maxUsage: {
+              type: 'integer',
+              minimum: INVITE_TOKEN_MAX_USAGE_MIN,
+              maximum: INVITE_TOKEN_MAX_USAGE_MAX,
+              description: 'Maximum number of times the token can be used',
+            },
             currentUsage: { type: 'integer', minimum: 0 },
             manageAdmins: {
               type: 'boolean',
-              description: 'Whether redeeming this token grants manage_admins.',
+              description: 'Whether redeeming this token grants manage admins permission.',
             },
             restrictedToFaculty: {
               type: 'boolean',
@@ -137,7 +183,7 @@ const spec = createSwaggerSpec({
           required: ['id', 'choice', 'position'],
           properties: {
             id: { type: 'string', format: 'uuid' },
-            choice: { type: 'string' },
+            choice: { type: 'string', minLength: 1, maxLength: ELECTION_CHOICE_MAX_LENGTH },
             position: { type: 'integer', minimum: 0 },
           },
         },
@@ -170,51 +216,68 @@ const spec = createSwaggerSpec({
           },
         },
 
-        /** Returned by GET /api/elections (list view) */
-        Election: {
+        ElectionCreateBody: {
           type: 'object',
-          required: [
-            'id',
-            'title',
-            'createdAt',
-            'opensAt',
-            'closesAt',
-            'minChoices',
-            'maxChoices',
-            'status',
-            'publicKey',
-            'creator',
-            'choices',
-            'ballotCount',
-          ],
+          required: ['title', 'opensAt', 'closesAt', 'choices'],
           properties: {
-            id: { type: 'string', format: 'uuid' },
-            title: { type: 'string' },
-            createdAt: { type: 'string', format: 'date-time' },
+            title: { type: 'string', minLength: 1, maxLength: ELECTION_TITLE_MAX_LENGTH },
             opensAt: { type: 'string', format: 'date-time' },
             closesAt: { type: 'string', format: 'date-time' },
-            minChoices: { type: 'integer', minimun: 1 },
-            maxChoices: { type: 'integer', minimun: 1 },
+            choices: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ElectionChoice' },
+              minItems: ELECTION_CHOICES_MIN,
+              maxItems: ELECTION_CHOICES_MAX,
+            },
+            minChoices: {
+              type: 'integer',
+              minimun: ELECTION_MIN_CHOICES_MIN,
+              maximum: ELECTION_MAX_CHOICES_MAX,
+            },
+            maxChoices: {
+              type: 'integer',
+              minimun: ELECTION_MIN_CHOICES_MIN,
+              maximum: ELECTION_MAX_CHOICES_MAX,
+            },
             restrictions: {
               type: 'array',
               items: { $ref: '#/components/schemas/ElectionRestriction' },
             },
-            status: { $ref: '#/components/schemas/ElectionStatus' },
-            restrictedToFaculty: { type: 'string', nullable: true },
-            restrictedToGroup: { type: 'string', nullable: true },
-            publicKey: { type: 'string', description: 'PEM-encoded RSA public key.' },
-            privateKey: {
-              type: 'string',
-              nullable: true,
-              description: 'PEM-encoded RSA private key. Only present once the election is closed.',
-            },
-            creator: { $ref: '#/components/schemas/ElectionCreator' },
-            choices: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/ElectionChoice' },
-            },
-            ballotCount: { type: 'integer', minimum: 0 },
           },
+        },
+
+        Election: {
+          allOf: [
+            { $ref: '#/components/schemas/ElectionCreateBody' },
+            {
+              type: 'object',
+              required: [
+                'id',
+                'createdAt',
+                'minChoices',
+                'maxChoices',
+                'restrictions',
+                'status',
+                'publicKey',
+                'creator',
+                'ballotCount',
+              ],
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                createdAt: { type: 'string', format: 'date-time' },
+                status: { $ref: '#/components/schemas/ElectionStatus' },
+                publicKey: { type: 'string', description: 'PEM-encoded RSA public key.' },
+                privateKey: {
+                  type: 'string',
+                  nullable: true,
+                  description:
+                    'PEM-encoded RSA private key. Only present once the election is closed.',
+                },
+                creator: { $ref: '#/components/schemas/ElectionCreator' },
+                ballotCount: { type: 'integer', minimum: 0 },
+              },
+            },
+          ],
         },
 
         /** Returned by GET /api/elections/[id] (detail view – adds hasVoted) */
@@ -286,6 +349,27 @@ const spec = createSwaggerSpec({
             position: { type: 'integer', minimum: 0 },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+
+        FaqCategoryCreateBody: {
+          type: 'object',
+          required: ['title'],
+          properties: {
+            title: { type: 'string', minLength: 1, maxLength: FAQ_CATEGORY_TITLE_MAX_LENGTH },
+          },
+        },
+
+        FaqItemCreateBody: {
+          type: 'object',
+          required: ['title', 'content'],
+          properties: {
+            title: { type: 'string', minLength: 1, maxLength: FAQ_ITEM_TITLE_MAX_LENGTH },
+            content: {
+              type: 'string',
+              minLength: 1,
+              description: `Serialised Quill Delta JSON; plain-text length must not exceed ${FAQ_ITEM_CONTENT_MAX_LENGTH} characters.`,
+            },
           },
         },
 

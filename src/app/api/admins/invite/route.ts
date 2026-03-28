@@ -140,28 +140,7 @@ export async function GET(req: NextRequest) {
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - validDue
- *             properties:
- *               maxUsage:
- *                 type: integer
- *                 minimum: 1
- *                 maximum: 100
- *                 default: 1
- *                 description: Maximum number of times the token can be used
- *               manageAdmins:
- *                 type: boolean
- *                 default: false
- *                 description: Whether the invited admin receives manage_admins permission
- *               restrictedToFaculty:
- *                 type: boolean
- *                 default: true
- *                 description: Whether the invited admin is restricted to the creator's faculty
- *               validDue:
- *                 type: string
- *                 format: date-time
- *                 description: Expiry timestamp; must be in the future and within INVITE_TOKEN_MAX_VALID_DAYS
+ *             $ref: '#/components/schemas/InviteTokenCreateBody'
  *     responses:
  *       201:
  *         description: Token created – raw token returned here only

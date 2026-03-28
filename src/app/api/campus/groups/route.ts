@@ -30,7 +30,7 @@ import { Errors } from '@/lib/errors';
  *                 items:
  *                   type: string
  *               example:
- *                 "Faculty of Engineering": ["Group A", "Group B"]
+ *                 "ФІОТ": ["ІП-24", "ІП-25"]
  *       401:
  *         description: Unauthorized
  *       500:

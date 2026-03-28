@@ -1,5 +1,6 @@
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
+import type { UserInfo } from '@/types/auth';
 import type { BallotResponse, BallotsResponse } from '@/types/ballot';
 import type {
   CreateElectionRequest,
@@ -22,13 +23,7 @@ type Fetcher = <T>(path: string, options?: RequestInit) => Promise<ApiResult<T>>
 export function createApiClient(fetcher: Fetcher) {
   return {
     loginWithTicket: (ticketId: string) =>
-      fetcher<{
-        userId: string;
-        fullName: string;
-        faculty: string;
-        group: string;
-        isAdmin: boolean;
-      }>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
+      fetcher<UserInfo>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
     refreshToken: () =>
       fetcher<{ ok: boolean; isAdmin: boolean }>('/auth/refresh', { method: 'POST' }),
     logout: () => fetcher<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
@@ -77,13 +72,8 @@ export function createApiClient(fetcher: Fetcher) {
 
     joinAsAdmin: (token: string) =>
       fetcher<{
-        userId: string;
-        fullName: string;
-        faculty: string;
-        group: string;
         manageAdmins: boolean;
         restrictedToFaculty: boolean;
-        promotedBy: string;
       }>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
 
     // FAQ

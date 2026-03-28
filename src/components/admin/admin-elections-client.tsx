@@ -155,7 +155,11 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
                     <ElectionRow
                       key={election.id}
                       election={election}
-                      canDelete={adminCanDeleteElection(session.faculty, election.restrictions)}
+                      canDelete={adminCanDeleteElection(
+                        session.restrictedToFaculty,
+                        session.faculty,
+                        election.restrictions,
+                      )}
                       onDelete={() => setDeleteTarget(election)}
                     />
                   ))}
@@ -168,7 +172,11 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
                 <ElectionMobileCard
                   key={election.id}
                   election={election}
-                  canDelete={adminCanDeleteElection(session.faculty, election.restrictions)}
+                  canDelete={adminCanDeleteElection(
+                    session.restrictedToFaculty,
+                    session.faculty,
+                    election.restrictions,
+                  )}
                   onDelete={() => setDeleteTarget(election)}
                 />
               ))}

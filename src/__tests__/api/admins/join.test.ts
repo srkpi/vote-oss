@@ -117,7 +117,7 @@ describe('POST /api/admins/join', () => {
 
   // ── Brand-new admin (happy path) ─────────────────────────────────────────
 
-  it('returns 201 with admin info on successful first-time join', async () => {
+  it('returns 201 on successful first-time join', async () => {
     const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
     const { access } = await makeTokenPair(USER_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
@@ -127,12 +127,8 @@ describe('POST /api/admins/join', () => {
 
     const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
     const res = await POST(req);
-    const { status, body } = await parseJson<any>(res);
-
+    const { status } = await parseJson<any>(res);
     expect(status).toBe(201);
-    expect(body.userId).toBe(USER_PAYLOAD.sub);
-    expect(body.faculty).toBe(USER_PAYLOAD.faculty);
-    expect(body.promotedBy).toBe('superadmin-001');
   });
 
   it('looks up invite token using SHA-256 hash of provided raw token', async () => {
@@ -180,10 +176,8 @@ describe('POST /api/admins/join', () => {
 
     const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
     const res = await POST(req);
-    const { status, body } = await parseJson<any>(res);
-
+    const { status } = await parseJson<any>(res);
     expect(status).toBe(201);
-    expect(body.userId).toBe(USER_PAYLOAD.sub);
   });
 
   it('uses admin.update (not admin.create) when a soft-deleted admin rejoins', async () => {
@@ -286,24 +280,6 @@ describe('POST /api/admins/join', () => {
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
     const [ops] = prismaMock.$transaction.mock.calls[0];
     expect(ops).toHaveLength(2);
-  });
-
-  it('returns the correct promotedBy (new inviter) in the response on rejoin', async () => {
-    const rawToken = generateBase64Token(INVITE_TOKEN_LENGTH);
-    const newInviter = 'fresh-inviter-007';
-    const { access } = await makeTokenPair(USER_PAYLOAD);
-    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
-    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
-      makeInviteRecord({ created_by: newInviter }),
-    );
-    prismaMock.admin.findUnique.mockResolvedValueOnce(DELETED_ADMIN_RECORD);
-    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
-
-    const req = makeAuthRequest(access.token, { method: 'POST', body: { token: rawToken } });
-    const res = await POST(req);
-    const { body } = await parseJson<any>(res);
-
-    expect(body.promotedBy).toBe(newInviter);
   });
 
   it('invalidates the admins cache on a successful rejoin', async () => {

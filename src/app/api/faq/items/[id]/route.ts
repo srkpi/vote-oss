@@ -32,17 +32,7 @@ import { deltaToPlainText, parseQuillDelta } from '@/lib/utils';
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - title
- *               - content
- *             properties:
- *               title:
- *                 type: string
- *                 maxLength: 200
- *               content:
- *                 type: string
- *                 description: Serialised Quill Delta JSON
+ *             $ref: '#/components/schemas/FaqItemCreateBody'
  *     responses:
  *       200:
  *         description: Item updated

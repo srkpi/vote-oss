@@ -74,13 +74,7 @@ export async function GET() {
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - title
- *             properties:
- *               title:
- *                 type: string
- *                 maxLength: 100
+ *             $ref: '#/components/schemas/FaqCategoryCreateBody'
  *     responses:
  *       201:
  *         description: Category created

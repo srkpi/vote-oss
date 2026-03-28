@@ -39,8 +39,11 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   if (status === 404 || !election) notFound();
 
-  const canDelete =
-    !session.restrictedToFaculty || adminCanDeleteElection(session.faculty, election.restrictions);
+  const canDelete = adminCanDeleteElection(
+    session.restrictedToFaculty,
+    session.faculty,
+    election.restrictions,
+  );
 
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';

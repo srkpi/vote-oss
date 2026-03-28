@@ -179,7 +179,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const restrictions = election.restrictions as ElectionRestriction[];
 
-  if (admin.restricted_to_faculty && !adminCanDeleteElection(admin.faculty, restrictions)) {
+  if (!adminCanDeleteElection(admin.restricted_to_faculty, admin.faculty, restrictions)) {
     return Errors.forbidden('You can only delete elections of your own faculty');
   }
 
