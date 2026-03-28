@@ -460,6 +460,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             label="Підрозділ"
             htmlFor="faculties"
             hint={restrictedToFaculty ? 'Акаунт обмежений одним підрозділом' : undefined}
+            error={fieldErrors.faculties}
           >
             {restrictedToFaculty ? (
               <div className="relative">
