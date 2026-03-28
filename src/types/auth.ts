@@ -1,19 +1,42 @@
 import type { Admin } from '@prisma/client';
 
+export interface KpiIdUserInfo {
+  EMPLOYEE_ID: string;
+  AUTH_METHOD: string;
+  STUDENT_ID: string;
+  TAX_ID: string;
+  NAME: string;
+  TRACE_ID: string;
+  TIME_STAMP: string;
+
+  // WILL BE FETCHED FROM CAMPUS API
+  GROUP?: string;
+  FACULTY?: string;
+  SPECIALITY?: string;
+  STUDY_FORM?: string;
+  STUDY_YEAR?: string;
+}
+
 export interface TicketUserInfo {
   id: string;
   created: string;
   applicationId: string;
-  data: {
-    EMPLOYEE_ID: string;
-    AUTH_METHOD: string;
-    STUDENT_ID: string;
-    TAX_ID: string;
-    NAME: string;
-    TRACE_ID: string;
-    TIME_STAMP: string;
-  };
+  data: KpiIdUserInfo;
   traceId: string;
+}
+
+export interface DiiaKpiIdResponse {
+  deepLink: string;
+  pageLink: string;
+  requestId: string;
+  createdAt: string;
+}
+
+export interface DiiaInitResponse {
+  deepLink: string;
+  requestId: string;
+  qrCode: string;
+  expiresAt: string;
 }
 
 export interface TokenPayload {

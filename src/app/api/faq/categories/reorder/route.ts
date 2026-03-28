@@ -33,16 +33,8 @@ import { prisma } from '@/lib/prisma';
  *                   type: string
  *                 description: Complete ordered list of all category IDs
  *     responses:
- *       200:
+ *       204:
  *         description: Categories reordered
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
  *       400:
  *         description: Invalid order array or unknown category IDs
  *       401:
@@ -92,5 +84,5 @@ export async function PATCH(req: NextRequest) {
 
   await invalidateFaq();
 
-  return NextResponse.json({ ok: true });
+  return new NextResponse(null, { status: 204 });
 }

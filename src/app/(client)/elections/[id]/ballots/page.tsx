@@ -20,8 +20,8 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
   const { id } = await params;
 
   const [ballotsResult, electionResult] = await Promise.all([
-    serverApi.getBallots(id),
-    serverApi.getElection(id),
+    serverApi.elections.getBallots(id),
+    serverApi.elections.get(id),
   ]);
 
   const { data, error, status } = ballotsResult;

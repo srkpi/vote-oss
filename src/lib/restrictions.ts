@@ -75,9 +75,18 @@ export function adminCanAccessElection(
  * explicitly include their faculty (cannot delete global elections).
  */
 export function adminCanDeleteElection(
-  adminFaculty: string,
+  isRestricted: boolean,
+  faculty: string,
   restrictions: ElectionRestriction[],
 ): boolean {
+  if (!isRestricted) {
+    return true;
+  }
+
   const facRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
-  return facRestrictions.some((r) => r.value === adminFaculty);
+  if (!facRestrictions.length) {
+    return false;
+  }
+
+  return facRestrictions.every((r) => r.value === faculty);
 }

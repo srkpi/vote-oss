@@ -41,16 +41,8 @@ import { prisma } from '@/lib/prisma';
  *                   type: string
  *                 description: Complete ordered list of item IDs for this category
  *     responses:
- *       200:
+ *       204:
  *         description: Items reordered
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
  *       400:
  *         description: Invalid order array or IDs not belonging to this category
  *       401:
@@ -111,5 +103,5 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   await invalidateFaq();
 
-  return NextResponse.json({ ok: true });
+  return new NextResponse(null, { status: 204 });
 }

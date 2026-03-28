@@ -31,10 +31,10 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
     setLoading(true);
     setError(null);
 
-    const result = await api.joinAsAdmin(trimmed);
+    const result = await api.admins.join(trimmed);
 
     if (result.success) {
-      await api.refreshToken();
+      await api.auth.refresh();
 
       setSuccess(true);
       toast({

@@ -2,7 +2,7 @@ import * as allure from 'allure-js-commons';
 
 import { makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
@@ -40,16 +40,13 @@ describe('POST /api/auth/logout', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 200 with ok=true on successful logout', async () => {
+  it('returns 200 on successful logout', async () => {
     const { access } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
 
     const req = makeAuthRequest(access.token, { method: 'POST' });
     const res = await POST(req);
-    const { status, body } = await parseJson<any>(res);
-
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
+    expect(res.status).toBe(200);
   });
 
   it('calls revokeByAccessJti with the jti and iat from the token', async () => {

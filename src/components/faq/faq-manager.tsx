@@ -72,7 +72,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     if (!title) return;
 
     setAddingCatLoading(true);
-    const { data, error } = await api.createFaqCategory(title);
+    const { data, error } = await api.faq.categories.create(title);
     setAddingCatLoading(false);
 
     if (error !== null) {
@@ -98,7 +98,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     if (!title) return;
 
     setRenameCatLoading(true);
-    const { error } = await api.updateFaqCategory(renameCat.id, title);
+    const { error } = await api.faq.categories.update(renameCat.id, title);
     setRenameCatLoading(false);
 
     if (error !== null) {
@@ -116,7 +116,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     if (!deleteCat) return;
 
     setDeleteCatLoading(true);
-    const { error } = await api.deleteFaqCategory(deleteCat.id);
+    const { error } = await api.faq.categories.delete(deleteCat.id);
     setDeleteCatLoading(false);
 
     if (error !== null) {
@@ -136,7 +136,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     [next[index], next[swapWith]] = [next[swapWith], next[index]];
 
     setCategories(next);
-    const { error } = await api.reorderFaqCategories(next.map((c) => c.id));
+    const { error } = await api.faq.categories.reorder(next.map((c) => c.id));
     if (error !== null) setCategories(categories);
   };
 
@@ -149,7 +149,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
     const snapshot = categories;
     setCategories(next);
-    const { error } = await api.reorderFaqCategories(next.map((c) => c.id));
+    const { error } = await api.faq.categories.reorder(next.map((c) => c.id));
     if (error !== null) setCategories(snapshot);
   };
 
@@ -185,7 +185,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     setItemLoading(true);
 
     if (item) {
-      const { data, error } = await api.updateFaqItem(item.id, title, content);
+      const { data, error } = await api.faq.items.update(item.id, title, content);
       setItemLoading(false);
       if (error !== null) {
         err(error);
@@ -201,7 +201,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       );
       toast({ title: 'Пункт оновлено', variant: 'success' });
     } else {
-      const { data, error } = await api.createFaqItem(categoryId, title, content);
+      const { data, error } = await api.faq.items.create(categoryId, title, content);
       setItemLoading(false);
       if (error !== null) {
         err(error);
@@ -222,7 +222,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     if (!deleteItem) return;
 
     setDeleteItemLoading(true);
-    const { error } = await api.deleteFaqItem(deleteItem.item.id);
+    const { error } = await api.faq.items.delete(deleteItem.item.id);
     setDeleteItemLoading(false);
 
     if (error !== null) {
@@ -251,7 +251,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     [next[index], next[swapWith]] = [next[swapWith], next[index]];
 
     setCategories((prev) => prev.map((c) => (c.id === categoryId ? { ...c, items: next } : c)));
-    const { error } = await api.reorderFaqItems(
+    const { error } = await api.faq.items.reorder(
       categoryId,
       next.map((i) => i.id),
     );
@@ -269,7 +269,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
     const snapshot = categories;
     setCategories((prev) => prev.map((c) => (c.id === categoryId ? { ...c, items: next } : c)));
-    const { error } = await api.reorderFaqItems(
+    const { error } = await api.faq.items.reorder(
       categoryId,
       next.map((i) => i.id),
     );

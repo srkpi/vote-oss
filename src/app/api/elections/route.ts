@@ -30,10 +30,11 @@ import type {
   RestrictionType,
 } from '@/types/election';
 
-function computeStatus(opensAt: string, closesAt: string): ElectionStatus {
+function computeStatus(opensAt: string | Date, closesAt: string | Date): ElectionStatus {
   const now = Date.now();
-  const open = new Date(opensAt).getTime();
-  const close = new Date(closesAt).getTime();
+  const open = typeof opensAt === 'string' ? new Date(opensAt).getTime() : opensAt.getTime();
+  const close = typeof closesAt === 'string' ? new Date(closesAt).getTime() : closesAt.getTime();
+
   if (now < open) return 'upcoming';
   if (now <= close) return 'open';
   return 'closed';
@@ -184,68 +185,14 @@ export async function GET(req: NextRequest) {
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - title
- *               - opensAt
- *               - closesAt
- *               - choices
- *             properties:
- *               title:
- *                 type: string
- *                 maxLength: 255
- *               opensAt:
- *                 type: string
- *                 format: date-time
- *               closesAt:
- *                 type: string
- *                 format: date-time
- *               choices:
- *                 type: array
- *                 minItems: 2
- *                 maxItems: 10
- *                 items:
- *                   type: string
- *                   maxLength: 100
- *               restrictedToFaculty:
- *                 type: string
- *                 nullable: true
- *                 description: Limit election to a specific faculty (null = all faculties)
- *               restrictedToGroup:
- *                 type: string
- *                 nullable: true
- *                 description: Limit election to a specific group within the faculty
+ *             $ref: '#/components/schemas/ElectionCreateBody'
  *     responses:
  *       201:
  *         description: Election created
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                 title:
- *                   type: string
- *                 opensAt:
- *                   type: string
- *                   format: date-time
- *                 closesAt:
- *                   type: string
- *                   format: date-time
- *                 publicKey:
- *                   type: string
- *                 choices:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       choice:
- *                         type: string
- *                       position:
- *                         type: integer
+ *               $ref: '#/components/schemas/Election'
  *       400:
  *         description: Validation error (missing fields, date constraints, unknown faculty/group)
  *       401:
@@ -277,8 +224,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { title, opensAt, closesAt, choices } = body;
-  const minChoices = body.minChoices ?? 1;
-  const maxChoices = body.maxChoices ?? 1;
+  const minChoices = body.minChoices ?? ELECTION_MIN_CHOICES_MIN;
+  const maxChoices = body.maxChoices ?? ELECTION_MIN_CHOICES_MIN;
   let restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
 
   if (!title || !opensAt || !closesAt || !choices?.length) {
@@ -456,13 +403,17 @@ export async function POST(req: NextRequest) {
     {
       id: election.id,
       title: election.title,
+      createdAt: election.created_at,
       opensAt: election.opens_at,
       closesAt: election.closes_at,
       minChoices: election.min_choices,
       maxChoices: election.max_choices,
-      publicKey: election.public_key,
-      choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
       restrictions: election.restrictions,
+      status: computeStatus(election.opens_at, election.closes_at),
+      publicKey: election.public_key,
+      creator: { fullName: admin.full_name, faculty: admin.faculty },
+      choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
+      ballotCount: 0,
     },
     { status: 201 },
   );

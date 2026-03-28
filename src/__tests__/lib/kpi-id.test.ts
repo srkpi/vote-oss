@@ -1,6 +1,13 @@
 import * as allure from 'allure-js-commons';
 
-import { GraduateUserError, NotDiiaAuthError, NotStudentError, resolveTicket } from '@/lib/kpi-id';
+import {
+  GraduateUserError,
+  InvalidTicketError,
+  InvalidUserDataError,
+  NotDiiaAuthError,
+  NotStudentError,
+  resolveTicket,
+} from '@/lib/kpi-id';
 
 describe('kpi-id', () => {
   beforeEach(() => {
@@ -60,26 +67,24 @@ describe('kpi-id', () => {
       expect(calledUrl).toContain('appSecret=test-secret');
     });
 
-    it('returns null if response is not ok', async () => {
+    it('throws InvalidTicketError if response is not ok', async () => {
       (fetch as jest.Mock).mockResolvedValue({
         ok: false,
       });
 
-      const user = await resolveTicket('bad-ticket');
-      expect(user).toBeNull();
+      await expect(resolveTicket('bad-ticket')).rejects.toThrow(InvalidTicketError);
     });
 
-    it('returns null if response has no data field', async () => {
+    it('throws InvalidTicketError if response has no data field', async () => {
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({}),
       });
 
-      const user = await resolveTicket('ticket');
-      expect(user).toBeNull();
+      await expect(resolveTicket('ticket')).rejects.toThrow(InvalidTicketError);
     });
 
-    it('returns null if required fields are missing', async () => {
+    it('throws InvalidUserDataError if required fields are missing', async () => {
       (fetch as jest.Mock).mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -91,8 +96,7 @@ describe('kpi-id', () => {
         }),
       });
 
-      const user = await resolveTicket('ticket');
-      expect(user).toBeNull();
+      await expect(resolveTicket('ticket')).rejects.toThrow(InvalidUserDataError);
     });
 
     it('throws an error if fetch fails', async () => {
@@ -100,9 +104,8 @@ describe('kpi-id', () => {
       await expect(resolveTicket('ticket')).rejects.toThrow('network error');
     });
 
-    it('returns null for empty ticketId', async () => {
-      const user = await resolveTicket('');
-      expect(user).toBeNull();
+    it('throws InvalidTicketError for empty ticketId', async () => {
+      await expect(resolveTicket('')).rejects.toThrow(InvalidTicketError);
       expect(fetch).not.toHaveBeenCalled();
     });
 

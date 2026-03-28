@@ -11,7 +11,7 @@ import {
   USER_PAYLOAD,
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
@@ -133,7 +133,7 @@ describe('DELETE /api/admins/[userId]', () => {
 
   // ── Successful soft-delete ────────────────────────────────────────────────
 
-  it('returns 200 with removedUserId when hierarchy check passes', async () => {
+  it('returns 205 when hierarchy check passes', async () => {
     const req = await adminReq(ADMIN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
     prismaMock.admin.findMany.mockResolvedValueOnce([
@@ -143,11 +143,7 @@ describe('DELETE /api/admins/[userId]', () => {
     prismaMock.admin.update.mockResolvedValueOnce({});
 
     const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-002' }) });
-    const { status, body } = await parseJson<any>(res);
-
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.removedUserId).toBe('admin-002');
+    expect(res.status).toBe(204);
   });
 
   it('soft-deletes the admin via update (not delete) with correct fields', async () => {
@@ -234,6 +230,6 @@ describe('DELETE /api/admins/[userId]', () => {
 
     const req = makeAuthRequest(access.token, { method: 'DELETE' });
     const res = await DELETE(req, { params: Promise.resolve({ userId: 'admin-leaf' }) });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(204);
   });
 });

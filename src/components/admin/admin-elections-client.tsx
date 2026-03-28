@@ -81,7 +81,7 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteElection(deleteTarget.id);
+    const result = await api.elections.delete(deleteTarget.id);
     if (result.success) {
       toast({
         title: 'Голосування видалено',
@@ -155,7 +155,11 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
                     <ElectionRow
                       key={election.id}
                       election={election}
-                      canDelete={adminCanDeleteElection(session.faculty, election.restrictions)}
+                      canDelete={adminCanDeleteElection(
+                        session.restrictedToFaculty,
+                        session.faculty,
+                        election.restrictions,
+                      )}
                       onDelete={() => setDeleteTarget(election)}
                     />
                   ))}
@@ -168,7 +172,11 @@ export function AdminElectionsClient({ elections, error, session }: AdminElectio
                 <ElectionMobileCard
                   key={election.id}
                   election={election}
-                  canDelete={adminCanDeleteElection(session.faculty, election.restrictions)}
+                  canDelete={adminCanDeleteElection(
+                    session.restrictedToFaculty,
+                    session.faculty,
+                    election.restrictions,
+                  )}
                   onDelete={() => setDeleteTarget(election)}
                 />
               ))}

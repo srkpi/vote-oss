@@ -34,7 +34,7 @@ export function AdminTable({ admins, currentUserId, onDelete }: AdminTableProps)
     if (!deleteTarget) return;
     setDeleting(true);
 
-    const result = await api.deleteAdmin(deleteTarget.userId);
+    const result = await api.admins.delete(deleteTarget.userId);
     if (result.success) {
       toast({
         title: 'Адміністратора видалено',

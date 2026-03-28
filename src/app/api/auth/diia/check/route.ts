@@ -5,28 +5,20 @@ import { requireAuth } from '@/lib/auth';
 import { KPI_AUTH_URL } from '@/lib/config/client';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
-import { parseGroupLevel } from '@/lib/group-utils';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
+import {
+  InvalidTicketError,
+  InvalidUserDataError,
+  resolveUserData,
+  ResolveUserDataError,
+} from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
-import type { TokenPayload } from '@/types/auth';
+import type { KpiIdUserInfo, TokenPayload } from '@/types/auth';
 
 interface CheckResponse {
   status: 'Processing' | 'Finished';
   sessionId: string;
-}
-
-interface KpiUserData {
-  fullName?: string;
-  data?: {
-    EMPLOYEE_ID?: string;
-    STUDENT_ID?: string;
-    NAME?: string;
-    AUTH_METHOD?: string;
-    GROUP?: string;
-    FACULTY?: string;
-    [key: string]: string | undefined;
-  };
 }
 
 /**
@@ -45,7 +37,7 @@ function extractCookieValues(setCookieHeaders: string[]): string {
 /**
  * @swagger
  * /api/auth/diia/check:
- *   get:
+ *   post:
  *     summary: Poll Diia authentication status
  *     description: >
  *       Checks whether the user has scanned and approved the Diia QR code.
@@ -53,18 +45,31 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *       completes Diia verification this endpoint exchanges the sessionId for
  *       KPI-ID session cookies, fetches the authenticated user profile, and
  *       issues a new JWT access + refresh token pair via HTTP-only cookies.
- *       Graduate (аспірант) users are rejected with 403.
+ *       Graduate users are rejected with 403.
  *     tags:
  *       - Auth
- *     parameters:
- *       - in: query
- *         name: requestId
- *         required: true
- *         schema:
- *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - requestId
+ *             properties:
+ *               requestId:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Status response (processing or success)
+ *         description: Status response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [success, processing]
  *       400:
  *         description: Missing requestId
  *       401:
@@ -74,8 +79,15 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *       500:
  *         description: Provider error
  */
-export async function GET(req: NextRequest) {
-  const requestId = req.nextUrl.searchParams.get('requestId');
+export async function POST(req: NextRequest) {
+  let body: { requestId?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return Errors.badRequest('Invalid JSON body');
+  }
+
+  const { requestId } = body;
   if (!requestId) return Errors.badRequest('requestId is required');
 
   let checkData: CheckResponse;
@@ -141,7 +153,7 @@ export async function GET(req: NextRequest) {
     return Errors.internal('No session cookies received from provider');
   }
 
-  let userData: KpiUserData;
+  let userData: { data: KpiIdUserInfo };
   try {
     const userRes = await fetch(`${KPI_AUTH_URL}/api/user`, {
       method: 'GET',
@@ -156,7 +168,7 @@ export async function GET(req: NextRequest) {
       return Errors.internal('Failed to retrieve user data from provider');
     }
 
-    userData = (await userRes.json()) as KpiUserData;
+    userData = (await userRes.json()) as { data: KpiIdUserInfo };
   } catch (err) {
     console.error('[diia/check] user fetch error:', err);
     return Errors.internal('Failed to retrieve user data from provider');
@@ -173,42 +185,35 @@ export async function GET(req: NextRequest) {
     return Errors.internal('Invalid user data from provider');
   }
 
-  const studentId = data.STUDENT_ID;
-  const fullName = data.NAME;
-
-  if (!studentId || !fullName) {
-    return Errors.unauthorized('Incomplete user data returned by provider');
-  }
-
-  if (data.EMPLOYEE_ID && !studentId) {
-    return Errors.forbidden('Platform is only available for students');
-  }
-
-  // In production GROUP comes from the KPI API; mocked for development
-  const group = data.GROUP ?? 'IP-24';
-
-  // Graduate (аспірант) students are not permitted to use the platform
-  if (parseGroupLevel(group) === 'g') {
-    return Errors.forbidden('Platform is not available for graduate students');
+  let userInfo;
+  try {
+    userInfo = await resolveUserData(data);
+  } catch (err) {
+    if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
+      return Errors.unauthorized(err.message);
+    }
+    if (err instanceof ResolveUserDataError) {
+      return Errors.forbidden(err.message);
+    }
+    console.error('[auth/kpi-id] resolveUserData error:', err);
+    return Errors.internal('Failed to contact auth provider');
   }
 
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
 
-  const faculty = data.FACULTY ?? 'TEST';
-
   const tokenPayload: TokenPayload = {
-    sub: studentId,
-    faculty,
-    group,
-    fullName,
-    speciality: undefined,
-    studyYear: undefined,
-    studyForm: undefined,
+    sub: userInfo.userId,
+    faculty: userInfo.faculty,
+    group: userInfo.group,
+    fullName: userInfo.fullName,
+    speciality: userInfo.speciality,
+    studyYear: userInfo.studyYear,
+    studyForm: userInfo.studyForm,
   };
 
   const adminRecord = await prisma.admin.findUnique({
-    where: { user_id: studentId, deleted_at: null },
+    where: { user_id: userInfo.userId, deleted_at: null },
   });
   const isAdmin = !!adminRecord;
 
@@ -223,12 +228,7 @@ export async function GET(req: NextRequest) {
 
   await persistTokenPair(accessJti, refreshJti);
 
-  const response = NextResponse.json({
-    status: 'success',
-    userId: studentId,
-    fullName,
-    isAdmin,
-  });
+  const response = NextResponse.json({ status: 'success' });
 
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));

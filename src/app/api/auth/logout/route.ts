@@ -21,14 +21,6 @@ import { revokeByAccessJti } from '@/lib/token-store';
  *     responses:
  *       200:
  *         description: Logged out successfully; cookies cleared
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
  *       401:
  *         description: Unauthorized – no valid access token present
  */
@@ -40,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   await revokeByAccessJti(user.jti, user.iat);
 
-  const response = NextResponse.json({ ok: true }, { status: 200 });
+  const response = new NextResponse(null, { status: 200 });
 
   const clearCookie = (name: string) =>
     response.cookies.set(name, '', { httpOnly: true, maxAge: 0, path: '/' });

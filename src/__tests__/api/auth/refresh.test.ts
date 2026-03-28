@@ -3,12 +3,7 @@ import * as allure from 'allure-js-commons';
 import { makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
-import {
-  getResponseCookie,
-  makeRefreshRequest,
-  makeRequest,
-  parseJson,
-} from '@/__tests__/helpers/request';
+import { getResponseCookie, makeRefreshRequest, makeRequest } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
@@ -61,18 +56,14 @@ describe('POST /api/auth/refresh', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 200 with ok=true and isAdmin flag for a valid refresh token', async () => {
+  it('returns 200 for a valid refresh token', async () => {
     const { refresh } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeRefreshRequest(refresh.token, { method: 'POST' });
     const res = await POST(req);
-    const { status, body } = await parseJson<any>(res);
-
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.isAdmin).toBe(false);
+    expect(res.status).toBe(200);
   });
 
   it('revokes the old refresh token pair via revokeByRefreshJti', async () => {
@@ -127,17 +118,5 @@ describe('POST /api/auth/refresh', () => {
     expect(prismaMock.admin.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { user_id: USER_PAYLOAD.sub } }),
     );
-  });
-
-  it('reflects isAdmin=true in response when admin record exists', async () => {
-    const { refresh } = await makeTokenPair(USER_PAYLOAD);
-    tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
-    // Simulate user being promoted to admin since last login
-    prismaMock.admin.findUnique.mockResolvedValueOnce({ user_id: 'user-001' });
-
-    const req = makeRefreshRequest(refresh.token, { method: 'POST' });
-    const res = await POST(req);
-    const { body } = await parseJson<any>(res);
-    expect(body.isAdmin).toBe(true);
   });
 });

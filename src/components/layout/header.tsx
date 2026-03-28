@@ -35,7 +35,7 @@ export function Header({ session }: HeaderProps) {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    const result = await api.logout();
+    const result = await api.auth.logout();
     if (result.success) {
       toast({ title: 'Вихід виконано', description: 'До побачення!', variant: 'success' });
       router.push('/login');

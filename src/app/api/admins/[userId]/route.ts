@@ -110,18 +110,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
  *           type: string
  *         description: The user ID of the admin to remove
  *     responses:
- *       200:
+ *       204:
  *         description: Admin successfully removed
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 removedUserId:
- *                   type: string
  *       400:
  *         description: Missing userId or attempting to remove self
  *       401:
@@ -177,5 +167,5 @@ export async function DELETE(
 
   await Promise.all([invalidateAdmins(), invalidateInviteTokens()]);
 
-  return NextResponse.json({ ok: true, removedUserId: targetUserId });
+  return new NextResponse(null, { status: 204 });
 }

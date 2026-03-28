@@ -16,7 +16,7 @@ export default async function AdminsPage() {
     redirect('/login');
   }
 
-  const { data, error } = await serverApi.getAdmins();
+  const { data, error } = await serverApi.admins.list();
 
   const all = data ?? [];
   const canInvite = session.manageAdmins ?? false;

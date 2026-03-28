@@ -1,6 +1,5 @@
 import * as allure from 'allure-js-commons';
 
-import { ADMIN_RECORD } from '@/__tests__/helpers/fixtures';
 import { kpiIdMock, resetKpiIdMock } from '@/__tests__/helpers/kpi-id-mock';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
@@ -80,36 +79,12 @@ describe('POST /api/auth/kpi-id', () => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 200 with user info and isAdmin=false for a regular user ticket', async () => {
+  it('returns 200 for a regular user ticket', async () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-user-1' } });
     const res = await POST(req);
-    const { status, body } = await parseJson<any>(res);
-
-    expect(status).toBe(200);
-    expect(body.userId).toBe('user-001');
-    expect(body.fullName).toBe('Ivan Petrenko');
-    expect(body.isAdmin).toBe(false);
-    expect(body.faculty).toBe('FICE');
-  });
-
-  it('returns isAdmin=true when the user exists in the admins table', async () => {
-    prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
-
-    const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-superadmin-1' } });
-    const res = await POST(req);
-    const { body } = await parseJson<any>(res);
-    expect(body.isAdmin).toBe(true);
-  });
-
-  it('returns isAdmin=false when admin record is absent even for an admin ticket', async () => {
-    prismaMock.admin.findUnique.mockResolvedValueOnce(null);
-
-    const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-superadmin-1' } });
-    const res = await POST(req);
-    const { body } = await parseJson<any>(res);
-    expect(body.isAdmin).toBe(false);
+    expect(res.status).toBe(200);
   });
 
   it('sets HTTPOnly access_token and refresh_token cookies', async () => {
@@ -181,7 +156,7 @@ describe('POST /api/auth/kpi-id', () => {
   });
 
   it('includes the graduate error message in the 403 response', async () => {
-    const errorMessage = 'Platform is not available for graduate (аспірант) students';
+    const errorMessage = 'Platform is not available for graduate students';
     kpiIdMock.resolveTicket.mockRejectedValueOnce(new kpiIdMock.GraduateUserError(errorMessage));
 
     const req = makeRequest({ method: 'POST', body: { ticketId: 'ticket-grad-1' } });

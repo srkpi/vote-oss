@@ -198,15 +198,13 @@ describe('DELETE /api/faq/categories/[id]', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns 200 with deletedId on success', async () => {
+  it('returns 204 on success', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-1' });
 
-    const { status, body } = await parseJson<any>(await deleteCategory(req, catParams('cat-1')));
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.deletedId).toBe('cat-1');
+    const res = await deleteCategory(req, catParams('cat-1'));
+    expect(res.status).toBe(204);
   });
 
   it('calls prisma.faqCategory.delete with the correct id', async () => {
@@ -600,15 +598,13 @@ describe('DELETE /api/faq/items/[id]', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns 200 with deletedId on success', async () => {
+  it('returns 204 on success', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     prismaMock.faqItem.delete.mockResolvedValueOnce({ id: 'item-1' });
 
-    const { status, body } = await parseJson<any>(await deleteItem(req, itemParams('item-1')));
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.deletedId).toBe('item-1');
+    const res = await deleteItem(req, itemParams('item-1'));
+    expect(res.status).toBe(204);
   });
 
   it('calls prisma.faqItem.delete with the correct id', async () => {
@@ -670,15 +666,13 @@ describe('PATCH /api/faq/categories/reorder', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 200 and updates positions via transaction', async () => {
+  it('returns 204 and updates positions via transaction', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['cat-2', 'cat-1'] });
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([{ id: 'cat-1' }, { id: 'cat-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
-    const { status, body } = await parseJson<any>(await reorderCategories(req));
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    const res = await reorderCategories(req);
+    expect(res.status).toBe(204);
   });
 
   it('invalidates the FAQ cache after reordering categories', async () => {
@@ -732,15 +726,14 @@ describe('PATCH /api/faq/categories/[id]/items/reorder', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 200 and reorders items atomically', async () => {
+  it('returns 204 and reorders items atomically', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['item-2', 'item-1'] });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
-    const { status, body } = await parseJson<any>(await reorderItems(req, catParams('cat-1')));
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
+    const res = await reorderItems(req, catParams('cat-1'));
+    expect(res.status).toBe(204);
   });
 
   it('invalidates the FAQ cache after reordering items', async () => {

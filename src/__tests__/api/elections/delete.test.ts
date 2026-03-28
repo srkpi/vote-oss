@@ -11,7 +11,7 @@ import {
   USER_PAYLOAD,
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
-import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
@@ -91,7 +91,7 @@ describe('DELETE /api/elections/[id]', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 200 when restricted admin deletes an election from their own faculty', async () => {
+  it('returns 204 when restricted admin deletes an election from their own faculty', async () => {
     const req = await restrictedAdminReq(); // faculty=FICE
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({ restrictions: [{ type: 'FACULTY', value: 'FICE' }] }),
@@ -99,23 +99,16 @@ describe('DELETE /api/elections/[id]', () => {
     prismaMock.$transaction.mockResolvedValueOnce([]);
 
     const res = await DELETE(req, PARAMS);
-    const { status, body } = await parseJson<any>(res);
-
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
-    expect(body.deletedId).toBe(MOCK_ELECTION_ID);
+    expect(res.status).toBe(204);
   });
 
-  it('returns 200 when unrestricted admin deletes any election', async () => {
+  it('returns 204 when unrestricted admin deletes any election', async () => {
     const req = await adminReq(ADMIN_RECORD); // restricted_to_faculty=false
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
     prismaMock.$transaction.mockResolvedValueOnce([]);
 
     const res = await DELETE(req, PARAMS);
-    const { status, body } = await parseJson<any>(res);
-
-    expect(status).toBe(200);
-    expect(body.ok).toBe(true);
+    expect(res.status).toBe(204);
   });
 
   it('allows unrestricted admin to delete an open election', async () => {
@@ -129,7 +122,7 @@ describe('DELETE /api/elections/[id]', () => {
     prismaMock.$transaction.mockResolvedValueOnce([]);
 
     const res = await DELETE(req, PARAMS);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(204);
   });
 
   it('allows unrestricted admin to delete a closed election', async () => {
@@ -143,7 +136,7 @@ describe('DELETE /api/elections/[id]', () => {
     prismaMock.$transaction.mockResolvedValueOnce([]);
 
     const res = await DELETE(req, PARAMS);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(204);
   });
 
   it('allows unrestricted admin to delete an upcoming election', async () => {
@@ -157,7 +150,7 @@ describe('DELETE /api/elections/[id]', () => {
     prismaMock.$transaction.mockResolvedValueOnce([]);
 
     const res = await DELETE(req, PARAMS);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(204);
   });
 
   it('invalidates the elections cache after deletion', async () => {

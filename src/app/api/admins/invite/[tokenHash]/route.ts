@@ -38,18 +38,8 @@ import { isAncestorInGraph } from '@/lib/utils';
  *           type: string
  *         description: SHA-256 hash of the raw invite token
  *     responses:
- *       200:
+ *       204:
  *         description: Token deleted
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 deletedTokenHash:
- *                   type: string
  *       400:
  *         description: Missing tokenHash
  *       401:
@@ -101,5 +91,5 @@ export async function DELETE(
   await prisma.adminInviteToken.delete({ where: { token_hash: tokenHash } });
   await invalidateInviteTokens();
 
-  return NextResponse.json({ ok: true, deletedTokenHash: tokenHash });
+  return new NextResponse(null, { status: 204 });
 }

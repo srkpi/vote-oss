@@ -32,16 +32,6 @@ import type { TokenPayload } from '@/types/auth';
  *             description: Rotated HTTP-only access and refresh token cookies
  *             schema:
  *               type: string
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 isAdmin:
- *                   type: boolean
  *       401:
  *         description: Refresh token is missing, invalid, or already revoked
  *       429:
@@ -95,7 +85,7 @@ export async function POST(req: NextRequest) {
 
   await persistTokenPair(accessJti, refreshJti);
 
-  const response = NextResponse.json({ ok: true, isAdmin }, { status: 200 });
+  const response = new NextResponse(null, { status: 200 });
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));
 
