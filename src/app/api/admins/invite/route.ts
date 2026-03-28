@@ -2,7 +2,12 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
-import { getCachedInviteTokens, invalidateInviteTokens, setCachedInviteTokens } from '@/lib/cache';
+import {
+  getCachedAdmins,
+  getCachedInviteTokens,
+  invalidateInviteTokens,
+  setCachedInviteTokens,
+} from '@/lib/cache';
 import {
   INVITE_TOKEN_LENGTH,
   INVITE_TOKEN_MAX_COUNT,
@@ -52,11 +57,17 @@ export async function GET(req: NextRequest) {
     return Errors.forbidden('You do not have permission to view invite tokens');
   }
 
-  // Load hierarchy graph (single query, includes soft-deleted nodes)
-  const graphNodes = await prisma.admin.findMany({
-    select: { user_id: true, promoted_by: true },
-  });
-  const graph = new Map(graphNodes.map((n) => [n.user_id, n.promoted_by]));
+  const cachedAdmins = await getCachedAdmins();
+  const graph: Map<string, string | null> = cachedAdmins
+    ? new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]))
+    : new Map(
+        (
+          await prisma.admin.findMany({
+            where: { deleted_at: null },
+            select: { user_id: true, promoted_by: true },
+          })
+        ).map((n) => [n.user_id, n.promoted_by]),
+      );
 
   // Resolve token list from cache or DB
   let allTokens = await getCachedInviteTokens();

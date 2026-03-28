@@ -66,13 +66,9 @@ export async function GET(req: NextRequest) {
 
   const { user } = auth;
 
-  const graphNodes = await prisma.admin.findMany({
-    select: { user_id: true, promoted_by: true },
-  });
-  const graph = new Map(graphNodes.map((n) => [n.user_id, n.promoted_by]));
-
   const cached = await getCachedAdmins();
   if (cached) {
+    const graph = new Map(cached.map((a) => [a.userId, a.promoter?.userId ?? null]));
     const activeIds = cached.map((a) => a.userId);
     const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
     return NextResponse.json(
@@ -108,6 +104,7 @@ export async function GET(req: NextRequest) {
 
   await setCachedAdmins(camelAdmins);
 
+  const graph = new Map(camelAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]));
   const activeIds = camelAdmins.map((a) => a.userId);
   const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
 
