@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     return auth.status === 401 ? Errors.unauthorized(auth.error) : Errors.forbidden(auth.error);
   }
 
-  const { user } = auth;
+  const { user, admin } = auth;
   const currentAdminId = user.sub;
 
   let body: { replacementId?: string | null };
@@ -138,7 +138,11 @@ export async function POST(req: NextRequest) {
         }),
         prisma.admin.update({
           where: { user_id: replacementId },
-          data: { promoted_by: callerPromotedBy },
+          data: {
+            promoted_by: callerPromotedBy,
+            manage_admins: admin.manage_admins,
+            restricted_to_faculty: admin.restricted_to_faculty,
+          },
         }),
         prisma.admin.update({
           where: { user_id: currentAdminId },
@@ -166,7 +170,11 @@ export async function POST(req: NextRequest) {
         }),
         prisma.admin.update({
           where: { user_id: replacementId },
-          data: { promoted_by: callerPromotedBy },
+          data: {
+            promoted_by: callerPromotedBy,
+            manage_admins: admin.manage_admins,
+            restricted_to_faculty: admin.restricted_to_faculty,
+          },
         }),
         prisma.admin.update({
           where: { user_id: currentAdminId },

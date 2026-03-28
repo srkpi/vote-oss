@@ -237,7 +237,7 @@ describe('POST /api/admins/leave', () => {
     expect(prismaMock.admin.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { user_id: 'admin-002' },
-        data: { promoted_by: null }, // inherits caller's position (root)
+        data: { promoted_by: null, manage_admins: true, restricted_to_faculty: false }, // inherits caller's position (root)
       }),
     );
   });
@@ -383,7 +383,7 @@ describe('POST /api/admins/leave', () => {
     expect(prismaMock.admin.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { user_id: 'admin-leaf' },
-        data: { promoted_by: null }, // caller was root → replacement inherits root position
+        data: { promoted_by: null, manage_admins: true, restricted_to_faculty: false }, // caller was root → replacement inherits root position
       }),
     );
   });
