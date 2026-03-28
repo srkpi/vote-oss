@@ -116,7 +116,7 @@ describe('POST /api/auth/refresh', () => {
     await POST(req);
 
     expect(prismaMock.admin.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { user_id: USER_PAYLOAD.sub } }),
+      expect.objectContaining({ where: { user_id: USER_PAYLOAD.sub, deleted_at: null } }),
     );
   });
 });
