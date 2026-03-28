@@ -3,29 +3,39 @@ import { KPI_APP_SECRET } from '@/lib/config/server';
 import { parseGroupLevel } from '@/lib/group-utils';
 import type { UserInfo } from '@/types/auth';
 
-export class NotStudentError extends Error {
+export class ResolveTicketError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = new.target.name;
+  }
+}
+
+export class InvalidTicketError extends ResolveTicketError {
+  constructor(message = 'Invalid or expired ticketId') {
+    super(message);
+  }
+}
+
+export class NotStudentError extends ResolveTicketError {
   constructor(message = 'Platform is only available for students') {
     super(message);
-    this.name = 'NotStudentError';
   }
 }
 
-export class NotDiiaAuthError extends Error {
+export class NotDiiaAuthError extends ResolveTicketError {
   constructor(message = 'Authentication must be performed through Diia') {
     super(message);
-    this.name = 'NotDiiaAuthError';
   }
 }
 
-export class GraduateUserError extends Error {
+export class GraduateUserError extends ResolveTicketError {
   constructor(message = 'Platform is not available for graduate students') {
     super(message);
-    this.name = 'GraduateUserError';
   }
 }
 
-export async function resolveTicket(ticketId: string): Promise<UserInfo | null> {
-  if (!ticketId) return null;
+export async function resolveTicket(ticketId: string): Promise<UserInfo> {
+  if (!ticketId) throw new InvalidTicketError();
 
   const url = new URL(`${KPI_AUTH_URL}/api/ticket`);
   url.searchParams.set('ticketId', ticketId);
@@ -33,10 +43,10 @@ export async function resolveTicket(ticketId: string): Promise<UserInfo | null> 
   url.searchParams.set('appSecret', KPI_APP_SECRET);
 
   const res = await fetch(url.toString());
-  if (!res.ok) return null;
+  if (!res.ok) throw new InvalidTicketError();
 
   const body = (await res.json()) as { data?: Record<string, string | undefined> };
-  if (!body?.data) return null;
+  if (!body?.data) throw new InvalidTicketError();
 
   const { data } = body;
 
@@ -46,7 +56,7 @@ export async function resolveTicket(ticketId: string): Promise<UserInfo | null> 
 
   if (!data.STUDENT_ID && data.EMPLOYEE_ID) throw new NotStudentError();
 
-  if (!data.AUTH_METHOD || !data.STUDENT_ID || !data.NAME) return null;
+  if (!data.STUDENT_ID || !data.NAME) throw new InvalidTicketError();
 
   const group = data.GROUP ?? 'IP-24';
   const faculty = data.FACULTY ?? 'TEST';

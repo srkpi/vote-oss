@@ -1,23 +1,33 @@
 import type { UserInfo } from '@/types/auth';
 
-export class NotStudentError extends Error {
+export class ResolveTicketError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = new.target.name;
+  }
+}
+
+export class InvalidTicketError extends ResolveTicketError {
+  constructor(message = 'Invalid or expired ticketId') {
+    super(message);
+  }
+}
+
+export class NotStudentError extends ResolveTicketError {
   constructor(message = 'Platform is only available for students') {
     super(message);
-    this.name = 'NotStudentError';
   }
 }
 
-export class NotDiiaAuthError extends Error {
+export class NotDiiaAuthError extends ResolveTicketError {
   constructor(message = 'Authentication must be performed through Diia') {
     super(message);
-    this.name = 'NotDiiaAuthError';
   }
 }
 
-export class GraduateUserError extends Error {
+export class GraduateUserError extends ResolveTicketError {
   constructor(message = 'Platform is not available for graduate students') {
     super(message);
-    this.name = 'GraduateUserError';
   }
 }
 
@@ -70,7 +80,9 @@ export const TICKET_MAP: Record<string, UserInfo> = {
 };
 
 export const kpiIdMock = {
-  resolveTicket: jest.fn<Promise<UserInfo | null>, [string]>(),
+  resolveTicket: jest.fn<Promise<UserInfo>, [string]>(),
+  ResolveTicketError,
+  InvalidTicketError,
   NotStudentError,
   NotDiiaAuthError,
   GraduateUserError,
@@ -78,6 +90,11 @@ export const kpiIdMock = {
 
 export function resetKpiIdMock(): void {
   kpiIdMock.resolveTicket.mockReset().mockImplementation(async (ticketId: string) => {
-    return TICKET_MAP[ticketId] ?? null;
+    const userInfo = TICKET_MAP[ticketId];
+    if (userInfo) {
+      return userInfo;
+    }
+
+    throw new InvalidTicketError();
   });
 }

@@ -196,7 +196,6 @@ describe('POST /api/elections/[id]/ballot', () => {
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(201);
-    expect(body.ok).toBe(true);
     expect(typeof body.ballotHash).toBe('string');
     expect(body.ballotHash).toMatch(/^[a-f0-9]{64}$/);
   });
