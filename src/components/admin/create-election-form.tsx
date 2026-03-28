@@ -58,19 +58,20 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const [groupsError, setGroupsError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/campus/groups', { credentials: 'include' })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<Record<string, string[]>>;
-      })
-      .then((data) => {
-        setFacultyGroups(data);
+    const fetchGroups = async () => {
+      try {
+        const res = await api.campus.getGroups();
+        if (!res.success) {
+          setGroupsError('Не вдалося завантажити список підрозділів і груп');
+          return;
+        }
+        setFacultyGroups(res.data);
+      } finally {
         setGroupsLoading(false);
-      })
-      .catch(() => {
-        setGroupsError('Не вдалося завантажити список підрозділів і груп');
-        setGroupsLoading(false);
-      });
+      }
+    };
+
+    fetchGroups();
   }, []);
 
   const facultyOptions = Object.keys(facultyGroups).sort((a, b) => {
@@ -124,7 +125,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
   // Remove selected groups that no longer appear in the filtered list
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedGroups((prev) => prev.filter((g) => availableGroups.includes(g)));
   }, [availableGroups]);
 
