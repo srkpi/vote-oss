@@ -4,10 +4,10 @@ import { FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { ElectionMobileCard } from '@/components/admin/election-mobile-card';
-import { ElectionRow } from '@/components/admin/election-row';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
+import { ElectionMobileCard } from '@/components/elections/admin/election-mobile-card';
+import { ElectionRow } from '@/components/elections/admin/election-row';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {

@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,20 @@ import type { Admin } from '@/types/admin';
 interface AdminRowProps {
   admin: Admin;
   isCurrentUser: boolean;
+  canManageAdmins: boolean;
   onDelete: () => void;
+  onEdit: () => void;
 }
 
-export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
+export function AdminRow({
+  admin,
+  isCurrentUser,
+  canManageAdmins,
+  onDelete,
+  onEdit,
+}: AdminRowProps) {
+  const showActions = !isCurrentUser && admin.deletable;
+
   return (
     <tr
       className={cn(
@@ -64,15 +74,29 @@ export function AdminRow({ admin, isCurrentUser, onDelete }: AdminRowProps) {
         </div>
       </td>
       <td className="px-4 py-3.5">
-        {!isCurrentUser && admin.deletable && (
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={onDelete}
-            className="text-error hover:bg-error-bg"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+        {showActions && (
+          <div className="flex items-center gap-1">
+            {canManageAdmins && (
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={onEdit}
+                className="text-muted-foreground hover:text-kpi-navy hover:bg-surface"
+                title="Редагувати права"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={onDelete}
+              className="text-error hover:bg-error-bg"
+              title="Видалити адміністратора"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </td>
     </tr>

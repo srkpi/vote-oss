@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { TokenResult } from '@/components/admin/token-result';
+import { TokenResult } from '@/components/admin/invite/token-result';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {

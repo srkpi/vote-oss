@@ -67,6 +67,11 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<void>(`/admins/${userId}`, {
           method: 'DELETE',
         }),
+      patch: (userId: string, data: { manageAdmins?: boolean; restrictedToFaculty?: boolean }) =>
+        fetcher<void>(`/admins/${userId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(data),
+        }),
       leave: (replacementId: string | null) =>
         fetcher<void>('/admins/leave', {
           method: 'POST',

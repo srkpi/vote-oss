@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
-import { DeleteElectionButton } from '@/components/admin/delete-election-button';
 import { PageHeader } from '@/components/common/page-header';
+import { DeleteElectionButton } from '@/components/elections/admin/delete-election-button';
 import { AccessRestrictions } from '@/components/elections/election-restrictions';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { ResultsChart } from '@/components/elections/result-chart';

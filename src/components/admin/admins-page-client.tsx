@@ -4,7 +4,7 @@ import { LogOut, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import { AdminTable } from '@/components/admin/admin-table';
-import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
+import { InviteAdminDialog } from '@/components/admin/invite/invite-admin-dialog';
 import { LeaveAdminDialog } from '@/components/admin/leave-admin-dialog';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,23 @@ export function AdminsPageClient({
 
   const handleDelete = (userId: string) => {
     setAdmins((prev) => prev.filter((a) => a.userId !== userId));
+  };
+
+  const handleUpdate = (
+    userId: string,
+    updates: { manageAdmins: boolean; restrictedToFaculty: boolean },
+  ) => {
+    setAdmins((prev) =>
+      prev.map((a) =>
+        a.userId === userId
+          ? {
+              ...a,
+              manageAdmins: updates.manageAdmins,
+              restrictedToFaculty: updates.restrictedToFaculty,
+            }
+          : a,
+      ),
+    );
   };
 
   const adminsCount = admins.length;
@@ -94,7 +111,14 @@ export function AdminsPageClient({
               підрозділу
             </span>
           </div>
-          <AdminTable admins={admins} currentUserId={currentUser.userId} onDelete={handleDelete} />
+          <AdminTable
+            admins={admins}
+            currentUserId={currentUser.userId}
+            canManageAdmins={canGrantManageAdmins}
+            callerRestrictedToFaculty={restrictedToFaculty}
+            onDelete={handleDelete}
+            onUpdate={handleUpdate}
+          />
         </div>
       )}
 

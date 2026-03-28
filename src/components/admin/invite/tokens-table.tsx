@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 
-import { TokenMobileCard } from '@/components/admin/token-mobile-card';
-import { TokenRow } from '@/components/admin/token-row';
+import { TokenMobileCard } from '@/components/admin/invite/token-mobile-card';
+import { TokenRow } from '@/components/admin/invite/token-row';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {

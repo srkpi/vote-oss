@@ -4,8 +4,8 @@ import { Key, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { InviteAdminDialog } from '@/components/admin/invite-admin-dialog';
-import { TokensTable } from '@/components/admin/tokens-table';
+import { InviteAdminDialog } from '@/components/admin/invite/invite-admin-dialog';
+import { TokensTable } from '@/components/admin/invite/tokens-table';
 import { EmptyState } from '@/components/common/empty-state';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';

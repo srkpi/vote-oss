@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
-import { TokensPageClient } from '@/components/admin/tokens-page-client';
+import { TokensPageClient } from '@/components/admin/invite/tokens-page-client';
 import { PageHeader } from '@/components/common/page-header';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
