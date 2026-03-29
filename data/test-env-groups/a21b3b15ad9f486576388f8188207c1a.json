@@ -1,1 +1,1 @@
-{"id":"a21b3b15ad9f486576388f8188207c1a","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check access_token cookie is HttpOnly","name":"access_token cookie is HttpOnly","status":"passed","testResultsByEnv":{"default":"a119c006195e434664a81dd6973377f6"}}
+{"id":"a21b3b15ad9f486576388f8188207c1a","fullName":"src/__tests__/api/auth/diia-check.test.ts#GET /api/auth/diia/check access_token cookie is HttpOnly","name":"access_token cookie is HttpOnly","status":"passed","testResultsByEnv":{"default":"f53543580a4a125398b50521b13f8107"}}
