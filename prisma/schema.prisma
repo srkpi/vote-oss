@@ -29,14 +29,15 @@ model Admin {
   deleted_at            DateTime?
   deleted_by            String?
 
-  created_elections     Election[]
-  created_invite_tokens AdminInviteToken[]
+  created_elections      Election[]
+  created_invite_tokens  AdminInviteToken[]
 
   created_faq_categories FaqCategory[] @relation("FaqCategoryCreator")
   updated_faq_categories FaqCategory[] @relation("FaqCategoryUpdater")
   created_faq_items      FaqItem[]     @relation("FaqItemCreator")
   updated_faq_items      FaqItem[]     @relation("FaqItemUpdater")
 
+  @@index([promoted_by])
   @@map("admins")
 }
 
@@ -56,27 +57,27 @@ model AdminInviteToken {
 }
 
 model Election {
-  id                 String   @id @default(uuid())
-  title              String
-  created_by         String
-  creator            Admin    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
-  created_at         DateTime @default(now())
-  opens_at           DateTime
-  closes_at          DateTime
+  id            String   @id @default(uuid()) @db.Uuid
+  title         String
+  created_by    String
+  creator       Admin    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
+  created_at    DateTime @default(now())
+  opens_at      DateTime
+  closes_at     DateTime
 
-  min_choices Int    @default(1)
-  max_choices Int    @default(1)
+  min_choices   Int    @default(1)
+  max_choices   Int    @default(1)
 
-  restrictions       ElectionRestriction[]
+  restrictions  ElectionRestriction[]
 
-  public_key  String @db.Text
-  private_key String @db.Text
+  public_key    String @db.Text
+  private_key   String @db.Text
 
-  choices            ElectionChoice[]
-  issued_tokens      IssuedToken[]
-  ballots            Ballot[]
-  tallies            ElectionTally[]
-  nullifiers         UsedTokenNullifier[]
+  choices       ElectionChoice[]
+  issued_tokens IssuedToken[]
+  ballots       Ballot[]
+  tallies       ElectionTally[]
+  nullifiers    UsedTokenNullifier[]
 
   @@map("elections")
 }
@@ -91,8 +92,8 @@ enum RestrictionType {
 }
 
 model ElectionRestriction {
-  id          String          @id @default(uuid())
-  election_id String
+  id          String          @id @default(uuid()) @db.Uuid
+  election_id String          @db.Uuid
   election    Election        @relation(fields: [election_id], references: [id], onDelete: Cascade)
   type        RestrictionType
   value       String
@@ -102,8 +103,8 @@ model ElectionRestriction {
 }
 
 model ElectionChoice {
-  id          String   @id @default(uuid())
-  election_id String
+  id          String   @id @default(uuid()) @db.Uuid
+  election_id String   @db.Uuid
   election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
   choice      String
   position    Int
@@ -115,8 +116,8 @@ model ElectionChoice {
 }
 
 model IssuedToken {
-  id          String   @id @default(uuid())
-  election_id String
+  id          String   @id @default(uuid()) @db.Uuid
+  election_id String   @db.Uuid
   election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
   user_id     String
 
@@ -125,8 +126,8 @@ model IssuedToken {
 }
 
 model Ballot {
-  id               String   @id @default(uuid())
-  election_id      String
+  id               String   @id @default(uuid()) @db.Uuid
+  election_id      String   @db.Uuid
   election         Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
   encrypted_ballot String   @unique @db.Text
   created_at       DateTime @default(now())
@@ -140,7 +141,7 @@ model Ballot {
 
 model UsedTokenNullifier {
   nullifier   String   @id
-  election_id String
+  election_id String   @db.Uuid
   election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
 
   @@index([election_id])
@@ -148,8 +149,8 @@ model UsedTokenNullifier {
 }
 
 model ElectionTally {
-  election_id String
-  choice_id   String
+  election_id String         @db.Uuid
+  choice_id   String         @db.Uuid
   election    Election       @relation(fields: [election_id], references: [id], onDelete: Cascade)
   choice      ElectionChoice @relation(fields: [choice_id], references: [id], onDelete: Cascade)
   vote_count  Int
@@ -159,7 +160,7 @@ model ElectionTally {
 }
 
 model FaqCategory {
-  id         String   @id @default(uuid())
+  id         String   @id @default(uuid()) @db.Uuid
   title      String
   position   Int
   created_at DateTime @default(now())
@@ -176,8 +177,8 @@ model FaqCategory {
 }
 
 model FaqItem {
-  id          String      @id @default(uuid())
-  category_id String
+  id          String      @id @default(uuid()) @db.Uuid
+  category_id String      @db.Uuid
   category    FaqCategory @relation(fields: [category_id], references: [id], onDelete: Cascade)
   title       String
   content     String      @db.Text
