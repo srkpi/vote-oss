@@ -15,7 +15,6 @@ import type {
   FaqItemCreated,
   FaqItemUpdated,
 } from '@/types/faq';
-import type { TallyResponse } from '@/types/tally';
 import type { VoteToken } from '@/types/vote';
 
 type Fetcher = <T>(path: string, options?: RequestInit) => Promise<ApiResult<T>>;
@@ -55,10 +54,8 @@ export function createApiClient(fetcher: Fetcher) {
           method: 'POST',
           body: JSON.stringify(data),
         }),
-
       getBallots: (electionId: string) =>
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
-      getTally: (electionId: string) => fetcher<TallyResponse>(`/elections/${electionId}/tally`),
     },
 
     admins: {

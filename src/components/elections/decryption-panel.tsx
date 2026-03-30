@@ -1,10 +1,9 @@
 import { Eye, EyeOff, Loader2, ShieldAlert, ShieldCheck, Unlock } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils';
 
 interface DecryptionPanelProps {
-  ballotCount: number;
   isDecrypting: boolean;
   decryptionDone: boolean;
   showDecrypted: boolean;
@@ -15,7 +14,6 @@ interface DecryptionPanelProps {
 }
 
 export function DecryptionPanel({
-  ballotCount,
   isDecrypting,
   decryptionDone,
   showDecrypted,
@@ -70,7 +68,7 @@ export function DecryptionPanel({
                 </p>
                 <p className="font-body text-muted-foreground mt-0.5 text-xs">
                   Голосування закрито — приватний ключ відкрито. Розшифрування відбувається у вашому
-                  браузері, дані нікуди не передаються.
+                  браузері.
                 </p>
               </>
             )}
@@ -83,8 +81,8 @@ export function DecryptionPanel({
                   )}
                 >
                   {isClean
-                    ? `Усі ${ballotCount} бюлетенів успішно розшифровано та верифіковано`
-                    : `${malformedCount} зіпсованих · ${invalidHashCount} з некоректним хешем`}
+                    ? `Усі бюлетені успішно розшифровано та верифіковано`
+                    : `${pluralize(malformedCount, ['зіпсований', 'зіпсовані', 'зіпсованих'])} · ${invalidHashCount} з некоректним хешем`}
                 </p>
                 <p className="font-body text-muted-foreground mt-0.5 text-xs">
                   Розшифровано локально у вашому браузері

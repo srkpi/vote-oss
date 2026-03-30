@@ -18,9 +18,21 @@ export interface ElectionChoice {
   position: number;
 }
 
+export interface CachedElectionChoice extends ElectionChoice {
+  voteCount: number | null;
+}
+
 export interface ElectionCreator {
   fullName: string;
   faculty: string;
+}
+
+export interface TallyResult {
+  choiceId: string;
+  choice: string;
+  position: number;
+  votes: number;
+  winner: boolean;
 }
 
 export interface Election {
@@ -38,6 +50,7 @@ export interface Election {
   creator: ElectionCreator;
   choices: ElectionChoice[];
   ballotCount: number;
+  results?: TallyResult[] | null;
 }
 
 export interface ElectionDetail extends Election {
@@ -45,8 +58,9 @@ export interface ElectionDetail extends Election {
   hasVoted?: boolean;
 }
 
-export type CachedElection = Omit<Election, 'status'> & {
+export type CachedElection = Omit<Election, 'status' | 'choices' | 'results'> & {
   privateKey: string;
+  choices: CachedElectionChoice[];
 };
 
 export interface ElectionFilters {

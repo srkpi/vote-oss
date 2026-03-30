@@ -4,6 +4,7 @@ process.env.DATABASE_URL = 'test-db';
 process.env.REDIS_URL = 'test-redis';
 process.env.JWT_ACCESS_SECRET = 'test-access-secret-that-is-long-enough-32chars';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-that-is-long-enough-32chars';
+process.env.DATABASE_ENCRYPTION_KEY = 'a'.repeat(64);
 process.env.CAMPUS_API_URL = 'https://campus.example.com';
 process.env.NEXT_PUBLIC_KPI_AUTH_URL = 'https://fake-auth.test';
 process.env.NEXT_PUBLIC_KPI_APP_ID = 'test-app-id';

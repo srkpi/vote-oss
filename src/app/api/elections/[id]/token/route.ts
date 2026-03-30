@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { generateVoteToken, signVoteToken } from '@/lib/crypto';
+import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { checkRestrictions } from '@/lib/restrictions';
@@ -85,7 +86,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (existingToken) return Errors.conflict('Vote token already issued for this election');
 
   const { token } = generateVoteToken(electionId);
-  const signature = signVoteToken(election.private_key, token);
+
+  const privateKeyPem = decryptField(election.private_key);
+  const signature = signVoteToken(privateKeyPem, token);
 
   await prisma.issuedToken.create({ data: { election_id: electionId, user_id: user.sub } });
 

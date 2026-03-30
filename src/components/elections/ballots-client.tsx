@@ -191,7 +191,6 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
       {canDecrypt && (
         <DecryptionPanel
-          ballotCount={ballots.length}
           isDecrypting={isDecrypting}
           decryptionDone={decryptionDone}
           showDecrypted={showDecrypted}

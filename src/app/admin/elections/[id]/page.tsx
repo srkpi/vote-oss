@@ -15,7 +15,6 @@ import { serverApi } from '@/lib/api/server';
 import { adminCanDeleteElection } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime, pluralize } from '@/lib/utils';
-import type { TallyResponse } from '@/types/tally';
 
 interface AdminElectionPageProps {
   params: Promise<{ id: string }>;
@@ -45,14 +44,9 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
     election.restrictions,
   );
 
+  const results = election.results ?? null;
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';
-
-  let tally: TallyResponse | null = null;
-  if (isClosed) {
-    const { data } = await serverApi.elections.getTally(id);
-    tally = data;
-  }
 
   return (
     <div className="flex-1 overflow-auto">
@@ -112,18 +106,18 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             )}
 
-            {isClosed && tally && (
+            {isClosed && results && (
               <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
                   <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
                     Результати голосування
                   </h2>
                   <Badge variant="secondary" size="md">
-                    {pluralize(tally.totalBallots, ['бюлетень', 'бюлетені', 'бюлетенів'])}
+                    {pluralize(election.ballotCount, ['бюлетень', 'бюлетені', 'бюлетенів'])}
                   </Badge>
                 </div>
                 <div className="p-4 sm:p-6">
-                  <ResultsChart results={tally.results} totalBallots={tally.totalBallots} />
+                  <ResultsChart results={results} totalBallots={election.ballotCount} />
                 </div>
               </div>
             )}

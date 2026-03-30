@@ -76,7 +76,6 @@ model Election {
   choices       ElectionChoice[]
   issued_tokens IssuedToken[]
   ballots       Ballot[]
-  tallies       ElectionTally[]
   nullifiers    UsedTokenNullifier[]
 
   @@map("elections")
@@ -108,8 +107,7 @@ model ElectionChoice {
   election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
   choice      String
   position    Int
-
-  tallies ElectionTally[]
+  vote_count  Int?
 
   @@index([election_id, position])
   @@map("election_choices")
@@ -146,17 +144,6 @@ model UsedTokenNullifier {
 
   @@index([election_id])
   @@map("used_token_nullifiers")
-}
-
-model ElectionTally {
-  election_id String         @db.Uuid
-  choice_id   String         @db.Uuid
-  election    Election       @relation(fields: [election_id], references: [id], onDelete: Cascade)
-  choice      ElectionChoice @relation(fields: [choice_id], references: [id], onDelete: Cascade)
-  vote_count  Int
-
-  @@id([election_id, choice_id])
-  @@map("election_tallies")
 }
 
 model FaqCategory {

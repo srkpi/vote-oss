@@ -16,7 +16,6 @@ import { serverApi } from '@/lib/api/server';
 import { checkRestrictions } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime, pluralize } from '@/lib/utils';
-import type { TallyResponse } from '@/types/tally';
 
 interface ElectionPageProps {
   params: Promise<{ id: string }>;
@@ -62,13 +61,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
     notFound();
   }
 
-  // Fetch tally only for closed elections
-  let tally: TallyResponse | null = null;
-  if (election.status === 'closed') {
-    const { data } = await serverApi.elections.getTally(id);
-    tally = data;
-  }
-
+  const results = election.results ?? null;
   const isOpen = election.status === 'open';
   const isUpcoming = election.status === 'upcoming';
   const isClosed = election.status === 'closed';
@@ -136,12 +129,12 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             )}
 
-            {isClosed && tally && (
+            {isClosed && results && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
                 <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
                   Результати
                 </h2>
-                <ResultsChart results={tally.results} totalBallots={tally.totalBallots} />
+                <ResultsChart results={results} totalBallots={election.ballotCount} />
               </div>
             )}
 

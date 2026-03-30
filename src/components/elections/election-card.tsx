@@ -1,19 +1,53 @@
-import { Calendar, ChevronRight, FileText, User } from 'lucide-react';
+import { Calendar, ChevronRight, Crown, FileText, User } from 'lucide-react';
 import Link from 'next/link';
 
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { cn, formatDate, formatDateTime, pluralize } from '@/lib/utils';
-import type { Election } from '@/types/election';
+import type { Election, TallyResult } from '@/types/election';
 
 interface ElectionCardProps {
   election: Election;
   index?: number;
 }
 
+/**
+ * Sort choices for display in the card.
+ * For closed elections with results: winner(s) first, then by vote count desc, then position.
+ * For other elections: original position order.
+ */
+function sortedChoicesForDisplay(
+  election: Election,
+): Array<{ id: string; choice: string; position: number; result?: TallyResult }> {
+  if (election.status !== 'closed' || !election.results) {
+    return election.choices;
+  }
+
+  const resultsMap = new Map(election.results.map((r) => [r.choiceId, r]));
+
+  return [...election.choices]
+    .map((c) => ({ ...c, result: resultsMap.get(c.id) }))
+    .sort((a, b) => {
+      // Winners come first
+      const aWinner = a.result?.winner ? 1 : 0;
+      const bWinner = b.result?.winner ? 1 : 0;
+      if (bWinner !== aWinner) return bWinner - aWinner;
+      // Then by votes descending
+      const aVotes = a.result?.votes ?? 0;
+      const bVotes = b.result?.votes ?? 0;
+      if (bVotes !== aVotes) return bVotes - aVotes;
+      // Fall back to position
+      return a.position - b.position;
+    });
+}
+
 export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
   const isOpen = election.status === 'open';
   const isUpcoming = election.status === 'upcoming';
   const isClosed = election.status === 'closed';
+
+  const displayChoices = sortedChoicesForDisplay(election);
+  const shownChoices = displayChoices.slice(0, 3);
+  const hiddenCount = election.choices.length - shownChoices.length;
 
   return (
     <Link
@@ -71,21 +105,28 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         </div>
 
         <div className="mb-5 flex flex-wrap gap-2">
-          {election.choices.slice(0, 3).map((choice) => (
-            <span
-              key={choice.id}
-              className={cn(
-                'font-body rounded-full px-2.5 py-1 text-xs',
-                'bg-surface text-muted-foreground',
-                'border-border-subtle truncate border',
-              )}
-            >
-              {choice.choice}
-            </span>
-          ))}
-          {election.choices.length > 3 && (
+          {shownChoices.map((choice) => {
+            const isWinner = 'result' in choice && choice.result?.winner === true;
+            return (
+              <span
+                key={choice.id}
+                className={cn(
+                  'font-body rounded-full px-2.5 py-1 text-xs',
+                  'truncate border',
+                  'flex items-center gap-1',
+                  isWinner
+                    ? 'border-kpi-navy/30 bg-kpi-navy/8 text-kpi-navy font-semibold'
+                    : 'bg-surface text-muted-foreground border-border-subtle',
+                )}
+              >
+                {isWinner && <Crown className="h-2.5 w-2.5 shrink-0" />}
+                {choice.choice}
+              </span>
+            );
+          })}
+          {hiddenCount > 0 && (
             <span className="border-border-subtle bg-surface text-muted-foreground rounded-full border px-2.5 py-1 text-xs">
-              +{election.choices.length - 3}
+              +{hiddenCount}
             </span>
           )}
         </div>

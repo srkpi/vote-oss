@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { invalidateElections } from '@/lib/cache';
 import {
   computeBallotHash,
   computeNullifier,
@@ -9,6 +10,7 @@ import {
   signBallotEntry,
   verifyVoteTokenSignature,
 } from '@/lib/crypto';
+import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils';
@@ -118,6 +120,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (now < election.opens_at) return Errors.badRequest('Election has not started yet');
   if (now > election.closes_at) return Errors.badRequest('Election has already closed');
 
+  const privateKeyPem = decryptField(election.private_key);
+
   if (!verifyVoteTokenSignature(election.public_key, token, signature)) {
     return Errors.badRequest('Invalid vote token signature');
   }
@@ -139,7 +143,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   let choiceIds: string[];
   try {
-    choiceIds = decryptBallot(election.private_key, encryptedBallot);
+    choiceIds = decryptBallot(privateKeyPem, encryptedBallot);
   } catch {
     return Errors.badRequest('Failed to decrypt ballot – check encryption format');
   }
@@ -165,8 +169,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
 
   const previousHash = lastBallot?.current_hash ?? null;
-
-  const ballotSignature = signBallotEntry(election.private_key, {
+  const ballotSignature = signBallotEntry(privateKeyPem, {
     electionId,
     encryptedBallot,
     previousHash,
@@ -194,6 +197,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     }),
   ]);
+
+  await invalidateElections();
 
   return NextResponse.json({ ballotHash: currentHash }, { status: 201 });
 }

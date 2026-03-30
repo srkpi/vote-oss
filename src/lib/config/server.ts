@@ -5,6 +5,7 @@ export const REDIS_URL = env.REDIS_URL;
 
 export const JWT_ACCESS_SECRET = env.JWT_ACCESS_SECRET;
 export const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
+export const DATABASE_ENCRYPTION_KEY = env.DATABASE_ENCRYPTION_KEY;
 
 export const CAMPUS_API_URL = env.CAMPUS_API_URL;
 
