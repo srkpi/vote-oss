@@ -2,15 +2,14 @@ import { Check, CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
-import { DiiaLogin } from '@/components/auth/diia-login';
+import { KpiIdButton } from '@/components/auth/kpi-id-button';
 import { AnimatedGrid } from '@/components/common/animated-grid';
 import { APP_NAME } from '@/lib/config/client';
 
 export const metadata: Metadata = {
   title: 'Вхід',
-  description: 'Увійдіть за допомогою застосунку Дія',
+  description: 'Увійдіть за допомогою KPI ID',
 };
 
 export default function LoginPage() {
@@ -185,8 +184,8 @@ export default function LoginPage() {
             </span>
           </h2>
           <p className="font-body text-md leading-relaxed text-white/65 xl:text-xl">
-            Використовуйте застосунок Дія для безпечного та верифікованого входу до платформи
-            голосування
+            Використовуйте KPI ID з верифікацією через Дію для безпечного та верифікованого входу до
+            платформи голосування
           </p>
         </div>
 
@@ -233,9 +232,7 @@ export default function LoginPage() {
           </h1>
 
           <div className="space-y-6">
-            <Suspense>
-              <DiiaLogin fullWidth />
-            </Suspense>
+            <KpiIdButton fullWidth />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -243,7 +240,7 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="font-body text-muted-foreground bg-white px-3">
-                  Авторизація через Дію
+                  Авторизація через KPI ID
                 </span>
               </div>
             </div>

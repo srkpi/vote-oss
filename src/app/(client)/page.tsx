@@ -29,8 +29,8 @@ const features = [
   },
   {
     icon: <ShieldCheck className="h-6 w-6" />,
-    title: 'Авторизація через Дію',
-    description: 'Вхід через застосунок Дія гарантує, що голосує справжній студент.',
+    title: 'Авторизація через KPI ID',
+    description: 'Вхід за допомогою KPI ID гарантує, що голосує справжній студент.',
   },
   {
     icon: <UserCheck className="h-6 w-6" />,
@@ -173,7 +173,7 @@ export default async function HomePage() {
                 </Button>
               ) : (
                 <Button variant="accent" size="xl" asChild>
-                  <Link href="/login?auto=true">Увійти через Дію</Link>
+                  <Link href="/login">Увійти через KPI ID</Link>
                 </Button>
               )}
             </div>
