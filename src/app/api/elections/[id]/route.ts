@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
-import { invalidateElections } from '@/lib/cache';
+import { getCachedElections, invalidateElections } from '@/lib/cache';
 import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
@@ -138,20 +138,65 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id: electionId } = await params;
   if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
 
-  const election = await prisma.election.findUnique({
-    where: { id: electionId },
-    include: {
-      choices: { orderBy: { position: 'asc' } },
-      creator: { select: { full_name: true, faculty: true } },
-      restrictions: { select: { type: true, value: true } },
-      _count: { select: { ballots: true } },
-    },
-  });
+  let electionData;
+  const cached = await getCachedElections();
 
-  if (!election) return Errors.notFound('Election not found');
+  if (cached) {
+    const found = cached.find((e) => e.id === electionId);
+    if (!found) return Errors.notFound('Election not found');
+
+    electionData = {
+      id: found.id,
+      title: found.title,
+      createdAt: new Date(found.createdAt),
+      opensAt: new Date(found.opensAt),
+      closesAt: new Date(found.closesAt),
+      minChoices: found.minChoices,
+      maxChoices: found.maxChoices,
+      publicKey: found.publicKey,
+      privateKey: found.privateKey,
+      restrictions: found.restrictions as ElectionRestriction[],
+      creator: found.creator,
+      choices: found.choices,
+      ballotCount: found.ballotCount,
+    };
+  } else {
+    const dbElection = await prisma.election.findUnique({
+      where: { id: electionId },
+      include: {
+        choices: { orderBy: { position: 'asc' } },
+        creator: { select: { full_name: true, faculty: true } },
+        restrictions: { select: { type: true, value: true } },
+        _count: { select: { ballots: true } },
+      },
+    });
+
+    if (!dbElection) return Errors.notFound('Election not found');
+
+    electionData = {
+      id: dbElection.id,
+      title: dbElection.title,
+      createdAt: dbElection.created_at,
+      opensAt: dbElection.opens_at,
+      closesAt: dbElection.closes_at,
+      minChoices: dbElection.min_choices,
+      maxChoices: dbElection.max_choices,
+      publicKey: dbElection.public_key,
+      privateKey: dbElection.private_key,
+      restrictions: dbElection.restrictions as ElectionRestriction[],
+      creator: { fullName: dbElection.creator.full_name, faculty: dbElection.creator.faculty },
+      choices: dbElection.choices.map((c) => ({
+        id: c.id,
+        choice: c.choice,
+        position: c.position,
+        voteCount: c.vote_count,
+      })),
+      ballotCount: dbElection._count.ballots,
+    };
+  }
 
   const { user } = auth;
-  const restrictions = election.restrictions as ElectionRestriction[];
+  const restrictions = electionData.restrictions;
 
   if (user.isAdmin && !user.restrictedToFaculty) {
     // unrestricted admin — pass
@@ -166,21 +211,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const now = new Date();
-  const isClosed = now > election.closes_at;
-  const isOpen = now >= election.opens_at && now <= election.closes_at;
+  const isClosed = now > electionData.closesAt;
+  const isOpen = now >= electionData.opensAt && now <= electionData.closesAt;
 
-  const privateKeyPem = decryptField(election.private_key);
+  const privateKeyPem = decryptField(electionData.privateKey);
   let results: TallyResult[] | undefined;
 
   if (isClosed) {
-    const needsComputation = election.choices.some((c) => c.vote_count === null);
+    const needsComputation = electionData.choices.some((c) => c.voteCount === null);
     if (needsComputation) {
-      const tally = await computeAndPersistTally(electionId, privateKeyPem, election.choices);
-      results = toTallyResults(tally, election.choices);
+      const tally = await computeAndPersistTally(electionId, privateKeyPem, electionData.choices);
+      results = toTallyResults(tally, electionData.choices);
     } else {
       const tally: Record<string, number> = {};
-      for (const c of election.choices) tally[c.id] = c.vote_count ?? 0;
-      results = toTallyResults(tally, election.choices);
+      for (const c of electionData.choices) tally[c.id] = c.voteCount ?? 0;
+      results = toTallyResults(tally, electionData.choices);
     }
   }
 
@@ -193,20 +238,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   return NextResponse.json({
-    id: election.id,
-    title: election.title,
-    createdAt: election.created_at,
-    opensAt: election.opens_at,
-    closesAt: election.closes_at,
-    status: now < election.opens_at ? 'upcoming' : now <= election.closes_at ? 'open' : 'closed',
+    id: electionData.id,
+    title: electionData.title,
+    createdAt: electionData.createdAt,
+    opensAt: electionData.opensAt,
+    closesAt: electionData.closesAt,
+    status:
+      now < electionData.opensAt ? 'upcoming' : now <= electionData.closesAt ? 'open' : 'closed',
     restrictions,
-    minChoices: election.min_choices,
-    maxChoices: election.max_choices,
-    publicKey: election.public_key,
+    minChoices: electionData.minChoices,
+    maxChoices: electionData.maxChoices,
+    publicKey: electionData.publicKey,
     privateKey: isClosed ? privateKeyPem : undefined,
-    creator: { fullName: election.creator.full_name, faculty: election.creator.faculty },
-    choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
-    ballotCount: election._count.ballots,
+    creator: electionData.creator,
+    choices: electionData.choices.map((c) => ({
+      id: c.id,
+      choice: c.choice,
+      position: c.position,
+    })),
+    ballotCount: electionData.ballotCount,
     results,
     hasVoted,
   });

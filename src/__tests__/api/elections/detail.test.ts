@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   encryptBallot,
   JWT_TOKEN_RECORD,
@@ -16,11 +17,7 @@ import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-s
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => ({
-  invalidateElections: jest.fn().mockResolvedValue(undefined),
-  getCachedElections: jest.fn().mockResolvedValue(null),
-}));
-// Encryption is pass-through in tests — raw PEM keys work directly
+jest.mock('@/lib/cache', () => cacheMock);
 jest.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
@@ -40,6 +37,8 @@ describe('GET /api/elections/[id]', () => {
   beforeEach(() => {
     resetPrismaMock();
     resetTokenStoreMock();
+    resetCacheMock();
+
     allure.feature('Elections');
     allure.story('Election Detail');
   });
@@ -86,6 +85,49 @@ describe('GET /api/elections/[id]', () => {
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(403);
+  });
+
+  // ── Cache behaviour ───────────────────────────────────────────────────────
+
+  describe('Caching', () => {
+    it('returns 200 using cached election data if available', async () => {
+      const req = await authRequest();
+      const election = makeElection();
+
+      cacheMock.getCachedElections.mockResolvedValueOnce([
+        {
+          id: election.id,
+          title: election.title,
+          createdAt: election.created_at.toISOString(),
+          opensAt: election.opens_at.toISOString(),
+          closesAt: election.closes_at.toISOString(),
+          minChoices: election.min_choices,
+          maxChoices: election.max_choices,
+          restrictions: election.restrictions,
+          publicKey: election.public_key,
+          privateKey: election.private_key,
+          creator: { fullName: election.creator.full_name, faculty: election.creator.faculty },
+          choices: election.choices.map((c) => ({ ...c, voteCount: c.vote_count ?? null })),
+          ballotCount: 0,
+        },
+      ] as any);
+
+      const res = await GET(req, PARAMS);
+      const { status, body } = await parseJson<any>(res);
+
+      expect(status).toBe(200);
+      expect(body.id).toBe(election.id);
+      expect(prismaMock.election.findUnique).not.toHaveBeenCalled(); // DB is skipped entirely!
+    });
+
+    it('returns 404 if cached elections exist but the requested election is not in the cache', async () => {
+      const req = await authRequest();
+      cacheMock.getCachedElections.mockResolvedValueOnce([] as any); // Cache array exists, but is empty
+
+      const res = await GET(req, PARAMS);
+      expect(res.status).toBe(404);
+      expect(prismaMock.election.findUnique).not.toHaveBeenCalled();
+    });
   });
 
   // ── Basic response shape ──────────────────────────────────────────────────
