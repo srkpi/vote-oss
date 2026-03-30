@@ -1,6 +1,6 @@
 import { fetchFacultyGroups } from '@/lib/campus-api';
 import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
-import { CAMPUS_INTEGRATION_API_KEY, KPI_APP_SECRET } from '@/lib/config/server';
+import { CAMPUS_API_URL, CAMPUS_INTEGRATION_API_KEY, KPI_APP_SECRET } from '@/lib/config/server';
 import { parseGroupLevel } from '@/lib/group-utils';
 import type { CampusUserInfo, KpiIdUserInfo, UserInfo } from '@/types/auth';
 
@@ -149,7 +149,7 @@ export async function resolveUserData(data: KpiIdUserInfo): Promise<UserInfo> {
 
   if (!data.STUDENT_ID || !data.NAME) throw new InvalidUserDataError();
 
-  const res = await fetch(`${KPI_AUTH_URL}/api/integration/voteoss/students/${data.STUDENT_ID}`, {
+  const res = await fetch(`${CAMPUS_API_URL}/api/integration/voteoss/students/${data.STUDENT_ID}`, {
     headers: {
       Accept: 'application/json',
       'X-Api-Key': CAMPUS_INTEGRATION_API_KEY,
@@ -157,10 +157,8 @@ export async function resolveUserData(data: KpiIdUserInfo): Promise<UserInfo> {
   });
   if (!res.ok) throw new InvalidUserDataError();
 
-  const body = (await res.json()) as { data?: CampusUserInfo };
-  if (!body?.data) throw new InvalidTicketError();
-
-  const campusData = body.data;
+  const campusData = (await res.json()) as CampusUserInfo | undefined;
+  if (!campusData) throw new InvalidTicketError();
 
   if (campusData.status !== 'Studying') throw new NotStudyingError();
 
