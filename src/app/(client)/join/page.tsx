@@ -1,9 +1,8 @@
-import { CheckCircle2, ShieldCheck } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { JoinAdminForm } from '@/components/admin/join-admin-form';
-import { APP_NAME } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 
 export const metadata: Metadata = {
@@ -49,19 +48,9 @@ export function JoinPageContent({
 
           {/* Card header */}
           <div className="border-border-subtle border-b px-8 pt-8 pb-6">
-            <div className="mb-5 flex items-center gap-4">
-              <div className="navy-gradient shadow-shadow-md flex h-14 w-14 items-center justify-center rounded-2xl">
-                <ShieldCheck className="h-7 w-7 text-white" />
-              </div>
-              <div>
-                <h1 className="font-display text-foreground text-2xl leading-tight font-bold">
-                  Приєднатися як адміністратор
-                </h1>
-                <p className="font-body text-muted-foreground mt-0.5 text-sm">
-                  {APP_NAME} · Система голосування
-                </p>
-              </div>
-            </div>
+            <h1 className="font-display text-foreground mb-6 text-center text-2xl leading-tight font-bold">
+              Приєднатися як адміністратор
+            </h1>
 
             {/* User info banner */}
             <div className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3.5">
@@ -69,14 +58,14 @@ export function JoinPageContent({
                 {session.fullName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-body text-foreground truncate text-sm font-semibold">
+                <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
                   {session.fullName}
                 </p>
                 <p className="font-body text-muted-foreground text-xs">
                   {session.faculty} · {session.group}
                 </p>
               </div>
-              <div className="font-body border-success/20 bg-success-bg text-success flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-xs">
+              <div className="font-body border-success/20 bg-success-bg text-success hidden shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-xs md:flex">
                 <CheckCircle2 className="h-3 w-3" />
                 Авторизовано
               </div>
