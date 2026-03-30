@@ -24,14 +24,12 @@ import { fetchFacultyGroups } from '@/lib/campus-api';
 // Default campus stub — returned by the voteoss endpoint.
 // Individual tests that need different data override fetch themselves.
 const DEFAULT_CAMPUS_RESPONSE = {
-  data: {
-    groupName: 'IP-24',
-    faculty: 'TEST Faculty',
-    status: 'Studying',
-    studyForm: 'Денна',
-    studyYear: 1,
-    speciality: '121',
-  },
+  groupName: 'IP-24',
+  faculty: 'TEST Faculty',
+  status: 'Studying',
+  studyForm: 'Денна',
+  studyYear: 1,
+  speciality: '121',
 };
 
 // Default faculty-groups stub (single unambiguous entry for IP-24).
@@ -186,14 +184,12 @@ describe('kpi-id', () => {
       mockFetchSequence(
         { data: { AUTH_METHOD: 'DIIA', STUDENT_ID: 'grad-001', NAME: 'Petro Aspirant' } },
         {
-          data: {
-            groupName: 'FT-51ф',
-            faculty: 'TEST Faculty',
-            status: 'Studying',
-            studyForm: 'Денна',
-            studyYear: 5,
-            speciality: '121',
-          },
+          groupName: 'FT-51ф',
+          faculty: 'TEST Faculty',
+          status: 'Studying',
+          studyForm: 'Денна',
+          studyYear: 5,
+          speciality: '121',
         },
       );
       await expect(resolveTicket('ticket-grad')).rejects.toThrow(GraduateUserError);
@@ -213,14 +209,12 @@ describe('kpi-id', () => {
           .mockResolvedValueOnce({
             ok: true,
             json: async () => ({
-              data: {
-                groupName,
-                faculty: 'TEST Faculty',
-                status: 'Studying',
-                studyForm: 'Денна',
-                studyYear: 5,
-                speciality: '121',
-              },
+              groupName,
+              faculty: 'TEST Faculty',
+              status: 'Studying',
+              studyForm: 'Денна',
+              studyYear: 5,
+              speciality: '121',
             }),
           });
 
@@ -233,14 +227,12 @@ describe('kpi-id', () => {
       mockFetchSequence(
         { data: { AUTH_METHOD: 'DIIA', STUDENT_ID: 'user-001', NAME: 'Ivan Student' } },
         {
-          data: {
-            groupName: 'KV-91',
-            faculty: 'KV Faculty',
-            status: 'Studying',
-            studyForm: 'Денна',
-            studyYear: 1,
-            speciality: '121',
-          },
+          groupName: 'KV-91',
+          faculty: 'KV Faculty',
+          status: 'Studying',
+          studyForm: 'Денна',
+          studyYear: 1,
+          speciality: '121',
         },
       );
 
@@ -254,14 +246,12 @@ describe('kpi-id', () => {
       mockFetchSequence(
         { data: { AUTH_METHOD: 'DIIA', STUDENT_ID: 'user-002', NAME: 'Olena Master' } },
         {
-          data: {
-            groupName: 'KV-51мн',
-            faculty: 'KV Faculty',
-            status: 'Studying',
-            studyForm: 'Денна',
-            studyYear: 1,
-            speciality: '121',
-          },
+          groupName: 'KV-51мн',
+          faculty: 'KV Faculty',
+          status: 'Studying',
+          studyForm: 'Денна',
+          studyYear: 1,
+          speciality: '121',
         },
       );
 
@@ -274,14 +264,12 @@ describe('kpi-id', () => {
       mockFetchSequence(
         { data: { AUTH_METHOD: 'DIIA', STUDENT_ID: 'grad-001', NAME: 'Petro Aspirant' } },
         {
-          data: {
-            groupName: 'FT-51ф',
-            faculty: 'TEST Faculty',
-            status: 'Studying',
-            studyForm: 'Денна',
-            studyYear: 5,
-            speciality: '121',
-          },
+          groupName: 'FT-51ф',
+          faculty: 'TEST Faculty',
+          status: 'Studying',
+          studyForm: 'Денна',
+          studyYear: 5,
+          speciality: '121',
         },
       );
 
@@ -302,14 +290,12 @@ describe('kpi-id', () => {
       mockFetchSequence(
         { data: { AUTH_METHOD: 'DIIA', STUDENT_ID: 'user-dismissed', NAME: 'Ex Student' } },
         {
-          data: {
-            groupName: 'IP-24',
-            faculty: 'TEST Faculty',
-            status: 'Dismissed',
-            studyForm: 'Денна',
-            studyYear: 2,
-            speciality: '121',
-          },
+          groupName: 'IP-24',
+          faculty: 'TEST Faculty',
+          status: 'Dismissed',
+          studyForm: 'Денна',
+          studyYear: 2,
+          speciality: '121',
         },
       );
 
@@ -320,14 +306,12 @@ describe('kpi-id', () => {
       mockFetchSequence(
         { data: { AUTH_METHOD: 'DIIA', STUDENT_ID: 'user-dismissed', NAME: 'Ex Student' } },
         {
-          data: {
-            groupName: 'IP-24',
-            faculty: 'TEST Faculty',
-            status: 'Dismissed',
-            studyForm: 'Денна',
-            studyYear: 2,
-            speciality: '121',
-          },
+          groupName: 'IP-24',
+          faculty: 'TEST Faculty',
+          status: 'Dismissed',
+          studyForm: 'Денна',
+          studyYear: 2,
+          speciality: '121',
         },
       );
 
