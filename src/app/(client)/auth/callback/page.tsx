@@ -60,8 +60,7 @@ export default function CallbackPage() {
           router.refresh();
         }, 1200);
       } else {
-        if (result.error === 'Authorization must be done through DIIA') {
-          // User authenticated with KPI ID but not via Diia — guide them.
+        if (result.error === 'Authentication must be performed through Diia') {
           setIsDiiaError(true);
           setErrorMessage(
             'Для верифікації, що голосує справжній студент, необхідно авторизуватись через застосунок Дія',
