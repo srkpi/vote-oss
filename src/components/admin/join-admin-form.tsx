@@ -134,7 +134,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
         disabled={!token.trim()}
         icon={<Shield className="h-4 w-4" />}
       >
-        Приєднатися як адміністратор
+        Приєднатися
       </Button>
 
       <div className="border-border-subtle border-t pt-2">
