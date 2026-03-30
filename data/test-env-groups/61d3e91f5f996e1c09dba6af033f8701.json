@@ -1,1 +1,1 @@
-{"id":"61d3e91f5f996e1c09dba6af033f8701","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 400 when body is not valid JSON","name":"returns 400 when body is not valid JSON","status":"passed","testResultsByEnv":{"default":"91a68950f5cd7c1dc9f587726409cf9a"}}
+{"id":"61d3e91f5f996e1c09dba6af033f8701","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 400 when body is not valid JSON","name":"returns 400 when body is not valid JSON","status":"passed","testResultsByEnv":{"default":"e818d9da5097043a452ad5d3d8d57829"}}

@@ -1,1 +1,1 @@
-{"id":"120b02ade16ba9b780d0fafdd0ad9821","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 400 when ticketId is missing","name":"returns 400 when ticketId is missing","status":"passed","testResultsByEnv":{"default":"81a825c062abed18b76021ca7b4236b1"}}
+{"id":"120b02ade16ba9b780d0fafdd0ad9821","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 400 when ticketId is missing","name":"returns 400 when ticketId is missing","status":"passed","testResultsByEnv":{"default":"5c4f7f6123702a38bbbdb5d66537cf84"}}
