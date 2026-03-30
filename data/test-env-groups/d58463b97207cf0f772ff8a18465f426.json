@@ -1,0 +1,1 @@
+{"id":"d58463b97207cf0f772ff8a18465f426","fullName":"src/__tests__/lib/kpi-id.test.ts#kpi-id resolveFacultyShortName returns the shortFaculty when group appears in exactly one faculty","name":"returns the shortFaculty when group appears in exactly one faculty","status":"passed","testResultsByEnv":{"default":"936be8989baa85b696b67cfd7eb7c4b0"}}
