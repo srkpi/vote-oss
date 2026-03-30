@@ -117,7 +117,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   </Badge>
                 </div>
                 <div className="p-4 sm:p-6">
-                  <ResultsChart results={results} totalBallots={election.ballotCount} />
+                  <ResultsChart
+                    results={results}
+                    totalBallots={election.ballotCount}
+                    electionId={election.id}
+                    hideOwnVote
+                  />
                 </div>
               </div>
             )}

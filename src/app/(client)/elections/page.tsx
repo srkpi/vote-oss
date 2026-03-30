@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
+import { SessionGuard } from '@/components/common/session-guard';
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
@@ -29,6 +30,7 @@ export default async function ElectionsPage() {
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+      <SessionGuard userId={session.userId} />
       <PageHeader
         title="Голосування"
         description="Усі доступні вам голосування в одному місці"

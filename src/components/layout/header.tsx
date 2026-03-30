@@ -175,7 +175,7 @@ export function Header({ session }: HeaderProps) {
                       size="lg"
                       onClick={handleLogout}
                       disabled={loggingOut}
-                      className="text-error hover:bg-error-bg flex w-full items-center gap-2.5 bg-white text-sm transition-colors disabled:opacity-50"
+                      className="text-error hover:bg-error-bg flex w-full items-center gap-2.5 rounded-none bg-white text-sm transition-colors disabled:opacity-50"
                     >
                       <LogOut className="h-4 w-4" />
                       {loggingOut ? 'Виходимо…' : 'Вийти'}

@@ -33,6 +33,8 @@ export const CACHE_KEY_INVITE_TOKENS = 'cache:invite-tokens';
 export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
 export const CACHE_KEY_FAQ = 'cache:faq';
 export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
+export const SESSION_USER_KEY = 'session_user_id';
+export const CONFETTI_KEY_PREFIX = 'election_confetti_shown_';
 
 // JWT
 export const COOKIE_ACCESS = 'access_token';

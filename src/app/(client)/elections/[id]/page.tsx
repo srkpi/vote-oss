@@ -134,7 +134,11 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
                   Результати
                 </h2>
-                <ResultsChart results={results} totalBallots={election.ballotCount} />
+                <ResultsChart
+                  results={results}
+                  totalBallots={election.ballotCount}
+                  electionId={election.id}
+                />
               </div>
             )}
 
