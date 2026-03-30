@@ -1,1 +1,1 @@
-{"id":"85e221e13fea367e39142def5f852132","fullName":"src/__tests__/lib/crypto.test.ts#crypto generateVoteToken embeds election id as the first segment","name":"embeds election id as the first segment","status":"passed","testResultsByEnv":{"default":"5e4e5961a2e05fc062de9da420f45dca"}}
+{"id":"85e221e13fea367e39142def5f852132","fullName":"src/__tests__/lib/crypto.test.ts#crypto generateVoteToken embeds election id as the first segment","name":"embeds election id as the first segment","status":"passed","testResultsByEnv":{"default":"5c5f2d8676af3b604085b2dea7f59389"}}

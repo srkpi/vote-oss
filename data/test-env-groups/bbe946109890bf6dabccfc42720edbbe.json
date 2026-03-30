@@ -1,0 +1,1 @@
+{"id":"bbe946109890bf6dabccfc42720edbbe","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] does NOT invalidate cache when tallies are already persisted","name":"does NOT invalidate cache when tallies are already persisted","status":"passed","testResultsByEnv":{"default":"c27d1474c863ade7fd85fd0d43f7e902"}}

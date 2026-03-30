@@ -1,0 +1,1 @@
+{"id":"cd79800423da2fda358ba6e3a24687d6","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] deletes nullifiers after computing tallies","name":"deletes nullifiers after computing tallies","status":"passed","testResultsByEnv":{"default":"6d34bd4059b53ea9ddaeb620f4e70289"}}

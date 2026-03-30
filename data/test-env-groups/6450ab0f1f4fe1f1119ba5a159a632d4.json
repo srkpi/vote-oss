@@ -1,1 +1,1 @@
-{"id":"6450ab0f1f4fe1f1119ba5a159a632d4","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 200 for a regular user ticket","name":"returns 200 for a regular user ticket","status":"passed","testResultsByEnv":{"default":"f7b80880abb408f9812948a42f43175f"}}
+{"id":"6450ab0f1f4fe1f1119ba5a159a632d4","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 200 for a regular user ticket","name":"returns 200 for a regular user ticket","status":"passed","testResultsByEnv":{"default":"c92cbf6770f7511a941128986831ae8a"}}
