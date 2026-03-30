@@ -1,1 +1,1 @@
-{"id":"9b804b1386f5138aeec27c89b8d99803","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/categories/[id] returns 400 when title is missing","name":"returns 400 when title is missing","status":"passed","testResultsByEnv":{"default":"535a2e5e83a2d8d2ce3865c6fa003a54"}}
+{"id":"9b804b1386f5138aeec27c89b8d99803","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/categories/[id] returns 400 when title is missing","name":"returns 400 when title is missing","status":"passed","testResultsByEnv":{"default":"f038eef14b5cdb0c605a1cc5c85303e9"}}
