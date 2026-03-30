@@ -1,1 +1,1 @@
-{"id":"120f50f88f03503a905be03aec7658e3","fullName":"src/__tests__/api/elections/list.test.ts#GET /api/elections exposes privateKey for closed elections","name":"exposes privateKey for closed elections","status":"passed","testResultsByEnv":{"default":"a3eac19d5489a794692367ac2d8e0062"}}
+{"id":"120f50f88f03503a905be03aec7658e3","fullName":"src/__tests__/api/elections/list.test.ts#GET /api/elections exposes privateKey for closed elections","name":"exposes privateKey for closed elections","status":"passed","testResultsByEnv":{"default":"e3bc8469bb024098f7f02d924370f955"}}
