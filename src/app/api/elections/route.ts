@@ -18,17 +18,24 @@ import {
   VALID_LEVEL_COURSES,
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
+import { decryptField, encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { parseGroupLevel } from '@/lib/group-utils';
 import { prisma } from '@/lib/prisma';
 import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
 import type {
   CachedElection,
+  CachedElectionChoice,
   CreateElectionRestriction,
   Election,
   ElectionStatus,
   RestrictionType,
+  TallyResult,
 } from '@/types/election';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function computeStatus(opensAt: string | Date, closesAt: string | Date): ElectionStatus {
   const now = Date.now();
@@ -38,6 +45,22 @@ function computeStatus(opensAt: string | Date, closesAt: string | Date): Electio
   if (now < open) return 'upcoming';
   if (now <= close) return 'open';
   return 'closed';
+}
+
+/**
+ * Build a TallyResult array from cached choices.
+ * Returns null when no votes have been computed yet.
+ */
+function buildResults(choices: CachedElectionChoice[]): TallyResult[] | null {
+  if (choices.some((c) => c.voteCount === null)) return null;
+  const maxVotes = Math.max(0, ...choices.map((c) => c.voteCount!));
+  return choices.map((c) => ({
+    choiceId: c.id,
+    choice: c.choice,
+    position: c.position,
+    votes: c.voteCount!,
+    winner: maxVotes > 0 && c.voteCount === maxVotes,
+  }));
 }
 
 function toClientElections(
@@ -62,11 +85,28 @@ function toClientElections(
       if (isAdmin && isAdminRestricted) return adminCanAccessElection(user.faculty, e.restrictions);
       return checkRestrictions(e.restrictions, user);
     })
-    .map((e) => ({
-      ...e,
-      status: computeStatus(e.opensAt, e.closesAt),
-      privateKey: now > new Date(e.closesAt).getTime() ? e.privateKey : undefined,
-    }));
+    .map((e) => {
+      const isClosed = now > new Date(e.closesAt).getTime();
+      const status = computeStatus(e.opensAt, e.closesAt);
+
+      return {
+        id: e.id,
+        title: e.title,
+        createdAt: e.createdAt,
+        opensAt: e.opensAt,
+        closesAt: e.closesAt,
+        status,
+        restrictions: e.restrictions,
+        minChoices: e.minChoices,
+        maxChoices: e.maxChoices,
+        publicKey: e.publicKey,
+        privateKey: isClosed ? decryptField(e.privateKey) : undefined,
+        creator: e.creator,
+        choices: e.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
+        ballotCount: e.ballotCount,
+        results: isClosed ? buildResults(e.choices) : undefined,
+      };
+    });
 }
 
 /**
@@ -79,6 +119,8 @@ function toClientElections(
  *       their faculty/group and admin status. Results are served from cache
  *       when available. The private key is included only for closed elections.
  *       Status (`upcoming` | `open` | `closed`) is computed at response time.
+ *       For closed elections whose tallies have been computed, a `results`
+ *       array is embedded directly in each election object.
  *     tags:
  *       - Elections
  *     security:
@@ -128,7 +170,10 @@ export async function GET(req: NextRequest) {
       public_key: true,
       private_key: true,
       creator: { select: { full_name: true, faculty: true } },
-      choices: { select: { id: true, choice: true, position: true }, orderBy: { position: 'asc' } },
+      choices: {
+        select: { id: true, choice: true, position: true, vote_count: true },
+        orderBy: { position: 'asc' },
+      },
       _count: { select: { ballots: true } },
     },
     orderBy: { opens_at: 'desc' },
@@ -146,7 +191,12 @@ export async function GET(req: NextRequest) {
     publicKey: e.public_key,
     privateKey: e.private_key,
     creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
-    choices: e.choices,
+    choices: e.choices.map((c) => ({
+      id: c.id,
+      choice: c.choice,
+      position: c.position,
+      voteCount: c.vote_count ?? null,
+    })) as CachedElectionChoice[],
     ballotCount: e._count.ballots,
   }));
 
@@ -172,11 +222,9 @@ export async function GET(req: NextRequest) {
  *     summary: Create an election
  *     description: >
  *       Creates a new election with an auto-generated RSA key pair. The
- *       `opensAt` date is clamped to `now` if it is in the past. Faculty and
- *       group values are validated against the campus API. Faculty-restricted
- *       admins must explicitly include exactly one FACULTY restriction matching
- *       their own faculty — omitting it or targeting another faculty returns
- *       400. Requires admin authentication.
+ *       private key is encrypted with AES-256-GCM before being stored.
+ *       Faculty and group values are validated against the campus API.
+ *       Requires admin authentication.
  *     tags:
  *       - Elections
  *     security:
@@ -276,9 +324,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Faculty-restricted admin: must include exactly one FACULTY restriction for their own faculty.
-  // Auto-appending is intentionally not done — the client is responsible for sending the correct
-  // restriction so the intent is explicit and auditable.
   if (admin.restricted_to_faculty) {
     const facultyRestrictionsInBody = restrictions.filter((r) => r.type === 'FACULTY');
 
@@ -297,7 +342,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Validate restrictions
   const groupRestrictions = restrictions.filter((r) => r.type === 'GROUP');
   const facultyRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
 
@@ -305,7 +349,6 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('GROUP restrictions require at least one FACULTY restriction');
   }
 
-  // Validate STUDY_YEAR values
   for (const r of restrictions.filter((r) => r.type === 'STUDY_YEAR')) {
     const year = Number(r.value);
     if (!STUDY_YEARS.includes(year as StudyYearValue)) {
@@ -315,7 +358,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Validate STUDY_FORM values
   for (const r of restrictions.filter((r) => r.type === 'STUDY_FORM')) {
     if (!STUDY_FORMS.includes(r.value as StudyFormValue)) {
       return Errors.badRequest(
@@ -324,14 +366,12 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Validate LEVEL_COURSE values
   for (const r of restrictions.filter((r) => r.type === 'LEVEL_COURSE')) {
     if (!VALID_LEVEL_COURSES.includes(r.value)) {
       return Errors.badRequest(
         `Invalid level/course value "${r.value}". Must be one of: ${VALID_LEVEL_COURSES.join(', ')}`,
       );
     }
-    // Graduate-level courses (g prefix) are not permitted on this platform
     if (r.value.startsWith('g')) {
       return Errors.badRequest(
         `Graduate-level course restrictions are not permitted. Value "${r.value}" targets graduate students.`,
@@ -339,7 +379,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Validate FACULTY and GROUP values via campus API
   if (facultyRestrictions.length > 0 || groupRestrictions.length > 0) {
     let facultyGroups: Record<string, string[]>;
     try {
@@ -379,7 +418,6 @@ export async function POST(req: NextRequest) {
       if (!groupExistsInFaculty) {
         return Errors.badRequest(`Group "${r.value}" does not exist in the specified faculties`);
       }
-      // Graduate groups are not permitted
       if (parseGroupLevel(r.value) === 'g') {
         return Errors.badRequest(
           `Group "${r.value}" is a graduate group. Elections targeting graduate students are not permitted.`,
@@ -389,6 +427,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { publicKey, privateKey } = generateElectionKeyPair();
+  const encryptedPrivateKey = encryptField(privateKey);
   const now = new Date();
 
   const election = await prisma.election.create({
@@ -401,7 +440,7 @@ export async function POST(req: NextRequest) {
       min_choices: minChoices,
       max_choices: maxChoices,
       public_key: publicKey,
-      private_key: privateKey,
+      private_key: encryptedPrivateKey,
       choices: {
         create: choices.map((choice, i) => ({ choice, position: i })),
       },

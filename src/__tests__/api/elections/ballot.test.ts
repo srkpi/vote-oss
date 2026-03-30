@@ -21,6 +21,10 @@ import { computeNullifier, generateVoteToken, signVoteToken } from '@/lib/crypto
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 jest.mock('@/lib/cache', () => cacheMock);
+jest.mock('@/lib/encryption', () => ({
+  encryptField: (s: string) => s,
+  decryptField: (s: string) => s,
+}));
 
 import { POST } from '@/app/api/elections/[id]/ballot/route';
 
@@ -169,7 +173,6 @@ describe('POST /api/elections/[id]/ballot', () => {
     const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
     const nullifier = computeNullifier(token);
-    // Encrypt 2 choices but max is 1 — no padding applied since length >= maxChoices
     const encryptedBallot = encryptBallot(
       election.public_key,
       [MOCK_ELECTION_CHOICES[0].id, MOCK_ELECTION_CHOICES[1].id],
@@ -226,7 +229,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     const encryptedBallot = encryptBallot(
       election.public_key,
       [MOCK_ELECTION_CHOICES[0].id, MOCK_ELECTION_CHOICES[1].id],
-      election.max_choices, // max_choices=2, no padding needed
+      election.max_choices,
     );
     const req = await authReq({ token, signature, nullifier, encryptedBallot });
 
@@ -251,5 +254,20 @@ describe('POST /api/elections/[id]/ballot', () => {
 
     await POST(req, PARAMS);
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('invalidate elections cache to ensure correct vote count', async () => {
+    const election = makeElection();
+    const ballot = makeVoteBallot(election);
+    const req = await authReq(ballot);
+
+    prismaMock.election.findUnique.mockResolvedValueOnce(election);
+    prismaMock.usedTokenNullifier.findUnique.mockResolvedValueOnce(null);
+    prismaMock.ballot.findFirst.mockResolvedValueOnce(null);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    await POST(req, PARAMS);
+
+    expect(cacheMock.invalidateElections).toHaveBeenCalledTimes(1);
   });
 });

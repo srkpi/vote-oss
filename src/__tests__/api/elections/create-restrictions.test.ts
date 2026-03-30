@@ -16,6 +16,10 @@ jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 jest.mock('@/lib/cache', () => cacheMock);
 jest.mock('@/lib/campus-api', () => campusMock);
+jest.mock('@/lib/encryption', () => ({
+  encryptField: (s: string) => s,
+  decryptField: (s: string) => s,
+}));
 
 import { POST } from '@/app/api/elections/route';
 import {

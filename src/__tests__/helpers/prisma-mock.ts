@@ -36,6 +36,8 @@ export const prismaMock = {
   },
   electionChoice: {
     findMany: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
     deleteMany: jest.fn(),
   },
   issuedToken: {
@@ -53,10 +55,6 @@ export const prismaMock = {
   usedTokenNullifier: {
     findUnique: jest.fn(),
     create: jest.fn(),
-    deleteMany: jest.fn(),
-  },
-  electionTally: {
-    createMany: jest.fn(),
     deleteMany: jest.fn(),
   },
   faqCategory: {
@@ -101,6 +99,7 @@ export function resetPrismaMock() {
   prismaMock.admin.updateMany.mockImplementation((args: unknown) => args);
   prismaMock.adminInviteToken.create.mockImplementation((args: unknown) => args);
   prismaMock.adminInviteToken.count.mockResolvedValue(0);
+  prismaMock.electionChoice.update.mockResolvedValue({});
   prismaMock.faqCategory.create.mockImplementation((args: unknown) => args);
   prismaMock.faqCategory.update.mockImplementation((args: unknown) => args);
   prismaMock.faqItem.create.mockImplementation((args: unknown) => args);

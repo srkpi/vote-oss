@@ -14,6 +14,10 @@ import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-s
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
+jest.mock('@/lib/encryption', () => ({
+  encryptField: (s: string) => s,
+  decryptField: (s: string) => s,
+}));
 
 import { POST } from '@/app/api/elections/[id]/token/route';
 

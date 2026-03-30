@@ -91,9 +91,6 @@ export const RESTRICTED_ADMIN_RECORD = {
   deleted_by: null as string | null,
 };
 
-/**
- * A previously-active admin who has been soft-deleted.
- */
 export const DELETED_ADMIN_RECORD = {
   ...RESTRICTED_ADMIN_RECORD,
   user_id: 'admin-002',
@@ -150,12 +147,14 @@ export const MOCK_ELECTION_CHOICES = [
     election_id: MOCK_ELECTION_ID,
     choice: 'Option A',
     position: 0,
+    vote_count: null as number | null,
   },
   {
     id: '550e8400-e29b-41d4-a716-446655441001',
     election_id: MOCK_ELECTION_ID,
     choice: 'Option B',
     position: 1,
+    vote_count: null as number | null,
   },
 ];
 export const MOCK_ELECTION_INVALID_CHOICE_ID = '550e8400-e29b-41d4-a716-446655441999';
@@ -173,10 +172,11 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     max_choices: 1,
     restrictions: [] as { type: string; value: string }[],
     public_key: keys.publicKey,
+    // In tests, encryption is mocked as a pass-through (decryptField returns the value as-is),
+    // so storing the raw PEM here is equivalent to storing an "encrypted" value in the mock DB.
     private_key: keys.privateKey,
     creator: { full_name: 'Super Admin User', faculty: 'FICE' },
     choices: MOCK_ELECTION_CHOICES,
-    tallies: [] as unknown[],
     _count: { ballots: 0 },
   };
 }

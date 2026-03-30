@@ -87,7 +87,7 @@ export const STUDY_FORM_LABELS: Record<StudyFormValue, string> = {
   Remote: 'Дистанційна',
   Extern: 'Екстернат',
   Correspondence: 'Заочна',
-  Shortened: 'Скорочена',
+  Shortened: 'Прискореники',
   OutOfPostgraduate: 'Поза аспірантурою',
   Other: 'Інше',
 };

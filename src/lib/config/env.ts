@@ -77,7 +77,7 @@ export function getUrlEnv(key: string, defaultValue?: string): string {
   }
 }
 
-export function getSecret(key: string, minLength = 32): string {
+export function getSecret(key: string, minLength = 32, maxLength?: number): string {
   const value = readEnv(key);
 
   if (!value) return ciSafe(key, 'a'.repeat(minLength));
@@ -85,6 +85,11 @@ export function getSecret(key: string, minLength = 32): string {
   if (value.length < minLength) {
     if (isCI && !isPublicVar(key)) return value;
     throw new Error(`❌ ${key} must be at least ${minLength} characters long`);
+  }
+
+  if (maxLength && value.length > maxLength) {
+    if (isCI && !isPublicVar(key)) return value;
+    throw new Error(`❌ ${key} must be no longer than ${maxLength} characters`);
   }
 
   return value;
@@ -96,6 +101,8 @@ export const env = {
 
   JWT_ACCESS_SECRET: getSecret('JWT_ACCESS_SECRET'),
   JWT_REFRESH_SECRET: getSecret('JWT_REFRESH_SECRET'),
+  DATABASE_ENCRYPTION_KEY: getSecret('DATABASE_ENCRYPTION_KEY', 64, 64),
+
   CAMPUS_API_URL: getEnv('CAMPUS_API_URL'),
 
   KPI_APP_SECRET: getEnv('KPI_APP_SECRET'),
