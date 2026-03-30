@@ -1,5 +1,7 @@
 import type { Admin } from '@prisma/client';
 
+import type { StudyFormValue, StudyYearValue } from '@/lib/constants';
+
 export interface KpiIdUserInfo {
   EMPLOYEE_ID: string;
   AUTH_METHOD: string;
@@ -8,13 +10,15 @@ export interface KpiIdUserInfo {
   NAME: string;
   TRACE_ID: string;
   TIME_STAMP: string;
+}
 
-  // WILL BE FETCHED FROM CAMPUS API
-  GROUP?: string;
-  FACULTY?: string;
-  SPECIALITY?: string;
-  STUDY_FORM?: string;
-  STUDY_YEAR?: string;
+export interface CampusUserInfo {
+  groupName: string;
+  faculty: string;
+  status: 'Studying' | 'Dismissed';
+  studyForm: StudyFormValue;
+  studyYear: StudyYearValue;
+  speciality: string;
 }
 
 export interface TicketUserInfo {

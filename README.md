@@ -129,6 +129,7 @@ cp .env.example .env
 | `JWT_REFRESH_SECRET` | **Yes** | Random secret for signing refresh tokens — **minimum 32 characters** |
 | `DATABASE_ENCRYPTION_KEY` | **Yes** | Random secret for elections private key encryption — **64 characters, hex format** |
 | `CAMPUS_API_URL` | **Yes** | Base URL of the KPI Campus API used for faculty/group validation |
+| `CAMPUS_INTEGRATION_API_KEY` | **Yes** | KPI Campus API key used for retrieving user data by user id from KPI ID |
 | `NEXT_PUBLIC_KPI_AUTH_URL` | No | KPI ID auth base URL (default: `https://auth.kpi.ua`) |
 | `NEXT_PUBLIC_KPI_APP_ID` | **Yes** | Your registered KPI ID application ID |
 | `KPI_APP_SECRET` | **Yes** | Your KPI ID application secret |
