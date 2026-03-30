@@ -37,6 +37,12 @@ export class GraduateUserError extends ResolveUserDataError {
   }
 }
 
+export class NotStudyingError extends ResolveUserDataError {
+  constructor(message = 'Platform is only available for active students') {
+    super(message);
+  }
+}
+
 export const TICKET_MAP: Record<string, UserInfo> = {
   'ticket-superadmin-1': {
     userId: 'superadmin-001',
@@ -93,6 +99,7 @@ export const kpiIdMock = {
   NotStudentError,
   NotDiiaAuthError,
   GraduateUserError,
+  NotStudyingError,
 };
 
 export function resetKpiIdMock(): void {

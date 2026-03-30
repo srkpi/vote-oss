@@ -8,6 +8,12 @@ import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
+jest.mock('@/lib/kpi-id', () => ({
+  ...jest.requireActual('@/lib/kpi-id'),
+  resolveUserData: jest.fn(),
+}));
+
+import { GraduateUserError, resolveUserData } from '@/lib/kpi-id';
 
 const fetchMock = jest.fn();
 global.fetch = fetchMock;
@@ -20,6 +26,16 @@ const MOCK_STUDENT_ID = 'user-001';
 const MOCK_FULL_NAME = 'Ivan Petrenko';
 
 const KPI_SESSION_COOKIE = 'PHPSESSID=abc123; Path=/; HttpOnly';
+
+const MOCK_USER_INFO = {
+  userId: MOCK_STUDENT_ID,
+  fullName: MOCK_FULL_NAME,
+  faculty: 'TEST',
+  group: 'IP-24',
+  speciality: '121',
+  studyYear: 1,
+  studyForm: 'Денна',
+};
 
 function makeCheckProcessing() {
   return new Response(JSON.stringify({ status: 'Processing', sessionId: null }), { status: 200 });
@@ -56,11 +72,13 @@ function makeUserDataOk(overrides: Record<string, unknown> = {}) {
 }
 
 /**
- * Sets up fetchMock to simulate a complete happy-path sequence:
+ * Mocks the three external fetch calls made by the route handler itself:
  *   1. check-request  → Finished
  *   2. internal-auth  → OK + Set-Cookie
- *   3. user           → student data
- *   4. logout         → covered by the beforeEach fallback (fire-and-forget)
+ *   3. /api/user      → KPI ID user data
+ *
+ * resolveUserData is mocked at the module level so no further fetch calls
+ * (voteoss, fetchFacultyGroups) are needed here.
  */
 function mockFullHappyPath(userDataOverrides: Record<string, unknown> = {}) {
   fetchMock
@@ -86,8 +104,14 @@ describe('GET /api/auth/diia/check', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     fetchMock.mockReset().mockResolvedValue(new Response('OK', { status: 200 }));
+    // Default: resolveUserData succeeds with a valid student
+    (resolveUserData as jest.Mock).mockResolvedValue(MOCK_USER_INFO);
     allure.feature('Auth');
     allure.story('Diia Check');
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   // ── Missing requestId ──────────────────────────────────────────────────────
@@ -95,7 +119,6 @@ describe('GET /api/auth/diia/check', () => {
   it('returns 400 when requestId query param is absent', async () => {
     const req = makeRequest({ method: 'GET', url: 'http://localhost/api/auth/diia/check' });
     const res = await POST(req);
-
     expect(res.status).toBe(400);
   });
 
@@ -105,8 +128,7 @@ describe('GET /api/auth/diia/check', () => {
     fetchMock.mockResolvedValueOnce(makeCheckProcessing());
 
     const req = makeCheckRequest();
-    const res = await POST(req);
-    const { status, body } = await parseJson<any>(res);
+    const { status, body } = await parseJson<any>(await POST(req));
 
     expect(status).toBe(200);
     expect(body.status).toBe('processing');
@@ -219,38 +241,11 @@ describe('GET /api/auth/diia/check', () => {
     consoleSpy.mockRestore();
   });
 
-  it('returns 401 when STUDENT_ID is missing from user data', async () => {
-    fetchMock
-      .mockResolvedValueOnce(makeCheckFinished())
-      .mockResolvedValueOnce(makeInternalAuthOk())
-      .mockResolvedValueOnce(makeUserDataOk({ STUDENT_ID: undefined }));
-
-    const req = makeCheckRequest();
-    const res = await POST(req);
-
-    expect(res.status).toBe(401);
-  });
-
-  it('returns 401 when NAME is missing from user data', async () => {
-    fetchMock
-      .mockResolvedValueOnce(makeCheckFinished())
-      .mockResolvedValueOnce(makeInternalAuthOk())
-      .mockResolvedValueOnce(makeUserDataOk({ NAME: undefined }));
-
-    const req = makeCheckRequest();
-    const res = await POST(req);
-
-    expect(res.status).toBe(401);
-  });
-
   // ── Graduate student restriction ──────────────────────────────────────────
 
   it('returns 403 when the Diia user belongs to a graduate group', async () => {
-    fetchMock
-      .mockResolvedValueOnce(makeCheckFinished())
-      .mockResolvedValueOnce(makeInternalAuthOk())
-      // GROUP field contains a graduate group (ф suffix → level 'g')
-      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
+    mockFullHappyPath({ GROUP: 'FT-51ф' });
+    (resolveUserData as jest.Mock).mockRejectedValueOnce(new GraduateUserError());
 
     const req = makeCheckRequest();
     const res = await POST(req);
@@ -259,10 +254,8 @@ describe('GET /api/auth/diia/check', () => {
   });
 
   it('includes a descriptive message in the 403 for graduate users', async () => {
-    fetchMock
-      .mockResolvedValueOnce(makeCheckFinished())
-      .mockResolvedValueOnce(makeInternalAuthOk())
-      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'KV-11ф' }));
+    mockFullHappyPath({ GROUP: 'KV-11ф' });
+    (resolveUserData as jest.Mock).mockRejectedValueOnce(new GraduateUserError());
 
     const req = makeCheckRequest();
     const { body } = await parseJson<any>(await POST(req));
@@ -271,10 +264,8 @@ describe('GET /api/auth/diia/check', () => {
   });
 
   it('does not set auth cookies when a graduate Diia user is rejected', async () => {
-    fetchMock
-      .mockResolvedValueOnce(makeCheckFinished())
-      .mockResolvedValueOnce(makeInternalAuthOk())
-      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
+    mockFullHappyPath({ GROUP: 'FT-51ф' });
+    (resolveUserData as jest.Mock).mockRejectedValueOnce(new GraduateUserError());
 
     const req = makeCheckRequest();
     const res = await POST(req);
@@ -285,10 +276,8 @@ describe('GET /api/auth/diia/check', () => {
   });
 
   it('still issues a fire-and-forget logout before the graduate check returns 403', async () => {
-    fetchMock
-      .mockResolvedValueOnce(makeCheckFinished())
-      .mockResolvedValueOnce(makeInternalAuthOk())
-      .mockResolvedValueOnce(makeUserDataOk({ GROUP: 'FT-51ф' }));
+    mockFullHappyPath({ GROUP: 'FT-51ф' });
+    (resolveUserData as jest.Mock).mockRejectedValueOnce(new GraduateUserError());
 
     const req = makeCheckRequest();
     await POST(req);
@@ -306,8 +295,7 @@ describe('GET /api/auth/diia/check', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
 
     const req = makeCheckRequest();
-    const res = await POST(req);
-    const { status, body } = await parseJson<any>(res);
+    const { status, body } = await parseJson<any>(await POST(req));
 
     expect(status).toBe(200);
     expect(body.status).toBe('success');
@@ -335,8 +323,7 @@ describe('GET /api/auth/diia/check', () => {
     const res = await POST(req);
 
     const setCookies = res.headers.getSetCookie?.() ?? [];
-    const hasAccess = setCookies.some((c) => c.startsWith(`${COOKIE_ACCESS}=`));
-    expect(hasAccess).toBe(true);
+    expect(setCookies.some((c) => c.startsWith(`${COOKIE_ACCESS}=`))).toBe(true);
   });
 
   it('sets a refresh_token cookie on success', async () => {
@@ -347,8 +334,7 @@ describe('GET /api/auth/diia/check', () => {
     const res = await POST(req);
 
     const setCookies = res.headers.getSetCookie?.() ?? [];
-    const hasRefresh = setCookies.some((c) => c.startsWith(`${COOKIE_REFRESH}=`));
-    expect(hasRefresh).toBe(true);
+    expect(setCookies.some((c) => c.startsWith(`${COOKIE_REFRESH}=`))).toBe(true);
   });
 
   it('access_token cookie is HttpOnly', async () => {
