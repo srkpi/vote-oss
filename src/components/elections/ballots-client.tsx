@@ -44,6 +44,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
 
   const [myVoteRecord, setMyVoteRecord] = useState<VoteRecord | null>(null);
   const myBallotRef = useRef<HTMLDivElement | null>(null);
+  const [isMyBallotVisible, setIsMyBallotVisible] = useState(false);
 
   const isClosed = election?.status === 'closed';
   const privateKey = election?.privateKey;
@@ -131,6 +132,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const safePage = Math.min(page, totalPages);
   const pagedBallots = filteredBallots.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
+  // Auto-navigate to the page containing the user's ballot on initial load
   useEffect(() => {
     if (!myVoteRecord) return;
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
@@ -138,6 +140,45 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       setPage(Math.floor(idx / PAGE_SIZE) + 1);
     }
   }, [myVoteRecord, filteredBallots]);
+
+  // Track if the user's ballot is currently visible on the screen
+  useEffect(() => {
+    const el = myBallotRef.current;
+    if (!el) {
+      setIsMyBallotVisible(false);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsMyBallotVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }, // Triggers when at least 10% is visible
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [safePage, pagedBallots]);
+
+  const handleScrollToMyBallot = () => {
+    if (!myVoteRecord) return;
+
+    // Check if we need to switch pages first
+    const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
+    if (idx !== -1) {
+      const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
+
+      if (safePage !== targetPage) {
+        setPage(targetPage);
+        // Wait for the page to render the ref, then scroll
+        setTimeout(() => {
+          myBallotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+      } else {
+        myBallotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  };
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
@@ -183,9 +224,8 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
           decryptionDone={decryptionDone}
           matchesDecryption={myVoteMatchesDecryption}
           decryptedChoiceLabels={myDecryption?.choiceLabels ?? null}
-          onScrollTo={() =>
-            myBallotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          }
+          isBallotVisible={isMyBallotVisible}
+          onScrollTo={handleScrollToMyBallot}
         />
       )}
 

@@ -1,36 +1,51 @@
 'use client';
 
+import { Crown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { calculateVotePercentage, cn, pluralize } from '@/lib/utils';
+import { getVote } from '@/lib/vote-storage';
 import type { TallyResult } from '@/types/election';
 
 const colors = [
-  { bar: 'from-kpi-navy to-kpi-blue-mid', badge: 'bg-kpi-navy' },
-  {
-    bar: 'from-kpi-orange to-kpi-orange-dark',
-    badge: 'bg-kpi-orange',
-  },
+  { bar: 'from-kpi-navy to-kpi-blue-mid', badge: 'bg-kpi-navy', crown: 'text-kpi-navy' },
+  { bar: 'from-kpi-orange to-kpi-orange-dark', badge: 'bg-kpi-orange', crown: 'text-kpi-orange' },
   {
     bar: 'from-kpi-blue-light to-kpi-blue-mid',
     badge: 'bg-kpi-blue-light',
+    crown: 'text-kpi-blue-light',
   },
-  { bar: 'from-kpi-wine to-kpi-wine-deep', badge: 'bg-kpi-wine' },
-  { bar: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-500' },
+  { bar: 'from-kpi-wine to-kpi-wine-deep', badge: 'bg-kpi-wine', crown: 'text-kpi-wine' },
+  { bar: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-500', crown: 'text-emerald-500' },
 ];
 
 interface ResultsChartProps {
   results: TallyResult[];
   totalBallots: number;
+  electionId: string;
+  hideOwnVote?: boolean;
 }
 
-export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
+export function ResultsChart({
+  results,
+  totalBallots,
+  electionId,
+  hideOwnVote,
+}: ResultsChartProps) {
   const [animated, setAnimated] = useState(false);
+  const [userChoices, setUserChoices] = useState<string[]>([]);
 
   useEffect(() => {
     const t = setTimeout(() => setAnimated(true), 100);
+
+    const localRecord = getVote(electionId);
+    if (localRecord && localRecord.choiceIds && !hideOwnVote) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUserChoices(localRecord.choiceIds);
+    }
+
     return () => clearTimeout(t);
-  }, []);
+  }, [electionId, hideOwnVote]);
 
   let highestVotes = 0;
   const winners: Set<string> = new Set();
@@ -44,7 +59,6 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
       winners.add(result.choiceId);
     }
   }
-  const winnerLabel = winners.size > 1 ? 'Нічия' : 'Переможець';
 
   return (
     <div className="space-y-6">
@@ -53,6 +67,7 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
           const pct = calculateVotePercentage(result.votes, totalBallots);
           const color = colors[index % colors.length]!;
           const isWinner = winners.has(result.choiceId);
+          const isUserChoice = userChoices.includes(result.choiceId);
 
           return (
             <div
@@ -63,7 +78,11 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
               )}
             >
               <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  {isWinner && totalBallots > 0 && (
+                    <Crown className={cn('h-4 w-4 shrink-0', color.crown)} />
+                  )}
+
                   <span
                     className={cn(
                       'font-body text-sm font-medium',
@@ -72,9 +91,10 @@ export function ResultsChart({ results, totalBallots }: ResultsChartProps) {
                   >
                     {result.choice}
                   </span>
-                  {isWinner && totalBallots > 0 && (
-                    <span className="bg-kpi-orange rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white uppercase">
-                      {winnerLabel}
+
+                  {isUserChoice && (
+                    <span className="bg-success/15 text-success rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                      Ваш вибір
                     </span>
                   )}
                 </div>
