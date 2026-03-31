@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 import { calculateVotePercentage, cn, pluralize } from '@/lib/utils';
 import { getVote } from '@/lib/vote-storage';
-import type { TallyResult } from '@/types/election';
+import type { ElectionChoice } from '@/types/election';
 
 const colors = [
   { bar: 'from-kpi-navy to-kpi-blue-mid', badge: 'bg-kpi-navy', crown: 'text-kpi-navy' },
@@ -37,14 +37,15 @@ const colors = [
 const CONFETTI_KEY_PREFIX = 'election_confetti_shown_';
 
 interface ResultsChartProps {
-  results: TallyResult[];
+  /** Choices for a closed election — must include `votes` and `winner` fields. */
+  choices: ElectionChoice[];
   totalBallots: number;
   electionId: string;
   hideOwnVote?: boolean;
 }
 
 export function ResultsChart({
-  results,
+  choices,
   totalBallots,
   electionId,
   hideOwnVote,
@@ -71,11 +72,10 @@ export function ResultsChart({
         const confettiKey = `${CONFETTI_KEY_PREFIX}${electionId}`;
         if (localStorage.getItem(confettiKey)) return;
 
-        const highestVotes = Math.max(...results.map((r) => r.votes));
-        const winnerIds = new Set(
-          results.filter((r) => r.votes === highestVotes).map((r) => r.choiceId),
-        );
-        const userWon = userChoices.some((id) => winnerIds.has(id));
+        const userWon = userChoices.some((id) => {
+          const c = choices.find((c) => c.id === id);
+          return c?.winner === true;
+        });
 
         if (userWon) {
           const { default: confetti } = await import('@hiseb/confetti');
@@ -88,33 +88,21 @@ export function ResultsChart({
     };
 
     triggerConfetti();
-  }, [userChoices, results, electionId, hideOwnVote, totalBallots]);
-
-  let highestVotes = 0;
-  const winners: Set<string> = new Set();
-
-  for (const result of results) {
-    if (result.votes > highestVotes) {
-      highestVotes = result.votes;
-      winners.clear();
-      winners.add(result.choiceId);
-    } else if (result.votes === highestVotes) {
-      winners.add(result.choiceId);
-    }
-  }
+  }, [userChoices, choices, electionId, hideOwnVote, totalBallots]);
 
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        {results.map((result, index) => {
-          const pct = calculateVotePercentage(result.votes, totalBallots);
+        {choices.map((choice, index) => {
+          const votes = choice.votes ?? 0;
+          const pct = calculateVotePercentage(votes, totalBallots);
           const color = colors[index % colors.length]!;
-          const isWinner = winners.has(result.choiceId);
-          const isUserChoice = userChoices.includes(result.choiceId);
+          const isWinner = choice.winner === true;
+          const isUserChoice = userChoices.includes(choice.id);
 
           return (
             <div
-              key={result.choiceId}
+              key={choice.id}
               className={cn(
                 'rounded-lg border p-4 transition-all duration-300',
                 isWinner ? 'border-kpi-navy/30 bg-kpi-navy/3' : 'border-border-subtle bg-white',
@@ -132,7 +120,7 @@ export function ResultsChart({
                       isWinner ? 'text-kpi-navy' : 'text-foreground',
                     )}
                   >
-                    {result.choice}
+                    {choice.choice}
                   </span>
 
                   {isUserChoice && (
@@ -146,7 +134,7 @@ export function ResultsChart({
                     {animated ? pct : 0}%
                   </span>
                   <p className="font-body text-muted-foreground text-xs">
-                    {pluralize(result.votes, ['голос', 'голоси', 'голосів'])}
+                    {pluralize(votes, ['голос', 'голоси', 'голосів'])}
                   </p>
                 </div>
               </div>

@@ -19,18 +19,17 @@ import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/cry
 import { cn, pluralize } from '@/lib/utils';
 import { getVote } from '@/lib/vote-storage';
 import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
-import type { ElectionChoice, ElectionDetail } from '@/types/election';
+import type { ElectionChoice } from '@/types/election';
 import type { VoteRecord } from '@/types/vote';
 
 interface BallotsClientProps {
   initialData: BallotsResponse;
-  election?: ElectionDetail | null;
 }
 
 const PAGE_SIZE = 20;
 
-export function BallotsClient({ initialData, election }: BallotsClientProps) {
-  const { ballots, election: electionMeta } = initialData;
+export function BallotsClient({ initialData }: BallotsClientProps) {
+  const { ballots, election } = initialData;
 
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,11 +45,11 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const myBallotRef = useRef<HTMLDivElement | null>(null);
   const [isMyBallotVisible, setIsMyBallotVisible] = useState(false);
 
-  const isClosed = election?.status === 'closed';
-  const privateKey = election?.privateKey;
+  const isClosed = election.status === 'closed';
+  const privateKey = election.privateKey;
   const canDecrypt = isClosed && !!privateKey && election.ballotCount > 0;
-  const choices: ElectionChoice[] = election?.choices ?? [];
-  const electionId = election?.id ?? electionMeta.id;
+  const choices: ElectionChoice[] = election.choices;
+  const electionId = election.id;
 
   useEffect(() => {
     const record = getVote(electionId);
@@ -153,7 +152,7 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
       ([entry]) => {
         setIsMyBallotVisible(entry.isIntersecting);
       },
-      { threshold: 0.1 }, // Triggers when at least 10% is visible
+      { threshold: 0.1 },
     );
 
     observer.observe(el);
@@ -163,14 +162,12 @@ export function BallotsClient({ initialData, election }: BallotsClientProps) {
   const handleScrollToMyBallot = () => {
     if (!myVoteRecord) return;
 
-    // Check if we need to switch pages first
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
       const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
 
       if (safePage !== targetPage) {
         setPage(targetPage);
-        // Wait for the page to render the ref, then scroll
         setTimeout(() => {
           myBallotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 150);

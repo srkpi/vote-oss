@@ -2,6 +2,8 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { getCachedElections } from '@/lib/cache';
+import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
@@ -14,11 +16,12 @@ import type { ElectionRestriction } from '@/types/election';
  *   get:
  *     summary: List all ballots for an election
  *     description: >
- *       Returns the full ordered ballot chain for the given election.
- *       Access is subject to faculty/group eligibility rules identical to
- *       those applied when viewing the election itself. The encrypted ballot
- *       payload and chain hashes are included so clients can independently
- *       verify integrity.
+ *       Returns the full ordered ballot chain for the given election together
+ *       with complete election metadata (status, choices, ballot count, and —
+ *       for closed elections — the private key for client-side decryption).
+ *       This single request replaces the previous pattern of fetching ballots
+ *       and election detail separately. Access is subject to faculty/group
+ *       eligibility rules identical to those applied when viewing the election.
  *     tags:
  *       - Elections
  *     security:
@@ -40,33 +43,11 @@ import type { ElectionRestriction } from '@/types/election';
  *               type: object
  *               properties:
  *                 election:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     title:
- *                       type: string
+ *                   $ref: '#/components/schemas/ElectionForBallotsResponse'
  *                 ballots:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       encryptedBallot:
- *                         type: string
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                       signature:
- *                         type: string
- *                       previousHash:
- *                         type: string
- *                         nullable: true
- *                       currentHash:
- *                         type: string
- *                 total:
- *                   type: integer
+ *                     $ref: '#/components/schemas/Ballot'
  *       400:
  *         description: Invalid election UUID
  *       401:
@@ -83,21 +64,43 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id: electionId } = await params;
   if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
 
-  const election = await prisma.election.findUnique({
-    where: { id: electionId },
-    select: {
-      id: true,
-      title: true,
-      opens_at: true,
-      closes_at: true,
-      restrictions: { select: { type: true, value: true } },
-    },
-  });
+  let electionData;
+  const cached = await getCachedElections();
+  if (cached) {
+    const found = cached.find((e) => e.id === electionId);
+    if (!found) return Errors.notFound('Election not found');
 
-  if (!election) return Errors.notFound('Election not found');
+    electionData = {
+      id: found.id,
+      title: found.title,
+      opensAt: new Date(found.opensAt),
+      closesAt: new Date(found.closesAt),
+      privateKey: found.privateKey,
+      restrictions: found.restrictions as ElectionRestriction[],
+      choices: found.choices,
+    };
+  } else {
+    electionData = await prisma.election.findUnique({
+      where: { id: electionId },
+      select: {
+        id: true,
+        title: true,
+        opens_at: true,
+        closes_at: true,
+        private_key: true,
+        restrictions: { select: { type: true, value: true } },
+        choices: {
+          select: { id: true, choice: true, position: true },
+          orderBy: { position: 'asc' },
+        },
+      },
+    });
+
+    if (!electionData) return Errors.notFound('Election not found');
+  }
 
   const { user } = auth;
-  const restrictions = election.restrictions as ElectionRestriction[];
+  const restrictions = electionData.restrictions as ElectionRestriction[];
 
   if (user.isAdmin && !user.restrictedToFaculty) {
     // pass
@@ -110,6 +113,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return Errors.forbidden('You are not eligible to view this election');
     }
   }
+
+  const now = new Date();
+  const isClosed = now > electionData.closes_at!;
+  const status =
+    now < electionData.opens_at! ? 'upcoming' : now <= electionData.closes_at! ? 'open' : 'closed';
 
   const ballots = await prisma.ballot.findMany({
     where: { election_id: electionId },
@@ -125,7 +133,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 
   return NextResponse.json({
-    election: { id: election.id, title: election.title },
+    election: {
+      id: electionData.id,
+      title: electionData.title,
+      status,
+      ballotCount: ballots.length,
+      choices: electionData.choices.map((c) => ({
+        id: c.id,
+        choice: c.choice,
+        position: c.position,
+      })),
+      ...(isClosed && { privateKey: decryptField(electionData.private_key!) }),
+    },
     ballots: ballots.map((b) => ({
       id: b.id,
       encryptedBallot: b.encrypted_ballot,
@@ -134,6 +153,5 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       previousHash: b.previous_hash,
       currentHash: b.current_hash,
     })),
-    total: ballots.length,
   });
 }

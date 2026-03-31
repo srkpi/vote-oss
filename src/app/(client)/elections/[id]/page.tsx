@@ -62,10 +62,11 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
     notFound();
   }
 
-  const results = election.results ?? null;
   const isOpen = election.status === 'open';
   const isUpcoming = election.status === 'upcoming';
   const isClosed = election.status === 'closed';
+  // Choices carry votes/winner for closed elections.
+  const hasResults = isClosed && election.choices.some((c) => c.votes !== undefined);
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
@@ -130,13 +131,13 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             )}
 
-            {isClosed && results && (
+            {isClosed && hasResults && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
                 <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
                   Результати
                 </h2>
                 <ResultsChart
-                  results={results}
+                  choices={election.choices}
                   totalBallots={election.ballotCount}
                   electionId={election.id}
                 />

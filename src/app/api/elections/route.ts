@@ -57,7 +57,8 @@ function computeStatus(opensAt: string | Date, closesAt: string | Date): Electio
   return 'closed';
 }
 
-function buildResults(choices: CachedElectionChoice[]): TallyResult[] | null {
+/** Build tally results from cached choices (only when all vote_counts are present). */
+function buildTallyResults(choices: CachedElectionChoice[]): TallyResult[] | null {
   if (choices.some((c) => c.voteCount === null)) return null;
   const maxVotes = Math.max(0, ...choices.map((c) => c.voteCount!));
   return choices.map((c) => ({
@@ -126,6 +127,19 @@ function toClientElections(
       const status = computeStatus(e.opensAt, e.closesAt);
       const isDeleted = !!e.deletedAt;
 
+      // Embed votes + winner into choices for closed elections.
+      const tallyResults = isClosed ? buildTallyResults(e.choices) : null;
+      const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
+
+      const choices = e.choices.map((c) => {
+        const base = { id: c.id, choice: c.choice, position: c.position };
+        if (tallyResults) {
+          const r = tallyMap.get(c.id);
+          return { ...base, votes: r?.votes ?? 0, winner: r?.winner ?? false };
+        }
+        return base;
+      });
+
       const base: Election = {
         id: e.id,
         title: e.title,
@@ -137,9 +151,8 @@ function toClientElections(
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
         creator: e.creator,
-        choices: e.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
+        choices,
         ballotCount: e.ballotCount,
-        results: isClosed ? buildResults(e.choices) : undefined,
       };
 
       // Attach admin-only fields.
@@ -187,11 +200,9 @@ function toClientElections(
  *     description: >
  *       Returns all elections the caller is eligible to see, filtered by
  *       their faculty/group and admin status. Results are served from cache
- *       when available. Deleted elections are included only for admin users
- *       and are accompanied by `deletedAt`, `deletedBy`, `canDelete`, and
- *       `canRestore` flags. The private key is included only for closed
- *       elections. Status (`upcoming` | `open` | `closed`) is computed at
- *       response time.
+ *       when available. For closed elections, choices include `votes` and
+ *       `winner` fields. Deleted elections are included only for admin users.
+ *       Status (`upcoming` | `open` | `closed`) is computed at response time.
  *     tags:
  *       - Elections
  *     security:
@@ -358,9 +369,7 @@ export async function GET(req: NextRequest) {
  *             schema:
  *               $ref: '#/components/schemas/Election'
  *       400:
- *         description: >
- *           Validation error (missing fields, date constraints, unknown faculty/group,
- *           missing/wrong FACULTY restriction for restricted admin)
+ *         description: Validation error
  *       401:
  *         description: Unauthorized
  *       403:

@@ -16,6 +16,10 @@ export interface ElectionChoice {
   id: string;
   choice: string;
   position: number;
+
+  /** Present only for closed elections */
+  votes?: number;
+  winner?: boolean;
 }
 
 export interface CachedElectionChoice extends ElectionChoice {
@@ -53,7 +57,7 @@ export interface Election {
   creator: ElectionCreator;
   choices: ElectionChoice[];
   ballotCount: number;
-  results?: TallyResult[] | null;
+
   /** Only present for admin-authenticated responses */
   deletedAt?: string | null;
   deletedBy?: ElectionDeleter | null;

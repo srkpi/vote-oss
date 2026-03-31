@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { cn, formatDate, formatDateTime, pluralize } from '@/lib/utils';
-import type { Election, TallyResult } from '@/types/election';
+import type { Election } from '@/types/election';
 
 interface ElectionCardProps {
   election: Election;
@@ -12,32 +12,28 @@ interface ElectionCardProps {
 
 /**
  * Sort choices for display in the card.
- * For closed elections with results: winner(s) first, then by vote count desc, then position.
+ * For closed elections with tally data: winner(s) first, then by votes desc, then by position.
  * For other elections: original position order.
  */
-function sortedChoicesForDisplay(
-  election: Election,
-): Array<{ id: string; choice: string; position: number; result?: TallyResult }> {
-  if (election.status !== 'closed' || !election.results) {
+function sortedChoicesForDisplay(election: Election) {
+  const hasTally = election.choices.some((c) => c.winner !== undefined);
+
+  if (election.status !== 'closed' || !hasTally) {
     return election.choices;
   }
 
-  const resultsMap = new Map(election.results.map((r) => [r.choiceId, r]));
-
-  return [...election.choices]
-    .map((c) => ({ ...c, result: resultsMap.get(c.id) }))
-    .sort((a, b) => {
-      // Winners come first
-      const aWinner = a.result?.winner ? 1 : 0;
-      const bWinner = b.result?.winner ? 1 : 0;
-      if (bWinner !== aWinner) return bWinner - aWinner;
-      // Then by votes descending
-      const aVotes = a.result?.votes ?? 0;
-      const bVotes = b.result?.votes ?? 0;
-      if (bVotes !== aVotes) return bVotes - aVotes;
-      // Fall back to position
-      return a.position - b.position;
-    });
+  return [...election.choices].sort((a, b) => {
+    // Winners first
+    const aWinner = a.winner ? 1 : 0;
+    const bWinner = b.winner ? 1 : 0;
+    if (bWinner !== aWinner) return bWinner - aWinner;
+    // Then by votes descending
+    const aVotes = a.votes ?? 0;
+    const bVotes = b.votes ?? 0;
+    if (bVotes !== aVotes) return bVotes - aVotes;
+    // Fall back to position
+    return a.position - b.position;
+  });
 }
 
 export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
@@ -106,7 +102,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 
         <div className="mb-5 flex flex-wrap gap-2">
           {shownChoices.map((choice) => {
-            const isWinner = 'result' in choice && choice.result?.winner === true;
+            const isWinner = choice.winner === true;
             return (
               <span
                 key={choice.id}

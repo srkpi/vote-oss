@@ -1,3 +1,5 @@
+import type { ElectionChoice, ElectionStatus } from '@/types/election';
+
 export interface Ballot {
   id: string;
   encryptedBallot: string;
@@ -7,8 +9,17 @@ export interface Ballot {
   currentHash: string;
 }
 
+export interface BallotsElection {
+  id: string;
+  title: string;
+  status: ElectionStatus;
+  ballotCount: number;
+  choices: ElectionChoice[];
+  privateKey?: string;
+}
+
 export interface BallotsResponse {
-  election: { id: string; title: string };
+  election: BallotsElection;
   ballots: Ballot[];
   total: number;
 }

@@ -52,9 +52,10 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
   const canRestore = election.canRestore ?? false;
   const isDeleted = !!election.deletedAt;
 
-  const results = election.results ?? null;
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';
+  // Choices carry votes/winner for closed elections.
+  const hasResults = isClosed && election.choices.some((c) => c.votes !== undefined);
 
   return (
     <div className="flex-1 overflow-auto">
@@ -147,7 +148,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             )}
 
-            {isClosed && results && (
+            {isClosed && hasResults && (
               <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
                   <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
@@ -159,7 +160,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 </div>
                 <div className="p-4 sm:p-6">
                   <ResultsChart
-                    results={results}
+                    choices={election.choices}
                     totalBallots={election.ballotCount}
                     electionId={election.id}
                     hideOwnVote
