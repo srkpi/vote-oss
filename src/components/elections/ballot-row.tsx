@@ -62,10 +62,7 @@ export function BallotRow({
           isMyBallot && !isAnomalous && 'hover:bg-info-bg/60',
         )}
       >
-        <span className="font-body text-muted-foreground w-8 shrink-0 text-right text-xs tabular-nums">
-          {index}
-        </span>
-
+        <span className="font-body text-muted-foreground shrink-0 text-xs">{index}</span>
         <span className="shrink-0">
           {isBadHash ? (
             <ShieldAlert className="text-error h-4 w-4" />
@@ -137,7 +134,7 @@ export function BallotRow({
 
       {isExpanded && (
         <div className="border-border-subtle bg-surface/50 border-t px-5 pb-4">
-          <div className="ml-13 space-y-4 pt-4">
+          <div className="space-y-4 pt-4">
             {isMyBallot && (
               <div>
                 <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">

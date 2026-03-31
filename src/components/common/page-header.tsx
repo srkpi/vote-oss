@@ -16,6 +16,7 @@ interface PageHeaderProps {
   isContainer?: boolean;
   backHref?: string;
   backClassName?: string;
+  collapseOnMobile?: boolean;
 }
 
 export function PageHeader({
@@ -26,6 +27,7 @@ export function PageHeader({
   isContainer,
   backHref,
   backClassName,
+  collapseOnMobile,
 }: PageHeaderProps) {
   return (
     <div
@@ -36,7 +38,10 @@ export function PageHeader({
     >
       <div
         className={cn(
-          'flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-3',
+          'gap-4 lg:gap-3',
+          collapseOnMobile
+            ? 'flex flex-col lg:flex-row lg:items-center lg:justify-between'
+            : 'flex flex-row items-center justify-between',
           isContainer && 'container',
         )}
       >
