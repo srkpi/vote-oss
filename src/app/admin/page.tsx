@@ -62,6 +62,7 @@ export default async function AdminDashboardPage() {
   const totalBallots = elections.reduce((sum, e) => sum + e.ballotCount, 0);
 
   const recentElections = [...elections]
+    .filter((e) => !e.deletedAt)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
