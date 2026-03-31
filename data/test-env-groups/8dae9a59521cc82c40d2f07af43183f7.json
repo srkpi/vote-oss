@@ -1,1 +1,1 @@
-{"id":"8dae9a59521cc82c40d2f07af43183f7","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 401 when ticketId is unknown","name":"returns 401 when ticketId is unknown","status":"passed","testResultsByEnv":{"default":"4c4065743cf6325eb7553417c53e37b9"}}
+{"id":"8dae9a59521cc82c40d2f07af43183f7","fullName":"src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 401 when ticketId is unknown","name":"returns 401 when ticketId is unknown","status":"passed","testResultsByEnv":{"default":"1a3045d513a7593ac4c1efc868d86327"}}

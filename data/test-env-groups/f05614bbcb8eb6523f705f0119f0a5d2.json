@@ -1,0 +1,1 @@
+{"id":"f05614bbcb8eb6523f705f0119f0a5d2","fullName":"src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] returns 204 when unrestricted admin soft-deletes any election","name":"returns 204 when unrestricted admin soft-deletes any election","status":"passed","testResultsByEnv":{"default":"bad04cc7a5537adfcb836474b36e35da"}}
