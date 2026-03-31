@@ -1,1 +1,1 @@
-{"id":"796778cc2db485155b9bb26f44f4f53d","fullName":"src/__tests__/api/faq/faq.test.ts#GET /api/faq does not require authentication","name":"does not require authentication","status":"passed","testResultsByEnv":{"default":"e04ffd9536dd42e96e1be0a6f4c149aa"}}
+{"id":"796778cc2db485155b9bb26f44f4f53d","fullName":"src/__tests__/api/faq/faq.test.ts#GET /api/faq does not require authentication","name":"does not require authentication","status":"passed","testResultsByEnv":{"default":"5fc319d3e1dd522964505bbb96854190"}}
