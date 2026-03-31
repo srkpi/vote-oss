@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
-import { getCachedElections, invalidateElections } from '@/lib/cache';
+import { getCachedAdmins, getCachedElections, invalidateElections } from '@/lib/cache';
 import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma';
 import {
   adminCanAccessElection,
   adminCanDeleteElection,
+  adminCanRestoreElection,
   checkRestrictions,
 } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
@@ -20,11 +21,24 @@ import type { ElectionRestriction, TallyResult } from '@/types/election';
 // ---------------------------------------------------------------------------
 
 /**
+ * Build a userId → promoted_by map from the cached admin list (preferred)
+ * or from the database when the cache is cold.
+ */
+async function buildAdminGraph(): Promise<Map<string, string | null>> {
+  const cachedAdmins = await getCachedAdmins();
+  if (cachedAdmins) {
+    return new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]));
+  }
+  const dbAdmins = await prisma.admin.findMany({
+    where: { deleted_at: null },
+    select: { user_id: true, promoted_by: true },
+  });
+  return new Map(dbAdmins.map((a) => [a.user_id, a.promoted_by]));
+}
+
+/**
  * Compute vote tallies from raw ballots, persist them to ElectionChoice,
  * clean up issued tokens + nullifiers, and invalidate the elections cache.
- *
- * Called lazily the first time a closed election's detail page is requested
- * and its choices still have null vote_count values.
  */
 async function computeAndPersistTally(
   electionId: string,
@@ -36,7 +50,6 @@ async function computeAndPersistTally(
     select: { encrypted_ballot: true },
   });
 
-  // Initialise tally counters
   const tally: Record<string, number> = {};
   for (const c of choices) tally[c.id] = 0;
 
@@ -51,7 +64,6 @@ async function computeAndPersistTally(
     }
   }
 
-  // Persist atomically alongside token / nullifier cleanup
   await prisma.$transaction([
     ...choices.map((c) =>
       prisma.electionChoice.update({
@@ -63,16 +75,11 @@ async function computeAndPersistTally(
     prisma.usedTokenNullifier.deleteMany({ where: { election_id: electionId } }),
   ]);
 
-  // Invalidate list cache so next GET /api/elections picks up vote_count values
   await invalidateElections();
 
   return tally;
 }
 
-/**
- * Build a sorted TallyResult array from a tally map + choices.
- * Results are ordered by position (matching the choices array).
- */
 function toTallyResults(
   tally: Record<string, number>,
   choices: Array<{ id: string; choice: string; position: number }>,
@@ -103,6 +110,9 @@ function toTallyResults(
  *       `hasVoted` flag indicates whether the caller has already been issued
  *       a vote token. For closed elections, `results` contains per-choice
  *       vote counts with winner flags — computed lazily on first request.
+ *       Admin-authenticated requests additionally receive `deletedAt`,
+ *       `deletedBy`, `canDelete`, and `canRestore` fields.
+ *       Non-admin requests for a deleted election return 404.
  *     tags:
  *       - Elections
  *     security:
@@ -138,7 +148,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id: electionId } = await params;
   if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
 
-  let electionData;
+  const { user } = auth;
+  const isAdmin = user.isAdmin ?? false;
+
+  let electionData: {
+    id: string;
+    title: string;
+    createdAt: Date;
+    opensAt: Date;
+    closesAt: Date;
+    minChoices: number;
+    maxChoices: number;
+    publicKey: string;
+    privateKey: string;
+    restrictions: ElectionRestriction[];
+    creator: { fullName: string; faculty: string };
+    choices: { id: string; choice: string; position: number; voteCount: number | null }[];
+    ballotCount: number;
+    createdBy: string;
+    deletedAt: Date | null;
+    deletedByUserId: string | null;
+    deletedByName: string | null;
+  };
+
   const cached = await getCachedElections();
 
   if (cached) {
@@ -159,6 +191,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       creator: found.creator,
       choices: found.choices,
       ballotCount: found.ballotCount,
+      createdBy: found.createdBy,
+      deletedAt: found.deletedAt ? new Date(found.deletedAt) : null,
+      deletedByUserId: found.deletedByUserId,
+      deletedByName: found.deletedByName,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -166,6 +202,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       include: {
         choices: { orderBy: { position: 'asc' } },
         creator: { select: { full_name: true, faculty: true } },
+        deleter: { select: { full_name: true } },
         restrictions: { select: { type: true, value: true } },
         _count: { select: { ballots: true } },
       },
@@ -192,15 +229,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         voteCount: c.vote_count,
       })),
       ballotCount: dbElection._count.ballots,
+      createdBy: dbElection.created_by,
+      deletedAt: dbElection.deleted_at,
+      deletedByUserId: dbElection.deleted_by,
+      deletedByName: dbElection.deleter?.full_name ?? null,
     };
   }
 
-  const { user } = auth;
+  // Non-admins cannot see deleted elections.
+  if (!isAdmin && electionData.deletedAt) {
+    return Errors.notFound('Election not found');
+  }
+
   const restrictions = electionData.restrictions;
 
-  if (user.isAdmin && !user.restrictedToFaculty) {
-    // unrestricted admin — pass
-  } else if (user.isAdmin && user.restrictedToFaculty) {
+  if (isAdmin && !user.restrictedToFaculty) {
+    // Unrestricted admin — pass
+  } else if (isAdmin && user.restrictedToFaculty) {
     if (!adminCanAccessElection(user.faculty, restrictions)) {
       return Errors.forbidden('You are not eligible for this election');
     }
@@ -237,6 +282,47 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     hasVoted = issuedToken !== null;
   }
 
+  // Compute admin-specific flags.
+  let canDelete: boolean | undefined;
+  let canRestore: boolean | undefined;
+  let deletedByField: { userId: string; fullName: string } | null | undefined;
+
+  if (isAdmin) {
+    const adminRecord = await prisma.admin.findUnique({ where: { user_id: user.sub } });
+    if (adminRecord) {
+      const adminGraph = await buildAdminGraph();
+      const isDeleted = !!electionData.deletedAt;
+
+      canDelete =
+        !isDeleted &&
+        adminCanDeleteElection(
+          {
+            restricted_to_faculty: adminRecord.restricted_to_faculty,
+            faculty: adminRecord.faculty,
+            user_id: adminRecord.user_id,
+          },
+          { restrictions, created_by: electionData.createdBy },
+          adminGraph,
+        );
+
+      canRestore =
+        isDeleted &&
+        adminCanRestoreElection(
+          {
+            restricted_to_faculty: adminRecord.restricted_to_faculty,
+            faculty: adminRecord.faculty,
+            user_id: adminRecord.user_id,
+          },
+          { restrictions, deletedByUserId: electionData.deletedByUserId },
+          adminGraph,
+        );
+    }
+
+    deletedByField = electionData.deletedByUserId
+      ? { userId: electionData.deletedByUserId, fullName: electionData.deletedByName ?? '' }
+      : null;
+  }
+
   return NextResponse.json({
     id: electionData.id,
     title: electionData.title,
@@ -259,18 +345,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ballotCount: electionData.ballotCount,
     results,
     hasVoted,
+    ...(isAdmin && {
+      deletedAt: electionData.deletedAt?.toISOString() ?? null,
+      deletedBy: deletedByField,
+      canDelete,
+      canRestore,
+    }),
   });
 }
+
+// ---------------------------------------------------------------------------
+// DELETE /api/elections/[id]
+// ---------------------------------------------------------------------------
 
 /**
  * @swagger
  * /api/elections/{id}:
  *   delete:
- *     summary: Delete an election
+ *     summary: Soft-delete an election
  *     description: >
- *       Permanently deletes an election and all related data. Requires admin
- *       authentication. Faculty-restricted admins may only delete elections
- *       scoped to their own faculty.
+ *       Marks an election as deleted (sets deleted_at / deleted_by). The
+ *       election is hidden from non-admin users immediately but remains
+ *       visible to admins and can be restored. Requires admin authentication.
+ *       Admins may only delete elections that were created by themselves or a
+ *       subordinate in the admin hierarchy.
  *     tags:
  *       - Elections
  *     security:
@@ -311,14 +409,33 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     include: { restrictions: { select: { type: true, value: true } } },
   });
   if (!election) return Errors.notFound('Election not found');
+  if (election.deleted_at) return Errors.notFound('Election not found');
 
   const restrictions = election.restrictions as ElectionRestriction[];
 
-  if (!adminCanDeleteElection(admin.restricted_to_faculty, admin.faculty, restrictions)) {
-    return Errors.forbidden('You can only delete elections of your own faculty');
+  const adminGraph = await buildAdminGraph();
+
+  if (
+    !adminCanDeleteElection(
+      {
+        restricted_to_faculty: admin.restricted_to_faculty,
+        faculty: admin.faculty,
+        user_id: admin.user_id,
+      },
+      { restrictions, created_by: election.created_by },
+      adminGraph,
+    )
+  ) {
+    return Errors.forbidden(
+      'You can only delete elections you created or that were created by your subordinates within your faculty',
+    );
   }
 
-  await prisma.election.delete({ where: { id: electionId } });
+  await prisma.election.update({
+    where: { id: electionId },
+    data: { deleted_at: new Date(), deleted_by: admin.user_id },
+  });
+
   await invalidateElections();
 
   return new NextResponse(null, { status: 204 });

@@ -1,10 +1,19 @@
-import { ExternalLink, FileText, Play, Plus, StopCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  ExternalLink,
+  FileText,
+  Play,
+  Plus,
+  RotateCcw,
+  StopCircle,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
 import { PageHeader } from '@/components/common/page-header';
 import { DeleteElectionButton } from '@/components/elections/admin/delete-election-button';
+import { RestoreElectionButton } from '@/components/elections/admin/restore-election-button';
 import { AccessRestrictions } from '@/components/elections/election-restrictions';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { ResultsChart } from '@/components/elections/result-chart';
@@ -12,7 +21,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TimelineItem } from '@/components/ui/timeline-item';
 import { serverApi } from '@/lib/api/server';
-import { adminCanDeleteElection } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
 import { formatDateTime, pluralize } from '@/lib/utils';
 
@@ -38,11 +46,10 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   if (status === 404 || !election) notFound();
 
-  const canDelete = adminCanDeleteElection(
-    session.restrictedToFaculty,
-    session.faculty,
-    election.restrictions,
-  );
+  // canDelete and canRestore come pre-computed from the API (hierarchy-aware).
+  const canDelete = election.canDelete ?? false;
+  const canRestore = election.canRestore ?? false;
+  const isDeleted = !!election.deletedAt;
 
   const results = election.results ?? null;
   const isClosed = election.status === 'closed';
@@ -59,26 +66,59 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
         title={election.title}
       >
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" asChild>
-            <Link href={`/elections/${id}/ballots`}>
-              <FileText className="h-3.5 w-3.5" />
-              Бюлетені
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/elections/${id}`}>
-              <ExternalLink className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Публічна сторінка</span>
-            </Link>
-          </Button>
-          {canDelete && <DeleteElectionButton electionId={id} electionTitle={election.title} />}
+          {!isDeleted && (
+            <Button variant="secondary" size="sm" asChild>
+              <Link href={`/elections/${id}/ballots`}>
+                <FileText className="h-3.5 w-3.5" />
+                Бюлетені
+              </Link>
+            </Button>
+          )}
+          {!isDeleted && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/elections/${id}`}>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          )}
+          {canRestore && <RestoreElectionButton electionId={id} electionTitle={election.title} />}
+          {canDelete && !isDeleted && (
+            <DeleteElectionButton electionId={id} electionTitle={election.title} hiddenLabel />
+          )}
         </div>
       </PageHeader>
 
       <div className="p-4 sm:p-8">
+        {/* Soft-deleted banner */}
+        {isDeleted && election.deletedBy && (
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 sm:gap-4 sm:p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm font-semibold text-red-700 sm:text-base">
+                Голосування видалено
+              </p>
+              <p className="font-body mt-0.5 text-xs text-red-600/80 sm:text-sm">
+                Видалив(-ла) <span className="font-semibold">{election.deletedBy.fullName}</span>
+                {election.deletedAt ? ` · ${formatDateTime(election.deletedAt)}` : ''}
+              </p>
+              {canRestore && (
+                <div className="mt-2">
+                  <RestoreElectionButton
+                    electionId={id}
+                    electionTitle={election.title}
+                    variant="inline"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <div className="space-y-6 xl:col-span-2">
-            {isOpen && (
+            {isOpen && !isDeleted && (
               <div className="border-success/20 bg-success-bg flex items-center gap-3 rounded-xl border p-4 sm:gap-4 sm:p-5">
                 <div className="bg-success flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12">
                   <span className="relative flex h-3 w-3">
@@ -171,6 +211,14 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   icon={<StopCircle className="h-4 w-4" />}
                   status={isClosed ? 'done' : 'pending'}
                 />
+                {isDeleted && election.deletedAt && (
+                  <TimelineItem
+                    label="Видалено"
+                    value={formatDateTime(election.deletedAt)}
+                    icon={<RotateCcw className="h-4 w-4" />}
+                    status="done"
+                  />
+                )}
               </div>
             </div>
 

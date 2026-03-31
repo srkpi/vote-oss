@@ -34,8 +34,13 @@ export function PageHeader({
         !isContainer && 'px-4 sm:px-8',
       )}
     >
-      <div className={cn('flex items-center justify-between gap-3', isContainer && 'container')}>
-        <div className="flex items-center gap-4">
+      <div
+        className={cn(
+          'flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-3',
+          isContainer && 'container',
+        )}
+      >
+        <div className="flex min-w-0 items-start gap-4">
           {backHref && (
             <Link
               href={backHref}
@@ -51,20 +56,33 @@ export function PageHeader({
             </Link>
           )}
 
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             {nav && nav.length > 0 && (
-              <nav className="font-body text-muted-foreground mb-2 flex items-center gap-2 text-sm sm:mb-3">
+              <nav
+                className={cn(
+                  'font-body text-muted-foreground mb-2 flex items-center gap-x-2 gap-y-1 text-sm sm:mb-3',
+                  'flex-wrap', // Allows breadcrumbs to wrap to a second line if needed
+                )}
+              >
                 {nav.map((item, index) => {
                   const isLast = index === nav.length - 1;
                   return (
-                    <span key={index} className="flex items-center gap-2">
+                    <span key={index} className="flex min-w-0 items-center gap-2">
                       {index > 0 && <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
                       {isLast || !item.href ? (
-                        <span className={isLast ? 'text-foreground' : 'text-muted-foreground'}>
+                        <span
+                          className={cn(
+                            'max-w-37.5 truncate sm:max-w-75', // Truncates very long titles
+                            isLast ? 'text-foreground font-medium' : 'text-muted-foreground',
+                          )}
+                        >
                           {item.label}
                         </span>
                       ) : (
-                        <Link href={item.href} className="hover:text-kpi-navy transition-colors">
+                        <Link
+                          href={item.href}
+                          className="hover:text-kpi-navy max-w-30 truncate transition-colors sm:max-w-none"
+                        >
                           {item.label}
                         </Link>
                       )}
@@ -77,13 +95,18 @@ export function PageHeader({
               {title}
             </h1>
             {description && (
-              <p className="font-body text-muted-foreground mt-0.5 text-sm wrap-break-word">
+              <p className="font-body text-muted-foreground mt-1 text-sm wrap-break-word">
                 {description}
               </p>
             )}
           </div>
         </div>
-        {children && <div className="shrink-0">{children}</div>}
+
+        {children && (
+          <div className="flex shrink-0 items-center gap-2 overflow-x-auto pb-1 lg:justify-end">
+            {children}
+          </div>
+        )}
       </div>
     </div>
   );

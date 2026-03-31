@@ -27,6 +27,11 @@ export interface ElectionCreator {
   faculty: string;
 }
 
+export interface ElectionDeleter {
+  userId: string;
+  fullName: string;
+}
+
 export interface TallyResult {
   choiceId: string;
   choice: string;
@@ -51,6 +56,11 @@ export interface Election {
   choices: ElectionChoice[];
   ballotCount: number;
   results?: TallyResult[] | null;
+  /** Only present for admin-authenticated responses */
+  deletedAt?: string | null;
+  deletedBy?: ElectionDeleter | null;
+  canDelete?: boolean;
+  canRestore?: boolean;
 }
 
 export interface ElectionDetail extends Election {
@@ -58,10 +68,32 @@ export interface ElectionDetail extends Election {
   hasVoted?: boolean;
 }
 
-export type CachedElection = Omit<Election, 'status' | 'choices' | 'results'> & {
+/**
+ * Shape stored in Redis.
+ * - `canDelete` and `canRestore` are NOT cached because they depend on the
+ *   requesting admin's identity; they are computed at serve time.
+ * - `createdBy` stores the creator's userId for hierarchy checks.
+ * - `deletedAt`/`deletedByUserId`/`deletedByName` support soft-delete.
+ */
+export interface CachedElection {
+  id: string;
+  title: string;
+  createdAt: string;
+  opensAt: string;
+  closesAt: string;
+  restrictions: ElectionRestriction[];
+  minChoices: number;
+  maxChoices: number;
+  publicKey: string;
   privateKey: string;
+  creator: ElectionCreator;
   choices: CachedElectionChoice[];
-};
+  ballotCount: number;
+  createdBy: string;
+  deletedAt: string | null;
+  deletedByUserId: string | null;
+  deletedByName: string | null;
+}
 
 export interface ElectionFilters {
   status?: ElectionStatus | 'all';

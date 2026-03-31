@@ -24,10 +24,11 @@ export default async function AdminElectionsPage() {
   const { data: elections, error } = await serverApi.elections.list();
 
   const all = elections ?? [];
-  const openCount = all.filter((e) => e.status === 'open').length;
-  const upcomingCount = all.filter((e) => e.status === 'upcoming').length;
-  const closedCount = all.filter((e) => e.status === 'closed').length;
-  const totalBallots = all.reduce((sum, e) => sum + e.ballotCount, 0);
+  const active = all.filter((e) => !e.deletedAt);
+  const openCount = active.filter((e) => e.status === 'open').length;
+  const upcomingCount = active.filter((e) => e.status === 'upcoming').length;
+  const closedCount = active.filter((e) => e.status === 'closed').length;
+  const totalBallots = active.reduce((sum, e) => sum + e.ballotCount, 0);
 
   return (
     <div className="flex-1 overflow-auto">
@@ -72,7 +73,7 @@ export default async function AdminElectionsPage() {
           />
         </div>
 
-        <AdminElectionsClient elections={all} error={error} session={session} />
+        <AdminElectionsClient elections={all} error={error} />
       </div>
     </div>
   );

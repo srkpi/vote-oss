@@ -30,6 +30,7 @@ model Admin {
   deleted_by            String?
 
   created_elections      Election[]
+  deleted_elections      Election[] @relation("ElectionDeleter")
   created_invite_tokens  AdminInviteToken[]
 
   created_faq_categories FaqCategory[] @relation("FaqCategoryCreator")
@@ -73,10 +74,14 @@ model Election {
   public_key    String @db.Text
   private_key   String @db.Text
 
+  deleted_at    DateTime?
+  deleted_by    String?
+
   choices       ElectionChoice[]
   issued_tokens IssuedToken[]
   ballots       Ballot[]
   nullifiers    UsedTokenNullifier[]
+  deleter       Admin?   @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
 
   @@map("elections")
 }

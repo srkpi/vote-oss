@@ -52,6 +52,10 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
   creator: { fullName: 'Admin', faculty: 'FICE' },
   choices: [],
   ballotCount: 0,
+  createdBy: 'admin-001',
+  deletedAt: null,
+  deletedByUserId: null,
+  deletedByName: null,
 };
 
 const SAMPLE_ADMIN: Admin = {

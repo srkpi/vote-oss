@@ -32,6 +32,20 @@ export const ADMIN_PAYLOAD: TokenPayload = {
   manageAdmins: true,
 };
 
+/**
+ * Restricted admin payload (admin-002, promoted by superadmin-001).
+ * Used for hierarchy tests.
+ */
+export const RESTRICTED_ADMIN_PAYLOAD: TokenPayload = {
+  sub: 'admin-002',
+  faculty: 'FICE',
+  group: 'KV-12',
+  fullName: 'Faculty Admin FICE',
+  isAdmin: true,
+  restrictedToFaculty: true,
+  manageAdmins: false,
+};
+
 export const OTHER_FACULTY_PAYLOAD: TokenPayload = {
   sub: 'user-002',
   faculty: 'FEL',
@@ -62,11 +76,13 @@ export async function makeTokenPair(payload = USER_PAYLOAD) {
 // Admin DB fixtures (snake_case — these mock Prisma return values)
 // ---------------------------------------------------------------------------
 
+/** Unrestricted super-admin — can manage all elections and admins. */
 export const ADMIN_RECORD = {
   user_id: 'superadmin-001',
   full_name: 'Super Admin User',
   group: 'KV-11',
   faculty: 'FICE',
+  promoted_by: null as string | null,
   promoter: null as null | { user_id: string; full_name: string },
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
@@ -75,11 +91,13 @@ export const ADMIN_RECORD = {
   deleted_by: null as string | null,
 };
 
+/** Faculty-restricted admin, promoted by superadmin-001. */
 export const RESTRICTED_ADMIN_RECORD = {
   user_id: 'admin-002',
   full_name: 'Faculty Admin FICE',
   group: 'KV-12',
   faculty: 'FICE',
+  promoted_by: 'superadmin-001' as string | null,
   promoter: { user_id: 'superadmin-001', full_name: 'Super Admin User' } as null | {
     user_id: string;
     full_name: string;
@@ -123,6 +141,20 @@ export const RESTRICTED_ADMIN_API: Admin = {
   manageAdmins: true,
   restrictedToFaculty: true,
 };
+
+// ---------------------------------------------------------------------------
+// Admin graph helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Represents the admin hierarchy used in tests:
+ *   superadmin-001 (root, unrestricted)
+ *       └── admin-002 (restricted, faculty=FICE)
+ */
+export const MOCK_ADMIN_GRAPH = new Map<string, string | null>([
+  ['superadmin-001', null],
+  ['admin-002', 'superadmin-001'],
+]);
 
 // ---------------------------------------------------------------------------
 // jwt_tokens DB record fixture
@@ -172,18 +204,35 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     max_choices: 1,
     restrictions: [] as { type: string; value: string }[],
     public_key: keys.publicKey,
-    // In tests, encryption is mocked as a pass-through (decryptField returns the value as-is),
-    // so storing the raw PEM here is equivalent to storing an "encrypted" value in the mock DB.
     private_key: keys.privateKey,
     creator: { full_name: 'Super Admin User', faculty: 'FICE' },
+    deleter: null as { full_name: string } | null,
     choices: MOCK_ELECTION_CHOICES,
     _count: { ballots: 0 },
+    deleted_at: null as Date | null,
+    deleted_by: null as string | null,
   };
 }
 
 export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBase>> = {}) {
   const keys = generateElectionKeyPair();
   return { ...makeElectionBase(keys), ...overrides };
+}
+
+/**
+ * Build a soft-deleted election fixture.
+ * By default deleted by admin-002 (the restricted admin).
+ */
+export function makeDeletedElection(
+  overrides: Partial<ReturnType<typeof makeElectionBase>> = {},
+  deletedBy = 'admin-002',
+) {
+  return makeElection({
+    deleted_at: new Date('2024-06-01T12:00:00Z'),
+    deleted_by: deletedBy,
+    deleter: { full_name: deletedBy === 'admin-002' ? 'Faculty Admin FICE' : 'Super Admin User' },
+    ...overrides,
+  });
 }
 
 // Re-export the library function so tests can import it from one place.

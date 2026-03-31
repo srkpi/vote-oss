@@ -21,9 +21,14 @@ import { api } from '@/lib/api/browser';
 interface DeleteElectionButtonProps {
   electionId: string;
   electionTitle: string;
+  hiddenLabel?: boolean;
 }
 
-export function DeleteElectionButton({ electionId, electionTitle }: DeleteElectionButtonProps) {
+export function DeleteElectionButton({
+  electionId,
+  electionTitle,
+  hiddenLabel,
+}: DeleteElectionButtonProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -57,7 +62,7 @@ export function DeleteElectionButton({ electionId, electionTitle }: DeleteElecti
         className="text-error hover:bg-error-bg"
       >
         <Trash2 className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Видалити</span>
+        {!hiddenLabel && <span className="hidden sm:inline">Видалити</span>}
       </Button>
 
       <Dialog open={open} onClose={() => setOpen(false)}>

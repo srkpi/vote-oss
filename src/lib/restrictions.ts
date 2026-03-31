@@ -1,4 +1,5 @@
 import { calculateCourse, parseGroupLevel, parseGroupYearEnteredDigit } from '@/lib/group-utils';
+import { isAncestorInGraph } from '@/lib/utils';
 import type { ElectionRestriction } from '@/types/election';
 
 interface UserContext {
@@ -71,22 +72,51 @@ export function adminCanAccessElection(
 }
 
 /**
- * For DELETE: faculty-restricted admin may only delete elections that
- * explicitly include their faculty (cannot delete global elections).
+ * Determines whether an admin may soft-delete an election.
+ *
+ * Rules:
+ *  - Admins may only delete elections that:
+ *    Were created by themselves OR by an admin they supervise
+ *    (i.e. the admin is an ancestor of the creator in the hierarchy).
+ *
+ * @param admin       The requesting admin record.
+ * @param election    The target election (restrictions + created_by userId).
+ * @param adminGraph  Map of userId → promoted_by userId (the hierarchy graph).
  */
 export function adminCanDeleteElection(
-  isRestricted: boolean,
-  faculty: string,
-  restrictions: ElectionRestriction[],
+  admin: { restricted_to_faculty: boolean; faculty: string; user_id: string },
+  election: { restrictions: ElectionRestriction[]; created_by: string },
+  adminGraph: Map<string, string | null>,
 ): boolean {
-  if (!isRestricted) {
-    return true;
-  }
+  // The admin is the creator.
+  if (election.created_by === admin.user_id) return true;
 
-  const facRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
-  if (!facRestrictions.length) {
-    return false;
-  }
+  // The admin must be an ancestor of the creator.
+  return isAncestorInGraph(adminGraph, admin.user_id, election.created_by);
+}
 
-  return facRestrictions.every((r) => r.value === faculty);
+/**
+ * Determines whether an admin may restore a soft-deleted election.
+ *
+ * Rules:
+ *  - Admins may restore a deleted election in their faculty if:
+ *      1. They deleted it themselves, OR
+ *      2. They are an ancestor of the admin who deleted it.
+ *
+ * @param admin       The requesting admin record.
+ * @param election    The target election (restrictions + deletedByUserId).
+ * @param adminGraph  Map of userId → promoted_by userId (the hierarchy graph).
+ */
+export function adminCanRestoreElection(
+  admin: { restricted_to_faculty: boolean; faculty: string; user_id: string },
+  election: { restrictions: ElectionRestriction[]; deletedByUserId: string | null },
+  adminGraph: Map<string, string | null>,
+): boolean {
+  if (!election.deletedByUserId) return false;
+
+  // Self-deleted.
+  if (election.deletedByUserId === admin.user_id) return true;
+
+  // Admin must be an ancestor of the deleter.
+  return isAncestorInGraph(adminGraph, admin.user_id, election.deletedByUserId);
 }
