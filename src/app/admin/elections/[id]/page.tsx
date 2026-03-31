@@ -20,10 +20,11 @@ import { KeyDisclosure } from '@/components/elections/key-disclosure';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { LocalDateTime } from '@/components/ui/local-time';
 import { TimelineItem } from '@/components/ui/timeline-item';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { formatDateTime, pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils';
 
 interface AdminElectionPageProps {
   params: Promise<{ id: string }>;
@@ -104,7 +105,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </p>
               <p className="font-body mt-0.5 text-xs text-red-600/80 sm:text-sm">
                 Видалив(-ла) <span className="font-semibold">{election.deletedBy.fullName}</span>
-                {election.deletedAt ? ` · ${formatDateTime(election.deletedAt)}` : ''}
+                {election.deletedAt && (
+                  <>
+                    {' '}
+                    · <LocalDateTime date={election.deletedAt} />
+                  </>
+                )}
               </p>
               {canRestore && (
                 <div className="mt-2">
@@ -134,7 +140,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                     Голосування активне
                   </p>
                   <p className="font-body text-success/80 mt-0.5 text-xs sm:text-sm">
-                    Завершується {formatDateTime(election.closesAt)}
+                    Завершується <LocalDateTime date={election.closesAt} />
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
@@ -198,26 +204,26 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               <div className="space-y-4 p-4 sm:p-5">
                 <TimelineItem
                   label="Створено"
-                  value={formatDateTime(election.createdAt)}
+                  value={<LocalDateTime date={election.createdAt} />}
                   icon={<Plus className="h-4 w-4" />}
                   status="done"
                 />
                 <TimelineItem
                   label="Початок"
-                  value={formatDateTime(election.opensAt)}
+                  value={<LocalDateTime date={election.opensAt} />}
                   icon={<Play className="h-4 w-4" />}
                   status={election.status === 'upcoming' ? 'pending' : 'done'}
                 />
                 <TimelineItem
                   label="Завершення"
-                  value={formatDateTime(election.closesAt)}
+                  value={<LocalDateTime date={election.closesAt} />}
                   icon={<StopCircle className="h-4 w-4" />}
                   status={isClosed ? 'done' : 'pending'}
                 />
                 {isDeleted && election.deletedAt && (
                   <TimelineItem
                     label="Видалено"
-                    value={formatDateTime(election.deletedAt)}
+                    value={<LocalDateTime date={election.deletedAt} />}
                     icon={<RotateCcw className="h-4 w-4" />}
                     status="done"
                   />

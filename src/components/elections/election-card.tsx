@@ -2,7 +2,8 @@ import { Calendar, ChevronRight, Crown, FileText, User } from 'lucide-react';
 import Link from 'next/link';
 
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { cn, formatDate, formatDateTime, pluralize } from '@/lib/utils';
+import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
+import { cn, pluralize } from '@/lib/utils';
 import type { Election } from '@/types/election';
 
 interface ElectionCardProps {
@@ -88,9 +89,21 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Calendar className="text-kpi-gray-mid h-4 w-4 shrink-0" />
             <span>
-              {isOpen && <>Діє до {formatDateTime(election.closesAt)}</>}
-              {isUpcoming && <>Починається {formatDateTime(election.opensAt)}</>}
-              {isClosed && <>Завершено {formatDate(election.closesAt)}</>}
+              {isOpen && (
+                <>
+                  Діє до <LocalDateTime date={election.closesAt} />
+                </>
+              )}
+              {isUpcoming && (
+                <>
+                  Починається <LocalDateTime date={election.opensAt} />
+                </>
+              )}
+              {isClosed && (
+                <>
+                  Завершено <LocalDate date={election.closesAt} />
+                </>
+              )}
             </span>
           </div>
 

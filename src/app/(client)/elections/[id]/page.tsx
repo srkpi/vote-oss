@@ -13,10 +13,11 @@ import { KeyDisclosure } from '@/components/elections/key-disclosure';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { Button } from '@/components/ui/button';
+import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
 import { checkRestrictions } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
-import { formatDateTime, pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils';
 
 interface ElectionPageProps {
   params: Promise<{ id: string }>;
@@ -150,15 +151,14 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   Варіанти відповідей
                 </h2>
                 <div className="space-y-2.5">
-                  {election.choices.map((choice, index) => (
+                  {election.choices.map((choice) => (
                     <div
                       key={choice.id}
                       className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3.5"
                     >
-                      <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white">
-                        {String.fromCharCode(65 + index)}
+                      <span className="font-body text-foreground min-w-0 flex-1 text-sm wrap-break-word">
+                        {choice.choice}
                       </span>
-                      <span className="font-body text-foreground text-sm">{choice.choice}</span>
                     </div>
                   ))}
                 </div>
@@ -175,12 +175,12 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 <InfoRow
                   icon={<Calendar className="h-4 w-4" />}
                   label="Початок"
-                  value={formatDateTime(election.opensAt)}
+                  value={<LocalDateTime date={election.opensAt} />}
                 />
                 <InfoRow
                   icon={<Clock className="h-4 w-4" />}
                   label="Завершення"
-                  value={formatDateTime(election.closesAt)}
+                  value={<LocalDateTime date={election.closesAt} />}
                 />
               </div>
             </div>

@@ -2,7 +2,8 @@ import { Pencil, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn, formatDate } from '@/lib/utils';
+import { LocalDate } from '@/components/ui/local-time';
+import { cn } from '@/lib/utils';
 import type { Admin } from '@/types/admin';
 
 interface AdminMobileCardProps {
@@ -90,7 +91,7 @@ export function AdminMobileCard({
       </div>
 
       <p className="font-body text-muted-foreground mt-2 text-xs">
-        Призначено: {formatDate(admin.promotedAt)}
+        Призначено: <LocalDate date={admin.promotedAt} />
       </p>
       {admin.promoter && (
         <p className="font-body text-muted-foreground text-xs">{admin.promoter.fullName}</p>
