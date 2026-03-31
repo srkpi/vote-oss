@@ -52,7 +52,7 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
     minChoices: e.min_choices,
     maxChoices: e.max_choices,
     publicKey: e.public_key,
-    privateKey: e.private_key, // always present in cache
+    privateKey: e.private_key,
     creator: e.creator,
     choices: e.choices,
     ballotCount: 0,
@@ -174,72 +174,6 @@ describe('GET /api/elections', () => {
 
     expect(body).toHaveLength(1);
     expect(body[0].restrictions).toContainEqual({ type: 'GROUP', value: 'KV-91' });
-  });
-
-  it('does not expose privateKey for open elections', async () => {
-    const req = await makeAuthReq();
-    cacheMock.getCachedElections.mockResolvedValueOnce(null);
-    const election = makeElection(); // open by default
-    prismaMock.election.findMany.mockResolvedValueOnce([
-      {
-        ...election,
-        private_key: election.private_key,
-        creator: { full_name: 'Admin', faculty: 'FICE' },
-        choices: election.choices,
-        _count: { ballots: 0 },
-      },
-    ]);
-
-    const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
-    expect(body[0].privateKey).toBeUndefined();
-  });
-
-  it('does not expose privateKey for open elections served from cache', async () => {
-    const req = await makeAuthReq();
-    const cached = [makeCachedElection()]; // open by default
-    cacheMock.getCachedElections.mockResolvedValueOnce(cached as any);
-
-    const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
-    expect(body[0].privateKey).toBeUndefined();
-  });
-
-  it('exposes privateKey for closed elections', async () => {
-    const req = await makeAuthReq();
-    cacheMock.getCachedElections.mockResolvedValueOnce(null);
-    const election = makeElection({
-      opens_at: new Date(Date.now() - 7_200_000),
-      closes_at: new Date(Date.now() - 100),
-    });
-    prismaMock.election.findMany.mockResolvedValueOnce([
-      {
-        ...election,
-        private_key: election.private_key,
-        creator: { full_name: 'Admin', faculty: 'FICE' },
-        choices: election.choices,
-        _count: { ballots: 0 },
-      },
-    ]);
-
-    const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
-    expect(body[0].privateKey).toBeDefined();
-  });
-
-  it('exposes privateKey for closed elections served from cache', async () => {
-    const req = await makeAuthReq();
-    const cached = [
-      makeCachedElection({
-        opens_at: new Date(Date.now() - 7_200_000),
-        closes_at: new Date(Date.now() - 100),
-      }),
-    ];
-    cacheMock.getCachedElections.mockResolvedValueOnce(cached as any);
-
-    const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
-    expect(body[0].privateKey).toBeDefined();
   });
 
   it('includes status field computed at serve time (upcoming/open/closed)', async () => {

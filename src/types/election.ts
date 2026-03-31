@@ -50,8 +50,6 @@ export interface Election {
   restrictions: ElectionRestriction[];
   minChoices: number;
   maxChoices: number;
-  publicKey: string;
-  privateKey?: string;
   creator: ElectionCreator;
   choices: ElectionChoice[];
   ballotCount: number;
@@ -64,6 +62,7 @@ export interface Election {
 }
 
 export interface ElectionDetail extends Election {
+  publicKey: string;
   privateKey?: string;
   hasVoted?: boolean;
 }

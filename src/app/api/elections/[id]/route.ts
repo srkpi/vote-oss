@@ -288,7 +288,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   let deletedByField: { userId: string; fullName: string } | null | undefined;
 
   if (isAdmin) {
-    const adminRecord = await prisma.admin.findUnique({ where: { user_id: user.sub } });
+    const adminRecord = await prisma.admin.findUnique({
+      where: { user_id: user.sub, deleted_at: null },
+    });
     if (adminRecord) {
       const adminGraph = await buildAdminGraph();
       const isDeleted = !!electionData.deletedAt;

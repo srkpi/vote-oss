@@ -23,7 +23,7 @@ import {
   VALID_LEVEL_COURSES,
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
-import { decryptField, encryptField } from '@/lib/encryption';
+import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { parseGroupLevel } from '@/lib/group-utils';
 import { prisma } from '@/lib/prisma';
@@ -136,8 +136,6 @@ function toClientElections(
         restrictions: e.restrictions,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
-        publicKey: e.publicKey,
-        privateKey: isClosed ? decryptField(e.privateKey) : undefined,
         creator: e.creator,
         choices: e.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
         ballotCount: e.ballotCount,
@@ -223,8 +221,10 @@ export async function GET(req: NextRequest) {
   let adminGraph: Map<string, string | null> | undefined;
 
   if (isAdmin) {
-    const dbAdmin = await prisma.admin.findUnique({ where: { user_id: user.sub } });
-    if (dbAdmin && !dbAdmin.deleted_at) {
+    const dbAdmin = await prisma.admin.findUnique({
+      where: { user_id: user.sub, deleted_at: null },
+    });
+    if (dbAdmin) {
       adminRecord = {
         user_id: dbAdmin.user_id,
         restricted_to_faculty: dbAdmin.restricted_to_faculty,
