@@ -8,7 +8,6 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { ElectionMobileCard } from '@/components/elections/admin/election-mobile-card';
 import { ElectionRow } from '@/components/elections/admin/election-row';
-import { RestoreElectionButton } from '@/components/elections/admin/restore-election-button';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,19 +19,20 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { LocalDateTime } from '@/components/ui/local-time';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
+import type { UserInfo } from '@/types/auth';
 import type { Election, ElectionStatus } from '@/types/election';
 
 interface AdminElectionsClientProps {
   elections: Election[];
+  session: UserInfo;
   error: string | null;
 }
 
-type TabKey = 'all' | ElectionStatus | 'deleted';
+type TabKey = 'all' | 'deleted' | ElectionStatus;
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'all', label: 'Усі' },
@@ -42,7 +42,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'deleted', label: 'Видалені' },
 ];
 
-export function AdminElectionsClient({ elections, error }: AdminElectionsClientProps) {
+export function AdminElectionsClient({ elections, session, error }: AdminElectionsClientProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
@@ -50,12 +50,14 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
   const [items, setItems] = useState<Election[]>(elections);
   const [deleteTarget, setDeleteTarget] = useState<Election | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [restoreTarget, setRestoreTarget] = useState<Election | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   const searchTrimmed = search.length > 100 ? search.substring(0, 100) + '...' : search;
 
   const counts: Record<TabKey, number> = useMemo(
     () => ({
-      all: items.filter((e) => !e.deletedAt).length,
+      all: items.length,
       open: items.filter((e) => e.status === 'open' && !e.deletedAt).length,
       upcoming: items.filter((e) => e.status === 'upcoming' && !e.deletedAt).length,
       closed: items.filter((e) => e.status === 'closed' && !e.deletedAt).length,
@@ -69,9 +71,7 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
 
     if (activeTab === 'deleted') {
       result = result.filter((e) => !!e.deletedAt);
-    } else if (activeTab === 'all') {
-      result = result.filter((e) => !e.deletedAt);
-    } else {
+    } else if (activeTab !== 'all') {
       result = result.filter((e) => e.status === activeTab && !e.deletedAt);
     }
 
@@ -95,11 +95,16 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
         description: `«${deleteTarget.title}» було успішно видалено.`,
         variant: 'success',
       });
-      // Soft delete: mark as deleted in local state instead of removing.
       setItems((prev) =>
         prev.map((e) =>
           e.id === deleteTarget.id
-            ? { ...e, deletedAt: new Date().toISOString(), canDelete: false, canRestore: true }
+            ? {
+                ...e,
+                deletedAt: new Date().toISOString(),
+                deletedBy: { userId: session.userId, fullName: session.fullName },
+                canDelete: false,
+                canRestore: true,
+              }
             : e,
         ),
       );
@@ -109,6 +114,38 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
       toast({ title: 'Помилка', description: result.error, variant: 'error' });
     }
     setDeleting(false);
+  };
+
+  const handleRestoreConfirm = async () => {
+    if (!restoreTarget) return;
+    setRestoring(true);
+
+    const result = await api.elections.restore(restoreTarget.id);
+    if (result.success) {
+      toast({
+        title: 'Голосування відновлено',
+        description: `«${restoreTarget.title}» успішно відновлено.`,
+        variant: 'success',
+      });
+      setItems((prev) =>
+        prev.map((e) =>
+          e.id === restoreTarget.id
+            ? {
+                ...e,
+                deletedAt: null,
+                deletedBy: null,
+                canDelete: true,
+                canRestore: false,
+              }
+            : e,
+        ),
+      );
+      setRestoreTarget(null);
+      router.refresh();
+    } else {
+      toast({ title: 'Помилка', description: result.error, variant: 'error' });
+    }
+    setRestoring(false);
   };
 
   if (error) {
@@ -142,66 +179,11 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
           <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
             <EmptyState
               icon={<FileText className="h-8 w-8" />}
-              title={
-                activeTab === 'deleted'
-                  ? 'Немає видалених голосувань'
-                  : search
-                    ? 'Голосувань не знайдено'
-                    : 'Голосувань немає'
-              }
+              title={search ? 'Голосувань не знайдено' : 'Голосувань немає'}
               description={search ? `За запитом «${searchTrimmed}» нічого не знайдено` : undefined}
             />
           </div>
-        ) : activeTab === 'deleted' ? (
-          /* ── Deleted elections list ─────────────────────────────────────── */
-          <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
-            <div className="divide-border-subtle divide-y">
-              {filtered.map((election) => (
-                <div key={election.id} className="flex items-start gap-3 p-4 sm:p-5">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-body text-foreground text-sm font-semibold wrap-break-word opacity-60">
-                      {election.title}
-                    </p>
-                    <p className="font-body text-muted-foreground mt-0.5 text-xs">
-                      Видалив(-ла){' '}
-                      <span className="font-medium">{election.deletedBy?.fullName ?? '—'}</span>
-                      {election.deletedAt && (
-                        <>
-                          {' '}
-                          · <LocalDateTime date={election.deletedAt} />
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  {election.canRestore && (
-                    <RestoreElectionButton
-                      electionId={election.id}
-                      electionTitle={election.title}
-                      variant="inline"
-                      onRestored={() => {
-                        setItems((prev) =>
-                          prev.map((e) =>
-                            e.id === election.id
-                              ? {
-                                  ...e,
-                                  deletedAt: null,
-                                  deletedBy: null,
-                                  canDelete: true,
-                                  canRestore: false,
-                                }
-                              : e,
-                          ),
-                        );
-                        router.refresh();
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
         ) : (
-          /* ── Active elections table / cards ─────────────────────────────── */
           <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full">
@@ -226,6 +208,7 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
                       election={election}
                       canDelete={election.canDelete ?? false}
                       onDelete={() => setDeleteTarget(election)}
+                      onRestore={() => setRestoreTarget(election)}
                     />
                   ))}
                 </tbody>
@@ -239,6 +222,7 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
                   election={election}
                   canDelete={election.canDelete ?? false}
                   onDelete={() => setDeleteTarget(election)}
+                  onRestore={() => setRestoreTarget(election)}
                 />
               ))}
             </div>
@@ -264,6 +248,29 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
             </Button>
             <Button variant="danger" onClick={handleDeleteConfirm} loading={deleting}>
               Видалити
+            </Button>
+          </DialogFooter>
+        </DialogPanel>
+      </Dialog>
+
+      <Dialog open={!!restoreTarget} onClose={() => setRestoreTarget(null)}>
+        <DialogPanel maxWidth="sm">
+          <DialogHeader>
+            <DialogTitle>Відновити голосування?</DialogTitle>
+            <DialogCloseButton onClose={() => setRestoreTarget(null)} />
+          </DialogHeader>
+          <DialogBody>
+            <Alert variant="info">
+              Голосування <strong className="wrap-break-word">«{restoreTarget?.title}»</strong> буде
+              відновлено та стане видимим для студентів знову.
+            </Alert>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setRestoreTarget(null)} disabled={restoring}>
+              Скасувати
+            </Button>
+            <Button variant="accent" onClick={handleRestoreConfirm} loading={restoring}>
+              Відновити
             </Button>
           </DialogFooter>
         </DialogPanel>

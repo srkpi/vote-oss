@@ -22,14 +22,12 @@ interface RestoreElectionButtonProps {
   electionId: string;
   electionTitle: string;
   onRestored?: () => void;
-  variant?: 'button' | 'inline';
 }
 
 export function RestoreElectionButton({
   electionId,
   electionTitle,
   onRestored,
-  variant = 'button',
 }: RestoreElectionButtonProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -57,25 +55,10 @@ export function RestoreElectionButton({
 
   return (
     <>
-      {variant === 'button' ? (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setOpen(true)}
-          className="text-kpi-navy"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Відновити</span>
-        </Button>
-      ) : (
-        <button
-          onClick={() => setOpen(true)}
-          className="text-kpi-navy inline-flex items-center gap-1 text-xs font-medium hover:underline"
-        >
-          <RotateCcw className="h-3 w-3" />
-          <span className="hidden sm:inline">Відновити</span>
-        </button>
-      )}
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)} className="text-kpi-navy">
+        <RotateCcw className="h-4 w-4" />
+        Відновити
+      </Button>
 
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogPanel maxWidth="sm">

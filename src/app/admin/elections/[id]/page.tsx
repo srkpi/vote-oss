@@ -1,12 +1,4 @@
-import {
-  AlertTriangle,
-  ExternalLink,
-  FileText,
-  Play,
-  Plus,
-  RotateCcw,
-  StopCircle,
-} from 'lucide-react';
+import { AlertTriangle, ExternalLink, FileText, Play, Plus, StopCircle, Trash } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -85,7 +77,6 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </Link>
             </Button>
           )}
-          {canRestore && <RestoreElectionButton electionId={id} electionTitle={election.title} />}
           {canDelete && !isDeleted && (
             <DeleteElectionButton electionId={id} electionTitle={election.title} hiddenLabel />
           )}
@@ -104,7 +95,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 Голосування видалено
               </p>
               <p className="font-body mt-0.5 text-xs text-red-600/80 sm:text-sm">
-                Видалив(-ла) <span className="font-semibold">{election.deletedBy.fullName}</span>
+                <span className="font-semibold">{election.deletedBy.fullName}</span>
                 {election.deletedAt && (
                   <>
                     {' '}
@@ -114,11 +105,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </p>
               {canRestore && (
                 <div className="mt-2">
-                  <RestoreElectionButton
-                    electionId={id}
-                    electionTitle={election.title}
-                    variant="inline"
-                  />
+                  <RestoreElectionButton electionId={id} electionTitle={election.title} />
                 </div>
               )}
             </div>
@@ -224,7 +211,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   <TimelineItem
                     label="Видалено"
                     value={<LocalDateTime date={election.deletedAt} />}
-                    icon={<RotateCcw className="h-4 w-4" />}
+                    icon={<Trash className="h-4 w-4" />}
                     status="done"
                   />
                 )}

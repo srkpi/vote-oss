@@ -70,6 +70,7 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {
   asChild?: boolean;
   dot?: boolean;
+  muted?: boolean;
   variant?: BadgeVariant;
   size?: BadgeSize;
 }
@@ -80,13 +81,18 @@ function Badge({
   size = 'md',
   asChild = false,
   dot = false,
+  muted = false,
   children,
   ...props
 }: BadgeProps) {
   const Comp = asChild ? Slot.Root : 'span';
 
   return (
-    <Comp data-slot="badge" className={cn(badgeVariants({ variant, size }), className)} {...props}>
+    <Comp
+      data-slot="badge"
+      className={cn(badgeVariants({ variant, size }), muted && 'opacity-50', className)}
+      {...props}
+    >
       {dot && (
         <span
           className={cn(
