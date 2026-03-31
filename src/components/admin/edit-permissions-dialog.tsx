@@ -1,6 +1,5 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
 import { Alert } from '@/components/ui/alert';
@@ -17,7 +16,6 @@ import {
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { ACCESS_TOKEN_TTL_SECS } from '@/lib/constants';
 import type { Admin } from '@/types/admin';
 
 interface EditPermissionsDialogProps {
@@ -117,15 +115,6 @@ export function EditPermissionsDialog({
               onChange={setRestrictedToFaculty}
               disabled={callerRestrictedToFaculty}
             />
-          </div>
-
-          <div className="border-border flex gap-2.5 rounded-lg border p-3.5">
-            <AlertTriangle className="text-kpi-orange mt-0.5 h-4 w-4 shrink-0" />
-            <p className="font-body text-foreground text-xs leading-relaxed">
-              Якщо цей користувач наразі користується платформою, зміни прав набудуть чинності після
-              закінчення терміну дії поточного токена доступу. Це може зайняти до{' '}
-              <strong>{Math.ceil(ACCESS_TOKEN_TTL_SECS / 60)} хвилин</strong>.
-            </p>
           </div>
         </DialogBody>
 
