@@ -1,1 +1,1 @@
-{"id":"b7d997ab56150ce7e1f31c4ce182607b","fullName":"src/__tests__/api/faq/faq.test.ts#GET /api/faq queries the database when the cache is empty","name":"queries the database when the cache is empty","status":"passed","testResultsByEnv":{"default":"7da30edd775c9f55c8b3f80a879c1e5f"}}
+{"id":"b7d997ab56150ce7e1f31c4ce182607b","fullName":"src/__tests__/api/faq/faq.test.ts#GET /api/faq queries the database when the cache is empty","name":"queries the database when the cache is empty","status":"passed","testResultsByEnv":{"default":"37a603080cdd8eef0a5e9e46aeb044e3"}}

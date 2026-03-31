@@ -1,1 +1,1 @@
-{"id":"e7fce11b4bf29e853f7fe111b3070197","fullName":"src/__tests__/api/elections/ballots.test.ts#GET /api/elections/[id]/ballots returns ballots for the election","name":"returns ballots for the election","status":"passed","testResultsByEnv":{"default":"9a645247073ea8561cdc9cc507164eea"}}
+{"id":"e7fce11b4bf29e853f7fe111b3070197","fullName":"src/__tests__/api/elections/ballots.test.ts#GET /api/elections/[id]/ballots returns ballots for the election","name":"returns ballots for the election","status":"passed","testResultsByEnv":{"default":"c0cc392aae079a437ca97b3199b7b353"}}

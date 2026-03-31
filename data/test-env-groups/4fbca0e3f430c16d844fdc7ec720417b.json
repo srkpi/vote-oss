@@ -1,1 +1,1 @@
-{"id":"4fbca0e3f430c16d844fdc7ec720417b","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"69cd3ae00134a11a047b5dbbe69111ee"}}
+{"id":"4fbca0e3f430c16d844fdc7ec720417b","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"2c493e5e9eb563784215f0346170a332"}}
