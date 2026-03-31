@@ -9,6 +9,7 @@ import { AccessRestrictions } from '@/components/elections/election-restrictions
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { InfoRow } from '@/components/elections/info-row';
+import { KeyDisclosure } from '@/components/elections/key-disclosure';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { Button } from '@/components/ui/button';
@@ -187,20 +188,24 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               <AccessRestrictions restrictions={election.restrictions} />
             )}
 
-            <EncryptionKey
-              title="Публічний ключ"
-              description="RSA-2048 SPKI · Використовується для шифрування бюлетенів"
-              keyValue={election.publicKey}
-            />
+            <KeyDisclosure>
+              <div className="space-y-5">
+                <EncryptionKey
+                  title="Публічний ключ"
+                  description="RSA-2048 SPKI · Використовується для шифрування бюлетенів"
+                  keyValue={election.publicKey}
+                />
 
-            {isClosed && election.privateKey && (
-              <EncryptionKey
-                isPrivate
-                title="Приватний ключ"
-                description="Використовується для розшифрування та перевірки"
-                keyValue={election.privateKey}
-              />
-            )}
+                {isClosed && election.privateKey && (
+                  <EncryptionKey
+                    isPrivate
+                    title="Приватний ключ"
+                    description="Використовується для розшифрування та перевірки"
+                    keyValue={election.privateKey}
+                  />
+                )}
+              </div>
+            </KeyDisclosure>
           </div>
         </div>
       </div>

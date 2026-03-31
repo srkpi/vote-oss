@@ -16,6 +16,7 @@ import { DeleteElectionButton } from '@/components/elections/admin/delete-electi
 import { RestoreElectionButton } from '@/components/elections/admin/restore-election-button';
 import { AccessRestrictions } from '@/components/elections/election-restrictions';
 import { EncryptionKey } from '@/components/elections/encryption-key';
+import { KeyDisclosure } from '@/components/elections/key-disclosure';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -226,20 +227,22 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               <AccessRestrictions restrictions={election.restrictions} />
             )}
 
-            <EncryptionKey
-              title="Публічний ключ"
-              description="RSA-2048 SPKI · Використовується для шифрування бюлетенів"
-              keyValue={election.publicKey}
-            />
-
-            {isClosed && election.privateKey && (
+            <KeyDisclosure>
               <EncryptionKey
-                isPrivate
-                title="Приватний ключ"
-                description="Використовується для розшифрування та перевірки"
-                keyValue={election.privateKey}
+                title="Публічний ключ"
+                description="RSA-2048 SPKI · Використовується для шифрування бюлетенів"
+                keyValue={election.publicKey}
               />
-            )}
+
+              {isClosed && election.privateKey && (
+                <EncryptionKey
+                  isPrivate
+                  title="Приватний ключ"
+                  description="Використовується для розшифрування та перевірки"
+                  keyValue={election.privateKey}
+                />
+              )}
+            </KeyDisclosure>
           </div>
         </div>
       </div>
