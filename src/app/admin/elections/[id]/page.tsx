@@ -66,6 +66,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           { label: election.title },
         ]}
         title={election.title}
+        collapseOnMobile
       >
         <div className="flex items-center gap-2">
           {!isDeleted && (

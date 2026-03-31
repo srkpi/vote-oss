@@ -73,9 +73,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     electionData = {
       id: found.id,
       title: found.title,
-      opensAt: new Date(found.opensAt),
-      closesAt: new Date(found.closesAt),
-      privateKey: found.privateKey,
+      opens_at: new Date(found.opensAt),
+      closes_at: new Date(found.closesAt),
+      private_key: found.privateKey,
       restrictions: found.restrictions as ElectionRestriction[],
       choices: found.choices,
     };
@@ -115,9 +115,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const now = new Date();
-  const isClosed = now > electionData.closes_at!;
+  const isClosed = now > electionData.closes_at;
   const status =
-    now < electionData.opens_at! ? 'upcoming' : now <= electionData.closes_at! ? 'open' : 'closed';
+    now < electionData.opens_at ? 'upcoming' : now <= electionData.closes_at ? 'open' : 'closed';
 
   const ballots = await prisma.ballot.findMany({
     where: { election_id: electionId },
@@ -143,7 +143,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         choice: c.choice,
         position: c.position,
       })),
-      ...(isClosed && { privateKey: decryptField(electionData.private_key!) }),
+      ...(isClosed && { privateKey: decryptField(electionData.private_key) }),
     },
     ballots: ballots.map((b) => ({
       id: b.id,
