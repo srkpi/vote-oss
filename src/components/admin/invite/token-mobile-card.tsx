@@ -57,7 +57,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
           )}
           {token.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
-              Обмежений підрозділом
+              Обмежений до підрозділу
             </Badge>
           )}
           {!token.manageAdmins && !token.restrictedToFaculty && (

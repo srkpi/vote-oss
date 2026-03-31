@@ -43,7 +43,7 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
           )}
           {token.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
-              Обмежений до підрозділу
+              Керувати підрозділом
             </Badge>
           )}
           {!token.manageAdmins && !token.restrictedToFaculty && (
