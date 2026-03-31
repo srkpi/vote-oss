@@ -73,7 +73,7 @@ export default async function AdminElectionsPage() {
           />
         </div>
 
-        <AdminElectionsClient elections={all} error={error} />
+        <AdminElectionsClient elections={all} session={session} error={error} />
       </div>
     </div>
   );
