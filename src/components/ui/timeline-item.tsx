@@ -1,6 +1,6 @@
 interface TimelineItemProps {
   label: string;
-  value: string;
+  value: string | React.ReactNode;
   icon: React.ReactNode;
   status: 'done' | 'pending';
 }

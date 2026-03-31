@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatDateTime } from '@/lib/utils';
+import { LocalDateTime } from '@/components/ui/local-time';
 import type { Election } from '@/types/election';
 
 interface ElectionRowProps {
@@ -41,13 +41,17 @@ export function ElectionRow({ election, canDelete, onDelete }: ElectionRowProps)
         className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
-        <p className="font-body text-foreground text-xs">{formatDateTime(election.opensAt)}</p>
+        <p className="font-body text-foreground text-xs">
+          <LocalDateTime date={election.opensAt} />
+        </p>
       </td>
       <td
         className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
-        <p className="font-body text-foreground text-xs">{formatDateTime(election.closesAt)}</p>
+        <p className="font-body text-foreground text-xs">
+          <LocalDateTime date={election.closesAt} />
+        </p>
       </td>
       <td
         className="cursor-pointer px-4 py-3.5"

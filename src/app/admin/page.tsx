@@ -6,9 +6,10 @@ import { redirect } from 'next/navigation';
 import { StatCard } from '@/components/admin/stat-card';
 import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
+import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { formatDateTime, pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Адмін панель',
@@ -151,7 +152,8 @@ export default async function AdminDashboardPage() {
                           {election.title}
                         </p>
                         <p className="font-body text-muted-foreground mt-0.5 hidden text-xs sm:block">
-                          {formatDateTime(election.opensAt)} — {formatDateTime(election.closesAt)}
+                          <LocalDateTime date={election.opensAt} /> —{' '}
+                          <LocalDateTime date={election.closesAt} />
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 sm:gap-3">

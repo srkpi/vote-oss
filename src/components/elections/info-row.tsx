@@ -1,7 +1,7 @@
 interface InfoRowProps {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: string | React.ReactNode;
 }
 
 export function InfoRow({ icon, label, value }: InfoRowProps) {

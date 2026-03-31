@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { formatDateTime } from '@/lib/utils';
+import { LocalDateTime } from '@/components/ui/local-time';
 import type { Election } from '@/types/election';
 
 interface ElectionMobileCardProps {
@@ -46,11 +46,11 @@ export function ElectionMobileCard({ election, canDelete, onDelete }: ElectionMo
         <div className="font-body text-muted-foreground mt-2 space-y-1.5 text-xs">
           <div className="flex items-center gap-2">
             <Play className="h-3.5 w-3.5 shrink-0" />
-            <span>{formatDateTime(election.opensAt)}</span>
+            <LocalDateTime date={election.opensAt} />
           </div>
           <div className="flex items-center gap-2">
             <StopCircle className="h-3.5 w-3.5 shrink-0" />
-            <span>{formatDateTime(election.closesAt)}</span>
+            <LocalDateTime date={election.closesAt} />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <FileText className="h-3.5 w-3.5 shrink-0" />

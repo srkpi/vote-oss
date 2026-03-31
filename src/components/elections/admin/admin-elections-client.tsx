@@ -20,11 +20,11 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { LocalDateTime } from '@/components/ui/local-time';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { formatDateTime } from '@/lib/utils';
 import type { Election, ElectionStatus } from '@/types/election';
 
 interface AdminElectionsClientProps {
@@ -165,7 +165,12 @@ export function AdminElectionsClient({ elections, error }: AdminElectionsClientP
                     <p className="font-body text-muted-foreground mt-0.5 text-xs">
                       Видалив(-ла){' '}
                       <span className="font-medium">{election.deletedBy?.fullName ?? '—'}</span>
-                      {election.deletedAt ? ` · ${formatDateTime(election.deletedAt)}` : ''}
+                      {election.deletedAt && (
+                        <>
+                          {' '}
+                          · <LocalDateTime date={election.deletedAt} />
+                        </>
+                      )}
                     </p>
                   </div>
                   {election.canRestore && (
