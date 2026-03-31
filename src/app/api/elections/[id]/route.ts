@@ -80,7 +80,7 @@ async function computeAndPersistTally(
   return tally;
 }
 
-function toTallyResults(
+function buildTallyResults(
   tally: Record<string, number>,
   choices: Array<{ id: string; choice: string; position: number }>,
 ): TallyResult[] {
@@ -108,8 +108,8 @@ function toTallyResults(
  *       Access is subject to faculty/group eligibility. The private key is
  *       only included after the election has closed. For open elections a
  *       `hasVoted` flag indicates whether the caller has already been issued
- *       a vote token. For closed elections, `results` contains per-choice
- *       vote counts with winner flags — computed lazily on first request.
+ *       a vote token. For closed elections, choices include `votes` and
+ *       `winner` fields computed lazily on first request.
  *       Admin-authenticated requests additionally receive `deletedAt`,
  *       `deletedBy`, `canDelete`, and `canRestore` fields.
  *       Non-admin requests for a deleted election return 404.
@@ -260,17 +260,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const isOpen = now >= electionData.opensAt && now <= electionData.closesAt;
 
   const privateKeyPem = decryptField(electionData.privateKey);
-  let results: TallyResult[] | undefined;
+
+  // Compute tally results and embed them into choices for closed elections.
+  let tallyResults: TallyResult[] | undefined;
 
   if (isClosed) {
     const needsComputation = electionData.choices.some((c) => c.voteCount === null);
     if (needsComputation) {
       const tally = await computeAndPersistTally(electionId, privateKeyPem, electionData.choices);
-      results = toTallyResults(tally, electionData.choices);
+      tallyResults = buildTallyResults(tally, electionData.choices);
     } else {
       const tally: Record<string, number> = {};
       for (const c of electionData.choices) tally[c.id] = c.voteCount ?? 0;
-      results = toTallyResults(tally, electionData.choices);
+      tallyResults = buildTallyResults(tally, electionData.choices);
     }
   }
 
@@ -288,7 +290,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   let deletedByField: { userId: string; fullName: string } | null | undefined;
 
   if (isAdmin) {
-    const adminRecord = await prisma.admin.findUnique({ where: { user_id: user.sub } });
+    const adminRecord = await prisma.admin.findUnique({
+      where: { user_id: user.sub, deleted_at: null },
+    });
     if (adminRecord) {
       const adminGraph = await buildAdminGraph();
       const isDeleted = !!electionData.deletedAt;
@@ -323,6 +327,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       : null;
   }
 
+  // Build choices: embed votes + winner for closed elections.
+  const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
+  const choices = electionData.choices.map((c) => {
+    const base = { id: c.id, choice: c.choice, position: c.position };
+    if (isClosed && tallyResults) {
+      const r = tallyMap.get(c.id);
+      return { ...base, votes: r?.votes ?? 0, winner: r?.winner ?? false };
+    }
+    return base;
+  });
+
   return NextResponse.json({
     id: electionData.id,
     title: electionData.title,
@@ -337,13 +352,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     publicKey: electionData.publicKey,
     privateKey: isClosed ? privateKeyPem : undefined,
     creator: electionData.creator,
-    choices: electionData.choices.map((c) => ({
-      id: c.id,
-      choice: c.choice,
-      position: c.position,
-    })),
+    choices,
     ballotCount: electionData.ballotCount,
-    results,
     hasVoted,
     ...(isAdmin && {
       deletedAt: electionData.deletedAt?.toISOString() ?? null,

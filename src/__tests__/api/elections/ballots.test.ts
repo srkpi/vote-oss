@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { cacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   JWT_TOKEN_RECORD,
   makeElection,
@@ -12,6 +13,7 @@ import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/req
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+jest.mock('@/lib/cache', () => cacheMock);
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 
 import { GET } from '@/app/api/elections/[id]/ballots/route';
@@ -83,7 +85,6 @@ describe('GET /api/elections/[id]/ballots', () => {
 
     expect(status).toBe(200);
     expect(body.ballots).toHaveLength(1);
-    expect(body.total).toBe(1);
     expect(body.election.id).toBe(mockElection.id);
     expect(body.ballots[0].id).toBe(MOCK_BALLOT.id);
   });
@@ -130,6 +131,5 @@ describe('GET /api/elections/[id]/ballots', () => {
     const { body } = await parseJson<any>(res);
 
     expect(body.ballots).toHaveLength(0);
-    expect(body.total).toBe(0);
   });
 });

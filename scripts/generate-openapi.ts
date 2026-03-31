@@ -178,7 +178,7 @@ const spec = createSwaggerSpec({
           },
         },
 
-        ElectionChoice: {
+        ElectionChoiceCreateBody: {
           type: 'object',
           required: ['id', 'choice', 'position'],
           properties: {
@@ -186,6 +186,19 @@ const spec = createSwaggerSpec({
             choice: { type: 'string', minLength: 1, maxLength: ELECTION_CHOICE_MAX_LENGTH },
             position: { type: 'integer', minimum: 0 },
           },
+        },
+
+        ElectionChoiceResponse: {
+          allOf: [
+            { $ref: '#/components/schemas/ElectionChoiceCreateBody' },
+            {
+              type: 'object',
+              properties: {
+                votes: { type: 'integer', minimum: 0 },
+                winner: { type: 'boolean' },
+              },
+            },
+          ],
         },
 
         ElectionCreator: {
@@ -216,6 +229,27 @@ const spec = createSwaggerSpec({
           },
         },
 
+        ElectionForBallotsResponse: {
+          type: 'object',
+          required: ['id', 'title', 'status', 'ballotCount', 'choices'],
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            title: { type: 'string', minLength: 1, maxLength: ELECTION_TITLE_MAX_LENGTH },
+            status: { $ref: '#/components/schemas/ElectionStatus' },
+            ballotCount: { type: 'integer', minimum: 0 },
+            choices: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ElectionChoiceResponse' },
+              minItems: ELECTION_CHOICES_MIN,
+              maxItems: ELECTION_CHOICES_MAX,
+            },
+            privateKey: {
+              type: 'string',
+              description: 'PEM-encoded RSA private key. Only present once the election is closed.',
+            },
+          },
+        },
+
         ElectionCreateBody: {
           type: 'object',
           required: ['title', 'opensAt', 'closesAt', 'choices'],
@@ -225,7 +259,7 @@ const spec = createSwaggerSpec({
             closesAt: { type: 'string', format: 'date-time' },
             choices: {
               type: 'array',
-              items: { $ref: '#/components/schemas/ElectionChoice' },
+              items: { $ref: '#/components/schemas/ElectionChoiceCreateBody' },
               minItems: ELECTION_CHOICES_MIN,
               maxItems: ELECTION_CHOICES_MAX,
             },
@@ -258,41 +292,50 @@ const spec = createSwaggerSpec({
                 'maxChoices',
                 'restrictions',
                 'status',
-                'publicKey',
                 'creator',
                 'ballotCount',
+                'choices',
               ],
               properties: {
                 id: { type: 'string', format: 'uuid' },
                 createdAt: { type: 'string', format: 'date-time' },
                 status: { $ref: '#/components/schemas/ElectionStatus' },
-                publicKey: { type: 'string', description: 'PEM-encoded RSA public key.' },
-                privateKey: {
-                  type: 'string',
-                  nullable: true,
-                  description:
-                    'PEM-encoded RSA private key. Only present once the election is closed.',
-                },
                 creator: { $ref: '#/components/schemas/ElectionCreator' },
                 ballotCount: { type: 'integer', minimum: 0 },
+                choices: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/ElectionChoiceResponse' },
+                  minItems: ELECTION_CHOICES_MIN,
+                  maxItems: ELECTION_CHOICES_MAX,
+                },
               },
             },
           ],
         },
 
-        /** Returned by GET /api/elections/[id] (detail view – adds hasVoted) */
+        /** Returned by GET /api/elections/[id] */
         ElectionDetail: {
           allOf: [
             { $ref: '#/components/schemas/Election' },
             {
               type: 'object',
+              required: ['publicKey'],
               properties: {
+                publicKey: { type: 'string', description: 'PEM-encoded RSA public key.' },
+                privateKey: {
+                  type: 'string',
+                  description:
+                    'PEM-encoded RSA private key. Only present once the election is closed.',
+                },
                 hasVoted: {
                   type: 'boolean',
-                  nullable: true,
                   description:
                     'Present only while the election is open. True if the caller has already been issued a vote token.',
                 },
+                deletedAt: { type: 'string', nullable: true, format: 'date-time' },
+                deletedBy: { type: 'string', nullable: true },
+                canDelete: { type: 'boolean' },
+                canRestore: { type: 'boolean' },
               },
             },
           ],

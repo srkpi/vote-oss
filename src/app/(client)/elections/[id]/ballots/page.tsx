@@ -18,14 +18,7 @@ export async function generateMetadata({ params }: BallotsPageProps): Promise<Me
 
 export default async function BallotsPage({ params }: BallotsPageProps) {
   const { id } = await params;
-
-  const [ballotsResult, electionResult] = await Promise.all([
-    serverApi.elections.getBallots(id),
-    serverApi.elections.get(id),
-  ]);
-
-  const { data, error, status } = ballotsResult;
-  const { data: election } = electionResult;
+  const { data, error, status } = await serverApi.elections.getBallots(id);
 
   if (status === 404) notFound();
 
@@ -50,7 +43,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
       <PageHeader
         nav={[
           { label: 'Голосування', href: '/elections' },
-          ...(data?.election ? [{ label: data.election.title, href: `/elections/${id}` }] : []),
+          { label: data.election.title, href: `/elections/${id}` },
           { label: 'Бюлетені' },
         ]}
         title="Публічні бюлетені"
@@ -63,7 +56,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
             {error}
           </Alert>
         ) : (
-          <BallotsClient initialData={data!} election={election ?? null} />
+          <BallotsClient initialData={data} />
         )}
       </div>
     </div>

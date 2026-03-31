@@ -280,7 +280,7 @@ describe('GET /api/elections/[id]', () => {
 
   // ── Results — pre-computed (vote_count already set) ───────────────────────
 
-  it('returns pre-computed results when closed election choices have vote_count', async () => {
+  it('returns pre-computed votes and winner embedded in choices when closed election choices have vote_count', async () => {
     const req = await authRequest();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -297,15 +297,17 @@ describe('GET /api/elections/[id]', () => {
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    expect(body.results).toHaveLength(2);
-    const optA = body.results.find((r: any) => r.choiceId === MOCK_ELECTION_CHOICES[0].id);
+    expect(body.choices).toHaveLength(2);
+    const optA = body.choices.find((c: any) => c.id === MOCK_ELECTION_CHOICES[0].id);
     expect(optA.votes).toBe(7);
     expect(optA.winner).toBe(true);
-    const optB = body.results.find((r: any) => r.choiceId === MOCK_ELECTION_CHOICES[1].id);
+    const optB = body.choices.find((c: any) => c.id === MOCK_ELECTION_CHOICES[1].id);
     expect(optB.votes).toBe(3);
     expect(optB.winner).toBe(false);
     // Should NOT re-fetch ballots since tallies are already persisted
     expect(prismaMock.ballot.findMany).not.toHaveBeenCalled();
+    // No separate results field
+    expect(body.results).toBeUndefined();
   });
 
   it('marks all tied choices as winners', async () => {
@@ -324,7 +326,7 @@ describe('GET /api/elections/[id]', () => {
     const res = await GET(req, PARAMS);
     const { body } = await parseJson<any>(res);
 
-    expect(body.results.every((r: any) => r.winner === true)).toBe(true);
+    expect(body.choices.every((c: any) => c.winner === true)).toBe(true);
   });
 
   it('marks no winners when all votes are zero', async () => {
@@ -343,10 +345,10 @@ describe('GET /api/elections/[id]', () => {
     const res = await GET(req, PARAMS);
     const { body } = await parseJson<any>(res);
 
-    expect(body.results.every((r: any) => r.winner === false)).toBe(true);
+    expect(body.choices.every((c: any) => c.winner === false)).toBe(true);
   });
 
-  it('does not include results for open elections', async () => {
+  it('does not include votes/winner in choices for open elections', async () => {
     const req = await authRequest();
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection()); // open by default
 
@@ -354,9 +356,11 @@ describe('GET /api/elections/[id]', () => {
     const { body } = await parseJson<any>(res);
 
     expect(body.results).toBeUndefined();
+    expect(body.choices[0].votes).toBeUndefined();
+    expect(body.choices[0].winner).toBeUndefined();
   });
 
-  it('does not include results for upcoming elections', async () => {
+  it('does not include votes/winner in choices for upcoming elections', async () => {
     const req = await authRequest();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -369,6 +373,8 @@ describe('GET /api/elections/[id]', () => {
     const { body } = await parseJson<any>(res);
 
     expect(body.results).toBeUndefined();
+    expect(body.choices[0].votes).toBeUndefined();
+    expect(body.choices[0].winner).toBeUndefined();
   });
 
   // ── Results — lazy computation (vote_count is null) ───────────────────────
@@ -410,8 +416,8 @@ describe('GET /api/elections/[id]', () => {
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    const optA = body.results.find((r: any) => r.choiceId === MOCK_ELECTION_CHOICES[0].id);
-    const optB = body.results.find((r: any) => r.choiceId === MOCK_ELECTION_CHOICES[1].id);
+    const optA = body.choices.find((c: any) => c.id === MOCK_ELECTION_CHOICES[0].id);
+    const optB = body.choices.find((c: any) => c.id === MOCK_ELECTION_CHOICES[1].id);
     expect(optA.votes).toBe(2);
     expect(optA.winner).toBe(true);
     expect(optB.votes).toBe(1);

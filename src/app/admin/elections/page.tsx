@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { AdminElectionsClient } from '@/components/admin/admin-elections-client';
 import { StatCard } from '@/components/admin/stat-card';
 import { PageHeader } from '@/components/common/page-header';
+import { AdminElectionsClient } from '@/components/elections/admin/admin-elections-client';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
