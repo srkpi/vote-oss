@@ -43,6 +43,7 @@ export function createApiClient(fetcher: Fetcher) {
           body: JSON.stringify(data),
         }),
       delete: (id: string) => fetcher<void>(`/elections/${id}`, { method: 'DELETE' }),
+      restore: (id: string) => fetcher<void>(`/elections/${id}/restore`, { method: 'POST' }),
 
       getVoteToken: (electionId: string) =>
         fetcher<VoteToken>(`/elections/${electionId}/token`, { method: 'POST' }),

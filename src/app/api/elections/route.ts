@@ -2,7 +2,12 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
-import { getCachedElections, invalidateElections, setCachedElections } from '@/lib/cache';
+import {
+  getCachedAdmins,
+  getCachedElections,
+  invalidateElections,
+  setCachedElections,
+} from '@/lib/cache';
 import { fetchFacultyGroups } from '@/lib/campus-api';
 import type { StudyFormValue, StudyYearValue } from '@/lib/constants';
 import {
@@ -22,7 +27,12 @@ import { decryptField, encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { parseGroupLevel } from '@/lib/group-utils';
 import { prisma } from '@/lib/prisma';
-import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
+import {
+  adminCanAccessElection,
+  adminCanDeleteElection,
+  adminCanRestoreElection,
+  checkRestrictions,
+} from '@/lib/restrictions';
 import type {
   CachedElection,
   CachedElectionChoice,
@@ -47,10 +57,6 @@ function computeStatus(opensAt: string | Date, closesAt: string | Date): Electio
   return 'closed';
 }
 
-/**
- * Build a TallyResult array from cached choices.
- * Returns null when no votes have been computed yet.
- */
 function buildResults(choices: CachedElectionChoice[]): TallyResult[] | null {
   if (choices.some((c) => c.voteCount === null)) return null;
   const maxVotes = Math.max(0, ...choices.map((c) => c.voteCount!));
@@ -63,6 +69,25 @@ function buildResults(choices: CachedElectionChoice[]): TallyResult[] | null {
   }));
 }
 
+/** Build a userId → promoted_by map from cache or DB. */
+async function buildAdminGraph(): Promise<Map<string, string | null>> {
+  const cachedAdmins = await getCachedAdmins();
+  if (cachedAdmins) {
+    return new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]));
+  }
+  const dbAdmins = await prisma.admin.findMany({
+    where: { deleted_at: null },
+    select: { user_id: true, promoted_by: true },
+  });
+  return new Map(dbAdmins.map((a) => [a.user_id, a.promoted_by]));
+}
+
+type AdminContext = {
+  user_id: string;
+  restricted_to_faculty: boolean;
+  faculty: string;
+};
+
 function toClientElections(
   cached: CachedElection[],
   user: {
@@ -74,22 +99,34 @@ function toClientElections(
     isAdmin?: boolean;
     restrictedToFaculty?: boolean;
   },
+  adminRecord?: AdminContext,
+  adminGraph?: Map<string, string | null>,
 ): Election[] {
-  const now = Date.now();
   const isAdmin = user.isAdmin ?? false;
   const isAdminRestricted = user.restrictedToFaculty ?? true;
 
   return cached
     .filter((e) => {
+      const isDeleted = !!e.deletedAt;
+
+      // Non-admins never see deleted elections.
+      if (!isAdmin && isDeleted) return false;
+
+      // Admins see all elections (deleted and active).
       if (isAdmin && !isAdminRestricted) return true;
-      if (isAdmin && isAdminRestricted) return adminCanAccessElection(user.faculty, e.restrictions);
+
+      if (isAdmin && isAdminRestricted) {
+        return adminCanAccessElection(user.faculty, e.restrictions);
+      }
+
       return checkRestrictions(e.restrictions, user);
     })
     .map((e) => {
-      const isClosed = now > new Date(e.closesAt).getTime();
+      const isClosed = Date.now() > new Date(e.closesAt).getTime();
       const status = computeStatus(e.opensAt, e.closesAt);
+      const isDeleted = !!e.deletedAt;
 
-      return {
+      const base: Election = {
         id: e.id,
         title: e.title,
         createdAt: e.createdAt,
@@ -106,8 +143,43 @@ function toClientElections(
         ballotCount: e.ballotCount,
         results: isClosed ? buildResults(e.choices) : undefined,
       };
+
+      // Attach admin-only fields.
+      if (isAdmin && adminRecord && adminGraph) {
+        const canDelete =
+          !isDeleted &&
+          adminCanDeleteElection(
+            adminRecord,
+            { restrictions: e.restrictions, created_by: e.createdBy },
+            adminGraph,
+          );
+
+        const canRestore =
+          isDeleted &&
+          adminCanRestoreElection(
+            adminRecord,
+            { restrictions: e.restrictions, deletedByUserId: e.deletedByUserId },
+            adminGraph,
+          );
+
+        return {
+          ...base,
+          deletedAt: e.deletedAt,
+          deletedBy: e.deletedByUserId
+            ? { userId: e.deletedByUserId, fullName: e.deletedByName ?? '' }
+            : null,
+          canDelete,
+          canRestore,
+        };
+      }
+
+      return base;
     });
 }
+
+// ---------------------------------------------------------------------------
+// GET /api/elections
+// ---------------------------------------------------------------------------
 
 /**
  * @swagger
@@ -117,10 +189,11 @@ function toClientElections(
  *     description: >
  *       Returns all elections the caller is eligible to see, filtered by
  *       their faculty/group and admin status. Results are served from cache
- *       when available. The private key is included only for closed elections.
- *       Status (`upcoming` | `open` | `closed`) is computed at response time.
- *       For closed elections whose tallies have been computed, a `results`
- *       array is embedded directly in each election object.
+ *       when available. Deleted elections are included only for admin users
+ *       and are accompanied by `deletedAt`, `deletedBy`, `canDelete`, and
+ *       `canRestore` flags. The private key is included only for closed
+ *       elections. Status (`upcoming` | `open` | `closed`) is computed at
+ *       response time.
  *     tags:
  *       - Elections
  *     security:
@@ -142,18 +215,43 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return Errors.unauthorized(auth.error);
   const { user } = auth;
 
+  const isAdmin = user.isAdmin ?? false;
+
+  // For admin users we need both the admin record (for hierarchy checks) and
+  // the admin graph.
+  let adminRecord: AdminContext | undefined;
+  let adminGraph: Map<string, string | null> | undefined;
+
+  if (isAdmin) {
+    const dbAdmin = await prisma.admin.findUnique({ where: { user_id: user.sub } });
+    if (dbAdmin && !dbAdmin.deleted_at) {
+      adminRecord = {
+        user_id: dbAdmin.user_id,
+        restricted_to_faculty: dbAdmin.restricted_to_faculty,
+        faculty: dbAdmin.faculty,
+      };
+      adminGraph = await buildAdminGraph();
+    }
+  }
+
   const cached = await getCachedElections();
+
   if (cached) {
     return NextResponse.json(
-      toClientElections(cached, {
-        faculty: user.faculty,
-        group: user.group,
-        speciality: user.speciality,
-        studyYear: user.studyYear,
-        studyForm: user.studyForm,
-        isAdmin: user.isAdmin,
-        restrictedToFaculty: user.restrictedToFaculty,
-      }),
+      toClientElections(
+        cached,
+        {
+          faculty: user.faculty,
+          group: user.group,
+          speciality: user.speciality,
+          studyYear: user.studyYear,
+          studyForm: user.studyForm,
+          isAdmin,
+          restrictedToFaculty: user.restrictedToFaculty,
+        },
+        adminRecord,
+        adminGraph,
+      ),
     );
   }
 
@@ -166,15 +264,19 @@ export async function GET(req: NextRequest) {
       closes_at: true,
       min_choices: true,
       max_choices: true,
+      created_by: true,
       restrictions: { select: { type: true, value: true } },
       public_key: true,
       private_key: true,
       creator: { select: { full_name: true, faculty: true } },
+      deleter: { select: { full_name: true } },
       choices: {
         select: { id: true, choice: true, position: true, vote_count: true },
         orderBy: { position: 'asc' },
       },
       _count: { select: { ballots: true } },
+      deleted_at: true,
+      deleted_by: true,
     },
     orderBy: { opens_at: 'desc' },
   });
@@ -198,22 +300,35 @@ export async function GET(req: NextRequest) {
       voteCount: c.vote_count ?? null,
     })) as CachedElectionChoice[],
     ballotCount: e._count.ballots,
+    createdBy: e.created_by,
+    deletedAt: e.deleted_at?.toISOString() ?? null,
+    deletedByUserId: e.deleted_by,
+    deletedByName: e.deleter?.full_name ?? null,
   }));
 
   await setCachedElections(rawResult);
 
   return NextResponse.json(
-    toClientElections(rawResult, {
-      faculty: user.faculty,
-      group: user.group,
-      speciality: user.speciality,
-      studyYear: user.studyYear,
-      studyForm: user.studyForm,
-      isAdmin: user.isAdmin,
-      restrictedToFaculty: user.restrictedToFaculty,
-    }),
+    toClientElections(
+      rawResult,
+      {
+        faculty: user.faculty,
+        group: user.group,
+        speciality: user.speciality,
+        studyYear: user.studyYear,
+        studyForm: user.studyForm,
+        isAdmin,
+        restrictedToFaculty: user.restrictedToFaculty,
+      },
+      adminRecord,
+      adminGraph,
+    ),
   );
 }
+
+// ---------------------------------------------------------------------------
+// POST /api/elections
+// ---------------------------------------------------------------------------
 
 /**
  * @swagger
@@ -471,6 +586,10 @@ export async function POST(req: NextRequest) {
       creator: { fullName: admin.full_name, faculty: admin.faculty },
       choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
       ballotCount: 0,
+      deletedAt: null,
+      deletedBy: null,
+      canDelete: true,
+      canRestore: false,
     },
     { status: 201 },
   );
