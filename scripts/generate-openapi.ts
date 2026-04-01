@@ -231,12 +231,13 @@ const spec = createSwaggerSpec({
 
         ElectionForBallotsResponse: {
           type: 'object',
-          required: ['id', 'title', 'status', 'ballotCount', 'choices'],
+          required: ['id', 'title', 'status', 'ballotCount', 'deletedAt', 'choices'],
           properties: {
             id: { type: 'string', format: 'uuid' },
             title: { type: 'string', minLength: 1, maxLength: ELECTION_TITLE_MAX_LENGTH },
             status: { $ref: '#/components/schemas/ElectionStatus' },
             ballotCount: { type: 'integer', minimum: 0 },
+            deletedAt: { type: 'string', nullable: true, format: 'date-time' },
             choices: {
               type: 'array',
               items: { $ref: '#/components/schemas/ElectionChoiceResponse' },

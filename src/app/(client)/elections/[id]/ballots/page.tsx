@@ -38,6 +38,16 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
     notFound();
   }
 
+  if (data.election.deletedAt) {
+    return (
+      <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
+        <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
+          <ErrorState title="Голосування було видалено" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       <PageHeader
