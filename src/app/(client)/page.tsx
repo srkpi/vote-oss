@@ -57,7 +57,7 @@ export default async function HomePage() {
   let featuredElections: Election[] = [];
   if (session) {
     const { data } = await serverApi.elections.list();
-    featuredElections = (data || []).filter((e) => e.status === 'open').slice(0, 3);
+    featuredElections = (data || []).filter((e) => e.status === 'open' && !e.deletedAt).slice(0, 3);
   }
 
   return (

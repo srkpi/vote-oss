@@ -22,11 +22,20 @@ export default async function ElectionsPage() {
     redirect('/login');
   }
 
-  const { data: elections, error } = await serverApi.elections.list();
+  const { data, error } = await serverApi.elections.list();
 
-  const open = (elections ?? []).filter((e) => e.status === 'open').length;
-  const upcoming = (elections ?? []).filter((e) => e.status === 'upcoming').length;
-  const closed = (elections ?? []).filter((e) => e.status === 'closed').length;
+  const elections = (data ?? []).filter((e) => !e.deletedAt);
+  const counts = elections.reduce(
+    (acc, e) => {
+      if (e.status === 'open') acc.open++;
+      else if (e.status === 'upcoming') acc.upcoming++;
+      else if (e.status === 'closed') acc.closed++;
+      return acc;
+    },
+    { open: 0, upcoming: 0, closed: 0 },
+  );
+
+  const { open, upcoming, closed } = counts;
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
