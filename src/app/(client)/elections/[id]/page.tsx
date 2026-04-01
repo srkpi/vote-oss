@@ -63,6 +63,16 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
     notFound();
   }
 
+  if (election.deletedAt) {
+    return (
+      <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
+        <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
+          <ErrorState title="Голосування було видалено" />
+        </div>
+      </div>
+    );
+  }
+
   const isOpen = election.status === 'open';
   const isUpcoming = election.status === 'upcoming';
   const isClosed = election.status === 'closed';

@@ -111,7 +111,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const now = new Date();
 
   const election = await prisma.election.findUnique({
-    where: { id: electionId },
+    where: { id: electionId, deleted_at: null },
     include: { choices: true },
   });
 

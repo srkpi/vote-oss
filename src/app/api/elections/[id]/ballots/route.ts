@@ -76,6 +76,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       opens_at: new Date(found.opensAt),
       closes_at: new Date(found.closesAt),
       private_key: found.privateKey,
+      deleted_at: found.deletedAt,
       restrictions: found.restrictions as ElectionRestriction[],
       choices: found.choices,
     };
@@ -88,6 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         opens_at: true,
         closes_at: true,
         private_key: true,
+        deleted_at: true,
         restrictions: { select: { type: true, value: true } },
         choices: {
           select: { id: true, choice: true, position: true },
@@ -100,6 +102,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { user } = auth;
+  if (!user.isAdmin && electionData.deleted_at) return Errors.notFound('Election not found');
+
   const restrictions = electionData.restrictions as ElectionRestriction[];
 
   if (user.isAdmin && !user.restrictedToFaculty) {
@@ -138,6 +142,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       title: electionData.title,
       status,
       ballotCount: ballots.length,
+      deleted_at: electionData.deleted_at,
       choices: electionData.choices.map((c) => ({
         id: c.id,
         choice: c.choice,
