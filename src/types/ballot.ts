@@ -16,7 +16,7 @@ export interface BallotsElection {
   ballotCount: number;
   choices: ElectionChoice[];
   privateKey?: string;
-  deletedAt: string;
+  deletedAt: string | null;
 }
 
 export interface BallotsResponse {
