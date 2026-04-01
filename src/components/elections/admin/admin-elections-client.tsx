@@ -54,17 +54,28 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
   const [restoring, setRestoring] = useState(false);
 
   const searchTrimmed = search.length > 100 ? search.substring(0, 100) + '...' : search;
-
-  const counts: Record<TabKey, number> = useMemo(
-    () => ({
-      all: items.length,
-      open: items.filter((e) => e.status === 'open' && !e.deletedAt).length,
-      upcoming: items.filter((e) => e.status === 'upcoming' && !e.deletedAt).length,
-      closed: items.filter((e) => e.status === 'closed' && !e.deletedAt).length,
-      deleted: items.filter((e) => !!e.deletedAt).length,
-    }),
-    [items],
-  );
+  const counts: Record<TabKey, number> = useMemo(() => {
+    return items.reduce(
+      (acc, e) => {
+        acc.all++;
+        if (e.deletedAt) {
+          acc.deleted++;
+          return acc;
+        }
+        if (e.status === 'open') acc.open++;
+        else if (e.status === 'upcoming') acc.upcoming++;
+        else if (e.status === 'closed') acc.closed++;
+        return acc;
+      },
+      {
+        all: 0,
+        open: 0,
+        upcoming: 0,
+        closed: 0,
+        deleted: 0,
+      },
+    );
+  }, [items]);
 
   const filtered = useMemo(() => {
     let result = items;
