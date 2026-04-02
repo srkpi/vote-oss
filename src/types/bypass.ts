@@ -2,6 +2,7 @@ export type BypassTokenType = 'GLOBAL' | 'ELECTION';
 
 export interface GlobalBypassInfo {
   bypassNotStudying: boolean;
+  bypassGraduate: boolean;
   validUntil: number;
 }
 
@@ -21,7 +22,10 @@ export interface BypassToken {
   type: BypassTokenType;
   electionId: string | null;
   bypassNotStudying: boolean;
+  bypassGraduate: boolean;
   bypassRestrictions: string[];
+  maxUsage: number | null;
+  currentUsage: number;
   validUntil: string;
   createdAt: string;
   creator: { userId: string; fullName: string };
@@ -39,6 +43,8 @@ export interface CreateBypassTokenRequest {
   type: BypassTokenType;
   electionId?: string;
   bypassNotStudying?: boolean;
+  bypassGraduate?: boolean;
   bypassRestrictions?: string[];
+  maxUsage?: number | null;
   validUntil: string;
 }

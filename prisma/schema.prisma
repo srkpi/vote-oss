@@ -165,7 +165,10 @@ model BypassToken {
   election_id         String?            @db.Uuid
   election            Election?          @relation(fields: [election_id], references: [id], onDelete: Cascade)
   bypass_not_studying Boolean            @default(false)
+  bypass_graduate     Boolean            @default(false)
   bypass_restrictions String[]
+  max_usage           Int
+  current_usage       Int                @default(0)
   created_by          String
   creator             Admin              @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
   valid_until         DateTime

@@ -7,6 +7,7 @@ import {
   BYPASS_TOKEN_LENGTH,
   BYPASS_TOKEN_MAX_COUNT,
   BYPASS_TOKEN_MAX_DAYS,
+  BYPASS_TOKEN_MAX_USAGE_MAX,
   BYPASS_TOKEN_MIN_HOURS,
 } from '@/lib/constants';
 import { generateBase64Token } from '@/lib/crypto';
@@ -28,10 +29,7 @@ export async function GET(req: NextRequest) {
   }
 
   const tokens = await prisma.bypassToken.findMany({
-    where: {
-      type: 'GLOBAL',
-      valid_until: { gt: new Date() },
-    },
+    where: { type: 'GLOBAL', valid_until: { gt: new Date() } },
     include: {
       creator: { select: { user_id: true, full_name: true } },
       usages: {
@@ -48,7 +46,10 @@ export async function GET(req: NextRequest) {
       type: t.type,
       electionId: t.election_id,
       bypassNotStudying: t.bypass_not_studying,
+      bypassGraduate: t.bypass_graduate,
       bypassRestrictions: t.bypass_restrictions,
+      maxUsage: t.max_usage,
+      currentUsage: t.current_usage,
       validUntil: t.valid_until.toISOString(),
       createdAt: t.created_at.toISOString(),
       creator: { userId: t.creator.user_id, fullName: t.creator.full_name },
@@ -78,6 +79,8 @@ export async function POST(req: NextRequest) {
 
   let body: {
     bypassNotStudying?: boolean;
+    bypassGraduate?: boolean;
+    maxUsage?: number;
     validUntil?: string;
   };
   try {
@@ -86,7 +89,14 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const { bypassNotStudying = false, validUntil } = body;
+  const { bypassNotStudying = false, bypassGraduate = false, maxUsage, validUntil } = body;
+
+  // Must bypass at least one thing
+  if (!bypassNotStudying && !bypassGraduate) {
+    return Errors.badRequest(
+      'At least one bypass option must be enabled (bypassNotStudying or bypassGraduate)',
+    );
+  }
 
   if (!validUntil) return Errors.badRequest('validUntil is required');
 
@@ -106,13 +116,18 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest(`validUntil cannot exceed ${BYPASS_TOKEN_MAX_DAYS} days from now`);
   }
 
-  // Enforce per-admin active token limit
+  if (!maxUsage) {
+    return Errors.badRequest('maxUsage must be provided');
+  }
+  if (!Number.isInteger(maxUsage) || maxUsage < 1) {
+    return Errors.badRequest('maxUsage must be a positive integer');
+  }
+  if (maxUsage > BYPASS_TOKEN_MAX_USAGE_MAX) {
+    return Errors.badRequest(`maxUsage cannot exceed ${BYPASS_TOKEN_MAX_USAGE_MAX}`);
+  }
+
   const activeCount = await prisma.bypassToken.count({
-    where: {
-      created_by: auth.user.sub,
-      type: 'GLOBAL',
-      valid_until: { gt: now },
-    },
+    where: { created_by: auth.user.sub, type: 'GLOBAL', valid_until: { gt: now } },
   });
 
   if (activeCount >= BYPASS_TOKEN_MAX_COUNT) {
@@ -130,7 +145,10 @@ export async function POST(req: NextRequest) {
       type: 'GLOBAL',
       election_id: null,
       bypass_not_studying: bypassNotStudying,
+      bypass_graduate: bypassGraduate,
       bypass_restrictions: [],
+      max_usage: maxUsage,
+      current_usage: 0,
       created_by: auth.user.sub,
       valid_until: validUntilDate,
     },
@@ -141,6 +159,9 @@ export async function POST(req: NextRequest) {
       token: rawToken,
       tokenHash,
       bypassNotStudying,
+      bypassGraduate,
+      maxUsage: maxUsage,
+      currentUsage: 0,
       validUntil: validUntilDate.toISOString(),
     },
     { status: 201 },

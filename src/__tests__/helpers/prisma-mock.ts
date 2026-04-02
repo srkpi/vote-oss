@@ -74,6 +74,15 @@ export const prismaMock = {
     update: jest.fn(),
     delete: jest.fn(),
   },
+  bypassToken: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+  },
   bypassTokenUsage: {
     findMany: jest.fn(),
     findFirst: jest.fn(),
@@ -115,4 +124,11 @@ export function resetPrismaMock() {
   prismaMock.faqItem.create.mockImplementation((args: unknown) => args);
   prismaMock.faqItem.update.mockImplementation((args: unknown) => args);
   prismaMock.issuedToken.findUnique.mockResolvedValue(null);
+  prismaMock.bypassToken.findUnique.mockReset();
+  prismaMock.bypassToken.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.bypassToken.create.mockReset().mockImplementation((args: unknown) => args);
+  prismaMock.bypassToken.update.mockReset().mockResolvedValue({});
+  prismaMock.bypassToken.delete.mockReset().mockResolvedValue({});
+  prismaMock.bypassToken.deleteMany.mockReset().mockResolvedValue({ count: 0 });
+  prismaMock.bypassToken.count.mockReset().mockResolvedValue(0);
 }

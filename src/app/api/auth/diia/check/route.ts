@@ -2,18 +2,11 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
-import { getUserBypassInfo } from '@/lib/bypass';
 import { KPI_AUTH_URL } from '@/lib/config/client';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
-import {
-  InvalidTicketError,
-  InvalidUserDataError,
-  NotStudyingError,
-  resolveUserData,
-  ResolveUserDataError,
-} from '@/lib/kpi-id';
+import { getCampusUserData } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
 import type { KpiIdUserInfo, TokenPayload } from '@/types/auth';
@@ -180,34 +173,10 @@ export async function POST(req: NextRequest) {
     return Errors.internal('Invalid user data from provider');
   }
 
-  let userInfo;
-  try {
-    userInfo = await resolveUserData(data);
-  } catch (err) {
-    if (err instanceof NotStudyingError && data.STUDENT_ID) {
-      // Try resolving again without the studying check, then verify bypass
-      try {
-        const partialInfo = await resolveUserData(data, { skipStudyingCheck: true });
-        const bypassInfo = await getUserBypassInfo(partialInfo.userId);
-        if (bypassInfo.global?.bypassNotStudying) {
-          userInfo = partialInfo;
-        } else {
-          return Errors.forbidden((err as Error).message);
-        }
-      } catch {
-        return Errors.forbidden((err as Error).message);
-      }
-    } else if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
-      return Errors.unauthorized((err as Error).message);
-    } else if (err instanceof ResolveUserDataError) {
-      return Errors.forbidden((err as Error).message);
-    } else {
-      console.error('[diia/check] resolveUserData error:', err);
-      return Errors.internal('Failed to contact auth provider');
-    }
+  const campusDataResult = await getCampusUserData(data);
+  if (campusDataResult instanceof NextResponse) {
+    return campusDataResult;
   }
-
-  if (!userInfo) return Errors.internal('Failed to resolve user info');
 
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
@@ -216,18 +185,18 @@ export async function POST(req: NextRequest) {
   const initialAuthAt = now;
 
   const tokenPayload: TokenPayload = {
-    sub: userInfo.userId,
-    faculty: userInfo.faculty,
-    group: userInfo.group,
-    fullName: userInfo.fullName,
-    speciality: userInfo.speciality,
-    studyYear: userInfo.studyYear,
-    studyForm: userInfo.studyForm,
+    sub: campusDataResult.userId,
+    faculty: campusDataResult.faculty,
+    group: campusDataResult.group,
+    fullName: campusDataResult.fullName,
+    speciality: campusDataResult.speciality,
+    studyYear: campusDataResult.studyYear,
+    studyForm: campusDataResult.studyForm,
     initialAuthAt,
   };
 
   const adminRecord = await prisma.admin.findUnique({
-    where: { user_id: userInfo.userId, deleted_at: null },
+    where: { user_id: campusDataResult.userId, deleted_at: null },
   });
 
   if (adminRecord) {

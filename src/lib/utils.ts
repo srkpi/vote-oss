@@ -134,32 +134,6 @@ export function isValidUuid(id: string): boolean {
   return UUID_RE.test(id);
 }
 
-/**
- * Walk the in-memory graph upward from `targetUserId` and return true if
- * `ancestorId` appears anywhere in the chain.
- *
- * O(depth) — no database I/O. A visited-set guards against cycles.
- */
-export function isAncestorInGraph(
-  graph: Map<string, string | null>,
-  ancestorId: string,
-  targetUserId: string,
-): boolean {
-  const visited = new Set<string>();
-  let currentId: string | null = targetUserId;
-
-  while (currentId) {
-    if (visited.has(currentId)) break;
-    visited.add(currentId);
-
-    const promotedBy: string | null = graph.get(currentId) ?? null;
-    if (promotedBy === ancestorId) return true;
-    currentId = promotedBy;
-  }
-
-  return false;
-}
-
 export function tokenUsageFraction(token: InviteToken): number {
   if (token.maxUsage === 0) return 0;
   return token.currentUsage / token.maxUsage;

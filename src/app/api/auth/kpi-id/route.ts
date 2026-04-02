@@ -2,16 +2,14 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
-import { getUserBypassInfo } from '@/lib/bypass';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
 import {
+  getCampusUserData,
   InvalidTicketError,
   InvalidUserDataError,
-  NotStudyingError,
   resolveTicket,
-  ResolveUserDataError,
 } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
@@ -93,39 +91,20 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('ticketId is required');
   }
 
-  let userInfo;
+  let kpiIdInfo;
   try {
-    userInfo = await resolveTicket(ticketId);
+    kpiIdInfo = await resolveTicket(ticketId);
   } catch (err) {
     if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
       return Errors.unauthorized(err.message);
     }
-
-    // Check if the user has a bypass for not-studying before propagating
-    if (err instanceof NotStudyingError) {
-      // We need the userId to check bypass — re-resolve without the studying check
-      // by attempting a bypass-aware resolve
-      try {
-        userInfo = await resolveTicket(ticketId, { skipStudyingCheck: true });
-        if (userInfo) {
-          const bypassInfo = await getUserBypassInfo(userInfo.userId);
-          if (!bypassInfo.global?.bypassNotStudying) {
-            return Errors.forbidden(err.message);
-          }
-          // bypassNotStudying is active — fall through with userInfo
-        }
-      } catch {
-        return Errors.forbidden((err as Error).message);
-      }
-    } else if (err instanceof ResolveUserDataError) {
-      return Errors.forbidden((err as ResolveUserDataError).message);
-    } else {
-      console.error('[auth/kpi-id] resolveTicket error:', err);
-      return Errors.internal('Failed to contact auth provider');
-    }
+    return Errors.forbidden((err as Error).message);
   }
 
-  if (!userInfo) return Errors.internal('Failed to resolve user info');
+  const campusDataResult = await getCampusUserData(kpiIdInfo);
+  if (campusDataResult instanceof NextResponse) {
+    return campusDataResult;
+  }
 
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
@@ -134,18 +113,18 @@ export async function POST(req: NextRequest) {
   const initialAuthAt = now;
 
   const tokenPayload: TokenPayload = {
-    sub: userInfo.userId,
-    faculty: userInfo.faculty,
-    group: userInfo.group,
-    fullName: userInfo.fullName,
-    speciality: userInfo.speciality,
-    studyYear: userInfo.studyYear,
-    studyForm: userInfo.studyForm,
+    sub: campusDataResult.userId,
+    faculty: campusDataResult.faculty,
+    group: campusDataResult.group,
+    fullName: campusDataResult.fullName,
+    speciality: campusDataResult.speciality,
+    studyYear: campusDataResult.studyYear,
+    studyForm: campusDataResult.studyForm,
     initialAuthAt,
   };
 
   const adminRecord = await prisma.admin.findUnique({
-    where: { user_id: userInfo.userId, deleted_at: null },
+    where: { user_id: campusDataResult.userId, deleted_at: null },
   });
   const isAdmin = !!adminRecord;
 

@@ -8,6 +8,7 @@ import {
   BYPASS_TOKEN_LENGTH,
   BYPASS_TOKEN_MAX_COUNT,
   BYPASS_TOKEN_MAX_DAYS,
+  BYPASS_TOKEN_MAX_USAGE_MAX,
   BYPASS_TOKEN_MIN_HOURS,
 } from '@/lib/constants';
 import { generateBase64Token } from '@/lib/crypto';
@@ -15,8 +16,9 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { adminCanManageElectionBypass } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
+import type { ElectionRestriction } from '@/types/election';
 
-const VALID_BYPASS_RESTRICTION_TYPES = [
+const BYPASSABLE_RESTRICTION_TYPES = [
   'FACULTY',
   'GROUP',
   'STUDY_YEAR',
@@ -35,11 +37,6 @@ async function buildAdminGraph(): Promise<Map<string, string | null>> {
   return new Map(admins.map((a) => [a.user_id, a.promoted_by]));
 }
 
-/**
- * GET /api/elections/[id]/bypass
- * List all non-expired election bypass tokens for this election.
- * Accessible by the election creator and their admin ancestors.
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -61,11 +58,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const tokens = await prisma.bypassToken.findMany({
-    where: {
-      type: 'ELECTION',
-      election_id: electionId,
-      valid_until: { gt: new Date() },
-    },
+    where: { type: 'ELECTION', election_id: electionId, valid_until: { gt: new Date() } },
     include: {
       creator: { select: { user_id: true, full_name: true } },
       usages: {
@@ -81,8 +74,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       tokenHash: t.token_hash,
       type: t.type,
       electionId: t.election_id,
-      bypassNotStudying: t.bypass_not_studying,
+      bypassNotStudying: false,
+      bypassGraduate: false,
       bypassRestrictions: t.bypass_restrictions,
+      maxUsage: t.max_usage,
+      currentUsage: t.current_usage,
       validUntil: t.valid_until.toISOString(),
       createdAt: t.created_at.toISOString(),
       creator: { userId: t.creator.user_id, fullName: t.creator.full_name },
@@ -96,10 +92,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   );
 }
 
-/**
- * POST /api/elections/[id]/bypass
- * Create an election bypass token.
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -111,9 +103,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const election = await prisma.election.findUnique({
     where: { id: electionId, deleted_at: null },
-    select: { id: true, created_by: true },
+    include: { restrictions: { select: { type: true, value: true } } },
   });
   if (!election) return Errors.notFound('Election not found');
+
+  if (election.restrictions.length === 0) {
+    return Errors.badRequest(
+      'Cannot create a bypass token for an election with no restrictions — all users already have access',
+    );
+  }
 
   const adminGraph = await buildAdminGraph();
   if (!adminCanManageElectionBypass(auth.user.sub, election.created_by, adminGraph)) {
@@ -122,6 +120,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   let body: {
     bypassRestrictions?: string[];
+    maxUsage?: number;
     validUntil?: string;
   };
   try {
@@ -130,7 +129,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const { bypassRestrictions = [], validUntil } = body;
+  const { bypassRestrictions = [], maxUsage, validUntil } = body;
+
+  // Must bypass at least one restriction type
+  if (bypassRestrictions.length === 0) {
+    return Errors.badRequest(
+      'bypassRestrictions must contain at least one restriction type to bypass',
+    );
+  }
+
+  // Validate each type is a known bypassable type
+  for (const rt of bypassRestrictions) {
+    if (
+      !BYPASSABLE_RESTRICTION_TYPES.includes(rt as (typeof BYPASSABLE_RESTRICTION_TYPES)[number])
+    ) {
+      return Errors.badRequest(`Invalid restriction type: ${rt}`);
+    }
+  }
+
+  // Validate each type actually exists on this election
+  const electionRestrictionTypes = new Set(
+    (election.restrictions as ElectionRestriction[]).map((r) => r.type),
+  );
+  for (const rt of bypassRestrictions) {
+    if (!electionRestrictionTypes.has(rt as ElectionRestriction['type'])) {
+      return Errors.badRequest(
+        `Restriction type "${rt}" is not present on this election and cannot be bypassed`,
+      );
+    }
+  }
 
   if (!validUntil) return Errors.badRequest('validUntil is required');
 
@@ -150,11 +177,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.badRequest(`validUntil cannot exceed ${BYPASS_TOKEN_MAX_DAYS} days from now`);
   }
 
-  for (const rt of bypassRestrictions) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!VALID_BYPASS_RESTRICTION_TYPES.includes(rt as any)) {
-      return Errors.badRequest(`Invalid restriction type: ${rt}`);
-    }
+  if (!maxUsage) {
+    return Errors.badRequest('maxUsage must be provided');
+  }
+  if (!maxUsage || !Number.isInteger(maxUsage) || maxUsage < 1) {
+    return Errors.badRequest('maxUsage must be a positive integer');
+  }
+  if (maxUsage > BYPASS_TOKEN_MAX_USAGE_MAX) {
+    return Errors.badRequest(`maxUsage cannot exceed ${BYPASS_TOKEN_MAX_USAGE_MAX}`);
   }
 
   const activeCount = await prisma.bypassToken.count({
@@ -181,7 +211,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       type: 'ELECTION',
       election_id: electionId,
       bypass_not_studying: false,
+      bypass_graduate: false,
       bypass_restrictions: bypassRestrictions,
+      max_usage: maxUsage,
+      current_usage: 0,
       created_by: auth.user.sub,
       valid_until: validUntilDate,
     },
@@ -193,6 +226,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       tokenHash,
       electionId,
       bypassRestrictions,
+      maxUsage: maxUsage ?? null,
+      currentUsage: 0,
       validUntil: validUntilDate.toISOString(),
     },
     { status: 201 },

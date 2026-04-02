@@ -1,4 +1,6 @@
-import type { UserInfo } from '@/types/auth';
+import type { NextResponse } from 'next/server';
+
+import type { KpiIdUserInfo, UserInfo } from '@/types/auth';
 
 export class ResolveUserDataError extends Error {
   constructor(message: string) {
@@ -14,7 +16,7 @@ export class InvalidTicketError extends ResolveUserDataError {
 }
 
 export class InvalidUserDataError extends ResolveUserDataError {
-  constructor(message = 'Invalid user data retireved from KPI ID') {
+  constructor(message = 'Invalid user data retrieved from KPI ID') {
     super(message);
   }
 }
@@ -43,56 +45,42 @@ export class NotStudyingError extends ResolveUserDataError {
   }
 }
 
-export const TICKET_MAP: Record<string, UserInfo> = {
-  'ticket-superadmin-1': {
-    userId: 'superadmin-001',
-    fullName: 'Super Admin User',
-    faculty: 'FICE',
-    group: 'KV-11',
-    speciality: 'Computer Science',
-    studyYear: 4,
-    studyForm: 'FullTime',
-  },
-  'ticket-admin-2': {
-    userId: 'admin-002',
-    fullName: 'Faculty Admin FICE',
-    faculty: 'FICE',
-    group: 'KV-12',
-    speciality: undefined,
-    studyYear: 3,
-    studyForm: 'FullTime',
-  },
+export const TICKET_MAP: Record<string, KpiIdUserInfo> = {
   'ticket-user-1': {
-    userId: 'user-001',
-    fullName: 'Ivan Petrenko',
-    faculty: 'FICE',
-    group: 'KV-91',
-    speciality: 'Computer Science',
-    studyYear: 3,
-    studyForm: 'FullTime',
+    STUDENT_ID: 'user-001',
+    NAME: 'Ivan Petrenko',
+    AUTH_METHOD: 'DIIA',
+    EMPLOYEE_ID: '',
+    TAX_ID: '1234',
+    TRACE_ID: 'some-trace',
+    TIME_STAMP: '0000',
   },
-  'ticket-user-2': {
-    userId: 'user-002',
-    fullName: 'Olena Kovalchuk',
-    faculty: 'FEL',
-    group: 'EL-21',
-    speciality: undefined,
-    studyYear: 2,
-    studyForm: 'FullTime',
-  },
-  'ticket-user-3': {
-    userId: 'user-003',
-    fullName: 'Mykola Savchenko',
-    faculty: 'FMF',
-    group: 'MT-31',
-    speciality: undefined,
-    studyYear: 1,
-    studyForm: 'FullTime',
+  'ticket-grad-1': {
+    STUDENT_ID: 'grad-001',
+    NAME: 'Petro Aspirant',
+    AUTH_METHOD: 'DIIA',
+    EMPLOYEE_ID: '',
+    TAX_ID: '4321',
+    TRACE_ID: 'some-trace-2',
+    TIME_STAMP: '0000',
   },
 };
 
+export const MOCK_USER_INFO: UserInfo = {
+  userId: 'user-001',
+  fullName: 'Ivan Petrenko',
+  faculty: 'FICE',
+  group: 'KV-91',
+  speciality: '121',
+  studyYear: 3,
+  studyForm: 'FullTime',
+};
+
 export const kpiIdMock = {
-  resolveTicket: jest.fn<Promise<UserInfo>, [string]>(),
+  resolveTicket: jest.fn<Promise<KpiIdUserInfo>, [string]>(),
+  resolveUserData: jest.fn(),
+  getCampusUserData: jest.fn<Promise<NextResponse | UserInfo>, [KpiIdUserInfo]>(),
+  resolveFacultyShortName: jest.fn(),
   ResolveUserDataError,
   InvalidTicketError,
   InvalidUserDataError,
@@ -105,10 +93,11 @@ export const kpiIdMock = {
 export function resetKpiIdMock(): void {
   kpiIdMock.resolveTicket.mockReset().mockImplementation(async (ticketId: string) => {
     const userInfo = TICKET_MAP[ticketId];
-    if (userInfo) {
-      return userInfo;
-    }
-
+    if (userInfo) return userInfo;
     throw new InvalidTicketError();
+  });
+
+  kpiIdMock.getCampusUserData.mockReset().mockImplementation(async () => {
+    return MOCK_USER_INFO;
   });
 }

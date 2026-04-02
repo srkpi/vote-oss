@@ -1,16 +1,3 @@
-/**
- * Bypass token business logic.
- *
- * Cache structure
- * ───────────────
- * Key:   `cache:bypass:user:{userId}`
- * Value: serialised UserBypassInfo
- * TTL:   CACHE_TTL_BYPASS_SECS (5 min)
- *
- * The cache is invalidated whenever a bypass usage for the user is created
- * or revoked. Expiry is enforced at read-time by checking `validUntil`.
- */
-
 import { CACHE_TTL_BYPASS_SECS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { redis, safeRedis } from '@/lib/redis';
@@ -19,10 +6,6 @@ import type { ElectionBypassInfo, GlobalBypassInfo, UserBypassInfo } from '@/typ
 function bypassCacheKey(userId: string): string {
   return `cache:bypass:user:${userId}`;
 }
-
-// ---------------------------------------------------------------------------
-// Cache helpers
-// ---------------------------------------------------------------------------
 
 async function getCachedBypass(userId: string): Promise<UserBypassInfo | null> {
   const raw = await safeRedis(() => redis.get(bypassCacheKey(userId)));
@@ -44,18 +27,9 @@ export async function invalidateUserBypassCache(userId: string): Promise<void> {
   await safeRedis(() => redis.del(bypassCacheKey(userId)));
 }
 
-// ---------------------------------------------------------------------------
-// Core lookup
-// ---------------------------------------------------------------------------
-
-/**
- * Return all active (non-revoked, non-expired) bypass info for a user.
- * Results are served from Redis when cached.
- */
 export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo> {
   const cached = await getCachedBypass(userId);
   if (cached) {
-    // Prune expired entries so the caller doesn't act on stale data
     const now = Date.now();
     const global = cached.global && cached.global.validUntil > now ? cached.global : null;
     const elections: Record<string, ElectionBypassInfo> = {};
@@ -67,7 +41,6 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
 
   const now = new Date();
 
-  // Fetch all active usages for this user in a single query
   const usages = await prisma.bypassTokenUsage.findMany({
     where: {
       user_id: userId,
@@ -80,6 +53,7 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
           type: true,
           election_id: true,
           bypass_not_studying: true,
+          bypass_graduate: true,
           bypass_restrictions: true,
           valid_until: true,
         },
@@ -95,15 +69,19 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
     const validUntil = token.valid_until.getTime();
 
     if (token.type === 'GLOBAL') {
-      // Last-write-wins if multiple (shouldn't happen in practice)
       global = {
         bypassNotStudying: token.bypass_not_studying,
+        bypassGraduate: token.bypass_graduate,
         validUntil,
       };
     } else if (token.type === 'ELECTION' && token.election_id) {
       // Multiple election bypasses: merge bypassedTypes (union)
       const existing = elections[token.election_id];
       const newTypes = token.bypass_restrictions as string[];
+
+      // Empty array means bypass nothing — skip this token if no types specified
+      if (newTypes.length === 0) continue;
+
       if (!existing) {
         elections[token.election_id] = {
           electionId: token.election_id,
@@ -111,14 +89,9 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
           validUntil,
         };
       } else {
-        // Union of bypassed types; empty array means "all" → keep it all
-        const merged =
-          existing.bypassedTypes.length === 0 || newTypes.length === 0
-            ? []
-            : [...new Set([...existing.bypassedTypes, ...newTypes])];
         elections[token.election_id] = {
           electionId: token.election_id,
-          bypassedTypes: merged,
+          bypassedTypes: [...new Set([...existing.bypassedTypes, ...newTypes])],
           validUntil: Math.max(existing.validUntil, validUntil),
         };
       }
@@ -143,6 +116,7 @@ export async function getElectionBypassForUser(
   const entry = info.elections[electionId];
   if (!entry) return null;
   if (entry.validUntil < Date.now()) return null;
+  if (entry.bypassedTypes.length === 0) return null;
   return entry.bypassedTypes;
 }
 
@@ -157,7 +131,9 @@ export async function getAllElectionBypassesForUser(
   const now = Date.now();
   const result: Record<string, string[]> = {};
   for (const [electionId, entry] of Object.entries(info.elections)) {
-    if (entry.validUntil >= now) result[electionId] = entry.bypassedTypes;
+    if (entry.validUntil >= now && entry.bypassedTypes.length > 0) {
+      result[electionId] = entry.bypassedTypes;
+    }
   }
   return result;
 }
@@ -194,18 +170,29 @@ export async function applyBypassToken(
   if (!token) throw new BypassTokenError('Invalid bypass token', 404);
   if (token.valid_until < new Date()) throw new BypassTokenError('Bypass token has expired', 400);
 
-  // Upsert usage (idempotent)
+  // Check max usage limit
+  if (token.max_usage !== null && token.current_usage >= token.max_usage) {
+    throw new BypassTokenError('Bypass token has reached its usage limit', 400);
+  }
+
   const existing = await prisma.bypassTokenUsage.findUnique({
     where: { token_hash_user_id: { token_hash: tokenHash, user_id: userId } },
   });
 
   if (existing) {
     if (existing.revoked_at) throw new BypassTokenError('Your bypass access has been revoked', 400);
-    // Already applied — just return success
+    // Already applied idempotently — no increment
   } else {
-    await prisma.bypassTokenUsage.create({
-      data: { token_hash: tokenHash, user_id: userId },
-    });
+    // New usage: create record + increment current_usage atomically
+    await prisma.$transaction([
+      prisma.bypassTokenUsage.create({
+        data: { token_hash: tokenHash, user_id: userId },
+      }),
+      prisma.bypassToken.update({
+        where: { token_hash: tokenHash },
+        data: { current_usage: { increment: 1 } },
+      }),
+    ]);
   }
 
   await invalidateUserBypassCache(userId);

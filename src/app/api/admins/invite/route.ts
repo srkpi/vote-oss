@@ -2,12 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
-import {
-  getCachedAdmins,
-  getCachedInviteTokens,
-  invalidateInviteTokens,
-  setCachedInviteTokens,
-} from '@/lib/cache';
+import { getCachedInviteTokens, invalidateInviteTokens, setCachedInviteTokens } from '@/lib/cache';
 import {
   INVITE_TOKEN_LENGTH,
   INVITE_TOKEN_MAX_COUNT,
@@ -15,8 +10,8 @@ import {
 } from '@/lib/constants';
 import { generateBase64Token, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
+import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
-import { isAncestorInGraph } from '@/lib/utils';
 
 /**
  * @swagger
@@ -57,19 +52,7 @@ export async function GET(req: NextRequest) {
     return Errors.forbidden('You do not have permission to view invite tokens');
   }
 
-  const cachedAdmins = await getCachedAdmins();
-  const graph: Map<string, string | null> = cachedAdmins
-    ? new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]))
-    : new Map(
-        (
-          await prisma.admin.findMany({
-            where: { deleted_at: null },
-            select: { user_id: true, promoted_by: true },
-          })
-        ).map((n) => [n.user_id, n.promoted_by]),
-      );
-
-  // Resolve token list from cache or DB
+  const graph = await buildAdminGraph();
   let allTokens = await getCachedInviteTokens();
 
   if (!allTokens) {

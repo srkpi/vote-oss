@@ -1,5 +1,5 @@
+import { isAncestorInGraph } from '@/lib/graph';
 import { calculateCourse, parseGroupLevel, parseGroupYearEnteredDigit } from '@/lib/group-utils';
-import { isAncestorInGraph } from '@/lib/utils';
 import type { ElectionRestriction } from '@/types/election';
 
 interface UserContext {
@@ -18,14 +18,6 @@ export function checkRestrictions(restrictions: ElectionRestriction[], user: Use
   return checkRestrictionsWithBypass(restrictions, user, null);
 }
 
-/**
- * Like `checkRestrictions` but honours an optional bypass.
- *
- * @param bypassedTypes
- *   - `null`  → no bypass, full check applies
- *   - `[]`    → bypass ALL restriction types (return true immediately)
- *   - `[...]` → skip only the listed restriction types
- */
 export function checkRestrictionsWithBypass(
   restrictions: ElectionRestriction[],
   user: UserContext,
@@ -33,11 +25,7 @@ export function checkRestrictionsWithBypass(
 ): boolean {
   if (restrictions.length === 0) return true;
 
-  // Empty array bypass = skip all restrictions
-  if (bypassedTypes !== null && bypassedTypes.length === 0) return true;
-
-  const bypassSet = bypassedTypes ? new Set(bypassedTypes) : null;
-
+  const bypassSet = bypassedTypes && bypassedTypes.length > 0 ? new Set(bypassedTypes) : null;
   const byType = new Map<string, string[]>();
   for (const r of restrictions) {
     if (bypassSet?.has(r.type)) continue;

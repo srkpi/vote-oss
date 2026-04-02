@@ -1,7 +1,12 @@
+import type { NextResponse } from 'next/server';
+
+import { getUserBypassInfo } from '@/lib/bypass';
 import { fetchFacultyGroups } from '@/lib/campus-api';
 import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
 import { CAMPUS_API_URL, CAMPUS_INTEGRATION_API_KEY, KPI_APP_SECRET } from '@/lib/config/server';
+import { Errors } from '@/lib/errors';
 import { parseGroupLevel } from '@/lib/group-utils';
+import type { ApiError } from '@/types/api';
 import type { CampusUserInfo, KpiIdUserInfo, UserInfo } from '@/types/auth';
 
 export class ResolveUserDataError extends Error {
@@ -126,54 +131,7 @@ export function resolveFacultyShortName(
   });
 }
 
-interface ResolveOptions {
-  skipStudyingCheck?: boolean;
-}
-
-export async function resolveUserData(
-  data: KpiIdUserInfo,
-  options: ResolveOptions = {},
-): Promise<UserInfo> {
-  if (!data.STUDENT_ID && !data.EMPLOYEE_ID) throw new InvalidUserDataError();
-  if (data.AUTH_METHOD !== 'DIIA') throw new NotDiiaAuthError();
-  if (!data.STUDENT_ID && data.EMPLOYEE_ID) throw new NotStudentError();
-  if (!data.STUDENT_ID || !data.NAME) throw new InvalidUserDataError();
-
-  const res = await fetch(`${CAMPUS_API_URL}/api/integration/voteoss/students/${data.STUDENT_ID}`, {
-    headers: {
-      Accept: 'application/json',
-      'X-Api-Key': CAMPUS_INTEGRATION_API_KEY,
-    },
-  });
-  if (!res.ok) throw new InvalidUserDataError();
-
-  const campusData = (await res.json()) as CampusUserInfo | undefined;
-  if (!campusData) throw new InvalidTicketError();
-
-  if (!options.skipStudyingCheck && campusData.status !== 'Studying') throw new NotStudyingError();
-
-  const group = campusData.groupName;
-  if (parseGroupLevel(group) === 'g') throw new GraduateUserError();
-
-  const fullFaculty = campusData.faculty;
-  const facultyGroups = await fetchFacultyGroups();
-  const faculty = resolveFacultyShortName(fullFaculty, group, facultyGroups);
-
-  return {
-    userId: data.STUDENT_ID,
-    fullName: data.NAME,
-    faculty,
-    group,
-    speciality: campusData.speciality,
-    studyYear: campusData.studyYear,
-    studyForm: campusData.studyForm,
-  };
-}
-
-export async function resolveTicket(
-  ticketId: string,
-  options: ResolveOptions = {},
-): Promise<UserInfo> {
+export async function resolveTicket(ticketId: string): Promise<KpiIdUserInfo> {
   if (!ticketId) throw new InvalidTicketError();
 
   const url = new URL(`${KPI_AUTH_URL}/api/ticket`);
@@ -185,7 +143,99 @@ export async function resolveTicket(
   if (!res.ok) throw new InvalidTicketError();
 
   const body = (await res.json()) as { data?: KpiIdUserInfo };
-  if (!body?.data) throw new InvalidTicketError();
+  const data = body.data;
 
-  return await resolveUserData(body.data, options);
+  if (!data) throw new InvalidTicketError();
+  if (!data.STUDENT_ID && !data.EMPLOYEE_ID) throw new InvalidUserDataError();
+  if (data.AUTH_METHOD !== 'DIIA') throw new NotDiiaAuthError();
+  if (!data.STUDENT_ID && data.EMPLOYEE_ID) throw new NotStudentError();
+  if (!data.STUDENT_ID || !data.NAME) throw new InvalidUserDataError();
+
+  return data;
+}
+
+export async function resolveUserData(
+  data: KpiIdUserInfo,
+): Promise<{ data?: UserInfo; errors: ResolveUserDataError[] }> {
+  const res = await fetch(`${CAMPUS_API_URL}/api/integration/voteoss/students/${data.STUDENT_ID}`, {
+    headers: {
+      Accept: 'application/json',
+      'X-Api-Key': CAMPUS_INTEGRATION_API_KEY,
+    },
+  });
+  if (!res.ok) {
+    return { errors: [new InvalidUserDataError()] };
+  }
+
+  const campusData = (await res.json()) as CampusUserInfo | undefined;
+  if (!campusData) {
+    return { errors: [new InvalidUserDataError()] };
+  }
+
+  const errors = [];
+  if (campusData.status !== 'Studying') {
+    errors.push(new NotStudyingError());
+  }
+
+  const group = campusData.groupName;
+  if (parseGroupLevel(group) === 'g') {
+    errors.push(new GraduateUserError());
+  }
+
+  const fullFaculty = campusData.faculty;
+  const facultyGroups = await fetchFacultyGroups();
+  const faculty = resolveFacultyShortName(fullFaculty, group, facultyGroups);
+
+  return {
+    data: {
+      userId: data.STUDENT_ID,
+      fullName: data.NAME,
+      faculty,
+      group,
+      speciality: campusData.speciality,
+      studyYear: campusData.studyYear,
+      studyForm: campusData.studyForm,
+    },
+    errors,
+  };
+}
+
+export async function getCampusUserData(
+  kpiIdInfo: KpiIdUserInfo,
+): Promise<NextResponse<ApiError> | UserInfo> {
+  const { data: userInfo, errors } = await resolveUserData(kpiIdInfo);
+
+  if (errors.length) {
+    const hasInvalidTicketOrUserData = errors.some(
+      (err) => err instanceof InvalidTicketError || err instanceof InvalidUserDataError,
+    );
+
+    if (hasInvalidTicketOrUserData) {
+      const err = errors.find(
+        (e) => e instanceof InvalidTicketError || e instanceof InvalidUserDataError,
+      )!;
+      return Errors.unauthorized(err.message);
+    }
+
+    const bypassInfo = await getUserBypassInfo(kpiIdInfo.STUDENT_ID);
+
+    const notStudyingError = errors.find((err) => err instanceof NotStudyingError);
+    if (notStudyingError && !bypassInfo.global?.bypassNotStudying) {
+      return Errors.forbidden(notStudyingError.message);
+    }
+
+    const graduateError = errors.find((err) => err instanceof GraduateUserError);
+    if (graduateError && !bypassInfo.global?.bypassGraduate) {
+      return Errors.forbidden(graduateError.message);
+    }
+
+    if (userInfo) return userInfo;
+
+    console.error('[auth/shared] resolveTicket errors:', errors);
+    return Errors.internal('Failed to contact auth provider');
+  }
+
+  if (!userInfo) return Errors.internal('Failed to resolve user info');
+
+  return userInfo;
 }

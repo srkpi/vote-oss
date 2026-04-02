@@ -250,3 +250,58 @@ export function makeVoteBallot(
   const encryptedBallot = encryptBallot(election.public_key, ids, election.max_choices);
   return { token, signature, nullifier, encryptedBallot };
 }
+
+export const MOCK_BYPASS_TOKEN_HASH = 'aabbccdd'.repeat(8);
+
+export function makeGlobalBypassToken(
+  overrides: Partial<{
+    token_hash: string;
+    bypass_not_studying: boolean;
+    bypass_graduate: boolean;
+    max_usage: number | null;
+    current_usage: number;
+    valid_until: Date;
+    created_by: string;
+  }> = {},
+) {
+  return {
+    token_hash: MOCK_BYPASS_TOKEN_HASH,
+    type: 'GLOBAL' as const,
+    election_id: null,
+    bypass_not_studying: true,
+    bypass_graduate: false,
+    bypass_restrictions: [] as string[],
+    max_usage: null as number | null,
+    current_usage: 0,
+    valid_until: new Date(Date.now() + 86_400_000),
+    created_at: new Date(),
+    created_by: 'superadmin-001',
+    ...overrides,
+  };
+}
+
+export function makeElectionBypassToken(
+  electionId: string,
+  bypassRestrictions: string[] = ['FACULTY'],
+  overrides: Partial<{
+    token_hash: string;
+    max_usage: number | null;
+    current_usage: number;
+    valid_until: Date;
+  }> = {},
+) {
+  return {
+    token_hash: MOCK_BYPASS_TOKEN_HASH,
+    type: 'ELECTION' as const,
+    election_id: electionId,
+    bypass_not_studying: false,
+    bypass_graduate: false,
+    bypass_restrictions: bypassRestrictions,
+    max_usage: null as number | null,
+    current_usage: 0,
+    valid_until: new Date(Date.now() + 86_400_000),
+    created_at: new Date(),
+    created_by: 'superadmin-001',
+    ...overrides,
+  };
+}

@@ -1,5 +1,3 @@
-// src/lib/constants.ts  (full replacement – all existing constants preserved)
-
 // Election limits
 export const ELECTION_TITLE_MAX_LENGTH = 255;
 export const ELECTION_CHOICES_MIN = 2;
@@ -20,6 +18,7 @@ export const BYPASS_TOKEN_LENGTH = 24;
 export const BYPASS_TOKEN_MIN_HOURS = 1;
 export const BYPASS_TOKEN_MAX_DAYS = 30;
 export const BYPASS_TOKEN_MAX_COUNT = 100;
+export const BYPASS_TOKEN_MAX_USAGE_MAX = 100;
 
 /** Maximum days a session stays valid without a fresh Diia re-authentication */
 export const SESSION_INITIAL_AUTH_MAX_DAYS = 30;

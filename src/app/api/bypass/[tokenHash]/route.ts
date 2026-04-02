@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { invalidateUserBypassCache } from '@/lib/bypass';
 import { Errors } from '@/lib/errors';
+import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -36,7 +37,13 @@ export async function DELETE(
     if (token.type === 'GLOBAL' && auth.admin.restricted_to_faculty) {
       return Errors.forbidden('Only unrestricted admins can delete global bypass tokens');
     }
-    // TODO: Additional hierarchy check could be done here; keeping simple for now
+
+    const adminGraph = await buildAdminGraph();
+    if (!isAncestorInGraph(adminGraph, auth.user.sub, token.created_by)) {
+      return Errors.forbidden(
+        'You can only delete bypass tokens in your own branch of the hierarchy',
+      );
+    }
   }
 
   // Collect affected user IDs before deletion for cache invalidation

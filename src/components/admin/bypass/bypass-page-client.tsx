@@ -103,15 +103,21 @@ function BypassTokenCard({
       <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-body text-foreground text-sm font-semibold">
-              {token.bypassNotStudying ? 'Обхід статусу навчання' : 'Токен доступу'}
-            </span>
+            <span>Обхід доступу</span>
             {token.bypassNotStudying && (
               <span className="bg-warning-bg text-warning rounded-full px-2 py-0.5 text-[10px] font-semibold">
                 Статус навчання
               </span>
             )}
+            {token.bypassGraduate && (
+              <span className="bg-warning-bg text-warning rounded-full px-2 py-0.5 text-[10px] font-semibold">
+                Аспірант
+              </span>
+            )}
           </div>
+          <p className="font-body text-muted-foreground text-xs">
+            Використань: {token.currentUsage} / {token.maxUsage}
+          </p>
           <p className="font-body text-muted-foreground text-xs">
             Дійсний до: {new Date(token.validUntil).toLocaleString('uk-UA')}
           </p>
@@ -206,14 +212,18 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
     .toISOString()
     .slice(0, 16);
   const [validUntil, setValidUntil] = useState(tomorrow);
-  const [bypassNotStudying, setBypassNotStudying] = useState(true);
+  const [bypassNotStudying, setBypassNotStudying] = useState(false);
+  const [bypassGraduate, setBypassGraduate] = useState(false);
+  const canCreate = bypassNotStudying || bypassGraduate;
 
   const handleCreate = async () => {
+    if (!canCreate) return;
     setCreating(true);
     setCreateError(null);
 
     const result = await api.bypass.createGlobal({
       bypassNotStudying,
+      bypassGraduate,
       validUntil: new Date(validUntil).toISOString(),
     });
 
@@ -265,7 +275,8 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
     setCreateOpen(false);
     setNewToken(null);
     setCreateError(null);
-    setBypassNotStudying(true);
+    setBypassNotStudying(false);
+    setBypassGraduate(false);
     setValidUntil(tomorrow);
     router.refresh();
   };
@@ -341,10 +352,21 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
 
                 <ToggleField
                   label="Обхід статусу навчання"
-                  description="Дозволяє студенту увійти навіть якщо статус навчання в кампусі відрахований"
+                  description='Дозволяє студенту увійти навіть якщо статус навчання в кампусі "Відрахований"'
                   checked={bypassNotStudying}
                   onChange={setBypassNotStudying}
                 />
+
+                <ToggleField
+                  label="Обхід перевірки рівня навчання"
+                  description="Дозволяє аспіранту увійти на платформу"
+                  checked={bypassGraduate}
+                  onChange={setBypassGraduate}
+                />
+
+                {!canCreate && (
+                  <p className="text-error font-body text-sm">Оберіть хоча б один варіант обходу</p>
+                )}
 
                 <FormField label="Дійсний до" required htmlFor="bypass-valid-until">
                   <Input
@@ -367,7 +389,12 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
                 <Button variant="secondary" onClick={handleDialogClose} disabled={creating}>
                   Скасувати
                 </Button>
-                <Button variant="accent" onClick={handleCreate} loading={creating}>
+                <Button
+                  variant="accent"
+                  onClick={handleCreate}
+                  loading={creating}
+                  disabled={!canCreate}
+                >
                   Створити токен
                 </Button>
               </>

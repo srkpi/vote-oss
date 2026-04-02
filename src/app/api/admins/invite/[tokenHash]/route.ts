@@ -2,10 +2,10 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
-import { getCachedAdmins, invalidateInviteTokens } from '@/lib/cache';
+import { invalidateInviteTokens } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
+import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
-import { isAncestorInGraph } from '@/lib/utils';
 
 /**
  * @swagger
@@ -66,18 +66,7 @@ export async function DELETE(
 
   // Owner may always delete their own token without a graph query
   if (token.created_by !== user.sub) {
-    const cachedAdmins = await getCachedAdmins();
-    const graph: Map<string, string | null> = cachedAdmins
-      ? new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]))
-      : new Map(
-          (
-            await prisma.admin.findMany({
-              where: { deleted_at: null },
-              select: { user_id: true, promoted_by: true },
-            })
-          ).map((n) => [n.user_id, n.promoted_by]),
-        );
-
+    const graph = await buildAdminGraph();
     if (!isAncestorInGraph(graph, user.sub, token.created_by)) {
       return Errors.forbidden(
         'You can only delete invite tokens created by admins in your hierarchy',

@@ -358,8 +358,8 @@ export function ElectionBypassPanel({
                       })}
                     </div>
                     {bypassRestrictions.length === 0 && (
-                      <p className="font-body text-muted-foreground mt-1.5 text-xs">
-                        Нічого не обрано = обійти всі обмеження
+                      <p className="text-error font-body mt-1.5 text-xs">
+                        Оберіть хоча б один тип обмеження для обходу
                       </p>
                     )}
                   </div>
@@ -386,7 +386,12 @@ export function ElectionBypassPanel({
                 <Button variant="secondary" onClick={handleDialogClose} disabled={creating}>
                   Скасувати
                 </Button>
-                <Button variant="accent" onClick={handleCreate} loading={creating}>
+                <Button
+                  variant="accent"
+                  onClick={handleCreate}
+                  loading={creating}
+                  disabled={!bypassRestrictions.length}
+                >
                   Видати токен
                 </Button>
               </>

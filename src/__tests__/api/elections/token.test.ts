@@ -20,6 +20,9 @@ jest.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
+jest.mock('@/lib/bypass', () => ({
+  getElectionBypassForUser: jest.fn().mockResolvedValue(null),
+}));
 
 import { POST } from '@/app/api/elections/[id]/token/route';
 

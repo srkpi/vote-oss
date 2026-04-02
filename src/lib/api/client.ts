@@ -116,7 +116,11 @@ export function createApiClient(fetcher: Fetcher) {
           body: JSON.stringify({ token }),
         }),
       listGlobal: () => fetcher<BypassToken[]>('/bypass'),
-      createGlobal: (data: { bypassNotStudying?: boolean; validUntil: string }) =>
+      createGlobal: (data: {
+        bypassNotStudying?: boolean;
+        bypassGraduate?: boolean;
+        validUntil: string;
+      }) =>
         fetcher<{
           token: string;
           tokenHash: string;
