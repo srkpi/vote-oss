@@ -17,18 +17,14 @@ import {
 import { FormField, Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import {
-  BYPASS_TOKEN_MAX_DAYS,
-  BYPASS_TOKEN_MIN_HOURS,
-  RESTRICTION_TYPE_LABELS,
-} from '@/lib/constants';
+import { BYPASS_TOKEN_MAX_USAGE_MAX, RESTRICTION_TYPE_LABELS } from '@/lib/constants';
 import { pluralize } from '@/lib/utils';
-import type { BypassToken } from '@/types/bypass';
+import type { ElectionBypassToken } from '@/types/bypass';
 import type { ElectionRestriction } from '@/types/election';
 
 interface ElectionBypassPanelProps {
   electionId: string;
-  initialTokens: BypassToken[];
+  initialTokens: ElectionBypassToken[];
   restrictions: ElectionRestriction[];
 }
 
@@ -93,12 +89,14 @@ function BypassTokenItem({
   onDelete,
   onRevokeUsage,
 }: {
-  token: BypassToken;
+  token: ElectionBypassToken;
   onDelete: () => void;
   onRevokeUsage: (userId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const activeUsagesCount = token.usages.filter((u) => !u.revokedAt).length;
+  const revokedUsagesCount = token.usages.filter((u) => u.revokedAt).length;
+  const hasUsages = token.usages.length > 0;
 
   const bypassLabel =
     token.bypassRestrictions.length === 0
@@ -111,16 +109,19 @@ function BypassTokenItem({
         <div className="min-w-0 flex-1">
           <p className="font-body text-foreground text-sm font-medium">Обходить: {bypassLabel}</p>
           <p className="font-body text-muted-foreground text-xs">
-            До {new Date(token.validUntil).toLocaleString('uk-UA')} · {token.creator.fullName}
-            {token.usages.filter((u) => !u.revokedAt).length > 0 && (
+            {token.creator.fullName} · {token.currentUsage} / {token.maxUsage} використань
+            {activeUsagesCount > 0 && (
               <span className="text-success ml-2">
                 {pluralize(activeUsagesCount, ['активний', 'активні', 'активних'])}
               </span>
             )}
+            {revokedUsagesCount > 0 && (
+              <span className="text-error ml-2">{revokedUsagesCount} відкликано</span>
+            )}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {token.usages.length > 0 && (
+          {hasUsages && (
             <Button
               variant="ghost"
               size="xs"
@@ -134,18 +135,20 @@ function BypassTokenItem({
               )}
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={onDelete}
-            className="text-error hover:bg-error-bg"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {token.canDelete && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onDelete}
+              className="text-error hover:bg-error-bg"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
-      {expanded && token.usages.length > 0 && (
+      {expanded && hasUsages && (
         <div className="border-border-subtle bg-surface border-t px-3 py-3 sm:px-4">
           <div className="space-y-2">
             {token.usages.map((usage) => (
@@ -156,17 +159,18 @@ function BypassTokenItem({
                     {new Date(usage.usedAt).toLocaleString('uk-UA')}
                     {usage.revokedAt && (
                       <span className="text-error ml-1">
-                        Відкликано {new Date(usage.revokedAt).toLocaleString('uk-UA')}
+                        · Відкликано {new Date(usage.revokedAt).toLocaleString('uk-UA')}
                       </span>
                     )}
                   </p>
                 </div>
-                {!usage.revokedAt && (
+                {!usage.revokedAt && token.canRevokeUsages && (
                   <Button
                     variant="ghost"
                     size="xs"
                     onClick={() => onRevokeUsage(usage.userId)}
                     className="text-error hover:bg-error-bg"
+                    title="Відкликати доступ"
                   >
                     <UserX className="h-3.5 w-3.5" />
                   </Button>
@@ -186,25 +190,16 @@ export function ElectionBypassPanel({
   restrictions,
 }: ElectionBypassPanelProps) {
   const { toast } = useToast();
-  const [tokens, setTokens] = useState<BypassToken[]>(initialTokens);
+  const [tokens, setTokens] = useState<ElectionBypassToken[]>(initialTokens);
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [newToken, setNewToken] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<BypassToken | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ElectionBypassToken | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Form
-  const now = new Date();
-  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
-  const minDate = new Date(now.getTime() + BYPASS_TOKEN_MIN_HOURS * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
-  const maxDate = new Date(now.getTime() + BYPASS_TOKEN_MAX_DAYS * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
-  const [validUntil, setValidUntil] = useState(tomorrow);
   const [bypassRestrictions, setBypassRestrictions] = useState<string[]>([]);
+  const [maxUsage, setMaxUsage] = useState(1);
 
   // Only show restriction types that actually exist on this election
   const presentTypes = [...new Set(restrictions.map((r) => r.type))].filter((t) =>
@@ -223,12 +218,12 @@ export function ElectionBypassPanel({
 
     const result = await api.elections.bypass.create(electionId, {
       bypassRestrictions,
-      validUntil: new Date(validUntil).toISOString(),
+      maxUsage,
     });
 
     if (result.success) {
       setNewToken(result.data.token);
-      // Reload tokens
+      // Refresh token list
       const listResult = await api.elections.bypass.list(electionId);
       if (listResult.success) setTokens(listResult.data);
     } else {
@@ -277,7 +272,7 @@ export function ElectionBypassPanel({
     setNewToken(null);
     setCreateError(null);
     setBypassRestrictions([]);
-    setValidUntil(tomorrow);
+    setMaxUsage(1);
   };
 
   return (
@@ -296,7 +291,7 @@ export function ElectionBypassPanel({
       <div className="p-4 sm:p-5">
         {tokens.length === 0 ? (
           <p className="font-body text-muted-foreground text-sm">
-            Немає активних токенів для цього голосування
+            Немає токенів для цього голосування
           </p>
         ) : (
           <div className="space-y-2">
@@ -329,8 +324,8 @@ export function ElectionBypassPanel({
             {!newToken ? (
               <>
                 <Alert variant="info">
-                  Токен дозволяє студенту проголосувати навіть якщо він не відповідає обмеженням
-                  голосування (наприклад, дані кампусу застарілі).
+                  Токен дозволяє студенту проголосувати навіть якщо він не відповідає обмеженням.
+                  Дійсний до закриття голосування.
                 </Alert>
 
                 {presentTypes.length > 0 && (
@@ -365,14 +360,18 @@ export function ElectionBypassPanel({
                   </div>
                 )}
 
-                <FormField label="Дійсний до" required htmlFor="election-bypass-valid-until">
+                <FormField
+                  label="Максимальна кількість використань"
+                  required
+                  htmlFor="election-bypass-max-usage"
+                >
                   <Input
-                    id="election-bypass-valid-until"
-                    type="datetime-local"
-                    value={validUntil}
-                    min={minDate}
-                    max={maxDate}
-                    onChange={(e) => setValidUntil(e.target.value)}
+                    id="election-bypass-max-usage"
+                    type="number"
+                    min={1}
+                    max={BYPASS_TOKEN_MAX_USAGE_MAX}
+                    value={maxUsage}
+                    onChange={(e) => setMaxUsage(Math.max(1, parseInt(e.target.value) || 1))}
                   />
                 </FormField>
               </>

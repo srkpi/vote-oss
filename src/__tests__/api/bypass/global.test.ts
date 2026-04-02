@@ -17,6 +17,11 @@ import { BYPASS_TOKEN_MAX_USAGE_MAX } from '@/lib/constants';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
+// Cache mock for buildAdminGraph in GET route
+jest.mock('@/lib/cache', () => ({
+  getCachedAdmins: jest.fn().mockResolvedValue(null),
+  getCachedElections: jest.fn().mockResolvedValue(null),
+}));
 
 import { GET, POST } from '@/app/api/bypass/route';
 
@@ -59,18 +64,20 @@ describe('GET /api/bypass', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 200 with token list including new fields', async () => {
+  it('returns 200 with token list including canDelete and canRevokeUsages', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
     const token = makeGlobalBypassToken({ bypass_graduate: true, max_usage: 5, current_usage: 2 });
-    prismaMock.bypassToken.findMany.mockResolvedValueOnce([
+    prismaMock.globalBypassToken.findMany.mockResolvedValueOnce([
       {
         ...token,
         creator: { user_id: 'superadmin-001', full_name: 'Super Admin User' },
         usages: [],
       },
     ]);
+    // buildAdminGraph: admin.findMany returns empty (no hierarchy needed for owner check)
+    prismaMock.admin.findMany.mockResolvedValueOnce([]);
 
     const req = makeAuthRequest(access.token, { method: 'GET' });
     const { status, body } = await parseJson<any[]>(await GET(req));
@@ -79,6 +86,8 @@ describe('GET /api/bypass', () => {
     expect(body[0].bypassGraduate).toBe(true);
     expect(body[0].maxUsage).toBe(5);
     expect(body[0].currentUsage).toBe(2);
+    expect(body[0].canDelete).toBe(true);
+    expect(body[0].canRevokeUsages).toBe(true);
   });
 });
 
@@ -109,6 +118,7 @@ describe('POST /api/bypass', () => {
   it('returns 403 for restricted admin', async () => {
     const req = await restrictedAdminReq({
       bypassNotStudying: true,
+      maxUsage: 1,
       validUntil: FUTURE_VALID_UNTIL,
     });
     const res = await POST(req);
@@ -118,7 +128,7 @@ describe('POST /api/bypass', () => {
   // ── Bypass option validation ──────────────────────────────────────────────
 
   it('returns 400 when neither bypassNotStudying nor bypassGraduate is set', async () => {
-    const req = await adminReq({ validUntil: FUTURE_VALID_UNTIL, maxUsage: 1 });
+    const req = await adminReq({ maxUsage: 1, validUntil: FUTURE_VALID_UNTIL });
     const { status, body } = await parseJson<any>(await POST(req));
     expect(status).toBe(400);
     expect(body.message).toMatch(/at least one bypass option/i);
@@ -128,8 +138,8 @@ describe('POST /api/bypass', () => {
     const req = await adminReq({
       bypassNotStudying: false,
       bypassGraduate: false,
-      validUntil: FUTURE_VALID_UNTIL,
       maxUsage: 1,
+      validUntil: FUTURE_VALID_UNTIL,
     });
     const { status } = await parseJson<any>(await POST(req));
     expect(status).toBe(400);
@@ -138,8 +148,8 @@ describe('POST /api/bypass', () => {
   it('accepts bypassNotStudying: true only', async () => {
     const req = await adminReq({
       bypassNotStudying: true,
-      validUntil: FUTURE_VALID_UNTIL,
       maxUsage: 1,
+      validUntil: FUTURE_VALID_UNTIL,
     });
     const { status } = await parseJson<any>(await POST(req));
     expect(status).toBe(201);
@@ -148,8 +158,8 @@ describe('POST /api/bypass', () => {
   it('accepts bypassGraduate: true only', async () => {
     const req = await adminReq({
       bypassGraduate: true,
-      validUntil: FUTURE_VALID_UNTIL,
       maxUsage: 1,
+      validUntil: FUTURE_VALID_UNTIL,
     });
     const { status } = await parseJson<any>(await POST(req));
     expect(status).toBe(201);
@@ -159,8 +169,8 @@ describe('POST /api/bypass', () => {
     const req = await adminReq({
       bypassNotStudying: true,
       bypassGraduate: true,
-      validUntil: FUTURE_VALID_UNTIL,
       maxUsage: 1,
+      validUntil: FUTURE_VALID_UNTIL,
     });
     const { status, body } = await parseJson<any>(await POST(req));
     expect(status).toBe(201);
@@ -170,14 +180,14 @@ describe('POST /api/bypass', () => {
 
   // ── maxUsage validation ────────────────────────────────────────────────────
 
-  it('returns 400 when both maxUsage not provided', async () => {
+  it('returns 400 when maxUsage not provided', async () => {
     const req = await adminReq({
       bypassNotStudying: true,
       validUntil: FUTURE_VALID_UNTIL,
     });
     const { status, body } = await parseJson<any>(await POST(req));
     expect(status).toBe(400);
-    expect(body.message).toMatch(new RegExp('maxUsage'));
+    expect(body.message).toMatch(/maxUsage/);
   });
 
   it('returns 400 when maxUsage exceeds BYPASS_TOKEN_MAX_USAGE_MAX', async () => {
@@ -227,11 +237,11 @@ describe('POST /api/bypass', () => {
   it('stores bypass_graduate in the database', async () => {
     const req = await adminReq({
       bypassGraduate: true,
-      validUntil: FUTURE_VALID_UNTIL,
       maxUsage: 1,
+      validUntil: FUTURE_VALID_UNTIL,
     });
     await POST(req);
-    expect(prismaMock.bypassToken.create).toHaveBeenCalledWith(
+    expect(prismaMock.globalBypassToken.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ bypass_graduate: true, bypass_not_studying: false }),
       }),
@@ -245,34 +255,22 @@ describe('POST /api/bypass', () => {
       validUntil: FUTURE_VALID_UNTIL,
     });
     await POST(req);
-    expect(prismaMock.bypassToken.create).toHaveBeenCalledWith(
+    expect(prismaMock.globalBypassToken.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ max_usage: 10, current_usage: 0 }),
       }),
     );
   });
 
-  it('returns currentUsage 0 on creation', async () => {
+  it('returns currentUsage 0 and canDelete/canRevokeUsages true on creation', async () => {
     const req = await adminReq({
       bypassNotStudying: true,
-      validUntil: FUTURE_VALID_UNTIL,
       maxUsage: 1,
+      validUntil: FUTURE_VALID_UNTIL,
     });
     const { body } = await parseJson<any>(await POST(req));
     expect(body.currentUsage).toBe(0);
-  });
-
-  it('stores bypass_restrictions as empty array for global tokens', async () => {
-    const req = await adminReq({
-      bypassNotStudying: true,
-      validUntil: FUTURE_VALID_UNTIL,
-      maxUsage: 1,
-    });
-    await POST(req);
-    expect(prismaMock.bypassToken.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ bypass_restrictions: [] }),
-      }),
-    );
+    expect(body.canDelete).toBe(true);
+    expect(body.canRevokeUsages).toBe(true);
   });
 });

@@ -32,10 +32,6 @@ export const ADMIN_PAYLOAD: TokenPayload = {
   manageAdmins: true,
 };
 
-/**
- * Restricted admin payload (admin-002, promoted by superadmin-001).
- * Used for hierarchy tests.
- */
 export const RESTRICTED_ADMIN_PAYLOAD: TokenPayload = {
   sub: 'admin-002',
   faculty: 'FICE',
@@ -59,11 +55,6 @@ export const OTHER_FACULTY_PAYLOAD: TokenPayload = {
   manageAdmins: false,
 };
 
-// ---------------------------------------------------------------------------
-// Token helpers
-// ---------------------------------------------------------------------------
-
-/** Returns signed access + refresh tokens for the given payload. */
 export async function makeTokenPair(payload = USER_PAYLOAD) {
   const [access, refresh] = await Promise.all([
     signAccessToken(payload),
@@ -73,10 +64,9 @@ export async function makeTokenPair(payload = USER_PAYLOAD) {
 }
 
 // ---------------------------------------------------------------------------
-// Admin DB fixtures (snake_case — these mock Prisma return values)
+// Admin DB fixtures
 // ---------------------------------------------------------------------------
 
-/** Unrestricted super-admin — can manage all elections and admins. */
 export const ADMIN_RECORD = {
   user_id: 'superadmin-001',
   full_name: 'Super Admin User',
@@ -91,7 +81,6 @@ export const ADMIN_RECORD = {
   deleted_by: null as string | null,
 };
 
-/** Faculty-restricted admin, promoted by superadmin-001. */
 export const RESTRICTED_ADMIN_RECORD = {
   user_id: 'admin-002',
   full_name: 'Faculty Admin FICE',
@@ -117,7 +106,7 @@ export const DELETED_ADMIN_RECORD = {
 };
 
 // ---------------------------------------------------------------------------
-// Admin API response fixtures (camelCase — use these when mocking the cache)
+// Admin API response fixtures
 // ---------------------------------------------------------------------------
 
 export const ADMIN_API: Admin = {
@@ -142,22 +131,13 @@ export const RESTRICTED_ADMIN_API: Admin = {
   restrictedToFaculty: true,
 };
 
-// ---------------------------------------------------------------------------
-// Admin graph helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Represents the admin hierarchy used in tests:
- *   superadmin-001 (root, unrestricted)
- *       └── admin-002 (restricted, faculty=FICE)
- */
 export const MOCK_ADMIN_GRAPH = new Map<string, string | null>([
   ['superadmin-001', null],
   ['admin-002', 'superadmin-001'],
 ]);
 
 // ---------------------------------------------------------------------------
-// jwt_tokens DB record fixture
+// JWT token record fixture
 // ---------------------------------------------------------------------------
 
 export const JWT_TOKEN_RECORD = {
@@ -219,10 +199,6 @@ export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBa
   return { ...makeElectionBase(keys), ...overrides };
 }
 
-/**
- * Build a soft-deleted election fixture.
- * By default deleted by admin-002 (the restricted admin).
- */
 export function makeDeletedElection(
   overrides: Partial<ReturnType<typeof makeElectionBase>> = {},
   deletedBy = 'admin-002',
@@ -235,10 +211,8 @@ export function makeDeletedElection(
   });
 }
 
-// Re-export the library function so tests can import it from one place.
 export { encryptBallot };
 
-/** Build a valid vote submission payload for a given election and choice(s). */
 export function makeVoteBallot(
   election: ReturnType<typeof makeElection>,
   choiceIds: string | string[] = MOCK_ELECTION_CHOICES[0].id,
@@ -251,14 +225,19 @@ export function makeVoteBallot(
   return { token, signature, nullifier, encryptedBallot };
 }
 
+// ---------------------------------------------------------------------------
+// Bypass token fixtures — split by type
+// ---------------------------------------------------------------------------
+
 export const MOCK_BYPASS_TOKEN_HASH = 'aabbccdd'.repeat(8);
 
+/** Factory for GlobalBypassToken DB records */
 export function makeGlobalBypassToken(
   overrides: Partial<{
     token_hash: string;
     bypass_not_studying: boolean;
     bypass_graduate: boolean;
-    max_usage: number | null;
+    max_usage: number;
     current_usage: number;
     valid_until: Date;
     created_by: string;
@@ -266,12 +245,9 @@ export function makeGlobalBypassToken(
 ) {
   return {
     token_hash: MOCK_BYPASS_TOKEN_HASH,
-    type: 'GLOBAL' as const,
-    election_id: null,
     bypass_not_studying: true,
     bypass_graduate: false,
-    bypass_restrictions: [] as string[],
-    max_usage: null as number | null,
+    max_usage: 1,
     current_usage: 0,
     valid_until: new Date(Date.now() + 86_400_000),
     created_at: new Date(),
@@ -280,26 +256,23 @@ export function makeGlobalBypassToken(
   };
 }
 
+/** Factory for ElectionBypassToken DB records */
 export function makeElectionBypassToken(
   electionId: string,
   bypassRestrictions: string[] = ['FACULTY'],
   overrides: Partial<{
     token_hash: string;
-    max_usage: number | null;
+    max_usage: number;
     current_usage: number;
-    valid_until: Date;
+    created_by: string;
   }> = {},
 ) {
   return {
     token_hash: MOCK_BYPASS_TOKEN_HASH,
-    type: 'ELECTION' as const,
     election_id: electionId,
-    bypass_not_studying: false,
-    bypass_graduate: false,
     bypass_restrictions: bypassRestrictions,
-    max_usage: null as number | null,
+    max_usage: 1,
     current_usage: 0,
-    valid_until: new Date(Date.now() + 86_400_000),
     created_at: new Date(),
     created_by: 'superadmin-001',
     ...overrides,

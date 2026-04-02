@@ -2,7 +2,12 @@ import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from
 import type { ApiResult } from '@/types/api';
 import type { DiiaInitResponse } from '@/types/auth';
 import type { BallotsResponse } from '@/types/ballot';
-import type { BypassToken } from '@/types/bypass';
+import type {
+  CreateElectionBypassTokenRequest,
+  CreateGlobalBypassTokenRequest,
+  ElectionBypassToken,
+  GlobalBypassToken,
+} from '@/types/bypass';
 import type {
   CreateElectionRequest,
   CreateElectionResponse,
@@ -60,21 +65,19 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
 
       bypass: {
-        list: (electionId: string) => fetcher<BypassToken[]>(`/elections/${electionId}/bypass`),
-        create: (
-          electionId: string,
-          data: { bypassNotStudying?: boolean; bypassRestrictions?: string[]; validUntil: string },
-        ) =>
+        list: (electionId: string) =>
+          fetcher<ElectionBypassToken[]>(`/elections/${electionId}/bypass`),
+        create: (electionId: string, data: CreateElectionBypassTokenRequest) =>
           fetcher<{
             token: string;
             tokenHash: string;
             electionId: string;
             bypassRestrictions: string[];
-            validUntil: string;
+            maxUsage: number;
+            currentUsage: number;
+            canDelete: boolean;
+            canRevokeUsages: boolean;
           }>(`/elections/${electionId}/bypass`, { method: 'POST', body: JSON.stringify(data) }),
-        delete: (tokenHash: string) => fetcher<void>(`/bypass/${tokenHash}`, { method: 'DELETE' }),
-        revokeUsage: (tokenHash: string, userId: string) =>
-          fetcher<void>(`/bypass/${tokenHash}/usages/${userId}`, { method: 'DELETE' }),
       },
     },
 
@@ -115,17 +118,17 @@ export function createApiClient(fetcher: Fetcher) {
           method: 'POST',
           body: JSON.stringify({ token }),
         }),
-      listGlobal: () => fetcher<BypassToken[]>('/bypass'),
-      createGlobal: (data: {
-        bypassNotStudying?: boolean;
-        bypassGraduate?: boolean;
-        validUntil: string;
-      }) =>
+      listGlobal: () => fetcher<GlobalBypassToken[]>('/bypass'),
+      createGlobal: (data: CreateGlobalBypassTokenRequest) =>
         fetcher<{
           token: string;
           tokenHash: string;
           bypassNotStudying: boolean;
+          bypassGraduate: boolean;
+          maxUsage: number;
           validUntil: string;
+          canDelete: boolean;
+          canRevokeUsages: boolean;
         }>('/bypass', { method: 'POST', body: JSON.stringify(data) }),
       delete: (tokenHash: string) => fetcher<void>(`/bypass/${tokenHash}`, { method: 'DELETE' }),
       revokeUsage: (tokenHash: string, userId: string) =>

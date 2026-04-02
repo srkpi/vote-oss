@@ -74,7 +74,7 @@ export const prismaMock = {
     update: jest.fn(),
     delete: jest.fn(),
   },
-  bypassToken: {
+  globalBypassToken: {
     findUnique: jest.fn(),
     findMany: jest.fn(),
     create: jest.fn(),
@@ -83,7 +83,24 @@ export const prismaMock = {
     deleteMany: jest.fn(),
     count: jest.fn(),
   },
-  bypassTokenUsage: {
+  globalBypassTokenUsage: {
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  electionBypassToken: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+    count: jest.fn(),
+  },
+  electionBypassTokenUsage: {
     findMany: jest.fn(),
     findFirst: jest.fn(),
     findUnique: jest.fn(),
@@ -124,11 +141,30 @@ export function resetPrismaMock() {
   prismaMock.faqItem.create.mockImplementation((args: unknown) => args);
   prismaMock.faqItem.update.mockImplementation((args: unknown) => args);
   prismaMock.issuedToken.findUnique.mockResolvedValue(null);
-  prismaMock.bypassToken.findUnique.mockReset();
-  prismaMock.bypassToken.findMany.mockReset().mockResolvedValue([]);
-  prismaMock.bypassToken.create.mockReset().mockImplementation((args: unknown) => args);
-  prismaMock.bypassToken.update.mockReset().mockResolvedValue({});
-  prismaMock.bypassToken.delete.mockReset().mockResolvedValue({});
-  prismaMock.bypassToken.deleteMany.mockReset().mockResolvedValue({ count: 0 });
-  prismaMock.bypassToken.count.mockReset().mockResolvedValue(0);
+
+  prismaMock.globalBypassToken.findUnique.mockReset().mockResolvedValue(null);
+  prismaMock.globalBypassToken.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.globalBypassToken.create.mockReset().mockImplementation((args: unknown) => args);
+  prismaMock.globalBypassToken.update.mockReset().mockResolvedValue({});
+  prismaMock.globalBypassToken.delete.mockReset().mockResolvedValue({});
+  prismaMock.globalBypassToken.deleteMany.mockReset().mockResolvedValue({ count: 0 });
+  prismaMock.globalBypassToken.count.mockReset().mockResolvedValue(0);
+  prismaMock.globalBypassTokenUsage.findUnique.mockReset().mockResolvedValue(null);
+  prismaMock.globalBypassTokenUsage.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.globalBypassTokenUsage.create.mockReset().mockImplementation((args: unknown) => args);
+  prismaMock.globalBypassTokenUsage.update.mockReset().mockResolvedValue({});
+
+  prismaMock.electionBypassToken.findUnique.mockReset().mockResolvedValue(null);
+  prismaMock.electionBypassToken.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.electionBypassToken.create.mockReset().mockImplementation((args: unknown) => args);
+  prismaMock.electionBypassToken.update.mockReset().mockResolvedValue({});
+  prismaMock.electionBypassToken.delete.mockReset().mockResolvedValue({});
+  prismaMock.electionBypassToken.deleteMany.mockReset().mockResolvedValue({ count: 0 });
+  prismaMock.electionBypassToken.count.mockReset().mockResolvedValue(0);
+  prismaMock.electionBypassTokenUsage.findUnique.mockReset().mockResolvedValue(null);
+  prismaMock.electionBypassTokenUsage.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.electionBypassTokenUsage.create
+    .mockReset()
+    .mockImplementation((args: unknown) => args);
+  prismaMock.electionBypassTokenUsage.update.mockReset().mockResolvedValue({});
 }

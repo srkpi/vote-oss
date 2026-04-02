@@ -20,12 +20,16 @@ import { FormField, Input } from '@/components/ui/form';
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { BYPASS_TOKEN_MAX_DAYS, BYPASS_TOKEN_MIN_HOURS } from '@/lib/constants';
+import {
+  BYPASS_TOKEN_MAX_DAYS,
+  BYPASS_TOKEN_MAX_USAGE_MAX,
+  BYPASS_TOKEN_MIN_HOURS,
+} from '@/lib/constants';
 import { pluralize } from '@/lib/utils';
-import type { BypassToken } from '@/types/bypass';
+import type { GlobalBypassToken } from '@/types/bypass';
 
 interface BypassPageClientProps {
-  initialTokens: BypassToken[];
+  initialTokens: GlobalBypassToken[];
   error: string | null;
 }
 
@@ -46,7 +50,6 @@ function TokenResult({ token }: { token: string }) {
       <Alert variant="success" title="Токен створено">
         Скопіюйте посилання або сирий токен.
       </Alert>
-
       <div>
         <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
           Посилання
@@ -64,7 +67,6 @@ function TokenResult({ token }: { token: string }) {
           </Button>
         </div>
       </div>
-
       <div>
         <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
           Токен
@@ -91,7 +93,7 @@ function BypassTokenCard({
   onDelete,
   onRevokeUsage,
 }: {
-  token: BypassToken;
+  token: GlobalBypassToken;
   onDelete: () => void;
   onRevokeUsage: (userId: string) => void;
 }) {
@@ -135,14 +137,16 @@ function BypassTokenCard({
           >
             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={onDelete}
-            className="text-error hover:bg-error-bg"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {token.canDelete && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={onDelete}
+              className="text-error hover:bg-error-bg"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -171,7 +175,7 @@ function BypassTokenCard({
                       )}
                     </p>
                   </div>
-                  {!usage.revokedAt && (
+                  {!usage.revokedAt && token.canRevokeUsages && (
                     <Button
                       variant="ghost"
                       size="xs"
@@ -195,12 +199,12 @@ function BypassTokenCard({
 export function BypassPageClient({ initialTokens, error }: BypassPageClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [tokens, setTokens] = useState<BypassToken[]>(initialTokens);
+  const [tokens, setTokens] = useState<GlobalBypassToken[]>(initialTokens);
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [newToken, setNewToken] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<BypassToken | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<GlobalBypassToken | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const now = new Date();
@@ -211,9 +215,11 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
   const maxDate = new Date(now.getTime() + BYPASS_TOKEN_MAX_DAYS * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 16);
+
   const [validUntil, setValidUntil] = useState(tomorrow);
   const [bypassNotStudying, setBypassNotStudying] = useState(false);
   const [bypassGraduate, setBypassGraduate] = useState(false);
+  const [maxUsage, setMaxUsage] = useState(1);
   const canCreate = bypassNotStudying || bypassGraduate;
 
   const handleCreate = async () => {
@@ -224,6 +230,7 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
     const result = await api.bypass.createGlobal({
       bypassNotStudying,
       bypassGraduate,
+      maxUsage,
       validUntil: new Date(validUntil).toISOString(),
     });
 
@@ -277,6 +284,7 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
     setCreateError(null);
     setBypassNotStudying(false);
     setBypassGraduate(false);
+    setMaxUsage(1);
     setValidUntil(tomorrow);
     router.refresh();
   };
@@ -313,7 +321,7 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
           <EmptyState
             icon={<Key className="h-8 w-8" />}
             title="Активних токенів доступу немає"
-            description="Створіть токен для студента, що має проблему з доступом"
+            description="Створіть токен для студента, що має проблему з входом у платформу"
           />
         ) : (
           <div className="space-y-3">
@@ -367,6 +375,21 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
                 {!canCreate && (
                   <p className="text-error font-body text-sm">Оберіть хоча б один варіант обходу</p>
                 )}
+
+                <FormField
+                  label="Максимальна кількість використань"
+                  required
+                  htmlFor="bypass-max-usage"
+                >
+                  <Input
+                    id="bypass-max-usage"
+                    type="number"
+                    min={1}
+                    max={BYPASS_TOKEN_MAX_USAGE_MAX}
+                    value={maxUsage}
+                    onChange={(e) => setMaxUsage(Math.max(1, parseInt(e.target.value) || 1))}
+                  />
+                </FormField>
 
                 <FormField label="Дійсний до" required htmlFor="bypass-valid-until">
                   <Input

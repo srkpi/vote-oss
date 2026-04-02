@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { redis, safeRedis } from '@/lib/redis';
 import type { ElectionBypassInfo, GlobalBypassInfo, UserBypassInfo } from '@/types/bypass';
 
+// ---------------------------------------------------------------------------
+// Cache helpers
+// ---------------------------------------------------------------------------
+
 function bypassCacheKey(userId: string): string {
   return `cache:bypass:user:${userId}`;
 }
@@ -27,6 +31,10 @@ export async function invalidateUserBypassCache(userId: string): Promise<void> {
   await safeRedis(() => redis.del(bypassCacheKey(userId)));
 }
 
+// ---------------------------------------------------------------------------
+// Core bypass-info query
+// ---------------------------------------------------------------------------
+
 export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo> {
   const cached = await getCachedBypass(userId);
   if (cached) {
@@ -41,60 +49,80 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
 
   const now = new Date();
 
-  const usages = await prisma.bypassTokenUsage.findMany({
-    where: {
-      user_id: userId,
-      revoked_at: null,
-      token: { valid_until: { gt: now } },
-    },
-    include: {
-      token: {
-        select: {
-          type: true,
-          election_id: true,
-          bypass_not_studying: true,
-          bypass_graduate: true,
-          bypass_restrictions: true,
-          valid_until: true,
+  const [globalUsages, electionUsages] = await Promise.all([
+    prisma.globalBypassTokenUsage.findMany({
+      where: {
+        user_id: userId,
+        revoked_at: null,
+        token: { valid_until: { gt: now } },
+      },
+      include: {
+        token: {
+          select: {
+            bypass_not_studying: true,
+            bypass_graduate: true,
+            valid_until: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.electionBypassTokenUsage.findMany({
+      where: {
+        user_id: userId,
+        revoked_at: null,
+        token: {
+          election: {
+            closes_at: { gt: now },
+            deleted_at: null,
+          },
+        },
+      },
+      include: {
+        token: {
+          select: {
+            election_id: true,
+            bypass_restrictions: true,
+            election: { select: { closes_at: true } },
+          },
+        },
+      },
+    }),
+  ]);
 
+  // Take the most recently valid global bypass (last one wins if multiple active)
   let global: GlobalBypassInfo | null = null;
-  const elections: Record<string, ElectionBypassInfo> = {};
-
-  for (const usage of usages) {
+  for (const usage of globalUsages) {
     const { token } = usage;
-    const validUntil = token.valid_until.getTime();
+    global = {
+      bypassNotStudying: token.bypass_not_studying,
+      bypassGraduate: token.bypass_graduate,
+      validUntil: token.valid_until.getTime(),
+    };
+  }
 
-    if (token.type === 'GLOBAL') {
-      global = {
-        bypassNotStudying: token.bypass_not_studying,
-        bypassGraduate: token.bypass_graduate,
+  // Merge election bypasses per election (union of bypassed types)
+  const elections: Record<string, ElectionBypassInfo> = {};
+  for (const usage of electionUsages) {
+    const { token } = usage;
+    if (!token.election_id) continue;
+    const newTypes = token.bypass_restrictions as string[];
+    if (newTypes.length === 0) continue;
+
+    const validUntil = token.election.closes_at.getTime();
+    const existing = elections[token.election_id];
+
+    if (!existing) {
+      elections[token.election_id] = {
+        electionId: token.election_id,
+        bypassedTypes: newTypes,
         validUntil,
       };
-    } else if (token.type === 'ELECTION' && token.election_id) {
-      // Multiple election bypasses: merge bypassedTypes (union)
-      const existing = elections[token.election_id];
-      const newTypes = token.bypass_restrictions as string[];
-
-      // Empty array means bypass nothing — skip this token if no types specified
-      if (newTypes.length === 0) continue;
-
-      if (!existing) {
-        elections[token.election_id] = {
-          electionId: token.election_id,
-          bypassedTypes: newTypes,
-          validUntil,
-        };
-      } else {
-        elections[token.election_id] = {
-          electionId: token.election_id,
-          bypassedTypes: [...new Set([...existing.bypassedTypes, ...newTypes])],
-          validUntil: Math.max(existing.validUntil, validUntil),
-        };
-      }
+    } else {
+      elections[token.election_id] = {
+        electionId: token.election_id,
+        bypassedTypes: [...new Set([...existing.bypassedTypes, ...newTypes])],
+        validUntil: Math.max(existing.validUntil, validUntil),
+      };
     }
   }
 
@@ -104,9 +132,7 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
 }
 
 /**
- * Check if a user has an active election bypass and return the bypassed
- * restriction types. Returns null if no bypass applies.
- * Empty string[] means "bypass ALL restriction types".
+ * Returns the bypassed restriction types for a specific election, or null.
  */
 export async function getElectionBypassForUser(
   userId: string,
@@ -121,8 +147,7 @@ export async function getElectionBypassForUser(
 }
 
 /**
- * Get all election bypasses for a user keyed by electionId.
- * Used in list endpoints to avoid N+1 queries.
+ * All active election bypasses keyed by electionId (avoids N+1 in list views).
  */
 export async function getAllElectionBypassesForUser(
   userId: string,
@@ -153,10 +178,8 @@ export class BypassTokenError extends Error {
 }
 
 /**
- * Validate a raw bypass token and create (or confirm) a usage record for
- * the given user. Idempotent: calling twice with the same user+token is safe.
- *
- * @returns the token's type and optional electionId for redirect purposes
+ * Validate and apply a raw bypass token for a user. Idempotent.
+ * Tries GlobalBypassToken first, then ElectionBypassToken.
  */
 export async function applyBypassToken(
   userId: string,
@@ -165,30 +188,74 @@ export async function applyBypassToken(
   const { createHash } = await import('crypto');
   const tokenHash = createHash('sha256').update(rawToken).digest('hex');
 
-  const token = await prisma.bypassToken.findUnique({ where: { token_hash: tokenHash } });
+  // ── Global bypass token ──────────────────────────────────────────────────
+  const globalToken = await prisma.globalBypassToken.findUnique({
+    where: { token_hash: tokenHash },
+  });
 
-  if (!token) throw new BypassTokenError('Invalid bypass token', 404);
-  if (token.valid_until < new Date()) throw new BypassTokenError('Bypass token has expired', 400);
+  if (globalToken) {
+    if (globalToken.valid_until < new Date()) {
+      throw new BypassTokenError('Bypass token has expired', 400);
+    }
+    if (globalToken.current_usage >= globalToken.max_usage) {
+      throw new BypassTokenError('Bypass token has reached its usage limit', 400);
+    }
 
-  // Check max usage limit
-  if (token.max_usage !== null && token.current_usage >= token.max_usage) {
+    const existing = await prisma.globalBypassTokenUsage.findUnique({
+      where: { token_hash_user_id: { token_hash: tokenHash, user_id: userId } },
+    });
+
+    if (existing) {
+      if (existing.revoked_at) {
+        throw new BypassTokenError('Your bypass access has been revoked', 400);
+      }
+      // Already applied — idempotent, no increment
+    } else {
+      await prisma.$transaction([
+        prisma.globalBypassTokenUsage.create({
+          data: { token_hash: tokenHash, user_id: userId },
+        }),
+        prisma.globalBypassToken.update({
+          where: { token_hash: tokenHash },
+          data: { current_usage: { increment: 1 } },
+        }),
+      ]);
+    }
+
+    await invalidateUserBypassCache(userId);
+    return { type: 'GLOBAL', electionId: null };
+  }
+
+  // ── Election bypass token ────────────────────────────────────────────────
+  const electionToken = await prisma.electionBypassToken.findUnique({
+    where: { token_hash: tokenHash },
+    include: { election: { select: { closes_at: true, deleted_at: true } } },
+  });
+
+  if (!electionToken) throw new BypassTokenError('Invalid bypass token', 404);
+
+  if (electionToken.election.deleted_at) {
+    throw new BypassTokenError('Election has been deleted', 400);
+  }
+  if (new Date() > electionToken.election.closes_at) {
+    throw new BypassTokenError('Election has already closed', 400);
+  }
+  if (electionToken.current_usage >= electionToken.max_usage) {
     throw new BypassTokenError('Bypass token has reached its usage limit', 400);
   }
 
-  const existing = await prisma.bypassTokenUsage.findUnique({
+  const existing = await prisma.electionBypassTokenUsage.findUnique({
     where: { token_hash_user_id: { token_hash: tokenHash, user_id: userId } },
   });
 
   if (existing) {
     if (existing.revoked_at) throw new BypassTokenError('Your bypass access has been revoked', 400);
-    // Already applied idempotently — no increment
   } else {
-    // New usage: create record + increment current_usage atomically
     await prisma.$transaction([
-      prisma.bypassTokenUsage.create({
+      prisma.electionBypassTokenUsage.create({
         data: { token_hash: tokenHash, user_id: userId },
       }),
-      prisma.bypassToken.update({
+      prisma.electionBypassToken.update({
         where: { token_hash: tokenHash },
         data: { current_usage: { increment: 1 } },
       }),
@@ -196,9 +263,5 @@ export async function applyBypassToken(
   }
 
   await invalidateUserBypassCache(userId);
-
-  return {
-    type: token.type as 'GLOBAL' | 'ELECTION',
-    electionId: token.election_id,
-  };
+  return { type: 'ELECTION', electionId: electionToken.election_id };
 }

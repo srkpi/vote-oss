@@ -142,7 +142,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       title: electionData.title,
       status,
       ballotCount: ballots.length,
-      deleted_at: electionData.deleted_at,
+      deletedAt: electionData.deleted_at,
       choices: electionData.choices.map((c) => ({
         id: c.id,
         choice: c.choice,

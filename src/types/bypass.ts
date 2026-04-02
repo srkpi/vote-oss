@@ -1,5 +1,3 @@
-export type BypassTokenType = 'GLOBAL' | 'ELECTION';
-
 export interface GlobalBypassInfo {
   bypassNotStudying: boolean;
   bypassGraduate: boolean;
@@ -17,21 +15,6 @@ export interface UserBypassInfo {
   elections: Record<string, ElectionBypassInfo>;
 }
 
-export interface BypassToken {
-  tokenHash: string;
-  type: BypassTokenType;
-  electionId: string | null;
-  bypassNotStudying: boolean;
-  bypassGraduate: boolean;
-  bypassRestrictions: string[];
-  maxUsage: number | null;
-  currentUsage: number;
-  validUntil: string;
-  createdAt: string;
-  creator: { userId: string; fullName: string };
-  usages: BypassTokenUsage[];
-}
-
 export interface BypassTokenUsage {
   id: string;
   userId: string;
@@ -39,12 +22,43 @@ export interface BypassTokenUsage {
   revokedAt: string | null;
 }
 
-export interface CreateBypassTokenRequest {
-  type: BypassTokenType;
-  electionId?: string;
+export interface GlobalBypassToken {
+  tokenHash: string;
+  bypassNotStudying: boolean;
+  bypassGraduate: boolean;
+  maxUsage: number;
+  currentUsage: number;
+  validUntil: string;
+  createdAt: string;
+  creator: { userId: string; fullName: string };
+  usages: BypassTokenUsage[];
+  canDelete: boolean;
+  canRevokeUsages: boolean;
+}
+
+export interface ElectionBypassToken {
+  tokenHash: string;
+  electionId: string;
+  bypassRestrictions: string[];
+  maxUsage: number;
+  currentUsage: number;
+  createdAt: string;
+  creator: { userId: string; fullName: string };
+  usages: BypassTokenUsage[];
+  canDelete: boolean;
+  canRevokeUsages: boolean;
+}
+
+export type BypassToken = GlobalBypassToken | ElectionBypassToken;
+
+export interface CreateGlobalBypassTokenRequest {
   bypassNotStudying?: boolean;
   bypassGraduate?: boolean;
-  bypassRestrictions?: string[];
-  maxUsage?: number | null;
+  maxUsage: number;
   validUntil: string;
+}
+
+export interface CreateElectionBypassTokenRequest {
+  bypassRestrictions: string[];
+  maxUsage: number;
 }

@@ -9,9 +9,13 @@ import { prisma } from '@/lib/prisma';
 
 /**
  * DELETE /api/bypass/[tokenHash]
- * Delete a bypass token (and cascade-delete its usages).
- * For GLOBAL: non-restricted admins who created it or are ancestors of the creator.
- * For ELECTION: admins who can manage that election's bypass.
+ * Hard-delete a global or election bypass token (and cascade its usages).
+ *
+ * Permissions:
+ *   – creator can always delete their own token
+ *   – any ancestor in the admin hierarchy can delete
+ *   – for GLOBAL tokens non-restricted admins only (restricted admins cannot
+ *     manage global tokens at all)
  */
 export async function DELETE(
   req: NextRequest,
@@ -25,33 +29,49 @@ export async function DELETE(
   const { tokenHash } = await params;
   if (!tokenHash) return Errors.badRequest('tokenHash is required');
 
-  const token = await prisma.bypassToken.findUnique({
+  const globalToken = await prisma.globalBypassToken.findUnique({
     where: { token_hash: tokenHash },
     include: { usages: { select: { user_id: true } } },
   });
 
-  if (!token) return Errors.notFound('Bypass token not found');
-
-  // Permission: creator can always delete their own; for others check hierarchy
-  if (token.created_by !== auth.user.sub) {
-    if (token.type === 'GLOBAL' && auth.admin.restricted_to_faculty) {
+  if (globalToken) {
+    if (auth.admin.restricted_to_faculty) {
       return Errors.forbidden('Only unrestricted admins can delete global bypass tokens');
     }
 
+    if (globalToken.created_by !== auth.user.sub) {
+      const adminGraph = await buildAdminGraph();
+      if (!isAncestorInGraph(adminGraph, auth.user.sub, globalToken.created_by)) {
+        return Errors.forbidden(
+          'You can only delete bypass tokens in your own branch of the hierarchy',
+        );
+      }
+    }
+
+    const affectedUserIds = globalToken.usages.map((u) => u.user_id);
+    await prisma.globalBypassToken.delete({ where: { token_hash: tokenHash } });
+    await Promise.all(affectedUserIds.map((uid) => invalidateUserBypassCache(uid)));
+    return new NextResponse(null, { status: 204 });
+  }
+
+  const electionToken = await prisma.electionBypassToken.findUnique({
+    where: { token_hash: tokenHash },
+    include: { usages: { select: { user_id: true } } },
+  });
+
+  if (!electionToken) return Errors.notFound('Bypass token not found');
+
+  if (electionToken.created_by !== auth.user.sub) {
     const adminGraph = await buildAdminGraph();
-    if (!isAncestorInGraph(adminGraph, auth.user.sub, token.created_by)) {
+    if (!isAncestorInGraph(adminGraph, auth.user.sub, electionToken.created_by)) {
       return Errors.forbidden(
         'You can only delete bypass tokens in your own branch of the hierarchy',
       );
     }
   }
 
-  // Collect affected user IDs before deletion for cache invalidation
-  const affectedUserIds = token.usages.map((u) => u.user_id);
-
-  await prisma.bypassToken.delete({ where: { token_hash: tokenHash } });
-
-  // Invalidate bypass cache for all affected users
+  const affectedUserIds = electionToken.usages.map((u) => u.user_id);
+  await prisma.electionBypassToken.delete({ where: { token_hash: tokenHash } });
   await Promise.all(affectedUserIds.map((uid) => invalidateUserBypassCache(uid)));
 
   return new NextResponse(null, { status: 204 });

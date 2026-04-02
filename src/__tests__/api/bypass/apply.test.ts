@@ -33,27 +33,45 @@ async function authReq(body: object = {}) {
 
 const VALID_TOKEN = 'some-raw-bypass-token-value';
 
-function makeTokenRecord(
+function makeGlobalTokenRecord(
   overrides: Partial<{
     valid_until: Date;
-    max_usage: number | null;
+    max_usage: number;
     current_usage: number;
-    type: string;
-    election_id: string | null;
   }> = {},
 ) {
   return {
     token_hash: 'hashed',
-    type: 'GLOBAL',
-    election_id: null,
     bypass_not_studying: true,
     bypass_graduate: false,
-    bypass_restrictions: [],
-    max_usage: null,
+    max_usage: 5,
     current_usage: 0,
     valid_until: new Date(Date.now() + 86_400_000),
     created_at: new Date(),
     created_by: 'superadmin-001',
+    ...overrides,
+  };
+}
+
+function makeElectionTokenRecord(
+  overrides: Partial<{
+    max_usage: number;
+    current_usage: number;
+  }> = {},
+) {
+  const now = Date.now();
+  return {
+    token_hash: 'hashed',
+    election_id: MOCK_ELECTION_ID,
+    bypass_restrictions: ['FACULTY'],
+    max_usage: 5,
+    current_usage: 0,
+    created_at: new Date(),
+    created_by: 'superadmin-001',
+    election: {
+      closes_at: new Date(now + 3_600_000),
+      deleted_at: null,
+    },
     ...overrides,
   };
 }
@@ -78,90 +96,54 @@ describe('POST /api/bypass/apply', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when token does not exist', async () => {
+  it('returns 404 when token does not exist in either table', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(null);
+    // globalBypassToken.findUnique returns null (default)
+    // electionBypassToken.findUnique returns null (default)
     const res = await POST(req);
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when token is expired', async () => {
+  // ── Global token tests ───────────────────────────────────────────────────
+
+  it('returns 400 when global token is expired', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ valid_until: new Date(Date.now() - 1000) }),
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce(
+      makeGlobalTokenRecord({ valid_until: new Date(Date.now() - 1000) }),
     );
     const { status, body } = await parseJson<any>(await POST(req));
     expect(status).toBe(400);
     expect(body.message).toMatch(/expired/i);
   });
 
-  // ── Max usage ─────────────────────────────────────────────────────────────
-
-  it('returns 400 when token has reached max_usage limit', async () => {
+  it('returns 400 when global token has reached max_usage limit', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ max_usage: 5, current_usage: 5 }),
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce(
+      makeGlobalTokenRecord({ max_usage: 5, current_usage: 5 }),
     );
     const { status, body } = await parseJson<any>(await POST(req));
     expect(status).toBe(400);
     expect(body.message).toMatch(/usage limit/i);
   });
 
-  it('returns 400 when current_usage exceeds max_usage (defensive)', async () => {
+  it('increments current_usage via $transaction on first global token activation', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ max_usage: 3, current_usage: 10 }),
-    );
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-  });
-
-  it('allows activation when current_usage < max_usage', async () => {
-    const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ max_usage: 5, current_usage: 4 }),
-    );
-    prismaMock.bypassTokenUsage.findUnique.mockResolvedValueOnce(null);
-    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
-
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(200);
-  });
-
-  it('allows activation when max_usage is null (unlimited)', async () => {
-    const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ max_usage: null, current_usage: 9999 }),
-    );
-    prismaMock.bypassTokenUsage.findUnique.mockResolvedValueOnce(null);
-    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
-
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(200);
-  });
-
-  // ── Usage creation & increment ────────────────────────────────────────────
-
-  it('increments current_usage via $transaction on first activation', async () => {
-    const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(makeTokenRecord());
-    prismaMock.bypassTokenUsage.findUnique.mockResolvedValueOnce(null); // no prior usage
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce(makeGlobalTokenRecord());
+    prismaMock.globalBypassTokenUsage.findUnique.mockResolvedValueOnce(null);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
     await POST(req);
 
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
-    // Transaction should include an update to increment current_usage
     const txOps = prismaMock.$transaction.mock.calls[0][0];
     expect(Array.isArray(txOps)).toBe(true);
-    expect(txOps).toHaveLength(2); // usage create + token update
+    expect(txOps).toHaveLength(2); // usage create + token increment
   });
 
-  it('does NOT call $transaction on idempotent re-activation (already applied)', async () => {
+  it('does NOT call $transaction on idempotent re-activation of global token', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(makeTokenRecord());
-    // Simulate already-applied usage (not revoked)
-    prismaMock.bypassTokenUsage.findUnique.mockResolvedValueOnce({
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce(makeGlobalTokenRecord());
+    prismaMock.globalBypassTokenUsage.findUnique.mockResolvedValueOnce({
       id: 'usage-1',
       token_hash: 'hashed',
       user_id: USER_PAYLOAD.sub,
@@ -174,15 +156,15 @@ describe('POST /api/bypass/apply', () => {
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
-  it('returns 400 when prior usage exists but is revoked', async () => {
+  it('returns 400 when prior global usage exists but is revoked', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(makeTokenRecord());
-    prismaMock.bypassTokenUsage.findUnique.mockResolvedValueOnce({
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce(makeGlobalTokenRecord());
+    prismaMock.globalBypassTokenUsage.findUnique.mockResolvedValueOnce({
       id: 'usage-1',
       token_hash: 'hashed',
       user_id: USER_PAYLOAD.sub,
       used_at: new Date(),
-      revoked_at: new Date(), // revoked
+      revoked_at: new Date(),
     });
 
     const { status, body } = await parseJson<any>(await POST(req));
@@ -190,22 +172,10 @@ describe('POST /api/bypass/apply', () => {
     expect(body.message).toMatch(/revoked/i);
   });
 
-  it('does NOT decrement current_usage when usage is revoked via DELETE endpoint', async () => {
-    // This tests the design constraint: revoke does not decrement current_usage.
-    // The DELETE /api/bypass/[hash]/usages/[userId] just sets revoked_at, never touches current_usage.
-    // Here we verify bypassToken.update is NOT called during revocation.
-    // (The actual revoke endpoint test would be in its own file, but the constraint is captured here.)
-    expect(true).toBe(true); // constraint is architectural; enforced by absence of decrement call
-  });
-
-  // ── Return value ──────────────────────────────────────────────────────────
-
-  it('returns type and electionId in response for GLOBAL token', async () => {
+  it('returns GLOBAL type and null electionId for global token', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ type: 'GLOBAL', election_id: null }),
-    );
-    prismaMock.bypassTokenUsage.findUnique.mockResolvedValueOnce(null);
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce(makeGlobalTokenRecord());
+    prismaMock.globalBypassTokenUsage.findUnique.mockResolvedValueOnce(null);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
     const { body } = await parseJson<any>(await POST(req));
@@ -213,16 +183,85 @@ describe('POST /api/bypass/apply', () => {
     expect(body.electionId).toBeNull();
   });
 
-  it('returns type and electionId in response for ELECTION token', async () => {
+  // ── Election token tests ─────────────────────────────────────────────────
+
+  it('falls through to election token when global token not found', async () => {
     const req = await authReq({ token: VALID_TOKEN });
-    prismaMock.bypassToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ type: 'ELECTION', election_id: MOCK_ELECTION_ID }),
-    );
-    prismaMock.bypassTokenUsage.findUnique.mockResolvedValueOnce(null);
+    // globalBypassToken returns null (default)
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(makeElectionTokenRecord());
+    prismaMock.electionBypassTokenUsage.findUnique.mockResolvedValueOnce(null);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
-    const { body } = await parseJson<any>(await POST(req));
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(200);
     expect(body.type).toBe('ELECTION');
     expect(body.electionId).toBe(MOCK_ELECTION_ID);
+  });
+
+  it('returns 400 when election has already closed', async () => {
+    const req = await authReq({ token: VALID_TOKEN });
+    const record = makeElectionTokenRecord();
+    record.election.closes_at = new Date(Date.now() - 1000);
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(record);
+
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/closed/i);
+  });
+
+  it('returns 400 when election token has reached max_usage limit', async () => {
+    const req = await authReq({ token: VALID_TOKEN });
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
+      makeElectionTokenRecord({ max_usage: 3, current_usage: 3 }),
+    );
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/usage limit/i);
+  });
+
+  it('increments current_usage via $transaction on first election token activation', async () => {
+    const req = await authReq({ token: VALID_TOKEN });
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(makeElectionTokenRecord());
+    prismaMock.electionBypassTokenUsage.findUnique.mockResolvedValueOnce(null);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    await POST(req);
+
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    const txOps = prismaMock.$transaction.mock.calls[0][0];
+    expect(Array.isArray(txOps)).toBe(true);
+    expect(txOps).toHaveLength(2);
+  });
+
+  it('does NOT call $transaction on idempotent re-activation of election token', async () => {
+    const req = await authReq({ token: VALID_TOKEN });
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(makeElectionTokenRecord());
+    prismaMock.electionBypassTokenUsage.findUnique.mockResolvedValueOnce({
+      id: 'usage-1',
+      token_hash: 'hashed',
+      user_id: USER_PAYLOAD.sub,
+      used_at: new Date(),
+      revoked_at: null,
+    });
+
+    const { status } = await parseJson<any>(await POST(req));
+    expect(status).toBe(200);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when prior election usage exists but is revoked', async () => {
+    const req = await authReq({ token: VALID_TOKEN });
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(makeElectionTokenRecord());
+    prismaMock.electionBypassTokenUsage.findUnique.mockResolvedValueOnce({
+      id: 'usage-1',
+      token_hash: 'hashed',
+      user_id: USER_PAYLOAD.sub,
+      used_at: new Date(),
+      revoked_at: new Date(),
+    });
+
+    const { status, body } = await parseJson<any>(await POST(req));
+    expect(status).toBe(400);
+    expect(body.message).toMatch(/revoked/i);
   });
 });

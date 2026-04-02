@@ -30,10 +30,11 @@ model Admin {
   deleted_at            DateTime?
   deleted_by            String?
 
-  created_elections      Election[]
-  deleted_elections      Election[] @relation("ElectionDeleter")
-  created_invite_tokens  AdminInviteToken[]
-  created_bypass_tokens  BypassToken[]
+  created_elections              Election[]
+  deleted_elections              Election[]             @relation("ElectionDeleter")
+  created_invite_tokens          AdminInviteToken[]
+  created_global_bypass_tokens   GlobalBypassToken[]
+  created_election_bypass_tokens ElectionBypassToken[]
 
   created_faq_categories FaqCategory[] @relation("FaqCategoryCreator")
   updated_faq_categories FaqCategory[] @relation("FaqCategoryUpdater")
@@ -79,12 +80,12 @@ model Election {
   deleted_at    DateTime?
   deleted_by    String?
 
-  choices       ElectionChoice[]
-  issued_tokens IssuedToken[]
-  ballots       Ballot[]
-  nullifiers    UsedTokenNullifier[]
-  deleter       Admin?        @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
-  bypass_tokens BypassToken[]
+  choices                ElectionChoice[]
+  issued_tokens          IssuedToken[]
+  ballots                Ballot[]
+  nullifiers             UsedTokenNullifier[]
+  deleter                Admin?              @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
+  election_bypass_tokens ElectionBypassToken[]
 
   @@map("elections")
 }
@@ -154,43 +155,63 @@ model UsedTokenNullifier {
   @@map("used_token_nullifiers")
 }
 
-enum BypassTokenType {
-  GLOBAL
-  ELECTION
-}
-
-model BypassToken {
-  token_hash          String             @id
-  type                BypassTokenType
-  election_id         String?            @db.Uuid
-  election            Election?          @relation(fields: [election_id], references: [id], onDelete: Cascade)
-  bypass_not_studying Boolean            @default(false)
-  bypass_graduate     Boolean            @default(false)
-  bypass_restrictions String[]
+model GlobalBypassToken {
+  token_hash          String                   @id
+  bypass_not_studying Boolean                  @default(false)
+  bypass_graduate     Boolean                  @default(false)
   max_usage           Int
-  current_usage       Int                @default(0)
-  created_by          String
-  creator             Admin              @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
+  current_usage       Int                      @default(0)
   valid_until         DateTime
-  created_at          DateTime           @default(now())
-  usages              BypassTokenUsage[]
+  created_by          String
+  creator             Admin                    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
+  created_at          DateTime                 @default(now())
+  usages              GlobalBypassTokenUsage[]
 
-  @@index([type, election_id])
   @@index([created_by])
-  @@map("bypass_tokens")
+  @@map("global_bypass_tokens")
 }
 
-model BypassTokenUsage {
-  id          String      @id @default(uuid()) @db.Uuid
-  token_hash  String
-  token       BypassToken @relation(fields: [token_hash], references: [token_hash], onDelete: Cascade)
-  user_id     String
-  used_at     DateTime    @default(now())
-  revoked_at  DateTime?
+model GlobalBypassTokenUsage {
+  id         String            @id @default(uuid()) @db.Uuid
+  token_hash String
+  token      GlobalBypassToken @relation(fields: [token_hash], references: [token_hash], onDelete: Cascade)
+  user_id    String
+  used_at    DateTime          @default(now())
+  revoked_at DateTime?
 
   @@unique([token_hash, user_id])
   @@index([user_id])
-  @@map("bypass_token_usages")
+  @@map("global_bypass_token_usages")
+}
+
+model ElectionBypassToken {
+  token_hash          String                    @id
+  election_id         String                    @db.Uuid
+  election            Election                  @relation(fields: [election_id], references: [id], onDelete: Cascade)
+  bypass_restrictions String[]
+  max_usage           Int
+  current_usage       Int                       @default(0)
+  created_by          String
+  creator             Admin                     @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
+  created_at          DateTime                  @default(now())
+  usages              ElectionBypassTokenUsage[]
+
+  @@index([election_id])
+  @@index([created_by])
+  @@map("election_bypass_tokens")
+}
+
+model ElectionBypassTokenUsage {
+  id         String              @id @default(uuid()) @db.Uuid
+  token_hash String
+  token      ElectionBypassToken @relation(fields: [token_hash], references: [token_hash], onDelete: Cascade)
+  user_id    String
+  used_at    DateTime            @default(now())
+  revoked_at DateTime?
+
+  @@unique([token_hash, user_id])
+  @@index([user_id])
+  @@map("election_bypass_token_usages")
 }
 
 model FaqCategory {
