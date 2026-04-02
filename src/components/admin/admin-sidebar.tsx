@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   LogOut,
   Settings,
+  ShieldCheck,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -43,6 +44,13 @@ const TOKENS_NAV_ITEM = {
   icon: <Key className="h-4 w-4" />,
 };
 
+const BYPASS_NAV_ITEM = {
+  label: 'Доступ',
+  href: '/admin/bypass',
+  exact: true,
+  icon: <ShieldCheck className="h-4 w-4" />,
+};
+
 const FAQ_NAV_ITEM = {
   label: 'FAQ',
   href: '/admin/faq',
@@ -67,6 +75,7 @@ export function AdminSidebar({
   }
 
   if (!restrictedToFaculty) {
+    navItems.push(BYPASS_NAV_ITEM);
     navItems.push(FAQ_NAV_ITEM);
   }
 

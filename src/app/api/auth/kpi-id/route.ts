@@ -2,12 +2,14 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { getUserBypassInfo } from '@/lib/bypass';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
 import {
   InvalidTicketError,
   InvalidUserDataError,
+  NotStudyingError,
   resolveTicket,
   ResolveUserDataError,
 } from '@/lib/kpi-id';
@@ -98,15 +100,38 @@ export async function POST(req: NextRequest) {
     if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
       return Errors.unauthorized(err.message);
     }
-    if (err instanceof ResolveUserDataError) {
-      return Errors.forbidden(err.message);
+
+    // Check if the user has a bypass for not-studying before propagating
+    if (err instanceof NotStudyingError) {
+      // We need the userId to check bypass — re-resolve without the studying check
+      // by attempting a bypass-aware resolve
+      try {
+        userInfo = await resolveTicket(ticketId, { skipStudyingCheck: true });
+        if (userInfo) {
+          const bypassInfo = await getUserBypassInfo(userInfo.userId);
+          if (!bypassInfo.global?.bypassNotStudying) {
+            return Errors.forbidden(err.message);
+          }
+          // bypassNotStudying is active — fall through with userInfo
+        }
+      } catch {
+        return Errors.forbidden((err as Error).message);
+      }
+    } else if (err instanceof ResolveUserDataError) {
+      return Errors.forbidden((err as ResolveUserDataError).message);
+    } else {
+      console.error('[auth/kpi-id] resolveTicket error:', err);
+      return Errors.internal('Failed to contact auth provider');
     }
-    console.error('[auth/kpi-id] resolveTicket error:', err);
-    return Errors.internal('Failed to contact auth provider');
   }
+
+  if (!userInfo) return Errors.internal('Failed to resolve user info');
 
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
+
+  const now = Math.floor(Date.now() / 1000);
+  const initialAuthAt = now;
 
   const tokenPayload: TokenPayload = {
     sub: userInfo.userId,
@@ -116,6 +141,7 @@ export async function POST(req: NextRequest) {
     speciality: userInfo.speciality,
     studyYear: userInfo.studyYear,
     studyForm: userInfo.studyForm,
+    initialAuthAt,
   };
 
   const adminRecord = await prisma.admin.findUnique({
@@ -132,7 +158,7 @@ export async function POST(req: NextRequest) {
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
     await Promise.all([signAccessToken(tokenPayload), signRefreshToken(tokenPayload)]);
 
-  await persistTokenPair(accessJti, refreshJti);
+  await persistTokenPair(accessJti, refreshJti, new Date(initialAuthAt * 1000));
 
   const response = new NextResponse(null, { status: 200 });
 

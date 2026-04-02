@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { getUserBypassInfo } from '@/lib/bypass';
 import { KPI_AUTH_URL } from '@/lib/config/client';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
@@ -9,6 +10,7 @@ import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt
 import {
   InvalidTicketError,
   InvalidUserDataError,
+  NotStudyingError,
   resolveUserData,
   ResolveUserDataError,
 } from '@/lib/kpi-id';
@@ -118,13 +120,9 @@ export async function POST(req: NextRequest) {
 
   let kpiCookieHeader: string;
   try {
-    const internalUrl = new URL(`${KPI_AUTH_URL}/api/auth/internal`);
-    const internalRes = await fetch(internalUrl.toString(), {
+    const internalRes = await fetch(new URL(`${KPI_AUTH_URL}/api/auth/internal`).toString(), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ sessionId }),
     });
 
@@ -157,10 +155,7 @@ export async function POST(req: NextRequest) {
   try {
     const userRes = await fetch(`${KPI_AUTH_URL}/api/user`, {
       method: 'GET',
-      headers: {
-        Cookie: kpiCookieHeader,
-        Accept: 'application/json',
-      },
+      headers: { Cookie: kpiCookieHeader, Accept: 'application/json' },
     });
 
     if (!userRes.ok) {
@@ -189,18 +184,36 @@ export async function POST(req: NextRequest) {
   try {
     userInfo = await resolveUserData(data);
   } catch (err) {
-    if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
-      return Errors.unauthorized(err.message);
+    if (err instanceof NotStudyingError && data.STUDENT_ID) {
+      // Try resolving again without the studying check, then verify bypass
+      try {
+        const partialInfo = await resolveUserData(data, { skipStudyingCheck: true });
+        const bypassInfo = await getUserBypassInfo(partialInfo.userId);
+        if (bypassInfo.global?.bypassNotStudying) {
+          userInfo = partialInfo;
+        } else {
+          return Errors.forbidden((err as Error).message);
+        }
+      } catch {
+        return Errors.forbidden((err as Error).message);
+      }
+    } else if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
+      return Errors.unauthorized((err as Error).message);
+    } else if (err instanceof ResolveUserDataError) {
+      return Errors.forbidden((err as Error).message);
+    } else {
+      console.error('[diia/check] resolveUserData error:', err);
+      return Errors.internal('Failed to contact auth provider');
     }
-    if (err instanceof ResolveUserDataError) {
-      return Errors.forbidden(err.message);
-    }
-    console.error('[auth/kpi-id] resolveUserData error:', err);
-    return Errors.internal('Failed to contact auth provider');
   }
+
+  if (!userInfo) return Errors.internal('Failed to resolve user info');
 
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
+
+  const now = Math.floor(Date.now() / 1000);
+  const initialAuthAt = now;
 
   const tokenPayload: TokenPayload = {
     sub: userInfo.userId,
@@ -210,14 +223,14 @@ export async function POST(req: NextRequest) {
     speciality: userInfo.speciality,
     studyYear: userInfo.studyYear,
     studyForm: userInfo.studyForm,
+    initialAuthAt,
   };
 
   const adminRecord = await prisma.admin.findUnique({
     where: { user_id: userInfo.userId, deleted_at: null },
   });
-  const isAdmin = !!adminRecord;
 
-  if (isAdmin) {
+  if (adminRecord) {
     tokenPayload.isAdmin = true;
     tokenPayload.manageAdmins = adminRecord.manage_admins;
     tokenPayload.restrictedToFaculty = adminRecord.restricted_to_faculty;
@@ -226,7 +239,7 @@ export async function POST(req: NextRequest) {
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
     await Promise.all([signAccessToken(tokenPayload), signRefreshToken(tokenPayload)]);
 
-  await persistTokenPair(accessJti, refreshJti);
+  await persistTokenPair(accessJti, refreshJti, new Date(initialAuthAt * 1000));
 
   const response = NextResponse.json({ status: 'success' });
 

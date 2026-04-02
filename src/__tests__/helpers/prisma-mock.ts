@@ -74,6 +74,14 @@ export const prismaMock = {
     update: jest.fn(),
     delete: jest.fn(),
   },
+  bypassTokenUsage: {
+    findMany: jest.fn(),
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
   $transaction: jest.fn(),
   $queryRaw: jest.fn(),
 };

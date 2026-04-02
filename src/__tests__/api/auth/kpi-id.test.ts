@@ -121,6 +121,7 @@ describe('POST /api/auth/kpi-id', () => {
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
+      expect.any(Date),
     );
   });
 

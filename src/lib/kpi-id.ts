@@ -47,10 +47,6 @@ export class NotStudyingError extends ResolveUserDataError {
   }
 }
 
-// --------------------------------------ч-------------------------------------
-// Faculty resolution helpers
-// ---------------------------------------------------------------------------
-
 /**
  * Levenshtein distance between two strings.
  */
@@ -118,15 +114,9 @@ export function resolveFacultyShortName(
     facultyGroups[short].includes(group),
   );
 
-  if (matches.length === 0) {
-    throw new InvalidUserDataError();
-  }
+  if (matches.length === 0) throw new InvalidUserDataError();
+  if (matches.length === 1) return matches[0];
 
-  if (matches.length === 1) {
-    return matches[0];
-  }
-
-  // Multiple matches — use Levenshtein to find the closest abbreviation
   const targetAbbr = normaliseAbbreviation(abbreviateFaculty(fullFaculty));
 
   return matches.reduce((best, candidate) => {
@@ -136,17 +126,17 @@ export function resolveFacultyShortName(
   });
 }
 
-// ---------------------------------------------------------------------------
-// Core auth functions
-// ---------------------------------------------------------------------------
+interface ResolveOptions {
+  skipStudyingCheck?: boolean;
+}
 
-export async function resolveUserData(data: KpiIdUserInfo): Promise<UserInfo> {
+export async function resolveUserData(
+  data: KpiIdUserInfo,
+  options: ResolveOptions = {},
+): Promise<UserInfo> {
   if (!data.STUDENT_ID && !data.EMPLOYEE_ID) throw new InvalidUserDataError();
-
   if (data.AUTH_METHOD !== 'DIIA') throw new NotDiiaAuthError();
-
   if (!data.STUDENT_ID && data.EMPLOYEE_ID) throw new NotStudentError();
-
   if (!data.STUDENT_ID || !data.NAME) throw new InvalidUserDataError();
 
   const res = await fetch(`${CAMPUS_API_URL}/api/integration/voteoss/students/${data.STUDENT_ID}`, {
@@ -160,10 +150,9 @@ export async function resolveUserData(data: KpiIdUserInfo): Promise<UserInfo> {
   const campusData = (await res.json()) as CampusUserInfo | undefined;
   if (!campusData) throw new InvalidTicketError();
 
-  if (campusData.status !== 'Studying') throw new NotStudyingError();
+  if (!options.skipStudyingCheck && campusData.status !== 'Studying') throw new NotStudyingError();
 
   const group = campusData.groupName;
-
   if (parseGroupLevel(group) === 'g') throw new GraduateUserError();
 
   const fullFaculty = campusData.faculty;
@@ -181,7 +170,10 @@ export async function resolveUserData(data: KpiIdUserInfo): Promise<UserInfo> {
   };
 }
 
-export async function resolveTicket(ticketId: string): Promise<UserInfo> {
+export async function resolveTicket(
+  ticketId: string,
+  options: ResolveOptions = {},
+): Promise<UserInfo> {
   if (!ticketId) throw new InvalidTicketError();
 
   const url = new URL(`${KPI_AUTH_URL}/api/ticket`);
@@ -195,5 +187,5 @@ export async function resolveTicket(ticketId: string): Promise<UserInfo> {
   const body = (await res.json()) as { data?: KpiIdUserInfo };
   if (!body?.data) throw new InvalidTicketError();
 
-  return await resolveUserData(body.data);
+  return await resolveUserData(body.data, options);
 }

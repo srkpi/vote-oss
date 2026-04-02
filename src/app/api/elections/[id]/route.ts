@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
+import { getElectionBypassForUser } from '@/lib/bypass';
 import { getCachedAdmins, getCachedElections, invalidateElections } from '@/lib/cache';
 import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
@@ -11,7 +12,7 @@ import {
   adminCanAccessElection,
   adminCanDeleteElection,
   adminCanRestoreElection,
-  checkRestrictions,
+  checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
 import type { ElectionRestriction, TallyResult } from '@/types/election';
@@ -250,7 +251,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return Errors.forbidden('You are not eligible for this election');
     }
   } else {
-    if (!checkRestrictions(restrictions, user)) {
+    const bypassedTypes = await getElectionBypassForUser(user.sub, electionId);
+    if (!checkRestrictionsWithBypass(restrictions, user, bypassedTypes)) {
       return Errors.forbidden('You are not eligible for this election');
     }
   }

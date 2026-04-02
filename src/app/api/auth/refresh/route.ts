@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
 
   await revokeByRefreshJti(user.jti, user.iat);
 
+  const initialAuthAt = user.initialAuthAt ?? Math.floor(Date.now() / 1000);
   const tokenPayload: TokenPayload = {
     sub: user.sub,
     faculty: user.faculty,
@@ -69,14 +70,14 @@ export async function POST(req: NextRequest) {
     speciality: user.speciality,
     studyYear: user.studyYear,
     studyForm: user.studyForm,
+    initialAuthAt,
   };
 
   const adminRecord = await prisma.admin.findUnique({
     where: { user_id: user.sub, deleted_at: null },
   });
-  const isAdmin = !!adminRecord;
 
-  if (isAdmin) {
+  if (adminRecord) {
     tokenPayload.isAdmin = true;
     tokenPayload.manageAdmins = adminRecord.manage_admins;
     tokenPayload.restrictedToFaculty = adminRecord.restricted_to_faculty;
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
     await Promise.all([signAccessToken(tokenPayload), signRefreshToken(tokenPayload)]);
 
-  await persistTokenPair(accessJti, refreshJti);
+  await persistTokenPair(accessJti, refreshJti, new Date(initialAuthAt * 1000));
 
   const response = new NextResponse(null, { status: 200 });
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));

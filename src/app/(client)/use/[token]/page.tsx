@@ -1,95 +1,58 @@
 'use client';
 
 import { CheckIcon, TriangleAlert } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import { api } from '@/lib/api/browser';
 
 type Status = 'loading' | 'success' | 'error';
 
-const STATUS_CONFIG = {
-  loading: {
-    title: 'Авторизація…',
-    description: 'Перевіряємо вашу особу через KPI ID',
-  },
-  success: {
-    title: 'Успішний вхід!',
-    description: 'Перенаправляємо вас до платформи…',
-  },
-  error: {
-    title: 'Помилка авторизації',
-    description: 'Не вдалось підтвердити особу',
-  },
-} as const;
-
-async function getReturnTo(): Promise<string> {
-  try {
-    const res = await fetch('/api/auth/return-to');
-    if (res.ok) {
-      const data = (await res.json()) as { returnTo?: string };
-      return data.returnTo && data.returnTo.startsWith('/') ? data.returnTo : '/elections';
-    }
-  } catch {
-    // ignore
-  }
-  return '/elections';
-}
-
-export default function CallbackPage() {
+export default function UseBypassTokenPage() {
+  const { token } = useParams<{ token: string }>();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const calledRef = useRef(false);
   const [status, setStatus] = useState<Status>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const calledRef = useRef(false);
-
-  const ticketId = searchParams.get('ticketId');
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
 
   useEffect(() => {
     if (calledRef.current) return;
     calledRef.current = true;
 
-    const run = async () => {
-      if (!ticketId) {
-        setErrorMessage('Відсутній ticketId');
-        setStatus('error');
-        return;
-      }
-
-      const result = await api.auth.loginWithTicket(ticketId);
+    const apply = async () => {
+      const result = await api.bypass.apply(token);
 
       if (result.success) {
         setStatus('success');
-        const returnTo = await getReturnTo();
+        const { type, electionId } = result.data as {
+          type: 'GLOBAL' | 'ELECTION';
+          electionId: string | null;
+        };
+
+        const target =
+          type === 'ELECTION' && electionId ? `/elections/${electionId}` : '/elections';
+
+        setRedirectTarget(target);
+
         setTimeout(() => {
-          router.push(returnTo);
+          router.push(target);
           router.refresh();
-        }, 1200);
+        }, 1500);
       } else {
-        if (result.error === 'Authentication must be performed through Diia') {
-          setErrorMessage('Авторизуйтесь через застосунок Дія в KPI ID');
-        } else if (result.error === 'Platform is only available for students') {
-          setErrorMessage('Платформа доступна лише студентам');
-        } else if (result.error === 'Invalid or expired ticketId') {
-          setErrorMessage('Не валідний або прострочений ticketId');
-        } else {
-          setErrorMessage(result.error);
-        }
+        setErrorMessage(result.error);
         setStatus('error');
       }
     };
 
-    run();
-  }, [ticketId, router]);
-
-  const config = STATUS_CONFIG[status];
+    apply();
+  }, [token, router]);
 
   return (
     <div className="flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-8">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="bg-kpi-navy/5 absolute top-1/4 left-1/4 h-96 w-96 rounded-full blur-3xl" />
         <div className="bg-kpi-orange/8 absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full blur-3xl" />
-        <div className="pattern-grid absolute inset-0 opacity-[0.03]" />
       </div>
 
       <div className="relative w-full max-w-md">
@@ -110,19 +73,13 @@ export default function CallbackPage() {
                 <div className="relative h-20 w-20">
                   <div className="border-border-color absolute inset-0 rounded-full border-4" />
                   <div className="border-kpi-navy absolute inset-0 animate-spin rounded-full border-4 border-t-transparent" />
-                  <div
-                    className="border-kpi-orange/30 border-b-accent absolute inset-3 animate-spin rounded-full border-2"
-                    style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}
-                  />
                 </div>
               )}
-
               {status === 'success' && (
                 <div className="animate-scale-in border-success/30 bg-success-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
                   <CheckIcon className="text-success h-10 w-10" />
                 </div>
               )}
-
               {status === 'error' && (
                 <div className="animate-scale-in border-error/30 bg-error-bg flex h-20 w-20 items-center justify-center rounded-full border-2">
                   <TriangleAlert className="text-error h-10 w-10" />
@@ -130,29 +87,25 @@ export default function CallbackPage() {
               )}
             </div>
 
-            <h1 className="font-display text-foreground mb-2 text-2xl font-bold">{config.title}</h1>
+            <h1 className="font-display text-foreground mb-2 text-2xl font-bold">
+              {status === 'loading' && 'Активація доступу…'}
+              {status === 'success' && 'Доступ активовано!'}
+              {status === 'error' && 'Помилка активації'}
+            </h1>
             <p className="font-body text-muted-foreground text-sm leading-relaxed">
-              {status === 'error' && errorMessage ? errorMessage : config.description}
+              {status === 'loading' && 'Застосовуємо ваш токен доступу'}
+              {status === 'success' &&
+                `Перенаправляємо вас ${redirectTarget === '/elections' ? 'до голосувань' : 'до голосування'}…`}
+              {status === 'error' && (errorMessage ?? 'Не вдалося активувати токен доступу')}
             </p>
 
             {status === 'error' && (
               <div className="mt-8 flex flex-col gap-3">
                 <button
-                  onClick={() => router.push('/login')}
+                  onClick={() => router.push('/elections')}
                   className="font-body bg-kpi-navy hover:bg-kpi-navy-hover h-10 w-full rounded-(--radius) px-4 text-sm font-medium text-white transition-colors"
                 >
-                  Повернутися до входу
-                </button>
-                <button
-                  onClick={() => {
-                    setStatus('loading');
-                    setErrorMessage(null);
-                    calledRef.current = false;
-                    window.location.reload();
-                  }}
-                  className="font-body border-border-color bg-surface text-foreground hover:bg-surface-hover h-10 w-full rounded-(--radius) border px-4 text-sm font-medium transition-colors"
-                >
-                  Спробувати знову
+                  До голосувань
                 </button>
               </div>
             )}

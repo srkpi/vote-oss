@@ -1,4 +1,3 @@
-// src/lib/jwt.ts
 import { randomUUID } from 'crypto';
 import { jwtVerify, SignJWT } from 'jose';
 
@@ -52,6 +51,7 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
     isAdmin: (payload['isAdmin'] as boolean) ?? false,
     restrictedToFaculty: (payload['restrictedToFaculty'] as boolean) ?? true,
     manageAdmins: (payload['manageAdmins'] as boolean) ?? false,
+    initialAuthAt: payload['initialAuthAt'] as number | undefined,
     jti: payload.jti as string,
     iat: payload.iat as number,
     tokenType: 'access',
@@ -73,6 +73,7 @@ export async function verifyRefreshToken(token: string): Promise<VerifiedPayload
     isAdmin: (payload['isAdmin'] as boolean) ?? false,
     restrictedToFaculty: (payload['restrictedToFaculty'] as boolean) ?? true,
     manageAdmins: (payload['manageAdmins'] as boolean) ?? false,
+    initialAuthAt: payload['initialAuthAt'] as number | undefined,
     jti: payload.jti as string,
     iat: payload.iat as number,
     tokenType: 'refresh',

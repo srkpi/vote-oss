@@ -2,6 +2,7 @@ import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from
 import type { ApiResult } from '@/types/api';
 import type { DiiaInitResponse } from '@/types/auth';
 import type { BallotsResponse } from '@/types/ballot';
+import type { BypassToken } from '@/types/bypass';
 import type {
   CreateElectionRequest,
   CreateElectionResponse,
@@ -57,14 +58,29 @@ export function createApiClient(fetcher: Fetcher) {
         }),
       getBallots: (electionId: string) =>
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
+
+      bypass: {
+        list: (electionId: string) => fetcher<BypassToken[]>(`/elections/${electionId}/bypass`),
+        create: (
+          electionId: string,
+          data: { bypassNotStudying?: boolean; bypassRestrictions?: string[]; validUntil: string },
+        ) =>
+          fetcher<{
+            token: string;
+            tokenHash: string;
+            electionId: string;
+            bypassRestrictions: string[];
+            validUntil: string;
+          }>(`/elections/${electionId}/bypass`, { method: 'POST', body: JSON.stringify(data) }),
+        delete: (tokenHash: string) => fetcher<void>(`/bypass/${tokenHash}`, { method: 'DELETE' }),
+        revokeUsage: (tokenHash: string, userId: string) =>
+          fetcher<void>(`/bypass/${tokenHash}/usages/${userId}`, { method: 'DELETE' }),
+      },
     },
 
     admins: {
       list: () => fetcher<Admin[]>('/admins'),
-      delete: (userId: string) =>
-        fetcher<void>(`/admins/${userId}`, {
-          method: 'DELETE',
-        }),
+      delete: (userId: string) => fetcher<void>(`/admins/${userId}`, { method: 'DELETE' }),
       patch: (userId: string, data: { manageAdmins?: boolean; restrictedToFaculty?: boolean }) =>
         fetcher<void>(`/admins/${userId}`, {
           method: 'PATCH',
@@ -83,9 +99,7 @@ export function createApiClient(fetcher: Fetcher) {
             body: JSON.stringify(data),
           }),
         delete: (tokenHash: string) =>
-          fetcher<void>(`/admins/invite/${tokenHash}`, {
-            method: 'DELETE',
-          }),
+          fetcher<void>(`/admins/invite/${tokenHash}`, { method: 'DELETE' }),
       },
       join: (token: string) =>
         fetcher<void>('/admins/join', { method: 'POST', body: JSON.stringify({ token }) }),
@@ -93,6 +107,25 @@ export function createApiClient(fetcher: Fetcher) {
 
     campus: {
       getGroups: () => fetcher<Record<string, string[]>>('/campus/groups'),
+    },
+
+    bypass: {
+      apply: (token: string) =>
+        fetcher<{ type: 'GLOBAL' | 'ELECTION'; electionId: string | null }>('/bypass/apply', {
+          method: 'POST',
+          body: JSON.stringify({ token }),
+        }),
+      listGlobal: () => fetcher<BypassToken[]>('/bypass'),
+      createGlobal: (data: { bypassNotStudying?: boolean; validUntil: string }) =>
+        fetcher<{
+          token: string;
+          tokenHash: string;
+          bypassNotStudying: boolean;
+          validUntil: string;
+        }>('/bypass', { method: 'POST', body: JSON.stringify(data) }),
+      delete: (tokenHash: string) => fetcher<void>(`/bypass/${tokenHash}`, { method: 'DELETE' }),
+      revokeUsage: (tokenHash: string, userId: string) =>
+        fetcher<void>(`/bypass/${tokenHash}/usages/${userId}`, { method: 'DELETE' }),
     },
 
     faq: {
@@ -108,10 +141,7 @@ export function createApiClient(fetcher: Fetcher) {
             method: 'PUT',
             body: JSON.stringify({ title }),
           }),
-        delete: (id: string) =>
-          fetcher<void>(`/faq/categories/${id}`, {
-            method: 'DELETE',
-          }),
+        delete: (id: string) => fetcher<void>(`/faq/categories/${id}`, { method: 'DELETE' }),
         reorder: (order: string[]) =>
           fetcher<void>('/faq/categories/reorder', {
             method: 'PATCH',
@@ -129,10 +159,7 @@ export function createApiClient(fetcher: Fetcher) {
             method: 'PUT',
             body: JSON.stringify({ title, content }),
           }),
-        delete: (id: string) =>
-          fetcher<void>(`/faq/items/${id}`, {
-            method: 'DELETE',
-          }),
+        delete: (id: string) => fetcher<void>(`/faq/items/${id}`, { method: 'DELETE' }),
         reorder: (categoryId: string, order: string[]) =>
           fetcher<void>(`/faq/categories/${categoryId}/items/reorder`, {
             method: 'PATCH',

@@ -24,20 +24,22 @@ import { bloomAdd, getBloomResetAt, isTokenClean } from '@/lib/bloom';
 import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 
-// ---------------------------------------------------------------------------
-// Issuance
-// ---------------------------------------------------------------------------
-
 /**
  * Persist a newly-issued token pair.
- * The DB record is kept for audit / fallback; the hot path never reads it.
+ * `initialAuthAt` is the timestamp of the original Diia authentication that
+ * started this session — it is preserved across all refresh rotations.
  */
-export async function persistTokenPair(accessJti: string, refreshJti: string): Promise<void> {
+export async function persistTokenPair(
+  accessJti: string,
+  refreshJti: string,
+  initialAuthAt: Date,
+): Promise<void> {
   await prisma.jwtToken.create({
     data: {
       access_jti: accessJti,
       refresh_jti: refreshJti,
       created_at: new Date(),
+      initial_auth_at: initialAuthAt,
     },
   });
 }
@@ -63,12 +65,8 @@ export async function isAccessTokenValid(jti: string, iat: number): Promise<bool
   }
 
   const bloomResult = await isTokenClean(jti);
-  if (bloomResult === true) {
-    return true;
-  }
-  if (bloomResult === false) {
-    return false;
-  }
+  if (bloomResult === true) return true;
+  if (bloomResult === false) return false;
 
   const record = await prisma.jwtToken.findFirst({
     where: { access_jti: jti },
@@ -90,7 +88,6 @@ export async function isRefreshTokenValid(jti: string, iat: number): Promise<boo
   }
 
   const bloomResult = await isTokenClean(jti);
-
   if (bloomResult === true) return true;
   if (bloomResult === false) return false;
 
@@ -118,7 +115,6 @@ export async function revokeTokenPair(
   refreshIat: number,
 ): Promise<void> {
   const now = Math.floor(Date.now() / 1_000);
-
   const accessTtl = Math.max(1, accessIat + ACCESS_TOKEN_TTL_SECS - now);
   const refreshTtl = Math.max(1, refreshIat + REFRESH_TOKEN_TTL_SECS - now);
 
@@ -140,23 +136,20 @@ export async function revokeByRefreshJti(
 ): Promise<{ accessJti: string | null }> {
   const now = Math.floor(Date.now() / 1_000);
 
-  // Look up the sibling access JTI so we can bloom-add it too
   const record = await prisma.jwtToken.findFirst({
     where: { refresh_jti: refreshJti },
     select: { access_jti: true },
   });
 
   const refreshTtl = Math.max(1, refreshIat + REFRESH_TOKEN_TTL_SECS - now);
-  const accessTtl = ACCESS_TOKEN_TTL_SECS; // conservative upper bound
+  const accessTtl = ACCESS_TOKEN_TTL_SECS;
 
   const ops: Promise<unknown>[] = [
     bloomAdd(refreshJti, refreshTtl),
     prisma.jwtToken.deleteMany({ where: { refresh_jti: refreshJti } }),
   ];
 
-  if (record?.access_jti) {
-    ops.push(bloomAdd(record.access_jti, accessTtl));
-  }
+  if (record?.access_jti) ops.push(bloomAdd(record.access_jti, accessTtl));
 
   await Promise.all(ops);
 
@@ -169,11 +162,7 @@ export async function revokeByRefreshJti(
 export async function revokeByAccessJti(accessJti: string, accessIat: number): Promise<void> {
   const now = Math.floor(Date.now() / 1_000);
   const accessTtl = Math.max(1, accessIat + ACCESS_TOKEN_TTL_SECS - now);
-
-  // Bloom the access token immediately (don't wait for DB lookup)
   const bloomAccessOp = bloomAdd(accessJti, accessTtl);
-
-  // Fetch sibling refresh JTI
   const record = await prisma.jwtToken.findFirst({
     where: { access_jti: accessJti },
     select: { refresh_jti: true, created_at: true },

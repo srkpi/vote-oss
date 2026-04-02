@@ -362,6 +362,7 @@ describe('GET /api/auth/diia/check', () => {
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
+      expect.any(Date),
     );
   });
 
