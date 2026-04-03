@@ -66,11 +66,23 @@ export async function POST(req: NextRequest) {
   // forcing re-login. The user can remain logged in for up to ACCESS_TOKEN_TTL_SECS
   // after revocation (until their current access token expires).
   if (user.initialAuthAt) {
+    const now = new Date();
     const initialAuthDate = new Date(user.initialAuthAt * 1000);
     const revokedBypass = await prisma.globalBypassTokenUsage.findFirst({
       where: {
         user_id: user.sub,
-        revoked_at: { gt: initialAuthDate },
+        OR: [
+          { revoked_at: { gt: initialAuthDate } },
+          {
+            revoked_at: null,
+            token: {
+              valid_until: {
+                gt: initialAuthDate,
+                lt: now,
+              },
+            },
+          },
+        ],
       },
       select: { id: true },
     });
