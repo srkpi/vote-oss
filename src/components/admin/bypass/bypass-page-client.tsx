@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
+import { LocalDateTime } from '@/components/ui/local-time';
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
@@ -118,13 +119,13 @@ function BypassTokenCard({
             Використань: {token.currentUsage} / {token.maxUsage}
           </p>
           <p className="font-body text-muted-foreground text-xs">
-            Дійсний до: {new Date(token.validUntil).toLocaleString('uk-UA')}
+            Дійсний до: <LocalDateTime date={token.validUntil} />
           </p>
           <p className="font-body text-muted-foreground text-xs">Видав: {token.creator.fullName}</p>
           {isDeleted && (
             <>
               <p className="font-body text-error text-xs">
-                Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
+                Видалено: <LocalDateTime date={token.deletedAt!} />
               </p>
               {token.deletedBy && (
                 <p className="font-body text-error text-xs">{token.deletedBy.fullName}</p>
@@ -174,12 +175,12 @@ function BypassTokenCard({
                   <div>
                     <p className="text-foreground font-mono text-xs">{usage.userId}</p>
                     <p className="font-body text-muted-foreground text-xs">
-                      {new Date(usage.usedAt).toLocaleString('uk-UA')}
+                      <LocalDateTime date={usage.usedAt} />
                     </p>
                     {usage.revokedAt && (
                       <>
                         <p className="font-body text-error text-xs">
-                          Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
+                          Відкликано: <LocalDateTime date={usage.revokedAt} />
                         </p>
                         {usage.revokedBy && (
                           <p className="font-body text-error text-xs">{usage.revokedBy.fullName}</p>

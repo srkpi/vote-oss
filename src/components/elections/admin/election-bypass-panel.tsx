@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
+import { LocalDateTime } from '@/components/ui/local-time';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { BYPASS_TOKEN_MAX_USAGE_MAX, RESTRICTION_TYPE_LABELS } from '@/lib/constants';
@@ -117,7 +118,7 @@ function BypassTokenItem({
           {isDeleted && (
             <>
               <p className="font-body text-error text-xs">
-                Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
+                Видалено: <LocalDateTime date={token.deletedAt!} />
               </p>
               {token.deletedBy && (
                 <p className="font-body text-error text-xs">{token.deletedBy.fullName}</p>
@@ -161,12 +162,12 @@ function BypassTokenItem({
                 <div>
                   <p className="text-foreground font-mono text-xs">{usage.userId}</p>
                   <p className="font-body text-muted-foreground text-xs">
-                    {new Date(usage.usedAt).toLocaleString('uk-UA')}
+                    <LocalDateTime date={usage.usedAt} />
                   </p>
                   {usage.revokedAt && (
                     <>
                       <p className="font-body text-error text-xs">
-                        Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
+                        Відкликано: <LocalDateTime date={usage.revokedAt} />
                       </p>
                       {usage.revokedBy && (
                         <p className="font-body text-error text-xs">{usage.revokedBy.fullName}</p>
