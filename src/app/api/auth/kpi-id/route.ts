@@ -6,10 +6,10 @@ import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
 import {
+  getCampusUserData,
   InvalidTicketError,
   InvalidUserDataError,
   resolveTicket,
-  ResolveUserDataError,
 } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
@@ -91,35 +91,40 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('ticketId is required');
   }
 
-  let userInfo;
+  let kpiIdInfo;
   try {
-    userInfo = await resolveTicket(ticketId);
+    kpiIdInfo = await resolveTicket(ticketId);
   } catch (err) {
     if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
       return Errors.unauthorized(err.message);
     }
-    if (err instanceof ResolveUserDataError) {
-      return Errors.forbidden(err.message);
-    }
-    console.error('[auth/kpi-id] resolveTicket error:', err);
-    return Errors.internal('Failed to contact auth provider');
+    return Errors.forbidden((err as Error).message);
+  }
+
+  const campusDataResult = await getCampusUserData(kpiIdInfo);
+  if (campusDataResult instanceof NextResponse) {
+    return campusDataResult;
   }
 
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
 
+  const now = Math.floor(Date.now() / 1000);
+  const initialAuthAt = now;
+
   const tokenPayload: TokenPayload = {
-    sub: userInfo.userId,
-    faculty: userInfo.faculty,
-    group: userInfo.group,
-    fullName: userInfo.fullName,
-    speciality: userInfo.speciality,
-    studyYear: userInfo.studyYear,
-    studyForm: userInfo.studyForm,
+    sub: campusDataResult.userId,
+    faculty: campusDataResult.faculty,
+    group: campusDataResult.group,
+    fullName: campusDataResult.fullName,
+    speciality: campusDataResult.speciality,
+    studyYear: campusDataResult.studyYear,
+    studyForm: campusDataResult.studyForm,
+    initialAuthAt,
   };
 
   const adminRecord = await prisma.admin.findUnique({
-    where: { user_id: userInfo.userId, deleted_at: null },
+    where: { user_id: campusDataResult.userId, deleted_at: null },
   });
   const isAdmin = !!adminRecord;
 
@@ -132,7 +137,7 @@ export async function POST(req: NextRequest) {
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
     await Promise.all([signAccessToken(tokenPayload), signRefreshToken(tokenPayload)]);
 
-  await persistTokenPair(accessJti, refreshJti);
+  await persistTokenPair(accessJti, refreshJti, new Date(initialAuthAt * 1000));
 
   const response = new NextResponse(null, { status: 200 });
 

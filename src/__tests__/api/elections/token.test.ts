@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   JWT_TOKEN_RECORD,
   makeElection,
@@ -14,9 +15,13 @@ import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-s
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
+jest.mock('@/lib/cache', () => cacheMock);
 jest.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
+}));
+jest.mock('@/lib/bypass', () => ({
+  getElectionBypassForUser: jest.fn().mockResolvedValue(null),
 }));
 
 import { POST } from '@/app/api/elections/[id]/token/route';
@@ -33,6 +38,7 @@ describe('POST /api/elections/[id]/token', () => {
   beforeEach(() => {
     resetPrismaMock();
     resetTokenStoreMock();
+    resetCacheMock();
     allure.feature('Elections');
     allure.story('Issue Vote Token');
   });

@@ -45,22 +45,21 @@ export function PageHeader({
           isContainer && 'container',
         )}
       >
+        {backHref && (
+          <Link
+            href={backHref}
+            className={cn(
+              'border-border-subtle hover:bg-surface text-muted-foreground hover:text-foreground',
+              'mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+              'border transition-all duration-200',
+              backClassName,
+            )}
+            aria-label="Назад"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Link>
+        )}
         <div className="flex min-w-0 items-start gap-4">
-          {backHref && (
-            <Link
-              href={backHref}
-              className={cn(
-                'border-border-subtle hover:bg-surface text-muted-foreground hover:text-foreground',
-                'mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-                'border transition-all duration-200',
-                backClassName,
-              )}
-              aria-label="Назад"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Link>
-          )}
-
           <div className="min-w-0 flex-1">
             {nav && nav.length > 0 && (
               <nav

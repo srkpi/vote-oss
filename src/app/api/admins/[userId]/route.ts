@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { getCachedAdmins, invalidateAdmins, invalidateInviteTokens } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
+import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
-import { isAncestorInGraph } from '@/lib/utils';
 
 /**
  * @swagger
@@ -178,19 +178,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     return Errors.notFound('Admin not found');
   }
 
-  // Build hierarchy graph from cache (active admins only).
-  const cachedAdmins = await getCachedAdmins();
-  const graph: Map<string, string | null> = cachedAdmins
-    ? new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]))
-    : new Map(
-        (
-          await prisma.admin.findMany({
-            where: { deleted_at: null },
-            select: { user_id: true, promoted_by: true },
-          })
-        ).map((n) => [n.user_id, n.promoted_by]),
-      );
-
+  const graph = await buildAdminGraph();
   if (!isAncestorInGraph(graph, user.sub, targetUserId)) {
     return Errors.forbidden('You can only modify admins in your own branch of the hierarchy');
   }
@@ -289,21 +277,7 @@ export async function DELETE(
     return Errors.notFound('Admin not found');
   }
 
-  // Build the hierarchy graph from cache (active admins only).
-  // Since soft-deleted admins are guaranteed to have no children, active-only
-  // nodes are sufficient for ancestry checks.
-  const cachedAdmins = await getCachedAdmins();
-  const graph: Map<string, string | null> = cachedAdmins
-    ? new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]))
-    : new Map(
-        (
-          await prisma.admin.findMany({
-            where: { deleted_at: null },
-            select: { user_id: true, promoted_by: true },
-          })
-        ).map((n) => [n.user_id, n.promoted_by]),
-      );
-
+  const graph = await buildAdminGraph();
   if (!isAncestorInGraph(graph, user.sub, targetUserId)) {
     return Errors.forbidden('You can only remove admins in your own branch of the hierarchy');
   }

@@ -1,10 +1,12 @@
 import type { NextRequest } from 'next/server';
 
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
+import { COOKIE_ACCESS, COOKIE_REFRESH, SESSION_INITIAL_AUTH_MAX_DAYS } from '@/lib/constants';
 import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import { prisma } from '@/lib/prisma';
 import { isAccessTokenValid, isRefreshTokenValid } from '@/lib/token-store';
 import type { AuthAdminSuccess, AuthFailure, AuthSuccess, VerifiedPayload } from '@/types/auth';
+
+const SESSION_MAX_SECS = SESSION_INITIAL_AUTH_MAX_DAYS * 24 * 60 * 60;
 
 export async function requireAuth(req: NextRequest): Promise<AuthFailure | AuthSuccess> {
   const token = req.cookies.get(COOKIE_ACCESS)?.value;
@@ -17,6 +19,14 @@ export async function requireAuth(req: NextRequest): Promise<AuthFailure | AuthS
     payload = await verifyAccessToken(token);
   } catch {
     return { ok: false, error: 'Invalid access token', status: 401 };
+  }
+
+  // Enforce max session age (requires fresh Diia authentication after N days)
+  if (payload.initialAuthAt) {
+    const ageSecs = Math.floor(Date.now() / 1000) - payload.initialAuthAt;
+    if (ageSecs > SESSION_MAX_SECS) {
+      return { ok: false, error: 'Session expired, please re-authenticate via Diia', status: 401 };
+    }
   }
 
   const valid = await isAccessTokenValid(payload.jti, payload.iat);
@@ -38,6 +48,14 @@ export async function requireRefreshAuth(req: NextRequest): Promise<AuthFailure 
     payload = await verifyRefreshToken(token);
   } catch {
     return { ok: false, error: 'Invalid refresh token', status: 401 };
+  }
+
+  // Enforce max session age on refresh too
+  if (payload.initialAuthAt) {
+    const ageSecs = Math.floor(Date.now() / 1000) - payload.initialAuthAt;
+    if (ageSecs > SESSION_MAX_SECS) {
+      return { ok: false, error: 'Session expired, please re-authenticate via Diia', status: 401 };
+    }
   }
 
   const valid = await isRefreshTokenValid(payload.jti, payload.iat);

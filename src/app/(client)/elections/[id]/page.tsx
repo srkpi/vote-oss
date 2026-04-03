@@ -10,12 +10,13 @@ import { ElectionStatusBadge } from '@/components/elections/election-status-badg
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { InfoRow } from '@/components/elections/info-row';
 import { KeyDisclosure } from '@/components/elections/key-disclosure';
+import { RestrictedVoteBanner } from '@/components/elections/restricted-vote-banner';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
-import { checkRestrictions } from '@/lib/restrictions';
+import { checkRestrictionsWithBypass } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
 import { pluralize } from '@/lib/utils';
 
@@ -76,8 +77,10 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   const isOpen = election.status === 'open';
   const isUpcoming = election.status === 'upcoming';
   const isClosed = election.status === 'closed';
-  // Choices carry votes/winner for closed elections.
   const hasResults = isClosed && election.choices.some((c) => c.votes !== undefined);
+
+  const bypassedTypes = election.bypassedTypes ?? null;
+  const canParticipate = checkRestrictionsWithBypass(election.restrictions, session, bypassedTypes);
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
@@ -129,7 +132,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
             {isOpen && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
-                {checkRestrictions(election.restrictions, session) ? (
+                {canParticipate ? (
                   <>
                     <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
                       Ваш голос
@@ -137,7 +140,11 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                     <VoteStatusWrapper election={election} />
                   </>
                 ) : (
-                  <ErrorState title="Ви не можете брати участь у цьому опитуванні" />
+                  <RestrictedVoteBanner
+                    restrictions={election.restrictions}
+                    session={session}
+                    bypassedTypes={bypassedTypes}
+                  />
                 )}
               </div>
             )}

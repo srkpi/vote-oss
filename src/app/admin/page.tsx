@@ -70,7 +70,6 @@ export default async function AdminDashboardPage() {
     <div className="flex-1 overflow-auto">
       <PageHeader
         title={`${getGreeting()}, ${session?.fullName.split(' ')[1] ?? session?.fullName}!`}
-        description="Ось короткий огляд системи голосування"
         backHref="/"
         backClassName="lg:hidden"
       >

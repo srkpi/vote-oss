@@ -54,6 +54,7 @@ export interface TokenPayload {
   isAdmin?: boolean;
   restrictedToFaculty?: boolean;
   manageAdmins?: boolean;
+  initialAuthAt?: number;
 }
 
 export interface VerifiedPayload extends TokenPayload {

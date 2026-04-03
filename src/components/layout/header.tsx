@@ -145,22 +145,27 @@ export function Header({ session }: HeaderProps) {
                       </div>
 
                       {session.studyForm && (
-                        <div>
+                        <>
                           <p className="text-muted-foreground mb-1 text-xs">Форма навчання:</p>
                           <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
                             {STUDY_FORM_LABELS[session.studyForm as StudyFormValue]}
                           </p>
-                        </div>
+                        </>
                       )}
 
                       {session.speciality && (
-                        <div>
+                        <>
                           <p className="text-muted-foreground mb-1 text-xs">Спеціальність:</p>
                           <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
                             {session.speciality}
                           </p>
-                        </div>
+                        </>
                       )}
+
+                      <p className="text-muted-foreground mb-1 text-xs">Ідентифікатор KPI ID:</p>
+                      <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
+                        {session.userId}
+                      </p>
 
                       {session.isAdmin && (
                         <span className="bg-kpi-orange inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-wide text-white uppercase">

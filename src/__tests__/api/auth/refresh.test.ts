@@ -92,6 +92,7 @@ describe('POST /api/auth/refresh', () => {
     expect(tokenStoreMock.persistTokenPair).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
+      expect.any(Date),
     );
   });
 

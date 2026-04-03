@@ -69,6 +69,7 @@ export interface ElectionDetail extends Election {
   publicKey: string;
   privateKey?: string;
   hasVoted?: boolean;
+  bypassedTypes?: string[];
 }
 
 /**

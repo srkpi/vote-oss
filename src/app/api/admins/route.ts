@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
 import { getCachedAdmins, setCachedAdmins } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
+import { isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
-import { isAncestorInGraph } from '@/lib/utils';
 import type { Admin } from '@/types/admin';
 
 // ---------------------------------------------------------------------------

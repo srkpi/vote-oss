@@ -1,8 +1,10 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import type { StudyFormValue } from '@/lib/constants';
+import { LEVEL_COURSE_LEVEL_LABELS, STUDY_FORM_LABELS } from '@/lib/constants';
 import type { InviteToken } from '@/types/admin';
-import type { ElectionStatus } from '@/types/election';
+import type { ElectionStatus, RestrictionType } from '@/types/election';
 import type { QuillDelta } from '@/types/quill';
 
 export function cn(...inputs: ClassValue[]) {
@@ -48,6 +50,34 @@ export function formatTimeRemaining(targetDate: string): string {
   if (hours > 0) return `${hours} год. ${minutes} хв.`;
   if (minutes > 0) return `${minutes} хв. ${seconds} с.`;
   return `${seconds} с.`;
+}
+
+export function formatLevelCourse(value: string): string {
+  const level = value[0] as 'b' | 'm' | 'g';
+  const course = value.slice(1);
+  const levelLabel = LEVEL_COURSE_LEVEL_LABELS[level];
+
+  // Singular form for display: Бакалавр, Магістр, Аспірант
+  const singularMap: Record<string, string> = {
+    b: 'Бакалавр',
+    m: 'Магістр',
+    g: 'Аспірант',
+  };
+
+  return `${singularMap[level] ?? levelLabel} ${course} курс`;
+}
+
+export function formatRestrictionValue(type: RestrictionType, value: string) {
+  if (type === 'STUDY_FORM') {
+    return STUDY_FORM_LABELS[value as StudyFormValue] || value;
+  }
+  if (type === 'STUDY_YEAR') {
+    return `${value} курс`;
+  }
+  if (type === 'LEVEL_COURSE') {
+    return formatLevelCourse(value);
+  }
+  return value;
 }
 
 export function getElectionStatus(opensAt: string, closesAt: string): ElectionStatus {
@@ -132,32 +162,6 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f
 
 export function isValidUuid(id: string): boolean {
   return UUID_RE.test(id);
-}
-
-/**
- * Walk the in-memory graph upward from `targetUserId` and return true if
- * `ancestorId` appears anywhere in the chain.
- *
- * O(depth) — no database I/O. A visited-set guards against cycles.
- */
-export function isAncestorInGraph(
-  graph: Map<string, string | null>,
-  ancestorId: string,
-  targetUserId: string,
-): boolean {
-  const visited = new Set<string>();
-  let currentId: string | null = targetUserId;
-
-  while (currentId) {
-    if (visited.has(currentId)) break;
-    visited.add(currentId);
-
-    const promotedBy: string | null = graph.get(currentId) ?? null;
-    if (promotedBy === ancestorId) return true;
-    currentId = promotedBy;
-  }
-
-  return false;
 }
 
 export function tokenUsageFraction(token: InviteToken): number {

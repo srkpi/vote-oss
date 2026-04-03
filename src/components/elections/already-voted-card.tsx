@@ -1,6 +1,7 @@
 import { Check, CheckCircle, Copy, Hash, MonitorSmartphone } from 'lucide-react';
 import { useState } from 'react';
 
+import { LocalDateTime } from '@/components/ui/local-time';
 import { cn } from '@/lib/utils';
 import type { VoteRecord } from '@/types/vote';
 
@@ -59,12 +60,7 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
         <div>
           <p className="font-body text-success text-sm font-semibold">Ви вже проголосували</p>
           <p className="font-body text-muted-foreground mt-0.5 text-xs">
-            {new Intl.DateTimeFormat('uk-UA', {
-              day: 'numeric',
-              month: 'long',
-              hour: '2-digit',
-              minute: '2-digit',
-            }).format(new Date(record.votedAt))}
+            <LocalDateTime date={record.votedAt} />
           </p>
         </div>
       </div>

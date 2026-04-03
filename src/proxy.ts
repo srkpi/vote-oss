@@ -1,11 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { APP_URL } from '@/lib/config/client';
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
+import {
+  COOKIE_ACCESS,
+  COOKIE_REFRESH,
+  COOKIE_RETURN_TO,
+  RETURN_COOKIE_TTL_SECS,
+} from '@/lib/constants';
 import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import type { VerifiedPayload } from '@/types/auth';
 
-const PROTECTED_PATHS = ['/elections', '/admin', '/join'];
+const PROTECTED_PATHS = ['/elections', '/admin', '/join', '/use'];
 const GUEST_ONLY_PATHS = ['/login'];
 const ADMIN_ONLY_PATHS = ['/admin'];
 
@@ -66,10 +71,29 @@ export async function proxy(req: NextRequest) {
   if (!user && isProtected) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/login';
-    return NextResponse.redirect(loginUrl);
+
+    // Store the requested path so we can redirect back after login
+    const response = NextResponse.redirect(loginUrl);
+    response.cookies.set(COOKIE_RETURN_TO, pathname + req.nextUrl.search, {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: RETURN_COOKIE_TTL_SECS,
+    });
+
+    return response;
   }
 
-  if (user && isGuestOnly) return NextResponse.redirect(new URL('/', req.nextUrl.origin));
+  if (user && isGuestOnly) {
+    // After login, redirect to the stored return_to URL if present
+    const returnTo = req.cookies.get(COOKIE_RETURN_TO)?.value;
+    const targetUrl = returnTo && returnTo.startsWith('/') ? returnTo : '/';
+    const response = NextResponse.redirect(new URL(targetUrl, req.nextUrl.origin));
+    // Clear the return_to cookie
+    response.cookies.set(COOKIE_RETURN_TO, '', { maxAge: 0, path: '/' });
+    return response;
+  }
+
   if (user && isAdminOnly && !user.isAdmin)
     return NextResponse.redirect(new URL('/', req.nextUrl.origin));
   if (user && user.isAdmin && pathname.startsWith('/join'))

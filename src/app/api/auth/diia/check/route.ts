@@ -6,12 +6,7 @@ import { KPI_AUTH_URL } from '@/lib/config/client';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
-import {
-  InvalidTicketError,
-  InvalidUserDataError,
-  resolveUserData,
-  ResolveUserDataError,
-} from '@/lib/kpi-id';
+import { getCampusUserData } from '@/lib/kpi-id';
 import { prisma } from '@/lib/prisma';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
 import type { KpiIdUserInfo, TokenPayload } from '@/types/auth';
@@ -118,13 +113,9 @@ export async function POST(req: NextRequest) {
 
   let kpiCookieHeader: string;
   try {
-    const internalUrl = new URL(`${KPI_AUTH_URL}/api/auth/internal`);
-    const internalRes = await fetch(internalUrl.toString(), {
+    const internalRes = await fetch(new URL(`${KPI_AUTH_URL}/api/auth/internal`).toString(), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ sessionId }),
     });
 
@@ -157,10 +148,7 @@ export async function POST(req: NextRequest) {
   try {
     const userRes = await fetch(`${KPI_AUTH_URL}/api/user`, {
       method: 'GET',
-      headers: {
-        Cookie: kpiCookieHeader,
-        Accept: 'application/json',
-      },
+      headers: { Cookie: kpiCookieHeader, Accept: 'application/json' },
     });
 
     if (!userRes.ok) {
@@ -185,39 +173,33 @@ export async function POST(req: NextRequest) {
     return Errors.internal('Invalid user data from provider');
   }
 
-  let userInfo;
-  try {
-    userInfo = await resolveUserData(data);
-  } catch (err) {
-    if (err instanceof InvalidTicketError || err instanceof InvalidUserDataError) {
-      return Errors.unauthorized(err.message);
-    }
-    if (err instanceof ResolveUserDataError) {
-      return Errors.forbidden(err.message);
-    }
-    console.error('[auth/kpi-id] resolveUserData error:', err);
-    return Errors.internal('Failed to contact auth provider');
+  const campusDataResult = await getCampusUserData(data);
+  if (campusDataResult instanceof NextResponse) {
+    return campusDataResult;
   }
 
   const auth = await requireAuth(req);
   if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
 
+  const now = Math.floor(Date.now() / 1000);
+  const initialAuthAt = now;
+
   const tokenPayload: TokenPayload = {
-    sub: userInfo.userId,
-    faculty: userInfo.faculty,
-    group: userInfo.group,
-    fullName: userInfo.fullName,
-    speciality: userInfo.speciality,
-    studyYear: userInfo.studyYear,
-    studyForm: userInfo.studyForm,
+    sub: campusDataResult.userId,
+    faculty: campusDataResult.faculty,
+    group: campusDataResult.group,
+    fullName: campusDataResult.fullName,
+    speciality: campusDataResult.speciality,
+    studyYear: campusDataResult.studyYear,
+    studyForm: campusDataResult.studyForm,
+    initialAuthAt,
   };
 
   const adminRecord = await prisma.admin.findUnique({
-    where: { user_id: userInfo.userId, deleted_at: null },
+    where: { user_id: campusDataResult.userId, deleted_at: null },
   });
-  const isAdmin = !!adminRecord;
 
-  if (isAdmin) {
+  if (adminRecord) {
     tokenPayload.isAdmin = true;
     tokenPayload.manageAdmins = adminRecord.manage_admins;
     tokenPayload.restrictedToFaculty = adminRecord.restricted_to_faculty;
@@ -226,7 +208,7 @@ export async function POST(req: NextRequest) {
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =
     await Promise.all([signAccessToken(tokenPayload), signRefreshToken(tokenPayload)]);
 
-  await persistTokenPair(accessJti, refreshJti);
+  await persistTokenPair(accessJti, refreshJti, new Date(initialAuthAt * 1000));
 
   const response = NextResponse.json({ status: 'success' });
 

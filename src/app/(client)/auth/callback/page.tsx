@@ -10,21 +10,31 @@ type Status = 'loading' | 'success' | 'error';
 
 const STATUS_CONFIG = {
   loading: {
-    icon: null,
     title: 'Авторизація…',
     description: 'Перевіряємо вашу особу через KPI ID',
   },
   success: {
-    icon: 'check',
     title: 'Успішний вхід!',
     description: 'Перенаправляємо вас до платформи…',
   },
   error: {
-    icon: 'error',
     title: 'Помилка авторизації',
     description: 'Не вдалось підтвердити особу',
   },
 } as const;
+
+async function getReturnTo(): Promise<string> {
+  try {
+    const res = await fetch('/api/auth/return-to');
+    if (res.ok) {
+      const data = (await res.json()) as { returnTo?: string };
+      return data.returnTo && data.returnTo.startsWith('/') ? data.returnTo : '/elections';
+    }
+  } catch {
+    // ignore
+  }
+  return '/elections';
+}
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -36,10 +46,7 @@ export default function CallbackPage() {
   const ticketId = searchParams.get('ticketId');
 
   useEffect(() => {
-    if (calledRef.current) {
-      return;
-    }
-
+    if (calledRef.current) return;
     calledRef.current = true;
 
     const run = async () => {
@@ -53,8 +60,9 @@ export default function CallbackPage() {
 
       if (result.success) {
         setStatus('success');
+        const returnTo = await getReturnTo();
         setTimeout(() => {
-          router.push('/elections');
+          router.push(returnTo);
           router.refresh();
         }, 1200);
       } else {
@@ -78,7 +86,6 @@ export default function CallbackPage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-8">
-      {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="bg-kpi-navy/5 absolute top-1/4 left-1/4 h-96 w-96 rounded-full blur-3xl" />
         <div className="bg-kpi-orange/8 absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full blur-3xl" />
@@ -87,7 +94,6 @@ export default function CallbackPage() {
 
       <div className="relative w-full max-w-md">
         <div className="border-border-color shadow-shadow-xl overflow-hidden rounded-2xl border bg-white">
-          {/* Top accent bar */}
           <div
             className={`h-1.5 w-full transition-all duration-700 ${
               status === 'loading'
@@ -99,7 +105,6 @@ export default function CallbackPage() {
           />
 
           <div className="p-10 text-center">
-            {/* Status icon */}
             <div className="mb-6 flex justify-center">
               {status === 'loading' && (
                 <div className="relative h-20 w-20">

@@ -2,11 +2,12 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { getElectionBypassForUser } from '@/lib/bypass';
 import { generateVoteToken, signVoteToken } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import { checkRestrictions } from '@/lib/restrictions';
+import { checkRestrictionsWithBypass } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
 import type { ElectionRestriction } from '@/types/election';
 
@@ -76,7 +77,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (now > election.closes_at) return Errors.badRequest('Election has already closed');
 
   const restrictions = election.restrictions as ElectionRestriction[];
-  if (!checkRestrictions(restrictions, user)) {
+  const bypassedTypes = await getElectionBypassForUser(user.sub, electionId);
+  if (!checkRestrictionsWithBypass(restrictions, user, bypassedTypes)) {
     return Errors.forbidden('You are not eligible for this election');
   }
 

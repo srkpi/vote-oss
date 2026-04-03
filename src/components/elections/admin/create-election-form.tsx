@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { CharCounter } from '@/components/ui/char-counter';
 import { ChipSelect } from '@/components/ui/chip-select';
 import { FormField, Input } from '@/components/ui/form';
+import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { MultiCombobox } from '@/components/ui/multi-combobox';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
@@ -305,22 +306,20 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <FormField label="Початок" required error={fieldErrors.opensAt} htmlFor="opensAt">
-              <Input
+              <KyivDateTimePicker
                 id="opensAt"
-                type="datetime-local"
                 value={form.opensAt}
-                onChange={(e) => updateForm('opensAt', e.target.value)}
+                onChange={(date) => updateForm('opensAt', date.toISOString())}
                 min={minDateTime}
                 max={maxOpensAt}
                 error={!!fieldErrors.opensAt}
               />
             </FormField>
             <FormField label="Завершення" required error={fieldErrors.closesAt} htmlFor="closesAt">
-              <Input
+              <KyivDateTimePicker
                 id="closesAt"
-                type="datetime-local"
                 value={form.closesAt}
-                onChange={(e) => updateForm('closesAt', e.target.value)}
+                onChange={(date) => updateForm('closesAt', date.toISOString())}
                 min={form.opensAt || minDateTime}
                 max={maxClosesAt}
                 error={!!fieldErrors.closesAt}

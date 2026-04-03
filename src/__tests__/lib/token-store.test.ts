@@ -45,18 +45,20 @@ describe('token-store', () => {
 
     it('creates a jwtToken DB record with the given JTIs', async () => {
       prismaMock.jwtToken.create.mockResolvedValueOnce({});
-      await persistTokenPair('access-jti', 'refresh-jti');
+      const initialAuthAt = new Date();
+      await persistTokenPair('access-jti', 'refresh-jti', initialAuthAt);
       expect(prismaMock.jwtToken.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           access_jti: 'access-jti',
           refresh_jti: 'refresh-jti',
+          initial_auth_at: initialAuthAt,
         }),
       });
     });
 
     it('includes created_at timestamp', async () => {
       prismaMock.jwtToken.create.mockResolvedValueOnce({});
-      await persistTokenPair('a', 'b');
+      await persistTokenPair('a', 'b', new Date());
       const { data } = prismaMock.jwtToken.create.mock.calls[0][0];
       expect(data.created_at).toBeInstanceOf(Date);
     });

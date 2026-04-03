@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 
 import { PageHeader } from '@/components/common/page-header';
 import { DeleteElectionButton } from '@/components/elections/admin/delete-election-button';
+import { ElectionBypassPanel } from '@/components/elections/admin/election-bypass-panel';
 import { RestoreElectionButton } from '@/components/elections/admin/restore-election-button';
 import { AccessRestrictions } from '@/components/elections/election-restrictions';
 import { EncryptionKey } from '@/components/elections/encryption-key';
@@ -49,6 +50,12 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
   const isOpen = election.status === 'open';
   // Choices carry votes/winner for closed elections.
   const hasResults = isClosed && election.choices.some((c) => c.votes !== undefined);
+
+  let bypassTokens;
+  if (election.canDelete || election.canRestore) {
+    const bypassReq = await serverApi.elections.bypass.list(id);
+    bypassTokens = bypassReq.data;
+  }
 
   return (
     <div className="flex-1 overflow-auto">
@@ -183,6 +190,15 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   ))}
                 </div>
               </div>
+            )}
+
+            {!isClosed && election.restrictions.length > 0 && bypassTokens && (
+              <ElectionBypassPanel
+                electionId={id}
+                initialTokens={bypassTokens}
+                restrictions={election.restrictions}
+                session={session}
+              />
             )}
           </div>
 
