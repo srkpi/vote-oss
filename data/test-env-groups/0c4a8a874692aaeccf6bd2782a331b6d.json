@@ -1,1 +1,1 @@
-{"id":"0c4a8a874692aaeccf6bd2782a331b6d","fullName":"src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"1de3748e30447524b5cb2021c3fecad4"}}
+{"id":"0c4a8a874692aaeccf6bd2782a331b6d","fullName":"src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"9baec012d9803ca02e492614d4586d3e"}}
