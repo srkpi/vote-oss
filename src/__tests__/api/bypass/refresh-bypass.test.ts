@@ -67,7 +67,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
     expect(prismaMock.globalBypassTokenUsage.findFirst).not.toHaveBeenCalled();
   });
 
-  it('queries globalBypassTokenUsage with correct user_id and revoked_at filter', async () => {
+  it('queries globalBypassTokenUsage with correct filters', async () => {
     const req = await makeRefreshReq(INITIAL_AUTH_AT);
     prismaMock.globalBypassTokenUsage.findFirst.mockResolvedValueOnce(null);
 
@@ -77,7 +77,19 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           user_id: USER_PAYLOAD.sub,
-          revoked_at: expect.objectContaining({ gt: expect.any(Date) }),
+          OR: expect.arrayContaining([
+            expect.objectContaining({
+              revoked_at: expect.objectContaining({ gt: expect.any(Date) }),
+            }),
+            expect.objectContaining({
+              token: {
+                valid_until: expect.objectContaining({
+                  gt: expect.any(Date),
+                  lt: expect.any(Date),
+                }),
+              },
+            }),
+          ]),
         }),
       }),
     );
