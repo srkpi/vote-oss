@@ -99,24 +99,23 @@ function BypassTokenCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const activeUsages = token.usages.filter((u) => !u.revokedAt);
+  const isDeleted = !!token.deletedAt;
+
+  const bypasses = [];
+  if (token.bypassNotStudying) {
+    bypasses.push('Статус навчання');
+  }
+  if (token.bypassGraduate) {
+    bypasses.push('Аспірант');
+  }
 
   return (
-    <div className="border-border-color overflow-hidden rounded-xl border bg-white">
+    <div
+      className={`border-border-color overflow-hidden rounded-xl border bg-white ${isDeleted ? 'opacity-60' : ''}`}
+    >
       <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
         <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Обхід доступу</span>
-            {token.bypassNotStudying && (
-              <span className="bg-warning-bg text-warning rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                Статус навчання
-              </span>
-            )}
-            {token.bypassGraduate && (
-              <span className="bg-warning-bg text-warning rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                Аспірант
-              </span>
-            )}
-          </div>
+          <p className="text-body text-sm">{bypasses.join(', ')}</p>
           <p className="font-body text-muted-foreground text-xs">
             Використань: {token.currentUsage} / {token.maxUsage}
           </p>
@@ -124,9 +123,14 @@ function BypassTokenCard({
             Дійсний до: {new Date(token.validUntil).toLocaleString('uk-UA')}
           </p>
           <p className="font-body text-muted-foreground text-xs">Видав: {token.creator.fullName}</p>
+          {isDeleted && (
+            <p className="font-body text-error text-xs">
+              Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="font-body text-muted-foreground text-xs">
+          <span className="font-body text-muted-foreground hidden text-xs sm:inline">
             {pluralize(activeUsages.length, ['активний', 'активні', 'активних'])}
           </span>
           <Button
@@ -137,7 +141,7 @@ function BypassTokenCard({
           >
             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
-          {token.canDelete && (
+          {token.canDelete && !isDeleted && (
             <Button
               variant="ghost"
               size="xs"
@@ -168,12 +172,12 @@ function BypassTokenCard({
                     <p className="text-foreground font-mono text-xs">{usage.userId}</p>
                     <p className="font-body text-muted-foreground text-xs">
                       {new Date(usage.usedAt).toLocaleString('uk-UA')}
-                      {usage.revokedAt && (
-                        <span className="text-error ml-2">
-                          Відкликано {new Date(usage.revokedAt).toLocaleString('uk-UA')}
-                        </span>
-                      )}
                     </p>
+                    {usage.revokedAt && (
+                      <p className="font-body text-error text-xs">
+                        Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
+                      </p>
+                    )}
                   </div>
                   {!usage.revokedAt && token.canRevokeUsages && (
                     <Button
@@ -236,6 +240,14 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
 
     if (result.success) {
       setNewToken(result.data.token);
+
+      // Immediately re-fetch the full list so the UI reflects the new token
+      // once the dialog is dismissed — no manual page refresh needed.
+      const listResult = await api.bypass.listGlobal();
+      if (listResult.success) {
+        setTokens(listResult.data);
+      }
+
       router.refresh();
     } else {
       setCreateError(result.error);
@@ -246,9 +258,28 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const result = await api.bypass.delete(deleteTarget.tokenHash);
+
+    // Use the global-specific delete route
+    const result = await api.bypass.deleteGlobal(deleteTarget.tokenHash);
     if (result.success) {
-      setTokens((prev) => prev.filter((t) => t.tokenHash !== deleteTarget.tokenHash));
+      // Soft delete: update local state to mark the token as deleted rather
+      // than removing it, preserving the audit trail in the UI.
+      setTokens((prev) =>
+        prev.map((t) =>
+          t.tokenHash === deleteTarget.tokenHash
+            ? {
+                ...t,
+                usages: t.usages.map((u) => ({
+                  ...u,
+                  revokedAt: new Date().toISOString(),
+                })),
+                deletedAt: new Date().toISOString(),
+                canDelete: false,
+                canRevokeUsages: false,
+              }
+            : t,
+        ),
+      );
       toast({ title: 'Токен видалено', variant: 'success' });
       setDeleteTarget(null);
     } else {
@@ -258,7 +289,8 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
   };
 
   const handleRevokeUsage = async (tokenHash: string, userId: string) => {
-    const result = await api.bypass.revokeUsage(tokenHash, userId);
+    // Use the global-specific revoke route
+    const result = await api.bypass.revokeGlobalUsage(tokenHash, userId);
     if (result.success) {
       setTokens((prev) =>
         prev.map((t) =>
@@ -286,7 +318,6 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
     setBypassGraduate(false);
     setMaxUsage(1);
     setValidUntil(tomorrow);
-    router.refresh();
   };
 
   return (
@@ -353,11 +384,6 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
 
             {!newToken ? (
               <>
-                <Alert variant="warning">
-                  Токен буде видано для обходу обмежень платформи. Переконайтесь, що запит є
-                  обґрунтованим перед створенням.
-                </Alert>
-
                 <ToggleField
                   label="Обхід статусу навчання"
                   description='Дозволяє студенту увійти навіть якщо статус навчання в кампусі "Відрахований"'
@@ -439,8 +465,8 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              Токен буде видалено. Усі користувачі, що використали цей токен, втратять надані права
-              доступу.
+              Токен буде деактивовано. Усі активні використання цього токена будуть відкликані.
+              Історія використань залишиться для аудиту.
             </Alert>
           </DialogBody>
           <DialogFooter>

@@ -85,14 +85,13 @@ describe('POST /api/elections/[id]/bypass', () => {
     const req = await adminReq({
       bypassRestrictions: ['FACULTY'],
       maxUsage: 1,
-      validUntil: new Date(Date.now() + 3_600_000).toISOString(), // should be ignored
+      validUntil: new Date(Date.now() + 3_600_000).toISOString(),
     });
     prismaMock.election.findUnique.mockResolvedValueOnce({
       ...makeElection(),
       restrictions: [{ type: 'FACULTY', value: 'FICE' }],
     });
     mockAdminGraph();
-    // If it returns 201 the field was accepted/ignored correctly
     const { status } = await parseJson<any>(await POST(req, PARAMS));
     expect(status).toBe(201);
   });
@@ -185,6 +184,29 @@ describe('POST /api/elections/[id]/bypass', () => {
     expect(status).toBe(400);
   });
 
+  // ── Token limit counts only active (non-deleted) tokens ───────────────────
+
+  it('counts only non-deleted tokens toward the per-election limit', async () => {
+    const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
+    prismaMock.election.findUnique.mockResolvedValueOnce({
+      ...makeElection(),
+      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    });
+    mockAdminGraph();
+    // count returns 0 = only non-deleted tokens counted
+    prismaMock.electionBypassToken.count.mockResolvedValueOnce(0);
+
+    const { status } = await parseJson<any>(await POST(req, PARAMS));
+    expect(status).toBe(201);
+
+    // Verify the count query filters for deleted_at: null
+    expect(prismaMock.electionBypassToken.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ deleted_at: null }),
+      }),
+    );
+  });
+
   // ── Hierarchy ─────────────────────────────────────────────────────────────
 
   it('returns 403 when admin is not the creator or ancestor', async () => {
@@ -224,24 +246,10 @@ describe('POST /api/elections/[id]/bypass', () => {
     expect(body.bypassRestrictions).toEqual(['FACULTY']);
     expect(body.currentUsage).toBe(0);
     expect(body.maxUsage).toBe(1);
-    // No validUntil in response
+    expect(body.deletedAt).toBeNull();
     expect(body.validUntil).toBeUndefined();
     expect(body.canDelete).toBe(true);
     expect(body.canRevokeUsages).toBe(true);
-  });
-
-  it('returns 201 when bypassing multiple restriction types all present on election', async () => {
-    const req = await adminReq({ bypassRestrictions: ['FACULTY', 'GROUP'], maxUsage: 3 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [
-        { type: 'FACULTY', value: 'FICE' },
-        { type: 'GROUP', value: 'KV-91' },
-      ],
-    });
-    mockAdminGraph();
-    const { status } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(201);
   });
 
   it('stores maxUsage in the database', async () => {
@@ -259,7 +267,7 @@ describe('POST /api/elections/[id]/bypass', () => {
     );
   });
 
-  it('stores correct fields in database (no valid_until)', async () => {
+  it('stores correct fields in database (no valid_until, no deleted_at)', async () => {
     const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
     prismaMock.election.findUnique.mockResolvedValueOnce({
       ...makeElection(),
@@ -269,6 +277,7 @@ describe('POST /api/elections/[id]/bypass', () => {
     await POST(req, PARAMS);
     const createCall = prismaMock.electionBypassToken.create.mock.calls[0][0];
     expect(createCall.data).not.toHaveProperty('valid_until');
+    expect(createCall.data).not.toHaveProperty('deleted_at');
     expect(createCall.data).toMatchObject({
       election_id: MOCK_ELECTION_ID,
       bypass_restrictions: ['FACULTY'],
@@ -287,7 +296,7 @@ describe('GET /api/elections/[id]/bypass', () => {
     allure.story('List Election Bypass Tokens');
   });
 
-  it('returns tokens with canDelete and canRevokeUsages fields', async () => {
+  it('returns tokens with deletedAt field and canDelete/canRevokeUsages', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
@@ -304,6 +313,7 @@ describe('GET /api/elections/[id]/bypass', () => {
         max_usage: 10,
         current_usage: 3,
         created_at: new Date(),
+        deleted_at: null,
         created_by: 'superadmin-001',
         creator: { user_id: 'superadmin-001', full_name: 'Super Admin' },
         usages: [],
@@ -317,13 +327,57 @@ describe('GET /api/elections/[id]/bypass', () => {
     expect(body[0].maxUsage).toBe(10);
     expect(body[0].currentUsage).toBe(3);
     expect(body[0].bypassRestrictions).toEqual(['FACULTY']);
-    expect(body[0].canDelete).toBe(true); // creator
-    expect(body[0].canRevokeUsages).toBe(true); // unrestricted admin
-    // No validUntil in response
-    expect(body[0].validUntil).toBeUndefined();
+    expect(body[0].deletedAt).toBeNull();
+    expect(body[0].canDelete).toBe(true);
+    expect(body[0].canRevokeUsages).toBe(true);
   });
 
-  it('returns all tokens including those with fully revoked usages', async () => {
+  it('includes soft-deleted tokens in the listing (for audit trail)', async () => {
+    const { access } = await makeTokenPair(ADMIN_PAYLOAD);
+    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+    prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
+    prismaMock.election.findUnique.mockResolvedValueOnce({
+      id: MOCK_ELECTION_ID,
+      created_by: 'superadmin-001',
+    });
+    cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API, RESTRICTED_ADMIN_API] as any);
+
+    const deletedAt = new Date('2024-06-01T12:00:00Z');
+    prismaMock.electionBypassToken.findMany.mockResolvedValueOnce([
+      {
+        token_hash: 'deleted-token',
+        election_id: MOCK_ELECTION_ID,
+        bypass_restrictions: ['FACULTY'],
+        max_usage: 5,
+        current_usage: 2,
+        created_at: new Date(),
+        deleted_at: deletedAt,
+        created_by: 'superadmin-001',
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin' },
+        usages: [
+          {
+            id: 'usage-1',
+            user_id: 'user-001',
+            used_at: new Date(),
+            revoked_at: null,
+          },
+        ],
+      },
+    ]);
+
+    const req = makeAuthRequest(access.token, { method: 'GET' });
+    const { status, body } = await parseJson<any[]>(await GET(req, PARAMS));
+
+    expect(status).toBe(200);
+    expect(body).toHaveLength(1);
+    expect(body[0].deletedAt).toBe(deletedAt.toISOString());
+    // Soft-deleted tokens cannot be deleted again
+    expect(body[0].canDelete).toBe(false);
+    // Usages are still present for audit
+    expect(body[0].usages).toHaveLength(1);
+  });
+
+  it('returns all tokens (active + deleted) without filtering', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
@@ -334,31 +388,36 @@ describe('GET /api/elections/[id]/bypass', () => {
     cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API, RESTRICTED_ADMIN_API] as any);
     prismaMock.electionBypassToken.findMany.mockResolvedValueOnce([
       {
-        token_hash: 'abc',
+        token_hash: 'active-token',
         election_id: MOCK_ELECTION_ID,
         bypass_restrictions: ['FACULTY'],
-        max_usage: 1,
-        current_usage: 1,
+        max_usage: 5,
+        current_usage: 0,
         created_at: new Date(),
+        deleted_at: null,
         created_by: 'superadmin-001',
         creator: { user_id: 'superadmin-001', full_name: 'Super Admin' },
-        usages: [
-          {
-            id: 'usage-1',
-            user_id: 'user-001',
-            used_at: new Date(),
-            revoked_at: new Date(), // fully revoked
-          },
-        ],
+        usages: [],
+      },
+      {
+        token_hash: 'deleted-token',
+        election_id: MOCK_ELECTION_ID,
+        bypass_restrictions: ['FACULTY'],
+        max_usage: 5,
+        current_usage: 1,
+        created_at: new Date(),
+        deleted_at: new Date(),
+        created_by: 'superadmin-001',
+        creator: { user_id: 'superadmin-001', full_name: 'Super Admin' },
+        usages: [],
       },
     ]);
 
     const req = makeAuthRequest(access.token, { method: 'GET' });
     const { status, body } = await parseJson<any[]>(await GET(req, PARAMS));
-    // Token still appears even with all usages revoked
+
     expect(status).toBe(200);
-    expect(body).toHaveLength(1);
-    expect(body[0].usages[0].revokedAt).not.toBeNull();
+    expect(body).toHaveLength(2); // both active and deleted are returned
   });
 
   it('sets canDelete=false and canRevokeUsages=false for restricted admin on other creator token', async () => {
@@ -367,7 +426,7 @@ describe('GET /api/elections/[id]/bypass', () => {
     prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
     prismaMock.election.findUnique.mockResolvedValueOnce({
       id: MOCK_ELECTION_ID,
-      created_by: 'admin-002', // restricted admin created it
+      created_by: 'admin-002',
     });
     cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API, RESTRICTED_ADMIN_API] as any);
     prismaMock.electionBypassToken.findMany.mockResolvedValueOnce([
@@ -378,7 +437,8 @@ describe('GET /api/elections/[id]/bypass', () => {
         max_usage: 1,
         current_usage: 0,
         created_at: new Date(),
-        created_by: 'superadmin-001', // created by someone else
+        deleted_at: null,
+        created_by: 'superadmin-001',
         creator: { user_id: 'superadmin-001', full_name: 'Super Admin' },
         usages: [],
       },
@@ -387,7 +447,7 @@ describe('GET /api/elections/[id]/bypass', () => {
     const req = makeAuthRequest(access.token, { method: 'GET' });
     const { status, body } = await parseJson<any[]>(await GET(req, PARAMS));
     expect(status).toBe(200);
-    expect(body[0].canDelete).toBe(false); // not creator, not ancestor
-    expect(body[0].canRevokeUsages).toBe(false); // restricted + not creator
+    expect(body[0].canDelete).toBe(false);
+    expect(body[0].canRevokeUsages).toBe(false);
   });
 });

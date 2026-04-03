@@ -1,44 +1,12 @@
 import type { BadgeVariant } from '@/components/ui/badge';
 import { Badge } from '@/components/ui/badge';
-import type { StudyFormValue } from '@/lib/constants';
-import {
-  LEVEL_COURSE_LEVEL_LABELS,
-  RESTRICTION_TYPE_LABELS,
-  STUDY_FORM_LABELS,
-} from '@/lib/constants';
+import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
+import { formatRestrictionValue } from '@/lib/utils';
 import type { ElectionRestriction, RestrictionType } from '@/types/election';
 
 interface ElectionRestrictionsProps {
   restrictions: ElectionRestriction[];
 }
-
-function formatLevelCourse(value: string): string {
-  const level = value[0] as 'b' | 'm' | 'g';
-  const course = value.slice(1);
-  const levelLabel = LEVEL_COURSE_LEVEL_LABELS[level];
-
-  // Singular form for display: Бакалавр, Магістр, Аспірант
-  const singularMap: Record<string, string> = {
-    b: 'Бакалавр',
-    m: 'Магістр',
-    g: 'Аспірант',
-  };
-
-  return `${singularMap[level] ?? levelLabel} ${course} курс`;
-}
-
-const formatValue = (type: RestrictionType, value: string) => {
-  if (type === 'STUDY_FORM') {
-    return STUDY_FORM_LABELS[value as StudyFormValue] || value;
-  }
-  if (type === 'STUDY_YEAR') {
-    return `${value} курс`;
-  }
-  if (type === 'LEVEL_COURSE') {
-    return formatLevelCourse(value);
-  }
-  return value;
-};
 
 const getVariant = (type: RestrictionType): BadgeVariant => {
   const variants: Record<RestrictionType, BadgeVariant> = {
@@ -95,7 +63,7 @@ export const AccessRestrictions = ({ restrictions }: ElectionRestrictionsProps) 
               <div className="flex flex-wrap gap-1.5">
                 {sortedValues.map((val, index) => (
                   <Badge key={index} variant={getVariant(type)} size="md">
-                    {formatValue(type, val)}
+                    {formatRestrictionValue(type, val)}
                   </Badge>
                 ))}
               </div>

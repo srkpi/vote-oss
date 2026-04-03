@@ -1,8 +1,10 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import type { StudyFormValue } from '@/lib/constants';
+import { LEVEL_COURSE_LEVEL_LABELS, STUDY_FORM_LABELS } from '@/lib/constants';
 import type { InviteToken } from '@/types/admin';
-import type { ElectionStatus } from '@/types/election';
+import type { ElectionStatus, RestrictionType } from '@/types/election';
 import type { QuillDelta } from '@/types/quill';
 
 export function cn(...inputs: ClassValue[]) {
@@ -48,6 +50,34 @@ export function formatTimeRemaining(targetDate: string): string {
   if (hours > 0) return `${hours} год. ${minutes} хв.`;
   if (minutes > 0) return `${minutes} хв. ${seconds} с.`;
   return `${seconds} с.`;
+}
+
+export function formatLevelCourse(value: string): string {
+  const level = value[0] as 'b' | 'm' | 'g';
+  const course = value.slice(1);
+  const levelLabel = LEVEL_COURSE_LEVEL_LABELS[level];
+
+  // Singular form for display: Бакалавр, Магістр, Аспірант
+  const singularMap: Record<string, string> = {
+    b: 'Бакалавр',
+    m: 'Магістр',
+    g: 'Аспірант',
+  };
+
+  return `${singularMap[level] ?? levelLabel} ${course} курс`;
+}
+
+export function formatRestrictionValue(type: RestrictionType, value: string) {
+  if (type === 'STUDY_FORM') {
+    return STUDY_FORM_LABELS[value as StudyFormValue] || value;
+  }
+  if (type === 'STUDY_YEAR') {
+    return `${value} курс`;
+  }
+  if (type === 'LEVEL_COURSE') {
+    return formatLevelCourse(value);
+  }
+  return value;
 }
 
 export function getElectionStatus(opensAt: string, closesAt: string): ElectionStatus {

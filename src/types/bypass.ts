@@ -30,6 +30,7 @@ export interface GlobalBypassToken {
   currentUsage: number;
   validUntil: string;
   createdAt: string;
+  deletedAt: string | null;
   creator: { userId: string; fullName: string };
   usages: BypassTokenUsage[];
   canDelete: boolean;
@@ -43,6 +44,7 @@ export interface ElectionBypassToken {
   maxUsage: number;
   currentUsage: number;
   createdAt: string;
+  deletedAt: string | null;
   creator: { userId: string; fullName: string };
   usages: BypassTokenUsage[];
   canDelete: boolean;

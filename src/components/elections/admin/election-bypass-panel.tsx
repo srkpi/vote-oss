@@ -18,7 +18,6 @@ import { FormField, Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { BYPASS_TOKEN_MAX_USAGE_MAX, RESTRICTION_TYPE_LABELS } from '@/lib/constants';
-import { pluralize } from '@/lib/utils';
 import type { ElectionBypassToken } from '@/types/bypass';
 import type { ElectionRestriction } from '@/types/election';
 
@@ -94,9 +93,8 @@ function BypassTokenItem({
   onRevokeUsage: (userId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const activeUsagesCount = token.usages.filter((u) => !u.revokedAt).length;
-  const revokedUsagesCount = token.usages.filter((u) => u.revokedAt).length;
   const hasUsages = token.usages.length > 0;
+  const isDeleted = !!token.deletedAt;
 
   const bypassLabel =
     token.bypassRestrictions.length === 0
@@ -104,21 +102,21 @@ function BypassTokenItem({
       : token.bypassRestrictions.map((t) => RESTRICTION_TYPE_LABELS[t] ?? t).join(', ');
 
   return (
-    <div className="border-border-color overflow-hidden rounded-lg border bg-white">
+    <div
+      className={`border-border-color overflow-hidden rounded-lg border bg-white ${isDeleted ? 'opacity-60' : ''}`}
+    >
       <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
         <div className="min-w-0 flex-1">
-          <p className="font-body text-foreground text-sm font-medium">Обходить: {bypassLabel}</p>
+          <p className="font-body text-foreground text-sm">{bypassLabel}</p>
+          <p className="font-body text-muted-foreground text-xs">{token.creator.fullName}</p>
           <p className="font-body text-muted-foreground text-xs">
-            {token.creator.fullName} · {token.currentUsage} / {token.maxUsage} використань
-            {activeUsagesCount > 0 && (
-              <span className="text-success ml-2">
-                {pluralize(activeUsagesCount, ['активний', 'активні', 'активних'])}
-              </span>
-            )}
-            {revokedUsagesCount > 0 && (
-              <span className="text-error ml-2">{revokedUsagesCount} відкликано</span>
-            )}
+            Використань: {token.currentUsage} / {token.maxUsage}
           </p>
+          {isDeleted && (
+            <p className="font-body text-error text-xs">
+              Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {hasUsages && (
@@ -135,7 +133,7 @@ function BypassTokenItem({
               )}
             </Button>
           )}
-          {token.canDelete && (
+          {token.canDelete && !isDeleted && (
             <Button
               variant="ghost"
               size="xs"
@@ -157,12 +155,12 @@ function BypassTokenItem({
                   <p className="text-foreground font-mono text-xs">{usage.userId}</p>
                   <p className="font-body text-muted-foreground text-xs">
                     {new Date(usage.usedAt).toLocaleString('uk-UA')}
-                    {usage.revokedAt && (
-                      <span className="text-error ml-1">
-                        · Відкликано {new Date(usage.revokedAt).toLocaleString('uk-UA')}
-                      </span>
-                    )}
                   </p>
+                  {usage.revokedAt && (
+                    <p className="font-body text-error text-xs">
+                      Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
+                    </p>
+                  )}
                 </div>
                 {!usage.revokedAt && token.canRevokeUsages && (
                   <Button
@@ -201,7 +199,6 @@ export function ElectionBypassPanel({
   const [bypassRestrictions, setBypassRestrictions] = useState<string[]>([]);
   const [maxUsage, setMaxUsage] = useState(1);
 
-  // Only show restriction types that actually exist on this election
   const presentTypes = [...new Set(restrictions.map((r) => r.type))].filter((t) =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     BYPASSABLE_TYPES.includes(t as any),
@@ -223,7 +220,9 @@ export function ElectionBypassPanel({
 
     if (result.success) {
       setNewToken(result.data.token);
-      // Refresh token list
+
+      // Re-fetch full list to include the newly created token with server-
+      // computed fields (isCreator, canRevokeUsages, etc.)
       const listResult = await api.elections.bypass.list(electionId);
       if (listResult.success) setTokens(listResult.data);
     } else {
@@ -235,9 +234,25 @@ export function ElectionBypassPanel({
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const result = await api.bypass.delete(deleteTarget.tokenHash);
+
+    const result = await api.bypass.deleteElection(deleteTarget.tokenHash);
     if (result.success) {
-      setTokens((prev) => prev.filter((t) => t.tokenHash !== deleteTarget.tokenHash));
+      setTokens((prev) =>
+        prev.map((t) =>
+          t.tokenHash === deleteTarget.tokenHash
+            ? {
+                ...t,
+                usages: t.usages.map((u) => ({
+                  ...u,
+                  revokedAt: new Date().toISOString(),
+                })),
+                deletedAt: new Date().toISOString(),
+                canDelete: false,
+                canRevokeUsages: false,
+              }
+            : t,
+        ),
+      );
       toast({ title: 'Токен видалено', variant: 'success' });
       setDeleteTarget(null);
     } else {
@@ -247,7 +262,8 @@ export function ElectionBypassPanel({
   };
 
   const handleRevokeUsage = async (tokenHash: string, userId: string) => {
-    const result = await api.bypass.revokeUsage(tokenHash, userId);
+    // Use the election-specific revoke route
+    const result = await api.bypass.revokeElectionUsage(tokenHash, userId);
     if (result.success) {
       setTokens((prev) =>
         prev.map((t) =>
@@ -275,12 +291,20 @@ export function ElectionBypassPanel({
     setMaxUsage(1);
   };
 
+  const activeTokenCount = tokens.filter((t) => !t.deletedAt).length;
+  const deletedTokenCount = tokens.filter((t) => !!t.deletedAt).length;
+
   return (
     <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
       <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-5">
         <div className="flex items-center gap-2">
           <Key className="text-kpi-gray-mid h-4 w-4" />
           <h3 className="font-display text-foreground text-base font-semibold">Токени доступу</h3>
+          {deletedTokenCount > 0 && (
+            <span className="font-body text-muted-foreground hidden text-xs sm:inline">
+              ({activeTokenCount} активних, {deletedTokenCount} видалених)
+            </span>
+          )}
         </div>
         <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
           <Plus className="h-3.5 w-3.5" />
@@ -325,7 +349,6 @@ export function ElectionBypassPanel({
               <>
                 <Alert variant="info">
                   Токен дозволяє студенту проголосувати навіть якщо він не відповідає обмеженням.
-                  Дійсний до закриття голосування.
                 </Alert>
 
                 {presentTypes.length > 0 && (
@@ -412,7 +435,8 @@ export function ElectionBypassPanel({
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              Токен та всі пов&apos;язані з ним права доступу будуть анульовані.
+              Токен буде деактивовано. Студенти, що вже використали його, втратять отримані права.
+              Історія використань залишиться видимою для аудиту.
             </Alert>
           </DialogBody>
           <DialogFooter>

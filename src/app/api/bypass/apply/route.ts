@@ -6,11 +6,63 @@ import { applyBypassToken, BypassTokenError } from '@/lib/bypass';
 import { Errors } from '@/lib/errors';
 
 /**
- * POST /api/bypass/apply
- * Apply (activate) a bypass token for the currently authenticated user.
- * Idempotent: calling twice is safe.
- *
- * Returns { type, electionId } so the client can redirect appropriately.
+ * @swagger
+ * /api/bypass/apply:
+ *   post:
+ *     summary: Apply a bypass token
+ *     description: >
+ *       Validates and activates a raw bypass token for the authenticated user.
+ *       The system checks for a Global token first, then an Election-specific token.
+ *       This operation is idempotent; applying the same token twice will not
+ *       increment usage counts further.
+ *     tags:
+ *       - Bypass
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The raw base64 bypass token provided to the user.
+ *     responses:
+ *       200:
+ *         description: Token successfully applied or already active.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 type:
+ *                   type: string
+ *                   enum: [GLOBAL, ELECTION]
+ *                   description: The scope of the bypass granted.
+ *                 electionId:
+ *                   type: string
+ *                   format: uuid
+ *                   nullable: true
+ *                   description: The ID of the election if the type is `ELECTION`; otherwise null.
+ *       400:
+ *         description: >
+ *           Bad Request. Possible reasons:
+ *           - Token has expired.
+ *           - Usage limit reached.
+ *           - Access has been revoked.
+ *           - Election deleted or closed.
+ *       401:
+ *         description: Unauthorized - User session is invalid or missing.
+ *       404:
+ *         description: Not Found - The provided token does not exist.
+ *       409:
+ *         description: Conflict - State conflict preventing token application.
+ *       500:
+ *         description: Internal server error.
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);

@@ -3,10 +3,11 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getElectionBypassForUser } from '@/lib/bypass';
-import { getCachedAdmins, getCachedElections, invalidateElections } from '@/lib/cache';
+import { getCachedElections, invalidateElections } from '@/lib/cache';
 import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
+import { buildAdminGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 import {
   adminCanAccessElection,
@@ -20,22 +21,6 @@ import type { ElectionRestriction, TallyResult } from '@/types/election';
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Build a userId → promoted_by map from the cached admin list (preferred)
- * or from the database when the cache is cold.
- */
-async function buildAdminGraph(): Promise<Map<string, string | null>> {
-  const cachedAdmins = await getCachedAdmins();
-  if (cachedAdmins) {
-    return new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]));
-  }
-  const dbAdmins = await prisma.admin.findMany({
-    where: { deleted_at: null },
-    select: { user_id: true, promoted_by: true },
-  });
-  return new Map(dbAdmins.map((a) => [a.user_id, a.promoted_by]));
-}
 
 /**
  * Compute vote tallies from raw ballots, persist them to ElectionChoice,
@@ -111,6 +96,9 @@ function buildTallyResults(
  *       `hasVoted` flag indicates whether the caller has already been issued
  *       a vote token. For closed elections, choices include `votes` and
  *       `winner` fields computed lazily on first request.
+ *       Users also receive a `bypassedTypes` array listing the
+ *       restriction types they are bypassing via an active bypass token —
+ *       the client uses this to display correct eligibility messaging.
  *       Admin-authenticated requests additionally receive `deletedAt`,
  *       `deletedBy`, `canDelete`, and `canRestore` fields.
  *       Non-admin requests for a deleted election return 404.
@@ -243,15 +231,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const restrictions = electionData.restrictions;
+  const bypassedTypes = await getElectionBypassForUser(user.sub, electionId);
 
   if (isAdmin && !user.restrictedToFaculty) {
-    // Unrestricted admin — pass
+    // Unrestricted admin — always pass
   } else if (isAdmin && user.restrictedToFaculty) {
     if (!adminCanAccessElection(user.faculty, restrictions)) {
       return Errors.forbidden('You are not eligible for this election');
     }
   } else {
-    const bypassedTypes = await getElectionBypassForUser(user.sub, electionId);
     if (!checkRestrictionsWithBypass(restrictions, user, bypassedTypes)) {
       return Errors.forbidden('You are not eligible for this election');
     }
@@ -263,9 +251,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const privateKeyPem = decryptField(electionData.privateKey);
 
-  // Compute tally results and embed them into choices for closed elections.
   let tallyResults: TallyResult[] | undefined;
-
   if (isClosed) {
     const needsComputation = electionData.choices.some((c) => c.voteCount === null);
     if (needsComputation) {
@@ -286,7 +272,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     hasVoted = issuedToken !== null;
   }
 
-  // Compute admin-specific flags.
   let canDelete: boolean | undefined;
   let canRestore: boolean | undefined;
   let deletedByField: { userId: string; fullName: string } | null | undefined;
@@ -329,7 +314,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       : null;
   }
 
-  // Build choices: embed votes + winner for closed elections.
   const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
   const choices = electionData.choices.map((c) => {
     const base = { id: c.id, choice: c.choice, position: c.position };
@@ -357,6 +341,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     choices,
     ballotCount: electionData.ballotCount,
     hasVoted,
+    bypassedTypes: bypassedTypes ?? [],
     ...(isAdmin && {
       deletedAt: electionData.deletedAt?.toISOString() ?? null,
       deletedBy: deletedByField,
@@ -424,7 +409,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (election.deleted_at) return Errors.notFound('Election not found');
 
   const restrictions = election.restrictions as ElectionRestriction[];
-
   const adminGraph = await buildAdminGraph();
 
   if (

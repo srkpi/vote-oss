@@ -165,6 +165,7 @@ model GlobalBypassToken {
   created_by          String
   creator             Admin                    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
   created_at          DateTime                 @default(now())
+  deleted_at          DateTime?
   usages              GlobalBypassTokenUsage[]
 
   @@index([created_by])
@@ -194,6 +195,7 @@ model ElectionBypassToken {
   created_by          String
   creator             Admin                     @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
   created_at          DateTime                  @default(now())
+  deleted_at          DateTime?
   usages              ElectionBypassTokenUsage[]
 
   @@index([election_id])

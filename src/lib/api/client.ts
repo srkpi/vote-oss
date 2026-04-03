@@ -75,6 +75,7 @@ export function createApiClient(fetcher: Fetcher) {
             bypassRestrictions: string[];
             maxUsage: number;
             currentUsage: number;
+            deletedAt: null;
             canDelete: boolean;
             canRevokeUsages: boolean;
           }>(`/elections/${electionId}/bypass`, { method: 'POST', body: JSON.stringify(data) }),
@@ -118,6 +119,7 @@ export function createApiClient(fetcher: Fetcher) {
           method: 'POST',
           body: JSON.stringify({ token }),
         }),
+
       listGlobal: () => fetcher<GlobalBypassToken[]>('/bypass'),
       createGlobal: (data: CreateGlobalBypassTokenRequest) =>
         fetcher<{
@@ -127,12 +129,20 @@ export function createApiClient(fetcher: Fetcher) {
           bypassGraduate: boolean;
           maxUsage: number;
           validUntil: string;
+          deletedAt: null;
           canDelete: boolean;
           canRevokeUsages: boolean;
         }>('/bypass', { method: 'POST', body: JSON.stringify(data) }),
-      delete: (tokenHash: string) => fetcher<void>(`/bypass/${tokenHash}`, { method: 'DELETE' }),
-      revokeUsage: (tokenHash: string, userId: string) =>
-        fetcher<void>(`/bypass/${tokenHash}/usages/${userId}`, { method: 'DELETE' }),
+
+      deleteGlobal: (tokenHash: string) =>
+        fetcher<void>(`/bypass/global/${tokenHash}`, { method: 'DELETE' }),
+      deleteElection: (tokenHash: string) =>
+        fetcher<void>(`/bypass/election/${tokenHash}`, { method: 'DELETE' }),
+
+      revokeGlobalUsage: (tokenHash: string, userId: string) =>
+        fetcher<void>(`/bypass/global/${tokenHash}/usages/${userId}`, { method: 'DELETE' }),
+      revokeElectionUsage: (tokenHash: string, userId: string) =>
+        fetcher<void>(`/bypass/election/${tokenHash}/usages/${userId}`, { method: 'DELETE' }),
     },
 
     faq: {
