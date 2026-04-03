@@ -29,6 +29,8 @@ const config: Config = {
   collectCoverageFrom: ['src/lib/**/*.ts', 'src/app/api/**/*.ts', '!src/**/*.d.ts'],
   coverageDirectory: 'coverage',
   testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  modulePathIgnorePatterns: ['<rootDir>/.next/'],
+  watchPathIgnorePatterns: ['<rootDir>/.next/'],
 };
 
 export default config;

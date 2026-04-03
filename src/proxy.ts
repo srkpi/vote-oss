@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { APP_URL } from '@/lib/config/client';
 import {
   COOKIE_ACCESS,
+  COOKIE_PENDING_BYPASS,
   COOKIE_REFRESH,
   COOKIE_RETURN_TO,
   RETURN_COOKIE_TTL_SECS,
@@ -80,6 +81,18 @@ export async function proxy(req: NextRequest) {
       path: '/',
       maxAge: RETURN_COOKIE_TTL_SECS,
     });
+
+    if (pathname.startsWith('/use/')) {
+      const bypassToken = pathname.slice('/use/'.length);
+      if (bypassToken) {
+        response.cookies.set(COOKIE_PENDING_BYPASS, bypassToken, {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: RETURN_COOKIE_TTL_SECS,
+        });
+      }
+    }
 
     return response;
   }

@@ -4,6 +4,7 @@ import { CheckIcon, TriangleAlert } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api/browser';
 
 type Status = 'loading' | 'success' | 'error';
@@ -22,19 +23,6 @@ const STATUS_CONFIG = {
     description: 'Не вдалось підтвердити особу',
   },
 } as const;
-
-async function getReturnTo(): Promise<string> {
-  try {
-    const res = await fetch('/api/auth/return-to');
-    if (res.ok) {
-      const data = (await res.json()) as { returnTo?: string };
-      return data.returnTo && data.returnTo.startsWith('/') ? data.returnTo : '/elections';
-    }
-  } catch {
-    // ignore
-  }
-  return '/elections';
-}
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -60,9 +48,9 @@ export default function CallbackPage() {
 
       if (result.success) {
         setStatus('success');
-        const returnTo = await getReturnTo();
+        const redirectTo = result.data?.redirectTo ?? '/elections';
         setTimeout(() => {
-          router.push(returnTo);
+          router.push(redirectTo);
           router.refresh();
         }, 1200);
       } else {
@@ -137,23 +125,21 @@ export default function CallbackPage() {
 
             {status === 'error' && (
               <div className="mt-8 flex flex-col gap-3">
-                <button
-                  onClick={() => router.push('/login')}
-                  className="font-body bg-kpi-navy hover:bg-kpi-navy-hover h-10 w-full rounded-(--radius) px-4 text-sm font-medium text-white transition-colors"
-                >
+                <Button onClick={() => router.push('/login')} variant="default" size="lg">
                   Повернутися до входу
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => {
                     setStatus('loading');
                     setErrorMessage(null);
                     calledRef.current = false;
                     window.location.reload();
                   }}
-                  className="font-body border-border-color bg-surface text-foreground hover:bg-surface-hover h-10 w-full rounded-(--radius) border px-4 text-sm font-medium transition-colors"
+                  variant="outline"
+                  size="lg"
                 >
                   Спробувати знову
-                </button>
+                </Button>
               </div>
             )}
           </div>

@@ -2,8 +2,14 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { applyBypassToken } from '@/lib/bypass';
 import { KPI_AUTH_URL } from '@/lib/config/client';
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
+import {
+  COOKIE_ACCESS,
+  COOKIE_PENDING_BYPASS,
+  COOKIE_REFRESH,
+  COOKIE_RETURN_TO,
+} from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
 import { getCampusUserData } from '@/lib/kpi-id';
@@ -41,6 +47,13 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *       KPI-ID session cookies, fetches the authenticated user profile, and
  *       issues a new JWT access + refresh token pair via HTTP-only cookies.
  *       Graduate users are rejected with 403.
+ *
+ *       If a `pending_bypass` cookie is present (set when an unauthenticated
+ *       user visited /use/[token]), the bypass is pre-applied before the
+ *       campus eligibility check, breaking the login chicken-and-egg.
+ *
+ *       On success the response body includes `redirectTo` so the client
+ *       does not need a separate /api/auth/return-to call.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -65,6 +78,9 @@ function extractCookieValues(setCookieHeaders: string[]): string {
  *                 status:
  *                   type: string
  *                   enum: [success, processing]
+ *                 redirectTo:
+ *                   type: string
+ *                   description: Present only when status is "success"
  *       400:
  *         description: Missing requestId
  *       401:
@@ -173,6 +189,19 @@ export async function POST(req: NextRequest) {
     return Errors.internal('Invalid user data from provider');
   }
 
+  // Pre-apply a pending bypass token stored by the proxy when the user was
+  // redirected from /use/[token] to /login while unauthenticated.
+  // Must happen BEFORE getCampusUserData so getUserBypassInfo finds the record.
+  const pendingBypassToken = req.cookies.get(COOKIE_PENDING_BYPASS)?.value;
+  let pendingBypassResult: { type: 'GLOBAL' | 'ELECTION'; electionId: string | null } | null = null;
+  if (pendingBypassToken) {
+    try {
+      pendingBypassResult = await applyBypassToken(data.STUDENT_ID, pendingBypassToken);
+    } catch {
+      // Token invalid, expired, or limit reached — proceed with normal auth flow.
+    }
+  }
+
   const campusDataResult = await getCampusUserData(data);
   if (campusDataResult instanceof NextResponse) {
     return campusDataResult;
@@ -210,10 +239,23 @@ export async function POST(req: NextRequest) {
 
   await persistTokenPair(accessJti, refreshJti, new Date(initialAuthAt * 1000));
 
-  const response = NextResponse.json({ status: 'success' });
+  // Compute post-login redirect. Prefer derived redirect from pre-applied
+  // bypass; otherwise fall back to the stored return_to cookie.
+  const returnTo = req.cookies.get(COOKIE_RETURN_TO)?.value;
+  const redirectTo = pendingBypassResult
+    ? pendingBypassResult.type === 'ELECTION' && pendingBypassResult.electionId
+      ? `/elections/${pendingBypassResult.electionId}`
+      : '/elections'
+    : returnTo && returnTo.startsWith('/')
+      ? returnTo
+      : '/elections';
+
+  const response = NextResponse.json({ status: 'success', redirectTo });
 
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));
+  response.cookies.set(COOKIE_PENDING_BYPASS, '', { maxAge: 0, path: '/' });
+  response.cookies.set(COOKIE_RETURN_TO, '', { maxAge: 0, path: '/' });
 
   return response;
 }

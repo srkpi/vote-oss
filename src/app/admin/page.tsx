@@ -1,10 +1,9 @@
-import { CheckCircle2, CreditCard, FileText, Plus, Users } from 'lucide-react';
+import { CheckCircle2, CreditCard, FileText, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { StatCard } from '@/components/admin/stat-card';
-import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
@@ -36,14 +35,6 @@ const statusConfig = {
   },
 };
 
-const getGreeting = (): string => {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return 'Доброго ранку';
-  if (hour >= 12 && hour < 17) return 'Доброго дня';
-  if (hour >= 17 && hour < 22) return 'Доброго вечора';
-  return 'Лягайте спати';
-};
-
 export default async function AdminDashboardPage() {
   const session = await getServerSession();
   if (!session) {
@@ -68,19 +59,6 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex-1 overflow-auto">
-      <PageHeader
-        title={`${getGreeting()}, ${session?.fullName.split(' ')[1] ?? session?.fullName}!`}
-        backHref="/"
-        backClassName="lg:hidden"
-      >
-        <Button variant="accent" size="sm" asChild>
-          <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">
-            <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Нове голосування</span>
-          </Link>
-        </Button>
-      </PageHeader>
-
       <div className="space-y-6 p-4 sm:p-8">
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard

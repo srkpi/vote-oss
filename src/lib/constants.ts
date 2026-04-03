@@ -50,6 +50,7 @@ export const CONFETTI_KEY_PREFIX = 'election_confetti_shown_';
 export const COOKIE_ACCESS = 'access_token';
 export const COOKIE_REFRESH = 'refresh_token';
 export const COOKIE_RETURN_TO = 'return_to';
+export const COOKIE_PENDING_BYPASS = 'pending_bypass';
 
 export const ACCESS_TOKEN_TTL_SECS = 60 * 15; // 15 minutes
 export const REFRESH_TOKEN_TTL_SECS = 60 * 60 * 24 * 7; // 7 days

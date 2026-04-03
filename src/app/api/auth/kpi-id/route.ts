@@ -2,7 +2,13 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
-import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
+import { applyBypassToken } from '@/lib/bypass';
+import {
+  COOKIE_ACCESS,
+  COOKIE_PENDING_BYPASS,
+  COOKIE_REFRESH,
+  COOKIE_RETURN_TO,
+} from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { signAccessToken, signRefreshToken, tokenCookieOptions } from '@/lib/jwt';
 import {
@@ -27,6 +33,15 @@ import type { TokenPayload } from '@/types/auth';
  *       authentication (AUTH_METHOD === "DIIA"). Non-student accounts,
  *       graduate students, and tickets issued via other auth methods are
  *       rejected. Rate-limited per IP.
+ *
+ *       If a `pending_bypass` cookie is present (set by the proxy when an
+ *       unauthenticated user was redirected from /use/[token]), the endpoint
+ *       attempts to pre-apply that bypass token before checking campus eligibility.
+ *       This resolves the chicken-and-egg situation where a student needs the
+ *       bypass to log in but could previously only apply tokens after login.
+ *
+ *       Returns a JSON body with `redirectTo` so the client does not need a
+ *       separate call to /api/auth/return-to.
  *     tags:
  *       - Auth
  *     requestBody:
@@ -44,6 +59,14 @@ import type { TokenPayload } from '@/types/auth';
  *     responses:
  *       200:
  *         description: Authentication successful; JWT cookies set
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 redirectTo:
+ *                   type: string
+ *                   description: Post-login redirect path
  *         headers:
  *           Set-Cookie:
  *             description: HTTP-only access and refresh token cookies
@@ -101,6 +124,21 @@ export async function POST(req: NextRequest) {
     return Errors.forbidden((err as Error).message);
   }
 
+  // Pre-apply a pending bypass token stored by the proxy when the user was
+  // redirected from /use/[token] to /login while unauthenticated.
+  // We do this BEFORE getCampusUserData so that the bypass is already in the
+  // DB when getUserBypassInfo is called inside getCampusUserData.
+  const pendingBypassToken = req.cookies.get(COOKIE_PENDING_BYPASS)?.value;
+  let pendingBypassResult: { type: 'GLOBAL' | 'ELECTION'; electionId: string | null } | null = null;
+  if (pendingBypassToken) {
+    try {
+      pendingBypassResult = await applyBypassToken(kpiIdInfo.STUDENT_ID, pendingBypassToken);
+    } catch {
+      // Token invalid, expired, or limit reached — proceed with normal auth flow.
+      // getCampusUserData will still return 403 if the user genuinely can't log in.
+    }
+  }
+
   const campusDataResult = await getCampusUserData(kpiIdInfo);
   if (campusDataResult instanceof NextResponse) {
     return campusDataResult;
@@ -139,10 +177,21 @@ export async function POST(req: NextRequest) {
 
   await persistTokenPair(accessJti, refreshJti, new Date(initialAuthAt * 1000));
 
-  const response = new NextResponse(null, { status: 200 });
+  const returnTo = req.cookies.get(COOKIE_RETURN_TO)?.value;
+  const redirectTo = pendingBypassResult
+    ? pendingBypassResult.type === 'ELECTION' && pendingBypassResult.electionId
+      ? `/elections/${pendingBypassResult.electionId}`
+      : '/elections'
+    : returnTo && returnTo.startsWith('/')
+      ? returnTo
+      : '/elections';
+
+  const response = NextResponse.json({ redirectTo }, { status: 200 });
 
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));
+  response.cookies.set(COOKIE_PENDING_BYPASS, '', { maxAge: 0, path: '/' });
+  response.cookies.set(COOKIE_RETURN_TO, '', { maxAge: 0, path: '/' });
 
   return response;
 }
