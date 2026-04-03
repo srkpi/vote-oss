@@ -1,0 +1,1 @@
+{"id":"96603d22bd456644b26c563508bdc318","fullName":"src/__tests__/api/bypass/global-delete.test.ts#DELETE /api/bypass/global/[tokenHash] returns 400 when token is already soft-deleted","name":"returns 400 when token is already soft-deleted","status":"passed","testResultsByEnv":{"default":"df3af5ab26700be310fe734349fea6c4"}}

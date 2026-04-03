@@ -1,0 +1,1 @@
+{"id":"18b3cd4ba714af49db0821680f02209e","fullName":"src/__tests__/api/bypass/election-delete.test.ts#DELETE /api/bypass/election/[tokenHash] calls update with deleted_at and deleted_by instead of hard-deleting","name":"calls update with deleted_at and deleted_by instead of hard-deleting","status":"passed","testResultsByEnv":{"default":"c3677e916eb7a4b68d1b14b588e9166d"}}

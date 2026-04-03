@@ -1,0 +1,1 @@
+{"id":"7a9c67dfddea26b846935b42b528557f","fullName":"src/__tests__/api/bypass/election-delete.test.ts#DELETE /api/bypass/election/[tokenHash] bulk-revokes all usages and sets revoked_by on delete","name":"bulk-revokes all usages and sets revoked_by on delete","status":"passed","testResultsByEnv":{"default":"84f095c2cbbb26a1436f1da6ad056ae0"}}

@@ -1,0 +1,1 @@
+{"id":"8ce91a2c30077aa41f21e97f1c5c7596","fullName":"src/__tests__/api/bypass/refresh-bypass.test.ts#POST /api/auth/refresh — global bypass revocation check skips bypass check entirely when token has no initialAuthAt","name":"skips bypass check entirely when token has no initialAuthAt","status":"passed","testResultsByEnv":{"default":"bad7c568135a077a6ca28cc4296ec8ee"}}

@@ -1,0 +1,1 @@
+{"id":"bb9dfee45c43f48f3d11aa52edefcfb3","fullName":"src/__tests__/api/bypass/election-delete.test.ts#DELETE /api/bypass/election/[tokenHash] returns 400 when token is already soft-deleted","name":"returns 400 when token is already soft-deleted","status":"passed","testResultsByEnv":{"default":"5abd1ed6f1dec8d05cd46f81295143d3"}}

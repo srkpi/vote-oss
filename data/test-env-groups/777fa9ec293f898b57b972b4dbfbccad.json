@@ -1,1 +1,1 @@
-{"id":"777fa9ec293f898b57b972b4dbfbccad","fullName":"src/__tests__/lib/crypto.test.ts#crypto generateVoteToken includes a 64-char hex random secret","name":"includes a 64-char hex random secret","status":"passed","testResultsByEnv":{"default":"3156592a06720cab1d1a41b1afc735a0"}}
+{"id":"777fa9ec293f898b57b972b4dbfbccad","fullName":"src/__tests__/lib/crypto.test.ts#crypto generateVoteToken includes a 64-char hex random secret","name":"includes a 64-char hex random secret","status":"passed","testResultsByEnv":{"default":"6d7d082463cc767a426caa0f4eb47d71"}}

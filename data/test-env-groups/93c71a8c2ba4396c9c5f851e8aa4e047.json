@@ -1,0 +1,1 @@
+{"id":"93c71a8c2ba4396c9c5f851e8aa4e047","fullName":"src/__tests__/api/bypass/election-delete.test.ts#DELETE /api/bypass/election/[tokenHash] returns 403 when caller is not creator or ancestor","name":"returns 403 when caller is not creator or ancestor","status":"passed","testResultsByEnv":{"default":"bb545a85ca9af64cf809b384a9a3b26b"}}

@@ -1,0 +1,1 @@
+{"id":"3cd47b86940151a83085601875b1bd7c","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 400 when maxUsage exceeds BYPASS_TOKEN_MAX_USAGE_MAX","name":"returns 400 when maxUsage exceeds BYPASS_TOKEN_MAX_USAGE_MAX","status":"passed","testResultsByEnv":{"default":"8920240a9a734bd2ec6c478f02cbab09"}}

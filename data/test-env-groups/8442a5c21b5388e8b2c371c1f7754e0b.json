@@ -1,0 +1,1 @@
+{"id":"8442a5c21b5388e8b2c371c1f7754e0b","fullName":"src/__tests__/api/bypass/refresh-bypass.test.ts#POST /api/auth/refresh — global bypass revocation check includes an informative error message when bypass is revoked","name":"includes an informative error message when bypass is revoked","status":"passed","testResultsByEnv":{"default":"3acaed1fa356f539f16dfc379d449ab0"}}

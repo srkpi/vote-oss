@@ -1,0 +1,1 @@
+{"id":"6fddd4dcb32455e94e617ad7223ab521","fullName":"src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns 400 when prior election usage exists but is revoked","name":"returns 400 when prior election usage exists but is revoked","status":"passed","testResultsByEnv":{"default":"2eaaa6fe0b37f3574e6e568d23d75067"}}

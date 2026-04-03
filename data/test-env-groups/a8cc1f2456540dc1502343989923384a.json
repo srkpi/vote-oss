@@ -1,0 +1,1 @@
+{"id":"a8cc1f2456540dc1502343989923384a","fullName":"src/__tests__/api/bypass/election.test.ts#POST /api/elections/[id]/bypass does NOT accept a validUntil field (ignored / not required)","name":"does NOT accept a validUntil field (ignored / not required)","status":"passed","testResultsByEnv":{"default":"8ab496b98f8384999c921cc71d7985cd"}}

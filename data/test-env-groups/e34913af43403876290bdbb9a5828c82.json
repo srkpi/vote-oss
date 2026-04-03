@@ -1,0 +1,1 @@
+{"id":"e34913af43403876290bdbb9a5828c82","fullName":"src/__tests__/api/bypass/global-delete.test.ts#DELETE /api/bypass/global/[tokenHash] returns 404 when token does not exist","name":"returns 404 when token does not exist","status":"passed","testResultsByEnv":{"default":"d08a44d05fae1158ff6db52190fb3d39"}}

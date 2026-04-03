@@ -1,0 +1,1 @@
+{"id":"3ef023ba5272e0359e82224e73fa71eb","fullName":"src/__tests__/api/bypass/global-delete.test.ts#DELETE /api/bypass/global/[tokenHash] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"64113bb3782158197d06b4aa281de2b5"}}
