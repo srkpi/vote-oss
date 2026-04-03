@@ -33,7 +33,7 @@ import type { TokenPayload } from '@/types/auth';
  *             schema:
  *               type: string
  *       401:
- *         description: Refresh token is missing, invalid, or already revoked
+ *         description: Refresh token invalid/revoked, or global bypass was revoked
  *       429:
  *         description: Too many refresh requests
  *         headers:
@@ -58,6 +58,27 @@ export async function POST(req: NextRequest) {
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
   const { user } = auth;
+
+  // If a student gained platform access via a global bypass token, revoking
+  // that bypass should invalidate their session. We check whether any of their
+  // bypass usages were revoked AFTER they first authenticated (initial_auth_at).
+  // This means the next refresh after an admin revokes access will fail,
+  // forcing re-login. The user can remain logged in for up to ACCESS_TOKEN_TTL_SECS
+  // after revocation (until their current access token expires).
+  if (user.initialAuthAt) {
+    const initialAuthDate = new Date(user.initialAuthAt * 1000);
+    const revokedBypass = await prisma.globalBypassTokenUsage.findFirst({
+      where: {
+        user_id: user.sub,
+        revoked_at: { gt: initialAuthDate },
+      },
+      select: { id: true },
+    });
+
+    if (revokedBypass) {
+      return Errors.unauthorized('Your bypass access has been revoked. Please log in again.');
+    }
+  }
 
   await revokeByRefreshJti(user.jti, user.iat);
 

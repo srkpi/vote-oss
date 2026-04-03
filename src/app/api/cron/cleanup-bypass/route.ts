@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { CRON_SECRET } from '@/lib/config/server';
+import { SESSION_INITIAL_AUTH_MAX_DAYS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -41,10 +42,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const now = new Date();
+    const maxSessionDuration = new Date(now);
+    maxSessionDuration.setDate(now.getDate() + SESSION_INITIAL_AUTH_MAX_DAYS);
 
     const [{ count: deleted }] = await Promise.all([
       prisma.globalBypassToken.deleteMany({
-        where: { valid_until: { lt: now } },
+        where: { valid_until: { lt: maxSessionDuration } },
       }),
     ]);
 

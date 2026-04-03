@@ -15,11 +15,17 @@ export interface UserBypassInfo {
   elections: Record<string, ElectionBypassInfo>;
 }
 
+export interface BypassTokenDeleter {
+  userId: string;
+  fullName: string;
+}
+
 export interface BypassTokenUsage {
   id: string;
   userId: string;
   usedAt: string;
   revokedAt: string | null;
+  revokedBy: BypassTokenDeleter | null;
 }
 
 export interface GlobalBypassToken {
@@ -31,6 +37,7 @@ export interface GlobalBypassToken {
   validUntil: string;
   createdAt: string;
   deletedAt: string | null;
+  deletedBy: BypassTokenDeleter | null;
   creator: { userId: string; fullName: string };
   usages: BypassTokenUsage[];
   canDelete: boolean;
@@ -45,6 +52,7 @@ export interface ElectionBypassToken {
   currentUsage: number;
   createdAt: string;
   deletedAt: string | null;
+  deletedBy: BypassTokenDeleter | null;
   creator: { userId: string; fullName: string };
   usages: BypassTokenUsage[];
   canDelete: boolean;

@@ -41,6 +41,7 @@ function makeElectionBypassTokenRecord(overrides: Partial<Record<string, unknown
     current_usage: 0,
     created_at: new Date(),
     deleted_at: null,
+    deleted_by: null,
     created_by: 'superadmin-001',
     usages: [],
     ...overrides,
@@ -79,7 +80,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
   it('returns 400 when token is already soft-deleted', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
-      makeElectionBypassTokenRecord({ deleted_at: new Date() }),
+      makeElectionBypassTokenRecord({ deleted_at: new Date(), deleted_by: 'superadmin-001' }),
     );
     const res = await DELETE(req, params('hash-abc'));
     expect(res.status).toBe(400);
@@ -95,7 +96,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(res.status).toBe(204);
   });
 
-  it('calls update with deleted_at instead of hard-deleting', async () => {
+  it('calls update with deleted_at and deleted_by instead of hard-deleting', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ created_by: 'superadmin-001' }),
@@ -106,10 +107,47 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(prismaMock.electionBypassToken.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { token_hash: 'hash-abc' },
-        data: { deleted_at: expect.any(Date) },
+        data: expect.objectContaining({
+          deleted_at: expect.any(Date),
+          deleted_by: 'superadmin-001',
+        }),
       }),
     );
     expect(prismaMock.electionBypassToken.delete).not.toHaveBeenCalled();
+  });
+
+  it('sets deleted_by to the requesting admin user_id', async () => {
+    const req = await adminReq();
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
+      makeElectionBypassTokenRecord({ created_by: 'superadmin-001' }),
+    );
+
+    await DELETE(req, params('hash-abc'));
+
+    const updateCall = prismaMock.electionBypassToken.update.mock.calls[0][0];
+    expect(updateCall.data.deleted_by).toBe('superadmin-001');
+  });
+
+  it('bulk-revokes all usages and sets revoked_by on delete', async () => {
+    const req = await adminReq();
+    prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
+      makeElectionBypassTokenRecord({
+        created_by: 'superadmin-001',
+        usages: [{ user_id: 'user-001' }, { user_id: 'user-002' }],
+      }),
+    );
+
+    await DELETE(req, params('hash-abc'));
+
+    expect(prismaMock.electionBypassTokenUsage.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { token_hash: 'hash-abc' },
+        data: expect.objectContaining({
+          revoked_at: expect.any(Date),
+          revoked_by: 'superadmin-001',
+        }),
+      }),
+    );
   });
 
   it('invalidates bypass cache for all users who activated the token', async () => {
@@ -147,7 +185,6 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
 
   it('returns 204 when ancestor deletes subordinate creator token', async () => {
     const req = await adminReq();
-    // superadmin-001 is ancestor of admin-002
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ created_by: 'admin-002' }),
     );

@@ -13,10 +13,11 @@ import { prisma } from '@/lib/prisma';
  *   delete:
  *     summary: Soft-delete an election bypass token
  *     description: >
- *       Marks the specified election bypass token as deleted (sets `deleted_at`).
- *       The token and its full usage history remain visible in the election
- *       bypass panel for audit purposes. The caller must be the token's
- *       creator or a transitive ancestor of the creator in the admin hierarchy.
+ *       Marks the specified election bypass token as deleted (sets `deleted_at`
+ *       and `deleted_by`). The token and its full usage history remain visible
+ *       in the election bypass panel for audit purposes. The caller must be the
+ *       token's creator or a transitive ancestor of the creator in the admin
+ *       hierarchy.
  *     tags:
  *       - Bypass
  *     security:
@@ -69,13 +70,14 @@ export async function DELETE(
     }
   }
 
+  const now = new Date();
   await prisma.electionBypassTokenUsage.updateMany({
     where: { token_hash: tokenHash },
-    data: { revoked_at: new Date() },
+    data: { revoked_at: now, revoked_by: auth.admin.user_id },
   });
   await prisma.electionBypassToken.update({
     where: { token_hash: tokenHash },
-    data: { deleted_at: new Date() },
+    data: { deleted_at: now, deleted_by: auth.admin.user_id },
   });
 
   const affectedUserIds = token.usages.map((u) => u.user_id);

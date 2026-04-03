@@ -13,11 +13,11 @@ import { prisma } from '@/lib/prisma';
  *   delete:
  *     summary: Soft-delete a global bypass token
  *     description: >
- *       Marks the specified global bypass token as deleted (sets `deleted_at`).
- *       The token and its usage history remain visible for audit purposes.
- *       Only non-restricted admins may manage global bypass tokens.
- *       The caller must be the creator or a transitive ancestor in the admin
- *       hierarchy.
+ *       Marks the specified global bypass token as deleted (sets `deleted_at`
+ *       and `deleted_by`). The token and its usage history remain visible for
+ *       audit purposes. Only non-restricted admins may manage global bypass
+ *       tokens. The caller must be the creator or a transitive ancestor in the
+ *       admin hierarchy.
  *     tags:
  *       - Bypass
  *     security:
@@ -74,17 +74,16 @@ export async function DELETE(
     }
   }
 
+  const now = new Date();
   await prisma.globalBypassTokenUsage.updateMany({
     where: { token_hash: tokenHash },
-    data: { revoked_at: new Date() },
+    data: { revoked_at: now, revoked_by: auth.admin.user_id },
   });
   await prisma.globalBypassToken.update({
     where: { token_hash: tokenHash },
-    data: { deleted_at: new Date() },
+    data: { deleted_at: now, deleted_by: auth.admin.user_id },
   });
 
-  // Invalidate bypass cache for all users who used this token so they lose
-  // the bypass access on the next request.
   const affectedUserIds = token.usages.map((u) => u.user_id);
   await Promise.all(affectedUserIds.map((uid) => invalidateUserBypassCache(uid)));
 

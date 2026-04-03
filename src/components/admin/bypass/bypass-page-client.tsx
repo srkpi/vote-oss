@@ -26,11 +26,13 @@ import {
   BYPASS_TOKEN_MIN_HOURS,
 } from '@/lib/constants';
 import { pluralize } from '@/lib/utils';
+import type { UserInfo } from '@/types/auth';
 import type { GlobalBypassToken } from '@/types/bypass';
 
 interface BypassPageClientProps {
   initialTokens: GlobalBypassToken[];
   error: string | null;
+  session: UserInfo;
 }
 
 function TokenResult({ token }: { token: string }) {
@@ -102,12 +104,8 @@ function BypassTokenCard({
   const isDeleted = !!token.deletedAt;
 
   const bypasses = [];
-  if (token.bypassNotStudying) {
-    bypasses.push('Статус навчання');
-  }
-  if (token.bypassGraduate) {
-    bypasses.push('Аспірант');
-  }
+  if (token.bypassNotStudying) bypasses.push('Статус навчання');
+  if (token.bypassGraduate) bypasses.push('Аспірант');
 
   return (
     <div
@@ -124,9 +122,14 @@ function BypassTokenCard({
           </p>
           <p className="font-body text-muted-foreground text-xs">Видав: {token.creator.fullName}</p>
           {isDeleted && (
-            <p className="font-body text-error text-xs">
-              Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
-            </p>
+            <>
+              <p className="font-body text-error text-xs">
+                Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
+              </p>
+              {token.deletedBy && (
+                <p className="font-body text-error text-xs">{token.deletedBy.fullName}</p>
+              )}
+            </>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -174,9 +177,14 @@ function BypassTokenCard({
                       {new Date(usage.usedAt).toLocaleString('uk-UA')}
                     </p>
                     {usage.revokedAt && (
-                      <p className="font-body text-error text-xs">
-                        Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
-                      </p>
+                      <>
+                        <p className="font-body text-error text-xs">
+                          Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
+                        </p>
+                        {usage.revokedBy && (
+                          <p className="font-body text-error text-xs">{usage.revokedBy.fullName}</p>
+                        )}
+                      </>
                     )}
                   </div>
                   {!usage.revokedAt && token.canRevokeUsages && (
@@ -200,7 +208,7 @@ function BypassTokenCard({
   );
 }
 
-export function BypassPageClient({ initialTokens, error }: BypassPageClientProps) {
+export function BypassPageClient({ initialTokens, error, session }: BypassPageClientProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [tokens, setTokens] = useState<GlobalBypassToken[]>(initialTokens);
@@ -210,6 +218,10 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
   const [newToken, setNewToken] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<GlobalBypassToken | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [revokeTarget, setRevokeTarget] = useState<{ tokenHash: string; userId: string } | null>(
+    null,
+  );
+  const [revoking, setRevoking] = useState(false);
 
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
@@ -240,14 +252,8 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
 
     if (result.success) {
       setNewToken(result.data.token);
-
-      // Immediately re-fetch the full list so the UI reflects the new token
-      // once the dialog is dismissed — no manual page refresh needed.
       const listResult = await api.bypass.listGlobal();
-      if (listResult.success) {
-        setTokens(listResult.data);
-      }
-
+      if (listResult.success) setTokens(listResult.data);
       router.refresh();
     } else {
       setCreateError(result.error);
@@ -259,11 +265,8 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
     if (!deleteTarget) return;
     setDeleting(true);
 
-    // Use the global-specific delete route
     const result = await api.bypass.deleteGlobal(deleteTarget.tokenHash);
     if (result.success) {
-      // Soft delete: update local state to mark the token as deleted rather
-      // than removing it, preserving the audit trail in the UI.
       setTokens((prev) =>
         prev.map((t) =>
           t.tokenHash === deleteTarget.tokenHash
@@ -272,8 +275,10 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
                 usages: t.usages.map((u) => ({
                   ...u,
                   revokedAt: new Date().toISOString(),
+                  revokedBy: { fullName: session.fullName, userId: session.userId },
                 })),
                 deletedAt: new Date().toISOString(),
+                deletedBy: { fullName: session.fullName, userId: session.userId },
                 canDelete: false,
                 canRevokeUsages: false,
               }
@@ -289,25 +294,39 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
   };
 
   const handleRevokeUsage = async (tokenHash: string, userId: string) => {
-    // Use the global-specific revoke route
-    const result = await api.bypass.revokeGlobalUsage(tokenHash, userId);
+    setRevokeTarget({ tokenHash, userId });
+  };
+
+  const confirmRevokeUsage = async () => {
+    if (!revokeTarget) return;
+    setRevoking(true);
+
+    const result = await api.bypass.revokeGlobalUsage(revokeTarget.tokenHash, revokeTarget.userId);
     if (result.success) {
       setTokens((prev) =>
         prev.map((t) =>
-          t.tokenHash === tokenHash
+          t.tokenHash === revokeTarget.tokenHash
             ? {
                 ...t,
                 usages: t.usages.map((u) =>
-                  u.userId === userId ? { ...u, revokedAt: new Date().toISOString() } : u,
+                  u.userId === revokeTarget.userId
+                    ? {
+                        ...u,
+                        revokedAt: new Date().toISOString(),
+                        revokedBy: { fullName: session.fullName, userId: session.userId },
+                      }
+                    : u,
                 ),
               }
             : t,
         ),
       );
       toast({ title: 'Доступ відкликано', variant: 'success' });
+      setRevokeTarget(null);
     } else {
       toast({ title: 'Помилка', description: result.error, variant: 'error' });
     }
+    setRevoking(false);
   };
 
   const handleDialogClose = () => {
@@ -390,18 +409,15 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
                   checked={bypassNotStudying}
                   onChange={setBypassNotStudying}
                 />
-
                 <ToggleField
                   label="Обхід перевірки рівня навчання"
                   description="Дозволяє аспіранту увійти на платформу"
                   checked={bypassGraduate}
                   onChange={setBypassGraduate}
                 />
-
                 {!canCreate && (
                   <p className="text-error font-body text-sm">Оберіть хоча б один варіант обходу</p>
                 )}
-
                 <FormField
                   label="Максимальна кількість використань"
                   required
@@ -416,7 +432,6 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
                     onChange={(e) => setMaxUsage(Math.max(1, parseInt(e.target.value) || 1))}
                   />
                 </FormField>
-
                 <FormField label="Дійсний до" required htmlFor="bypass-valid-until">
                   <Input
                     id="bypass-valid-until"
@@ -463,10 +478,10 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
             <DialogTitle>Видалити токен доступу?</DialogTitle>
             <DialogCloseButton onClose={() => setDeleteTarget(null)} />
           </DialogHeader>
-          <DialogBody>
+          <DialogBody className="space-y-3">
             <Alert variant="warning">
               Токен буде деактивовано. Усі активні використання цього токена будуть відкликані.
-              Історія використань залишиться для аудиту.
+              Історія використань залишиться видимою.
             </Alert>
           </DialogBody>
           <DialogFooter>
@@ -475,6 +490,30 @@ export function BypassPageClient({ initialTokens, error }: BypassPageClientProps
             </Button>
             <Button variant="danger" onClick={handleDelete} loading={deleting}>
               Видалити
+            </Button>
+          </DialogFooter>
+        </DialogPanel>
+      </Dialog>
+
+      {/* Revoke usage confirm dialog */}
+      <Dialog open={!!revokeTarget} onClose={() => setRevokeTarget(null)}>
+        <DialogPanel maxWidth="sm">
+          <DialogHeader>
+            <DialogTitle>Відкликати доступ?</DialogTitle>
+            <DialogCloseButton onClose={() => setRevokeTarget(null)} />
+          </DialogHeader>
+          <DialogBody className="space-y-3">
+            <Alert variant="warning">
+              Студент <span className="font-mono">{revokeTarget?.userId}</span> втратить глобальний
+              доступ, отриманий через цей токен.
+            </Alert>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setRevokeTarget(null)} disabled={revoking}>
+              Скасувати
+            </Button>
+            <Button variant="danger" onClick={confirmRevokeUsage} loading={revoking}>
+              Відкликати
             </Button>
           </DialogFooter>
         </DialogPanel>

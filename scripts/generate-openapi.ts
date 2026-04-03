@@ -3,6 +3,7 @@ import { createSwaggerSpec } from 'next-swagger-doc';
 import path from 'path';
 
 import {
+  BYPASS_TOKEN_MAX_USAGE_MAX,
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
@@ -320,13 +321,18 @@ const spec = createSwaggerSpec({
             { $ref: '#/components/schemas/Election' },
             {
               type: 'object',
-              required: ['publicKey'],
+              required: ['publicKey', 'bypassedTypes'],
               properties: {
                 publicKey: { type: 'string', description: 'PEM-encoded RSA public key.' },
                 privateKey: {
                   type: 'string',
                   description:
                     'PEM-encoded RSA private key. Only present once the election is closed.',
+                },
+                bypassedTypes: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/ElectionRestrictionType' },
+                  description: 'Restriction types that user bypasses',
                 },
                 hasVoted: {
                   type: 'boolean',
@@ -377,6 +383,175 @@ const spec = createSwaggerSpec({
             position: { type: 'integer' },
             votes: { type: 'integer', minimum: 0 },
           },
+        },
+
+        BypassTokensCommonFields: {
+          type: 'object',
+          required: [
+            'tokenHash',
+            'currentUsage',
+            'createdAt',
+            'deletedAt',
+            'deletedBy',
+            'creator',
+            'usages',
+            'canDelete',
+            'canRevokeUsages',
+          ],
+          properties: {
+            tokenHash: {
+              type: 'string',
+              description: 'SHA-256 hash of the token',
+            },
+            currentUsage: {
+              type: 'integer',
+              minimum: 0,
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+            deletedAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+            },
+            deletedBy: {
+              type: 'object',
+              nullable: true,
+              properties: {
+                userId: {
+                  type: 'string',
+                },
+                fullName: {
+                  type: 'string',
+                },
+              },
+            },
+            creator: {
+              type: 'object',
+              properties: {
+                userId: {
+                  type: 'string',
+                },
+                fullName: {
+                  type: 'string',
+                },
+              },
+            },
+            usages: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {
+                    type: 'string',
+                    format: 'uuid',
+                  },
+                  userId: {
+                    type: 'string',
+                  },
+                  usedAt: {
+                    type: 'string',
+                    format: 'date-time',
+                  },
+                  revokedAt: {
+                    type: 'string',
+                    format: 'date-time',
+                    nullable: true,
+                  },
+                  revokedBy: {
+                    type: 'object',
+                    nullable: true,
+                    properties: {
+                      userId: {
+                        type: 'string',
+                      },
+                      fullName: {
+                        type: 'string',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            canDelete: {
+              type: 'boolean',
+              description:
+                'True if the current admin created the token or is an ancestor of the creator',
+            },
+            canRevokeUsages: {
+              type: 'boolean',
+              description: 'True if the token is not soft-deleted',
+            },
+          },
+        },
+
+        GlobalBypassTokenCreateBody: {
+          type: 'object',
+          required: ['maxUsage', 'validUntil'],
+          properties: {
+            bypassNotStudying: {
+              type: 'boolean',
+            },
+            bypassGraduate: {
+              type: 'boolean',
+            },
+            maxUsage: {
+              type: 'integer',
+              minimum: 1,
+              maximum: BYPASS_TOKEN_MAX_USAGE_MAX,
+            },
+            validUntil: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+        },
+
+        GlobalBypassToken: {
+          allOf: [
+            { $ref: '#/components/schemas/GlobalBypassTokenCreateBody' },
+            { $ref: '#/components/schemas/BypassTokensCommonFields' },
+            {
+              type: 'object',
+              required: ['bypassNotStudying', 'bypassGraduate'],
+            },
+          ],
+        },
+
+        ElectionBypassTokenCreateBody: {
+          type: 'object',
+          required: ['bypassRestrictions', 'maxUsage'],
+          properties: {
+            bypassRestrictions: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ElectionRestrictionType' },
+              description: 'Restriction types this token bypasses',
+            },
+            maxUsage: {
+              type: 'integer',
+              minimum: 1,
+              maximum: BYPASS_TOKEN_MAX_USAGE_MAX,
+            },
+          },
+        },
+
+        ElectionBypassToken: {
+          allOf: [
+            { $ref: '#/components/schemas/ElectionBypassTokenCreateBody' },
+            { $ref: '#/components/schemas/BypassTokensCommonFields' },
+            {
+              type: 'object',
+              required: ['electionId'],
+              properties: {
+                electionId: {
+                  type: 'string',
+                  format: 'uuid',
+                },
+              },
+            },
+          ],
         },
 
         FaqItem: {

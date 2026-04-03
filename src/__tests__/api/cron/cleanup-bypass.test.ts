@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { POST } from '@/app/api/cron/cleanup-bypass/route';
 import { CRON_SECRET } from '@/lib/config/server';
+import { SESSION_INITIAL_AUTH_MAX_DAYS } from '@/lib/constants';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 
@@ -78,6 +79,8 @@ describe('POST /api/cron/cleanup-bypass', () => {
 
     // Mocking the system time so 'new Date()' is predictable
     const fixedTime = new Date('2026-04-02T12:00:00Z');
+    const timeWithSessionMaxDays = new Date(fixedTime);
+    timeWithSessionMaxDays.setDate(fixedTime.getDate() + SESSION_INITIAL_AUTH_MAX_DAYS);
     jest.useFakeTimers().setSystemTime(fixedTime);
 
     prismaMock.globalBypassToken.deleteMany.mockResolvedValueOnce({ count: 0 });
@@ -88,7 +91,7 @@ describe('POST /api/cron/cleanup-bypass', () => {
       expect.objectContaining({
         where: {
           valid_until: {
-            lt: fixedTime,
+            lt: timeWithSessionMaxDays,
           },
         },
       }),

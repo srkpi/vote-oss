@@ -34,7 +34,12 @@ model Admin {
   deleted_elections              Election[]             @relation("ElectionDeleter")
   created_invite_tokens          AdminInviteToken[]
   created_global_bypass_tokens   GlobalBypassToken[]
+  deleted_global_bypass_tokens   GlobalBypassToken[]    @relation("GlobalBypassTokenDeleter")
   created_election_bypass_tokens ElectionBypassToken[]
+  deleted_election_bypass_tokens ElectionBypassToken[]  @relation("ElectionBypassTokenDeleter")
+
+  revoked_global_bypass_tokens_usages   GlobalBypassTokenUsage[]    @relation("GlobalBypassTokenUsageRevoker")
+  revoked_election_bypass_tokens_usages ElectionBypassTokenUsage[]  @relation("ElectionBypassTokenUsageRevoker")
 
   created_faq_categories FaqCategory[] @relation("FaqCategoryCreator")
   updated_faq_categories FaqCategory[] @relation("FaqCategoryUpdater")
@@ -156,16 +161,19 @@ model UsedTokenNullifier {
 }
 
 model GlobalBypassToken {
-  token_hash          String                   @id
-  bypass_not_studying Boolean                  @default(false)
-  bypass_graduate     Boolean                  @default(false)
+  token_hash          String    @id
+  bypass_not_studying Boolean   @default(false)
+  bypass_graduate     Boolean   @default(false)
   max_usage           Int
-  current_usage       Int                      @default(0)
+  current_usage       Int       @default(0)
   valid_until         DateTime
   created_by          String
-  creator             Admin                    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
-  created_at          DateTime                 @default(now())
+  creator             Admin     @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
+  created_at          DateTime  @default(now())
   deleted_at          DateTime?
+  deleted_by          String?
+
+  deleter             Admin?    @relation("GlobalBypassTokenDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
   usages              GlobalBypassTokenUsage[]
 
   @@index([created_by])
@@ -179,6 +187,8 @@ model GlobalBypassTokenUsage {
   user_id    String
   used_at    DateTime          @default(now())
   revoked_at DateTime?
+  revoked_by String?
+  revoker    Admin?            @relation("GlobalBypassTokenUsageRevoker", fields: [revoked_by], references: [user_id], onDelete: SetNull)
 
   @@unique([token_hash, user_id])
   @@index([user_id])
@@ -186,16 +196,19 @@ model GlobalBypassTokenUsage {
 }
 
 model ElectionBypassToken {
-  token_hash          String                    @id
-  election_id         String                    @db.Uuid
-  election            Election                  @relation(fields: [election_id], references: [id], onDelete: Cascade)
+  token_hash          String    @id
+  election_id         String    @db.Uuid
+  election            Election  @relation(fields: [election_id], references: [id], onDelete: Cascade)
   bypass_restrictions String[]
   max_usage           Int
-  current_usage       Int                       @default(0)
+  current_usage       Int       @default(0)
   created_by          String
-  creator             Admin                     @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
-  created_at          DateTime                  @default(now())
+  creator             Admin     @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
+  created_at          DateTime  @default(now())
   deleted_at          DateTime?
+  deleted_by          String?
+
+  deleter             Admin?    @relation("ElectionBypassTokenDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
   usages              ElectionBypassTokenUsage[]
 
   @@index([election_id])
@@ -210,6 +223,8 @@ model ElectionBypassTokenUsage {
   user_id    String
   used_at    DateTime            @default(now())
   revoked_at DateTime?
+  revoked_by String?
+  revoker    Admin?              @relation("ElectionBypassTokenUsageRevoker", fields: [revoked_by], references: [user_id], onDelete: SetNull)
 
   @@unique([token_hash, user_id])
   @@index([user_id])

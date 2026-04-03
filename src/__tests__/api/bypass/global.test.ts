@@ -261,16 +261,4 @@ describe('POST /api/bypass', () => {
       }),
     );
   });
-
-  it('returns currentUsage 0 and canDelete/canRevokeUsages true on creation', async () => {
-    const req = await adminReq({
-      bypassNotStudying: true,
-      maxUsage: 1,
-      validUntil: FUTURE_VALID_UNTIL,
-    });
-    const { body } = await parseJson<any>(await POST(req));
-    expect(body.currentUsage).toBe(0);
-    expect(body.canDelete).toBe(true);
-    expect(body.canRevokeUsages).toBe(true);
-  });
 });

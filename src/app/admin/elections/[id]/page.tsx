@@ -197,6 +197,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 electionId={id}
                 initialTokens={bypassTokens}
                 restrictions={election.restrictions}
+                session={session}
               />
             )}
           </div>

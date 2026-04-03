@@ -12,8 +12,11 @@ import { prisma } from '@/lib/prisma';
  *   delete:
  *     summary: Revoke a user's global bypass access
  *     description: >
- *       Sets `revoked_at` on the specified usage record, preventing the user
- *       from benefiting from this bypass token in future requests.
+ *       Sets `revoked_at` and `revoked_by` on the specified usage record,
+ *       preventing the user from benefiting from this bypass token in future
+ *       requests. Because global bypass tokens gate platform access (not just
+ *       a single election), revoking a usage will also block the user's next
+ *       token refresh, effectively requiring them to re-authenticate.
  *       Non-restricted admins can revoke any usage; restricted admins can
  *       only revoke usages on tokens they created.
  *     tags:
@@ -74,7 +77,7 @@ export async function DELETE(
 
   await prisma.globalBypassTokenUsage.update({
     where: { token_hash_user_id: { token_hash: tokenHash, user_id: userId } },
-    data: { revoked_at: new Date() },
+    data: { revoked_at: new Date(), revoked_by: auth.admin.user_id },
   });
 
   await invalidateUserBypassCache(userId);

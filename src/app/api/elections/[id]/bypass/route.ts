@@ -58,74 +58,7 @@ const BYPASSABLE_RESTRICTION_TYPES = [
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 required:
- *                   - tokenHash
- *                   - electionId
- *                   - bypassRestrictions
- *                   - maxUsage
- *                   - currentUsage
- *                   - createdAt
- *                   - creator
- *                   - usages
- *                   - canDelete
- *                   - canRevokeUsages
- *                 properties:
- *                   tokenHash:
- *                     type: string
- *                     description: SHA-256 hash of the bypass token
- *                   electionId:
- *                     type: string
- *                     format: uuid
- *                   bypassRestrictions:
- *                     type: array
- *                     items:
- *                       $ref: '#/components/schemas/ElectionRestrictionType'
- *                     description: List of restriction types this token overrides
- *                   maxUsage:
- *                     type: integer
- *                     description: Maximum number of times this token can be applied
- *                   currentUsage:
- *                     type: integer
- *                     description: Number of students who have already used this token
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                   deletedAt:
- *                     type: string
- *                     format: date-time
- *                     nullable: true
- *                     description: Timestamp of soft-deletion; null if token is active
- *                   creator:
- *                     type: object
- *                     properties:
- *                       userId:
- *                         type: string
- *                       fullName:
- *                         type: string
- *                   usages:
- *                     type: array
- *                     description: History of users who applied this token
- *                     items:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                         userId:
- *                           type: string
- *                         usedAt:
- *                           type: string
- *                           format: date-time
- *                         revokedAt:
- *                           type: string
- *                           format: date-time
- *                           nullable: true
- *                   canDelete:
- *                     type: boolean
- *                     description: Whether the current admin has permission to delete this token
- *                   canRevokeUsages:
- *                     type: boolean
- *                     description: Whether the current admin can revoke individual usages of this token
+ *                 $ref: '#/components/schemas/ElectionBypassToken'
  *       400:
  *         description: Invalid election UUID
  *       401:
@@ -155,13 +88,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return Errors.forbidden('You do not have permission to manage bypass tokens for this election');
   }
 
-  // Include ALL tokens: active and soft-deleted, for full audit history
   const tokens = await prisma.electionBypassToken.findMany({
     where: { election_id: electionId },
     include: {
       creator: { select: { user_id: true, full_name: true } },
+      deleter: { select: { user_id: true, full_name: true } },
       usages: {
-        select: { id: true, user_id: true, used_at: true, revoked_at: true },
+        select: {
+          id: true,
+          user_id: true,
+          used_at: true,
+          revoked_at: true,
+          revoker: { select: { user_id: true, full_name: true } },
+        },
         orderBy: { used_at: 'desc' },
       },
     },
@@ -184,14 +123,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         currentUsage: t.current_usage,
         createdAt: t.created_at.toISOString(),
         deletedAt: t.deleted_at?.toISOString() ?? null,
+        deletedBy: t.deleter ? { userId: t.deleter.user_id, fullName: t.deleter.full_name } : null,
         creator: { userId: t.creator.user_id, fullName: t.creator.full_name },
         usages: t.usages.map((u) => ({
           id: u.id,
           userId: u.user_id,
           usedAt: u.used_at.toISOString(),
           revokedAt: u.revoked_at?.toISOString() ?? null,
+          revokedBy: u.revoker
+            ? { userId: u.revoker.user_id, fullName: u.revoker.full_name }
+            : null,
         })),
-        // Soft-deleted tokens can't be deleted again; usages can still be revoked for record
         canDelete: !isDeleted && (isCreator || isAncestor),
         canRevokeUsages: !isDeleted && (isUnrestricted || isCreator),
       };
@@ -228,20 +170,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - bypassRestrictions
- *               - maxUsage
- *             properties:
- *               bypassRestrictions:
- *                 type: array
- *                 items:
- *                   $ref: '#/components/schemas/ElectionRestrictionType'
- *                 description: Restriction types this token bypasses (must exist on the election)
- *               maxUsage:
- *                 type: integer
- *                 minimum: 1
- *                 description: Maximum number of times the token can be activated
+ *             $ref: '#/components/schemas/ElectionBypassTokenCreateBody'
  *     responses:
  *       201:
  *         description: Bypass token created – raw token returned here only
@@ -249,26 +178,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *           application/json:
  *             schema:
  *               type: object
+ *               required:
+ *                 - token
+ *                 - tokenHash
+ *                 - electionId
+ *                 - bypassRestrictions
+ *                 - maxUsage
  *               properties:
  *                 token:
  *                   type: string
  *                   description: Raw token to share with the student
  *                 tokenHash:
  *                   type: string
+ *                   description: SHA-256 hash of the token
  *                 electionId:
  *                   type: string
+ *                   format: uuid
  *                 bypassRestrictions:
  *                   type: array
  *                   items:
- *                     type: string
+ *                     $ref: '#/components/schemas/ElectionRestrictionType'
  *                 maxUsage:
  *                   type: integer
- *                 currentUsage:
- *                   type: integer
- *                 canDelete:
- *                   type: boolean
- *                 canRevokeUsages:
- *                   type: boolean
+ *                   minimum: 1
+ *                   description: Maximum number of times this token can be used
  *       400:
  *         description: Validation error
  *       401:
@@ -376,10 +309,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       electionId,
       bypassRestrictions,
       maxUsage,
-      currentUsage: 0,
-      deletedAt: null,
-      canDelete: true,
-      canRevokeUsages: true,
     },
     { status: 201 },
   );

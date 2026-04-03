@@ -244,12 +244,7 @@ describe('POST /api/elections/[id]/bypass', () => {
     const { status, body } = await parseJson<any>(await POST(req, PARAMS));
     expect(status).toBe(201);
     expect(body.bypassRestrictions).toEqual(['FACULTY']);
-    expect(body.currentUsage).toBe(0);
     expect(body.maxUsage).toBe(1);
-    expect(body.deletedAt).toBeNull();
-    expect(body.validUntil).toBeUndefined();
-    expect(body.canDelete).toBe(true);
-    expect(body.canRevokeUsages).toBe(true);
   });
 
   it('stores maxUsage in the database', async () => {

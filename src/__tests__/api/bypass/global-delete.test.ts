@@ -79,6 +79,7 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken(),
       deleted_at: new Date(),
+      deleted_by: 'superadmin-001',
       usages: [],
     });
     const res = await DELETE(req, params('some-hash'));
@@ -90,6 +91,7 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
       deleted_at: null,
+      deleted_by: null,
       usages: [],
     });
 
@@ -97,11 +99,12 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     expect(res.status).toBe(204);
   });
 
-  it('calls update with deleted_at instead of deleting the record', async () => {
+  it('calls update with deleted_at and deleted_by instead of deleting the record', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
       deleted_at: null,
+      deleted_by: null,
       usages: [],
     });
 
@@ -110,11 +113,50 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     expect(prismaMock.globalBypassToken.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { token_hash: 'some-hash' },
-        data: { deleted_at: expect.any(Date) },
+        data: expect.objectContaining({
+          deleted_at: expect.any(Date),
+          deleted_by: 'superadmin-001',
+        }),
       }),
     );
-    // Hard delete must NOT be called
     expect(prismaMock.globalBypassToken.delete).not.toHaveBeenCalled();
+  });
+
+  it('sets deleted_by to the requesting admin user_id', async () => {
+    const req = await adminReq();
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
+      ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
+      deleted_at: null,
+      deleted_by: null,
+      usages: [],
+    });
+
+    await DELETE(req, params('some-hash'));
+
+    const updateCall = prismaMock.globalBypassToken.update.mock.calls[0][0];
+    expect(updateCall.data.deleted_by).toBe('superadmin-001');
+  });
+
+  it('bulk-revokes all usages and sets revoked_by on delete', async () => {
+    const req = await adminReq();
+    prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
+      ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
+      deleted_at: null,
+      deleted_by: null,
+      usages: [{ user_id: 'user-001' }, { user_id: 'user-002' }],
+    });
+
+    await DELETE(req, params('some-hash'));
+
+    expect(prismaMock.globalBypassTokenUsage.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { token_hash: 'some-hash' },
+        data: expect.objectContaining({
+          revoked_at: expect.any(Date),
+          revoked_by: 'superadmin-001',
+        }),
+      }),
+    );
   });
 
   it('invalidates bypass cache for all users who used the token', async () => {
@@ -122,13 +164,12 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
       deleted_at: null,
+      deleted_by: null,
       usages: [{ user_id: 'user-001' }, { user_id: 'user-002' }],
     });
 
     const { safeRedis } = jest.requireMock('@/lib/redis');
     await DELETE(req, params('some-hash'));
-
-    // Cache invalidation (redis.del) should have been triggered for each user
     expect(safeRedis).toHaveBeenCalled();
   });
 
@@ -137,9 +178,9 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'other-root-admin' }),
       deleted_at: null,
+      deleted_by: null,
       usages: [],
     });
-    // Graph: superadmin-001 is root, other-root-admin is an unrelated root
     prismaMock.admin.findMany.mockResolvedValueOnce([
       { user_id: 'superadmin-001', promoted_by: null },
       { user_id: 'other-root-admin', promoted_by: null },

@@ -18,6 +18,7 @@ import { FormField, Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { BYPASS_TOKEN_MAX_USAGE_MAX, RESTRICTION_TYPE_LABELS } from '@/lib/constants';
+import type { UserInfo } from '@/types/auth';
 import type { ElectionBypassToken } from '@/types/bypass';
 import type { ElectionRestriction } from '@/types/election';
 
@@ -25,6 +26,7 @@ interface ElectionBypassPanelProps {
   electionId: string;
   initialTokens: ElectionBypassToken[];
   restrictions: ElectionRestriction[];
+  session: UserInfo;
 }
 
 const BYPASSABLE_TYPES = ['FACULTY', 'GROUP', 'STUDY_YEAR', 'STUDY_FORM', 'LEVEL_COURSE'] as const;
@@ -113,9 +115,14 @@ function BypassTokenItem({
             Використань: {token.currentUsage} / {token.maxUsage}
           </p>
           {isDeleted && (
-            <p className="font-body text-error text-xs">
-              Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
-            </p>
+            <>
+              <p className="font-body text-error text-xs">
+                Видалено: {new Date(token.deletedAt!).toLocaleString('uk-UA')}
+              </p>
+              {token.deletedBy && (
+                <p className="font-body text-error text-xs">{token.deletedBy.fullName}</p>
+              )}
+            </>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -157,9 +164,14 @@ function BypassTokenItem({
                     {new Date(usage.usedAt).toLocaleString('uk-UA')}
                   </p>
                   {usage.revokedAt && (
-                    <p className="font-body text-error text-xs">
-                      Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
-                    </p>
+                    <>
+                      <p className="font-body text-error text-xs">
+                        Відкликано: {new Date(usage.revokedAt).toLocaleString('uk-UA')}
+                      </p>
+                      {usage.revokedBy && (
+                        <p className="font-body text-error text-xs">{usage.revokedBy.fullName}</p>
+                      )}
+                    </>
                   )}
                 </div>
                 {!usage.revokedAt && token.canRevokeUsages && (
@@ -186,6 +198,7 @@ export function ElectionBypassPanel({
   electionId,
   initialTokens,
   restrictions,
+  session,
 }: ElectionBypassPanelProps) {
   const { toast } = useToast();
   const [tokens, setTokens] = useState<ElectionBypassToken[]>(initialTokens);
@@ -220,9 +233,6 @@ export function ElectionBypassPanel({
 
     if (result.success) {
       setNewToken(result.data.token);
-
-      // Re-fetch full list to include the newly created token with server-
-      // computed fields (isCreator, canRevokeUsages, etc.)
       const listResult = await api.elections.bypass.list(electionId);
       if (listResult.success) setTokens(listResult.data);
     } else {
@@ -247,6 +257,7 @@ export function ElectionBypassPanel({
                   revokedAt: new Date().toISOString(),
                 })),
                 deletedAt: new Date().toISOString(),
+                deletedBy: { fullName: session.fullName, userId: session.userId },
                 canDelete: false,
                 canRevokeUsages: false,
               }
@@ -262,7 +273,6 @@ export function ElectionBypassPanel({
   };
 
   const handleRevokeUsage = async (tokenHash: string, userId: string) => {
-    // Use the election-specific revoke route
     const result = await api.bypass.revokeElectionUsage(tokenHash, userId);
     if (result.success) {
       setTokens((prev) =>
@@ -271,7 +281,13 @@ export function ElectionBypassPanel({
             ? {
                 ...t,
                 usages: t.usages.map((u) =>
-                  u.userId === userId ? { ...u, revokedAt: new Date().toISOString() } : u,
+                  u.userId === userId
+                    ? {
+                        ...u,
+                        revokedAt: new Date().toISOString(),
+                        revokedBy: { fullName: session.fullName, userId: session.userId },
+                      }
+                    : u,
                 ),
               }
             : t,
@@ -436,7 +452,7 @@ export function ElectionBypassPanel({
           <DialogBody>
             <Alert variant="warning">
               Токен буде деактивовано. Студенти, що вже використали його, втратять отримані права.
-              Історія використань залишиться видимою для аудиту.
+              Історія використань залишиться видимою.
             </Alert>
           </DialogBody>
           <DialogFooter>

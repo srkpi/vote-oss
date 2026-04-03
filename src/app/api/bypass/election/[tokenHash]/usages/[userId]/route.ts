@@ -12,10 +12,10 @@ import { prisma } from '@/lib/prisma';
  *   delete:
  *     summary: Revoke a user's election bypass access
  *     description: >
- *       Sets `revoked_at` on the specified election bypass usage record,
- *       immediately removing the user's bypass eligibility for this election.
- *       Non-restricted admins can revoke any usage; restricted admins can
- *       only revoke usages on tokens they created.
+ *       Sets `revoked_at` and `revoked_by` on the specified election bypass
+ *       usage record, immediately removing the user's bypass eligibility for
+ *       this election. Non-restricted admins can revoke any usage; restricted
+ *       admins can only revoke usages on tokens they created.
  *     tags:
  *       - Bypass
  *     security:
@@ -74,7 +74,7 @@ export async function DELETE(
 
   await prisma.electionBypassTokenUsage.update({
     where: { token_hash_user_id: { token_hash: tokenHash, user_id: userId } },
-    data: { revoked_at: new Date() },
+    data: { revoked_at: new Date(), revoked_by: auth.admin.user_id },
   });
 
   await invalidateUserBypassCache(userId);

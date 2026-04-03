@@ -26,7 +26,7 @@ export default async function BypassPage() {
       />
 
       <div className="space-y-6 p-4 sm:p-8">
-        <BypassPageClient initialTokens={tokens ?? []} error={error} />
+        <BypassPageClient initialTokens={tokens ?? []} error={error} session={session} />
       </div>
     </div>
   );
