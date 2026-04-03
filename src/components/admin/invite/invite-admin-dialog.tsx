@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
+import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
@@ -147,13 +148,12 @@ export function InviteAdminDialog({
           {!result ? (
             <>
               <FormField label="Дійсний до" required htmlFor="validDue">
-                <Input
+                <KyivDateTimePicker
                   id="validDue"
-                  type="datetime-local"
                   value={form.validDue}
                   min={oneMinuteAhead}
                   max={maxValidDate}
-                  onChange={(e) => setForm((p) => ({ ...p, validDue: e.target.value }))}
+                  onChange={(date) => setForm((p) => ({ ...p, validDue: date.toISOString() }))}
                 />
               </FormField>
 

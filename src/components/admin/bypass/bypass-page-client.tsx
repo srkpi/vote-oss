@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
+import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
@@ -434,13 +435,12 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
                   />
                 </FormField>
                 <FormField label="Дійсний до" required htmlFor="bypass-valid-until">
-                  <Input
+                  <KyivDateTimePicker
                     id="bypass-valid-until"
-                    type="datetime-local"
                     value={validUntil}
                     min={minDate}
                     max={maxDate}
-                    onChange={(e) => setValidUntil(e.target.value)}
+                    onChange={(date) => setValidUntil(date.toISOString())}
                   />
                 </FormField>
               </>
