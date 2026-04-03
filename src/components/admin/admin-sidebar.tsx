@@ -84,7 +84,7 @@ export function AdminSidebar({
 
   return (
     <>
-      <aside className="border-border-subtle hidden w-60 shrink-0 flex-col border-r bg-white lg:flex">
+      <aside className="border-border-subtle sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-white lg:flex">
         <div className="border-border-subtle border-b p-5">
           <div className="flex items-center gap-3">
             <div className="bg-kpi-orange shadow-shadow-sm flex h-9 w-9 items-center justify-center rounded-lg">
@@ -101,7 +101,7 @@ export function AdminSidebar({
           </div>
         </div>
 
-        <nav className="flex-1 space-y-0.5 p-3">
+        <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           <p className="font-body text-muted-foreground px-3 pt-3 pb-2 text-[10px] font-semibold tracking-widest uppercase">
             Навігація
           </p>

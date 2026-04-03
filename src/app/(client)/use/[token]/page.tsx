@@ -4,6 +4,7 @@ import { CheckIcon, TriangleAlert } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api/browser';
 
 type Status = 'loading' | 'success' | 'error';
@@ -100,14 +101,14 @@ export default function UseBypassTokenPage() {
             </p>
 
             {status === 'error' && (
-              <div className="mt-8 flex flex-col gap-3">
-                <button
-                  onClick={() => router.push('/elections')}
-                  className="font-body bg-kpi-navy hover:bg-kpi-navy-hover h-10 w-full rounded-(--radius) px-4 text-sm font-medium text-white transition-colors"
-                >
-                  До голосувань
-                </button>
-              </div>
+              <Button
+                size="lg"
+                fullWidth
+                onClick={() => router.push('/elections')}
+                className="mt-8"
+              >
+                До голосувань
+              </Button>
             )}
           </div>
         </div>

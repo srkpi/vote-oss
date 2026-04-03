@@ -29,10 +29,13 @@ export function createApiClient(fetcher: Fetcher) {
   return {
     auth: {
       loginWithTicket: (ticketId: string) =>
-        fetcher<void>('/auth/kpi-id', { method: 'POST', body: JSON.stringify({ ticketId }) }),
+        fetcher<{ redirectTo: string }>('/auth/kpi-id', {
+          method: 'POST',
+          body: JSON.stringify({ ticketId }),
+        }),
       diiaInit: () => fetcher<DiiaInitResponse>('/auth/diia/init', { method: 'POST' }),
       diiaCheck: (requestId: string) =>
-        fetcher<{ status: 'success' | 'processing' }>('/auth/diia/check', {
+        fetcher<{ status: 'success' | 'processing'; redirectTo?: string }>('/auth/diia/check', {
           method: 'POST',
           body: JSON.stringify({ requestId }),
         }),
