@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
         OR: [
           { revoked_at: { gt: initialAuthDate } },
           {
+            revoked_at: null,
             token: {
               valid_until: {
                 gt: initialAuthDate,

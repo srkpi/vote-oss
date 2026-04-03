@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+
 import { CACHE_TTL_BYPASS_SECS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { redis, safeRedis } from '@/lib/redis';
@@ -185,10 +187,7 @@ export async function applyBypassToken(
   userId: string,
   rawToken: string,
 ): Promise<{ type: 'GLOBAL' | 'ELECTION'; electionId: string | null }> {
-  const { createHash } = await import('crypto');
   const tokenHash = createHash('sha256').update(rawToken).digest('hex');
-
-  // ── Global bypass token ──────────────────────────────────────────────────
   const globalToken = await prisma.globalBypassToken.findUnique({
     where: { token_hash: tokenHash },
   });
@@ -226,7 +225,6 @@ export async function applyBypassToken(
     return { type: 'GLOBAL', electionId: null };
   }
 
-  // ── Election bypass token ────────────────────────────────────────────────
   const electionToken = await prisma.electionBypassToken.findUnique({
     where: { token_hash: tokenHash },
     include: { election: { select: { closes_at: true, deleted_at: true } } },

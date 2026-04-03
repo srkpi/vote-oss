@@ -82,6 +82,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
               revoked_at: expect.objectContaining({ gt: expect.any(Date) }),
             }),
             expect.objectContaining({
+              revoked_at: null,
               token: {
                 valid_until: expect.objectContaining({
                   gt: expect.any(Date),
