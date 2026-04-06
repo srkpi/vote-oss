@@ -16,7 +16,9 @@ import {
   checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
-import type { ElectionRestriction, TallyResult } from '@/types/election';
+import { computeWinners, parseWinningConditions } from '@/lib/winning-conditions';
+import type { ElectionRestriction, TallyResult, WinningConditions } from '@/types/election';
+import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -25,12 +27,13 @@ import type { ElectionRestriction, TallyResult } from '@/types/election';
 /**
  * Compute vote tallies from raw ballots, persist them to ElectionChoice,
  * clean up issued tokens + nullifiers, and invalidate the elections cache.
+ * Returns the tally and total ballot count.
  */
 async function computeAndPersistTally(
   electionId: string,
   privateKeyPem: string,
   choices: Array<{ id: string }>,
-): Promise<Record<string, number>> {
+): Promise<{ tally: Record<string, number>; totalBallots: number }> {
   const ballots = await prisma.ballot.findMany({
     where: { election_id: electionId },
     select: { encrypted_ballot: true },
@@ -63,20 +66,22 @@ async function computeAndPersistTally(
 
   await invalidateElections();
 
-  return tally;
+  return { tally, totalBallots: ballots.length };
 }
 
 function buildTallyResults(
   tally: Record<string, number>,
+  totalBallots: number,
   choices: Array<{ id: string; choice: string; position: number }>,
+  conditions: WinningConditions,
 ): TallyResult[] {
-  const maxVotes = Math.max(0, ...Object.values(tally));
+  const winners = computeWinners(tally, totalBallots, conditions);
   return choices.map((c) => ({
     choiceId: c.id,
     choice: c.choice,
     position: c.position,
     votes: tally[c.id] ?? 0,
-    winner: maxVotes > 0 && (tally[c.id] ?? 0) === maxVotes,
+    winner: winners[c.id] ?? false,
   }));
 }
 
@@ -90,18 +95,13 @@ function buildTallyResults(
  *   get:
  *     summary: Get a single election
  *     description: >
- *       Returns full election details including choices and ballot count.
- *       Access is subject to faculty/group eligibility. The private key is
- *       only included after the election has closed. For open elections a
- *       `hasVoted` flag indicates whether the caller has already been issued
- *       a vote token. For closed elections, choices include `votes` and
- *       `winner` fields computed lazily on first request.
- *       Users also receive a `bypassedTypes` array listing the
- *       restriction types they are bypassing via an active bypass token —
- *       the client uses this to display correct eligibility messaging.
- *       Admin-authenticated requests additionally receive `deletedAt`,
- *       `deletedBy`, `canDelete`, and `canRestore` fields.
- *       Non-admin requests for a deleted election return 404.
+ *       Returns full election details including choices, ballot count, and
+ *       winning conditions.  Access is subject to faculty/group eligibility.
+ *       The private key is only included after the election has closed.  For
+ *       open elections a `hasVoted` flag indicates whether the caller has
+ *       already been issued a vote token.  For closed elections, choices
+ *       include `votes` and `winner` fields computed using the election's
+ *       winning conditions.
  *     tags:
  *       - Elections
  *     security:
@@ -158,6 +158,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     deletedAt: Date | null;
     deletedByUserId: string | null;
     deletedByName: string | null;
+    winningConditions: WinningConditions;
   };
 
   const cached = await getCachedElections();
@@ -184,6 +185,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedAt: found.deletedAt ? new Date(found.deletedAt) : null,
       deletedByUserId: found.deletedByUserId,
       deletedByName: found.deletedByName,
+      winningConditions: found.winningConditions ?? { ...DEFAULT_WINNING_CONDITIONS },
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -222,10 +224,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedAt: dbElection.deleted_at,
       deletedByUserId: dbElection.deleted_by,
       deletedByName: dbElection.deleter?.full_name ?? null,
+      winningConditions: parseWinningConditions(dbElection.winning_conditions),
     };
   }
 
-  // Non-admins cannot see deleted elections.
   if (!isAdmin && electionData.deletedAt) {
     return Errors.notFound('Election not found');
   }
@@ -250,17 +252,32 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const isOpen = now >= electionData.opensAt && now <= electionData.closesAt;
 
   const privateKeyPem = decryptField(electionData.privateKey);
+  const { winningConditions } = electionData;
 
   let tallyResults: TallyResult[] | undefined;
   if (isClosed) {
     const needsComputation = electionData.choices.some((c) => c.voteCount === null);
     if (needsComputation) {
-      const tally = await computeAndPersistTally(electionId, privateKeyPem, electionData.choices);
-      tallyResults = buildTallyResults(tally, electionData.choices);
+      const { tally, totalBallots } = await computeAndPersistTally(
+        electionId,
+        privateKeyPem,
+        electionData.choices,
+      );
+      tallyResults = buildTallyResults(
+        tally,
+        totalBallots,
+        electionData.choices,
+        winningConditions,
+      );
     } else {
       const tally: Record<string, number> = {};
       for (const c of electionData.choices) tally[c.id] = c.voteCount ?? 0;
-      tallyResults = buildTallyResults(tally, electionData.choices);
+      tallyResults = buildTallyResults(
+        tally,
+        electionData.ballotCount,
+        electionData.choices,
+        winningConditions,
+      );
     }
   }
 
@@ -340,6 +357,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     creator: electionData.creator,
     choices,
     ballotCount: electionData.ballotCount,
+    winningConditions,
     hasVoted,
     bypassedTypes: bypassedTypes ?? [],
     ...(isAdmin && {

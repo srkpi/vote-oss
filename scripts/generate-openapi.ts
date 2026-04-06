@@ -16,6 +16,12 @@ import {
   INVITE_TOKEN_MAX_USAGE_MAX,
   INVITE_TOKEN_MAX_USAGE_MIN,
   INVITE_TOKEN_MAX_VALID_DAYS,
+  WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE,
+  WINNING_CONDITION_PERCENTAGE_MIN,
+  WINNING_CONDITION_QUORUM_MAX,
+  WINNING_CONDITION_QUORUM_MIN,
+  WINNING_CONDITION_VOTES_MAX,
+  WINNING_CONDITION_VOTES_MIN,
 } from '../src/lib/constants';
 
 const spec = createSwaggerSpec({
@@ -179,6 +185,31 @@ const spec = createSwaggerSpec({
           },
         },
 
+        WinningCondition: {
+          type: 'object',
+          properties: {
+            hasMostVotes: { type: 'boolean' },
+            reachesPercentage: {
+              type: 'number',
+              nullable: true,
+              minimum: WINNING_CONDITION_PERCENTAGE_MIN,
+              maximum: WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE,
+            },
+            reachesVotes: {
+              type: 'integer',
+              nullable: true,
+              minimum: WINNING_CONDITION_VOTES_MIN,
+              maximum: WINNING_CONDITION_VOTES_MAX,
+            },
+            quorum: {
+              type: 'integer',
+              nullable: true,
+              minimum: WINNING_CONDITION_QUORUM_MIN,
+              maximum: WINNING_CONDITION_QUORUM_MAX,
+            },
+          },
+        },
+
         ElectionChoiceCreateBody: {
           type: 'object',
           required: ['id', 'choice', 'position'],
@@ -279,6 +310,7 @@ const spec = createSwaggerSpec({
               type: 'array',
               items: { $ref: '#/components/schemas/ElectionRestriction' },
             },
+            winningConditions: { $ref: '#/components/schemas/WinningCondition' },
           },
         },
 

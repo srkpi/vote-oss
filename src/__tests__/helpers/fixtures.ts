@@ -8,6 +8,8 @@ import {
 import { signAccessToken, signRefreshToken } from '@/lib/jwt';
 import type { Admin } from '@/types/admin';
 import type { TokenPayload } from '@/types/auth';
+import type { WinningConditions } from '@/types/election';
+import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
 export const USER_PAYLOAD: TokenPayload = {
   sub: 'user-001',
@@ -183,6 +185,7 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     min_choices: 1,
     max_choices: 1,
     restrictions: [] as { type: string; value: string }[],
+    winning_conditions: DEFAULT_WINNING_CONDITIONS as unknown,
     public_key: keys.publicKey,
     private_key: keys.privateKey,
     creator: { full_name: 'Super Admin User', faculty: 'FICE' },
@@ -194,9 +197,21 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
   };
 }
 
-export function makeElection(overrides: Partial<ReturnType<typeof makeElectionBase>> = {}) {
+export function makeElection(
+  overrides: Partial<ReturnType<typeof makeElectionBase>> & {
+    winningConditions?: WinningConditions;
+  } = {},
+) {
   const keys = generateElectionKeyPair();
-  return { ...makeElectionBase(keys), ...overrides };
+  const { winningConditions, ...rest } = overrides;
+  const base = makeElectionBase(keys);
+  return {
+    ...base,
+    ...rest,
+    winning_conditions: (winningConditions ??
+      (rest.winning_conditions as WinningConditions | undefined) ??
+      DEFAULT_WINNING_CONDITIONS) as unknown,
+  };
 }
 
 export function makeDeletedElection(

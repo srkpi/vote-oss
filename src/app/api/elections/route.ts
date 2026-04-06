@@ -33,6 +33,11 @@ import {
   adminCanRestoreElection,
   checkRestrictions,
 } from '@/lib/restrictions';
+import {
+  computeWinners,
+  parseWinningConditions,
+  validateWinningConditions,
+} from '@/lib/winning-conditions';
 import type {
   CachedElection,
   CachedElectionChoice,
@@ -41,7 +46,9 @@ import type {
   ElectionStatus,
   RestrictionType,
   TallyResult,
+  WinningConditions,
 } from '@/types/election';
+import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -57,16 +64,28 @@ function computeStatus(opensAt: string | Date, closesAt: string | Date): Electio
   return 'closed';
 }
 
-/** Build tally results from cached choices (only when all vote_counts are present). */
-function buildTallyResults(choices: CachedElectionChoice[]): TallyResult[] | null {
+/**
+ * Build tally results from cached choices using winning conditions.
+ * Returns null if any voteCount is still null (tallies not yet computed).
+ */
+function buildTallyResults(
+  choices: CachedElectionChoice[],
+  ballotCount: number,
+  conditions: WinningConditions,
+): TallyResult[] | null {
   if (choices.some((c) => c.voteCount === null)) return null;
-  const maxVotes = Math.max(0, ...choices.map((c) => c.voteCount!));
+
+  const tally: Record<string, number> = {};
+  for (const c of choices) tally[c.id] = c.voteCount!;
+
+  const winners = computeWinners(tally, ballotCount, conditions);
+
   return choices.map((c) => ({
     choiceId: c.id,
     choice: c.choice,
     position: c.position,
     votes: c.voteCount!,
-    winner: maxVotes > 0 && c.voteCount === maxVotes,
+    winner: winners[c.id] ?? false,
   }));
 }
 
@@ -109,17 +128,11 @@ function toClientElections(
   return cached
     .filter((e) => {
       const isDeleted = !!e.deletedAt;
-
-      // Non-admins never see deleted elections.
       if (!isAdmin && isDeleted) return false;
-
-      // Admins see all elections (deleted and active).
       if (isAdmin && !isAdminRestricted) return true;
-
       if (isAdmin && isAdminRestricted) {
         return adminCanAccessElection(user.faculty, e.restrictions);
       }
-
       return checkRestrictions(e.restrictions, user);
     })
     .map((e) => {
@@ -127,8 +140,9 @@ function toClientElections(
       const status = computeStatus(e.opensAt, e.closesAt);
       const isDeleted = !!e.deletedAt;
 
-      // Embed votes + winner into choices for closed elections.
-      const tallyResults = isClosed ? buildTallyResults(e.choices) : null;
+      const tallyResults = isClosed
+        ? buildTallyResults(e.choices, e.ballotCount, e.winningConditions)
+        : null;
       const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
 
       const choices = e.choices.map((c) => {
@@ -148,6 +162,7 @@ function toClientElections(
         closesAt: e.closesAt,
         status,
         restrictions: e.restrictions,
+        winningConditions: e.winningConditions,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
         creator: e.creator,
@@ -155,7 +170,6 @@ function toClientElections(
         ballotCount: e.ballotCount,
       };
 
-      // Attach admin-only fields.
       if (isAdmin && adminRecord && adminGraph) {
         const canDelete =
           !isDeleted &&
@@ -164,7 +178,6 @@ function toClientElections(
             { restrictions: e.restrictions, created_by: e.createdBy },
             adminGraph,
           );
-
         const canRestore =
           isDeleted &&
           adminCanRestoreElection(
@@ -172,7 +185,6 @@ function toClientElections(
             { restrictions: e.restrictions, deletedByUserId: e.deletedByUserId },
             adminGraph,
           );
-
         return {
           ...base,
           deletedAt: e.deletedAt,
@@ -203,6 +215,8 @@ function toClientElections(
  *       when available. For closed elections, choices include `votes` and
  *       `winner` fields. Deleted elections are included only for admin users.
  *       Status (`upcoming` | `open` | `closed`) is computed at response time.
+ *       Winning conditions are NOT included in this response; use the detail
+ *       endpoint to retrieve them.
  *     tags:
  *       - Elections
  *     security:
@@ -226,8 +240,6 @@ export async function GET(req: NextRequest) {
 
   const isAdmin = user.isAdmin ?? false;
 
-  // For admin users we need both the admin record (for hierarchy checks) and
-  // the admin graph.
   let adminRecord: AdminContext | undefined;
   let adminGraph: Map<string, string | null> | undefined;
 
@@ -279,6 +291,7 @@ export async function GET(req: NextRequest) {
       restrictions: { select: { type: true, value: true } },
       public_key: true,
       private_key: true,
+      winning_conditions: true,
       creator: { select: { full_name: true, faculty: true } },
       deleter: { select: { full_name: true } },
       choices: {
@@ -303,6 +316,7 @@ export async function GET(req: NextRequest) {
     restrictions: e.restrictions as { type: RestrictionType; value: string }[],
     publicKey: e.public_key,
     privateKey: e.private_key,
+    winningConditions: parseWinningConditions(e.winning_conditions),
     creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
     choices: e.choices.map((c) => ({
       id: c.id,
@@ -350,6 +364,8 @@ export async function GET(req: NextRequest) {
  *       Creates a new election with an auto-generated RSA key pair. The
  *       private key is encrypted with AES-256-GCM before being stored.
  *       Faculty and group values are validated against the campus API.
+ *       Winning conditions are validated and stored; they affect how the
+ *       winner is determined when tallying closed-election results.
  *       Requires admin authentication.
  *     tags:
  *       - Elections
@@ -390,6 +406,7 @@ export async function POST(req: NextRequest) {
     minChoices?: number;
     maxChoices?: number;
     restrictions?: CreateElectionRestriction[];
+    winningConditions?: unknown;
   };
 
   try {
@@ -402,6 +419,8 @@ export async function POST(req: NextRequest) {
   const minChoices = body.minChoices ?? ELECTION_MIN_CHOICES_MIN;
   const maxChoices = body.maxChoices ?? ELECTION_MIN_CHOICES_MIN;
   const restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
+
+  // ── Basic field validation ────────────────────────────────────────────────
 
   if (!title || !opensAt || !closesAt || !choices?.length) {
     return Errors.badRequest('title, opensAt, closesAt, choices are required');
@@ -448,9 +467,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ── Winning conditions validation ─────────────────────────────────────────
+
+  const winningConditionsRaw =
+    body.winningConditions !== undefined ? body.winningConditions : DEFAULT_WINNING_CONDITIONS;
+  const winningConditionsResult = validateWinningConditions(winningConditionsRaw);
+  if (typeof winningConditionsResult === 'string') {
+    return Errors.badRequest(winningConditionsResult);
+  }
+  const winningConditions: WinningConditions = winningConditionsResult;
+
+  // ── Faculty / restriction validation ─────────────────────────────────────
+
   if (admin.restricted_to_faculty) {
     const facultyRestrictionsInBody = restrictions.filter((r) => r.type === 'FACULTY');
-
     if (facultyRestrictionsInBody.length === 0) {
       return Errors.badRequest(
         `Faculty-restricted admins must include a FACULTY restriction for their faculty ("${admin.faculty}")`,
@@ -550,6 +580,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Create election ───────────────────────────────────────────────────────
+
   const { publicKey, privateKey } = generateElectionKeyPair();
   const encryptedPrivateKey = encryptField(privateKey);
   const now = new Date();
@@ -565,6 +597,7 @@ export async function POST(req: NextRequest) {
       max_choices: maxChoices,
       public_key: publicKey,
       private_key: encryptedPrivateKey,
+      winning_conditions: winningConditions,
       choices: {
         create: choices.map((choice, i) => ({ choice, position: i })),
       },
@@ -590,6 +623,7 @@ export async function POST(req: NextRequest) {
       minChoices: election.min_choices,
       maxChoices: election.max_choices,
       restrictions: election.restrictions,
+      winningConditions,
       status: computeStatus(election.opens_at, election.closes_at),
       publicKey: election.public_key,
       creator: { fullName: admin.full_name, faculty: admin.faculty },

@@ -4,6 +4,7 @@ import { Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
+import { WinningConditionsSection } from '@/components/elections/admin/winning-conditions-section';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CharCounter } from '@/components/ui/char-counter';
@@ -26,7 +27,12 @@ import {
   LEVEL_COURSE_MASTER_COURSES,
   STUDY_FORM_LABELS,
   UI_STUDY_FORMS,
-  //STUDY_YEARS,
+  WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE,
+  WINNING_CONDITION_PERCENTAGE_MIN,
+  WINNING_CONDITION_QUORUM_MAX,
+  WINNING_CONDITION_QUORUM_MIN,
+  WINNING_CONDITION_VOTES_MAX,
+  WINNING_CONDITION_VOTES_MIN,
 } from '@/lib/constants';
 import {
   filterGroupsByLevelCourses,
@@ -34,7 +40,11 @@ import {
   parseGroupLevel,
 } from '@/lib/group-utils';
 import { cn } from '@/lib/utils';
-import type { CreateElectionRestriction } from '@/types/election';
+import type {
+  CreateElectionRestriction,
+  WinningConditions,
+  WinningConditionsState,
+} from '@/types/election';
 
 interface CreateElectionFormProps {
   restrictedToFaculty: string | null;
@@ -46,6 +56,29 @@ const LEVEL_COLUMNS = [
   { key: 'b', label: 'Бакалаври', courses: LEVEL_COURSE_BACHELOR_COURSES },
   { key: 'm', label: 'Магістри', courses: LEVEL_COURSE_MASTER_COURSES },
 ] as const;
+
+const DEFAULT_WC_STATE: WinningConditionsState = {
+  hasMostVotes: true,
+  reachesPercentageEnabled: false,
+  reachesPercentage: 50,
+  reachesVotesEnabled: false,
+  reachesVotes: 10,
+  quorumEnabled: false,
+  quorum: 100,
+};
+
+function wcStateToPayload(wc: WinningConditionsState): WinningConditions {
+  return {
+    hasMostVotes: wc.hasMostVotes,
+    reachesPercentage: wc.reachesPercentageEnabled ? wc.reachesPercentage : null,
+    reachesVotes: wc.reachesVotesEnabled ? wc.reachesVotes : null,
+    quorum: wc.quorumEnabled ? wc.quorum : null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// WinningConditionsSection component
+// ---------------------------------------------------------------------------
 
 export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectionFormProps) {
   const router = useRouter();
@@ -90,6 +123,9 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     maxChoices: 1,
   });
 
+  const [winningConditionsState, setWinningConditionsState] =
+    useState<WinningConditionsState>(DEFAULT_WC_STATE);
+
   const [selectedFaculties, setSelectedFaculties] = useState<string[]>(
     restrictedToFaculty ? [restrictedToFaculty] : [],
   );
@@ -103,33 +139,24 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
   const validChoicesCount = choices.filter((c) => c.trim()).length;
 
-  // Available groups: filtered by faculties, study forms, level courses,
-  // and with graduate groups always excluded
   const availableGroups = useMemo(() => {
     let groups = Array.from(new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? []))).sort(
       (a, b) => a.localeCompare(b, 'uk'),
     );
-
-    // Always exclude graduate groups — they cannot participate
     groups = groups.filter((g) => parseGroupLevel(g) !== 'g');
-
     if (selectedForms.length > 0) {
       groups = filterGroupsByStudyForms(groups, selectedForms);
     }
-
     if (selectedLevelCourses.length > 0) {
       groups = filterGroupsByLevelCourses(groups, selectedLevelCourses);
     }
-
     return groups;
   }, [selectedFaculties, facultyGroups, selectedForms, selectedLevelCourses]);
 
-  // Remove selected groups that no longer appear in the filtered list
   useEffect(() => {
     setSelectedGroups((prev) => prev.filter((g) => availableGroups.includes(g)));
   }, [availableGroups]);
 
-  // True when faculties are chosen but active filters leave zero matching groups
   const noGroupsMatchCriteria =
     selectedFaculties.length > 0 &&
     availableGroups.length === 0 &&
@@ -137,7 +164,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     !groupsLoading;
 
   function handleFacultiesChange(faculties: string[]) {
-    if (restrictedToFaculty) return; // locked
+    if (restrictedToFaculty) return;
     setSelectedFaculties(faculties);
     setFieldErrors((p) => ({ ...p, faculties: '' }));
   }
@@ -170,6 +197,47 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     );
     setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
   };
+
+  function validateWinningConditionsUI(): boolean {
+    const errors: Record<string, string> = {};
+    const wc = winningConditionsState;
+
+    if (wc.reachesPercentageEnabled) {
+      if (
+        isNaN(wc.reachesPercentage) ||
+        wc.reachesPercentage < WINNING_CONDITION_PERCENTAGE_MIN ||
+        wc.reachesPercentage >= WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE
+      ) {
+        errors.reachesPercentage = `Значення повинно бути від ${WINNING_CONDITION_PERCENTAGE_MIN} до менш ніж ${WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE}`;
+      }
+    }
+
+    if (wc.reachesVotesEnabled) {
+      if (
+        !Number.isInteger(wc.reachesVotes) ||
+        wc.reachesVotes < WINNING_CONDITION_VOTES_MIN ||
+        wc.reachesVotes > WINNING_CONDITION_VOTES_MAX
+      ) {
+        errors.reachesVotes = `Ціле число від ${WINNING_CONDITION_VOTES_MIN} до ${WINNING_CONDITION_VOTES_MAX}`;
+      }
+    }
+
+    if (wc.quorumEnabled) {
+      if (
+        !Number.isInteger(wc.quorum) ||
+        wc.quorum < WINNING_CONDITION_QUORUM_MIN ||
+        wc.quorum > WINNING_CONDITION_QUORUM_MAX
+      ) {
+        errors.quorum = `Ціле число від ${WINNING_CONDITION_QUORUM_MIN} до ${WINNING_CONDITION_QUORUM_MAX}`;
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors((prev) => ({ ...prev, ...errors }));
+      return false;
+    }
+    return true;
+  }
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -220,7 +288,9 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     }
 
     setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+    const baseValid = Object.keys(errors).length === 0;
+    const wcValid = validateWinningConditionsUI();
+    return baseValid && wcValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -245,6 +315,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       minChoices: form.minChoices,
       maxChoices: form.maxChoices,
       restrictions,
+      winningConditions: wcStateToPayload(winningConditionsState),
     });
 
     if (result.success) {
@@ -272,7 +343,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     .toISOString()
     .slice(0, 16);
 
-  //const studyYearOptions = STUDY_YEARS.map((y) => ({ value: String(y), label: String(y) }));
   const studyFormOptions = UI_STUDY_FORMS.map((f) => ({ value: f, label: STUDY_FORM_LABELS[f] }));
 
   return (
@@ -435,6 +505,30 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
               </div>
             </div>
           </FormField>
+        </div>
+      </section>
+
+      {/* Winning conditions */}
+      <section>
+        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">Умови перемоги</h2>
+        <p className="font-body text-muted-foreground mb-4 text-sm">
+          Визначте, за якими критеріями обирається переможець. Усі вибрані умови застосовуються
+          одночасно.
+        </p>
+        <div className="border-border-color rounded-xl border bg-white p-5">
+          <WinningConditionsSection
+            state={winningConditionsState}
+            onChange={(next) => {
+              setWinningConditionsState(next);
+              setFieldErrors((prev) => ({
+                ...prev,
+                reachesPercentage: '',
+                reachesVotes: '',
+                quorum: '',
+              }));
+            }}
+            errors={fieldErrors}
+          />
         </div>
       </section>
 

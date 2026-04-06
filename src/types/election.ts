@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client';
+
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';
 export type RestrictionType =
   | 'FACULTY'
@@ -44,6 +46,41 @@ export interface TallyResult {
   winner: boolean;
 }
 
+/**
+ * All four conditions are ANDed together.  Only options satisfying every
+ * enabled condition win.  Ties (multiple options satisfying all conditions
+ * with the same highest vote count) are all marked as winners.
+ *
+ * - hasMostVotes       – option must have the maximum vote count
+ * - reachesPercentage  – votes / totalBallots * 100 must be strictly > X
+ * - reachesVotes       – option must have at least X votes
+ * - quorum             – total ballots cast must be at least X; if not met,
+ *                        no option wins regardless of other conditions
+ */
+export interface WinningConditions extends Prisma.InputJsonObject {
+  hasMostVotes: boolean;
+  reachesPercentage: number | null; // [0, 100)
+  reachesVotes: number | null;
+  quorum: number | null;
+}
+
+export interface WinningConditionsState {
+  hasMostVotes: boolean;
+  reachesPercentageEnabled: boolean;
+  reachesPercentage: number;
+  reachesVotesEnabled: boolean;
+  reachesVotes: number;
+  quorumEnabled: boolean;
+  quorum: number;
+}
+
+export const DEFAULT_WINNING_CONDITIONS: WinningConditions = {
+  hasMostVotes: true,
+  reachesPercentage: null,
+  reachesVotes: null,
+  quorum: null,
+};
+
 export interface Election {
   id: string;
   title: string;
@@ -52,6 +89,7 @@ export interface Election {
   closesAt: string;
   status: ElectionStatus;
   restrictions: ElectionRestriction[];
+  winningConditions: WinningConditions;
   minChoices: number;
   maxChoices: number;
   creator: ElectionCreator;
@@ -74,10 +112,8 @@ export interface ElectionDetail extends Election {
 
 /**
  * Shape stored in Redis.
- * - `canDelete` and `canRestore` are NOT cached because they depend on the
- *   requesting admin's identity; they are computed at serve time.
- * - `createdBy` stores the creator's userId for hierarchy checks.
- * - `deletedAt`/`deletedByUserId`/`deletedByName` support soft-delete.
+ * - `canDelete` and `canRestore` are NOT cached (computed at serve time).
+ * - `winningConditions` IS cached but only exposed on the detail route.
  */
 export interface CachedElection {
   id: string;
@@ -97,6 +133,7 @@ export interface CachedElection {
   deletedAt: string | null;
   deletedByUserId: string | null;
   deletedByName: string | null;
+  winningConditions: WinningConditions;
 }
 
 export interface ElectionFilters {
@@ -118,6 +155,7 @@ export interface CreateElectionRequest {
   minChoices?: number;
   maxChoices?: number;
   restrictions?: CreateElectionRestriction[];
+  winningConditions?: Partial<WinningConditions>;
 }
 
 export interface CreateElectionResponse {
@@ -130,4 +168,5 @@ export interface CreateElectionResponse {
   publicKey: string;
   choices: ElectionChoice[];
   restrictions: ElectionRestriction[];
+  winningConditions: WinningConditions;
 }

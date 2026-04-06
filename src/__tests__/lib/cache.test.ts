@@ -56,6 +56,12 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
   deletedAt: null,
   deletedByUserId: null,
   deletedByName: null,
+  winningConditions: {
+    hasMostVotes: true,
+    reachesPercentage: null,
+    reachesVotes: null,
+    quorum: null,
+  },
 };
 
 const SAMPLE_ADMIN: Admin = {

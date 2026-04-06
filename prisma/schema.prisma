@@ -78,6 +78,7 @@ model Election {
   max_choices   Int    @default(1)
 
   restrictions  ElectionRestriction[]
+  winning_conditions Json @default("{}")
 
   public_key    String @db.Text
   private_key   String @db.Text
