@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, KeyRound, XCircle } from 'lucide-react';
 
 import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
 import { calculateCourse, parseGroupLevel, parseGroupYearEnteredDigit } from '@/lib/group-utils';
@@ -37,6 +37,9 @@ function getUserValueForType(type: RestrictionType, user: UserContext): string |
       const level = parseGroupLevel(user.group);
       const course = calculateCourse(yearDigit);
       return `${level}${course}`;
+    case 'BYPASS_REQUIRED':
+      // Never met without a token — always requires bypass
+      return undefined;
   }
 }
 
@@ -58,6 +61,8 @@ export function RestrictedVoteBanner({
   }
 
   const bypassSet = new Set(bypassedTypes ?? []);
+  const hasBypassRequired = byType.has('BYPASS_REQUIRED');
+  const bypassRequiredMet = bypassSet.has('BYPASS_REQUIRED');
 
   return (
     <div className="space-y-4">
@@ -68,50 +73,83 @@ export function RestrictedVoteBanner({
         </p>
       </div>
 
+      {/* BYPASS_REQUIRED special display */}
+      {hasBypassRequired && (
+        <div
+          className={`flex items-center gap-3 rounded-lg border p-3 ${
+            bypassRequiredMet ? 'border-success/20 bg-success-bg' : 'border-amber-200 bg-amber-50'
+          }`}
+        >
+          {bypassRequiredMet ? (
+            <CheckCircle2 className="text-success h-4 w-4 shrink-0" />
+          ) : (
+            <KeyRound className="h-4 w-4 shrink-0 text-amber-600" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="font-body text-foreground text-sm font-medium">
+              {RESTRICTION_TYPE_LABELS['BYPASS_REQUIRED']}
+            </p>
+            <p className="font-body text-muted-foreground text-xs">
+              {bypassRequiredMet
+                ? 'Токен доступу застосовано'
+                : 'Потрібен токен доступу від організатора'}
+            </p>
+          </div>
+          <span className="font-body shrink-0 text-xs font-semibold">
+            {bypassRequiredMet ? 'Виконано' : 'Не виконано'}
+          </span>
+        </div>
+      )}
+
       <div className="space-y-2">
-        {[...byType.entries()].map(([type, values]) => {
-          const isBypassed = bypassSet.has(type);
-          const userValue = getUserValueForType(type, session);
-          const isMet = !!userValue && values.includes(userValue);
+        {[...byType.entries()]
+          .filter(([type]) => type !== 'BYPASS_REQUIRED')
+          .map(([type, values]) => {
+            const isBypassed = bypassSet.has(type);
+            const userValue = getUserValueForType(type, session);
+            const isMet = !!userValue && values.includes(userValue);
 
-          let icon: React.ReactNode;
-          let rowClass: string;
-          let statusLabel: string;
+            let icon: React.ReactNode;
+            let rowClass: string;
+            let statusLabel: string;
 
-          if (isBypassed) {
-            icon = <CheckCircle2 className="text-warning h-4 w-4 shrink-0" />;
-            rowClass = 'border-warning/20 bg-warning-bg';
-            statusLabel = 'Обійдено';
-          } else if (isMet) {
-            icon = <CheckCircle2 className="text-success h-4 w-4 shrink-0" />;
-            rowClass = 'border-success/20 bg-success-bg';
-            statusLabel = 'Виконано';
-          } else {
-            icon = <XCircle className="text-error h-4 w-4 shrink-0" />;
-            rowClass = 'border-error/20 bg-error-bg';
-            statusLabel = 'Не виконано';
-          }
+            if (isBypassed) {
+              icon = <CheckCircle2 className="text-warning h-4 w-4 shrink-0" />;
+              rowClass = 'border-warning/20 bg-warning-bg';
+              statusLabel = 'Обійдено';
+            } else if (isMet) {
+              icon = <CheckCircle2 className="text-success h-4 w-4 shrink-0" />;
+              rowClass = 'border-success/20 bg-success-bg';
+              statusLabel = 'Виконано';
+            } else {
+              icon = <XCircle className="text-error h-4 w-4 shrink-0" />;
+              rowClass = 'border-error/20 bg-error-bg';
+              statusLabel = 'Не виконано';
+            }
 
-          return (
-            <div key={type} className={`flex items-center gap-3 rounded-lg border p-3 ${rowClass}`}>
-              {icon}
-              <div className="min-w-0 flex-1">
-                <p className="font-body text-foreground text-sm font-medium">
-                  {RESTRICTION_TYPE_LABELS[type] ?? type}
-                </p>
-                <p className="font-body text-muted-foreground text-xs">
-                  Вимагається: {values.map((v) => formatRestrictionValue(type, v)).join(', ')}
-                </p>
-                {userValue && !isMet && !isBypassed && (
-                  <p className="font-body text-muted-foreground text-xs">
-                    Ваше значення: {formatRestrictionValue(type, userValue)}
+            return (
+              <div
+                key={type}
+                className={`flex items-center gap-3 rounded-lg border p-3 ${rowClass}`}
+              >
+                {icon}
+                <div className="min-w-0 flex-1">
+                  <p className="font-body text-foreground text-sm font-medium">
+                    {RESTRICTION_TYPE_LABELS[type] ?? type}
                   </p>
-                )}
+                  <p className="font-body text-muted-foreground text-xs">
+                    Вимагається: {values.map((v) => formatRestrictionValue(type, v)).join(', ')}
+                  </p>
+                  {userValue && !isMet && !isBypassed && (
+                    <p className="font-body text-muted-foreground text-xs">
+                      Ваше значення: {formatRestrictionValue(type, userValue)}
+                    </p>
+                  )}
+                </div>
+                <span className="font-body shrink-0 text-xs font-semibold">{statusLabel}</span>
               </div>
-              <span className="font-body shrink-0 text-xs font-semibold">{statusLabel}</span>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {bypassSet.size > 0 && (

@@ -137,4 +137,25 @@ export const RESTRICTION_TYPE_LABELS: Record<string, string> = {
   STUDY_FORM: 'Форма навчання',
   SPECIALITY: 'Спеціальність',
   LEVEL_COURSE: 'Рівень та курс',
+  BYPASS_REQUIRED: 'Токен доступу',
 };
+
+export const BYPASSABLE_RESTRICTION_TYPES = [
+  'FACULTY',
+  'GROUP',
+  'STUDY_YEAR',
+  'STUDY_FORM',
+  'LEVEL_COURSE',
+  'SPECIALITY',
+  'BYPASS_REQUIRED',
+] as const;
+
+// Winning conditions
+export const WINNING_CONDITION_PERCENTAGE_MIN = 0;
+export const WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE = 100;
+
+export const WINNING_CONDITION_VOTES_MIN = 1;
+export const WINNING_CONDITION_VOTES_MAX = 10_000;
+
+export const WINNING_CONDITION_QUORUM_MIN = 1;
+export const WINNING_CONDITION_QUORUM_MAX = 10_000;

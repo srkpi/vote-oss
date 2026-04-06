@@ -12,6 +12,7 @@ import {
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
@@ -56,6 +57,8 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
     creator: e.creator,
     choices: e.choices,
     ballotCount: 0,
+    winningConditions: (e.winning_conditions ??
+      DEFAULT_WINNING_CONDITIONS) as typeof DEFAULT_WINNING_CONDITIONS,
   };
 }
 

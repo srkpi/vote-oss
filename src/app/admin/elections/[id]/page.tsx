@@ -11,6 +11,7 @@ import { AccessRestrictions } from '@/components/elections/election-restrictions
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { KeyDisclosure } from '@/components/elections/key-disclosure';
 import { ResultsChart } from '@/components/elections/result-chart';
+import { WinningConditionsDisplay } from '@/components/elections/winning-conditions-display';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
@@ -237,6 +238,8 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             {election.restrictions.length > 0 && (
               <AccessRestrictions restrictions={election.restrictions} />
             )}
+
+            <WinningConditionsDisplay conditions={election.winningConditions} />
 
             <KeyDisclosure>
               <EncryptionKey
