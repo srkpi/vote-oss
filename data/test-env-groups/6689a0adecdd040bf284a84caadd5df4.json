@@ -1,0 +1,1 @@
+{"id":"6689a0adecdd040bf284a84caadd5df4","fullName":"src/__tests__/api/elections/winning-conditions.test.ts#POST /api/elections — winning conditions validation accepts reachesVotes at minimum (1)","name":"accepts reachesVotes at minimum (1)","status":"passed","testResultsByEnv":{"default":"a76362c32fda07509d584776419dc269"}}

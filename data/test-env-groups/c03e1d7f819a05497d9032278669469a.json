@@ -1,0 +1,1 @@
+{"id":"c03e1d7f819a05497d9032278669469a","fullName":"src/__tests__/api/elections/winning-conditions.test.ts#POST /api/elections — winning conditions validation stores hasMostVotes=true as default","name":"stores hasMostVotes=true as default","status":"passed","testResultsByEnv":{"default":"51f818cf87bd22ac48c65b1c58b1943c"}}

@@ -1,0 +1,1 @@
+{"id":"b86fde6882a2c136258c27899318567c","fullName":"src/__tests__/api/elections/winning-conditions.test.ts#GET /api/elections/[id] — reachesVotes tally condition winner if vote count meets threshold (hasMostVotes disabled)","name":"winner if vote count meets threshold (hasMostVotes disabled)","status":"passed","testResultsByEnv":{"default":"7b6192c81c499002c07f6eeb25682d4f"}}

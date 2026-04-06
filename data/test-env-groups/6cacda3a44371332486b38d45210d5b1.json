@@ -1,0 +1,1 @@
+{"id":"6cacda3a44371332486b38d45210d5b1","fullName":"src/__tests__/api/elections/winning-conditions.test.ts#POST /api/elections — winning conditions validation rejects reachesVotes above maximum (10001)","name":"rejects reachesVotes above maximum (10001)","status":"passed","testResultsByEnv":{"default":"18ec1bf0ba27a8380cd0d1ffe4006bfb"}}
