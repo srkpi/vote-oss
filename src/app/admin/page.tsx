@@ -1,14 +1,15 @@
-import { CheckCircle2, CreditCard, FileText, Users } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, CreditCard, FileText, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { AdminGreeting } from '@/components/admin/admin-greeting';
 import { StatCard } from '@/components/admin/stat-card';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { pluralize } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Адмін панель',
@@ -59,6 +60,21 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex-1 overflow-auto">
+      <div className="border-border-subtle flex items-center gap-4 border-b bg-white px-4 py-4 sm:px-8 sm:py-6">
+        <Link
+          href="/"
+          className={cn(
+            'border-border-subtle hover:bg-surface text-muted-foreground hover:text-foreground',
+            'mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+            'border transition-all duration-200 lg:hidden',
+          )}
+          aria-label="Назад"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+        <AdminGreeting name={session?.fullName.split(' ')[1] ?? session?.fullName} />
+      </div>
+
       <div className="space-y-6 p-4 sm:p-8">
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <StatCard
