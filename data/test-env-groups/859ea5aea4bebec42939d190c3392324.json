@@ -1,1 +1,1 @@
-{"id":"859ea5aea4bebec42939d190c3392324","fullName":"src/__tests__/lib/cache.test.ts#cache invalidateAdmins does not throw when Redis is unavailable","name":"does not throw when Redis is unavailable","status":"passed","testResultsByEnv":{"default":"c5dc0ecb392b21a1c9a935e85e926c21"}}
+{"id":"859ea5aea4bebec42939d190c3392324","fullName":"src/__tests__/lib/cache.test.ts#cache invalidateAdmins does not throw when Redis is unavailable","name":"does not throw when Redis is unavailable","status":"passed","testResultsByEnv":{"default":"0c6d42fa8b02c478de940e309cc4394a"}}
