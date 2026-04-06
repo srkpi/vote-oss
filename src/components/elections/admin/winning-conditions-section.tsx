@@ -7,6 +7,7 @@ import {
   WINNING_CONDITION_VOTES_MAX,
   WINNING_CONDITION_VOTES_MIN,
 } from '@/lib/constants';
+import { pluralize } from '@/lib/utils';
 import type { WinningConditionsState } from '@/types/election';
 
 interface WinningConditionsSectionProps {
@@ -56,7 +57,7 @@ export function WinningConditionsSection({
             {state.reachesPercentageEnabled ? (
               <span className="text-kpi-navy">{state.reachesPercentage}%</span>
             ) : (
-              '[X]%'
+              'N%'
             )}{' '}
             голосів від загальної кількості бюлетенів
           </span>
@@ -83,9 +84,6 @@ export function WinningConditionsSection({
             {errors.reachesPercentage && (
               <p className="text-error mt-1 text-xs">{errors.reachesPercentage}</p>
             )}
-            <p className="font-body text-muted-foreground mt-1 text-xs">
-              Варіант повинен набрати строго більше ніж {state.reachesPercentage}% голосів
-            </p>
           </div>
         )}
       </div>
@@ -102,11 +100,13 @@ export function WinningConditionsSection({
           <span className="font-body text-foreground text-sm font-medium">
             Щонайменше{' '}
             {state.reachesVotesEnabled ? (
-              <span className="text-kpi-navy">{state.reachesVotes}</span>
+              <>
+                <span className="text-kpi-navy">{state.reachesVotes}</span>{' '}
+                {pluralize(state.reachesVotes, ['голос', 'голоси', 'голосів'], false)}
+              </>
             ) : (
-              '[X]'
-            )}{' '}
-            голосів
+              'N голосів'
+            )}
           </span>
         </label>
 
@@ -128,9 +128,6 @@ export function WinningConditionsSection({
             {errors.reachesVotes && (
               <p className="text-error mt-1 text-xs">{errors.reachesVotes}</p>
             )}
-            <p className="font-body text-muted-foreground mt-1 text-xs">
-              Варіант повинен набрати щонайменше {state.reachesVotes} голосів
-            </p>
           </div>
         )}
       </div>
@@ -146,12 +143,18 @@ export function WinningConditionsSection({
           />
           <div>
             <span className="font-body text-foreground text-sm font-medium">
-              Кворум: щонайменше{' '}
-              {state.quorumEnabled ? <span className="text-kpi-navy">{state.quorum}</span> : '[X]'}{' '}
-              бюлетенів подано
+              Кворум{' '}
+              {state.quorumEnabled ? (
+                <>
+                  <span className="text-kpi-navy">{state.quorum}</span>{' '}
+                  {pluralize(state.quorum, ['голос', 'голоси', 'голосів'], false)}
+                </>
+              ) : (
+                'N голосів'
+              )}
             </span>
             <p className="font-body text-muted-foreground text-xs">
-              Якщо кворум не досягнуто, переможця не визначається
+              Якщо кворум не досягнуто, переможці не визначаються
             </p>
           </div>
         </label>

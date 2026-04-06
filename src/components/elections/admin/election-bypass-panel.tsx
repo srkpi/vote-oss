@@ -18,7 +18,11 @@ import { FormField, Input } from '@/components/ui/form';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { BYPASS_TOKEN_MAX_USAGE_MAX, RESTRICTION_TYPE_LABELS } from '@/lib/constants';
+import {
+  BYPASS_TOKEN_MAX_USAGE_MAX,
+  BYPASSABLE_RESTRICTION_TYPES,
+  RESTRICTION_TYPE_LABELS,
+} from '@/lib/constants';
 import type { UserInfo } from '@/types/auth';
 import type { ElectionBypassToken } from '@/types/bypass';
 import type { ElectionRestriction } from '@/types/election';
@@ -29,8 +33,6 @@ interface ElectionBypassPanelProps {
   restrictions: ElectionRestriction[];
   session: UserInfo;
 }
-
-const BYPASSABLE_TYPES = ['FACULTY', 'GROUP', 'STUDY_YEAR', 'STUDY_FORM', 'LEVEL_COURSE'] as const;
 
 function TokenResult({ token }: { token: string }) {
   const [copiedLink, setCopiedLink] = useState(false);
@@ -215,7 +217,7 @@ export function ElectionBypassPanel({
 
   const presentTypes = [...new Set(restrictions.map((r) => r.type))].filter((t) =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    BYPASSABLE_TYPES.includes(t as any),
+    BYPASSABLE_RESTRICTION_TYPES.includes(t as any),
   );
 
   const toggleRestriction = (type: string) =>

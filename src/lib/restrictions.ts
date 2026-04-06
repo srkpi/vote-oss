@@ -63,6 +63,11 @@ export function checkRestrictionsWithBypass(
         userValue = `${level}${course}`;
         break;
       }
+      case 'BYPASS_REQUIRED':
+        // This restriction is never satisfied by user attributes alone.
+        // It can only be bypassed via an election bypass token that includes
+        // BYPASS_REQUIRED in its bypass_restrictions list.
+        return false;
     }
 
     if (!userValue || !values.includes(userValue)) return false;

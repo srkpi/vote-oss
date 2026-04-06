@@ -1,3 +1,5 @@
+import { KeyRound } from 'lucide-react';
+
 import type { BadgeVariant } from '@/components/ui/badge';
 import { Badge } from '@/components/ui/badge';
 import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
@@ -16,6 +18,7 @@ const getVariant = (type: RestrictionType): BadgeVariant => {
     STUDY_YEAR: 'warning',
     STUDY_FORM: 'error',
     LEVEL_COURSE: 'warning',
+    BYPASS_REQUIRED: 'default',
   };
   return variants[type] || 'info';
 };
@@ -30,17 +33,32 @@ export const AccessRestrictions = ({ restrictions }: ElectionRestrictionsProps) 
     {} as Record<RestrictionType, string[]>,
   );
 
+  const hasBypassRequired = !!groupedRestrictions['BYPASS_REQUIRED'];
+
   return (
     <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white p-5">
       <h3 className="font-display text-foreground mb-4 text-base font-semibold">
         Обмеження доступу
       </h3>
+
+      {hasBypassRequired && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <p className="font-body text-sm text-amber-800">
+            Голосування доступне лише за токеном доступу. Зверніться до організатора.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-3.5">
         {Object.entries(RESTRICTION_TYPE_LABELS).map(([typeKey, label]) => {
           const type = typeKey as RestrictionType;
           const values = groupedRestrictions[type];
 
           if (!values || !values.length) return null;
+
+          // BYPASS_REQUIRED is shown via the banner above, skip normal rendering
+          if (type === 'BYPASS_REQUIRED') return null;
 
           // Sort LEVEL_COURSE values by level then course for consistent display
           const sortedValues =

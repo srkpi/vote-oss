@@ -1,6 +1,6 @@
 'use client';
 
-import { Lock, Plus, Trash2 } from 'lucide-react';
+import { KeyRound, Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -76,10 +76,6 @@ function wcStateToPayload(wc: WinningConditionsState): WinningConditions {
   };
 }
 
-// ---------------------------------------------------------------------------
-// WinningConditionsSection component
-// ---------------------------------------------------------------------------
-
 export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectionFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -134,6 +130,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedForms, setSelectedForms] = useState<string[]>([]);
   const [selectedLevelCourses, setSelectedLevelCourses] = useState<string[]>([]);
+  /** When true, the BYPASS_REQUIRED restriction is added (nobody can vote without a token) */
+  const [bypassRequired, setBypassRequired] = useState(false);
   const [choices, setChoices] = useState(['', '']);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -305,6 +303,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       ...selectedYears.map((v) => ({ type: 'STUDY_YEAR' as const, value: v })),
       ...selectedForms.map((v) => ({ type: 'STUDY_FORM' as const, value: v })),
       ...selectedLevelCourses.map((v) => ({ type: 'LEVEL_COURSE' as const, value: v })),
+      ...(bypassRequired ? [{ type: 'BYPASS_REQUIRED' as const, value: 'true' }] : []),
     ];
 
     const result = await api.elections.create({
@@ -515,21 +514,19 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
           Визначте, за якими критеріями обирається переможець. Усі вибрані умови застосовуються
           одночасно.
         </p>
-        <div className="border-border-color rounded-xl border bg-white p-5">
-          <WinningConditionsSection
-            state={winningConditionsState}
-            onChange={(next) => {
-              setWinningConditionsState(next);
-              setFieldErrors((prev) => ({
-                ...prev,
-                reachesPercentage: '',
-                reachesVotes: '',
-                quorum: '',
-              }));
-            }}
-            errors={fieldErrors}
-          />
-        </div>
+        <WinningConditionsSection
+          state={winningConditionsState}
+          onChange={(next) => {
+            setWinningConditionsState(next);
+            setFieldErrors((prev) => ({
+              ...prev,
+              reachesPercentage: '',
+              reachesVotes: '',
+              quorum: '',
+            }));
+          }}
+          errors={fieldErrors}
+        />
       </section>
 
       {/* Restrictions */}
@@ -660,6 +657,29 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
               emptyText="Групу не знайдено"
             />
           </FormField>
+
+          <div className="border-border-color rounded-xl border bg-white p-4">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={bypassRequired}
+                onChange={(e) => setBypassRequired(e.target.checked)}
+                className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="text-kpi-gray-mid h-4 w-4 shrink-0" />
+                  <span className="font-body text-foreground text-sm font-medium">
+                    Доступ лише за токеном
+                  </span>
+                </div>
+                <p className="font-body text-muted-foreground mt-1 text-xs">
+                  Ніхто не може проголосувати без персонального токена доступу від організатора.
+                  Видайте токени через панель «Токени доступу» після створення.
+                </p>
+              </div>
+            </label>
+          </div>
         </div>
       </section>
 

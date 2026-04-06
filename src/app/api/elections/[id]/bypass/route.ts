@@ -7,6 +7,7 @@ import {
   BYPASS_TOKEN_LENGTH,
   BYPASS_TOKEN_MAX_COUNT,
   BYPASS_TOKEN_MAX_USAGE_MAX,
+  BYPASSABLE_RESTRICTION_TYPES,
 } from '@/lib/constants';
 import { generateBase64Token } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
@@ -15,15 +16,6 @@ import { prisma } from '@/lib/prisma';
 import { adminCanManageElectionBypass } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils';
 import type { ElectionRestriction } from '@/types/election';
-
-const BYPASSABLE_RESTRICTION_TYPES = [
-  'FACULTY',
-  'GROUP',
-  'STUDY_YEAR',
-  'STUDY_FORM',
-  'LEVEL_COURSE',
-  'SPECIALITY',
-] as const;
 
 /**
  * @swagger

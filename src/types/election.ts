@@ -7,7 +7,8 @@ export type RestrictionType =
   | 'SPECIALITY'
   | 'STUDY_YEAR'
   | 'STUDY_FORM'
-  | 'LEVEL_COURSE';
+  | 'LEVEL_COURSE'
+  | 'BYPASS_REQUIRED';
 
 export interface ElectionRestriction {
   type: RestrictionType;

@@ -137,7 +137,18 @@ export const RESTRICTION_TYPE_LABELS: Record<string, string> = {
   STUDY_FORM: 'Форма навчання',
   SPECIALITY: 'Спеціальність',
   LEVEL_COURSE: 'Рівень та курс',
+  BYPASS_REQUIRED: 'Токен доступу',
 };
+
+export const BYPASSABLE_RESTRICTION_TYPES = [
+  'FACULTY',
+  'GROUP',
+  'STUDY_YEAR',
+  'STUDY_FORM',
+  'LEVEL_COURSE',
+  'SPECIALITY',
+  'BYPASS_REQUIRED',
+] as const;
 
 // Winning conditions
 export const WINNING_CONDITION_PERCENTAGE_MIN = 0;

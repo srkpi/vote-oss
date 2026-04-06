@@ -498,9 +498,18 @@ export async function POST(req: NextRequest) {
 
   const groupRestrictions = restrictions.filter((r) => r.type === 'GROUP');
   const facultyRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
+  const bypassRestrictions = restrictions.filter((r) => r.type === 'BYPASS_REQUIRED');
 
   if (groupRestrictions.length > 0 && facultyRestrictions.length === 0) {
     return Errors.badRequest('GROUP restrictions require at least one FACULTY restriction');
+  }
+
+  if (bypassRestrictions.length > 1) {
+    return Errors.badRequest('Only one BYPASS_REQUIRED restriction is allowed');
+  }
+
+  if (bypassRestrictions.length === 1 && bypassRestrictions[0].value !== 'true') {
+    return Errors.badRequest('BYPASS_REQUIRED restriction value should be "true"');
   }
 
   for (const r of restrictions.filter((r) => r.type === 'STUDY_YEAR')) {

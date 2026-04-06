@@ -103,6 +103,7 @@ enum RestrictionType {
   STUDY_YEAR
   STUDY_FORM
   LEVEL_COURSE
+  BYPASS_REQUIRED
 }
 
 model ElectionRestriction {

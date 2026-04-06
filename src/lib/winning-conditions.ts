@@ -103,8 +103,9 @@ export function validateWinningConditions(body: unknown): WinningConditions | st
  *
  * Rules:
  *  1. If quorum is set and totalBallots < quorum → no winners.
- *  2. For each option ALL enabled conditions must be satisfied.
- *  3. Ties: multiple options can simultaneously satisfy all conditions.
+ *  2. If hasMostVotes is set and maxVotes === 0 → no winners (no votes cast).
+ *  3. For each option ALL enabled conditions must be satisfied.
+ *  4. Ties: multiple options can simultaneously satisfy all conditions.
  */
 export function computeWinners(
   tally: Record<string, number>,
@@ -124,8 +125,8 @@ export function computeWinners(
   for (const [id, votes] of Object.entries(tally)) {
     let winner = true;
 
-    // Condition 1: has the most votes
-    if (conditions.hasMostVotes && votes !== maxVotes) {
+    // Condition 1: has the most votes — also requires at least one vote cast
+    if (conditions.hasMostVotes && (maxVotes === 0 || votes !== maxVotes)) {
       winner = false;
     }
 

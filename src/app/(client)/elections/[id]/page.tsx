@@ -13,6 +13,7 @@ import { KeyDisclosure } from '@/components/elections/key-disclosure';
 import { RestrictedVoteBanner } from '@/components/elections/restricted-vote-banner';
 import { ResultsChart } from '@/components/elections/result-chart';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
+import { WinningConditionsDisplay } from '@/components/elections/winning-conditions-display';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
@@ -205,6 +206,8 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             {election.restrictions.length > 0 && (
               <AccessRestrictions restrictions={election.restrictions} />
             )}
+
+            <WinningConditionsDisplay conditions={election.winningConditions} />
 
             <KeyDisclosure>
               <div className="space-y-5">
