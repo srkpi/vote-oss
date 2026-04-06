@@ -25,7 +25,6 @@ export function WinningConditionsSection({
 
   return (
     <div className="space-y-4">
-      {/* hasMostVotes */}
       <label className="flex cursor-pointer items-start gap-3">
         <input
           type="checkbox"
@@ -43,7 +42,6 @@ export function WinningConditionsSection({
         </div>
       </label>
 
-      {/* reachesPercentage */}
       <div className="space-y-2">
         <label className="flex cursor-pointer items-start gap-3">
           <input
@@ -59,7 +57,7 @@ export function WinningConditionsSection({
             ) : (
               'N%'
             )}{' '}
-            голосів від загальної кількості бюлетенів
+            голосів від загальної кількості
           </span>
         </label>
 
@@ -88,7 +86,6 @@ export function WinningConditionsSection({
         )}
       </div>
 
-      {/* reachesVotes */}
       <div className="space-y-2">
         <label className="flex cursor-pointer items-start gap-3">
           <input
@@ -132,7 +129,6 @@ export function WinningConditionsSection({
         )}
       </div>
 
-      {/* quorum */}
       <div className="space-y-2">
         <label className="flex cursor-pointer items-start gap-3">
           <input
@@ -178,11 +174,6 @@ export function WinningConditionsSection({
           </div>
         )}
       </div>
-
-      <p className="font-body text-muted-foreground border-border-subtle border-t pt-3 text-xs">
-        Усі вибрані умови застосовуються одночасно (логіка «І»). Варіант перемагає лише якщо
-        задовольняє всі умови. При рівності голосів усі рівні варіанти визначаються переможцями.
-      </p>
     </div>
   );
 }
