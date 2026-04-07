@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { AnalyticsPanel } from '@/components/elections/analytics-panel';
+import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel';
 import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
@@ -255,7 +255,6 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
         </button>
       </div>
 
-      {/* ── Analytics tab ───────────────────────────────────────── */}
       {activeTab === 'analytics' && (
         <AnalyticsPanel
           ballots={ballots}
@@ -268,7 +267,6 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
         />
       )}
 
-      {/* ── Ballots tab ─────────────────────────────────────────── */}
       {activeTab === 'ballots' && (
         <>
           {canDecrypt && (
