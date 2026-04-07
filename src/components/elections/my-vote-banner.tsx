@@ -10,7 +10,7 @@ interface MyVoteBannerProps {
   decryptionDone: boolean;
   matchesDecryption: boolean | null;
   decryptedChoiceLabels?: string[] | null;
-  isBallotVisible: boolean;
+  showScrollButton: boolean;
   onScrollTo: () => void;
 }
 
@@ -25,7 +25,7 @@ export function MyVoteBanner({
   decryptionDone,
   matchesDecryption,
   decryptedChoiceLabels,
-  isBallotVisible,
+  showScrollButton,
   onScrollTo,
 }: MyVoteBannerProps) {
   const storedChoices = formatLabels(record.choiceLabels);
@@ -94,7 +94,7 @@ export function MyVoteBanner({
           )}
         </div>
 
-        {found && !isBallotVisible && (
+        {found && showScrollButton && (
           <Button
             variant="secondary"
             size="sm"
