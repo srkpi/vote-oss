@@ -1,0 +1,55 @@
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/faq/[22m[1mfaq-crud.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mdetail.test.ts[22m ([0m[1m[41m7.664 s[49m[22m[0m)
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/[22m[1mpatch.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/[22m[1mleave.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mwinning-conditions.test.ts[22m ([0m[1m[41m15.151 s[49m[22m[0m)
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/invite/[22m[1mget.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mtoken-store.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/[22m[1mdelete.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/[22m[1mjoin.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/bypass/[22m[1melection.test.ts[22m ([0m[1m[41m5.251 s[49m[22m[0m)
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mgroup-utils.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mballot.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/faq/[22m[1mfaq.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mlist.test.ts[22m ([0m[1m[41m5.602 s[49m[22m[0m)
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mcreate-restrictions.test.ts[22m ([0m[1m[41m22.099 s[49m[22m[0m)
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/auth/[22m[1mkpi-id.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/bypass/[22m[1mapply.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mconstants.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mcrypto.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mbloom.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/auth/[22m[1mdiia-check.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/bypass/[22m[1mglobal.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/auth/[22m[1mdiia-init.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mauth.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mkpi-id.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/invite/[22m[1mcreate.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/invite/[22m[1mdelete.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mcache.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/[22m[1mlist.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/bypass/[22m[1melection-delete.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/bypass/[22m[1mglobal-delete.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mrestore.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/admins/[22m[1mget.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mrate-limit.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mcampus-api.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/bypass/[22m[1mrestriction-bypass.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/auth/[22m[1mrefresh.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mjwt.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mdelete.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/bypass/[22m[1mrefresh-bypass.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/lib/[22m[1mconstants.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mtoken.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/auth/[22m[1mlogout.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/health/[22m[1mcheck.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/cron/[22m[1mcleanup-tokens.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/cron/[22m[1mcleanup-bypass.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/info/[22m[1minfo.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/campus/[22m[1mgroups.test.ts[22m
+[0m[7m[1m[32m PASS [39m[22m[27m[0m [2msrc/__tests__/api/elections/[22m[1mballots.test.ts[22m
+
+[1mTest Suites: [22m[1m[32m49 passed[39m[22m, 49 total
+[1mTests:       [22m[1m[32m867 passed[39m[22m, 867 total
+[1mSnapshots:   [22m0 total
+[1mTime:[22m        29.616 s
+[2mRan all test suites[22m[2m.[22m
