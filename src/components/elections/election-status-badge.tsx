@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { getStatusLabel } from '@/lib/utils';
+import { getStatusLabel } from '@/lib/utils/common';
 import type { ElectionStatus } from '@/types/election';
 
 interface ElectionStatusBadgeProps {

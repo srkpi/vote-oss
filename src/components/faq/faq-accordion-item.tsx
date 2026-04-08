@@ -1,7 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 
 import { QuillRenderer } from '@/components/ui/quill/quill-renderer';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { FaqItemData } from '@/types/faq';
 
 interface FaqAccordionItemProps {

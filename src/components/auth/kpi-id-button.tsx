@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 type Size = 'sm' | 'md' | 'lg';
 type LogoAlignment = 'left' | 'right';

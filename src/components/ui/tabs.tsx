@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 export type Tab<T extends string> = {
   key: T;
@@ -9,7 +9,7 @@ export type TabsProps<T extends string> = {
   tabs: Tab<T>[];
   activeTab: T;
   onTabChange: (key: T) => void;
-  tabCount: (key: T) => number;
+  tabCount?: (key: T) => number;
 };
 
 export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount }: TabsProps<T>) {
@@ -20,7 +20,7 @@ export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount 
     >
       <div className="flex min-w-full gap-1">
         {tabs.map((tab) => {
-          const count = tabCount(tab.key);
+          const count = tabCount ? tabCount(tab.key) : null;
           const isActive = activeTab === tab.key;
 
           return (
@@ -37,14 +37,16 @@ export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabCount 
               )}
             >
               {tab.label}
-              <span
-                className={cn(
-                  'inline-flex h-4.5 items-center justify-center rounded-full px-1 text-[10px] font-semibold',
-                  isActive ? 'bg-white/20 text-white' : 'bg-surface text-muted-foreground',
-                )}
-              >
-                {count}
-              </span>
+              {count !== null && (
+                <span
+                  className={cn(
+                    'inline-flex h-4.5 items-center justify-center rounded-full px-1 text-[10px] font-semibold',
+                    isActive ? 'bg-white/20 text-white' : 'bg-surface text-muted-foreground',
+                  )}
+                >
+                  {count}
+                </span>
+              )}
             </button>
           );
         })}

@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 type Size = 'sm' | 'md' | 'lg';
 type LogoAlignment = 'left' | 'right';

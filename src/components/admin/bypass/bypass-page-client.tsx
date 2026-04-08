@@ -27,7 +27,7 @@ import {
   BYPASS_TOKEN_MAX_USAGE_MAX,
   BYPASS_TOKEN_MIN_HOURS,
 } from '@/lib/constants';
-import { pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils/common';
 import type { UserInfo } from '@/types/auth';
 import type { GlobalBypassToken } from '@/types/bypass';
 

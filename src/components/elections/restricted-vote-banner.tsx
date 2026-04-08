@@ -1,8 +1,12 @@
 import { AlertCircle, CheckCircle2, KeyRound, XCircle } from 'lucide-react';
 
 import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
-import { calculateCourse, parseGroupLevel, parseGroupYearEnteredDigit } from '@/lib/group-utils';
-import { formatRestrictionValue } from '@/lib/utils';
+import { formatRestrictionValue } from '@/lib/utils/common';
+import {
+  calculateCourse,
+  parseGroupLevel,
+  parseGroupYearEnteredDigit,
+} from '@/lib/utils/group-utils';
 import type { ElectionRestriction, RestrictionType } from '@/types/election';
 
 interface UserContext {

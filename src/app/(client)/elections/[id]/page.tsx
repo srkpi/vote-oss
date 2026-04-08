@@ -19,7 +19,7 @@ import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
 import { checkRestrictionsWithBypass } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
-import { pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils/common';
 
 interface ElectionPageProps {
   params: Promise<{ id: string }>;

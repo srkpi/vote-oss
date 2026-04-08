@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { APP_NAME } from '@/lib/config/client';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { Ballot, DecryptedMap } from '@/types/ballot';
 
 const CSV_FIELDS: { key: string; label: string; encrypted?: boolean }[] = [

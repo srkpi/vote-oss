@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { cn, parseQuillDelta } from '@/lib/utils';
+import { cn, parseQuillDelta } from '@/lib/utils/common';
 import type { QuillDeltaOp } from '@/types/quill';
 
 // ---------------------------------------------------------------------------

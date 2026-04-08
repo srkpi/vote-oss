@@ -1,7 +1,7 @@
 'use client';
 
 import { useHydration } from '@/hooks/use-hydration';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 const getGreeting = (): string => {
   const hour = new Date().getHours();

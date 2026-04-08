@@ -15,7 +15,7 @@ import {
   adminCanRestoreElection,
   checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
-import { isValidUuid } from '@/lib/utils';
+import { isValidUuid } from '@/lib/utils/common';
 import { computeWinners, parseWinningConditions } from '@/lib/winning-conditions';
 import type { ElectionRestriction, TallyResult, WinningConditions } from '@/types/election';
 import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';

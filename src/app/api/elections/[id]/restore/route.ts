@@ -6,7 +6,7 @@ import { getCachedAdmins, invalidateElections } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { adminCanRestoreElection } from '@/lib/restrictions';
-import { isValidUuid } from '@/lib/utils';
+import { isValidUuid } from '@/lib/utils/common';
 import type { ElectionRestriction } from '@/types/election';
 
 /**

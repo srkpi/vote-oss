@@ -1,7 +1,7 @@
 import { Check, HelpCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { ElectionChoice } from '@/types/election';
 
 interface ConfirmChoiceProps {

@@ -8,7 +8,7 @@ import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { checkRestrictionsWithBypass } from '@/lib/restrictions';
-import { isValidUuid } from '@/lib/utils';
+import { isValidUuid } from '@/lib/utils/common';
 import type { ElectionRestriction } from '@/types/election';
 
 /**

@@ -1,41 +1,12 @@
+import type {
+  ActivityPoint,
+  AnalyticsTimePoint,
+  ChartGranularity,
+  SharePoint,
+} from '@/types/analytics-charts';
 import type { Ballot, DecryptedMap } from '@/types/ballot';
 import type { ElectionChoice } from '@/types/election';
-
-export type ChartGranularity = 'minute' | 'hour' | '6hour' | 'day';
-
-export interface AnalyticsTimePoint {
-  ms: number;
-  label: string;
-  total: number;
-  [choiceId: string]: number | string;
-}
-
-export interface ActivityPoint {
-  ms: number;
-  label: string;
-  count: number;
-}
-
-export interface SharePoint {
-  ms: number;
-  label: string;
-  [choiceId: string]: number | string;
-}
-
-export interface AnalyticsMetrics {
-  totalBallots: number;
-  maxCount: number;
-  peakHourConcentration: number | null;
-  peakHourLabel: string | null;
-  velocityRatio: number | null; // null = fewer than 4 ballots
-  medianTimePercentile: number | null; // null = fewer than 2 ballots
-  frontrunnerChanges: number | null; // null = not decrypted
-  normalizedEntropy: number | null; // null = not decrypted
-  enc: number | null; // null = not decrypted
-  gini: number | null; // null = not decrypted
-  leadingMargin: number | null; // null = not decrypted
-  voteCounts: Record<string, number>;
-}
+import type { AnalyticsMetrics } from '@/types/metrics';
 
 export interface AnalyticsResult {
   sortedBallots: Ballot[];

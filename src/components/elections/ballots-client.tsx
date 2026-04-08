@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { EmptyState } from '@/components/common/empty-state';
 import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel';
 import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
@@ -18,7 +19,7 @@ import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
-import { cn, pluralize } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
 import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
 import type { ElectionChoice } from '@/types/election';
@@ -307,27 +308,19 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
 
           {ballots.length === 0 ? (
             <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
-              <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
-                <FileText className="text-kpi-gray-mid h-7 w-7" />
-              </div>
-              <p className="font-display text-foreground text-lg font-semibold">
-                {isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
-              </p>
-              <p className="font-body text-muted-foreground mt-1 text-sm">
-                {isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
-              </p>
+              <EmptyState
+                title={isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
+                description={isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
+                icon={<FileText className="text-kpi-gray-mid h-7 w-7" />}
+              />
             </div>
           ) : pagedBallots.length === 0 ? (
             <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
-              <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
-                <CircleSlash2 className="text-kpi-gray-mid h-7 w-7" />
-              </div>
-              <p className="font-display text-foreground text-lg font-semibold">
-                Нічого не знайдено
-              </p>
-              <p className="font-body text-muted-foreground mt-1 text-sm">
-                Спробуйте змінити пошуковий запит
-              </p>
+              <EmptyState
+                title="Нічого не знайдено"
+                description="Спробуйте змінити пошуковий запит"
+                icon={<CircleSlash2 className="text-kpi-gray-mid h-7 w-7" />}
+              />
             </div>
           ) : (
             <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">

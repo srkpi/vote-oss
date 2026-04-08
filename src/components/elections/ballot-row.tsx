@@ -9,7 +9,7 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { Ballot, DecryptionResult } from '@/types/ballot';
 import type { ElectionChoice } from '@/types/election';
 

@@ -18,7 +18,7 @@ import { LocalDateTime } from '@/components/ui/local-time';
 import { TimelineItem } from '@/components/ui/timeline-item';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils/common';
 
 interface AdminElectionPageProps {
   params: Promise<{ id: string }>;

@@ -1,5 +1,5 @@
 import { CHAR_COUNTER_THRESHOLD } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 interface CharCounterProps {
   value: string | number;

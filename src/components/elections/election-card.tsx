@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
-import { cn, pluralize } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils/common';
 import type { Election } from '@/types/election';
 
 interface ElectionCardProps {

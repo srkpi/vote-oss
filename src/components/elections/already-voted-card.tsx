@@ -2,7 +2,7 @@ import { Check, CheckCircle, Copy, Hash, MonitorSmartphone } from 'lucide-react'
 import { useState } from 'react';
 
 import { LocalDateTime } from '@/components/ui/local-time';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { VoteRecord } from '@/types/vote';
 
 interface AlreadyVotedCardProps {

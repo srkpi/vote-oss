@@ -2,28 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { cn } from '@/lib/utils';
-
-export interface MetricScaleConfig {
-  min: number;
-  max: number;
-  current: number;
-  gradientFrom: string;
-  gradientTo: string;
-  labels: [string, string];
-}
-
-export interface MetricCardConfig {
-  id: string;
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  interpretation: string;
-  color: 'navy' | 'orange' | 'blue' | 'success' | 'warning' | 'error' | 'purple';
-  description: string;
-  insight: string;
-  scale?: MetricScaleConfig;
-}
+import { cn } from '@/lib/utils/common';
+import type { MetricCardConfig, MetricScaleConfig } from '@/types/metrics';
 
 const COLOR_GRADIENT: Record<
   MetricCardConfig['color'],
@@ -40,11 +20,7 @@ const COLOR_GRADIENT: Record<
 
 const COLOR_STYLES: Record<
   MetricCardConfig['color'],
-  {
-    border: string;
-    iconBg: string;
-    iconText: string;
-  }
+  { border: string; iconBg: string; iconText: string }
 > = {
   navy: { border: 'border-kpi-navy/15', iconBg: 'bg-kpi-navy/8', iconText: 'text-kpi-navy' },
   orange: {
@@ -143,6 +119,7 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
         )}
         style={{ animationDuration: '200ms' }}
       >
+        {/* Gradient header */}
         <div
           className="relative overflow-hidden px-6 pt-7 pb-6"
           style={{ background: `linear-gradient(135deg, ${grad.from} 0%, ${grad.to} 100%)` }}
@@ -174,6 +151,7 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
           </div>
         </div>
 
+        {/* Body */}
         <div className="max-h-[60vh] space-y-5 overflow-y-auto px-6 py-5">
           {metric.scale && (
             <div>

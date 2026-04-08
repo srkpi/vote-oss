@@ -3,7 +3,7 @@
 import { Check, ChevronDown, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 export interface MultiComboboxProps {
   options: string[];

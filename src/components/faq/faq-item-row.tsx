@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Edit2, GripVertical, Trash2 } from 'lucide-react';
 
-import { deltaToPlainText } from '@/lib/utils';
+import { deltaToPlainText } from '@/lib/utils/common';
 import type { FaqItemData } from '@/types/faq';
 
 interface FaqItemRowProps {

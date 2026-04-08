@@ -8,7 +8,7 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { DiiaLoginButton } from '@/components/auth/diia-login-button';
 import { api } from '@/lib/api/browser';
 import { DIIA_LINK_TTL_MS, DIIA_POLL_INTERVAL_MS } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { DiiaInitResponse } from '@/types/auth';
 
 interface TimerDisplayProps {

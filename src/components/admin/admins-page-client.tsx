@@ -8,7 +8,7 @@ import { InviteAdminDialog } from '@/components/admin/invite/invite-admin-dialog
 import { LeaveAdminDialog } from '@/components/admin/leave-admin-dialog';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils/common';
 import type { Admin } from '@/types/admin';
 import type { User } from '@/types/auth';
 

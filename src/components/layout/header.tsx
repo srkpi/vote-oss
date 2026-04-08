@@ -12,7 +12,7 @@ import { api } from '@/lib/api/browser';
 import { APP_NAME } from '@/lib/config/client';
 import type { StudyFormValue } from '@/lib/constants';
 import { STUDY_FORM_LABELS } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
 
 interface HeaderProps {

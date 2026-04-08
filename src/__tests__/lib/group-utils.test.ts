@@ -6,7 +6,7 @@ import {
   parseGroupLevelCourse,
   parseGroupStudyFormLetter,
   parseGroupYearEnteredDigit,
-} from '@/lib/group-utils';
+} from '@/lib/utils/group-utils';
 
 // Fixed reference date: March 27, 2026 (before September → use base formula)
 // yearLastDigit = 6, isBeforeSeptember = true
