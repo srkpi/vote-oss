@@ -8,7 +8,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 interface JoinAdminFormProps {
   initialToken?: string;

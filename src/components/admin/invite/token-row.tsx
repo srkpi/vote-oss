@@ -2,7 +2,7 @@ import { Clock, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn, tokenExpiresLabel, tokenUsageColor, tokenUsageFraction } from '@/lib/utils';
+import { cn, tokenExpiresLabel, tokenUsageColor, tokenUsageFraction } from '@/lib/utils/common';
 import type { InviteToken } from '@/types/admin';
 
 interface TokenRowProps {

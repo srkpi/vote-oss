@@ -159,3 +159,6 @@ export const WINNING_CONDITION_VOTES_MAX = 10_000;
 
 export const WINNING_CONDITION_QUORUM_MIN = 1;
 export const WINNING_CONDITION_QUORUM_MAX = 10_000;
+
+// Axis tick style shared across all analytics chart variants
+export const AXIS_STYLE = { fontSize: 11, fill: '#94a3b8' } as const;

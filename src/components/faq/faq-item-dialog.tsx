@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
 import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
-import { deltaToPlainText } from '@/lib/utils';
+import { deltaToPlainText } from '@/lib/utils/common';
 
 // Quill is browser-only
 const QuillEditor = dynamic(() => import('@/components/ui/quill/quill-editor'), {

@@ -2,7 +2,7 @@
 
 import { createContext, type ReactNode, useCallback, useContext, useState } from 'react';
 
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/lib/utils/common';
 
 type ToastVariant = 'default' | 'success' | 'error' | 'warning' | 'info';
 

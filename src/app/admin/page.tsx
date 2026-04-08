@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { cn, pluralize } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils/common';
 
 export const metadata: Metadata = {
   title: 'Адмін панель',

@@ -7,7 +7,7 @@ import {
   WINNING_CONDITION_VOTES_MAX,
   WINNING_CONDITION_VOTES_MIN,
 } from '@/lib/constants';
-import { pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils/common';
 import type { WinningConditionsState } from '@/types/election';
 
 interface WinningConditionsSectionProps {

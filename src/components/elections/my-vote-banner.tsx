@@ -1,7 +1,7 @@
 import { AlertTriangle, ArrowDown, CheckCircle, UserCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import type { VoteRecord } from '@/types/vote';
 
 interface MyVoteBannerProps {
@@ -10,7 +10,7 @@ interface MyVoteBannerProps {
   decryptionDone: boolean;
   matchesDecryption: boolean | null;
   decryptedChoiceLabels?: string[] | null;
-  isBallotVisible: boolean;
+  showScrollButton: boolean;
   onScrollTo: () => void;
 }
 
@@ -25,7 +25,7 @@ export function MyVoteBanner({
   decryptionDone,
   matchesDecryption,
   decryptedChoiceLabels,
-  isBallotVisible,
+  showScrollButton,
   onScrollTo,
 }: MyVoteBannerProps) {
   const storedChoices = formatLabels(record.choiceLabels);
@@ -94,7 +94,7 @@ export function MyVoteBanner({
           )}
         </div>
 
-        {found && !isBallotVisible && (
+        {found && showScrollButton && (
           <Button
             variant="secondary"
             size="sm"

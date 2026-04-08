@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Loader2, ShieldAlert, ShieldCheck, Unlock } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { cn, pluralize } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils/common';
 
 interface DecryptionPanelProps {
   isDecrypting: boolean;

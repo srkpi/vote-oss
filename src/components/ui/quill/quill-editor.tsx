@@ -13,7 +13,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { CharCounter } from '@/components/ui/char-counter';
 import { LinkTooltip } from '@/components/ui/quill/link-tooltip';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 const TOOLBAR_CONFIG = [
   [{ header: [1, 2, 3, 4, false] }],

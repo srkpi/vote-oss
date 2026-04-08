@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyRound, Lock, Plus, Trash2 } from 'lucide-react';
+import { Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -34,12 +34,12 @@ import {
   WINNING_CONDITION_VOTES_MAX,
   WINNING_CONDITION_VOTES_MIN,
 } from '@/lib/constants';
+import { cn } from '@/lib/utils/common';
 import {
   filterGroupsByLevelCourses,
   filterGroupsByStudyForms,
   parseGroupLevel,
-} from '@/lib/group-utils';
-import { cn } from '@/lib/utils';
+} from '@/lib/utils/group-utils';
 import type {
   CreateElectionRestriction,
   WinningConditions,
@@ -667,12 +667,9 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                 className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
               />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <KeyRound className="text-kpi-gray-mid h-4 w-4 shrink-0" />
-                  <span className="font-body text-foreground text-sm font-medium">
-                    Доступ лише за токеном
-                  </span>
-                </div>
+                <span className="font-body text-foreground text-sm font-medium">
+                  Доступ лише за токеном
+                </span>
                 <p className="font-body text-muted-foreground mt-1 text-xs">
                   Ніхто не може проголосувати без персонального токена доступу від організатора.
                   Видайте токени через панель «Токени доступу» після створення.

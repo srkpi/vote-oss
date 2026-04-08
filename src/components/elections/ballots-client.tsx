@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BarChart2,
   ChevronLeft,
   ChevronRight,
   CircleSlash2,
@@ -10,13 +11,15 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { EmptyState } from '@/components/common/empty-state';
+import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel';
 import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
-import { cn, pluralize } from '@/lib/utils';
+import { cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
 import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
 import type { ElectionChoice } from '@/types/election';
@@ -28,9 +31,12 @@ interface BallotsClientProps {
 
 const PAGE_SIZE = 20;
 
+type ActiveTab = 'ballots' | 'analytics';
+
 export function BallotsClient({ initialData }: BallotsClientProps) {
   const { ballots, election } = initialData;
 
+  const [activeTab, setActiveTab] = useState<ActiveTab>('ballots');
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -131,7 +137,6 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
   const safePage = Math.min(page, totalPages);
   const pagedBallots = filteredBallots.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  // Auto-navigate to the page containing the user's ballot on initial load
   useEffect(() => {
     if (!myVoteRecord) return;
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
@@ -140,32 +145,27 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
     }
   }, [myVoteRecord, filteredBallots]);
 
-  // Track if the user's ballot is currently visible on the screen
   useEffect(() => {
     const el = myBallotRef.current;
     if (!el) {
       setIsMyBallotVisible(false);
       return;
     }
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsMyBallotVisible(entry.isIntersecting);
       },
       { threshold: 0.1 },
     );
-
     observer.observe(el);
     return () => observer.disconnect();
   }, [safePage, pagedBallots]);
 
   const handleScrollToMyBallot = () => {
     if (!myVoteRecord) return;
-
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
       const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
-
       if (safePage !== targetPage) {
         setPage(targetPage);
         setTimeout(() => {
@@ -201,14 +201,11 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
 
   const myVoteMatchesDecryption = useMemo(() => {
     if (!myDecryption || !myVoteRecord || !myDecryption.valid) return null;
-
     const decryptedIds = myDecryption.choiceIds || [];
     const storedIds = Array.isArray(myVoteRecord.choiceIds)
       ? myVoteRecord.choiceIds
       : [myVoteRecord.choiceIds];
-
     if (decryptedIds.length !== storedIds.length) return false;
-
     return storedIds.every((id) => decryptedIds.includes(id));
   }, [myDecryption, myVoteRecord]);
 
@@ -221,171 +218,214 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
           decryptionDone={decryptionDone}
           matchesDecryption={myVoteMatchesDecryption}
           decryptedChoiceLabels={myDecryption?.choiceLabels ?? null}
-          isBallotVisible={isMyBallotVisible}
+          showScrollButton={!isMyBallotVisible && activeTab === 'ballots'}
           onScrollTo={handleScrollToMyBallot}
         />
       )}
 
-      {canDecrypt && (
-        <DecryptionPanel
-          isDecrypting={isDecrypting}
+      {/* ── Tab toggle ──────────────────────────────────────────── */}
+      <div className="border-border-subtle bg-surface flex w-fit items-center gap-1 rounded-xl border p-1">
+        <button
+          onClick={() => setActiveTab('ballots')}
+          className={cn(
+            'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150',
+            activeTab === 'ballots'
+              ? 'text-kpi-navy shadow-shadow-xs bg-white'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          <FileText className="h-3.5 w-3.5" />
+          Бюлетені
+        </button>
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={cn(
+            'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150',
+            activeTab === 'analytics'
+              ? 'text-kpi-navy shadow-shadow-xs bg-white'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          <BarChart2 className="h-3.5 w-3.5" />
+          Аналітика
+          {decryptionDone && (
+            <span className="bg-kpi-navy/10 text-kpi-navy rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+              Повна
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'analytics' && (
+        <AnalyticsPanel
+          ballots={ballots}
+          decryptedMap={decryptedMap}
           decryptionDone={decryptionDone}
-          showDecrypted={showDecrypted}
-          malformedCount={malformedCount}
-          invalidHashCount={invalidHashCount}
+          isDecrypting={isDecrypting}
           onDecrypt={handleDecryptAll}
-          onToggleShow={() => setShowDecrypted((v) => !v)}
+          choices={choices}
+          election={election}
         />
       )}
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
-          <FileText className="text-kpi-gray-mid h-4 w-4" />
-          <span>
-            {trimmedQuery
-              ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
-              : pluralize(ballots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])}
-          </span>
-        </div>
+      {activeTab === 'ballots' && (
+        <>
+          {canDecrypt && (
+            <DecryptionPanel
+              isDecrypting={isDecrypting}
+              decryptionDone={decryptionDone}
+              showDecrypted={showDecrypted}
+              malformedCount={malformedCount}
+              invalidHashCount={invalidHashCount}
+              onDecrypt={handleDecryptAll}
+              onToggleShow={() => setShowDecrypted((v) => !v)}
+            />
+          )}
 
-        {ballots.length > 0 && (
-          <SearchInput
-            value={searchQuery}
-            onChange={handleSearch}
-            className="max-w-md"
-            placeholder={
-              decryptionDone
-                ? 'Пошук за хешем або варіантом відповіді…'
-                : 'Пошук за хешем бюлетеня…'
-            }
-          />
-        )}
-      </div>
-
-      {ballots.length === 0 ? (
-        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
-          <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
-            <FileText className="text-kpi-gray-mid h-7 w-7" />
-          </div>
-          <p className="font-display text-foreground text-lg font-semibold">
-            {isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
-          </p>
-          <p className="font-body text-muted-foreground mt-1 text-sm">
-            {isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
-          </p>
-        </div>
-      ) : pagedBallots.length === 0 ? (
-        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
-          <div className="border-border-subtle bg-surface mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
-            <CircleSlash2 className="text-kpi-gray-mid h-7 w-7" />
-          </div>
-          <p className="font-display text-foreground text-lg font-semibold">Нічого не знайдено</p>
-          <p className="font-body text-muted-foreground mt-1 text-sm">
-            Спробуйте змінити пошуковий запит
-          </p>
-        </div>
-      ) : (
-        <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
-          {decryptionDone && invalidHashCount > 0 && (
-            <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 border-b px-5 py-3 text-sm">
-              <ShieldAlert className="h-4 w-4 shrink-0" />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
+              <FileText className="text-kpi-gray-mid h-4 w-4" />
               <span>
-                <strong>{invalidHashCount}</strong>{' '}
-                {pluralize(invalidHashCount, ['бюлетень', 'бюлетені', 'бюлетенів'], false)} мають
-                некоректний хеш
+                {trimmedQuery
+                  ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
+                  : pluralize(ballots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])}
               </span>
             </div>
-          )}
-          {decryptionDone && invalidHashCount === 0 && (
-            <div className="font-body border-success/20 bg-success-bg text-success flex items-center gap-2 border-b px-5 py-3 text-sm">
-              <ShieldCheck className="h-4 w-4 shrink-0" />
-              <span>Ланцюжок бюлетенів цілісний — усі хеші вірні</span>
-            </div>
-          )}
 
-          <div className="divide-border-subtle divide-y">
-            {pagedBallots.map((ballot, index) => {
-              const isMyBallot =
-                myVoteRecord !== null && ballot.currentHash === myVoteRecord.ballotHash;
-              return (
-                <div
-                  key={ballot.id}
-                  ref={isMyBallot ? myBallotRef : undefined}
-                  className={cn(
-                    isMyBallot && 'ring-kpi-blue-light relative rounded-none ring-2 ring-inset',
-                  )}
-                >
-                  <BallotRow
-                    ballot={ballot}
-                    index={(safePage - 1) * PAGE_SIZE + index + 1}
-                    isExpanded={expandedIds.has(ballot.id)}
-                    onToggle={() => toggleExpand(ballot.id)}
-                    decryption={
-                      decryptionDone && showDecrypted ? decryptedMap.get(ballot.id) : undefined
-                    }
-                    choices={choices}
-                    isMyBallot={isMyBallot}
-                    myStoredChoiceLabels={isMyBallot ? myVoteRecord!.choiceLabels : undefined}
-                  />
+            {ballots.length > 0 && (
+              <SearchInput
+                value={searchQuery}
+                onChange={handleSearch}
+                className="max-w-md"
+                placeholder={
+                  decryptionDone
+                    ? 'Пошук за хешем або варіантом відповіді…'
+                    : 'Пошук за хешем бюлетеня…'
+                }
+              />
+            )}
+          </div>
+
+          {ballots.length === 0 ? (
+            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+              <EmptyState
+                title={isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
+                description={isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
+                icon={<FileText className="text-kpi-gray-mid h-7 w-7" />}
+              />
+            </div>
+          ) : pagedBallots.length === 0 ? (
+            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+              <EmptyState
+                title="Нічого не знайдено"
+                description="Спробуйте змінити пошуковий запит"
+                icon={<CircleSlash2 className="text-kpi-gray-mid h-7 w-7" />}
+              />
+            </div>
+          ) : (
+            <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+              {decryptionDone && invalidHashCount > 0 && (
+                <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 border-b px-5 py-3 text-sm">
+                  <ShieldAlert className="h-4 w-4 shrink-0" />
+                  <span>
+                    <strong>{invalidHashCount}</strong>{' '}
+                    {pluralize(invalidHashCount, ['бюлетень', 'бюлетені', 'бюлетенів'], false)}{' '}
+                    мають некоректний хеш
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+              )}
+              {decryptionDone && invalidHashCount === 0 && (
+                <div className="font-body border-success/20 bg-success-bg text-success flex items-center gap-2 border-b px-5 py-3 text-sm">
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                  <span>Ланцюжок бюлетенів цілісний — усі хеші вірні</span>
+                </div>
+              )}
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between py-2">
-          <p className="font-body text-muted-foreground text-sm">
-            Сторінка {safePage} з {totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={safePage <= 1}
-              onClick={() => setPage((p) => p - 1)}
-              icon={<ChevronLeft className="h-4 w-4" />}
-            >
-              Назад
-            </Button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let p: number;
-                if (totalPages <= 5) p = i + 1;
-                else if (safePage <= 3) p = i + 1;
-                else if (safePage >= totalPages - 2) p = totalPages - 4 + i;
-                else p = safePage - 2 + i;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={cn(
-                      'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
-                      p === safePage
-                        ? 'bg-kpi-navy shadow-shadow-sm text-white'
-                        : 'text-muted-foreground hover:bg-surface hover:text-foreground',
-                    )}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
+              <div className="divide-border-subtle divide-y">
+                {pagedBallots.map((ballot, index) => {
+                  const isMyBallot =
+                    myVoteRecord !== null && ballot.currentHash === myVoteRecord.ballotHash;
+                  return (
+                    <div
+                      key={ballot.id}
+                      ref={isMyBallot ? myBallotRef : undefined}
+                      className={cn(
+                        isMyBallot && 'ring-kpi-blue-light relative rounded-none ring-2 ring-inset',
+                      )}
+                    >
+                      <BallotRow
+                        ballot={ballot}
+                        index={(safePage - 1) * PAGE_SIZE + index + 1}
+                        isExpanded={expandedIds.has(ballot.id)}
+                        onToggle={() => toggleExpand(ballot.id)}
+                        decryption={
+                          decryptionDone && showDecrypted ? decryptedMap.get(ballot.id) : undefined
+                        }
+                        choices={choices}
+                        isMyBallot={isMyBallot}
+                        myStoredChoiceLabels={isMyBallot ? myVoteRecord!.choiceLabels : undefined}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+          )}
 
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={safePage >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              icon={<ChevronRight className="h-4 w-4" />}
-              iconPosition="right"
-            >
-              Вперед
-            </Button>
-          </div>
-        </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between py-2">
+              <p className="font-body text-muted-foreground text-sm">
+                Сторінка {safePage} з {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={safePage <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  icon={<ChevronLeft className="h-4 w-4" />}
+                >
+                  Назад
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let p: number;
+                    if (totalPages <= 5) p = i + 1;
+                    else if (safePage <= 3) p = i + 1;
+                    else if (safePage >= totalPages - 2) p = totalPages - 4 + i;
+                    else p = safePage - 2 + i;
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={cn(
+                          'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
+                          p === safePage
+                            ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                            : 'text-muted-foreground hover:bg-surface hover:text-foreground',
+                        )}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  icon={<ChevronRight className="h-4 w-4" />}
+                  iconPosition="right"
+                >
+                  Вперед
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

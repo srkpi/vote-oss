@@ -3,7 +3,7 @@
 import { Crown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { calculateVotePercentage, cn, pluralize } from '@/lib/utils';
+import { calculateVotePercentage, cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
 import type { ElectionChoice } from '@/types/election';
 

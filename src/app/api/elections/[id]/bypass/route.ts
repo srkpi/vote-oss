@@ -14,7 +14,7 @@ import { Errors } from '@/lib/errors';
 import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 import { adminCanManageElectionBypass } from '@/lib/restrictions';
-import { isValidUuid } from '@/lib/utils';
+import { isValidUuid } from '@/lib/utils/common';
 import type { ElectionRestriction } from '@/types/election';
 
 /**

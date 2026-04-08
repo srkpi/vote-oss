@@ -1,9 +1,7 @@
-import { KeyRound } from 'lucide-react';
-
 import type { BadgeVariant } from '@/components/ui/badge';
 import { Badge } from '@/components/ui/badge';
 import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
-import { formatRestrictionValue } from '@/lib/utils';
+import { formatRestrictionValue } from '@/lib/utils/common';
 import type { ElectionRestriction, RestrictionType } from '@/types/election';
 
 interface ElectionRestrictionsProps {
@@ -42,12 +40,9 @@ export const AccessRestrictions = ({ restrictions }: ElectionRestrictionsProps) 
       </h3>
 
       {hasBypassRequired && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-          <p className="font-body text-sm text-amber-800">
-            Голосування доступне лише за токеном доступу. Зверніться до організатора.
-          </p>
-        </div>
+        <p className="font-body mb-4 flex rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Голосування доступне лише за токеном доступу. Зверніться до організатора.
+        </p>
       )}
 
       <div className="space-y-3.5">

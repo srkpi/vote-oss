@@ -6,7 +6,7 @@ import { invalidateFaq } from '@/lib/cache';
 import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import { deltaToPlainText, parseQuillDelta } from '@/lib/utils';
+import { deltaToPlainText, parseQuillDelta } from '@/lib/utils/common';
 
 /**
  * @swagger

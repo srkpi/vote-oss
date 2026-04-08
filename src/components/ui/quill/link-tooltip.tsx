@@ -4,7 +4,7 @@ import { Check, ExternalLink, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 interface LinkTooltipProps {
   anchorRect: DOMRect;

@@ -9,7 +9,7 @@ import { AdminElectionsClient } from '@/components/elections/admin/admin-electio
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
-import { pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils/common';
 
 export const metadata: Metadata = {
   title: 'Голосування',

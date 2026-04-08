@@ -3,7 +3,7 @@
 import { X } from 'lucide-react';
 import * as React from 'react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 interface DialogProps {
   open: boolean;

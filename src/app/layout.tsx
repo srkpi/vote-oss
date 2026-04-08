@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { Bitter, Onest } from 'next/font/google';
 
 import { APP_NAME, APP_URL } from '@/lib/config/client';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 import { ToastProvider } from '@/providers/toast-provider';
 
 const onest = Onest({

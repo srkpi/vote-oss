@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 
 import { useHydration } from '@/hooks/use-hydration';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate, formatDateTime } from '@/lib/utils/common';
 
 type Props = React.ComponentProps<'time'> & {
   date: string;

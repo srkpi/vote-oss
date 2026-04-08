@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react';
 
 import { useCountdown } from '@/hooks/use-countdown';
 import { useHydration } from '@/hooks/use-hydration';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/common';
 
 interface CountdownTimerProps {
   targetDate: string;

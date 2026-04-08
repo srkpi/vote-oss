@@ -25,7 +25,6 @@ import {
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
-import { parseGroupLevel } from '@/lib/group-utils';
 import { prisma } from '@/lib/prisma';
 import {
   adminCanAccessElection,
@@ -33,6 +32,7 @@ import {
   adminCanRestoreElection,
   checkRestrictions,
 } from '@/lib/restrictions';
+import { parseGroupLevel } from '@/lib/utils/group-utils';
 import {
   computeWinners,
   parseWinningConditions,

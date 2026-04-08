@@ -1,5 +1,9 @@
 import { isAncestorInGraph } from '@/lib/graph';
-import { calculateCourse, parseGroupLevel, parseGroupYearEnteredDigit } from '@/lib/group-utils';
+import {
+  calculateCourse,
+  parseGroupLevel,
+  parseGroupYearEnteredDigit,
+} from '@/lib/utils/group-utils';
 import type { ElectionRestriction } from '@/types/election';
 
 interface UserContext {

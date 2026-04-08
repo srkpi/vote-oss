@@ -1,6 +1,6 @@
 import { Percent, Trophy, Users, Vote } from 'lucide-react';
 
-import { pluralize } from '@/lib/utils';
+import { pluralize } from '@/lib/utils/common';
 import type { WinningConditions } from '@/types/election';
 import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
