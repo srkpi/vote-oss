@@ -138,7 +138,7 @@ export function AnalyticsCharts({
 
       {activeTab === 'dynamics' && (
         <ChartWrapper
-          title={`Динаміка надходження голосів · ${granLabel}`}
+          title="Динаміка надходження голосів"
           onDownload={dynamicsDownloader}
           legend={legendEntries}
         >
@@ -147,17 +147,14 @@ export function AnalyticsCharts({
       )}
 
       {activeTab === 'activity' && (
-        <ChartWrapper
-          title={`Активність голосування · ${granLabel}`}
-          onDownload={activityDownloader}
-        >
+        <ChartWrapper title="Активність голосування" onDownload={activityDownloader}>
           <ActivityChart data={activityData} metrics={metrics} />
         </ChartWrapper>
       )}
 
       {activeTab === 'share' && decryptionDone && (
         <ChartWrapper
-          title={`Еволюція частки голосів · ${granLabel}`}
+          title="Еволюція частки голосів"
           onDownload={shareDownloader}
           legend={legendEntries}
         >

@@ -123,7 +123,7 @@ export function AnalyticsCsvPanel({
           onClick={() => downloadCsv(ballots, decryptedMap, selected, electionId)}
           icon={<Download className="h-3.5 w-3.5" />}
         >
-          Завантажити
+          <span className="hidden sm:inline">Завантажити</span>
         </Button>
       </div>
 
