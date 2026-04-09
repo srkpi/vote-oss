@@ -280,10 +280,11 @@ const spec = createSwaggerSpec({
             deletedAt: { type: 'string', nullable: true, format: 'date-time' },
             choices: {
               type: 'array',
-              items: { $ref: '#/components/schemas/ElectionChoiceResponse' },
+              items: { $ref: '#/components/schemas/ElectionChoiceCreateBody' },
               minItems: ELECTION_CHOICES_MIN,
               maxItems: ELECTION_CHOICES_MAX,
             },
+            shuffleChoices: { type: 'boolean' },
             privateKey: {
               type: 'string',
               description: 'PEM-encoded RSA private key. Only present once the election is closed.',
@@ -314,6 +315,7 @@ const spec = createSwaggerSpec({
               minimun: ELECTION_MIN_CHOICES_MIN,
               maximum: ELECTION_MAX_CHOICES_MAX,
             },
+            shuffleChoices: { type: 'boolean' },
             restrictions: {
               type: 'array',
               items: { $ref: '#/components/schemas/ElectionRestriction' },
@@ -332,6 +334,7 @@ const spec = createSwaggerSpec({
                 'createdAt',
                 'minChoices',
                 'maxChoices',
+                'shuffleChoices',
                 'restrictions',
                 'status',
                 'creator',

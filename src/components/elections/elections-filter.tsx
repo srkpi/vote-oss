@@ -63,7 +63,7 @@ export function ElectionsFilter({ elections, counts }: ElectionsFilterProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} tabCount={tabCount} />
+        <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} tabBadge={tabCount} />
         <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
       </div>
 

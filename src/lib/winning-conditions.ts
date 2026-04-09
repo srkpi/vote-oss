@@ -94,6 +94,10 @@ export function validateWinningConditions(body: unknown): WinningConditions | st
     quorum = val;
   }
 
+  if (!hasMostVotes && reachesPercentage === null && reachesVotes === null && quorum === null) {
+    return 'At least one winning condition must be set';
+  }
+
   return { hasMostVotes, reachesPercentage, reachesVotes, quorum };
 }
 

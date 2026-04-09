@@ -74,8 +74,9 @@ model Election {
   opens_at      DateTime
   closes_at     DateTime
 
-  min_choices   Int    @default(1)
-  max_choices   Int    @default(1)
+  min_choices     Int     @default(1)
+  max_choices     Int     @default(1)
+  shuffle_choices Boolean @default(false)
 
   restrictions  ElectionRestriction[]
   winning_conditions Json @default("{}")

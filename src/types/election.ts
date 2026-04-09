@@ -91,6 +91,7 @@ export interface Election {
   status: ElectionStatus;
   restrictions: ElectionRestriction[];
   winningConditions: WinningConditions;
+  shuffleChoices: boolean;
   minChoices: number;
   maxChoices: number;
   creator: ElectionCreator;
@@ -111,11 +112,6 @@ export interface ElectionDetail extends Election {
   bypassedTypes?: string[];
 }
 
-/**
- * Shape stored in Redis.
- * - `canDelete` and `canRestore` are NOT cached (computed at serve time).
- * - `winningConditions` IS cached but only exposed on the detail route.
- */
 export interface CachedElection {
   id: string;
   title: string;
@@ -135,6 +131,7 @@ export interface CachedElection {
   deletedByUserId: string | null;
   deletedByName: string | null;
   winningConditions: WinningConditions;
+  shuffleChoices: boolean;
 }
 
 export interface ElectionFilters {
@@ -157,6 +154,7 @@ export interface CreateElectionRequest {
   maxChoices?: number;
   restrictions?: CreateElectionRestriction[];
   winningConditions?: Partial<WinningConditions>;
+  shuffleChoices?: boolean;
 }
 
 export interface CreateElectionResponse {
@@ -170,4 +168,5 @@ export interface CreateElectionResponse {
   choices: ElectionChoice[];
   restrictions: ElectionRestriction[];
   winningConditions: WinningConditions;
+  shuffleChoices: boolean;
 }

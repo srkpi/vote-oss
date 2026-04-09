@@ -175,7 +175,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
             tabs={TABS}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            tabCount={(key) => counts[key]}
+            tabBadge={(key) => counts[key]}
           />
           <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
 

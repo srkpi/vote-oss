@@ -92,32 +92,30 @@ export function DecryptionPanel({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          {decryptionDone && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onToggleShow}
-              icon={
-                showDecrypted ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />
-              }
-            >
-              {showDecrypted ? 'Сховати' : 'Показати'}
-            </Button>
-          )}
-          {!decryptionDone && (
-            <Button
-              variant="accent"
-              size="sm"
-              onClick={onDecrypt}
-              loading={isDecrypting}
-              disabled={isDecrypting}
-              icon={<Unlock className="h-3.5 w-3.5" />}
-            >
-              Розшифрувати
-            </Button>
-          )}
-        </div>
+        {decryptionDone && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onToggleShow}
+            icon={
+              showDecrypted ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />
+            }
+          >
+            {showDecrypted ? 'Сховати' : 'Показати'}
+          </Button>
+        )}
+        {!decryptionDone && (
+          <Button
+            variant="accent"
+            size="sm"
+            onClick={onDecrypt}
+            loading={isDecrypting}
+            disabled={isDecrypting}
+            icon={<Unlock className="h-3.5 w-3.5" />}
+          >
+            {isDecrypting ? 'Розшифровуємо…' : 'Розшифрувати'}
+          </Button>
+        )}
       </div>
     </div>
   );

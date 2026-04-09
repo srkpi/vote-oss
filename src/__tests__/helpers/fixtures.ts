@@ -184,6 +184,7 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     closes_at: new Date(now.getTime() + 3_600_000),
     min_choices: 1,
     max_choices: 1,
+    shuffle_choices: false,
     restrictions: [] as { type: string; value: string }[],
     winning_conditions: DEFAULT_WINNING_CONDITIONS as unknown,
     public_key: keys.publicKey,
