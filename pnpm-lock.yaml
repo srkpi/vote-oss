@@ -5,7 +5,11 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  '@hono/node-server@<1.19.13': '>=1.19.13'
+  axios@<1.15.0: '>=1.15.0'
   handlebars@>=4.0.0 <4.7.9: '>=4.7.9'
+  lodash-es@<=4.17.23: '>=4.18.0'
+  lodash-es@>=4.0.0 <=4.17.23: '>=4.18.0'
   lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
   picomatch@<2.3.2: '>=2.3.2'
   picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
@@ -115,11 +119,11 @@ importers:
         specifier: ^5.18.0
         version: 5.18.0
       allure-jest:
-        specifier: ^3.7.0
-        version: 3.7.0(jest-circus@30.3.0)(jest-cli@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3)))(jest-environment-node@30.3.0)(jest@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3)))
+        specifier: ^3.7.1
+        version: 3.7.1(jest-circus@30.3.0)(jest-cli@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3)))(jest-environment-node@30.3.0)(jest@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3)))
       allure-js-commons:
-        specifier: ^3.7.0
-        version: 3.7.0
+        specifier: ^3.7.1
+        version: 3.7.1
       babel-jest:
         specifier: ^30.2.0
         version: 30.3.0(@babel/core@7.29.0)
@@ -1046,12 +1050,6 @@ packages:
 
   '@hiseb/confetti@2.1.0':
     resolution: {integrity: sha512-yPalKd34NfmEsUTXj3ZrlNtj1J21WgoocDs8+92W/Quzl2j5ECuxX5L0jQp16tgvp+uIYdeNAmizP1WPyt5hfQ==}
-
-  '@hono/node-server@1.19.11':
-    resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: ^4
 
   '@hono/node-server@1.19.13':
     resolution: {integrity: sha512-TsQLe4i2gvoTtrHje625ngThGBySOgSK3Xo2XRYOdqGN1teR8+I7vchQC46uLJi8OF62YTYA3AhSpumtkhsaKQ==}
@@ -2858,8 +2856,8 @@ packages:
   ajv@8.18.0:
     resolution: {integrity: sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==}
 
-  allure-jest@3.7.0:
-    resolution: {integrity: sha512-gaHBzlQVIsc9Fvir+WlJ/ipnJW3H4nCDEVftRkzwXJTviNAPt9QhETG5yrqM4cZb1ckSHBQl4gmPvekMHqPN2A==}
+  allure-jest@3.7.1:
+    resolution: {integrity: sha512-pvYH6UPa7wuu6SzMOOQVDKKx9GI64/0I3Dzj3LfBP5iu87yvhnkWQw4HwP34Ge2x+1pdAq/+e5POzb0xRUheGg==}
     peerDependencies:
       jest: '>=24.8.0'
       jest-circus: '>=24.8.0'
@@ -2878,10 +2876,10 @@ packages:
       jest-environment-node:
         optional: true
 
-  allure-js-commons@3.7.0:
-    resolution: {integrity: sha512-cDjqmSIDhpk0AFktb7/qwAk4D3To8S0bmPROq0hS5dDby+uXf6ir4WyXI0HC/rHS9+smidyFHwBod3yIQ8kZ4w==}
+  allure-js-commons@3.7.1:
+    resolution: {integrity: sha512-S8tFymEzgWpp3ITGFu01z2+6KYdiNZC3sX8FbJaNgLoLWBHDBNQ0lq4lTQgkVjV6IN4TIUrnYfa2YuytWpv8WA==}
     peerDependencies:
-      allure-playwright: 3.7.0
+      allure-playwright: 3.7.1
     peerDependenciesMeta:
       allure-playwright:
         optional: true
@@ -2995,8 +2993,8 @@ packages:
     resolution: {integrity: sha512-byD6KPdvo72y/wj2T/4zGEvvlis+PsZsn/yPS3pEO+sFpcrqRpX/TJCxvVaEsNeMrfQbCr7w163YqoD9IYwHXw==}
     engines: {node: '>=4'}
 
-  axios@1.14.0:
-    resolution: {integrity: sha512-3Y8yrqLSwjuzpXuZ0oIYZ/XGgLwUIBU3uLvbcpb0pidD9ctpShJd43KSlEEkVQg6DS0G9NKyzOvBfUtDKEyHvQ==}
+  axios@1.15.0:
+    resolution: {integrity: sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==}
 
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -4807,8 +4805,8 @@ packages:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
 
-  lodash-es@4.17.23:
-    resolution: {integrity: sha512-kVI48u3PZr38HdYz98UmfPnXl2DXrpdctLrFLCd3kOx1xUkOmpFPx7gCWWM5MPkL/fD8zb+Ph0QzjGFs4+hHWg==}
+  lodash-es@4.18.1:
+    resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
   lodash.clonedeep@4.5.0:
     resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
@@ -7554,10 +7552,6 @@ snapshots:
 
   '@hiseb/confetti@2.1.0': {}
 
-  '@hono/node-server@1.19.11(hono@4.12.12)':
-    dependencies:
-      hono: 4.12.12
-
   '@hono/node-server@1.19.13(hono@4.12.12)':
     dependencies:
       hono: 4.12.12
@@ -8066,7 +8060,7 @@ snapshots:
       '@electric-sql/pglite': 0.4.1
       '@electric-sql/pglite-socket': 0.1.1(@electric-sql/pglite@0.4.1)
       '@electric-sql/pglite-tools': 0.3.1(@electric-sql/pglite@0.4.1)
-      '@hono/node-server': 1.19.11(hono@4.12.12)
+      '@hono/node-server': 1.19.13(hono@4.12.12)
       '@prisma/get-platform': 7.2.0
       '@prisma/query-plan-executor': 7.2.0
       '@prisma/streams-local': 0.1.2
@@ -9301,7 +9295,7 @@ snapshots:
       '@swagger-api/apidom-core': 1.10.1
       '@swagger-api/apidom-error': 1.10.1
       '@types/ramda': 0.30.2
-      axios: 1.14.0
+      axios: 1.15.0
       minimatch: 10.2.5
       ramda: 0.30.1
       ramda-adjunct: 5.1.0(ramda@0.30.1)
@@ -9754,9 +9748,9 @@ snapshots:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
-  allure-jest@3.7.0(jest-circus@30.3.0)(jest-cli@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3)))(jest-environment-node@30.3.0)(jest@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3))):
+  allure-jest@3.7.1(jest-circus@30.3.0)(jest-cli@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3)))(jest-environment-node@30.3.0)(jest@30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3))):
     dependencies:
-      allure-js-commons: 3.7.0
+      allure-js-commons: 3.7.1
     optionalDependencies:
       jest: 30.3.0(@types/node@20.19.37)(ts-node@10.9.2(@types/node@20.19.37)(typescript@5.9.3))
       jest-circus: 30.3.0
@@ -9765,7 +9759,7 @@ snapshots:
     transitivePeerDependencies:
       - allure-playwright
 
-  allure-js-commons@3.7.0:
+  allure-js-commons@3.7.1:
     dependencies:
       md5: 2.3.0
 
@@ -9895,7 +9889,7 @@ snapshots:
 
   axe-core@4.11.2: {}
 
-  axios@1.14.0:
+  axios@1.15.0:
     dependencies:
       follow-redirects: 1.15.11
       form-data: 4.0.5
@@ -12002,7 +11996,7 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
-  lodash-es@4.17.23: {}
+  lodash-es@4.18.1: {}
 
   lodash.clonedeep@4.5.0: {}
 
@@ -12642,7 +12636,7 @@ snapshots:
   quill@2.0.3:
     dependencies:
       eventemitter3: 5.0.4
-      lodash-es: 4.17.23
+      lodash-es: 4.18.1
       parchment: 3.0.0
       quill-delta: 5.1.0
 
