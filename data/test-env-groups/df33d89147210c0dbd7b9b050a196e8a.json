@@ -1,0 +1,1 @@
+{"id":"df33d89147210c0dbd7b9b050a196e8a","fullName":"src/__tests__/api/elections/shuffle.test.ts#POST /api/elections — shuffleChoices passes shuffle_choices: true to prisma.election.create","name":"passes shuffle_choices: true to prisma.election.create","status":"passed","testResultsByEnv":{"default":"d33c89d08d85ba772c0d01c0cf3ba16d"}}

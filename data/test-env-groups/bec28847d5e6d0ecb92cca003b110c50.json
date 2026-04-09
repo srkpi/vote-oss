@@ -1,0 +1,1 @@
+{"id":"bec28847d5e6d0ecb92cca003b110c50","fullName":"src/__tests__/api/elections/shuffle.test.ts#shuffleChoicesForUser utility preserves all properties of each choice object","name":"preserves all properties of each choice object","status":"passed","testResultsByEnv":{"default":"afb52a8871a158ad222336e60b2a23f0"}}

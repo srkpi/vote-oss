@@ -1,0 +1,1 @@
+{"id":"24c2138033eabfd43e1c163b1ef713f7","fullName":"src/__tests__/api/elections/shuffle.test.ts#GET /api/elections — shuffleChoices includes shuffleChoices: true when enabled","name":"includes shuffleChoices: true when enabled","status":"passed","testResultsByEnv":{"default":"d6c170485aa841b21dab41b29a66e5eb"}}

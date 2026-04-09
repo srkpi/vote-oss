@@ -1,0 +1,1 @@
+{"id":"aa2d85e3ea13ba69913259fea3c48197","fullName":"src/__tests__/api/elections/shuffle.test.ts#POST /api/elections — shuffleChoices creates election with shuffleChoices: true when requested","name":"creates election with shuffleChoices: true when requested","status":"passed","testResultsByEnv":{"default":"f781cfc5ae6fc31dd2fb63c8297a6507"}}
