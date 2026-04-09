@@ -315,12 +315,12 @@ export default async function HomePage() {
           />
         </svg>
 
-        <div className="container flex flex-col items-center">
+        <div className="flex flex-col items-center px-2">
           <VisitorCounter
             name={APP_NAME}
             scale={1.2}
             darkmode={false}
-            className="mt-4 mb-4 lg:mt-0"
+            className="mt-4 mb-4 md:mt-0 lg:-mt-2 xl:-mt-4 2xl:-mt-6"
           />
         </div>
       </footer>
