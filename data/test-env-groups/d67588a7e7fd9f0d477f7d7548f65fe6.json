@@ -1,1 +1,1 @@
-{"id":"d67588a7e7fd9f0d477f7d7548f65fe6","fullName":"src/__tests__/lib/jwt.test.ts#jwt signAccessToken returns a token string and a jti UUID","name":"returns a token string and a jti UUID","status":"passed","testResultsByEnv":{"default":"dfb86edadf91628c952dd18c94d542da"}}
+{"id":"d67588a7e7fd9f0d477f7d7548f65fe6","fullName":"src/__tests__/lib/jwt.test.ts#jwt signAccessToken returns a token string and a jti UUID","name":"returns a token string and a jti UUID","status":"passed","testResultsByEnv":{"default":"a7ba7eb049efd7433ad162ce5004c0fc"}}
