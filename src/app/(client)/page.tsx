@@ -5,6 +5,7 @@ import { AnimatedGrid } from '@/components/common/animated-grid';
 import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
 import { StatItem } from '@/components/landing/stat-item';
+import { VisitorCounter } from '@/components/landing/visitor-counter';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { APP_NAME } from '@/lib/config/client';
@@ -297,6 +298,32 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <footer className="bg-white">
+        {/* Mirrored wave — navy flows into white */}
+        <svg
+          viewBox="0 0 1440 52"
+          xmlns="http://www.w3.org/2000/svg"
+          className="block w-full"
+          preserveAspectRatio="none"
+          style={{ display: 'block', marginTop: '-1px' }}
+          aria-hidden="true"
+        >
+          <path
+            d="M0 0L1440 0L1440 52C1440 52 1152 14 720 14C288 14 0 52 0 52L0 0Z"
+            fill="#1c396e"
+          />
+        </svg>
+
+        <div className="flex flex-col items-center px-2">
+          <VisitorCounter
+            name={APP_NAME}
+            scale={1.2}
+            darkmode={false}
+            className="mt-4 mb-4 md:mt-0 lg:-mt-2 xl:-mt-4 2xl:-mt-6"
+          />
+        </div>
+      </footer>
     </>
   );
 }
