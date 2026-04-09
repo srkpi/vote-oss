@@ -32,14 +32,9 @@ export function WinningConditionsSection({
           onChange={(e) => set({ hasMostVotes: e.target.checked })}
           className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
         />
-        <div>
-          <span className="font-body text-foreground text-sm font-medium">
-            Найбільша кількість голосів
-          </span>
-          <p className="font-body text-muted-foreground text-xs">
-            Варіант з найбільшою кількістю голосів перемагає
-          </p>
-        </div>
+        <span className="font-body text-foreground text-sm font-medium">
+          Найбільша кількість голосів
+        </span>
       </label>
 
       <div className="space-y-2">
@@ -137,22 +132,17 @@ export function WinningConditionsSection({
             onChange={(e) => set({ quorumEnabled: e.target.checked })}
             className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
           />
-          <div>
-            <span className="font-body text-foreground text-sm font-medium">
-              Кворум{' '}
-              {state.quorumEnabled ? (
-                <>
-                  <span className="text-kpi-navy">{state.quorum}</span>{' '}
-                  {pluralize(state.quorum, ['голос', 'голоси', 'голосів'], false)}
-                </>
-              ) : (
-                'N голосів'
-              )}
-            </span>
-            <p className="font-body text-muted-foreground text-xs">
-              Якщо кворум не досягнуто, переможці не визначаються
-            </p>
-          </div>
+          <span className="font-body text-foreground text-sm font-medium">
+            Кворум{' '}
+            {state.quorumEnabled ? (
+              <>
+                <span className="text-kpi-navy">{state.quorum}</span>{' '}
+                {pluralize(state.quorum, ['голос', 'голоси', 'голосів'], false)}
+              </>
+            ) : (
+              'N голосів'
+            )}
+          </span>
         </label>
 
         {state.quorumEnabled && (

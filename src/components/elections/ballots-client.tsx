@@ -18,6 +18,8 @@ import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
+import type { Tab } from '@/components/ui/tabs';
+import { Tabs } from '@/components/ui/tabs';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
@@ -32,6 +34,11 @@ interface BallotsClientProps {
 const PAGE_SIZE = 20;
 
 type ActiveTab = 'ballots' | 'analytics';
+
+const tabs: Tab<ActiveTab>[] = [
+  { key: 'ballots', label: 'Бюлетені', icon: <FileText className="h-3.5 w-3.5" /> },
+  { key: 'analytics', label: 'Аналітика', icon: <BarChart2 className="h-3.5 w-3.5" /> },
+];
 
 export function BallotsClient({ initialData }: BallotsClientProps) {
   const { ballots, election } = initialData;
@@ -223,38 +230,17 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
         />
       )}
 
-      {/* ── Tab toggle ──────────────────────────────────────────── */}
-      <div className="border-border-subtle bg-surface flex w-fit items-center gap-1 rounded-xl border p-1">
-        <button
-          onClick={() => setActiveTab('ballots')}
-          className={cn(
-            'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150',
-            activeTab === 'ballots'
-              ? 'text-kpi-navy shadow-shadow-xs bg-white'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
-          <FileText className="h-3.5 w-3.5" />
-          Бюлетені
-        </button>
-        <button
-          onClick={() => setActiveTab('analytics')}
-          className={cn(
-            'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150',
-            activeTab === 'analytics'
-              ? 'text-kpi-navy shadow-shadow-xs bg-white'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
-          <BarChart2 className="h-3.5 w-3.5" />
-          Аналітика
-          {decryptionDone && (
-            <span className="bg-kpi-navy/10 text-kpi-navy rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
-              Повна
-            </span>
-          )}
-        </button>
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        tabBadge={(key) => {
+          if (key === 'analytics' && decryptionDone) {
+            return 'Повна';
+          }
+          return null;
+        }}
+      />
 
       {activeTab === 'analytics' && (
         <AnalyticsPanel

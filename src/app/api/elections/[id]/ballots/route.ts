@@ -8,6 +8,7 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
+import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import type { ElectionRestriction } from '@/types/election';
 
 /**
@@ -79,9 +80,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deleted_at: found.deletedAt,
       restrictions: found.restrictions as ElectionRestriction[],
       choices: found.choices,
+      shuffle_choices: found.shuffleChoices ?? false,
     };
   } else {
-    electionData = await prisma.election.findUnique({
+    const dbElection = await prisma.election.findUnique({
       where: { id: electionId },
       select: {
         id: true,
@@ -90,6 +92,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         closes_at: true,
         private_key: true,
         deleted_at: true,
+        shuffle_choices: true,
         restrictions: { select: { type: true, value: true } },
         choices: {
           select: { id: true, choice: true, position: true },
@@ -98,7 +101,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
 
-    if (!electionData) return Errors.notFound('Election not found');
+    if (!dbElection) return Errors.notFound('Election not found');
+
+    electionData = {
+      ...dbElection,
+      restrictions: dbElection.restrictions as ElectionRestriction[],
+    };
   }
 
   const { user } = auth;
@@ -136,6 +144,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     orderBy: { created_at: 'asc' },
   });
 
+  let choices = electionData.choices.map((c) => ({
+    id: c.id,
+    choice: c.choice,
+    position: c.position,
+  }));
+
+  if (electionData.shuffle_choices) {
+    choices = shuffleChoicesForUser(choices, user.sub, electionId);
+  }
+
   return NextResponse.json({
     election: {
       id: electionData.id,
@@ -143,11 +161,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       status,
       ballotCount: ballots.length,
       deletedAt: electionData.deleted_at,
-      choices: electionData.choices.map((c) => ({
-        id: c.id,
-        choice: c.choice,
-        position: c.position,
-      })),
+      shuffleChoices: electionData.shuffle_choices,
+      choices,
       ...(isClosed && { privateKey: decryptField(electionData.private_key) }),
     },
     ballots: ballots.map((b) => ({

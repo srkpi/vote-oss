@@ -130,8 +130,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedForms, setSelectedForms] = useState<string[]>([]);
   const [selectedLevelCourses, setSelectedLevelCourses] = useState<string[]>([]);
-  /** When true, the BYPASS_REQUIRED restriction is added (nobody can vote without a token) */
   const [bypassRequired, setBypassRequired] = useState(false);
+  const [shuffleChoices, setShuffleChoices] = useState(false);
   const [choices, setChoices] = useState(['', '']);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -315,6 +315,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       maxChoices: form.maxChoices,
       restrictions,
       winningConditions: wcStateToPayload(winningConditionsState),
+      shuffleChoices,
     });
 
     if (result.success) {
@@ -461,6 +462,20 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             Додати варіант
           </Button>
         )}
+
+        <div className="mt-6">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={shuffleChoices}
+              onChange={(e) => setShuffleChoices(e.target.checked)}
+              className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+            />
+            <span className="font-body text-foreground text-sm font-medium">
+              Перемішувати варіанти
+            </span>
+          </label>
+        </div>
 
         {/* Min/Max choices */}
         <div className="mt-6">
@@ -658,25 +673,17 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             />
           </FormField>
 
-          <div className="border-border-color rounded-xl border bg-white p-4">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={bypassRequired}
-                onChange={(e) => setBypassRequired(e.target.checked)}
-                className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
-              />
-              <div className="min-w-0 flex-1">
-                <span className="font-body text-foreground text-sm font-medium">
-                  Доступ лише за токеном
-                </span>
-                <p className="font-body text-muted-foreground mt-1 text-xs">
-                  Ніхто не може проголосувати без персонального токена доступу від організатора.
-                  Видайте токени через панель «Токени доступу» після створення.
-                </p>
-              </div>
-            </label>
-          </div>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={bypassRequired}
+              onChange={(e) => setBypassRequired(e.target.checked)}
+              className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+            />
+            <span className="font-body text-foreground text-sm font-medium">
+              Доступ лише за токеном
+            </span>
+          </label>
         </div>
       </section>
 

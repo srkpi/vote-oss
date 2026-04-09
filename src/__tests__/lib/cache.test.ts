@@ -46,6 +46,7 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
   closesAt: new Date(Date.now() + 3_600_000).toISOString(),
   minChoices: 1,
   maxChoices: 1,
+  shuffleChoices: false,
   restrictions: [],
   publicKey: '-----BEGIN PUBLIC KEY-----\nfake\n-----END PUBLIC KEY-----',
   privateKey: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----',

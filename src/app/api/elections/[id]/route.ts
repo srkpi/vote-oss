@@ -16,6 +16,7 @@ import {
   checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
+import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import { computeWinners, parseWinningConditions } from '@/lib/winning-conditions';
 import type { ElectionRestriction, TallyResult, WinningConditions } from '@/types/election';
 import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
@@ -140,27 +141,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { user } = auth;
   const isAdmin = user.isAdmin ?? false;
 
-  let electionData: {
-    id: string;
-    title: string;
-    createdAt: Date;
-    opensAt: Date;
-    closesAt: Date;
-    minChoices: number;
-    maxChoices: number;
-    publicKey: string;
-    privateKey: string;
-    restrictions: ElectionRestriction[];
-    creator: { fullName: string; faculty: string };
-    choices: { id: string; choice: string; position: number; voteCount: number | null }[];
-    ballotCount: number;
-    createdBy: string;
-    deletedAt: Date | null;
-    deletedByUserId: string | null;
-    deletedByName: string | null;
-    winningConditions: WinningConditions;
-  };
-
+  let electionData;
   const cached = await getCachedElections();
 
   if (cached) {
@@ -186,6 +167,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedByUserId: found.deletedByUserId,
       deletedByName: found.deletedByName,
       winningConditions: found.winningConditions ?? { ...DEFAULT_WINNING_CONDITIONS },
+      shuffleChoices: found.shuffleChoices ?? false,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -225,6 +207,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedByUserId: dbElection.deleted_by,
       deletedByName: dbElection.deleter?.full_name ?? null,
       winningConditions: parseWinningConditions(dbElection.winning_conditions),
+      shuffleChoices: dbElection.shuffle_choices,
     };
   }
 
@@ -332,7 +315,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
-  const choices = electionData.choices.map((c) => {
+  let choices = electionData.choices.map((c) => {
     const base = { id: c.id, choice: c.choice, position: c.position };
     if (isClosed && tallyResults) {
       const r = tallyMap.get(c.id);
@@ -340,6 +323,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
     return base;
   });
+
+  if (electionData.shuffleChoices) {
+    choices = shuffleChoicesForUser(choices, user.sub, electionId);
+  }
 
   return NextResponse.json({
     id: electionData.id,
@@ -358,6 +345,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     choices,
     ballotCount: electionData.ballotCount,
     winningConditions,
+    shuffleChoices: electionData.shuffleChoices,
     hasVoted,
     bypassedTypes: bypassedTypes ?? [],
     ...(isAdmin && {

@@ -17,6 +17,7 @@ export interface BallotsElection {
   choices: ElectionChoice[];
   privateKey?: string;
   deletedAt: string | null;
+  shuffleChoices: boolean;
 }
 
 export interface BallotsResponse {

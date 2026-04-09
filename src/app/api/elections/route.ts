@@ -33,6 +33,7 @@ import {
   checkRestrictions,
 } from '@/lib/restrictions';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
+import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import {
   computeWinners,
   parseWinningConditions,
@@ -111,6 +112,7 @@ type AdminContext = {
 function toClientElections(
   cached: CachedElection[],
   user: {
+    sub: string;
     faculty: string;
     group: string;
     speciality?: string;
@@ -145,7 +147,8 @@ function toClientElections(
         : null;
       const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
 
-      const choices = e.choices.map((c) => {
+      // Build choices with tally data, then apply shuffle if enabled
+      let choices = e.choices.map((c) => {
         const base = { id: c.id, choice: c.choice, position: c.position };
         if (tallyResults) {
           const r = tallyMap.get(c.id);
@@ -153,6 +156,10 @@ function toClientElections(
         }
         return base;
       });
+
+      if (e.shuffleChoices) {
+        choices = shuffleChoicesForUser(choices, user.sub, e.id);
+      }
 
       const base: Election = {
         id: e.id,
@@ -163,6 +170,7 @@ function toClientElections(
         status,
         restrictions: e.restrictions,
         winningConditions: e.winningConditions,
+        shuffleChoices: e.shuffleChoices,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
         creator: e.creator,
@@ -264,6 +272,7 @@ export async function GET(req: NextRequest) {
       toClientElections(
         cached,
         {
+          sub: user.sub,
           faculty: user.faculty,
           group: user.group,
           speciality: user.speciality,
@@ -292,6 +301,7 @@ export async function GET(req: NextRequest) {
       public_key: true,
       private_key: true,
       winning_conditions: true,
+      shuffle_choices: true,
       creator: { select: { full_name: true, faculty: true } },
       deleter: { select: { full_name: true } },
       choices: {
@@ -317,6 +327,7 @@ export async function GET(req: NextRequest) {
     publicKey: e.public_key,
     privateKey: e.private_key,
     winningConditions: parseWinningConditions(e.winning_conditions),
+    shuffleChoices: e.shuffle_choices,
     creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
     choices: e.choices.map((c) => ({
       id: c.id,
@@ -337,6 +348,7 @@ export async function GET(req: NextRequest) {
     toClientElections(
       rawResult,
       {
+        sub: user.sub,
         faculty: user.faculty,
         group: user.group,
         speciality: user.speciality,
@@ -407,6 +419,7 @@ export async function POST(req: NextRequest) {
     maxChoices?: number;
     restrictions?: CreateElectionRestriction[];
     winningConditions?: unknown;
+    shuffleChoices?: boolean;
   };
 
   try {
@@ -419,6 +432,7 @@ export async function POST(req: NextRequest) {
   const minChoices = body.minChoices ?? ELECTION_MIN_CHOICES_MIN;
   const maxChoices = body.maxChoices ?? ELECTION_MIN_CHOICES_MIN;
   const restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
+  const shuffleChoices = body.shuffleChoices === true;
 
   // ── Basic field validation ────────────────────────────────────────────────
 
@@ -607,6 +621,7 @@ export async function POST(req: NextRequest) {
       public_key: publicKey,
       private_key: encryptedPrivateKey,
       winning_conditions: winningConditions,
+      shuffle_choices: shuffleChoices,
       choices: {
         create: choices.map((choice, i) => ({ choice, position: i })),
       },
@@ -622,6 +637,15 @@ export async function POST(req: NextRequest) {
 
   await invalidateElections();
 
+  let responseChoices = election.choices.map((c) => ({
+    id: c.id,
+    choice: c.choice,
+    position: c.position,
+  }));
+  if (shuffleChoices) {
+    responseChoices = shuffleChoicesForUser(responseChoices, user.sub, election.id);
+  }
+
   return NextResponse.json(
     {
       id: election.id,
@@ -633,10 +657,11 @@ export async function POST(req: NextRequest) {
       maxChoices: election.max_choices,
       restrictions: election.restrictions,
       winningConditions,
+      shuffleChoices,
       status: computeStatus(election.opens_at, election.closes_at),
       publicKey: election.public_key,
       creator: { fullName: admin.full_name, faculty: admin.faculty },
-      choices: election.choices.map((c) => ({ id: c.id, choice: c.choice, position: c.position })),
+      choices: responseChoices,
       ballotCount: 0,
       deletedAt: null,
       deletedBy: null,
