@@ -219,7 +219,7 @@ export default async function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="bg-white py-20">
+      <section className="relative z-20 -mt-px bg-white py-20">
         <div className="container">
           <h2 className="font-display text-foreground mb-8 text-center text-4xl font-bold">
             Чому {APP_NAME}?
@@ -270,7 +270,7 @@ export default async function HomePage() {
       )}
 
       {/* Stats */}
-      <section className="bg-kpi-navy relative overflow-hidden py-20">
+      <section className="bg-kpi-navy relative overflow-hidden py-20 md:pb-25 2xl:pb-30">
         <AnimatedGrid variant="dark" cellSize={56} />
 
         <div
@@ -297,24 +297,16 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+
+        {/* Bottom wave */}
+        <div className="absolute right-0 bottom-0 left-0 z-10">
+          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 48C0 48 288 12 720 12C1152 12 1440 48 1440 48L0 48Z" fill="white" />
+          </svg>
+        </div>
       </section>
 
-      <footer className="bg-white">
-        {/* Mirrored wave — navy flows into white */}
-        <svg
-          viewBox="0 0 1440 52"
-          xmlns="http://www.w3.org/2000/svg"
-          className="block w-full"
-          preserveAspectRatio="none"
-          style={{ display: 'block', marginTop: '-1px' }}
-          aria-hidden="true"
-        >
-          <path
-            d="M0 0L1440 0L1440 52C1440 52 1152 14 720 14C288 14 0 52 0 52L0 0Z"
-            fill="#1c396e"
-          />
-        </svg>
-
+      <footer className="relative z-20 -mt-px bg-white">
         <div className="flex flex-col items-center px-2">
           <VisitorCounter
             name={APP_NAME}
