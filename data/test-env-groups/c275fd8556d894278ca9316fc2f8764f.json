@@ -1,1 +1,1 @@
-{"id":"c275fd8556d894278ca9316fc2f8764f","fullName":"src/__tests__/api/admins/invite/get.test.ts#GET /api/admins/invite returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"53f9692962e23be77d8a3d32ba88ad84"}}
+{"id":"c275fd8556d894278ca9316fc2f8764f","fullName":"src/__tests__/api/admins/invite/get.test.ts#GET /api/admins/invite returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"d6d9cc7e7d7731f9f5f39c3034e57453"}}

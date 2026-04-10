@@ -1,1 +1,1 @@
-{"id":"3aab447444c076764251fe6ce2b7eae5","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] returns 400 for a non-uuid id","name":"returns 400 for a non-uuid id","status":"passed","testResultsByEnv":{"default":"47a31c705e52159c0600a4023ab8b64d"}}
+{"id":"3aab447444c076764251fe6ce2b7eae5","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] returns 400 for a non-uuid id","name":"returns 400 for a non-uuid id","status":"passed","testResultsByEnv":{"default":"c86a1025fecc9f1b1b02d3e0f8f68de8"}}
