@@ -169,6 +169,17 @@ describe('kpi-id module', () => {
       expect((res as any).userId).toBe('user-123');
     });
 
+    it('success for students on academic leave', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, status: 'OnAcademicLeave' }),
+      });
+
+      const res = await getCampusUserData(mockKpiData);
+      expect(res).not.toBeInstanceOf(NextResponse);
+      expect((res as any).userId).toBe('user-123');
+    });
+
     it('returns 403 Forbidden for NotStudyingError if no bypass exists', async () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
