@@ -173,7 +173,7 @@ export async function resolveUserData(
   }
 
   const errors = [];
-  if (campusData.status !== 'Studying') {
+  if (campusData.status !== 'Studying' && campusData.status !== 'OnAcademicLeave') {
     errors.push(new NotStudyingError());
   }
 

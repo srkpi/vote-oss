@@ -15,7 +15,7 @@ export interface KpiIdUserInfo {
 export interface CampusUserInfo {
   groupName: string;
   faculty: string;
-  status: 'Studying' | 'Dismissed';
+  status: 'Studying' | 'OnAcademicLeave' | 'Dismissed';
   studyForm: StudyFormValue;
   studyYear: StudyYearValue;
   speciality: string;
