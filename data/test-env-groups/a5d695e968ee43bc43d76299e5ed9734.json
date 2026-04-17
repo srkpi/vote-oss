@@ -1,1 +1,1 @@
-{"id":"a5d695e968ee43bc43d76299e5ed9734","fullName":"src/__tests__/lib/cache.test.ts#cache setCachedElections does not throw when Redis is unavailable","name":"does not throw when Redis is unavailable","status":"passed","testResultsByEnv":{"default":"76197bb6b1f2f5787a3a9701291d1967"}}
+{"id":"a5d695e968ee43bc43d76299e5ed9734","fullName":"src/__tests__/lib/cache.test.ts#cache setCachedElections does not throw when Redis is unavailable","name":"does not throw when Redis is unavailable","status":"passed","testResultsByEnv":{"default":"e0d76c9f07ec8557d4b617e7f76d7aca"}}

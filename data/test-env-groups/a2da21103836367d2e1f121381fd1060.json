@@ -1,1 +1,1 @@
-{"id":"a2da21103836367d2e1f121381fd1060","fullName":"src/__tests__/lib/group-utils.test.ts#parseGroupStudyFormLetter returns \"о\" for Remote groups","name":"returns \"о\" for Remote groups","status":"passed","testResultsByEnv":{"default":"89eb2553894ea91a1c5912a403b8a61a"}}
+{"id":"a2da21103836367d2e1f121381fd1060","fullName":"src/__tests__/lib/group-utils.test.ts#parseGroupStudyFormLetter returns \"о\" for Remote groups","name":"returns \"о\" for Remote groups","status":"passed","testResultsByEnv":{"default":"fe7991162d045750782227c0bc4c727c"}}
