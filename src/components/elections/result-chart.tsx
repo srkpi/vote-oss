@@ -3,6 +3,7 @@
 import { Crown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { Alert } from '@/components/ui/alert';
 import { calculateVotePercentage, cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
 import type { ElectionChoice } from '@/types/election';
@@ -156,6 +157,12 @@ export function ResultsChart({
           );
         })}
       </div>
+
+      {!choices.some((c) => c.winner === true) && (
+        <Alert variant="warning" title="Переможця не визначено">
+          {choices.length === 1 ? 'Варіант' : 'Жоден з варіантів'} не виконав умови для перемоги
+        </Alert>
+      )}
     </div>
   );
 }
