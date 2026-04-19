@@ -11,7 +11,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(dateString: string, options?: Intl.DateTimeFormatOptions): string {
+export function formatDate(
+  dateString: string | number,
+  options?: Intl.DateTimeFormatOptions,
+): string {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('uk-UA', {
     day: 'numeric',
@@ -21,7 +24,7 @@ export function formatDate(dateString: string, options?: Intl.DateTimeFormatOpti
   }).format(date);
 }
 
-export function formatDateTime(dateString: string): string {
+export function formatDateTime(dateString: string | number): string {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('uk-UA', {
     day: 'numeric',
