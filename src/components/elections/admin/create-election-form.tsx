@@ -152,6 +152,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   }, [selectedFaculties, facultyGroups, selectedForms, selectedLevelCourses]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedGroups((prev) => prev.filter((g) => availableGroups.includes(g)));
   }, [availableGroups]);
 

@@ -66,6 +66,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
 
   useEffect(() => {
     const record = getVote(electionId);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMyVoteRecord(record);
   }, [electionId]);
 
@@ -148,6 +149,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
     if (!myVoteRecord) return;
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPage(Math.floor(idx / PAGE_SIZE) + 1);
     }
   }, [myVoteRecord, filteredBallots]);

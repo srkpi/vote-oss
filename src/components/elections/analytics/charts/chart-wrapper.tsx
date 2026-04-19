@@ -36,6 +36,7 @@ function DeferredChartArea({
 
   useEffect(() => {
     // Reset on re-mount (tab switch remounts this component).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasSize(false);
 
     let rafId: number | undefined = undefined;
