@@ -1,6 +1,15 @@
 'use client';
 
-import { Check, ChevronDown, ChevronRight, Copy, Key, Plus, Trash2, UserX } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  UserX,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -346,7 +355,7 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
       <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="navy-gradient flex h-8 w-8 items-center justify-center rounded-lg">
-            <Key className="h-4 w-4 text-white" />
+            <ShieldCheck className="h-4 w-4 text-white" />
           </div>
           <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
             Глобальні токени доступу
@@ -371,7 +380,7 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
 
         {tokens.length === 0 ? (
           <EmptyState
-            icon={<Key className="h-8 w-8" />}
+            icon={<ShieldCheck className="h-8 w-8" />}
             title="Активних токенів доступу немає"
             description="Створіть токен для студента, що має проблему з входом у платформу"
           />

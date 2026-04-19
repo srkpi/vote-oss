@@ -23,21 +23,14 @@ export const buildMedianMetric: MetricBuilder = ({ metrics, totalBallots }) => {
   const isExtremeLate = mp > 85;
   const isMid = mp >= 35 && mp <= 65;
 
-  // ── Card-level interpretation ────────────────────────────────────────────────
-  // For ongoing elections, suffix clarifies that "time" means elapsed time, not
-  // full scheduled duration — otherwise e.g. "в перших 2% часу" is meaningless
-  // when the election window is 48 h but only 2 h have passed.
-
-  const timeSuffix = isElectionClosed ? '' : ' минулого часу';
-
   let interpretation: string;
 
   if (isExtremeEarly) {
-    interpretation = `Лавина на старті — половина голосів надійшла вже в перших ${mp.toFixed(0)}%${timeSuffix}`;
+    interpretation = `Лавина на старті — половина голосів надійшла вже в перших ${mp.toFixed(0)}% часу`;
   } else if (isEarly) {
-    interpretation = `Рання хвиля — більшість учасників проголосувала в першій третині${timeSuffix}`;
+    interpretation = `Рання хвиля — більшість учасників проголосувала в першій третині часу`;
   } else if (isExtremeLate) {
-    interpretation = `Фінальний ривок — половина голосів зібрана лише в останніх ${(100 - mp).toFixed(0)}%${timeSuffix}`;
+    interpretation = `Фінальний ривок — половина голосів зібрана лише в останніх ${(100 - mp).toFixed(0)}% часу`;
   } else if (isLate) {
     interpretation = `Пізня хвиля — активність наростала й пришвидшилась наприкінці`;
   } else {
@@ -57,7 +50,7 @@ export const buildMedianMetric: MetricBuilder = ({ metrics, totalBallots }) => {
   // scheduled duration, so "40% of time" means 40% of what has already passed.
   const ongoingContext = isElectionClosed
     ? ''
-    : ` Оскільки голосування ще триває, відсоток розраховано відносно вже минулого часу від відкриття, а не від повної запланованої тривалості.`;
+    : ` Оскільки голосування ще триває, відсоток розраховано відносно поточного часу з моменту відкриття опитування, а не від повної запланованої тривалості.`;
 
   let insight: string;
 
@@ -121,7 +114,7 @@ export const buildMedianMetric: MetricBuilder = ({ metrics, totalBallots }) => {
     ? 'Показує, на якій часовій позначці (у відсотках від загальної тривалості) надійшов рівно 50-й відсоток бюлетенів. ' +
       'Низьке значення — рання хвиля, коли більшість поспішила проголосувати одразу; ' +
       'високе — аудиторія відклала участь до останнього.'
-    : 'Показує, на якій позначці відносно вже минулого часу надійшов рівно 50-й відсоток бюлетенів. ' +
+    : 'Показує, на якій позначці відносно часу з моменту відкриття опитування надійшов рівно 50-й відсоток бюлетенів. ' +
       'Оскільки голосування ще триває, відлік ведеться від відкриття до поточного моменту, а не до запланованого закриття. ' +
       'Низьке значення — рання хвиля; високе — активність зростала з часом.';
 
