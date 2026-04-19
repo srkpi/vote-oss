@@ -32,6 +32,8 @@ function ShareChartInner({
   height,
 }: Omit<ShareChartProps, 'exportSize'> & { width?: number; height?: number }) {
   const sizeProps = width != null && height != null ? { width, height } : {};
+  const tickMap = Object.fromEntries(data.map((d) => [d.ms, d.label]));
+  const ticks = data.map((d) => d.ms);
 
   return (
     <AreaChart {...sizeProps} data={data} margin={{ top: 8, right: 20, left: -8, bottom: 0 }}>
@@ -54,7 +56,12 @@ function ShareChartInner({
 
       <CartesianGrid strokeDasharray="3 3" stroke="#ecf0f7" vertical={false} />
       <XAxis
-        dataKey="label"
+        dataKey="ms"
+        type="number"
+        scale="time"
+        domain={['dataMin', 'dataMax']}
+        ticks={ticks}
+        tickFormatter={(ms: number) => tickMap[ms] ?? ''}
         tick={AXIS_STYLE}
         tickLine={false}
         axisLine={{ stroke: '#ecf0f7' }}
