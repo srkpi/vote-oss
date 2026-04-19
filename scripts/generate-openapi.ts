@@ -284,6 +284,16 @@ const spec = createSwaggerSpec({
               minItems: ELECTION_CHOICES_MIN,
               maxItems: ELECTION_CHOICES_MAX,
             },
+            minChoices: {
+              type: 'integer',
+              minimun: ELECTION_MIN_CHOICES_MIN,
+              maximum: ELECTION_MAX_CHOICES_MAX,
+            },
+            maxChoices: {
+              type: 'integer',
+              minimun: ELECTION_MIN_CHOICES_MIN,
+              maximum: ELECTION_MAX_CHOICES_MAX,
+            },
             shuffleChoices: { type: 'boolean' },
             privateKey: {
               type: 'string',

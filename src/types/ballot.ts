@@ -18,6 +18,8 @@ export interface BallotsElection {
   privateKey?: string;
   deletedAt: string | null;
   shuffleChoices: boolean;
+  minChoices: number;
+  maxChoices: number;
 }
 
 export interface BallotsResponse {

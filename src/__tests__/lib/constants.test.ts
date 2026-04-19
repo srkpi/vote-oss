@@ -35,8 +35,8 @@ describe('constants', () => {
       expect(ELECTION_CHOICES_MIN).toBeLessThan(ELECTION_CHOICES_MAX);
     });
 
-    it('ELECTION_CHOICES_MIN is at least 2', () => {
-      expect(ELECTION_CHOICES_MIN).toBeGreaterThanOrEqual(2);
+    it('ELECTION_CHOICES_MIN is at least 1', () => {
+      expect(ELECTION_CHOICES_MIN).toBeGreaterThanOrEqual(1);
     });
 
     it('ELECTION_MIN_CHOICES_MIN <= ELECTION_MAX_CHOICES_MAX', () => {

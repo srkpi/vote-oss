@@ -48,7 +48,7 @@ export function AnalyticsCharts({
   const tabs = [
     { key: 'dynamics' as const, label: 'Динаміка' },
     { key: 'activity' as const, label: 'Активність' },
-    ...(decryptionDone ? [{ key: 'share' as const, label: 'Частка' }] : []),
+    ...(decryptionDone && choices.length > 1 ? [{ key: 'share' as const, label: 'Частка' }] : []),
   ];
 
   const granLabel = GRANULARITY_LABEL[granularity];
@@ -116,6 +116,7 @@ export function AnalyticsCharts({
             data={shareEvolution}
             choices={choices}
             exportSize={{ width: w, height: h }}
+            isMultiChoice={election.maxChoices > 1}
           />
         ),
         election,
@@ -158,7 +159,11 @@ export function AnalyticsCharts({
           onDownload={shareDownloader}
           legend={legendEntries}
         >
-          <ShareChart data={shareEvolution} choices={choices} />
+          <ShareChart
+            data={shareEvolution}
+            choices={choices}
+            isMultiChoice={election.maxChoices > 1}
+          />
         </ChartWrapper>
       )}
     </div>

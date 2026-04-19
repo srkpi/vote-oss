@@ -318,12 +318,6 @@ describe('POST /api/elections', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when fewer than 2 choices are provided', async () => {
-    const req = await makeAdminReq({ ...validBody, choices: ['Only one'] });
-    const res = await POST(req);
-    expect(res.status).toBe(400);
-  });
-
   it('returns 400 when closesAt is before opensAt', async () => {
     const req = await makeAdminReq({
       ...validBody,

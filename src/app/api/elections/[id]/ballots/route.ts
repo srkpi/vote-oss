@@ -80,6 +80,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deleted_at: found.deletedAt,
       restrictions: found.restrictions as ElectionRestriction[],
       choices: found.choices,
+      min_choices: found.minChoices,
+      max_choices: found.maxChoices,
       shuffle_choices: found.shuffleChoices ?? false,
     };
   } else {
@@ -98,6 +100,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           select: { id: true, choice: true, position: true },
           orderBy: { position: 'asc' },
         },
+        min_choices: true,
+        max_choices: true,
       },
     });
 
@@ -163,6 +167,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedAt: electionData.deleted_at,
       shuffleChoices: electionData.shuffle_choices,
       choices,
+      minChoices: electionData.min_choices,
+      maxChoices: electionData.max_choices,
       ...(isClosed && { privateKey: decryptField(electionData.private_key) }),
     },
     ballots: ballots.map((b) => ({

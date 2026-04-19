@@ -443,10 +443,17 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
   }
   if (choices.length < ELECTION_CHOICES_MIN) {
+    if (ELECTION_CHOICES_MIN === 1) {
+      return Errors.badRequest(`At least 1 choice is required`);
+    }
+
     return Errors.badRequest(`At least ${ELECTION_CHOICES_MIN} choices are required`);
   }
   if (choices.length > ELECTION_CHOICES_MAX) {
     return Errors.badRequest(`At most ${ELECTION_CHOICES_MAX} choices are allowed`);
+  }
+  if (choices.length === 1 && shuffleChoices) {
+    return Errors.badRequest(`Shuffle choices impossible for 1 choice election`);
   }
   const tooLongChoice = choices.find((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
   if (tooLongChoice) {
