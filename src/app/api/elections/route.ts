@@ -452,6 +452,9 @@ export async function POST(req: NextRequest) {
   if (choices.length > ELECTION_CHOICES_MAX) {
     return Errors.badRequest(`At most ${ELECTION_CHOICES_MAX} choices are allowed`);
   }
+  if (choices.length === 1 && shuffleChoices) {
+    return Errors.badRequest(`Shuffle choices impossible for 1 choice election`);
+  }
   const tooLongChoice = choices.find((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
   if (tooLongChoice) {
     return Errors.badRequest(

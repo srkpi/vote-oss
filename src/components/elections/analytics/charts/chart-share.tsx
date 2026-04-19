@@ -21,11 +21,13 @@ interface ShareChartProps {
   data: SharePoint[];
   choices: ElectionChoice[];
   exportSize?: ChartExportSize;
+  isMultiChoice?: boolean;
 }
 
 function ShareChartInner({
   data,
   choices,
+  isMultiChoice = false,
   width,
   height,
 }: Omit<ShareChartProps, 'exportSize'> & { width?: number; height?: number }) {
@@ -36,11 +38,15 @@ function ShareChartInner({
       <defs>
         {choices.map((c, i) => (
           <linearGradient key={c.id} id={`aGrad-${c.id}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={CHART_COLORS[i % CHART_COLORS.length]} stopOpacity={0.3} />
+            <stop
+              offset="5%"
+              stopColor={CHART_COLORS[i % CHART_COLORS.length]}
+              stopOpacity={0.15}
+            />
             <stop
               offset="95%"
               stopColor={CHART_COLORS[i % CHART_COLORS.length]}
-              stopOpacity={0.04}
+              stopOpacity={0.02}
             />
           </linearGradient>
         ))}
@@ -61,17 +67,21 @@ function ShareChartInner({
         domain={[0, 100]}
         tickFormatter={(v) => `${v}%`}
       />
-      <ReferenceLine
-        y={100 / choices.length}
-        stroke="#94a3b8"
-        strokeDasharray="4 2"
-        label={{
-          value: 'Рівність',
-          fill: '#94a3b8',
-          fontSize: 10,
-          position: 'insideTopRight',
-        }}
-      />
+
+      {!isMultiChoice && (
+        <ReferenceLine
+          y={100 / choices.length}
+          stroke="#94a3b8"
+          strokeDasharray="4 2"
+          label={{
+            value: 'Рівність',
+            fill: '#94a3b8',
+            fontSize: 10,
+            position: 'insideTopRight',
+          }}
+        />
+      )}
+
       <Tooltip content={<ShareTooltip choices={choices} />} cursor={{ stroke: '#dde5f0' }} />
 
       {choices.map((c, i) => (
@@ -79,7 +89,6 @@ function ShareChartInner({
           key={c.id}
           type="monotone"
           dataKey={c.id}
-          stackId="1"
           stroke={CHART_COLORS[i % CHART_COLORS.length]}
           strokeWidth={1.5}
           isAnimationActive={width == null}
@@ -90,12 +99,13 @@ function ShareChartInner({
   );
 }
 
-export function ShareChart({ data, choices, exportSize }: ShareChartProps) {
+export function ShareChart({ data, choices, exportSize, isMultiChoice }: ShareChartProps) {
   if (exportSize) {
     return (
       <ShareChartInner
         data={data}
         choices={choices}
+        isMultiChoice={isMultiChoice}
         width={exportSize.width}
         height={exportSize.height}
       />
@@ -104,7 +114,7 @@ export function ShareChart({ data, choices, exportSize }: ShareChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-      <ShareChartInner data={data} choices={choices} />
+      <ShareChartInner data={data} choices={choices} isMultiChoice={isMultiChoice} />
     </ResponsiveContainer>
   );
 }
