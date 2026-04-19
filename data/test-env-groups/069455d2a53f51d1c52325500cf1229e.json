@@ -1,1 +1,1 @@
-{"id":"069455d2a53f51d1c52325500cf1229e","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 400 when maxUsage is zero","name":"returns 400 when maxUsage is zero","status":"passed","testResultsByEnv":{"default":"838a203b6de267c7bc9a1e565b705c36"}}
+{"id":"069455d2a53f51d1c52325500cf1229e","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 400 when maxUsage is zero","name":"returns 400 when maxUsage is zero","status":"passed","testResultsByEnv":{"default":"4c7d9c0838fd880b608724deb7aa977f"}}
