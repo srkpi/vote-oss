@@ -28,7 +28,16 @@ interface ElectionPageProps {
 export async function generateMetadata({ params }: ElectionPageProps): Promise<Metadata> {
   const { id } = await params;
   const { data } = await serverApi.elections.get(id);
-  return { title: data?.title ?? 'Голосування' };
+  const metaTitle = data?.title ?? 'Голосування';
+
+  return {
+    title: metaTitle,
+    openGraph: {
+      title: metaTitle,
+      url: `/elections/${id}`,
+      type: 'website',
+    },
+  };
 }
 
 export default async function ElectionPage({ params }: ElectionPageProps) {

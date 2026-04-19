@@ -13,7 +13,17 @@ interface BallotsPageProps {
 
 export async function generateMetadata({ params }: BallotsPageProps): Promise<Metadata> {
   const { id } = await params;
-  return { title: `Бюлетені голосування #${id}` };
+  const title = `Бюлетені голосування #${id}`;
+  const description = `Перегляд та перевірка публічних електронних бюлетенів голосування #${id}`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/elections/${id}/ballots`,
+    },
+  };
 }
 
 export default async function BallotsPage({ params }: BallotsPageProps) {

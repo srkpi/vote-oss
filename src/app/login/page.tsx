@@ -10,6 +10,12 @@ import { APP_NAME } from '@/lib/config/client';
 export const metadata: Metadata = {
   title: 'Вхід',
   description: 'Увійдіть за допомогою KPI ID',
+  openGraph: {
+    title: 'Вхід до системи голосування',
+    description:
+      'Увійдіть за допомогою KPI ID з верифікацією через Дію для безпечного та верифікованого доступу.',
+    url: '/login',
+  },
 };
 
 export default function LoginPage() {

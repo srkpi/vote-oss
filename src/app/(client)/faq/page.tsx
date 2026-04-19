@@ -7,6 +7,12 @@ import { serverApi } from '@/lib/api/server';
 export const metadata: Metadata = {
   title: 'FAQ — Часті запитання',
   description: 'Відповіді на найпоширеніші запитання про систему голосування КПІ.',
+  openGraph: {
+    title: 'FAQ — Часті запитання',
+    description:
+      'Відповіді на найпоширеніші запитання про систему голосування КПІ. Як працює анонімність, як проголосувати, хто має доступ тощо.',
+    url: '/faq',
+  },
 };
 
 export default async function FaqPage() {
