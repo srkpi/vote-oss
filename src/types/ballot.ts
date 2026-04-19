@@ -12,6 +12,8 @@ export interface Ballot {
 export interface BallotsElection {
   id: string;
   title: string;
+  opensAt: string;
+  closesAt: string;
   status: ElectionStatus;
   ballotCount: number;
   choices: ElectionChoice[];

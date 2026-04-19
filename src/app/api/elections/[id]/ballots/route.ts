@@ -162,6 +162,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     election: {
       id: electionData.id,
       title: electionData.title,
+      opensAt: electionData.opens_at,
+      closesAt: electionData.closes_at,
       status,
       ballotCount: ballots.length,
       deletedAt: electionData.deleted_at,

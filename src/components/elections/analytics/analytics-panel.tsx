@@ -40,12 +40,13 @@ interface AnalyticsPanelProps {
  * Builders decide independently whether they have enough data to render.
  */
 function buildMetrics(
+  election: BallotsElection,
   ballots: Ballot[],
   decryptedMap: DecryptedMap,
   choices: ElectionChoice[],
   decryptionDone: boolean,
 ): MetricCardConfig[] {
-  const { metrics } = computeAnalytics(ballots, decryptedMap, choices, decryptionDone);
+  const { metrics } = computeAnalytics(election, ballots, decryptedMap, choices, decryptionDone);
 
   const ctx: MetricContext = {
     ballots,
@@ -129,13 +130,13 @@ export function AnalyticsPanel({
   election,
 }: AnalyticsPanelProps) {
   const analyticsResult = useMemo(
-    () => computeAnalytics(ballots, decryptedMap, choices, decryptionDone),
-    [ballots, decryptedMap, choices, decryptionDone],
+    () => computeAnalytics(election, ballots, decryptedMap, choices, decryptionDone),
+    [election, ballots, decryptedMap, choices, decryptionDone],
   );
 
   const visibleMetrics = useMemo(
-    () => buildMetrics(ballots, decryptedMap, choices, decryptionDone),
-    [ballots, decryptedMap, choices, decryptionDone],
+    () => buildMetrics(election, ballots, decryptedMap, choices, decryptionDone),
+    [election, ballots, decryptedMap, choices, decryptionDone],
   );
 
   if (ballots.length === 0) {

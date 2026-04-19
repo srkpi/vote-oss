@@ -4,7 +4,7 @@ import type {
   ChartGranularity,
   SharePoint,
 } from '@/types/analytics-charts';
-import type { Ballot, DecryptedMap } from '@/types/ballot';
+import type { Ballot, BallotsElection, DecryptedMap } from '@/types/ballot';
 import type { ElectionChoice } from '@/types/election';
 import type { AnalyticsMetrics } from '@/types/metrics';
 
@@ -92,6 +92,7 @@ export const GRANULARITY_LABEL: Record<ChartGranularity, string> = {
 };
 
 export function computeAnalytics(
+  election: BallotsElection,
   ballots: Ballot[],
   decryptedMap: DecryptedMap,
   choices: ElectionChoice[],
@@ -129,7 +130,11 @@ export function computeAnalytics(
 
   const firstMs = new Date(sortedBallots[0]!.createdAt).getTime();
   const lastMs = new Date(sortedBallots[sortedBallots.length - 1]!.createdAt).getTime();
-  const totalDurationMs = lastMs - firstMs;
+
+  const electionStartMs = new Date(election.opensAt).getTime();
+  const electionEndMs = new Date(election.closesAt).getTime();
+  const totalDurationMs = electionEndMs - electionStartMs;
+
   const granularity = determineGranularity(firstMs, lastMs, ballots.length);
 
   // Vote counts per choice
@@ -211,15 +216,15 @@ export function computeAnalytics(
     const tM = new Date(sortedBallots[mid]!.createdAt).getTime();
     const firstHalfDur = tM - firstMs;
     const secondHalfDur = lastMs - tM;
-    const r1 = firstHalfDur > 0 ? mid / firstHalfDur : 0;
-    const r2 = secondHalfDur > 0 ? (totalBallots - mid) / secondHalfDur : 0;
+    const r1 = firstHalfDur > 0 ? mid / (tM - electionStartMs) : 0;
+    const r2 = secondHalfDur > 0 ? (totalBallots - mid) / (electionEndMs - tM) : 0;
     if (r1 > 0) velocityRatio = r2 / r1;
   }
 
   let medianTimePercentile: number | null = null;
   if (totalBallots >= 2 && totalDurationMs > 0) {
     const tMedian = new Date(sortedBallots[Math.floor(totalBallots / 2)]!.createdAt).getTime();
-    medianTimePercentile = ((tMedian - firstMs) / totalDurationMs) * 100;
+    medianTimePercentile = ((tMedian - electionStartMs) / totalDurationMs) * 100;
   }
 
   // ── Decryption-dependent metrics ──

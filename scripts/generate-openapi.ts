@@ -275,6 +275,8 @@ const spec = createSwaggerSpec({
           properties: {
             id: { type: 'string', format: 'uuid' },
             title: { type: 'string', minLength: 1, maxLength: ELECTION_TITLE_MAX_LENGTH },
+            opensAt: { type: 'string', format: 'date-time' },
+            closesAt: { type: 'string', format: 'date-time' },
             status: { $ref: '#/components/schemas/ElectionStatus' },
             ballotCount: { type: 'integer', minimum: 0 },
             deletedAt: { type: 'string', nullable: true, format: 'date-time' },
