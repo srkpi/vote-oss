@@ -110,14 +110,14 @@ export function ResultsChart({
               )}
             >
               <div className="mb-3 flex items-center justify-between">
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-3">
                   {isWinner && totalBallots > 0 && (
                     <Crown className={cn('h-4 w-4 shrink-0', color.crown)} />
                   )}
 
                   <span
                     className={cn(
-                      'font-body text-sm font-medium',
+                      'font-body min-w-0 text-sm font-medium wrap-break-word',
                       isWinner ? 'text-kpi-navy' : 'text-foreground',
                     )}
                   >
