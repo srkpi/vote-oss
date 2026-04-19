@@ -28,7 +28,7 @@ export const buildMedianMetric: MetricBuilder = ({ metrics, totalBallots }) => {
   // full scheduled duration — otherwise e.g. "в перших 2% часу" is meaningless
   // when the election window is 48 h but only 2 h have passed.
 
-  const timeSuffix = isElectionClosed ? '' : ' мінулого часу';
+  const timeSuffix = isElectionClosed ? '' : ' минулого часу';
 
   let interpretation: string;
 
@@ -78,7 +78,7 @@ export const buildMedianMetric: MetricBuilder = ({ metrics, totalBallots }) => {
         : `Якщо голосування триватиме ще довго, частка може вирівнятись із надходженням нових бюлетенів.`);
   } else if (isEarly) {
     insight =
-      `Половина голосів зібрана вже на ${mp.toFixed(0)}%-й позначці ${isElectionClosed ? 'тривалості' : 'минулого часу'}. ` +
+      `Половина голосів зібрана вже на ${mp.toFixed(0)}%-й позначці ${isElectionClosed ? 'тривалості' : 'часу'}. ` +
       `Перша третина ${isElectionClosed ? 'часового вікна' : 'пройденого часу'} несла непропорційно більше навантаження, ніж друга. ` +
       `Друга половина голосування тривала довше, але зібрала менше бюлетенів — ` +
       `активність поступово вичерпувалась, а не зростала.` +
@@ -104,14 +104,14 @@ export const buildMedianMetric: MetricBuilder = ({ metrics, totalBallots }) => {
   } else if (isExtremeLate) {
     insight =
       `Половина всіх голосів зібрана лише на ${mp.toFixed(0)}%-й позначці — ` +
-      `це означає, що більшу частину ${isElectionClosed ? 'тривалості голосування' : 'минулого часу'} голосування було майже порожнім. ` +
-      `Реальна активність сконцентрувалась в останніх ${(100 - mp).toFixed(0)}% ${isElectionClosed ? 'часу' : 'мінулого часу'}. ` +
+      `це означає, що більшу частину ${isElectionClosed ? 'тривалості голосування' : 'часу'} голосування було майже порожнім. ` +
+      `Реальна активність сконцентрувалась в останніх ${(100 - mp).toFixed(0)}% часу. ` +
       `Найімовірніша причина: фінальне нагадування або усвідомлення дедлайну спровокувало масову участь ` +
       `саме тоді, коли час майже вийшов.` +
       (isElectionClosed ? '' : ongoingContext);
   } else {
     insight =
-      `Медіана зміщена до пізнішої частини: половина голосів зібрана після ${mp.toFixed(0)}% ${isElectionClosed ? 'тривалості' : 'минулого часу'}.${ongoingContext} ` +
+      `Медіана зміщена до пізнішої частини: половина голосів зібрана після ${mp.toFixed(0)}% ${isElectionClosed ? 'тривалості голосування' : 'часу'}.${ongoingContext} ` +
       `Початок голосування залишався відносно спокійним, а активність поступово наростала до кінця. ` +
       `Це може свідчити про поступове розповсюдження інформації або про нагадування ближче до фіналу.`;
   }
