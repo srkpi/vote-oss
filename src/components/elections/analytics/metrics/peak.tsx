@@ -7,7 +7,12 @@ export const buildPeakMetric: MetricBuilder = ({ metrics, totalBallots }) => {
   if (totalBallots < 1 || metrics.peakHourConcentration === null) return null;
 
   const pct = metrics.peakHourConcentration;
-  const label = metrics.peakHourLabel ?? 'один проміжок';
+  // peakHourLabel is null when multiple buckets tie for the maximum count.
+  // In that case we must not invent a label — the whole point is that no single
+  // period stands out.
+  const label = metrics.peakHourLabel; // may be null
+  const hasSinglePeak = label !== null;
+  const peakTiedCount = metrics.peakTiedCount ?? 0;
 
   // ── Card-level interpretation (tile) ────────────────────────────────────────
 
@@ -15,8 +20,15 @@ export const buildPeakMetric: MetricBuilder = ({ metrics, totalBallots }) => {
 
   if (totalBallots === 1) {
     interpretation = 'Єдиний бюлетень — часовий розподіл не має статистичного значення';
+  } else if (!hasSinglePeak) {
+    // Multiple periods share the maximum — genuinely even distribution
+    if (pct >= 50) {
+      // Rare: e.g. exactly 2 buckets each with 50% of votes
+      interpretation = `Два рівних піки — активність рівно поділена між ${peakTiedCount} проміжками`;
+    } else {
+      interpretation = `Рівномірна участь — жоден часовий проміжок не виділяється`;
+    }
   } else if (pct === 100) {
-    // All votes in one slot — "решта розподілилась рівномірніше" is nonsensical here
     interpretation = `Усі ${pluralize(totalBallots, ['бюлетень', 'бюлетені', 'бюлетенів'])} надійшли в одному часовому проміжку`;
   } else if (pct >= 90) {
     interpretation = `Практично весь потік голосів — ${pct.toFixed(1)}% — зосереджений у ${label}`;
@@ -40,6 +52,22 @@ export const buildPeakMetric: MetricBuilder = ({ metrics, totalBallots }) => {
     insight =
       `Голосування містить лише один бюлетень, тому концентрація активності автоматично дорівнює 100% — ` +
       `це не несе жодного аналітичного сенсу. Показник стане значущим, коли накопичиться хоча б кілька голосів.`;
+  } else if (!hasSinglePeak) {
+    // Tied peaks — genuinely even distribution
+    if (peakTiedCount === totalBallots) {
+      // Every ballot landed in its own unique bucket — perfectly spread
+      insight =
+        `Кожен із ${pluralize(totalBallots, ['бюлетеня', 'бюлетенів', 'бюлетенів'])} надійшов у власний окремий часовий проміжок — ` +
+        `активність розподілена максимально рівномірно. ` +
+        `Жоден момент не виділяється більшою концентрацією, ніж будь-який інший (по ${pct.toFixed(1)}% на кожен проміжок). ` +
+        `Це органічний незалежний потік без ознак синхронних нагадувань чи «хвиль».`;
+    } else {
+      insight =
+        `${pluralize(peakTiedCount, ['Проміжок', 'Проміжки', 'Проміжків'])} з ${peakTiedCount} одночасно є максимальними — ` +
+        `кожен з них містить по ${pct.toFixed(1)}% бюлетенів. ` +
+        `Єдиного домінуючого піку немає: активність розподілена між кількома рівними за інтенсивністю хвилями. ` +
+        `Такий паттерн може свідчити про кілька однаково ефективних нагадувань або про рівномірне органічне залучення.`;
+    }
   } else if (pct === 100 && totalBallots === 2) {
     insight =
       `Обидва бюлетені надійшли в один часовий проміжок (${label}). ` +
@@ -78,7 +106,9 @@ export const buildPeakMetric: MetricBuilder = ({ metrics, totalBallots }) => {
       `у власний зручний час. Голосування поєднувало короткочасний спалах активності з органічним фоновим потоком.`;
   } else if (pct >= 15) {
     insight =
-      `Активність відносно рівна: найінтенсивніший проміжок ${label} отримав лише ${pct.toFixed(1)}% від загального потоку. ` +
+      `Активність відносно рівна: найінтенсивніший проміжок` +
+      (label ? ` ${label}` : '') +
+      ` отримав лише ${pct.toFixed(1)}% від загального потоку. ` +
       `Голосування не мало яскравого кульмінаційного моменту — учасники підключались поступово, ` +
       `розподіляючи свою активність протягом усього доступного часу.`;
   } else {
