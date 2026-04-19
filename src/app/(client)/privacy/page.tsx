@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 
 import { APP_NAME } from '@/lib/config/client';
 
+const privacyDescription = `Політика конфіденційності системи електронного голосування ${APP_NAME}.`;
+
 export const metadata: Metadata = {
   title: 'Політика конфіденційності',
-  description: `Політика конфіденційності системи електронного голосування ${APP_NAME}`,
+  description: privacyDescription,
   openGraph: {
     title: 'Політика конфіденційності',
-    description: `Політика конфіденційності системи електронного голосування ${APP_NAME}.`,
+    description: privacyDescription,
     url: '/privacy',
   },
 };
