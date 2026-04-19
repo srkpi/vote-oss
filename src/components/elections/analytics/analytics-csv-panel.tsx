@@ -102,8 +102,6 @@ export function AnalyticsCsvPanel({
     });
   };
 
-  const estimatedKb = Math.round((ballots.length * selected.size * 30) / 1024);
-
   return (
     <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -163,7 +161,6 @@ export function AnalyticsCsvPanel({
 
       <p className="font-body text-muted-foreground mt-3 text-[10px]">
         Вибрано полів: {selected.size} · Рядків: {ballots.length.toLocaleString('uk-UA')}
-        {selected.size > 0 && ` · ~${estimatedKb} KB`}
       </p>
     </div>
   );
