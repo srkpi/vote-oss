@@ -96,8 +96,7 @@ function DecryptBanner({
               Розшифруйте бюлетені для повної аналітики
             </p>
             <p className="font-body text-muted-foreground mt-0.5 text-xs leading-snug">
-              Часова аналітика вже доступна. Після дешифрування з&apos;явиться більше показників та
-              розподілу часток.
+              Часова аналітика вже доступна. Після дешифрування з&apos;явиться більше показників.
             </p>
           </div>
         </div>
@@ -144,7 +143,7 @@ export function AnalyticsPanel({
       <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
         <EmptyState
           title="Немає даних для аналізу"
-          description="Жодного бюлетеня ще не подано"
+          description="Жодного бюлетеня не подано"
           icon={<BarChart2 className="text-kpi-gray-mid h-7 w-7" />}
         />
       </div>
