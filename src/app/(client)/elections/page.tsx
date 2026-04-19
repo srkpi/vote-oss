@@ -14,6 +14,11 @@ import { getServerSession } from '@/lib/server-auth';
 export const metadata: Metadata = {
   title: 'Голосування',
   description: 'Список всіх доступних голосувань',
+  openGraph: {
+    title: 'Голосування',
+    description: 'Список всіх доступних голосувань. Долучіться до управління університетом.',
+    url: '/elections',
+  },
 };
 
 export default async function ElectionsPage() {

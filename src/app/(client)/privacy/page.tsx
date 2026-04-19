@@ -5,6 +5,11 @@ import { APP_NAME } from '@/lib/config/client';
 export const metadata: Metadata = {
   title: 'Політика конфіденційності',
   description: `Політика конфіденційності системи електронного голосування ${APP_NAME}`,
+  openGraph: {
+    title: 'Політика конфіденційності',
+    description: `Політика конфіденційності системи електронного голосування ${APP_NAME}.`,
+    url: '/privacy',
+  },
 };
 
 export const lastUpdated = '27.03.2026';
