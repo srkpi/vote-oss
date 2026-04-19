@@ -1,1 +1,1 @@
-{"id":"78905d94a8f7bc2960c3048ba36d4451","fullName":"src/__tests__/api/auth/refresh.test.ts#POST /api/auth/refresh returns 200 for a valid refresh token","name":"returns 200 for a valid refresh token","status":"passed","testResultsByEnv":{"default":"5bbea6f2b2f39f2b4a5c9880d20543e9"}}
+{"id":"78905d94a8f7bc2960c3048ba36d4451","fullName":"src/__tests__/api/auth/refresh.test.ts#POST /api/auth/refresh returns 200 for a valid refresh token","name":"returns 200 for a valid refresh token","status":"passed","testResultsByEnv":{"default":"e0f8d2d0c1b66ed745d37939202efa72"}}

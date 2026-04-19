@@ -1,1 +1,1 @@
-{"id":"2c27a828d61b582fd7660b71631f991b","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass accepts maxUsage = 100","name":"accepts maxUsage = 100","status":"passed","testResultsByEnv":{"default":"eaff0b9b1577b8974d1cd5dd1ce7f92b"}}
+{"id":"2c27a828d61b582fd7660b71631f991b","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass accepts maxUsage = 100","name":"accepts maxUsage = 100","status":"passed","testResultsByEnv":{"default":"58b2be47db1b9844a05d7770af3bb45b"}}
