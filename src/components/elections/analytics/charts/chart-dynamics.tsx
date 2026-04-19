@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 
-import { LineTooltip } from '@/components/elections/analytics/charts/chart-tooltipes';
+import { LineTooltip } from '@/components/elections/analytics/charts/chart-tooltips';
 import { CHART_COLORS } from '@/lib/analytics-compute';
 import { AXIS_STYLE } from '@/lib/constants';
 import type { AnalyticsTimePoint, ChartExportSize } from '@/types/analytics-charts';

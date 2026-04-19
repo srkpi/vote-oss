@@ -11,7 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 
-import { BarTooltip } from '@/components/elections/analytics/charts/chart-tooltipes';
+import { BarTooltip } from '@/components/elections/analytics/charts/chart-tooltips';
 import { AXIS_STYLE } from '@/lib/constants';
 import type { ActivityPoint, ChartExportSize } from '@/types/analytics-charts';
 import type { AnalyticsMetrics } from '@/types/metrics';

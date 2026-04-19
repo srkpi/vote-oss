@@ -11,7 +11,7 @@ import {
   YAxis,
 } from 'recharts';
 
-import { ShareTooltip } from '@/components/elections/analytics/charts/chart-tooltipes';
+import { ShareTooltip } from '@/components/elections/analytics/charts/chart-tooltips';
 import { CHART_COLORS } from '@/lib/analytics-compute';
 import { AXIS_STYLE } from '@/lib/constants';
 import type { ChartExportSize, SharePoint } from '@/types/analytics-charts';
