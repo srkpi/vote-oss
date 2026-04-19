@@ -50,7 +50,6 @@ export function FaqItemDialog({ open, onClose, onSave, initial, loading }: FaqIt
 
   useEffect(() => {
     if (open && !prevOpen.current) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(initial?.title ?? '');
       setContent(initial?.content ?? '');
       setError(null);

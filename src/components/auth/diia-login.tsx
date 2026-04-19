@@ -189,6 +189,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
   useEffect(() => () => stopPoll(), [stopPoll]);
   useEffect(() => {
     if (shouldAutoStart && phase === 'idle') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       startFlow();
     }
   }, [shouldAutoStart, phase, startFlow]);

@@ -58,6 +58,7 @@ export function ResultsChart({
 
     const localRecord = getVote(electionId);
     if (localRecord && localRecord.choiceIds && !hideOwnVote) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUserChoices(localRecord.choiceIds);
     }
 

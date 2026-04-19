@@ -29,6 +29,7 @@ export function TokensPageClient({
   const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTokens(initialTokens);
   }, [initialTokens]);
 
