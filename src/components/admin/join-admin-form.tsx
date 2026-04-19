@@ -23,7 +23,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const trimmed = token.trim();
     if (!trimmed) return;

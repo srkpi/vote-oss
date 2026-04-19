@@ -477,6 +477,7 @@ export async function POST(req: NextRequest) {
 
   const openDate = new Date(opensAt);
   const closeDate = new Date(closesAt);
+  const now = new Date();
   const maxCloseDate = Date.now() + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000;
 
   if (isNaN(openDate.getTime())) return Errors.badRequest('Invalid date format for opensAt');
@@ -486,6 +487,9 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest(
       `closesAt must be no more than ${ELECTION_MAX_CLOSES_AT_DAYS} days from current date`,
     );
+  }
+  if (closeDate.getTime() <= now.getTime()) {
+    return Errors.badRequest('closesAt must be in the future');
   }
 
   // ── Winning conditions validation ─────────────────────────────────────────
@@ -614,7 +618,6 @@ export async function POST(req: NextRequest) {
 
   const { publicKey, privateKey } = generateElectionKeyPair();
   const encryptedPrivateKey = encryptField(privateKey);
-  const now = new Date();
 
   const election = await prisma.election.create({
     data: {

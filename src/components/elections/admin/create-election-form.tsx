@@ -156,6 +156,13 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     setSelectedGroups((prev) => prev.filter((g) => availableGroups.includes(g)));
   }, [availableGroups]);
 
+  useEffect(() => {
+    if (choices.length <= 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShuffleChoices(false);
+    }
+  }, [choices.length]);
+
   const noGroupsMatchCriteria =
     selectedFaculties.length > 0 &&
     availableGroups.length === 0 &&
@@ -166,11 +173,13 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     if (restrictedToFaculty) return;
     setSelectedFaculties(faculties);
     setFieldErrors((p) => ({ ...p, faculties: '' }));
+    setError(null);
   }
 
   const updateForm = (field: string, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setFieldErrors((prev) => ({ ...prev, [field]: '' }));
+    setError(null);
   };
 
   const updateChoice = (index: number, value: string) => {
@@ -180,6 +189,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       return next;
     });
     setFieldErrors((prev) => ({ ...prev, [`choice_${index}`]: '' }));
+    setError(null);
   };
 
   const addChoice = () => {
@@ -195,11 +205,21 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
     );
     setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
+    setError(null);
   };
 
   function validateWinningConditionsUI(): boolean {
     const errors: Record<string, string> = {};
     const wc = winningConditionsState;
+
+    if (
+      !wc.hasMostVotes &&
+      !wc.reachesPercentageEnabled &&
+      !wc.reachesVotesEnabled &&
+      !wc.quorumEnabled
+    ) {
+      errors.winningConditions = 'Виберіть принаймні одну умову перемоги';
+    }
 
     if (wc.reachesPercentageEnabled) {
       if (
@@ -292,9 +312,12 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     return baseValid && wcValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      setError('Будь ласка, виправте помилки');
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -348,12 +371,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {error && (
-        <Alert variant="error" title="Помилка" onDismiss={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
       {/* Basic info */}
       <section>
         <h2 className="font-display text-foreground mb-4 text-xl font-semibold">
@@ -464,19 +481,21 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
           </Button>
         )}
 
-        <div className="mt-6">
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={shuffleChoices}
-              onChange={(e) => setShuffleChoices(e.target.checked)}
-              className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
-            />
-            <span className="font-body text-foreground text-sm font-medium">
-              Перемішувати варіанти
-            </span>
-          </label>
-        </div>
+        {choices.length > 1 && (
+          <div className="mt-6">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={shuffleChoices}
+                onChange={(e) => setShuffleChoices(e.target.checked)}
+                className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+              />
+              <span className="font-body text-foreground text-sm font-medium">
+                Перемішувати варіанти
+              </span>
+            </label>
+          </div>
+        )}
 
         {/* Min/Max choices */}
         <div className="mt-6">
@@ -506,6 +525,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                   minChoices: '',
                   maxChoices: '',
                 }));
+                setError(null);
               }}
               className="my-5"
             />
@@ -536,13 +556,18 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             setWinningConditionsState(next);
             setFieldErrors((prev) => ({
               ...prev,
+              winningConditions: '',
               reachesPercentage: '',
               reachesVotes: '',
               quorum: '',
             }));
+            setError(null);
           }}
           errors={fieldErrors}
         />
+        {fieldErrors.winningConditions && (
+          <p className="text-error mt-2 text-sm">{fieldErrors.winningConditions}</p>
+        )}
       </section>
 
       {/* Restrictions */}
@@ -600,6 +625,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
               onChange={(forms) => {
                 setSelectedForms(forms);
                 setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
+                setError(null);
               }}
             />
           </FormField>
@@ -666,7 +692,10 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
               id="groups"
               options={availableGroups}
               value={selectedGroups}
-              onChange={setSelectedGroups}
+              onChange={(g) => {
+                setSelectedGroups(g);
+                setError(null);
+              }}
               placeholder="Без обмеження"
               searchPlaceholder="Пошук групи…"
               disabled={selectedFaculties.length === 0 || groupsLoading || noGroupsMatchCriteria}
@@ -688,19 +717,26 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </div>
       </section>
 
-      <div className="border-border-subtle flex flex-col-reverse gap-3 border-t pt-4 sm:flex-row">
-        <Button
-          type="button"
-          variant="secondary"
-          size="lg"
-          onClick={() => router.back()}
-          disabled={loading}
-        >
-          Скасувати
-        </Button>
-        <Button type="submit" variant="accent" size="lg" loading={loading}>
-          Створити голосування
-        </Button>
+      <div className="border-border-subtle flex flex-col gap-3 border-t pt-4">
+        {error && (
+          <Alert variant="error" title="Помилка" onDismiss={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            onClick={() => router.back()}
+            disabled={loading}
+          >
+            Скасувати
+          </Button>
+          <Button type="submit" variant="accent" size="lg" loading={loading}>
+            Створити голосування
+          </Button>
+        </div>
       </div>
     </form>
   );
