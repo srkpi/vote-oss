@@ -1,1 +1,1 @@
-{"id":"b5c2d6d2e638158be57c609e0fe2b49e","fullName":"src/__tests__/api/health/check.test.ts#GET /api/health returns 503 when DB check fails","name":"returns 503 when DB check fails","status":"passed","testResultsByEnv":{"default":"7a0eec68cdd786c799af848b1520a03b"}}
+{"id":"b5c2d6d2e638158be57c609e0fe2b49e","fullName":"src/__tests__/api/health/check.test.ts#GET /api/health returns 503 when DB check fails","name":"returns 503 when DB check fails","status":"passed","testResultsByEnv":{"default":"ba5a9ac66a93cf476cafb526a96e674b"}}
