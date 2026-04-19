@@ -443,6 +443,10 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
   }
   if (choices.length < ELECTION_CHOICES_MIN) {
+    if (ELECTION_CHOICES_MIN === 1) {
+      return Errors.badRequest(`At least 1 choice is required`);
+    }
+
     return Errors.badRequest(`At least ${ELECTION_CHOICES_MIN} choices are required`);
   }
   if (choices.length > ELECTION_CHOICES_MAX) {
