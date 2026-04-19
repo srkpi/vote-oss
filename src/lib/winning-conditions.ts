@@ -7,7 +7,10 @@ import {
   WINNING_CONDITION_VOTES_MIN,
 } from '@/lib/constants';
 import type { WinningConditions } from '@/types/election';
-import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
+import {
+  DEFAULT_WINNING_CONDITIONS,
+  DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
+} from '@/types/election';
 
 /**
  * Safely parse a raw DB JSON value into a WinningConditions object.
@@ -31,8 +34,14 @@ export function parseWinningConditions(raw: unknown): WinningConditions {
  * API request.  Returns a validated WinningConditions object, or an error
  * string describing the first validation failure.
  */
-export function validateWinningConditions(body: unknown): WinningConditions | string {
+export function validateWinningConditions(
+  body: unknown,
+  choicesLength: number,
+): WinningConditions | string {
   if (body === null || body === undefined) {
+    if (choicesLength === 1) {
+      return { ...DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE };
+    }
     return { ...DEFAULT_WINNING_CONDITIONS };
   }
   if (typeof body !== 'object' || Array.isArray(body)) {
@@ -42,10 +51,17 @@ export function validateWinningConditions(body: unknown): WinningConditions | st
   const obj = body as Record<string, unknown>;
 
   const hasMostVotes = obj.hasMostVotes === undefined ? false : Boolean(obj.hasMostVotes);
+  if (choicesLength === 1 && hasMostVotes) {
+    return `hasMostVote is not allowed for elections with one choice`;
+  }
 
   // reachesPercentage: [0, 100)
   let reachesPercentage: number | null = null;
   if (obj.reachesPercentage !== null && obj.reachesPercentage !== undefined) {
+    if (choicesLength === 1) {
+      return `reachesPercentage is not allowed for elections with one choice`;
+    }
+
     const val = Number(obj.reachesPercentage);
     if (
       isNaN(val) ||
@@ -63,6 +79,10 @@ export function validateWinningConditions(body: unknown): WinningConditions | st
   // reachesVotes: [1, 10_000]
   let reachesVotes: number | null = null;
   if (obj.reachesVotes !== null && obj.reachesVotes !== undefined) {
+    if (choicesLength === 1) {
+      return `reachesVotes is not allowed for elections with one choice, use quorum instead`;
+    }
+
     const val = Number(obj.reachesVotes);
     if (
       !Number.isInteger(val) ||

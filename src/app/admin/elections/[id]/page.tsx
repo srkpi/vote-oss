@@ -239,7 +239,10 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               <AccessRestrictions restrictions={election.restrictions} />
             )}
 
-            <WinningConditionsDisplay conditions={election.winningConditions} />
+            <WinningConditionsDisplay
+              conditions={election.winningConditions}
+              choicesCount={election.choices.length}
+            />
 
             <KeyDisclosure>
               <EncryptionKey

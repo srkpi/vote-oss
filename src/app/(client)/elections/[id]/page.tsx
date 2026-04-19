@@ -207,7 +207,10 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               <AccessRestrictions restrictions={election.restrictions} />
             )}
 
-            <WinningConditionsDisplay conditions={election.winningConditions} />
+            <WinningConditionsDisplay
+              conditions={election.winningConditions}
+              choicesCount={election.choices.length}
+            />
 
             <KeyDisclosure>
               <div className="space-y-5">
