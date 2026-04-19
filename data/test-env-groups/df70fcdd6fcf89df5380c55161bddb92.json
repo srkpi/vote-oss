@@ -1,1 +1,1 @@
-{"id":"df70fcdd6fcf89df5380c55161bddb92","fullName":"src/__tests__/lib/jwt.test.ts#jwt tokenCookieOptions refresh token maxAge is 7 days","name":"refresh token maxAge is 7 days","status":"passed","testResultsByEnv":{"default":"0f4d16ad83faf1ba386e3ef5ab312246"}}
+{"id":"df70fcdd6fcf89df5380c55161bddb92","fullName":"src/__tests__/lib/jwt.test.ts#jwt tokenCookieOptions refresh token maxAge is 7 days","name":"refresh token maxAge is 7 days","status":"passed","testResultsByEnv":{"default":"f437dc04cd236e8ffddce862f994ba31"}}
