@@ -82,6 +82,13 @@ export const DEFAULT_WINNING_CONDITIONS: WinningConditions = {
   quorum: null,
 };
 
+export const DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE: WinningConditions = {
+  hasMostVotes: false,
+  reachesPercentage: null,
+  reachesVotes: null,
+  quorum: 1,
+};
+
 export interface Election {
   id: string;
   title: string;

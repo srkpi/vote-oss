@@ -2,10 +2,14 @@ import { Percent, Trophy, Users, Vote } from 'lucide-react';
 
 import { pluralize } from '@/lib/utils/common';
 import type { WinningConditions } from '@/types/election';
-import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
+import {
+  DEFAULT_WINNING_CONDITIONS,
+  DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
+} from '@/types/election';
 
 interface WinningConditionsDisplayProps {
   conditions?: WinningConditions | null;
+  choicesCount: number;
 }
 
 interface ConditionRowProps {
@@ -22,8 +26,18 @@ function ConditionRow({ icon, label }: ConditionRowProps) {
   );
 }
 
-export function WinningConditionsDisplay({ conditions }: WinningConditionsDisplayProps) {
-  const wc: WinningConditions = conditions ?? DEFAULT_WINNING_CONDITIONS;
+export function WinningConditionsDisplay({
+  conditions,
+  choicesCount,
+}: WinningConditionsDisplayProps) {
+  let wc: WinningConditions | null | undefined = conditions;
+  if (!wc) {
+    if (choicesCount === 1) {
+      wc = DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE;
+    } else {
+      wc = DEFAULT_WINNING_CONDITIONS;
+    }
+  }
 
   return (
     <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white p-5">

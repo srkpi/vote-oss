@@ -19,7 +19,10 @@ import { isValidUuid } from '@/lib/utils/common';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import { computeWinners, parseWinningConditions } from '@/lib/winning-conditions';
 import type { ElectionRestriction, TallyResult, WinningConditions } from '@/types/election';
-import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
+import {
+  DEFAULT_WINNING_CONDITIONS,
+  DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
+} from '@/types/election';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -148,6 +151,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const found = cached.find((e) => e.id === electionId);
     if (!found) return Errors.notFound('Election not found');
 
+    let winningConditions = found.winningConditions;
+    if (!winningConditions) {
+      if (found.choices.length === 1) {
+        winningConditions = DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE;
+      } else {
+        winningConditions = DEFAULT_WINNING_CONDITIONS;
+      }
+    }
+
     electionData = {
       id: found.id,
       title: found.title,
@@ -166,7 +178,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedAt: found.deletedAt ? new Date(found.deletedAt) : null,
       deletedByUserId: found.deletedByUserId,
       deletedByName: found.deletedByName,
-      winningConditions: found.winningConditions ?? { ...DEFAULT_WINNING_CONDITIONS },
+      winningConditions,
       shuffleChoices: found.shuffleChoices ?? false,
     };
   } else {

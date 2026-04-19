@@ -41,7 +41,7 @@ export const AccessRestrictions = ({ restrictions }: ElectionRestrictionsProps) 
 
       {hasBypassRequired && (
         <p className="font-body mb-4 flex rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          Голосування доступне лише за токеном доступу. Зверніться до організатора.
+          Голосування доступне лише за токеном
         </p>
       )}
 

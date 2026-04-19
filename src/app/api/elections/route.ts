@@ -49,7 +49,10 @@ import type {
   TallyResult,
   WinningConditions,
 } from '@/types/election';
-import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
+import {
+  DEFAULT_WINNING_CONDITIONS,
+  DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
+} from '@/types/election';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -494,9 +497,16 @@ export async function POST(req: NextRequest) {
 
   // ── Winning conditions validation ─────────────────────────────────────────
 
-  const winningConditionsRaw =
-    body.winningConditions !== undefined ? body.winningConditions : DEFAULT_WINNING_CONDITIONS;
-  const winningConditionsResult = validateWinningConditions(winningConditionsRaw);
+  let winningConditionsRaw = body.winningConditions;
+  if (typeof body === 'undefined') {
+    if (choices.length === 1) {
+      winningConditionsRaw = DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE;
+    } else {
+      winningConditionsRaw = DEFAULT_WINNING_CONDITIONS;
+    }
+  }
+
+  const winningConditionsResult = validateWinningConditions(winningConditionsRaw, choices.length);
   if (typeof winningConditionsResult === 'string') {
     return Errors.badRequest(winningConditionsResult);
   }

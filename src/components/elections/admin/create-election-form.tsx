@@ -67,7 +67,16 @@ const DEFAULT_WC_STATE: WinningConditionsState = {
   quorum: 100,
 };
 
-function wcStateToPayload(wc: WinningConditionsState): WinningConditions {
+function wcStateToPayload(wc: WinningConditionsState, choicesCount: number): WinningConditions {
+  if (choicesCount === 1) {
+    return {
+      hasMostVotes: false,
+      reachesPercentage: null,
+      reachesVotes: null,
+      quorum: wc.quorumEnabled ? wc.quorum : null,
+    };
+  }
+
   return {
     hasMostVotes: wc.hasMostVotes,
     reachesPercentage: wc.reachesPercentageEnabled ? wc.reachesPercentage : null,
@@ -134,8 +143,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const [shuffleChoices, setShuffleChoices] = useState(false);
   const [choices, setChoices] = useState(['', '']);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  const validChoicesCount = choices.filter((c) => c.trim()).length;
 
   const availableGroups = useMemo(() => {
     let groups = Array.from(new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? []))).sort(
@@ -212,33 +219,37 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     const errors: Record<string, string> = {};
     const wc = winningConditionsState;
 
-    if (
-      !wc.hasMostVotes &&
-      !wc.reachesPercentageEnabled &&
-      !wc.reachesVotesEnabled &&
-      !wc.quorumEnabled
-    ) {
-      errors.winningConditions = 'Виберіть принаймні одну умову перемоги';
-    }
-
-    if (wc.reachesPercentageEnabled) {
+    if (choices.length > 1) {
       if (
-        isNaN(wc.reachesPercentage) ||
-        wc.reachesPercentage < WINNING_CONDITION_PERCENTAGE_MIN ||
-        wc.reachesPercentage >= WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE
+        !wc.hasMostVotes &&
+        !wc.reachesPercentageEnabled &&
+        !wc.reachesVotesEnabled &&
+        !wc.quorumEnabled
       ) {
-        errors.reachesPercentage = `Значення повинно бути від ${WINNING_CONDITION_PERCENTAGE_MIN} до менш ніж ${WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE}`;
+        errors.winningConditions = 'Виберіть принаймні одну умову перемоги';
       }
-    }
 
-    if (wc.reachesVotesEnabled) {
-      if (
-        !Number.isInteger(wc.reachesVotes) ||
-        wc.reachesVotes < WINNING_CONDITION_VOTES_MIN ||
-        wc.reachesVotes > WINNING_CONDITION_VOTES_MAX
-      ) {
-        errors.reachesVotes = `Ціле число від ${WINNING_CONDITION_VOTES_MIN} до ${WINNING_CONDITION_VOTES_MAX}`;
+      if (wc.reachesPercentageEnabled) {
+        if (
+          isNaN(wc.reachesPercentage) ||
+          wc.reachesPercentage < WINNING_CONDITION_PERCENTAGE_MIN ||
+          wc.reachesPercentage >= WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE
+        ) {
+          errors.reachesPercentage = `Значення повинно бути від ${WINNING_CONDITION_PERCENTAGE_MIN} до менш ніж ${WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE}`;
+        }
       }
+
+      if (wc.reachesVotesEnabled) {
+        if (
+          !Number.isInteger(wc.reachesVotes) ||
+          wc.reachesVotes < WINNING_CONDITION_VOTES_MIN ||
+          wc.reachesVotes > WINNING_CONDITION_VOTES_MAX
+        ) {
+          errors.reachesVotes = `Ціле число від ${WINNING_CONDITION_VOTES_MIN} до ${WINNING_CONDITION_VOTES_MAX}`;
+        }
+      }
+    } else if (!wc.quorumEnabled) {
+      errors.quorum = `Має бути задано для опитувань з 1 варіантом голосу`;
     }
 
     if (wc.quorumEnabled) {
@@ -255,6 +266,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       setFieldErrors((prev) => ({ ...prev, ...errors }));
       return false;
     }
+
     return true;
   }
 
@@ -283,13 +295,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     if (new Set(choices.map((c) => c.trim().toLowerCase())).size !== choices.length)
       errors.choices = 'Варіанти не можуть повторюватися';
 
-    if (form.minChoices < ELECTION_MIN_CHOICES_MIN)
-      errors.minChoices = `Мінімум ${ELECTION_MIN_CHOICES_MIN}`;
-    if (form.maxChoices > ELECTION_MAX_CHOICES_MAX)
-      errors.maxChoices = `Максимум ${ELECTION_MAX_CHOICES_MAX}`;
-    if (form.maxChoices < form.minChoices) errors.maxChoices = 'Не менше за мінімум';
-    if (form.maxChoices > validChoicesCount) errors.maxChoices = 'Не більше за кількість варіантів';
-
     if (noGroupsMatchCriteria) {
       errors.levelCourses =
         'Жодна група не відповідає вибраним обмеженням. Змініть критерії або приберіть деякі фільтри.';
@@ -315,7 +320,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!validate()) {
-      setError('Будь ласка, виправте помилки');
+      setError('Будь ласка, виправте підсвічені помилки валідації');
       return;
     }
     setLoading(true);
@@ -330,15 +335,16 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       ...(bypassRequired ? [{ type: 'BYPASS_REQUIRED' as const, value: 'true' }] : []),
     ];
 
+    const filteredChoices = choices.filter((c) => c.trim());
     const result = await api.elections.create({
       title: form.title.trim(),
       opensAt: new Date(form.opensAt).toISOString(),
       closesAt: new Date(form.closesAt).toISOString(),
-      choices: choices.filter((c) => c.trim()),
-      minChoices: form.minChoices,
-      maxChoices: form.maxChoices,
+      choices: filteredChoices,
+      minChoices: Math.min(form.minChoices, filteredChoices.length),
+      maxChoices: Math.min(form.maxChoices, filteredChoices.length),
       restrictions,
-      winningConditions: wcStateToPayload(winningConditionsState),
+      winningConditions: wcStateToPayload(winningConditionsState, filteredChoices.length),
       shuffleChoices,
     });
 
@@ -498,49 +504,55 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
 
         {/* Min/Max choices */}
-        <div className="mt-6">
-          <FormField
-            label="Дозволено обирати варіантів"
-            required
-            error={fieldErrors.minChoices || fieldErrors.maxChoices}
-            htmlFor="choices-slider"
-          >
-            <Slider
-              id="choices-slider"
-              min={ELECTION_MIN_CHOICES_MIN}
-              max={Math.max(
-                ELECTION_MIN_CHOICES_MIN,
-                Math.min(ELECTION_MAX_CHOICES_MAX, Math.max(validChoicesCount, 2)),
-              )}
-              step={1}
-              value={[form.minChoices, form.maxChoices]}
-              onValueChange={([newMin, newMax]) => {
-                setForm((prev) => ({
-                  ...prev,
-                  minChoices: newMin,
-                  maxChoices: newMax,
-                }));
-                setFieldErrors((prev) => ({
-                  ...prev,
-                  minChoices: '',
-                  maxChoices: '',
-                }));
-                setError(null);
-              }}
-              className="my-5"
-            />
-            <div className="font-body flex items-center justify-between text-sm font-medium">
-              <div className="flex flex-col items-start">
-                <span className="text-muted-foreground text-xs">Мінімум</span>
-                <span className="text-foreground">{form.minChoices}</span>
+        {choices.length > 1 && (
+          <div className="mt-6">
+            <FormField
+              label="Дозволено обирати варіантів"
+              required
+              error={fieldErrors.minChoices || fieldErrors.maxChoices}
+              htmlFor="choices-slider"
+            >
+              <Slider
+                id="choices-slider"
+                min={ELECTION_MIN_CHOICES_MIN}
+                max={Math.max(
+                  ELECTION_MIN_CHOICES_MIN,
+                  Math.min(ELECTION_MAX_CHOICES_MAX, Math.max(choices.length, 2)),
+                )}
+                step={1}
+                value={[form.minChoices, form.maxChoices]}
+                onValueChange={([newMin, newMax]) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    minChoices: newMin,
+                    maxChoices: newMax,
+                  }));
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    minChoices: '',
+                    maxChoices: '',
+                  }));
+                  setError(null);
+                }}
+                className="my-5"
+              />
+              <div className="font-body flex items-center justify-between text-sm font-medium">
+                <div className="flex flex-col items-start">
+                  <span className="text-muted-foreground text-xs">Мінімум</span>
+                  <span className="text-foreground">
+                    {Math.min(form.minChoices, choices.length)}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-muted-foreground text-xs">Максимум</span>
+                  <span className="text-foreground">
+                    {Math.min(form.maxChoices, choices.length)}
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-muted-foreground text-xs">Максимум</span>
-                <span className="text-foreground">{form.maxChoices}</span>
-              </div>
-            </div>
-          </FormField>
-        </div>
+            </FormField>
+          </div>
+        )}
       </section>
 
       {/* Winning conditions */}
@@ -552,6 +564,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </p>
         <WinningConditionsSection
           state={winningConditionsState}
+          validChoicesCount={choices.length}
           onChange={(next) => {
             setWinningConditionsState(next);
             setFieldErrors((prev) => ({

@@ -56,11 +56,25 @@ function ActivityChartInner({
 }: Omit<ActivityChartProps, 'exportSize'> & { width?: number; height?: number }) {
   const sizeProps = width != null && height != null ? { width, height } : {};
 
+  // Build ms→label map so the numeric axis can display formatted ticks
+  const tickMap = Object.fromEntries(data.map((d) => [d.ms, d.label]));
+  const ticks = data.map((d) => d.ms);
+
+  // Only show Пік when a single bar holds the maximum (no tie for first place)
+  const peakBars = data.filter((d) => d.count === metrics.maxCount);
+  const hasSinglePeak = peakBars.length === 1;
+  const peakMs = hasSinglePeak ? peakBars[0]!.ms : undefined;
+
   return (
     <BarChart {...sizeProps} data={data} margin={{ top: 24, right: 20, left: -8, bottom: 0 }}>
       <CartesianGrid strokeDasharray="3 3" stroke="#ecf0f7" vertical={false} />
       <XAxis
-        dataKey="label"
+        dataKey="ms"
+        type="number"
+        scale="time"
+        domain={['dataMin', 'dataMax']}
+        ticks={ticks}
+        tickFormatter={(ms: number) => tickMap[ms] ?? ''}
         tick={AXIS_STYLE}
         tickLine={false}
         axisLine={{ stroke: '#ecf0f7' }}
@@ -69,9 +83,9 @@ function ActivityChartInner({
       <YAxis tick={AXIS_STYLE} tickLine={false} axisLine={false} allowDecimals={false} />
       <Tooltip content={<BarTooltip />} cursor={{ fill: '#f6f8fc' }} />
 
-      {metrics.peakHourLabel && (
+      {hasSinglePeak && peakMs != null && (
         <ReferenceLine
-          x={metrics.peakHourLabel}
+          x={peakMs}
           stroke="#f07d00"
           strokeDasharray="4 2"
           label={{
