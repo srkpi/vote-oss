@@ -1,1 +1,1 @@
-{"id":"2dc2a84e375f18b68b56eaba05d98e5b","fullName":"src/__tests__/api/health/check.test.ts#GET /api/health logs errors without throwing","name":"logs errors without throwing","status":"passed","testResultsByEnv":{"default":"32921a7f7874de0fa5037b6bee843d6c"}}
+{"id":"2dc2a84e375f18b68b56eaba05d98e5b","fullName":"src/__tests__/api/health/check.test.ts#GET /api/health logs errors without throwing","name":"logs errors without throwing","status":"passed","testResultsByEnv":{"default":"1f039a6b7d6a7ac51975c4ef3d583d39"}}
