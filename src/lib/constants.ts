@@ -162,3 +162,5 @@ export const WINNING_CONDITION_QUORUM_MAX = 10_000;
 
 // Axis tick style shared across all analytics chart variants
 export const AXIS_STYLE = { fontSize: 11, fill: '#94a3b8' } as const;
+
+export const BOT_REQUEST_HEADER = 'x-bot-request';

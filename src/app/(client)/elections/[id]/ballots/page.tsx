@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { BallotsClient } from '@/components/elections/ballots-client';
 import { Alert } from '@/components/ui/alert';
 import { serverApi } from '@/lib/api/server';
+import { isBotRequest } from '@/lib/utils/bot';
 
 interface BallotsPageProps {
   params: Promise<{ id: string }>;
@@ -13,21 +14,26 @@ interface BallotsPageProps {
 
 export async function generateMetadata({ params }: BallotsPageProps): Promise<Metadata> {
   const { id } = await params;
-  const title = `Бюлетені голосування #${id}`;
-  const description = `Перегляд та перевірка публічних електронних бюлетенів голосування #${id}`;
+  const { data, status } = await serverApi.elections.og(id);
+
+  let metaTitle = 'Бюлетені голосування';
+  if (status === 404) {
+    metaTitle = '404 | Голосування не здайдено';
+  } else if (data?.title) {
+    metaTitle = `Бюлетені | ${data.title}`;
+  }
+
   return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `/elections/${id}/ballots`,
-    },
+    title: metaTitle,
+    description: metaTitle,
   };
 }
 
 export default async function BallotsPage({ params }: BallotsPageProps) {
   const { id } = await params;
+
+  if (await isBotRequest()) return null;
+
   const { data, error, status } = await serverApi.elections.getBallots(id);
 
   if (status === 404) notFound();

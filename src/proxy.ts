@@ -1,7 +1,9 @@
+import { isbot } from 'isbot';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { APP_URL } from '@/lib/config/client';
 import {
+  BOT_REQUEST_HEADER,
   COOKIE_ACCESS,
   COOKIE_PENDING_BYPASS,
   COOKIE_REFRESH,
@@ -29,6 +31,20 @@ export async function proxy(req: NextRequest) {
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
   const isGuestOnly = GUEST_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
   const isAdminOnly = ADMIN_ONLY_PATHS.some((p) => pathname.startsWith(p));
+
+  // ── Bot detection ──────────────────────────────────────────────────────────
+  // Crawlers (Googlebot, Twitterbot, OpenGraph scrapers, etc.) need to reach
+  // protected pages so that Next.js can serve the <head> with correct metadata
+  // and OG tags.  We let them through with an identifying header so that page
+  // components can render an empty <body> rather than redirect to /login.
+  const ua = req.headers.get('user-agent') ?? '';
+  const isBotRequest = isbot(ua);
+
+  if (isBotRequest && isProtected) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set(BOT_REQUEST_HEADER, '1');
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
 
   const accessCookie = req.cookies.get(COOKIE_ACCESS)?.value;
   const refreshCookie = req.cookies.get(COOKIE_REFRESH)?.value;

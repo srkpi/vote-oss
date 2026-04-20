@@ -3,10 +3,14 @@ import { ImageResponse } from 'next/og';
 import path from 'path';
 
 import { APP_NAME } from '@/lib/config/client';
+import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 
 export const runtime = 'nodejs';
-export const alt = `${APP_NAME} — Система електронного голосування`;
-export const size = { width: 1200, height: 630 };
+export const alt = OPENGRAPH_IMAGE_DATA.alt;
+export const size = {
+  width: OPENGRAPH_IMAGE_DATA.width,
+  height: OPENGRAPH_IMAGE_DATA.height,
+};
 export const contentType = 'image/png';
 
 // Blue orb center:  top = -180 + 330 = 150,  right = -180 + 330 = 150  → left = 1050
@@ -26,8 +30,8 @@ export default function OgImage() {
   return new ImageResponse(
     <div
       style={{
-        width: 1200,
-        height: 630,
+        width: OPENGRAPH_IMAGE_DATA.width,
+        height: OPENGRAPH_IMAGE_DATA.height,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

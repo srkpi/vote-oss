@@ -5,16 +5,23 @@ import Link from 'next/link';
 
 import { KpiIdButton } from '@/components/auth/kpi-id-button';
 import { AnimatedGrid } from '@/components/common/animated-grid';
-import { APP_NAME } from '@/lib/config/client';
+import { APP_NAME, APP_URL } from '@/lib/config/client';
+import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 
 export const metadata: Metadata = {
   title: 'Вхід',
   description: 'Увійдіть за допомогою KPI ID',
   openGraph: {
-    title: 'Вхід до системи голосування',
-    description:
-      'Увійдіть за допомогою KPI ID з верифікацією через Дію для безпечного та верифікованого доступу.',
-    url: '/login',
+    title: `Вхід | ${APP_NAME}`,
+    description: 'Увійдіть за допомогою KPI ID',
+    url: new URL('/login', APP_URL),
+    images: [OPENGRAPH_IMAGE_DATA],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Вхід | ${APP_NAME}`,
+    description: 'Увійдіть за допомогою KPI ID',
+    images: [OPENGRAPH_IMAGE_DATA],
   },
 };
 

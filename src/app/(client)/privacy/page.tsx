@@ -1,16 +1,22 @@
 import type { Metadata } from 'next';
 
-import { APP_NAME } from '@/lib/config/client';
-
-const privacyDescription = `Політика конфіденційності системи електронного голосування ${APP_NAME}.`;
+import { APP_NAME, APP_URL } from '@/lib/config/client';
+import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 
 export const metadata: Metadata = {
   title: 'Політика конфіденційності',
-  description: privacyDescription,
+  description: `Політика конфіденційності системи електронного голосування ${APP_NAME}`,
   openGraph: {
-    title: 'Політика конфіденційності',
-    description: privacyDescription,
-    url: '/privacy',
+    title: `Політика конфіденційності | ${APP_NAME}`,
+    description: `Політика конфіденційності системи електронного голосування ${APP_NAME}`,
+    url: new URL('/privacy', APP_URL),
+    images: [OPENGRAPH_IMAGE_DATA],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Політика конфіденційності | ${APP_NAME}`,
+    description: `Політика конфіденційності системи електронного голосування ${APP_NAME}`,
+    images: [OPENGRAPH_IMAGE_DATA],
   },
 };
 

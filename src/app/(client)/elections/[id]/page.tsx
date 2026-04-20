@@ -17,8 +17,10 @@ import { WinningConditionsDisplay } from '@/components/elections/winning-conditi
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
+import { APP_URL } from '@/lib/config/client';
 import { checkRestrictionsWithBypass } from '@/lib/restrictions';
 import { getServerSession } from '@/lib/server-auth';
+import { isBotRequest } from '@/lib/utils/bot';
 import { pluralize } from '@/lib/utils/common';
 
 interface ElectionPageProps {
@@ -27,21 +29,35 @@ interface ElectionPageProps {
 
 export async function generateMetadata({ params }: ElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data } = await serverApi.elections.get(id);
-  const metaTitle = data?.title ?? 'Голосування';
+  const { data, status } = await serverApi.elections.og(id);
+
+  let metaTitle = 'Голосування';
+  if (status === 404) {
+    metaTitle = '404 | Голосування не здайдено';
+  } else if (data?.title) {
+    metaTitle = data.title;
+  }
 
   return {
     title: metaTitle,
+    description: metaTitle,
     openGraph: {
       title: metaTitle,
-      url: `/elections/${id}`,
-      type: 'website',
+      description: metaTitle,
+      url: new URL(`/elections/${id}`, APP_URL),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: metaTitle,
+      description: metaTitle,
     },
   };
 }
 
 export default async function ElectionPage({ params }: ElectionPageProps) {
   const { id } = await params;
+
+  if (await isBotRequest()) return null;
 
   const [session, { data: election, error, status }] = await Promise.all([
     getServerSession(),
