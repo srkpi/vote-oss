@@ -8,8 +8,9 @@ import { getServerSession } from '@/lib/server-auth';
 export const metadata: Metadata = {
   title: {
     default: 'Адмін-панель',
-    template: `%s | Адмін-панель | ${APP_NAME}`,
+    template: `%s | Адмін | ${APP_NAME}`,
   },
+  robots: { index: false, follow: false },
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

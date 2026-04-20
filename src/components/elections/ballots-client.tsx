@@ -271,26 +271,27 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
           )}
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
-              <FileText className="text-kpi-gray-mid h-4 w-4" />
-              <span>
-                {trimmedQuery
-                  ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
-                  : pluralize(ballots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])}
-              </span>
-            </div>
-
             {ballots.length > 0 && (
-              <SearchInput
-                value={searchQuery}
-                onChange={handleSearch}
-                className="max-w-md"
-                placeholder={
-                  decryptionDone
-                    ? 'Пошук за хешем або варіантом відповіді…'
-                    : 'Пошук за хешем бюлетеня…'
-                }
-              />
+              <>
+                <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
+                  <FileText className="text-kpi-gray-mid h-4 w-4" />
+                  <span>
+                    {trimmedQuery
+                      ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
+                      : pluralize(ballots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])}
+                  </span>
+                </div>
+                <SearchInput
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  className="max-w-md"
+                  placeholder={
+                    decryptionDone
+                      ? 'Пошук за хешем або варіантом відповіді…'
+                      : 'Пошук за хешем бюлетеня…'
+                  }
+                />
+              </>
             )}
           </div>
 

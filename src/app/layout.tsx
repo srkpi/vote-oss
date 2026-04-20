@@ -5,6 +5,7 @@ import { Bitter, Onest } from 'next/font/google';
 
 import { APP_NAME, APP_URL } from '@/lib/config/client';
 import { cn } from '@/lib/utils/common';
+import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 import { ToastProvider } from '@/providers/toast-provider';
 
 const onest = Onest({
@@ -38,11 +39,13 @@ export const metadata: Metadata = {
     siteName: APP_NAME,
     title: title,
     description: description,
+    images: [OPENGRAPH_IMAGE_DATA],
   },
   twitter: {
     card: 'summary_large_image',
     title: title,
     description: description,
+    images: [OPENGRAPH_IMAGE_DATA],
   },
 };
 

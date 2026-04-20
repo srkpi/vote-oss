@@ -46,6 +46,7 @@ export function createApiClient(fetcher: Fetcher) {
     elections: {
       list: () => fetcher<Election[]>('/elections'),
       get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
+      og: (id: string) => fetcher<{ title: string }>(`/elections/${id}/og`),
       create: (data: CreateElectionRequest) =>
         fetcher<CreateElectionResponse>('/elections', {
           method: 'POST',
