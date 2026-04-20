@@ -215,12 +215,45 @@ export function computeAnalytics(
     return point;
   });
 
-  // Activity buckets
+  // Activity buckets ──────────────────────────────────────────────────────────
   const activityBuckets = new Map<number, number>();
+
+  // 1. Pre-fill the map with zeros for the entire duration.
+  // This ensures the chart line hits 0 during periods of inactivity.
+  let currentBucketMs = bucketMs(electionStartMs, granularity);
+  const endLimitMs = bucketMs(effectiveEndMs, granularity);
+
+  while (currentBucketMs <= endLimitMs) {
+    activityBuckets.set(currentBucketMs, 0);
+
+    // Advance to the next bucket based on granularity
+    const d = new Date(currentBucketMs);
+    switch (granularity) {
+      case 'minute':
+        d.setMinutes(d.getMinutes() + 1);
+        break;
+      case 'hour':
+        d.setHours(d.getHours() + 1);
+        break;
+      case '6hour':
+        d.setHours(d.getHours() + 6);
+        break;
+      case 'day':
+        d.setDate(d.getDate() + 1);
+        break;
+    }
+    currentBucketMs = d.getTime();
+  }
+
+  // 2. Populate the counts from actual ballots.
   sortedBallots.forEach((ballot) => {
     const ms = new Date(ballot.createdAt).getTime();
     const bucket = bucketMs(ms, granularity);
-    activityBuckets.set(bucket, (activityBuckets.get(bucket) ?? 0) + 1);
+
+    // Safety: only increment if the bucket exists in our pre-filled range
+    if (activityBuckets.has(bucket)) {
+      activityBuckets.set(bucket, (activityBuckets.get(bucket) ?? 0) + 1);
+    }
   });
 
   const activityData: ActivityPoint[] = [...activityBuckets.entries()]
@@ -349,11 +382,12 @@ export function computeAnalytics(
 
       // Frontrunner changes
       let changes = 0;
-      let prevLeader: string | null = null;
+      let currentLeaderId: string | null = null;
       const cur: Record<string, number> = {};
       choices.forEach((c) => {
         cur[c.id] = 0;
       });
+
       sortedBallots.forEach((ballot) => {
         const dec = decryptedMap.get(ballot.id);
         if (dec?.valid && dec.choiceIds) {
@@ -361,13 +395,28 @@ export function computeAnalytics(
             if (cur[id] !== undefined) cur[id]++;
           });
         }
-        const leader = choices.reduce(
-          (best, c) => (cur[c.id]! > cur[best.id]! ? c : best),
-          choices[0]!,
-        );
-        if (prevLeader !== null && leader.id !== prevLeader) changes++;
-        prevLeader = leader.id;
+
+        // 1. Find the highest vote count at this exact moment
+        const maxVotes = Math.max(...choices.map((c) => cur[c.id]!));
+
+        // 2. Check if the incumbent leader survived (incumbency advantage during a tie)
+        if (currentLeaderId !== null && cur[currentLeaderId] === maxVotes) {
+          // The incumbent is still tied for first, so they don't lose the lead.
+          return;
+        }
+
+        // 3. The incumbent was strictly beaten. Find the new leader.
+        // (If multiple choices tied for the new lead, simply pick the first one)
+        const newLeader = choices.find((c) => cur[c.id] === maxVotes)!;
+
+        // 4. Register the change (ignoring the very first ballot which just sets the baseline)
+        if (currentLeaderId !== null && newLeader.id !== currentLeaderId) {
+          changes++;
+        }
+
+        currentLeaderId = newLeader.id;
       });
+
       frontrunnerChanges = changes;
     }
   }
