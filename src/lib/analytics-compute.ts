@@ -257,21 +257,38 @@ export function computeAnalytics(
   const peakHourLabel = peakTiedCount === 1 ? (peakBuckets[0]?.label ?? null) : null;
 
   // Velocity ratio ─────────────────────────────────────────────────────────────
-  // Compares vote *rate* in the second half of elapsed time to the first half.
-  // "Elapsed time" = [electionStartMs, effectiveEndMs], i.e. for an ongoing
-  // election we only look at how far we have come, not at the blank future.
+  // Compares the number of votes in the second half of the elapsed time interval
+  // to the number of votes in the first half.
   let velocityRatio: number | null = null;
+
   if (totalBallots >= 4 && effectiveDurationMs > 0) {
-    const mid = Math.floor(totalBallots / 2);
-    const tM = new Date(sortedBallots[mid]!.createdAt).getTime();
-    // Clamp to valid range to absorb clock skew or data anomalies.
-    const tMClamped = Math.max(electionStartMs, Math.min(effectiveEndMs, tM));
-    const firstHalfDuration = tMClamped - electionStartMs;
-    const secondHalfDuration = effectiveEndMs - tMClamped;
-    const r1 = firstHalfDuration > 0 ? mid / firstHalfDuration : 0;
-    const r2 = secondHalfDuration > 0 ? (totalBallots - mid) / secondHalfDuration : 0;
-    // If r1 === 0 all votes arrived exactly at election-start; ratio undefined.
-    if (r1 > 0) velocityRatio = r2 / r1;
+    const midTime = electionStartMs + effectiveDurationMs / 2;
+
+    let firstHalfCount = 0;
+    let secondHalfCount = 0;
+
+    for (const ballot of sortedBallots) {
+      const t = new Date(ballot.createdAt).getTime();
+
+      // Safety check: Ignore anomalies outside the valid timeline
+      if (t < electionStartMs || t > effectiveEndMs) continue;
+
+      if (t <= midTime) {
+        firstHalfCount++;
+      } else {
+        secondHalfCount++;
+      }
+    }
+
+    if (firstHalfCount > 0) {
+      // Direct ratio of counts (since durations of both halves are identical,
+      // the ratio of their counts is exactly equal to the ratio of their rates).
+      velocityRatio = secondHalfCount / firstHalfCount;
+    } else if (secondHalfCount > 0) {
+      // Pathological case: 0 votes in first half, all votes in second half.
+      // This is a massive late surge.
+      velocityRatio = secondHalfCount;
+    }
   }
 
   // Median time percentile ────────────────────────────────────────────────────
