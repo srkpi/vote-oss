@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: ElectionPageProps): Promise<M
 
   let metaTitle = 'Голосування';
   if (status === 404) {
-    metaTitle = '404 | Голосування не здайдено';
+    metaTitle = '404 | Голосування не знайдено';
   } else if (data?.title) {
     metaTitle = data.title;
   }

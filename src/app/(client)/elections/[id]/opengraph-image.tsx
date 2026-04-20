@@ -49,7 +49,7 @@ export default async function ElectionOgImage({ params }: Props) {
 
   let metaTitle = 'Голосування';
   if (status === 404) {
-    metaTitle = '404 | Голосування не здайдено';
+    metaTitle = 'Голосування не знайдено';
   } else if (data?.title) {
     metaTitle = data.title;
   }
