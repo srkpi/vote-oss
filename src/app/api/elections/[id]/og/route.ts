@@ -16,8 +16,6 @@ import { isValidUuid } from '@/lib/utils/common';
  *       This endpoint is public and does not require authentication.
  *     tags:
  *       - Elections
- *     security:
- *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
