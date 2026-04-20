@@ -21,7 +21,7 @@ const ORANGE_CX = 140;
 const ORANGE_CY = 550;
 
 // Clamp title length for display
-function clampTitle(title: string, max = 85): string {
+function clampTitle(title: string, max = 200): string {
   return title.length > max ? title.slice(0, max - 1) + '…' : title;
 }
 
