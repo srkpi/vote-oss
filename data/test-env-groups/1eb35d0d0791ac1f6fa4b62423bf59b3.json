@@ -1,1 +1,1 @@
-{"id":"1eb35d0d0791ac1f6fa4b62423bf59b3","fullName":"src/__tests__/api/admins/get.test.ts#GET /api/admins/[userId] returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"72b20177cd021543b33f09f4625c04d2"}}
+{"id":"1eb35d0d0791ac1f6fa4b62423bf59b3","fullName":"src/__tests__/api/admins/get.test.ts#GET /api/admins/[userId] returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"f35ffa49acefeb1f3fbf88d6a5f97a2f"}}
