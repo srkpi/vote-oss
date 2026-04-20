@@ -36,9 +36,13 @@ export const CHART_COLORS = [
   '#0ea5e9',
 ] as const;
 
-function determineGranularity(firstMs: number, lastMs: number, count: number): ChartGranularity {
-  const durationH = (lastMs - firstMs) / 3_600_000;
-  if (durationH < 3 || count < 20) return 'minute';
+/**
+ * Determines the best time bucket size based solely on the election's
+ * *effective* duration (open → min(close, now)).
+ */
+function determineGranularity(electionStartMs: number, effectiveEndMs: number): ChartGranularity {
+  const durationH = Math.max(0, effectiveEndMs - electionStartMs) / 3_600_000;
+  if (durationH < 3) return 'minute';
   if (durationH < 72) return 'hour';
   if (durationH < 336) return '6hour';
   return 'day';
@@ -65,10 +69,28 @@ function bucketMs(ms: number, granularity: ChartGranularity): number {
   return d.getTime();
 }
 
-export function formatXTick(ms: number, granularity: ChartGranularity): string {
+/**
+ * Formats a single x-axis tick.
+ *
+ * `spanH` is the election's effective duration in hours. For 'minute'
+ * granularity it is used to decide whether to prepend the day+month so that
+ * ticks like "14:04" become "19 квіт. 14:04" when the election spans more
+ * than one calendar day — eliminating ambiguity between timestamps on
+ * different days.
+ */
+export function formatXTick(ms: number, granularity: ChartGranularity, spanH = 0): string {
   const d = new Date(ms);
   switch (granularity) {
     case 'minute':
+      if (spanH >= 20) {
+        return d.toLocaleString('uk-UA', {
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      }
+
       return d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
     case 'hour':
       return d.toLocaleString('uk-UA', {
@@ -115,6 +137,20 @@ export function computeAnalytics(
     voteCounts: {},
   };
 
+  const now = Date.now();
+  const electionStartMs = new Date(election.opensAt).getTime();
+  const electionEndMs = new Date(election.closesAt).getTime();
+  const isElectionClosed = now >= electionEndMs;
+
+  // For ongoing elections never use the future close time as the denominator
+  // it makes rate-based metrics nonsensical. Use elapsed time only.
+  const effectiveEndMs = Math.min(electionEndMs, now);
+  const effectiveDurationMs = Math.max(0, effectiveEndMs - electionStartMs);
+
+  // spanH is passed to formatXTick so minute-level labels can include a date
+  // when the election runs longer than a single day.
+  const spanH = effectiveDurationMs / 3_600_000;
+
   if (ballots.length === 0) {
     return {
       sortedBallots: [],
@@ -122,10 +158,7 @@ export function computeAnalytics(
       timeSeries: [],
       activityData: [],
       shareEvolution: [],
-      metrics: {
-        ...emptyMetrics,
-        isElectionClosed: Date.now() >= new Date(election.closesAt).getTime(),
-      },
+      metrics: { ...emptyMetrics, isElectionClosed },
     };
   }
 
@@ -133,13 +166,10 @@ export function computeAnalytics(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
-  const firstMs = new Date(sortedBallots[0]!.createdAt).getTime();
-  const lastMs = new Date(sortedBallots[sortedBallots.length - 1]!.createdAt).getTime();
-
-  const electionStartMs = new Date(election.opensAt).getTime();
-  const electionEndMs = new Date(election.closesAt).getTime();
-
-  const granularity = determineGranularity(firstMs, lastMs, ballots.length);
+  // Granularity is now driven entirely by the election's effective duration,
+  // not by ballot count or ballot spread. This prevents a multi-day election
+  // with few votes from falling back to minute-level buckets.
+  const granularity = determineGranularity(electionStartMs, effectiveEndMs);
 
   // Vote counts per choice
   const voteCounts: Record<string, number> = {};
@@ -176,7 +206,7 @@ export function computeAnalytics(
     const ms = new Date(ballot.createdAt).getTime();
     const point: AnalyticsTimePoint = {
       ms,
-      label: formatXTick(ms, granularity),
+      label: formatXTick(ms, granularity, spanH),
       total: cumulativeTotal,
     };
     choices.forEach((c) => {
@@ -195,7 +225,11 @@ export function computeAnalytics(
 
   const activityData: ActivityPoint[] = [...activityBuckets.entries()]
     .sort(([a], [b]) => a - b)
-    .map(([bucket, count]) => ({ ms: bucket, label: formatXTick(bucket, granularity), count }));
+    .map(([bucket, count]) => ({
+      ms: bucket,
+      label: formatXTick(bucket, granularity, spanH),
+      count,
+    }));
 
   // Share evolution
   const shareEvolution: SharePoint[] = timeSeries.map((point) => {
@@ -207,22 +241,10 @@ export function computeAnalytics(
     return sp;
   });
 
-  // ── Timing metrics ──
+  // ── Timing metrics ──────────────────────────────────────────────────────────
   const totalBallots = sortedBallots.length;
 
-  // For ongoing elections, never use the future close time as a denominator — it
-  // makes every rate-based metric nonsensical (e.g. 48 h remaining collapses
-  // second-half vote rates to near zero, and pushes median percentile to ~2%).
-  // We use the *effective* end: the earlier of the scheduled close and right now.
-  const now = Date.now();
-  const effectiveEndMs = Math.min(electionEndMs, now);
-  const isElectionClosed = now >= electionEndMs;
-
-  // Guard: election could theoretically start at the same millisecond we compute
-  // (effectiveEndMs === electionStartMs); keep all divisions safe.
-  const effectiveDurationMs = Math.max(0, effectiveEndMs - electionStartMs);
-
-  // Peak activity ─────────────────────────────────────────────────────────────
+  // Peak activity
   // Find the maximum bucket count and collect *all* buckets that share it.
   // When multiple buckets tie (e.g. every per-minute bucket has exactly 1 vote)
   // there is no meaningful "peak label" — we expose null so metric builders can
@@ -265,7 +287,7 @@ export function computeAnalytics(
     medianTimePercentile = Math.min(100, Math.max(0, raw));
   }
 
-  // ── Decryption-dependent metrics ──
+  // ── Decryption-dependent metrics ────────────────────────────────────────────
   let normalizedEntropy: number | null = null;
   let enc: number | null = null;
   let gini: number | null = null;
