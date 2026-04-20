@@ -1,1 +1,1 @@
-{"id":"6d4da8a9c437fee9eaa3b0c7aba838f7","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimit uses the TTL from Redis for resetInMs","name":"uses the TTL from Redis for resetInMs","status":"passed","testResultsByEnv":{"default":"599a9ea404d0aa02eca50b4d14919e83"}}
+{"id":"6d4da8a9c437fee9eaa3b0c7aba838f7","fullName":"src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimit uses the TTL from Redis for resetInMs","name":"uses the TTL from Redis for resetInMs","status":"passed","testResultsByEnv":{"default":"497e34f6b9d5433ed61a14e4f0192c39"}}
