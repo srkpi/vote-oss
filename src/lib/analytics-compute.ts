@@ -36,9 +36,9 @@ export const CHART_COLORS = [
   '#0ea5e9',
 ] as const;
 
-function determineGranularity(firstMs: number, lastMs: number, count: number): ChartGranularity {
+function determineGranularity(firstMs: number, lastMs: number): ChartGranularity {
   const durationH = (lastMs - firstMs) / 3_600_000;
-  if (durationH < 3 || count < 20) return 'minute';
+  if (durationH < 3) return 'minute';
   if (durationH < 72) return 'hour';
   if (durationH < 336) return '6hour';
   return 'day';
@@ -139,7 +139,7 @@ export function computeAnalytics(
   const electionStartMs = new Date(election.opensAt).getTime();
   const electionEndMs = new Date(election.closesAt).getTime();
 
-  const granularity = determineGranularity(firstMs, lastMs, ballots.length);
+  const granularity = determineGranularity(firstMs, lastMs);
 
   // Vote counts per choice
   const voteCounts: Record<string, number> = {};
