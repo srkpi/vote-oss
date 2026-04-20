@@ -1,1 +1,1 @@
-{"id":"72d288cdca77ea30029aba3e3034870d","fullName":"src/__tests__/lib/token-store.test.ts#token-store revokeTokenPair deletes the DB record by access_jti","name":"deletes the DB record by access_jti","status":"passed","testResultsByEnv":{"default":"7581b768ac5bef787a8b56a254a5374e"}}
+{"id":"72d288cdca77ea30029aba3e3034870d","fullName":"src/__tests__/lib/token-store.test.ts#token-store revokeTokenPair deletes the DB record by access_jti","name":"deletes the DB record by access_jti","status":"passed","testResultsByEnv":{"default":"18e55f1f69816641310dca439fe33e45"}}

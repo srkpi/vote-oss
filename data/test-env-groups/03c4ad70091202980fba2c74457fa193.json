@@ -1,1 +1,1 @@
-{"id":"03c4ad70091202980fba2c74457fa193","fullName":"src/__tests__/lib/crypto.test.ts#crypto signBallotEntry returns a non-empty base64 string","name":"returns a non-empty base64 string","status":"passed","testResultsByEnv":{"default":"21902d4731d50dc062e09cbb6010c249"}}
+{"id":"03c4ad70091202980fba2c74457fa193","fullName":"src/__tests__/lib/crypto.test.ts#crypto signBallotEntry returns a non-empty base64 string","name":"returns a non-empty base64 string","status":"passed","testResultsByEnv":{"default":"d9f83ddffe25151196b24bf767b9f77f"}}

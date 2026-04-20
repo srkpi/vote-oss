@@ -1,1 +1,1 @@
-{"id":"4e0b220a87a6817323fc955c640d6f83","fullName":"src/__tests__/api/elections/list.test.ts#POST /api/elections returns 403 for a non-admin user","name":"returns 403 for a non-admin user","status":"passed","testResultsByEnv":{"default":"3ad37d359b035b1dab1218cf62a0fddb"}}
+{"id":"4e0b220a87a6817323fc955c640d6f83","fullName":"src/__tests__/api/elections/list.test.ts#POST /api/elections returns 403 for a non-admin user","name":"returns 403 for a non-admin user","status":"passed","testResultsByEnv":{"default":"59a01dec1276de1fcf750a28cdcf0108"}}

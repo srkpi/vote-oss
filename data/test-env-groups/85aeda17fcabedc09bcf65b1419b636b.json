@@ -1,1 +1,1 @@
-{"id":"85aeda17fcabedc09bcf65b1419b636b","fullName":"src/__tests__/lib/campus-api.test.ts#fixFacultyName leaves empty string unchanged","name":"leaves empty string unchanged","status":"passed","testResultsByEnv":{"default":"a302ead6be68cd936f46895dc52577c8"}}
+{"id":"85aeda17fcabedc09bcf65b1419b636b","fullName":"src/__tests__/lib/campus-api.test.ts#fixFacultyName leaves empty string unchanged","name":"leaves empty string unchanged","status":"passed","testResultsByEnv":{"default":"5505c7d97bc529712c4bccb0e61f91c7"}}
