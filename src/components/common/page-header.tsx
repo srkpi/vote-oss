@@ -85,7 +85,7 @@ export function PageHeader({
                       ) : (
                         <Link
                           href={item.href}
-                          className="hover:text-kpi-navy max-w-30 truncate transition-colors sm:max-w-none"
+                          className="hover:text-kpi-navy max-w-30 truncate transition-colors sm:max-w-xs"
                         >
                           {item.label}
                         </Link>

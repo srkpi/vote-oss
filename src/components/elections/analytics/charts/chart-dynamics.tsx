@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -20,6 +21,8 @@ interface DynamicsChartProps {
   data: AnalyticsTimePoint[];
   choices: ElectionChoice[];
   decryptionDone: boolean;
+  opensAt: string;
+  closesAt: string;
   /** When provided the chart renders with explicit pixel dimensions (for PNG export). */
   exportSize?: ChartExportSize;
 }
@@ -33,12 +36,25 @@ function DynamicsChartInner({
   data,
   choices,
   decryptionDone,
+  opensAt,
+  closesAt,
   width,
   height,
 }: Omit<DynamicsChartProps, 'exportSize'> & { width?: number; height?: number }) {
   const sizeProps = width != null && height != null ? { width, height } : {};
   const tickMap = Object.fromEntries(data.map((d) => [d.ms, d.label]));
   const ticks = data.map((d) => d.ms);
+  const [currentMs, setCurrentMs] = useState<number | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentMs(Date.now());
+  }, []);
+
+  const startMs = new Date(opensAt).getTime();
+  const closeMs = new Date(closesAt).getTime();
+  const lastDataMs = data.length > 0 ? data[data.length - 1].ms : startMs;
+  const endMs = Math.min(currentMs ?? lastDataMs, closeMs);
 
   return (
     <LineChart {...sizeProps} data={data} margin={{ top: 8, right: 20, left: -8, bottom: 0 }}>
@@ -47,7 +63,7 @@ function DynamicsChartInner({
         dataKey="ms"
         type="number"
         scale="time"
-        domain={['dataMin', 'dataMax']}
+        domain={[startMs, endMs]}
         ticks={ticks}
         tickFormatter={(ms: number) => tickMap[ms] ?? ''}
         tick={AXIS_STYLE}
@@ -97,13 +113,22 @@ function DynamicsChartInner({
   );
 }
 
-export function DynamicsChart({ data, choices, decryptionDone, exportSize }: DynamicsChartProps) {
+export function DynamicsChart({
+  data,
+  choices,
+  decryptionDone,
+  opensAt,
+  closesAt,
+  exportSize,
+}: DynamicsChartProps) {
   if (exportSize) {
     return (
       <DynamicsChartInner
         data={data}
         choices={choices}
         decryptionDone={decryptionDone}
+        opensAt={opensAt}
+        closesAt={closesAt}
         width={exportSize.width}
         height={exportSize.height}
       />
@@ -112,7 +137,13 @@ export function DynamicsChart({ data, choices, decryptionDone, exportSize }: Dyn
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-      <DynamicsChartInner data={data} choices={choices} decryptionDone={decryptionDone} />
+      <DynamicsChartInner
+        data={data}
+        choices={choices}
+        decryptionDone={decryptionDone}
+        opensAt={opensAt}
+        closesAt={closesAt}
+      />
     </ResponsiveContainer>
   );
 }
