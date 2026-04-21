@@ -6,7 +6,7 @@ export interface AnalyticsMetrics {
   maxCount: number;
   peakHourConcentration: number | null;
   peakHourLabel: string | null;
-  peakTiedCount: number;
+  peakCount: number | null;
   isElectionClosed: boolean;
   velocityRatio: number | null; // null = fewer than 4 ballots
   medianTimePercentile: number | null; // null = fewer than 2 ballots
@@ -35,7 +35,7 @@ export interface MetricCardConfig {
   interpretation: string;
   color: 'navy' | 'orange' | 'blue' | 'success' | 'warning' | 'error' | 'purple';
   description: string;
-  insight: string;
+  insight: string | null;
   scale?: MetricScaleConfig;
 }
 

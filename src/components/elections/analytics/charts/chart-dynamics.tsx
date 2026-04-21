@@ -56,8 +56,52 @@ function DynamicsChartInner({
   const lastDataMs = data.length > 0 ? data[data.length - 1].ms : startMs;
   const endMs = Math.min(currentMs ?? lastDataMs, closeMs);
 
+  // Synthetic boundary points so the line spans from open → now/close.
+  // _synthetic flags them so the dot renderer can hide them completely.
+  const zeroValues = Object.fromEntries(choices.map((c) => [c.id, 0]));
+  const lastPoint = data.length > 0 ? data[data.length - 1] : null;
+
+  const startPoint = {
+    ms: startMs,
+    label: '',
+    total: 0,
+    ...zeroValues,
+    _synthetic: true,
+  };
+
+  const endPoint = {
+    ...(lastPoint ?? { ms: endMs, label: '', total: 0, ...zeroValues }),
+    ms: endMs,
+    label: '',
+    _synthetic: true,
+  };
+
+  const paddedData = [
+    startPoint,
+    ...data,
+    // Only append if the end boundary is strictly after the last real point
+    ...(endMs > (lastPoint?.ms ?? startMs) ? [endPoint] : []),
+  ];
+
+  // Custom dot: render nothing for synthetic boundary points, normal dot otherwise
+  const makeDot = (color: string, showDots: boolean) => {
+    function DotRenderer({
+      cx,
+      cy,
+      payload,
+    }: {
+      cx?: number;
+      cy?: number;
+      payload?: { _synthetic?: boolean };
+    }) {
+      if (payload?._synthetic || !showDots || cx == null || cy == null) return <g />;
+      return <circle cx={cx} cy={cy} r={3} fill={color} strokeWidth={0} />;
+    }
+    return DotRenderer;
+  };
+
   return (
-    <LineChart {...sizeProps} data={data} margin={{ top: 8, right: 20, left: -8, bottom: 0 }}>
+    <LineChart {...sizeProps} data={paddedData} margin={{ top: 8, right: 20, left: -8, bottom: 0 }}>
       <CartesianGrid strokeDasharray="3 3" stroke="#ecf0f7" vertical={false} />
       <XAxis
         dataKey="ms"
@@ -78,26 +122,22 @@ function DynamicsChartInner({
       />
 
       {decryptionDone ? (
-        choices.map((c, i) => (
-          <Line
-            key={c.id}
-            type="monotone"
-            dataKey={c.id}
-            stroke={CHART_COLORS[i % CHART_COLORS.length]}
-            strokeWidth={2.5}
-            isAnimationActive={width == null}
-            dot={
-              data.length < 30
-                ? {
-                    r: 3,
-                    strokeWidth: 0,
-                    fill: CHART_COLORS[i % CHART_COLORS.length],
-                  }
-                : false
-            }
-            activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
-          />
-        ))
+        choices.map((c, i) => {
+          const color = CHART_COLORS[i % CHART_COLORS.length];
+          const showDots = data.length < 30;
+          return (
+            <Line
+              key={c.id}
+              type="monotone"
+              dataKey={c.id}
+              stroke={color}
+              strokeWidth={2.5}
+              isAnimationActive={width == null}
+              dot={makeDot(color, showDots)}
+              activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
+            />
+          );
+        })
       ) : (
         <Line
           type="monotone"
@@ -105,7 +145,7 @@ function DynamicsChartInner({
           stroke="#1c396e"
           strokeWidth={2.5}
           isAnimationActive={width == null}
-          dot={data.length < 30 ? { r: 3, fill: '#1c396e', strokeWidth: 0 } : false}
+          dot={makeDot('#1c396e', data.length < 30)}
           activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
         />
       )}

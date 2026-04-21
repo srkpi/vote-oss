@@ -172,18 +172,20 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
             </p>
           </div>
 
-          <div
-            className="rounded-xl p-4"
-            style={{ background: `${grad.text}10`, border: `1px solid ${grad.text}25` }}
-          >
-            <p
-              className="mb-1.5 text-[10px] font-semibold tracking-wider uppercase"
-              style={{ color: grad.text }}
+          {metric.insight && (
+            <div
+              className="rounded-xl p-4"
+              style={{ background: `${grad.text}10`, border: `1px solid ${grad.text}25` }}
             >
-              В цьому голосуванні
-            </p>
-            <p className="font-body text-foreground text-sm leading-relaxed">{metric.insight}</p>
-          </div>
+              <p
+                className="mb-1.5 text-[10px] font-semibold tracking-wider uppercase"
+                style={{ color: grad.text }}
+              >
+                В цьому голосуванні
+              </p>
+              <p className="font-body text-foreground text-sm leading-relaxed">{metric.insight}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
