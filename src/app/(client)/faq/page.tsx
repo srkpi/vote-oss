@@ -3,21 +3,21 @@ import type { Metadata } from 'next';
 import { ErrorState } from '@/components/common/error-state';
 import { FaqAccordion } from '@/components/faq/faq-accordion';
 import { serverApi } from '@/lib/api/server';
-import { APP_URL } from '@/lib/config/client';
+import { APP_NAME, APP_URL } from '@/lib/config/client';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 
 export const metadata: Metadata = {
   title: 'FAQ — Часті запитання',
   description: 'Відповіді на найпоширеніші запитання про платформу голосування',
   openGraph: {
-    title: 'FAQ — Часті запитання',
+    title: `FAQ — Часті запитання | ${APP_NAME}`,
     description: 'Відповіді на найпоширеніші запитання про платформу голосування',
     url: new URL('/faq', APP_URL),
     images: [OPENGRAPH_IMAGE_DATA],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FAQ — Часті запитання',
+    title: `FAQ — Часті запитання | ${APP_NAME}`,
     description: 'Відповіді на найпоширеніші запитання про платформу голосування',
     images: [OPENGRAPH_IMAGE_DATA],
   },

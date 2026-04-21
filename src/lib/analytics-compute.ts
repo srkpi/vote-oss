@@ -277,17 +277,87 @@ export function computeAnalytics(
   // ── Timing metrics ──────────────────────────────────────────────────────────
   const totalBallots = sortedBallots.length;
 
-  // Peak activity
-  // Find the maximum bucket count and collect *all* buckets that share it.
-  // When multiple buckets tie (e.g. every per-minute bucket has exactly 1 vote)
-  // there is no meaningful "peak label" — we expose null so metric builders can
-  // produce accurate prose rather than showing an arbitrary timestamp.
+  // Peak activity — sliding window
+  //
+  // A single-bucket approach breaks for fine granularities (e.g. 'minute'): a
+  // 30-minute surge of 15 votes spread across 30 × 1-minute buckets (max 2 per
+  // bucket) looks "flat" even though it's obviously the dominant period.
+  //
+  // Fix: find the contiguous window of N buckets whose sum is highest, then
+  // report concentration as windowSum / totalBallots.  Window sizes are chosen
+  // so the window represents a human-meaningful "session":
+  //   minute → 30-bucket (30 min)   hour → 3-bucket (3 h)
+  //   6hour  → 1-bucket  (6 h)      day  → 1-bucket  (1 day)
+  //
+  // maxCount is kept as the per-bucket maximum because the Activity chart uses
+  // it to highlight and annotate the single tallest bar.
   const maxCount = activityData.length > 0 ? Math.max(...activityData.map((d) => d.count)) : 0;
-  const peakBuckets = maxCount > 0 ? activityData.filter((d) => d.count === maxCount) : [];
-  const peakTiedCount = peakBuckets.length;
-  const peakHourConcentration = totalBallots > 0 ? (maxCount / totalBallots) * 100 : null;
-  // Only expose a named label when there is a single, genuinely dominant period.
-  const peakHourLabel = peakTiedCount === 1 ? (peakBuckets[0]?.label ?? null) : null;
+
+  const PEAK_WINDOW_SIZES: Record<ChartGranularity, number> = {
+    minute: 30,
+    hour: 3,
+    '6hour': 1,
+    day: 1,
+  };
+
+  const rawWindowSize = PEAK_WINDOW_SIZES[granularity];
+  // Never exceed the available number of buckets.
+  const windowSize = Math.min(rawWindowSize, activityData.length);
+
+  let peakWindowSum = 0;
+  let peakWindowStartIdx = 0;
+  let peakTiedCount = 0;
+
+  if (activityData.length > 0) {
+    const counts = activityData.map((d) => d.count);
+
+    if (windowSize <= 1) {
+      // Single-bucket path — preserves original semantics exactly.
+      peakWindowSum = maxCount;
+      peakWindowStartIdx = counts.indexOf(maxCount);
+      peakTiedCount = counts.filter((c) => c === maxCount).length;
+    } else {
+      // Compute initial window sum.
+      let windowSum = 0;
+      for (let i = 0; i < windowSize; i++) windowSum += counts[i] ?? 0;
+
+      peakWindowSum = windowSum;
+      peakWindowStartIdx = 0;
+      peakTiedCount = 1;
+
+      for (let i = windowSize; i < counts.length; i++) {
+        windowSum += (counts[i] ?? 0) - (counts[i - windowSize] ?? 0);
+        if (windowSum > peakWindowSum) {
+          peakWindowSum = windowSum;
+          peakWindowStartIdx = i - windowSize + 1;
+          peakTiedCount = 1;
+        } else if (windowSum === peakWindowSum) {
+          peakTiedCount++;
+        }
+      }
+    }
+  }
+
+  const peakHourConcentration = totalBallots > 0 ? (peakWindowSum / totalBallots) * 100 : null;
+
+  // Build a human-readable label for the peak window.
+  // For single-bucket windows just use the bucket label; for multi-bucket
+  // windows show "HH:MM–HH:MM" so the reader knows what span is being cited.
+  // If multiple windows tied we expose null — no single period stands out.
+  let peakHourLabel: string | null = null;
+  if (peakTiedCount === 1 && activityData.length > 0) {
+    if (windowSize <= 1) {
+      peakHourLabel = activityData[peakWindowStartIdx]?.label ?? null;
+    } else {
+      const startLabel = activityData[peakWindowStartIdx]?.label ?? null;
+      const endIdx = Math.min(peakWindowStartIdx + windowSize - 1, activityData.length - 1);
+      const endLabel = activityData[endIdx]?.label ?? null;
+      peakHourLabel =
+        startLabel && endLabel && startLabel !== endLabel
+          ? `${startLabel}–${endLabel}`
+          : startLabel;
+    }
+  }
 
   // Velocity ratio ─────────────────────────────────────────────────────────────
   // Compares the number of votes in the second half of the elapsed time interval

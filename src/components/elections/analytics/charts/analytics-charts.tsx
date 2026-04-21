@@ -80,6 +80,8 @@ export function AnalyticsCharts({
             choices={choices}
             decryptionDone={decryptionDone}
             exportSize={{ width: w, height: h }}
+            opensAt={election.opensAt}
+            closesAt={election.closesAt}
           />
         ),
         election,
@@ -143,7 +145,13 @@ export function AnalyticsCharts({
           onDownload={dynamicsDownloader}
           legend={legendEntries}
         >
-          <DynamicsChart data={timeSeries} choices={choices} decryptionDone={decryptionDone} />
+          <DynamicsChart
+            data={timeSeries}
+            choices={choices}
+            decryptionDone={decryptionDone}
+            opensAt={election.opensAt}
+            closesAt={election.closesAt}
+          />
         </ChartWrapper>
       )}
 
