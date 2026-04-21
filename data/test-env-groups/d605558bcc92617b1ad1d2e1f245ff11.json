@@ -1,1 +1,1 @@
-{"id":"d605558bcc92617b1ad1d2e1f245ff11","fullName":"src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups preserves already-correct НН names","name":"preserves already-correct НН names","status":"passed","testResultsByEnv":{"default":"fcf7f419dd141bcc8ddfc1083e3a02fe"}}
+{"id":"d605558bcc92617b1ad1d2e1f245ff11","fullName":"src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups preserves already-correct НН names","name":"preserves already-correct НН names","status":"passed","testResultsByEnv":{"default":"b482777971bd8cb7c1896a0065a39c48"}}

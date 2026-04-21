@@ -1,1 +1,1 @@
-{"id":"2988166c5701d89ffdddcc192163c7c9","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"522b436ef8dc24f2de6e63aac7438956"}}
+{"id":"2988166c5701d89ffdddcc192163c7c9","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"5d5d50fc85e5c7466ffc6c276f211375"}}

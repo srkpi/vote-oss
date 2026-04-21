@@ -1,1 +1,1 @@
-{"id":"e98b5c43b8a79b8a6648f1b1ed6af1a2","fullName":"src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"912aef3c73fbdf679f76e3cc1e35f7a2"}}
+{"id":"e98b5c43b8a79b8a6648f1b1ed6af1a2","fullName":"src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"7de73f4f743e9e96ee6c43fffef36ec4"}}

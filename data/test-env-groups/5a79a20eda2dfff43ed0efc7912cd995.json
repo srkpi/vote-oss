@@ -1,1 +1,1 @@
-{"id":"5a79a20eda2dfff43ed0efc7912cd995","fullName":"src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout returns 401 for a malformed access token","name":"returns 401 for a malformed access token","status":"passed","testResultsByEnv":{"default":"2a7b19096f560a00b7dbcb2dbe76f088"}}
+{"id":"5a79a20eda2dfff43ed0efc7912cd995","fullName":"src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout returns 401 for a malformed access token","name":"returns 401 for a malformed access token","status":"passed","testResultsByEnv":{"default":"445af4e8e14f1d63b316d732e6f7f2df"}}

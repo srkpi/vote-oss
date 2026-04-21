@@ -1,1 +1,1 @@
-{"id":"b931381d86b7337d3429ae4d22a04d41","fullName":"src/__tests__/lib/campus-api.test.ts#fixFacultyName leaves plain non-НН faculty names unchanged","name":"leaves plain non-НН faculty names unchanged","status":"passed","testResultsByEnv":{"default":"5dbfaef40b7a49896874b08245717448"}}
+{"id":"b931381d86b7337d3429ae4d22a04d41","fullName":"src/__tests__/lib/campus-api.test.ts#fixFacultyName leaves plain non-НН faculty names unchanged","name":"leaves plain non-НН faculty names unchanged","status":"passed","testResultsByEnv":{"default":"3b0d222dc70f53787de09029ab6e3965"}}
