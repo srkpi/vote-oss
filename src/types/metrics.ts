@@ -6,7 +6,7 @@ export interface AnalyticsMetrics {
   maxCount: number;
   peakHourConcentration: number | null;
   peakHourLabel: string | null;
-  peakTiedCount: number;
+  peakCount: number | null;
   isElectionClosed: boolean;
   velocityRatio: number | null; // null = fewer than 4 ballots
   medianTimePercentile: number | null; // null = fewer than 2 ballots

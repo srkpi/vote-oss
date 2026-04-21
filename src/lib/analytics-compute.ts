@@ -71,12 +71,6 @@ function bucketMs(ms: number, granularity: ChartGranularity): number {
 
 /**
  * Formats a single x-axis tick.
- *
- * `spanH` is the election's effective duration in hours. For 'minute'
- * granularity it is used to decide whether to prepend the day+month so that
- * ticks like "14:04" become "19 квіт. 14:04" when the election spans more
- * than one calendar day — eliminating ambiguity between timestamps on
- * different days.
  */
 export function formatXTick(ms: number, granularity: ChartGranularity, spanH = 0): string {
   const d = new Date(ms);
@@ -113,6 +107,34 @@ export const GRANULARITY_LABEL: Record<ChartGranularity, string> = {
   day: 'по днях',
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers for granularity-independent peak detection
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * 1-D normalised Gaussian smoothing with reflective boundaries.
+ * σ in units of bins. Kernel radius = ceil(σ × 3).
+ */
+function gaussianSmooth1D(data: number[], sigma: number): number[] {
+  if (data.length === 0) return [];
+  const radius = Math.ceil(sigma * 3);
+  const result = new Array<number>(data.length).fill(0);
+  for (let i = 0; i < data.length; i++) {
+    let sum = 0;
+    let w = 0;
+    for (let k = -radius; k <= radius; k++) {
+      const j = i + k;
+      if (j >= 0 && j < data.length) {
+        const weight = Math.exp(-(k * k) / (2 * sigma * sigma));
+        sum += data[j]! * weight;
+        w += weight;
+      }
+    }
+    result[i] = w > 0 ? sum / w : 0;
+  }
+  return result;
+}
+
 export function computeAnalytics(
   election: BallotsElection,
   ballots: Ballot[],
@@ -125,7 +147,7 @@ export function computeAnalytics(
     maxCount: 0,
     peakHourConcentration: null,
     peakHourLabel: null,
-    peakTiedCount: 0,
+    peakCount: null,
     isElectionClosed: false,
     velocityRatio: null,
     medianTimePercentile: null,
@@ -215,7 +237,7 @@ export function computeAnalytics(
     return point;
   });
 
-  // Activity buckets ──────────────────────────────────────────────────────────
+  // Activity buckets
   const activityBuckets = new Map<number, number>();
 
   // 1. Pre-fill the map with zeros for the entire duration.
@@ -274,94 +296,141 @@ export function computeAnalytics(
     return sp;
   });
 
-  // ── Timing metrics ──────────────────────────────────────────────────────────
   const totalBallots = sortedBallots.length;
 
-  // Peak activity — sliding window
-  //
-  // A single-bucket approach breaks for fine granularities (e.g. 'minute'): a
-  // 30-minute surge of 15 votes spread across 30 × 1-minute buckets (max 2 per
-  // bucket) looks "flat" even though it's obviously the dominant period.
-  //
-  // Fix: find the contiguous window of N buckets whose sum is highest, then
-  // report concentration as windowSum / totalBallots.  Window sizes are chosen
-  // so the window represents a human-meaningful "session":
-  //   minute → 30-bucket (30 min)   hour → 3-bucket (3 h)
-  //   6hour  → 1-bucket  (6 h)      day  → 1-bucket  (1 day)
-  //
-  // maxCount is kept as the per-bucket maximum because the Activity chart uses
-  // it to highlight and annotate the single tallest bar.
+  // maxCount stays as the single-bucket maximum (used by the activity bar chart
+  // to highlight and annotate the tallest bar — unrelated to the burst metric).
   const maxCount = activityData.length > 0 ? Math.max(...activityData.map((d) => d.count)) : 0;
 
-  const PEAK_WINDOW_SIZES: Record<ChartGranularity, number> = {
-    minute: 30,
-    hour: 3,
-    '6hour': 1,
-    day: 1,
-  };
+  // ── Burst / peak detection — granularity-independent ─────────────────────
+  //
+  // Two independent stages work on continuous timestamps (milliseconds) and
+  // are never influenced by chart granularity:
+  //
+  // Stage A — CONCENTRATION  (sliding window, O(n) two-pointer)
+  //   Window = 20 % of effective election duration.
+  //   A perfectly uniform vote flow yields ≈ 20 %.
+  //   A genuine burst will score substantially higher.
+  //
+  // Stage B — DISTINCT PEAK COUNT  (density estimation + Gaussian smoothing)
+  //   1. Build a fine histogram (≈ 1 bin / minute, max 200 bins).
+  //   2. Smooth with σ ≈ 4 % of bins to merge nearby micro-clusters.
+  //   3. Mark contiguous regions above 2 × mean density as "burst zones".
+  //   4. Drop noise zones (< max(2, 5 % of total) votes).
+  //   → peakCount = number of surviving zones (0 = uniform, 1 = single burst, …)
+  //   → peakHourLabel = time range of the dominant zone (most votes)
+  //
+  // Why keep them separate:
+  //   The sliding window answers "how concentrated was the peak?"; the density
+  //   analysis answers "how many truly distinct bursts were there?". A single
+  //   long burst may score only 60 % on concentration yet still be the sole
+  //   peak (count = 1).
 
-  const rawWindowSize = PEAK_WINDOW_SIZES[granularity];
-  // Never exceed the available number of buckets.
-  const windowSize = Math.min(rawWindowSize, activityData.length);
+  let peakHourConcentration: number | null = null;
+  let peakHourLabel: string | null = null;
+  let peakCount: number | null = null;
 
-  let peakWindowSum = 0;
-  let peakWindowStartIdx = 0;
-  let peakTiedCount = 0;
+  if (totalBallots >= 1 && effectiveDurationMs > 0) {
+    const times = sortedBallots.map((b) => new Date(b.createdAt).getTime());
 
-  if (activityData.length > 0) {
-    const counts = activityData.map((d) => d.count);
+    // ── Stage A: concentration via 20 %-window sliding scan ────────────────
+    const burstWindowMs = effectiveDurationMs * 0.2;
+    let bestWindowCount = 0;
 
-    if (windowSize <= 1) {
-      // Single-bucket path — preserves original semantics exactly.
-      peakWindowSum = maxCount;
-      peakWindowStartIdx = counts.indexOf(maxCount);
-      peakTiedCount = counts.filter((c) => c === maxCount).length;
-    } else {
-      // Compute initial window sum.
-      let windowSum = 0;
-      for (let i = 0; i < windowSize; i++) windowSum += counts[i] ?? 0;
-
-      peakWindowSum = windowSum;
-      peakWindowStartIdx = 0;
-      peakTiedCount = 1;
-
-      for (let i = windowSize; i < counts.length; i++) {
-        windowSum += (counts[i] ?? 0) - (counts[i - windowSize] ?? 0);
-        if (windowSum > peakWindowSum) {
-          peakWindowSum = windowSum;
-          peakWindowStartIdx = i - windowSize + 1;
-          peakTiedCount = 1;
-        } else if (windowSum === peakWindowSum) {
-          peakTiedCount++;
-        }
+    let rPtr = 0;
+    for (let lPtr = 0; lPtr < times.length; lPtr++) {
+      while (rPtr < times.length && times[rPtr]! - times[lPtr]! <= burstWindowMs) rPtr++;
+      if (rPtr - lPtr > bestWindowCount) {
+        bestWindowCount = rPtr - lPtr;
       }
     }
-  }
 
-  const peakHourConcentration = totalBallots > 0 ? (peakWindowSum / totalBallots) * 100 : null;
+    peakHourConcentration = (bestWindowCount / totalBallots) * 100;
 
-  // Build a human-readable label for the peak window.
-  // For single-bucket windows just use the bucket label; for multi-bucket
-  // windows show "HH:MM–HH:MM" so the reader knows what span is being cited.
-  // If multiple windows tied we expose null — no single period stands out.
-  let peakHourLabel: string | null = null;
-  if (peakTiedCount === 1 && activityData.length > 0) {
-    if (windowSize <= 1) {
-      peakHourLabel = activityData[peakWindowStartIdx]?.label ?? null;
+    // ── Stage B: distinct burst zones via density + Gaussian smoothing ──────
+    if (totalBallots >= 2) {
+      // ≈ 1 bin per minute, capped at 200 to stay performant for very long elections
+      const NUM_BINS = Math.min(200, Math.max(30, Math.round(effectiveDurationMs / 60_000)));
+      const binMs = effectiveDurationMs / NUM_BINS;
+
+      // Raw density histogram
+      const densityArr = new Array<number>(NUM_BINS).fill(0);
+      for (const t of times) {
+        const offset = t - electionStartMs;
+        if (offset < 0 || offset > effectiveDurationMs) continue;
+        densityArr[Math.min(NUM_BINS - 1, Math.floor(offset / binMs))]++;
+      }
+
+      // Prefix sums for O(1) range vote counts (used during zone finalisation)
+      const prefix = new Array<number>(NUM_BINS + 1).fill(0);
+      for (let i = 0; i < NUM_BINS; i++) prefix[i + 1] = prefix[i]! + densityArr[i]!;
+
+      // Gaussian smoothing: σ = 4 % of bins (min 1.5) merges sub-clusters that
+      // belong to the same real burst while preserving valley structure between
+      // genuinely separate bursts.
+      const sigma = Math.max(1.5, NUM_BINS * 0.04);
+      const smoothed = gaussianSmooth1D(densityArr, sigma);
+
+      // Burst threshold: 2 × mean density.
+      // A bin must be twice as active as average to count toward a burst zone.
+      const meanDensity = totalBallots / NUM_BINS;
+      const burstThreshold = meanDensity * 2.0;
+
+      // Noise filter: zones smaller than 5 % of total (min 2) are dropped.
+      const minZoneVotes = Math.max(2, Math.ceil(totalBallots * 0.05));
+
+      type BurstZone = { startMs: number; endMs: number; votes: number };
+      const zones: BurstZone[] = [];
+      let inZone = false;
+      let zoneStartBin = 0;
+
+      for (let i = 0; i <= NUM_BINS; i++) {
+        const above = i < NUM_BINS && (smoothed[i] ?? 0) > burstThreshold;
+
+        if (above && !inZone) {
+          inZone = true;
+          zoneStartBin = i;
+        } else if (!above && inZone) {
+          inZone = false;
+          // Use prefix sums to count real (unsmoothed) votes in the zone
+          const votes = (prefix[i] ?? 0) - (prefix[zoneStartBin] ?? 0);
+          if (votes >= minZoneVotes) {
+            zones.push({
+              startMs: electionStartMs + zoneStartBin * binMs,
+              endMs: electionStartMs + i * binMs,
+              votes,
+            });
+          }
+        }
+      }
+
+      peakCount = zones.length;
+
+      // Build a time-range label for the dominant zone (most votes).
+      // This is the label shown in the metric card — it refers to the actual
+      // burst cluster, not to the abstract 20 %-window boundary.
+      if (zones.length > 0) {
+        zones.sort((a, b) => b.votes - a.votes);
+        const dom = zones[0]!;
+        const sl = formatXTick(dom.startMs, granularity, spanH);
+        const el = formatXTick(Math.min(dom.endMs, effectiveEndMs), granularity, spanH);
+        peakHourLabel = sl === el ? sl : `${sl}–${el}`;
+      }
     } else {
-      const startLabel = activityData[peakWindowStartIdx]?.label ?? null;
-      const endIdx = Math.min(peakWindowStartIdx + windowSize - 1, activityData.length - 1);
-      const endLabel = activityData[endIdx]?.label ?? null;
-      peakHourLabel =
-        startLabel && endLabel && startLabel !== endLabel
-          ? `${startLabel}–${endLabel}`
-          : startLabel;
+      // Single ballot: treat as its own burst for label purposes
+      peakCount = 1;
+      const t = times[0];
+      if (t !== undefined) peakHourLabel = formatXTick(t, granularity, spanH);
     }
+  } else if (totalBallots >= 1 && effectiveDurationMs === 0) {
+    // Edge case: all votes cast at the exact same instant
+    peakHourConcentration = 100;
+    peakCount = 1;
+    const t = new Date(sortedBallots[0]!.createdAt).getTime();
+    peakHourLabel = formatXTick(t, granularity, spanH);
   }
 
-  // Velocity ratio ─────────────────────────────────────────────────────────────
-  // Compares the number of votes in the second half of the elapsed time interval
-  // to the number of votes in the first half.
+  // ── Velocity ratio ────────────────────────────────────────────────────────
   let velocityRatio: number | null = null;
 
   if (totalBallots >= 4 && effectiveDurationMs > 0) {
@@ -372,15 +441,9 @@ export function computeAnalytics(
 
     for (const ballot of sortedBallots) {
       const t = new Date(ballot.createdAt).getTime();
-
-      // Safety check: Ignore anomalies outside the valid timeline
       if (t < electionStartMs || t > effectiveEndMs) continue;
-
-      if (t <= midTime) {
-        firstHalfCount++;
-      } else {
-        secondHalfCount++;
-      }
+      if (t <= midTime) firstHalfCount++;
+      else secondHalfCount++;
     }
 
     if (firstHalfCount > 0) {
@@ -394,11 +457,7 @@ export function computeAnalytics(
     }
   }
 
-  // Median time percentile ────────────────────────────────────────────────────
-  // Position of the median ballot within elapsed election time [0, 100].
-  // Using effectiveDurationMs instead of the full scheduled duration means an
-  // election open for 48 h with all votes in the first hour gives ~40% (of the
-  // 2.5 h elapsed so far), not 2% (of 48 h total).
+  // ── Median time percentile ────────────────────────────────────────────────
   let medianTimePercentile: number | null = null;
   if (totalBallots >= 2 && effectiveDurationMs > 0) {
     const tMedian = new Date(sortedBallots[Math.floor(totalBallots / 2)]!.createdAt).getTime();
@@ -407,7 +466,7 @@ export function computeAnalytics(
     medianTimePercentile = Math.min(100, Math.max(0, raw));
   }
 
-  // ── Decryption-dependent metrics ────────────────────────────────────────────
+  // ── Decryption-dependent metrics ──────────────────────────────────────────
   let normalizedEntropy: number | null = null;
   let enc: number | null = null;
   let gini: number | null = null;
@@ -502,7 +561,7 @@ export function computeAnalytics(
       maxCount,
       peakHourConcentration,
       peakHourLabel,
-      peakTiedCount,
+      peakCount,
       isElectionClosed,
       velocityRatio,
       medianTimePercentile,
