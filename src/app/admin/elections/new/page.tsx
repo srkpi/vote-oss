@@ -32,6 +32,7 @@ export default async function NewElectionPage() {
           <div className="border-border-color shadow-shadow-card rounded-xl border bg-white p-5 sm:p-8">
             <CreateElectionForm
               restrictedToFaculty={session.restrictedToFaculty ? session.faculty : null}
+              manageGroups={session.manageGroups}
             />
           </div>
         </div>

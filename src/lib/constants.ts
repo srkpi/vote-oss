@@ -23,6 +23,16 @@ export const BYPASS_TOKEN_MAX_USAGE_MAX = 100;
 /** Maximum days a session stays valid without a fresh Diia re-authentication */
 export const SESSION_INITIAL_AUTH_MAX_DAYS = 30;
 
+// Group limits
+export const GROUP_NAME_MAX_LENGTH = 100;
+export const GROUP_INVITE_LINK_TOKEN_LENGTH = 24;
+export const GROUP_INVITE_LINK_MAX_USAGE = 1000;
+export const GROUP_INVITE_LINK_MAX_DAYS = 90;
+export const GROUP_INVITE_LINK_MIN_HOURS = 1;
+export const GROUP_INVITE_LINK_LABEL_MAX_LENGTH = 100;
+export const GROUP_INVITE_LINK_MAX_ACTIVE = 10;
+export const GROUP_MAX_OWNED = 20;
+
 // FAQ limits
 export const FAQ_CATEGORY_TITLE_MAX_LENGTH = 32;
 export const FAQ_ITEM_TITLE_MAX_LENGTH = 128;
@@ -35,6 +45,8 @@ export const CACHE_TTL_INVITE_TOKENS_SECS = 5 * 60;
 export const CACHE_TTL_CAMPUS_GROUPS_SECS = 60 * 60;
 export const CACHE_TTL_FAQ_SECS = 5 * 60;
 export const CACHE_TTL_BYPASS_SECS = 5 * 60;
+export const CACHE_TTL_GROUP_MEMBERSHIPS_SECS = 5 * 60;
+export const CACHE_TTL_GROUP_OWNED_SECS = 5 * 60;
 
 // Cache keys
 export const CACHE_KEY_ELECTIONS = 'cache:elections';
@@ -138,6 +150,7 @@ export const RESTRICTION_TYPE_LABELS: Record<string, string> = {
   SPECIALITY: 'Спеціальність',
   LEVEL_COURSE: 'Рівень та курс',
   BYPASS_REQUIRED: 'Токен доступу',
+  GROUP_MEMBERSHIP: 'Членство в групі',
 };
 
 export const BYPASSABLE_RESTRICTION_TYPES = [
@@ -148,6 +161,7 @@ export const BYPASSABLE_RESTRICTION_TYPES = [
   'LEVEL_COURSE',
   'SPECIALITY',
   'BYPASS_REQUIRED',
+  'GROUP_MEMBERSHIP',
 ] as const;
 
 // Winning conditions

@@ -32,6 +32,8 @@ interface BallotsClientProps {
 }
 
 const PAGE_SIZE = 20;
+const MAX_VISIBLE_PAGES_BUTTONS = 5;
+const MAX_VISIBLE_PAGES_BUTTONS_HALFWAY = Math.ceil(MAX_VISIBLE_PAGES_BUTTONS / 2);
 
 type ActiveTab = 'ballots' | 'analytics';
 
@@ -270,30 +272,28 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
             />
           )}
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            {ballots.length > 0 && (
-              <>
-                <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
-                  <FileText className="text-kpi-gray-mid h-4 w-4" />
-                  <span>
-                    {trimmedQuery
-                      ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
-                      : pluralize(ballots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])}
-                  </span>
-                </div>
-                <SearchInput
-                  value={searchQuery}
-                  onChange={handleSearch}
-                  className="max-w-md"
-                  placeholder={
-                    decryptionDone
-                      ? 'Пошук за хешем або варіантом відповіді…'
-                      : 'Пошук за хешем бюлетеня…'
-                  }
-                />
-              </>
-            )}
-          </div>
+          {ballots.length > 0 && (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
+                <FileText className="text-kpi-gray-mid h-4 w-4" />
+                <span>
+                  {trimmedQuery
+                    ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
+                    : pluralize(ballots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])}
+                </span>
+              </div>
+              <SearchInput
+                value={searchQuery}
+                onChange={handleSearch}
+                className="max-w-md"
+                placeholder={
+                  decryptionDone
+                    ? 'Пошук за хешем або варіантом відповіді…'
+                    : 'Пошук за хешем бюлетеня…'
+                }
+              />
+            </div>
+          )}
 
           {ballots.length === 0 ? (
             <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
@@ -362,11 +362,11 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
           )}
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between py-2">
-              <p className="font-body text-muted-foreground text-sm">
+            <div className="flex flex-col items-center justify-between gap-4 py-2 sm:flex-row">
+              <p className="font-body text-muted-foreground text-center sm:text-left">
                 Сторінка {safePage} з {totalPages}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button
                   variant="secondary"
                   size="sm"
@@ -378,27 +378,32 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
                 </Button>
 
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let p: number;
-                    if (totalPages <= 5) p = i + 1;
-                    else if (safePage <= 3) p = i + 1;
-                    else if (safePage >= totalPages - 2) p = totalPages - 4 + i;
-                    else p = safePage - 2 + i;
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => setPage(p)}
-                        className={cn(
-                          'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
-                          p === safePage
-                            ? 'bg-kpi-navy shadow-shadow-sm text-white'
-                            : 'text-muted-foreground hover:bg-surface hover:text-foreground',
-                        )}
-                      >
-                        {p}
-                      </button>
-                    );
-                  })}
+                  {Array.from(
+                    { length: Math.min(MAX_VISIBLE_PAGES_BUTTONS, totalPages) },
+                    (_, i) => {
+                      let p: number;
+                      if (totalPages <= MAX_VISIBLE_PAGES_BUTTONS) p = i + 1;
+                      else if (safePage <= MAX_VISIBLE_PAGES_BUTTONS_HALFWAY) p = i + 1;
+                      else if (safePage >= totalPages - (MAX_VISIBLE_PAGES_BUTTONS_HALFWAY - 1))
+                        p = totalPages - MAX_VISIBLE_PAGES_BUTTONS + i;
+                      else p = safePage - (MAX_VISIBLE_PAGES_BUTTONS_HALFWAY - 1) + i;
+
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => setPage(p)}
+                          className={cn(
+                            'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
+                            p === safePage
+                              ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                              : 'text-muted-foreground hover:bg-surface hover:text-foreground',
+                          )}
+                        >
+                          {p}
+                        </button>
+                      );
+                    },
+                  )}
                 </div>
 
                 <Button

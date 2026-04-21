@@ -25,10 +25,11 @@ interface AdminTableProps {
   currentUserId: string;
   canManageAdmins: boolean;
   callerRestrictedToFaculty: boolean;
+  callerManageGroups: boolean;
   onDelete: (userId: string) => void;
   onUpdate: (
     userId: string,
-    updates: { manageAdmins: boolean; restrictedToFaculty: boolean },
+    updates: { manageAdmins: boolean; manageGroups: boolean; restrictedToFaculty: boolean },
   ) => void;
 }
 
@@ -37,6 +38,7 @@ export function AdminTable({
   currentUserId,
   canManageAdmins,
   callerRestrictedToFaculty,
+  callerManageGroups,
   onDelete,
   onUpdate,
 }: AdminTableProps) {
@@ -116,7 +118,6 @@ export function AdminTable({
         ))}
       </div>
 
-      {/* Delete confirmation dialog */}
       <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)}>
         <DialogPanel maxWidth="sm">
           <DialogHeader>
@@ -145,6 +146,7 @@ export function AdminTable({
           onClose={() => setEditTarget(null)}
           admin={editTarget}
           callerRestrictedToFaculty={callerRestrictedToFaculty}
+          callerManageGroups={callerManageGroups}
           onUpdate={(userId, updates) => {
             onUpdate(userId, updates);
             setEditTarget(null);

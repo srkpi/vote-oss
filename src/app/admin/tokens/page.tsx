@@ -36,6 +36,7 @@ export default async function TokensPage() {
         <TokensPageClient
           initialTokens={tokens ?? []}
           canGrantManageAdmins={session.manageAdmins}
+          canGrantManageGroups={session.manageGroups}
           restrictedToFaculty={session.restrictedToFaculty}
           error={error}
         />

@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
         max_usage: true,
         current_usage: true,
         manage_admins: true,
+        manage_groups: true,
         restricted_to_faculty: true,
         valid_due: true,
         created_at: true,
@@ -75,6 +76,7 @@ export async function GET(req: NextRequest) {
       maxUsage: t.max_usage,
       currentUsage: t.current_usage,
       manageAdmins: t.manage_admins,
+      manageGroups: t.manage_groups,
       restrictedToFaculty: t.restricted_to_faculty,
       validDue: t.valid_due.toISOString(),
       createdAt: t.created_at.toISOString(),
@@ -177,6 +179,7 @@ export async function POST(req: NextRequest) {
   let body: {
     maxUsage?: number;
     manageAdmins?: boolean;
+    manageGroups?: boolean;
     restrictedToFaculty?: boolean;
     validDue?: string;
   };
@@ -187,7 +190,7 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const { maxUsage = 1, manageAdmins = false, validDue } = body;
+  const { maxUsage = 1, manageAdmins = false, manageGroups = false, validDue } = body;
   let { restrictedToFaculty = true } = body;
 
   if (!validDue) return Errors.badRequest('validDue is required');
@@ -210,6 +213,11 @@ export async function POST(req: NextRequest) {
 
   if (manageAdmins && !admin.manage_admins) {
     return Errors.forbidden('Cannot grant manage_admins permission you do not have');
+  }
+
+  // manage_groups can only be granted by admins who themselves have manage_groups
+  if (manageGroups && !admin.manage_groups) {
+    return Errors.forbidden('Cannot grant manage_groups permission you do not have');
   }
 
   if (admin.restricted_to_faculty) {
@@ -240,6 +248,7 @@ export async function POST(req: NextRequest) {
       max_usage: maxUsage,
       current_usage: 0,
       manage_admins: manageAdmins,
+      manage_groups: manageGroups,
       restricted_to_faculty: restrictedToFaculty,
       valid_due: validDueDate,
       created_at: now,
@@ -254,6 +263,7 @@ export async function POST(req: NextRequest) {
       token: rawToken,
       maxUsage,
       manageAdmins,
+      manageGroups,
       restrictedToFaculty,
       validDue: validDueDate,
     },

@@ -14,6 +14,7 @@ import type { InviteToken } from '@/types/admin';
 interface TokensPageClientProps {
   initialTokens: InviteToken[];
   canGrantManageAdmins: boolean;
+  canGrantManageGroups: boolean;
   restrictedToFaculty: boolean;
   error: string | null;
 }
@@ -21,6 +22,7 @@ interface TokensPageClientProps {
 export function TokensPageClient({
   initialTokens,
   canGrantManageAdmins,
+  canGrantManageGroups,
   restrictedToFaculty,
   error,
 }: TokensPageClientProps) {
@@ -112,6 +114,7 @@ export function TokensPageClient({
         onClose={handleDialogClose}
         canGrantManageAdmins={canGrantManageAdmins}
         restrictedToFaculty={restrictedToFaculty}
+        canGrantManageGroups={canGrantManageGroups}
       />
     </div>
   );

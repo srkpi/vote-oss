@@ -54,6 +54,7 @@ export interface TokenPayload {
   isAdmin?: boolean;
   restrictedToFaculty?: boolean;
   manageAdmins?: boolean;
+  manageGroups?: boolean;
   initialAuthAt?: number;
 }
 
@@ -84,6 +85,7 @@ export interface User {
   isAdmin: boolean;
   restrictedToFaculty: boolean;
   manageAdmins: boolean;
+  manageGroups: boolean;
 }
 
 export type AuthFailure = {

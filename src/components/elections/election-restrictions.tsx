@@ -2,10 +2,15 @@ import type { BadgeVariant } from '@/components/ui/badge';
 import { Badge } from '@/components/ui/badge';
 import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
 import { formatRestrictionValue } from '@/lib/utils/common';
-import type { ElectionRestriction, RestrictionType } from '@/types/election';
+import type {
+  ElectionRestrictedGroups,
+  ElectionRestriction,
+  RestrictionType,
+} from '@/types/election';
 
 interface ElectionRestrictionsProps {
   restrictions: ElectionRestriction[];
+  restrictedGroups?: ElectionRestrictedGroups[];
 }
 
 const getVariant = (type: RestrictionType): BadgeVariant => {
@@ -17,11 +22,15 @@ const getVariant = (type: RestrictionType): BadgeVariant => {
     STUDY_FORM: 'error',
     LEVEL_COURSE: 'warning',
     BYPASS_REQUIRED: 'default',
+    GROUP_MEMBERSHIP: 'default',
   };
   return variants[type] || 'info';
 };
 
-export const AccessRestrictions = ({ restrictions }: ElectionRestrictionsProps) => {
+export const AccessRestrictions = ({
+  restrictions,
+  restrictedGroups,
+}: ElectionRestrictionsProps) => {
   const groupedRestrictions = restrictions.reduce(
     (acc, curr) => {
       if (!acc[curr.type]) acc[curr.type] = [];
@@ -76,7 +85,7 @@ export const AccessRestrictions = ({ restrictions }: ElectionRestrictionsProps) 
               <div className="flex flex-wrap gap-1.5">
                 {sortedValues.map((val, index) => (
                   <Badge key={index} variant={getVariant(type)} size="md">
-                    {formatRestrictionValue(type, val)}
+                    {formatRestrictionValue(type, val, restrictedGroups)}
                   </Badge>
                 ))}
               </div>

@@ -7,7 +7,11 @@ import {
   parseGroupLevel,
   parseGroupYearEnteredDigit,
 } from '@/lib/utils/group-utils';
-import type { ElectionRestriction, RestrictionType } from '@/types/election';
+import type {
+  ElectionRestrictedGroups,
+  ElectionRestriction,
+  RestrictionType,
+} from '@/types/election';
 
 interface UserContext {
   faculty: string;
@@ -21,6 +25,8 @@ interface RestrictedVoteBannerProps {
   restrictions: ElectionRestriction[];
   session: UserContext;
   bypassedTypes: string[] | null;
+  restrictedGroups?: ElectionRestrictedGroups[];
+  groupMember: string[] | null;
 }
 
 function getUserValueForType(type: RestrictionType, user: UserContext): string | undefined {
@@ -55,6 +61,8 @@ export function RestrictedVoteBanner({
   restrictions,
   session,
   bypassedTypes,
+  restrictedGroups,
+  groupMember,
 }: RestrictedVoteBannerProps) {
   // Group restrictions by type so we can render one row per type
   const byType = new Map<RestrictionType, string[]>();
@@ -111,7 +119,13 @@ export function RestrictedVoteBanner({
           .map(([type, values]) => {
             const isBypassed = bypassSet.has(type);
             const userValue = getUserValueForType(type, session);
-            const isMet = !!userValue && values.includes(userValue);
+
+            let isMet = false;
+            if (type === 'GROUP_MEMBERSHIP' && groupMember) {
+              isMet = groupMember.some((id) => values.includes(id));
+            } else {
+              isMet = !!userValue && values.includes(userValue);
+            }
 
             let icon: React.ReactNode;
             let rowClass: string;
@@ -142,7 +156,10 @@ export function RestrictedVoteBanner({
                     {RESTRICTION_TYPE_LABELS[type] ?? type}
                   </p>
                   <p className="font-body text-muted-foreground text-xs">
-                    Вимагається: {values.map((v) => formatRestrictionValue(type, v)).join(', ')}
+                    Вимагається:{' '}
+                    {values
+                      .map((v) => formatRestrictionValue(type, v, restrictedGroups))
+                      .join(', ')}
                   </p>
                   {userValue && !isMet && !isBypassed && (
                     <p className="font-body text-muted-foreground text-xs">

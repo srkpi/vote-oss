@@ -6,6 +6,7 @@ import { getElectionBypassForUser } from '@/lib/bypass';
 import { generateVoteToken, signVoteToken } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
+import { getUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
 import { checkRestrictionsWithBypass } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
@@ -77,8 +78,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (now > election.closes_at) return Errors.badRequest('Election has already closed');
 
   const restrictions = election.restrictions as ElectionRestriction[];
-  const bypassedTypes = await getElectionBypassForUser(user.sub, electionId);
-  if (!checkRestrictionsWithBypass(restrictions, user, bypassedTypes)) {
+
+  const hasGroupMembershipRestriction = restrictions.some((r) => r.type === 'GROUP_MEMBERSHIP');
+  const [bypassedTypes, groupMemberships] = await Promise.all([
+    getElectionBypassForUser(user.sub, electionId),
+    hasGroupMembershipRestriction ? getUserGroupMemberships(user.sub) : Promise.resolve(null),
+  ]);
+
+  if (!checkRestrictionsWithBypass(restrictions, user, bypassedTypes, groupMemberships)) {
     return Errors.forbidden('You are not eligible for this election');
   }
 

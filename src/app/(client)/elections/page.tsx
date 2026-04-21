@@ -9,7 +9,7 @@ import { SessionGuard } from '@/components/common/session-guard';
 import { ElectionsFilter } from '@/components/elections/elections-filter';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
-import { APP_URL } from '@/lib/config/client';
+import { APP_NAME, APP_URL } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
@@ -18,14 +18,14 @@ export const metadata: Metadata = {
   title: 'Голосування',
   description: 'Список всіх доступних голосувань',
   openGraph: {
-    title: 'Голосування',
+    title: `Голосування | ${APP_NAME}`,
     description: 'Список всіх доступних голосувань',
     url: new URL('/elections', APP_URL),
     images: [OPENGRAPH_IMAGE_DATA],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Голосування',
+    title: `Голосування | ${APP_NAME}`,
     description: 'Список всіх доступних голосувань',
     images: [OPENGRAPH_IMAGE_DATA],
   },

@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 import type { StudyFormValue } from '@/lib/constants';
 import { LEVEL_COURSE_LEVEL_LABELS, STUDY_FORM_LABELS } from '@/lib/constants';
 import type { InviteToken } from '@/types/admin';
-import type { ElectionStatus, RestrictionType } from '@/types/election';
+import type { ElectionRestrictedGroups, ElectionStatus, RestrictionType } from '@/types/election';
 import type { QuillDelta } from '@/types/quill';
 
 export function cn(...inputs: ClassValue[]) {
@@ -70,7 +70,11 @@ export function formatLevelCourse(value: string): string {
   return `${singularMap[level] ?? levelLabel} ${course} курс`;
 }
 
-export function formatRestrictionValue(type: RestrictionType, value: string) {
+export function formatRestrictionValue(
+  type: RestrictionType,
+  value: string,
+  restrictedGroups?: ElectionRestrictedGroups[],
+) {
   if (type === 'STUDY_FORM') {
     return STUDY_FORM_LABELS[value as StudyFormValue] || value;
   }
@@ -80,6 +84,11 @@ export function formatRestrictionValue(type: RestrictionType, value: string) {
   if (type === 'LEVEL_COURSE') {
     return formatLevelCourse(value);
   }
+  if (type === 'GROUP_MEMBERSHIP') {
+    const group = restrictedGroups?.find((g) => g.id === value);
+    return group?.name ?? value;
+  }
+
   return value;
 }
 

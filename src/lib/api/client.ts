@@ -21,6 +21,15 @@ import type {
   FaqItemCreated,
   FaqItemUpdated,
 } from '@/types/faq';
+import type {
+  AdminGroupSummary,
+  CreateInviteLinkRequest,
+  Group,
+  GroupDetail,
+  GroupInviteLink,
+  GroupOption,
+  JoinGroupResponse,
+} from '@/types/group';
 import type { VoteToken } from '@/types/vote';
 
 type Fetcher = <T>(path: string, options?: RequestInit) => Promise<ApiResult<T>>;
@@ -89,7 +98,10 @@ export function createApiClient(fetcher: Fetcher) {
     admins: {
       list: () => fetcher<Admin[]>('/admins'),
       delete: (userId: string) => fetcher<void>(`/admins/${userId}`, { method: 'DELETE' }),
-      patch: (userId: string, data: { manageAdmins?: boolean; restrictedToFaculty?: boolean }) =>
+      patch: (
+        userId: string,
+        data: { manageAdmins?: boolean; manageGroups?: boolean; restrictedToFaculty?: boolean },
+      ) =>
         fetcher<void>(`/admins/${userId}`, {
           method: 'PATCH',
           body: JSON.stringify(data),
@@ -187,6 +199,51 @@ export function createApiClient(fetcher: Fetcher) {
             body: JSON.stringify({ order }),
           }),
       },
+    },
+
+    // ── Groups ───────────────────────────────────────────────────────────────
+
+    groups: {
+      list: () => fetcher<Group[]>('/groups'),
+      get: (id: string) => fetcher<GroupDetail>(`/groups/${id}`),
+      og: (id: string) => fetcher<{ name: string }>(`/groups/${id}/og`),
+
+      create: (name: string) =>
+        fetcher<Group>('/groups', { method: 'POST', body: JSON.stringify({ name }) }),
+      rename: (id: string, name: string) =>
+        fetcher<void>(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+      delete: (id: string) => fetcher<void>(`/groups/${id}`, { method: 'DELETE' }),
+
+      join: (token: string) =>
+        fetcher<JoinGroupResponse>('/groups/join', {
+          method: 'POST',
+          body: JSON.stringify({ token }),
+        }),
+
+      transfer: (id: string, newOwnerId: string) =>
+        fetcher<void>(`/groups/${id}/transfer`, {
+          method: 'POST',
+          body: JSON.stringify({ newOwnerId }),
+        }),
+
+      members: {
+        remove: (groupId: string, userId: string) =>
+          fetcher<void>(`/groups/${groupId}/members/${userId}`, { method: 'DELETE' }),
+      },
+
+      inviteLinks: {
+        list: (groupId: string) => fetcher<GroupInviteLink[]>(`/groups/${groupId}/invite-links`),
+        create: (groupId: string, data: CreateInviteLinkRequest) =>
+          fetcher<GroupInviteLink & { token: string }>(`/groups/${groupId}/invite-links`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+          }),
+        revoke: (groupId: string, linkId: string) =>
+          fetcher<void>(`/groups/${groupId}/invite-links/${linkId}`, { method: 'DELETE' }),
+      },
+
+      owned: () => fetcher<GroupOption[]>('/groups/owned'),
+      all: () => fetcher<AdminGroupSummary[]>('/groups/all'),
     },
   };
 }

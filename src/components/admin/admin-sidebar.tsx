@@ -9,6 +9,7 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  UsersRound,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -51,6 +52,13 @@ const BYPASS_NAV_ITEM = {
   icon: <ShieldCheck className="h-4 w-4" />,
 };
 
+const GROUPS_NAV_ITEM = {
+  label: 'Групи',
+  href: '/admin/groups',
+  exact: true,
+  icon: <UsersRound className="h-4 w-4" />,
+};
+
 const FAQ_NAV_ITEM = {
   label: 'FAQ',
   href: '/admin/faq',
@@ -60,11 +68,13 @@ const FAQ_NAV_ITEM = {
 
 interface AdminSidebarProps {
   manageAdmins?: boolean;
+  manageGroups?: boolean;
   restrictedToFaculty?: boolean;
 }
 
 export function AdminSidebar({
   manageAdmins = false,
+  manageGroups = false,
   restrictedToFaculty = true,
 }: AdminSidebarProps) {
   const pathname = usePathname();
@@ -77,6 +87,10 @@ export function AdminSidebar({
   if (!restrictedToFaculty) {
     navItems.push(BYPASS_NAV_ITEM);
     navItems.push(FAQ_NAV_ITEM);
+  }
+
+  if (manageGroups) {
+    navItems.push(GROUPS_NAV_ITEM);
   }
 
   const isActive = (href: string, exact: boolean) =>
@@ -136,7 +150,7 @@ export function AdminSidebar({
       </aside>
 
       <div className="safe-area-pb border-border-subtle fixed right-0 bottom-0 left-0 z-40 border-t bg-white shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden">
-        <div className="flex items-stretch">
+        <div className="flex items-stretch overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
             return (
@@ -145,7 +159,7 @@ export function AdminSidebar({
                 href={item.href}
                 className={cn(
                   'flex flex-1 flex-col items-center justify-center gap-1 px-1 py-2.5 text-center',
-                  'min-h-14 transition-all duration-150',
+                  'min-h-14 min-w-20 transition-all duration-150',
                   active ? 'text-kpi-navy' : 'text-muted-foreground hover:text-foreground',
                 )}
               >

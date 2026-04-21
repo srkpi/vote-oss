@@ -83,10 +83,10 @@ export async function POST(req: NextRequest) {
 
   if (existingAdmin) {
     if (existingAdmin.deleted_at === null) {
-      // Active admin — cannot join again.
       return Errors.conflict('You are already an admin');
     }
 
+    // Reactivate previously soft-deleted admin
     await prisma.$transaction([
       prisma.admin.update({
         where: { user_id: user.sub },
@@ -94,6 +94,7 @@ export async function POST(req: NextRequest) {
           promoted_by: inviteToken.created_by,
           promoted_at: now,
           manage_admins: inviteToken.manage_admins,
+          manage_groups: inviteToken.manage_groups,
           restricted_to_faculty: inviteToken.restricted_to_faculty,
           deleted_at: null,
           deleted_by: null,
@@ -105,6 +106,7 @@ export async function POST(req: NextRequest) {
       }),
     ]);
   } else {
+    // Create fresh admin record
     await prisma.$transaction([
       prisma.admin.create({
         data: {
@@ -115,6 +117,7 @@ export async function POST(req: NextRequest) {
           promoted_by: inviteToken.created_by,
           promoted_at: now,
           manage_admins: inviteToken.manage_admins,
+          manage_groups: inviteToken.manage_groups,
           restricted_to_faculty: inviteToken.restricted_to_faculty,
         },
       }),
@@ -125,14 +128,13 @@ export async function POST(req: NextRequest) {
     ]);
   }
 
-  // ── Auto-delete exhausted token (fire-and-forget, non-critical) ───────────
-  // current_usage before increment + 1 equals the new usage after the transaction.
+  // Auto-delete exhausted token
   const newUsage = inviteToken.current_usage + 1;
   if (newUsage >= inviteToken.max_usage) {
     try {
       await prisma.adminInviteToken.delete({ where: { token_hash: tokenHash } });
     } catch {
-      // Token may already have been deleted by a concurrent request — ignore
+      // Already deleted by concurrent request — ignore
     }
     await invalidateInviteTokens();
   }

@@ -1,0 +1,78 @@
+export interface GroupMemberSummary {
+  userId: string;
+  displayName: string;
+  joinedAt: string;
+  isOwner: boolean;
+}
+
+export interface GroupInviteLinkUsageSummary {
+  id: string;
+  userId: string;
+  usedAt: string;
+}
+
+export interface GroupInviteLink {
+  id: string;
+  groupId: string;
+  label: string | null;
+  maxUsage: number;
+  currentUsage: number;
+  expiresAt: string;
+  createdBy: string;
+  createdAt: string;
+  deletedAt: string | null;
+  deletedBy: string | null;
+  usages: GroupInviteLinkUsageSummary[];
+  canRevoke: boolean;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  ownerId: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  memberCount: number;
+  isOwner: boolean;
+  isMember: boolean;
+  deletedAt: string | null;
+}
+
+export interface GroupDetail extends Group {
+  members: GroupMemberSummary[];
+  inviteLinks: GroupInviteLink[];
+}
+
+// For election restriction display / selection
+export interface GroupOption {
+  id: string;
+  name: string;
+  memberCount: number;
+}
+
+// Request / response shapes
+export interface UpdateGroupRequest {
+  name?: string;
+}
+
+export interface CreateInviteLinkRequest {
+  label?: string;
+  maxUsage: number;
+  expiresAt: string;
+}
+
+export interface JoinGroupResponse {
+  groupId: string;
+  groupName: string;
+}
+
+export interface AdminGroupSummary {
+  id: string;
+  name: string;
+  ownerId: string;
+  ownerName: string | null;
+  memberCount: number;
+  createdAt: string;
+  deletedAt: string | null;
+}

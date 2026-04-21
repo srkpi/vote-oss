@@ -8,7 +8,8 @@ export type RestrictionType =
   | 'STUDY_YEAR'
   | 'STUDY_FORM'
   | 'LEVEL_COURSE'
-  | 'BYPASS_REQUIRED';
+  | 'BYPASS_REQUIRED'
+  | 'GROUP_MEMBERSHIP';
 
 export interface ElectionRestriction {
   type: RestrictionType;
@@ -89,6 +90,11 @@ export const DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE: WinningConditions = {
   quorum: 1,
 };
 
+export interface ElectionRestrictedGroups {
+  id: string;
+  name: string;
+}
+
 export interface Election {
   id: string;
   title: string;
@@ -103,7 +109,9 @@ export interface Election {
   maxChoices: number;
   creator: ElectionCreator;
   choices: ElectionChoice[];
+  publicViewing: boolean;
   ballotCount: number;
+  restrictedGroups?: ElectionRestrictedGroups[];
 
   /** Only present for admin-authenticated responses */
   deletedAt?: string | null;
@@ -132,6 +140,7 @@ export interface CachedElection {
   privateKey: string;
   creator: ElectionCreator;
   choices: CachedElectionChoice[];
+  publicViewing: boolean;
   ballotCount: number;
   createdBy: string;
   deletedAt: string | null;
@@ -162,6 +171,7 @@ export interface CreateElectionRequest {
   restrictions?: CreateElectionRestriction[];
   winningConditions?: Partial<WinningConditions>;
   shuffleChoices?: boolean;
+  publicViewing?: boolean;
 }
 
 export interface CreateElectionResponse {

@@ -30,6 +30,7 @@ interface InviteAdminDialogProps {
   open: boolean;
   onClose: () => void;
   canGrantManageAdmins: boolean;
+  canGrantManageGroups: boolean;
   restrictedToFaculty: boolean;
 }
 
@@ -37,6 +38,7 @@ export function InviteAdminDialog({
   open,
   onClose,
   canGrantManageAdmins,
+  canGrantManageGroups,
   restrictedToFaculty,
 }: InviteAdminDialogProps) {
   const { toast } = useToast();
@@ -44,7 +46,6 @@ export function InviteAdminDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InviteTokenResponse | null>(null);
-
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -57,8 +58,9 @@ export function InviteAdminDialog({
 
   const [form, setForm] = useState({
     validDue: tomorrow,
-    maxUsage: '1',
+    maxUsage: String(INVITE_TOKEN_MAX_USAGE_MIN),
     manageAdmins: false,
+    manageGroups: false,
     restrictedToFaculty: true,
   });
 
@@ -66,17 +68,18 @@ export function InviteAdminDialog({
     setError(null);
     setLoading(true);
 
-    const result = await api.admins.invites.create({
+    const res = await api.admins.invites.create({
       validDue: new Date(form.validDue).toISOString(),
       maxUsage: parseInt(form.maxUsage, 10),
       manageAdmins: form.manageAdmins,
+      manageGroups: form.manageGroups,
       restrictedToFaculty: form.restrictedToFaculty,
     });
 
-    if (result.success) {
-      setResult(result.data);
+    if (res.success) {
+      setResult(res.data);
     } else {
-      setError(result.error);
+      setError(res.error);
     }
 
     setLoading(false);
@@ -84,33 +87,18 @@ export function InviteAdminDialog({
 
   const handleCopy = async () => {
     if (!result) return;
-
     await navigator.clipboard.writeText(result.token);
     setCopied(true);
-
-    toast({
-      title: 'Скопійовано!',
-      variant: 'success',
-      duration: 2000,
-    });
-
+    toast({ title: 'Скопійовано!', variant: 'success', duration: 2000 });
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopyLink = async () => {
     if (!result) return;
-
     const link = `${window.location.origin}/join/${result.token}`;
     await navigator.clipboard.writeText(link);
-
     setCopiedLink(true);
-
-    toast({
-      title: 'Посилання скопійовано!',
-      variant: 'success',
-      duration: 2000,
-    });
-
+    toast({ title: 'Посилання скопійовано!', variant: 'success', duration: 2000 });
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
@@ -119,14 +107,13 @@ export function InviteAdminDialog({
     setError(null);
     setCopied(false);
     setCopiedLink(false);
-
     setForm({
       validDue: tomorrow,
       maxUsage: String(INVITE_TOKEN_MAX_USAGE_MIN),
       manageAdmins: false,
+      manageGroups: false,
       restrictedToFaculty: restrictedToFaculty,
     });
-
     onClose();
   };
 
@@ -175,7 +162,7 @@ export function InviteAdminDialog({
               <div className="space-y-3">
                 <ToggleField
                   label="Обмежити підрозділом"
-                  description="Новий адмін зможе керувати створювати опитування лише для свого підрозділу"
+                  description="Новий адмін зможе керувати опитуваннями лише свого підрозділу"
                   checked={form.restrictedToFaculty}
                   onChange={(v) => setForm((p) => ({ ...p, restrictedToFaculty: v }))}
                   disabled={restrictedToFaculty}
@@ -187,6 +174,18 @@ export function InviteAdminDialog({
                   checked={form.manageAdmins}
                   onChange={(v) => setForm((p) => ({ ...p, manageAdmins: v }))}
                   disabled={!canGrantManageAdmins}
+                />
+
+                <ToggleField
+                  label="Керувати групами"
+                  description={
+                    !canGrantManageGroups
+                      ? 'Ви не маєте цього права, тому не можете його передати'
+                      : 'Дозволити переглядати та модерувати групи в системі'
+                  }
+                  checked={form.manageGroups}
+                  onChange={(v) => setForm((p) => ({ ...p, manageGroups: v }))}
+                  disabled={!canGrantManageGroups}
                 />
               </div>
             </>
@@ -207,7 +206,6 @@ export function InviteAdminDialog({
               <Button variant="secondary" onClick={handleClose} disabled={loading}>
                 Скасувати
               </Button>
-
               <Button variant="accent" onClick={handleSubmit} loading={loading}>
                 Створити токен
               </Button>

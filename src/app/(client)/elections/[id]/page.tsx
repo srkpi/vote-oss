@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: ElectionPageProps): Promise<M
   const { data, status } = await serverApi.elections.og(id);
 
   let metaTitle = 'Голосування';
-  if (status === 404) {
+  if (status === 404 || status === 400) {
     metaTitle = '404 | Голосування не знайдено';
   } else if (data?.title) {
     metaTitle = data.title;
@@ -59,10 +59,13 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
   if (await isBotRequest()) return null;
 
-  const [session, { data: election, error, status }] = await Promise.all([
+  const [session, groups, { data: election, error, status }] = await Promise.all([
     getServerSession(),
+    serverApi.groups.list(),
     serverApi.elections.get(id),
   ]);
+
+  const groupMember = groups.data?.map((group) => group.id) ?? null;
 
   if (!session) {
     redirect('/login');
@@ -106,7 +109,12 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   const hasResults = isClosed && election.choices.some((c) => c.votes !== undefined);
 
   const bypassedTypes = election.bypassedTypes ?? null;
-  const canParticipate = checkRestrictionsWithBypass(election.restrictions, session, bypassedTypes);
+  const canParticipate = checkRestrictionsWithBypass(
+    election.restrictions,
+    session,
+    bypassedTypes,
+    groupMember,
+  );
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
@@ -170,6 +178,8 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                     restrictions={election.restrictions}
                     session={session}
                     bypassedTypes={bypassedTypes}
+                    restrictedGroups={election.restrictedGroups}
+                    groupMember={groupMember}
                   />
                 )}
               </div>
@@ -229,7 +239,10 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             </div>
 
             {election.restrictions.length > 0 && (
-              <AccessRestrictions restrictions={election.restrictions} />
+              <AccessRestrictions
+                restrictions={election.restrictions}
+                restrictedGroups={election.restrictedGroups}
+              />
             )}
 
             <WinningConditionsDisplay
