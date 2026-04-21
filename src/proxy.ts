@@ -13,7 +13,7 @@ import {
 import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import type { VerifiedPayload } from '@/types/auth';
 
-const PROTECTED_PATHS = ['/elections', '/admin', '/join', '/use'];
+const PROTECTED_PATHS = ['/elections', '/admin', '/join', '/use', '/groups'];
 const GUEST_ONLY_PATHS = ['/login'];
 const ADMIN_ONLY_PATHS = ['/admin'];
 
@@ -155,6 +155,7 @@ export async function proxy(req: NextRequest) {
     if (user.isAdmin) {
       requestHeaders.set('x-user-restricted-to-faculty', String(user.restrictedToFaculty ?? true));
       requestHeaders.set('x-user-manage-admins', String(user.manageAdmins ?? false));
+      requestHeaders.set('x-user-manage-groups', String(user.manageGroups ?? false));
     }
   }
 

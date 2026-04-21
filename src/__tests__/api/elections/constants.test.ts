@@ -197,14 +197,14 @@ describe('POST /api/elections — constant-driven validation', () => {
     const req = await makeAdminReq({ ...validBody, opensAt: 'not-a-date' });
     const { status, body } = await parseJson<any>(await POST(req));
     expect(status).toBe(400);
-    expect(body.message).toMatch(/Invalid date format/);
+    expect(body.message).toMatch(/Invalid opensAt date/);
   });
 
   it('returns 400 if closesAt is invalid', async () => {
     const req = await makeAdminReq({ ...validBody, closesAt: 'not-a-date' });
     const { status, body } = await parseJson<any>(await POST(req));
     expect(status).toBe(400);
-    expect(body.message).toMatch(/Invalid date format/);
+    expect(body.message).toMatch(/Invalid closesAt date/);
   });
 
   it('returns 400 if closesAt is before opensAt', async () => {

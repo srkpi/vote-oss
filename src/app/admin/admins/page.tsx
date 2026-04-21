@@ -21,6 +21,7 @@ export default async function AdminsPage() {
   const all = data ?? [];
   const canInvite = session.manageAdmins ?? false;
   const canGrantManageAdmins = session.manageAdmins ?? false;
+  const canGrantManageGroups = session.manageGroups ?? false;
   const restrictedToFaculty = session.restrictedToFaculty ?? false;
 
   return (
@@ -37,6 +38,7 @@ export default async function AdminsPage() {
           currentUser={session}
           canInvite={canInvite}
           canGrantManageAdmins={canGrantManageAdmins}
+          canGrantManageGroups={canGrantManageGroups}
           restrictedToFaculty={restrictedToFaculty}
           error={error}
         />

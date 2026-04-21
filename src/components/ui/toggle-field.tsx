@@ -6,12 +6,14 @@ interface ToggleFieldProps {
   checked: boolean;
   disabled?: boolean;
   onChange: (v: boolean) => void;
+  className?: string;
 }
 
 export function ToggleField({
   label,
   description,
   checked,
+  className,
   disabled = false,
   onChange,
 }: ToggleFieldProps) {
@@ -20,6 +22,7 @@ export function ToggleField({
       className={cn(
         'group flex items-start gap-3',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+        className,
       )}
     >
       <div className="relative mt-0.5">

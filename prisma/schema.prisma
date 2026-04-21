@@ -26,6 +26,7 @@ model Admin {
   subordinates          Admin[]   @relation("AdminHierarchy")
   promoted_at           DateTime  @default(now())
   manage_admins         Boolean   @default(false)
+  manage_groups         Boolean   @default(false)
   restricted_to_faculty Boolean   @default(true)
   deleted_at            DateTime?
   deleted_by            String?
@@ -54,8 +55,9 @@ model AdminInviteToken {
   token_hash            String   @id
   max_usage             Int
   current_usage         Int      @default(0)
-  manage_admins         Boolean
-  restricted_to_faculty Boolean
+  manage_admins         Boolean  @default(false)
+  manage_groups         Boolean  @default(false)
+  restricted_to_faculty Boolean  @default(true)
   valid_due             DateTime
   created_at            DateTime @default(now())
   created_by            String
@@ -77,6 +79,7 @@ model Election {
   min_choices     Int     @default(1)
   max_choices     Int     @default(1)
   shuffle_choices Boolean @default(false)
+  public_viewing  Boolean @default(false)
 
   restrictions  ElectionRestriction[]
   winning_conditions Json @default("{}")
@@ -105,6 +108,7 @@ enum RestrictionType {
   STUDY_FORM
   LEVEL_COURSE
   BYPASS_REQUIRED
+  GROUP_MEMBERSHIP
 }
 
 model ElectionRestriction {
@@ -267,4 +271,69 @@ model FaqItem {
 
   @@index([category_id, position])
   @@map("faq_items")
+}
+
+model Group {
+  id         String    @id @default(uuid()) @db.Uuid
+  name       String
+  owner_id   String
+  created_by String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  updated_by String?
+  deleted_at DateTime?
+  deleted_by String?
+
+  members      GroupMember[]
+  invite_links GroupInviteLink[]
+
+  @@index([owner_id])
+  @@map("groups")
+}
+
+model GroupMember {
+  id           String    @id @default(uuid()) @db.Uuid
+  group_id     String    @db.Uuid
+  group        Group     @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  user_id      String
+  display_name String
+  joined_at    DateTime  @default(now())
+  deleted_at   DateTime?
+  deleted_by   String?
+
+  @@unique([group_id, user_id])
+  @@index([user_id])
+  @@map("group_members")
+}
+
+model GroupInviteLink {
+  id            String    @id @default(uuid()) @db.Uuid
+  group_id      String    @db.Uuid
+  group         Group     @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  token_hash    String    @unique
+  label         String?
+  max_usage     Int
+  current_usage Int       @default(0)
+  expires_at    DateTime
+  created_by    String
+  created_at    DateTime  @default(now())
+  deleted_at    DateTime?
+  deleted_by    String?
+
+  usages GroupInviteLinkUsage[]
+
+  @@index([group_id])
+  @@map("group_invite_links")
+}
+
+model GroupInviteLinkUsage {
+  id      String          @id @default(uuid()) @db.Uuid
+  link_id String          @db.Uuid
+  link    GroupInviteLink @relation(fields: [link_id], references: [id], onDelete: Cascade)
+  user_id String
+  used_at DateTime        @default(now())
+
+  @@unique([link_id, user_id])
+  @@index([user_id])
+  @@map("group_invite_link_usages")
 }

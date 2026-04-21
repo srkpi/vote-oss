@@ -138,6 +138,11 @@ function toClientElections(
       if (isAdmin && isAdminRestricted) {
         return adminCanAccessElection(user.faculty, e.restrictions);
       }
+      // Regular users: only show elections they're eligible for
+      // (GROUP_MEMBERSHIP is always checked against memberships, but for the
+      // list view we don't fetch memberships — elections with GROUP_MEMBERSHIP
+      // restrictions are intentionally excluded from the list for non-members;
+      // they can still be accessed directly if publicViewing=true)
       return checkRestrictions(e.restrictions, user);
     })
     .map((e) => {
@@ -174,6 +179,7 @@ function toClientElections(
         restrictions: e.restrictions,
         winningConditions: e.winningConditions,
         shuffleChoices: e.shuffleChoices,
+        publicViewing: e.publicViewing,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
         creator: e.creator,
@@ -305,6 +311,7 @@ export async function GET(req: NextRequest) {
       private_key: true,
       winning_conditions: true,
       shuffle_choices: true,
+      public_viewing: true,
       creator: { select: { full_name: true, faculty: true } },
       deleter: { select: { full_name: true } },
       choices: {
@@ -331,6 +338,7 @@ export async function GET(req: NextRequest) {
     privateKey: e.private_key,
     winningConditions: parseWinningConditions(e.winning_conditions),
     shuffleChoices: e.shuffle_choices,
+    publicViewing: e.public_viewing,
     creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
     choices: e.choices.map((c) => ({
       id: c.id,
@@ -423,6 +431,7 @@ export async function POST(req: NextRequest) {
     restrictions?: CreateElectionRestriction[];
     winningConditions?: unknown;
     shuffleChoices?: boolean;
+    publicViewing?: boolean;
   };
 
   try {
@@ -436,11 +445,16 @@ export async function POST(req: NextRequest) {
   const maxChoices = body.maxChoices ?? ELECTION_MIN_CHOICES_MIN;
   const restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
   const shuffleChoices = body.shuffleChoices === true;
+  const publicViewing =
+    body.publicViewing === undefined ? !restrictions.length : body.publicViewing === true;
 
-  // ── Basic field validation ────────────────────────────────────────────────
+  // ── Basic validation ───────────────────────────────────────────────────────
 
   if (!title || !opensAt || !closesAt || !choices?.length) {
     return Errors.badRequest('title, opensAt, closesAt, choices are required');
+  }
+  if (!publicViewing && !restrictions.length) {
+    return Errors.badRequest('publicViewing can not be false if no restrictions applied');
   }
   if (title.length > ELECTION_TITLE_MAX_LENGTH) {
     return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
@@ -456,7 +470,7 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest(`At most ${ELECTION_CHOICES_MAX} choices are allowed`);
   }
   if (choices.length === 1 && shuffleChoices) {
-    return Errors.badRequest(`Shuffle choices impossible for 1 choice election`);
+    return Errors.badRequest('Shuffle choices is not possible for a single-choice election');
   }
   const tooLongChoice = choices.find((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
   if (tooLongChoice) {
@@ -472,7 +486,7 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest(`maxChoices must be at most ${ELECTION_MAX_CHOICES_MAX}`);
   }
   if (maxChoices < minChoices) {
-    return Errors.badRequest('maxChoices must be greater than or equal to minChoices');
+    return Errors.badRequest('maxChoices must be >= minChoices');
   }
   if (maxChoices > choices.length) {
     return Errors.badRequest('maxChoices cannot exceed the number of choices');
@@ -483,20 +497,19 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   const maxCloseDate = Date.now() + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000;
 
-  if (isNaN(openDate.getTime())) return Errors.badRequest('Invalid date format for opensAt');
-  if (isNaN(closeDate.getTime())) return Errors.badRequest('Invalid date format for closesAt');
+  if (isNaN(openDate.getTime())) return Errors.badRequest('Invalid opensAt date');
+  if (isNaN(closeDate.getTime())) return Errors.badRequest('Invalid closesAt date');
   if (closeDate <= openDate) return Errors.badRequest('closesAt must be after opensAt');
   if (closeDate.getTime() > maxCloseDate) {
     return Errors.badRequest(
-      `closesAt must be no more than ${ELECTION_MAX_CLOSES_AT_DAYS} days from current date`,
+      `closesAt must be no more than ${ELECTION_MAX_CLOSES_AT_DAYS} days from now`,
     );
   }
   if (closeDate.getTime() <= now.getTime()) {
     return Errors.badRequest('closesAt must be in the future');
   }
 
-  // ── Winning conditions validation ─────────────────────────────────────────
-
+  // ── Winning conditions ─────────────────────────────────────────────────────
   let winningConditionsRaw = body.winningConditions;
   if (typeof body === 'undefined') {
     if (choices.length === 1) {
@@ -512,28 +525,50 @@ export async function POST(req: NextRequest) {
   }
   const winningConditions: WinningConditions = winningConditionsResult;
 
-  // ── Faculty / restriction validation ─────────────────────────────────────
+  // ── Restriction type / value validation ───────────────────────────────────
+  const VALID_RESTRICTION_TYPES = new Set<string>([
+    'FACULTY',
+    'GROUP',
+    'STUDY_YEAR',
+    'STUDY_FORM',
+    'LEVEL_COURSE',
+    'GROUP_MEMBERSHIP',
+    'BYPASS_REQUIRED',
+  ]);
 
-  if (admin.restricted_to_faculty) {
-    const facultyRestrictionsInBody = restrictions.filter((r) => r.type === 'FACULTY');
-    if (facultyRestrictionsInBody.length === 0) {
+  for (const r of restrictions) {
+    if (!VALID_RESTRICTION_TYPES.has(r.type)) {
       return Errors.badRequest(
-        `Faculty-restricted admins must include a FACULTY restriction for their faculty ("${admin.faculty}")`,
+        `Unknown restriction type "${r.type}". Allowed types: ${[...VALID_RESTRICTION_TYPES].join(', ')}`,
       );
     }
-    if (
-      facultyRestrictionsInBody.length > 1 ||
-      facultyRestrictionsInBody[0].value !== admin.faculty
-    ) {
-      return Errors.badRequest(
-        `Faculty-restricted admins may only restrict elections to their own faculty ("${admin.faculty}")`,
-      );
+    if (typeof r.value !== 'string' || !r.value.trim()) {
+      return Errors.badRequest(`Restriction value must be a non-empty string (got "${r.value}")`);
     }
   }
 
+  // ── Restriction validation ─────────────────────────────────────────────────
   const groupRestrictions = restrictions.filter((r) => r.type === 'GROUP');
   const facultyRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
   const bypassRestrictions = restrictions.filter((r) => r.type === 'BYPASS_REQUIRED');
+  const groupMembershipRestrictions = restrictions.filter((r) => r.type === 'GROUP_MEMBERSHIP');
+
+  if (admin.restricted_to_faculty) {
+    if (facultyRestrictions.length > 0) {
+      // A FACULTY restriction is present — it must still be the admin's own faculty.
+      if (facultyRestrictions.length > 1 || facultyRestrictions[0].value !== admin.faculty) {
+        return Errors.badRequest(
+          `Faculty-restricted admins may only restrict elections to their own faculty ("${admin.faculty}")`,
+        );
+      }
+    } else if (groupMembershipRestrictions.length === 0) {
+      // No FACULTY restriction and no GROUP_MEMBERSHIP bypass → reject.
+      return Errors.badRequest(
+        `Faculty-restricted admins must include a FACULTY restriction for their faculty ("${admin.faculty}"), unless at least one GROUP_MEMBERSHIP restriction is specified`,
+      );
+    }
+    // else: no FACULTY restriction but GROUP_MEMBERSHIP is present → allowed.
+  }
 
   if (groupRestrictions.length > 0 && facultyRestrictions.length === 0) {
     return Errors.badRequest('GROUP restrictions require at least one FACULTY restriction');
@@ -545,6 +580,34 @@ export async function POST(req: NextRequest) {
 
   if (bypassRestrictions.length === 1 && bypassRestrictions[0].value !== 'true') {
     return Errors.badRequest('BYPASS_REQUIRED restriction value should be "true"');
+  }
+
+  // Validate GROUP_MEMBERSHIP restriction values are real group UUIDs owned by this admin
+  if (groupMembershipRestrictions.length > 0) {
+    const groupIds = groupMembershipRestrictions.map((r) => r.value);
+    const existingGroups = await prisma.group.findMany({
+      where: { id: { in: groupIds }, deleted_at: null },
+      select: { id: true, owner_id: true },
+    });
+
+    const existingIds = new Set(existingGroups.map((g) => g.id));
+    for (const gid of groupIds) {
+      if (!existingIds.has(gid)) {
+        return Errors.badRequest(`Group "${gid}" does not exist or has been deleted`);
+      }
+    }
+
+    // Only the group owner can use their group as a restriction
+    // (unless the admin has manage_groups, in which case any group is valid)
+    if (!admin.manage_groups) {
+      for (const g of existingGroups) {
+        if (g.owner_id !== admin.user_id) {
+          return Errors.badRequest(
+            `You can only restrict elections to groups you own. Group "${g.id}" belongs to another user.`,
+          );
+        }
+      }
+    }
   }
 
   for (const r of restrictions.filter((r) => r.type === 'STUDY_YEAR')) {
@@ -577,6 +640,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Validate FACULTY / GROUP against campus API
   if (facultyRestrictions.length > 0 || groupRestrictions.length > 0) {
     let facultyGroups: Record<string, string[]>;
     try {
@@ -624,8 +688,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── Create election ───────────────────────────────────────────────────────
-
+  // ── Create election ────────────────────────────────────────────────────────
   const { publicKey, privateKey } = generateElectionKeyPair();
   const encryptedPrivateKey = encryptField(privateKey);
 
@@ -642,6 +705,7 @@ export async function POST(req: NextRequest) {
       private_key: encryptedPrivateKey,
       winning_conditions: winningConditions,
       shuffle_choices: shuffleChoices,
+      public_viewing: publicViewing,
       choices: {
         create: choices.map((choice, i) => ({ choice, position: i })),
       },
@@ -678,6 +742,7 @@ export async function POST(req: NextRequest) {
       restrictions: election.restrictions,
       winningConditions,
       shuffleChoices,
+      publicViewing,
       status: computeStatus(election.opens_at, election.closes_at),
       publicKey: election.public_key,
       creator: { fullName: admin.full_name, faculty: admin.faculty },

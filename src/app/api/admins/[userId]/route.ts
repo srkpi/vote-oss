@@ -68,6 +68,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       promoter: { select: { user_id: true, full_name: true } },
       promoted_at: true,
       manage_admins: true,
+      manage_groups: true,
       restricted_to_faculty: true,
     },
   });
@@ -84,6 +85,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       : null,
     promotedAt: admin.promoted_at.toISOString(),
     manageAdmins: admin.manage_admins,
+    manageGroups: admin.manage_groups,
     restrictedToFaculty: admin.restricted_to_faculty,
   });
 }
@@ -151,18 +153,26 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
   if (!targetUserId) return Errors.badRequest('userId is required');
   if (targetUserId === user.sub) return Errors.badRequest('You cannot modify your own permissions');
 
-  let body: { manageAdmins?: boolean; restrictedToFaculty?: boolean };
+  let body: {
+    manageAdmins?: boolean;
+    manageGroups?: boolean;
+    restrictedToFaculty?: boolean;
+  };
   try {
     body = await req.json();
   } catch {
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const { manageAdmins, restrictedToFaculty } = body;
+  const { manageAdmins, manageGroups, restrictedToFaculty } = body;
 
-  if (manageAdmins === undefined && restrictedToFaculty === undefined) {
+  if (
+    manageAdmins === undefined &&
+    manageGroups === undefined &&
+    restrictedToFaculty === undefined
+  ) {
     return Errors.badRequest(
-      'At least one of manageAdmins or restrictedToFaculty must be provided',
+      'At least one of manageAdmins, manageGroups, or restrictedToFaculty must be provided',
     );
   }
 
@@ -173,6 +183,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     );
   }
 
+  // manage_groups can be granted regardless of restricted_to_faculty since it's
+  // a cross-platform permission unrelated to faculty boundaries
   const targetAdmin = await prisma.admin.findUnique({ where: { user_id: targetUserId } });
   if (!targetAdmin || targetAdmin.deleted_at !== null) {
     return Errors.notFound('Admin not found');
@@ -183,9 +195,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     return Errors.forbidden('You can only modify admins in your own branch of the hierarchy');
   }
 
-  // Build update payload with only the fields that were supplied
-  const updateData: { manage_admins?: boolean; restricted_to_faculty?: boolean } = {};
+  const updateData: {
+    manage_admins?: boolean;
+    manage_groups?: boolean;
+    restricted_to_faculty?: boolean;
+  } = {};
   if (manageAdmins !== undefined) updateData.manage_admins = manageAdmins;
+  if (manageGroups !== undefined) updateData.manage_groups = manageGroups;
   if (restrictedToFaculty !== undefined) updateData.restricted_to_faculty = restrictedToFaculty;
 
   await prisma.admin.update({

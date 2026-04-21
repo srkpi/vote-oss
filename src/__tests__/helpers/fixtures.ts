@@ -120,6 +120,7 @@ export const ADMIN_API: Admin = {
   promotedAt: new Date('2024-01-01').toISOString(),
   manageAdmins: true,
   restrictedToFaculty: false,
+  manageGroups: true,
 };
 
 export const RESTRICTED_ADMIN_API: Admin = {
@@ -131,6 +132,7 @@ export const RESTRICTED_ADMIN_API: Admin = {
   promotedAt: new Date('2024-01-02').toISOString(),
   manageAdmins: true,
   restrictedToFaculty: true,
+  manageGroups: false,
 };
 
 export const MOCK_ADMIN_GRAPH = new Map<string, string | null>([

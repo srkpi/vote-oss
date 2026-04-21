@@ -63,6 +63,7 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
     reachesVotes: null,
     quorum: null,
   },
+  publicViewing: false,
 };
 
 const SAMPLE_ADMIN: Admin = {
@@ -74,6 +75,7 @@ const SAMPLE_ADMIN: Admin = {
   promotedAt: new Date('2024-01-01').toISOString(),
   manageAdmins: true,
   restrictedToFaculty: false,
+  manageGroups: false,
 };
 
 describe('cache', () => {

@@ -13,6 +13,7 @@ import { FormField, Input } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { MultiCombobox } from '@/components/ui/multi-combobox';
 import { Slider } from '@/components/ui/slider';
+import { ToggleField } from '@/components/ui/toggle-field';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
@@ -34,7 +35,7 @@ import {
   WINNING_CONDITION_VOTES_MAX,
   WINNING_CONDITION_VOTES_MIN,
 } from '@/lib/constants';
-import { cn } from '@/lib/utils/common';
+import { cn, pluralize } from '@/lib/utils/common';
 import {
   filterGroupsByLevelCourses,
   filterGroupsByStudyForms,
@@ -45,9 +46,11 @@ import type {
   WinningConditions,
   WinningConditionsState,
 } from '@/types/election';
+import type { AdminGroupSummary, GroupOption } from '@/types/group';
 
 interface CreateElectionFormProps {
   restrictedToFaculty: string | null;
+  manageGroups: boolean;
 }
 
 // Graduate level ('g') is intentionally excluded — graduate students cannot
@@ -85,33 +88,47 @@ function wcStateToPayload(wc: WinningConditionsState, choicesCount: number): Win
   };
 }
 
-export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectionFormProps) {
+export function CreateElectionForm({
+  restrictedToFaculty = null,
+  manageGroups,
+}: CreateElectionFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Campus faculty/group data
   const [facultyGroups, setFacultyGroups] = useState<Record<string, string[]>>({});
   const [groupsLoading, setGroupsLoading] = useState(true);
   const [groupsError, setGroupsError] = useState<string | null>(null);
 
+  // Owned groups for GROUP_MEMBERSHIP restriction
+  const [ownedGroups, setOwnedGroups] = useState<GroupOption[] | AdminGroupSummary[]>([]);
+  const [ownedGroupsLoading, setOwnedGroupsLoading] = useState(true);
+
   useEffect(() => {
     const fetchGroups = async () => {
-      try {
-        const res = await api.campus.getGroups();
-        if (!res.success) {
-          setGroupsError('Не вдалося завантажити список підрозділів і груп');
-          return;
-        }
-        setFacultyGroups(res.data);
-      } finally {
-        setGroupsLoading(false);
+      const [campusRes, ownedRes] = await Promise.all([
+        api.campus.getGroups(),
+        manageGroups ? api.groups.all() : api.groups.owned(),
+      ]);
+
+      if (!campusRes.success) {
+        setGroupsError('Не вдалося завантажити список підрозділів і груп');
+      } else {
+        setFacultyGroups(campusRes.data);
       }
+      setGroupsLoading(false);
+
+      if (ownedRes.success) {
+        setOwnedGroups(ownedRes.data);
+      }
+      setOwnedGroupsLoading(false);
     };
 
     fetchGroups();
-  }, []);
+  }, [manageGroups]);
 
   const facultyOptions = Object.keys(facultyGroups).sort((a, b) => {
     const aNN = a.startsWith('НН ');
@@ -120,6 +137,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     return a.localeCompare(b, 'uk');
   });
 
+  // Form state
   const [form, setForm] = useState({
     title: '',
     opensAt: '',
@@ -131,19 +149,37 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
   const [winningConditionsState, setWinningConditionsState] =
     useState<WinningConditionsState>(DEFAULT_WC_STATE);
 
+  // Restriction state
   const [selectedFaculties, setSelectedFaculties] = useState<string[]>(
     restrictedToFaculty ? [restrictedToFaculty] : [],
   );
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedForms, setSelectedForms] = useState<string[]>([]);
   const [selectedLevelCourses, setSelectedLevelCourses] = useState<string[]>([]);
+  const [selectedGroupMemberships, setSelectedGroupMemberships] = useState<string[]>([]);
   const [bypassRequired, setBypassRequired] = useState(false);
+
+  // When the admin is faculty-restricted but has ≥1 GROUP_MEMBERSHIP restriction,
+  // they may opt out of the automatic faculty restriction.
+  const canBypassFaculty = !!restrictedToFaculty && selectedGroupMemberships.length > 0;
+  const [includeFacultyRestriction, setIncludeFacultyRestriction] = useState(true);
+
+  useEffect(() => {
+    // If the bypass condition is no longer met, re-enable the faculty restriction.
+    if (!canBypassFaculty) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIncludeFacultyRestriction(true);
+    }
+  }, [canBypassFaculty]);
+
+  // Election options
   const [shuffleChoices, setShuffleChoices] = useState(false);
+  const [publicViewing, setPublicViewing] = useState(false);
+
   const [choices, setChoices] = useState(['', '']);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // Available campus groups filtered by faculties + form + level
   const availableGroups = useMemo(() => {
     let groups = Array.from(new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? []))).sort(
       (a, b) => a.localeCompare(b, 'uk'),
@@ -175,6 +211,17 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     availableGroups.length === 0 &&
     (selectedForms.length > 0 || selectedLevelCourses.length > 0) &&
     !groupsLoading;
+
+  const restrictions: CreateElectionRestriction[] = [
+    ...(restrictedToFaculty && !includeFacultyRestriction
+      ? []
+      : selectedFaculties.map((v) => ({ type: 'FACULTY' as const, value: v }))),
+    ...selectedGroups.map((v) => ({ type: 'GROUP' as const, value: v })),
+    ...selectedForms.map((v) => ({ type: 'STUDY_FORM' as const, value: v })),
+    ...selectedLevelCourses.map((v) => ({ type: 'LEVEL_COURSE' as const, value: v })),
+    ...selectedGroupMemberships.map((v) => ({ type: 'GROUP_MEMBERSHIP' as const, value: v })),
+    ...(bypassRequired ? [{ type: 'BYPASS_REQUIRED' as const, value: 'true' }] : []),
+  ];
 
   function handleFacultiesChange(faculties: string[]) {
     if (restrictedToFaculty) return;
@@ -249,7 +296,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         }
       }
     } else if (!wc.quorumEnabled) {
-      errors.quorum = `Має бути задано для опитувань з 1 варіантом голосу`;
+      errors.quorum = 'Має бути задано для опитувань з 1 варіантом голосу';
     }
 
     if (wc.quorumEnabled) {
@@ -317,7 +364,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     return baseValid && wcValid;
   };
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
       setError('Будь ласка, виправте підсвічені помилки валідації');
@@ -325,15 +372,6 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     }
     setLoading(true);
     setError(null);
-
-    const restrictions: CreateElectionRestriction[] = [
-      ...selectedFaculties.map((v) => ({ type: 'FACULTY' as const, value: v })),
-      ...selectedGroups.map((v) => ({ type: 'GROUP' as const, value: v })),
-      ...selectedYears.map((v) => ({ type: 'STUDY_YEAR' as const, value: v })),
-      ...selectedForms.map((v) => ({ type: 'STUDY_FORM' as const, value: v })),
-      ...selectedLevelCourses.map((v) => ({ type: 'LEVEL_COURSE' as const, value: v })),
-      ...(bypassRequired ? [{ type: 'BYPASS_REQUIRED' as const, value: 'true' }] : []),
-    ];
 
     const filteredChoices = choices.filter((c) => c.trim());
     const result = await api.elections.create({
@@ -346,6 +384,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
       restrictions,
       winningConditions: wcStateToPayload(winningConditionsState, filteredChoices.length),
       shuffleChoices,
+      publicViewing: restrictions.length === 0 || publicViewing,
     });
 
     if (result.success) {
@@ -373,11 +412,14 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
     .toISOString()
     .slice(0, 16);
 
-  const studyFormOptions = UI_STUDY_FORMS.map((f) => ({ value: f, label: STUDY_FORM_LABELS[f] }));
+  const studyFormOptions = UI_STUDY_FORMS.map((f) => ({
+    value: f,
+    label: STUDY_FORM_LABELS[f],
+  }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Basic info */}
+      {/* ── Basic info ─────────────────────────────────────────────────────── */}
       <section>
         <h2 className="font-display text-foreground mb-4 text-xl font-semibold">
           Основна інформація
@@ -423,7 +465,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         </div>
       </section>
 
-      {/* Choices + min/max */}
+      {/* ── Choices ────────────────────────────────────────────────────────── */}
       <section>
         <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
           Варіанти відповідей
@@ -488,19 +530,13 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
 
         {choices.length > 1 && (
-          <div className="mt-6">
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={shuffleChoices}
-                onChange={(e) => setShuffleChoices(e.target.checked)}
-                className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
-              />
-              <span className="font-body text-foreground text-sm font-medium">
-                Перемішувати варіанти
-              </span>
-            </label>
-          </div>
+          <ToggleField
+            label="Перемішувати варіанти"
+            description="У кожного користувача буде свій випадковий порядок відображення варіантів"
+            checked={shuffleChoices}
+            onChange={setShuffleChoices}
+            className="mt-6"
+          />
         )}
 
         {/* Min/Max choices */}
@@ -522,16 +558,8 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
                 step={1}
                 value={[form.minChoices, form.maxChoices]}
                 onValueChange={([newMin, newMax]) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    minChoices: newMin,
-                    maxChoices: newMax,
-                  }));
-                  setFieldErrors((prev) => ({
-                    ...prev,
-                    minChoices: '',
-                    maxChoices: '',
-                  }));
+                  setForm((prev) => ({ ...prev, minChoices: newMin, maxChoices: newMax }));
+                  setFieldErrors((prev) => ({ ...prev, minChoices: '', maxChoices: '' }));
                   setError(null);
                 }}
                 className="my-5"
@@ -555,7 +583,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
       </section>
 
-      {/* Winning conditions */}
+      {/* ── Winning conditions ──────────────────────────────────────────────── */}
       <section>
         <h2 className="font-display text-foreground mb-1 text-xl font-semibold">Умови перемоги</h2>
         <p className="font-body text-muted-foreground mb-4 text-sm">
@@ -583,7 +611,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
       </section>
 
-      {/* Restrictions */}
+      {/* ── Access restrictions ─────────────────────────────────────────────── */}
       <section>
         <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
           Обмеження доступу
@@ -600,22 +628,48 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
         )}
 
         <div className="space-y-5">
+          {/* Faculty */}
           <FormField
             label="Підрозділ"
             htmlFor="faculties"
-            hint={restrictedToFaculty ? 'Акаунт обмежений одним підрозділом' : undefined}
+            hint={
+              restrictedToFaculty
+                ? canBypassFaculty
+                  ? undefined
+                  : 'Акаунт обмежений одним підрозділом'
+                : undefined
+            }
             error={fieldErrors.faculties}
           >
             {restrictedToFaculty ? (
-              <div className="relative">
-                <Input
-                  value={restrictedToFaculty}
-                  readOnly
-                  className="bg-surface cursor-not-allowed pr-9"
-                />
-                <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
-                  <Lock className="h-4 w-4" />
+              <div className="space-y-3">
+                <div className="relative">
+                  <Input
+                    value={restrictedToFaculty}
+                    readOnly
+                    className={cn(
+                      'bg-surface pr-9',
+                      !includeFacultyRestriction
+                        ? 'cursor-not-allowed opacity-40'
+                        : 'cursor-not-allowed',
+                    )}
+                  />
+                  <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
+                    <Lock className="h-4 w-4" />
+                  </div>
                 </div>
+                {canBypassFaculty && (
+                  <ToggleField
+                    label="Включити обмеження підрозділом"
+                    description={
+                      includeFacultyRestriction
+                        ? 'Можна зняти обмеження підрозділу завдяки обмеженню за членством у групі'
+                        : 'Обмеження підрозділу знято — діє обмеження за членством у групі'
+                    }
+                    checked={includeFacultyRestriction}
+                    onChange={setIncludeFacultyRestriction}
+                  />
+                )}
               </div>
             ) : (
               <MultiCombobox
@@ -631,6 +685,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             )}
           </FormField>
 
+          {/* Study form */}
           <FormField label="Форма навчання">
             <ChipSelect
               options={studyFormOptions}
@@ -643,6 +698,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             />
           </FormField>
 
+          {/* Level & course */}
           <FormField label="Рівень та курс" error={fieldErrors.levelCourses}>
             <div className={`grid grid-cols-1 gap-4 sm:grid-cols-${LEVEL_COLUMNS.length}`}>
               {LEVEL_COLUMNS.map(({ key, label, courses }) => (
@@ -682,14 +738,7 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             )}
           </FormField>
 
-          {/* <FormField label="Рік навчання (загальний)">
-            <ChipSelect
-              options={studyYearOptions}
-              value={selectedYears}
-              onChange={setSelectedYears}
-            />
-          </FormField> */}
-
+          {/* Campus group */}
           <FormField
             label="Група"
             htmlFor="groups"
@@ -716,20 +765,83 @@ export function CreateElectionForm({ restrictedToFaculty = null }: CreateElectio
             />
           </FormField>
 
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={bypassRequired}
-              onChange={(e) => setBypassRequired(e.target.checked)}
-              className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+          {/* GROUP_MEMBERSHIP restriction */}
+          {(ownedGroups.length > 0 || !ownedGroupsLoading) && (
+            <FormField
+              label="Членство в групі"
+              htmlFor="group-memberships"
+              hint={
+                ownedGroupsLoading
+                  ? 'Завантаження ваших груп…'
+                  : ownedGroups.length === 0
+                    ? 'У вас немає власних груп'
+                    : 'Лише члени обраних груп зможуть взяти участь у голосуванні'
+              }
+            >
+              {ownedGroupsLoading ? (
+                <p className="font-body text-muted-foreground text-sm">Завантаження…</p>
+              ) : ownedGroups.length === 0 ? (
+                <p className="font-body text-muted-foreground text-sm italic">
+                  Немає доступних груп
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {ownedGroups.map((grp) => {
+                    const isSelected = selectedGroupMemberships.includes(grp.id);
+                    return (
+                      <button
+                        key={grp.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedGroupMemberships((prev) =>
+                            isSelected ? prev.filter((id) => id !== grp.id) : [...prev, grp.id],
+                          );
+                          setError(null);
+                        }}
+                        className={cn(
+                          'font-body min-w-0 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-all duration-150',
+                          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+                          isSelected
+                            ? 'border-kpi-navy bg-kpi-navy shadow-shadow-sm text-white'
+                            : 'border-border-color text-foreground hover:border-kpi-blue-light bg-white',
+                        )}
+                      >
+                        <span className="block font-semibold wrap-break-word">{grp.name}</span>
+                        <span
+                          className={cn(
+                            'mt-0.5 block text-xs',
+                            isSelected ? 'text-white/70' : 'text-muted-foreground',
+                          )}
+                        >
+                          {pluralize(grp.memberCount, ['учасник', 'учасники', 'учасників'])}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </FormField>
+          )}
+
+          <ToggleField
+            label="Доступ лише за токеном"
+            description="Участь зможуть взяти лише люди, яким видано токен доступу до голосування."
+            checked={bypassRequired}
+            onChange={setBypassRequired}
+          />
+
+          {restrictions.length > 0 && (
+            <ToggleField
+              label="Публічний перегляд"
+              description="Будь-який авторизований користувач може переглядати сторінку голосування за посиланням. Однак у загальному списку вона не відображатиметься для користувачів, які не відповідають умовам участі."
+              checked={publicViewing}
+              onChange={setPublicViewing}
             />
-            <span className="font-body text-foreground text-sm font-medium">
-              Доступ лише за токеном
-            </span>
-          </label>
+          )}
         </div>
       </section>
 
+      {/* ── Submit ──────────────────────────────────────────────────────────── */}
       <div className="border-border-subtle flex flex-col gap-3 border-t pt-4">
         {error && (
           <Alert variant="error" title="Помилка" onDismiss={() => setError(null)}>

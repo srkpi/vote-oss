@@ -8,6 +8,7 @@ import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { buildAdminGraph } from '@/lib/graph';
+import { getUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
 import {
   adminCanAccessElection,
@@ -18,7 +19,12 @@ import {
 import { isValidUuid } from '@/lib/utils/common';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import { computeWinners, parseWinningConditions } from '@/lib/winning-conditions';
-import type { ElectionRestriction, TallyResult, WinningConditions } from '@/types/election';
+import type {
+  ElectionRestrictedGroups,
+  ElectionRestriction,
+  TallyResult,
+  WinningConditions,
+} from '@/types/election';
 import {
   DEFAULT_WINNING_CONDITIONS,
   DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
@@ -144,6 +150,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { user } = auth;
   const isAdmin = user.isAdmin ?? false;
 
+  // ── Fetch election (cache-first) ──────────────────────────────────────────
   let electionData;
   const cached = await getCachedElections();
 
@@ -153,11 +160,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     let winningConditions = found.winningConditions;
     if (!winningConditions) {
-      if (found.choices.length === 1) {
-        winningConditions = DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE;
-      } else {
-        winningConditions = DEFAULT_WINNING_CONDITIONS;
-      }
+      winningConditions =
+        found.choices.length === 1
+          ? DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE
+          : DEFAULT_WINNING_CONDITIONS;
     }
 
     electionData = {
@@ -180,6 +186,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedByName: found.deletedByName,
       winningConditions,
       shuffleChoices: found.shuffleChoices ?? false,
+      publicViewing: found.publicViewing ?? false,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -220,28 +227,62 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedByName: dbElection.deleter?.full_name ?? null,
       winningConditions: parseWinningConditions(dbElection.winning_conditions),
       shuffleChoices: dbElection.shuffle_choices,
+      publicViewing: dbElection.public_viewing,
     };
   }
 
+  // Hidden from non-admins when deleted
   if (!isAdmin && electionData.deletedAt) {
     return Errors.notFound('Election not found');
   }
 
   const restrictions = electionData.restrictions;
-  const bypassedTypes = await getElectionBypassForUser(user.sub, electionId);
+  const { publicViewing } = electionData;
+
+  // ── Access & eligibility check ────────────────────────────────────────────
+  // userCanVote = whether this specific user meets the voting restrictions.
+  // When publicViewing=true, we skip the 403 for viewers but still track eligibility.
+
+  let userCanVote = false;
+  let bypassedTypes: string[] = [];
+
+  const groupMembershipRestrictions = restrictions.filter((r) => r.type === 'GROUP_MEMBERSHIP');
+  const groupMembershipRestrictionsIds = groupMembershipRestrictions.map((r) => r.value);
 
   if (isAdmin && !user.restrictedToFaculty) {
-    // Unrestricted admin — always pass
+    userCanVote = true;
   } else if (isAdmin && user.restrictedToFaculty) {
-    if (!adminCanAccessElection(user.faculty, restrictions)) {
+    const eligible = adminCanAccessElection(user.faculty, restrictions);
+    userCanVote = eligible;
+    if (!eligible && !publicViewing) {
       return Errors.forbidden('You are not eligible for this election');
     }
   } else {
-    if (!checkRestrictionsWithBypass(restrictions, user, bypassedTypes)) {
+    // Regular user: fetch bypass tokens and group memberships concurrently
+    const [fetchedBypass, groupMemberships] = await Promise.all([
+      getElectionBypassForUser(user.sub, electionId),
+      groupMembershipRestrictions.length > 0
+        ? getUserGroupMemberships(user.sub)
+        : Promise.resolve(null),
+    ]);
+
+    bypassedTypes = fetchedBypass ?? [];
+    userCanVote = checkRestrictionsWithBypass(restrictions, user, bypassedTypes, groupMemberships);
+
+    if (!userCanVote && !publicViewing) {
       return Errors.forbidden('You are not eligible for this election');
     }
   }
 
+  let restrictedGroups: ElectionRestrictedGroups[] | undefined = undefined;
+  if (groupMembershipRestrictionsIds.length > 0) {
+    restrictedGroups = await prisma.group.findMany({
+      select: { id: true, name: true },
+      where: { id: { in: groupMembershipRestrictionsIds } }, // IMPORTANT FIX
+    });
+  }
+
+  // ── Tally ─────────────────────────────────────────────────────────────────
   const now = new Date();
   const isClosed = now > electionData.closesAt;
   const isOpen = now >= electionData.opensAt && now <= electionData.closesAt;
@@ -276,6 +317,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
   }
 
+  // ── hasVoted ──────────────────────────────────────────────────────────────
   let hasVoted: boolean | undefined;
   if (isOpen) {
     const issuedToken = await prisma.issuedToken.findUnique({
@@ -284,6 +326,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     hasVoted = issuedToken !== null;
   }
 
+  // ── Admin extras ──────────────────────────────────────────────────────────
   let canDelete: boolean | undefined;
   let canRestore: boolean | undefined;
   let deletedByField: { userId: string; fullName: string } | null | undefined;
@@ -326,6 +369,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       : null;
   }
 
+  // ── Build choices ─────────────────────────────────────────────────────────
   const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
   let choices = electionData.choices.map((c) => {
     const base = { id: c.id, choice: c.choice, position: c.position };
@@ -336,7 +380,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return base;
   });
 
-  if (electionData.shuffleChoices) {
+  // Only shuffle for users who can vote; public viewers see canonical order
+  if (electionData.shuffleChoices && userCanVote) {
     choices = shuffleChoicesForUser(choices, user.sub, electionId);
   }
 
@@ -352,6 +397,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     minChoices: electionData.minChoices,
     maxChoices: electionData.maxChoices,
     publicKey: electionData.publicKey,
+    publicViewing,
     privateKey: isClosed ? privateKeyPem : undefined,
     creator: electionData.creator,
     choices,
@@ -359,7 +405,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     winningConditions,
     shuffleChoices: electionData.shuffleChoices,
     hasVoted,
-    bypassedTypes: bypassedTypes ?? [],
+    bypassedTypes,
+    restrictedGroups,
     ...(isAdmin && {
       deletedAt: electionData.deletedAt?.toISOString() ?? null,
       deletedBy: deletedByField,
@@ -441,7 +488,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     )
   ) {
     return Errors.forbidden(
-      'You can only delete elections you created or that were created by your subordinates within your faculty',
+      'You can only delete elections you created or that were created by your subordinates',
     );
   }
 

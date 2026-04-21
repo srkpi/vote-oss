@@ -236,7 +236,10 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             </div>
 
             {election.restrictions.length > 0 && (
-              <AccessRestrictions restrictions={election.restrictions} />
+              <AccessRestrictions
+                restrictions={election.restrictions}
+                restrictedGroups={election.restrictedGroups}
+              />
             )}
 
             <WinningConditionsDisplay

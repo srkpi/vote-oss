@@ -5,8 +5,9 @@ import { requireAuth } from '@/lib/auth';
 import { getCachedElections } from '@/lib/cache';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
+import { getUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
-import { adminCanAccessElection, checkRestrictions } from '@/lib/restrictions';
+import { adminCanAccessElection, checkRestrictionsWithBypass } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import type { ElectionRestriction } from '@/types/election';
@@ -23,6 +24,8 @@ import type { ElectionRestriction } from '@/types/election';
  *       This single request replaces the previous pattern of fetching ballots
  *       and election detail separately. Access is subject to faculty/group
  *       eligibility rules identical to those applied when viewing the election.
+ *       When `publicViewing` is true on the election, any authenticated user
+ *       may view the ballots regardless of voting eligibility.
  *     tags:
  *       - Elections
  *     security:
@@ -65,7 +68,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id: electionId } = await params;
   if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
 
-  let electionData;
+  // ── Fetch election ────────────────────────────────────────────────────────
+  let electionData: {
+    id: string;
+    title: string;
+    opens_at: Date;
+    closes_at: Date;
+    private_key: string;
+    deleted_at: string | Date | null;
+    restrictions: ElectionRestriction[];
+    choices: { id: string; choice: string; position: number }[];
+    min_choices: number;
+    max_choices: number;
+    shuffle_choices: boolean;
+    public_viewing: boolean;
+  };
+
   const cached = await getCachedElections();
   if (cached) {
     const found = cached.find((e) => e.id === electionId);
@@ -83,6 +101,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       min_choices: found.minChoices,
       max_choices: found.maxChoices,
       shuffle_choices: found.shuffleChoices ?? false,
+      public_viewing: found.publicViewing ?? false,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -95,6 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         private_key: true,
         deleted_at: true,
         shuffle_choices: true,
+        public_viewing: true,
         restrictions: { select: { type: true, value: true } },
         choices: {
           select: { id: true, choice: true, position: true },
@@ -114,22 +134,39 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { user } = auth;
+
+  // Deleted elections: non-admins see 404
   if (!user.isAdmin && electionData.deleted_at) return Errors.notFound('Election not found');
 
-  const restrictions = electionData.restrictions as ElectionRestriction[];
+  const restrictions = electionData.restrictions;
+  const { public_viewing: publicViewing } = electionData;
+
+  // ── Access check ──────────────────────────────────────────────────────────
+  // Admins (unrestricted): always allowed.
+  // Admins (faculty-restricted): allowed if faculty matches, or publicViewing.
+  // Regular users: allowed if they meet restrictions, or publicViewing.
 
   if (user.isAdmin && !user.restrictedToFaculty) {
-    // pass
+    // unrestricted admin — pass
   } else if (user.isAdmin && user.restrictedToFaculty) {
-    if (!adminCanAccessElection(user.faculty, restrictions)) {
+    if (!adminCanAccessElection(user.faculty, restrictions) && !publicViewing) {
       return Errors.forbidden('You are not eligible to view this election');
     }
   } else {
-    if (!checkRestrictions(restrictions, user)) {
+    // Regular user path
+    const hasGroupMembershipRestriction = restrictions.some((r) => r.type === 'GROUP_MEMBERSHIP');
+    const groupMemberships = hasGroupMembershipRestriction
+      ? await getUserGroupMemberships(user.sub)
+      : null;
+
+    const eligible = checkRestrictionsWithBypass(restrictions, user, null, groupMemberships);
+
+    if (!eligible && !publicViewing) {
       return Errors.forbidden('You are not eligible to view this election');
     }
   }
 
+  // ── Fetch ballots ─────────────────────────────────────────────────────────
   const now = new Date();
   const isClosed = now > electionData.closes_at;
   const status =
@@ -154,7 +191,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     position: c.position,
   }));
 
-  if (electionData.shuffle_choices) {
+  // Only shuffle for users who can actually vote (not for public observers)
+  const hasGroupMembershipRestriction = restrictions.some((r) => r.type === 'GROUP_MEMBERSHIP');
+  const groupMembershipsForShuffle = hasGroupMembershipRestriction
+    ? await getUserGroupMemberships(user.sub)
+    : null;
+  const userCanVote = user.isAdmin
+    ? true
+    : checkRestrictionsWithBypass(restrictions, user, null, groupMembershipsForShuffle);
+
+  if (electionData.shuffle_choices && userCanVote) {
     choices = shuffleChoicesForUser(choices, user.sub, electionId);
   }
 
@@ -168,6 +214,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       ballotCount: ballots.length,
       deletedAt: electionData.deleted_at,
       shuffleChoices: electionData.shuffle_choices,
+      publicViewing,
       choices,
       minChoices: electionData.min_choices,
       maxChoices: electionData.max_choices,

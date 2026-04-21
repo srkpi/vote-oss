@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: BallotsPageProps): Promise<Me
   const { data, status } = await serverApi.elections.og(id);
 
   let metaTitle = 'Бюлетені голосування';
-  if (status === 404) {
+  if (status === 404 || status === 400) {
     metaTitle = '404 | Голосування не знайдено';
   } else if (data?.title) {
     metaTitle = `Бюлетені | ${data.title}`;

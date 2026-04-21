@@ -23,9 +23,10 @@ interface EditPermissionsDialogProps {
   onClose: () => void;
   admin: Admin;
   callerRestrictedToFaculty: boolean;
+  callerManageGroups: boolean;
   onUpdate: (
     userId: string,
-    updates: { manageAdmins: boolean; restrictedToFaculty: boolean },
+    updates: { manageAdmins: boolean; manageGroups: boolean; restrictedToFaculty: boolean },
   ) => void;
 }
 
@@ -34,17 +35,21 @@ export function EditPermissionsDialog({
   onClose,
   admin,
   callerRestrictedToFaculty,
+  callerManageGroups,
   onUpdate,
 }: EditPermissionsDialogProps) {
   const { toast } = useToast();
 
   const [manageAdmins, setManageAdmins] = useState(admin.manageAdmins);
+  const [manageGroups, setManageGroups] = useState(admin.manageGroups);
   const [restrictedToFaculty, setRestrictedToFaculty] = useState(admin.restrictedToFaculty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasChanges =
-    manageAdmins !== admin.manageAdmins || restrictedToFaculty !== admin.restrictedToFaculty;
+    manageAdmins !== admin.manageAdmins ||
+    manageGroups !== admin.manageGroups ||
+    restrictedToFaculty !== admin.restrictedToFaculty;
 
   const handleSubmit = async () => {
     if (!hasChanges) {
@@ -55,10 +60,14 @@ export function EditPermissionsDialog({
     setLoading(true);
     setError(null);
 
-    const result = await api.admins.patch(admin.userId, { manageAdmins, restrictedToFaculty });
+    const result = await api.admins.patch(admin.userId, {
+      manageAdmins,
+      manageGroups,
+      restrictedToFaculty,
+    });
 
     if (result.success) {
-      onUpdate(admin.userId, { manageAdmins, restrictedToFaculty });
+      onUpdate(admin.userId, { manageAdmins, manageGroups, restrictedToFaculty });
       toast({
         title: 'Права оновлено',
         description: `Права адміністратора ${admin.fullName} успішно змінено.`,
@@ -75,8 +84,8 @@ export function EditPermissionsDialog({
   const handleClose = () => {
     if (loading) return;
     setError(null);
-    // Reset to current admin values when closing without saving
     setManageAdmins(admin.manageAdmins);
+    setManageGroups(admin.manageGroups);
     setRestrictedToFaculty(admin.restrictedToFaculty);
     onClose();
   };
@@ -102,6 +111,18 @@ export function EditPermissionsDialog({
               description="Дозволяє запрошувати нових адміністраторів та видаляти підлеглих"
               checked={manageAdmins}
               onChange={setManageAdmins}
+            />
+
+            <ToggleField
+              label="Керування групами"
+              description={
+                !callerManageGroups
+                  ? 'Ви не можете надати цей дозвіл, оскільки самі його не маєте'
+                  : 'Дозволяє переглядати, видаляти групи та видаляти їх учасників'
+              }
+              checked={manageGroups}
+              onChange={setManageGroups}
+              disabled={!callerManageGroups}
             />
 
             <ToggleField

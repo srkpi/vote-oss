@@ -64,12 +64,17 @@ export function AdminRow({
               Керування адмінами
             </Badge>
           )}
+          {admin.manageGroups && (
+            <Badge variant="success" size="sm">
+              Керування групами
+            </Badge>
+          )}
           {admin.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
               Обмежений до підрозділу
             </Badge>
           )}
-          {!admin.manageAdmins && !admin.restrictedToFaculty && (
+          {!admin.manageAdmins && !admin.manageGroups && !admin.restrictedToFaculty && (
             <Badge variant="default" size="sm">
               Базові
             </Badge>

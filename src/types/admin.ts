@@ -11,6 +11,7 @@ export interface Admin {
   promoter: AdminPromoter | null;
   promotedAt: string;
   manageAdmins: boolean;
+  manageGroups: boolean;
   restrictedToFaculty: boolean;
   deletable?: boolean;
 }
@@ -19,6 +20,7 @@ export interface InviteTokenRequest {
   validDue: string;
   maxUsage?: number;
   manageAdmins?: boolean;
+  manageGroups?: boolean;
   restrictedToFaculty?: boolean;
 }
 
@@ -26,6 +28,7 @@ export interface InviteTokenResponse {
   token: string;
   maxUsage: number;
   manageAdmins: boolean;
+  manageGroups: boolean;
   restrictedToFaculty: boolean;
   validDue: string;
 }
@@ -35,6 +38,7 @@ export interface InviteToken {
   maxUsage: number;
   currentUsage: number;
   manageAdmins: boolean;
+  manageGroups: boolean;
   restrictedToFaculty: boolean;
   validDue: string;
   createdAt: string;

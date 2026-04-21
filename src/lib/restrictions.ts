@@ -17,20 +17,28 @@ interface UserContext {
 /**
  * AND between different restriction types, OR within the same type.
  * Returns true if the user satisfies all restriction groups.
+ *
+ * @param restrictions    Election restrictions to check.
+ * @param user            User attributes from JWT.
+ * @param bypassedTypes   Restriction types the user has bypassed via token.
+ * @param groupMemberships Group UUIDs the user is actively a member of.
+ *                         Required when GROUP_MEMBERSHIP restrictions are present.
  */
 export function checkRestrictions(restrictions: ElectionRestriction[], user: UserContext): boolean {
-  return checkRestrictionsWithBypass(restrictions, user, null);
+  return checkRestrictionsWithBypass(restrictions, user, null, null);
 }
 
 export function checkRestrictionsWithBypass(
   restrictions: ElectionRestriction[],
   user: UserContext,
   bypassedTypes: string[] | null,
+  groupMemberships: string[] | null,
 ): boolean {
   if (restrictions.length === 0) return true;
 
   const bypassSet = bypassedTypes && bypassedTypes.length > 0 ? new Set(bypassedTypes) : null;
   const byType = new Map<string, string[]>();
+
   for (const r of restrictions) {
     if (bypassSet?.has(r.type)) continue;
 
@@ -41,40 +49,56 @@ export function checkRestrictionsWithBypass(
 
   // After removing bypassed types, all remaining must be satisfied
   for (const [type, values] of byType) {
-    let userValue: string | undefined;
+    let satisfied = false;
 
     switch (type) {
       case 'FACULTY':
-        userValue = user.faculty;
+        satisfied = values.includes(user.faculty);
         break;
+
       case 'GROUP':
-        userValue = user.group;
+        satisfied = values.includes(user.group);
         break;
+
       case 'SPECIALITY':
-        userValue = user.speciality;
+        satisfied = !!user.speciality && values.includes(user.speciality);
         break;
+
       case 'STUDY_YEAR':
-        userValue = user.studyYear != null ? String(user.studyYear) : undefined;
+        satisfied = user.studyYear != null && values.includes(String(user.studyYear));
         break;
+
       case 'STUDY_FORM':
-        userValue = user.studyForm;
+        satisfied = !!user.studyForm && values.includes(user.studyForm);
         break;
+
       case 'LEVEL_COURSE': {
         const yearDigit = parseGroupYearEnteredDigit(user.group);
         if (yearDigit === null) return false;
         const level = parseGroupLevel(user.group);
         const course = calculateCourse(yearDigit);
-        userValue = `${level}${course}`;
+        const userValue = `${level}${course}`;
+        satisfied = values.includes(userValue);
         break;
       }
+
       case 'BYPASS_REQUIRED':
-        // This restriction is never satisfied by user attributes alone.
-        // It can only be bypassed via an election bypass token that includes
-        // BYPASS_REQUIRED in its bypass_restrictions list.
+        // Never satisfied by user attributes alone; requires an explicit bypass token
+        // that includes BYPASS_REQUIRED in its bypass_restrictions.
+        return false;
+
+      case 'GROUP_MEMBERSHIP':
+        // `values` is an array of group UUIDs (OR semantics — user must be in at least one)
+        if (!groupMemberships || groupMemberships.length === 0) return false;
+        satisfied = values.some((groupId) => groupMemberships.includes(groupId));
+        break;
+
+      default:
+        // Unknown restriction type — deny by default for forward-compatibility
         return false;
     }
 
-    if (!userValue || !values.includes(userValue)) return false;
+    if (!satisfied) return false;
   }
 
   return true;
@@ -94,15 +118,6 @@ export function adminCanAccessElection(
 
 /**
  * Determines whether an admin may soft-delete an election.
- *
- * Rules:
- *  - Admins may only delete elections that:
- *    Were created by themselves OR by an admin they supervise
- *    (i.e. the admin is an ancestor of the creator in the hierarchy).
- *
- * @param admin       The requesting admin record.
- * @param election    The target election (restrictions + created_by userId).
- * @param adminGraph  Map of userId → promoted_by userId (the hierarchy graph).
  */
 export function adminCanDeleteElection(
   admin: { restricted_to_faculty: boolean; faculty: string; user_id: string },
