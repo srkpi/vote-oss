@@ -35,7 +35,7 @@ export interface MetricCardConfig {
   interpretation: string;
   color: 'navy' | 'orange' | 'blue' | 'success' | 'warning' | 'error' | 'purple';
   description: string;
-  insight: string;
+  insight: string | null;
   scale?: MetricScaleConfig;
 }
 

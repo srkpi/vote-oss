@@ -74,7 +74,7 @@ export const buildPeakMetric: MetricBuilder = ({ metrics, totalBallots }) => {
 
   // ── Detailed insight (modal) ──────────────────────────────────────────────────
 
-  let insight: string;
+  let insight: string | null = null;
 
   if (totalBallots === 1) {
     insight =
@@ -157,8 +157,6 @@ export const buildPeakMetric: MetricBuilder = ({ metrics, totalBallots }) => {
         'від основної хвилі. Голосування поєднувало короткочасний спалах активності з органічним ' +
         'фоновим потоком.';
     }
-  } else {
-    insight = '';
   }
 
   // ── Color ─────────────────────────────────────────────────────────────────
