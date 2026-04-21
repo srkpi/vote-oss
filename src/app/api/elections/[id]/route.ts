@@ -35,11 +35,10 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Compute vote tallies from raw ballots (supports both v1 anonymous and v2
- * identified ballot formats), persist them to ElectionChoice, clean up issued
- * tokens + nullifiers, and invalidate the elections cache.
+ * Decrypt all ballots for an election and count votes in-memory.  Works for
+ * both v1 anonymous and v2 identified ballot formats.  Performs no DB writes.
  */
-async function computeAndPersistTally(
+async function computeTallyInMemory(
   electionId: string,
   privateKeyPem: string,
   choices: Array<{ id: string }>,
@@ -63,6 +62,21 @@ async function computeAndPersistTally(
     }
   }
 
+  return { tally, totalBallots: ballots.length };
+}
+
+/**
+ * Compute tally AND persist it: writes vote_count on each choice and clears
+ * issued tokens + nullifiers.  Only safe for closed elections — clearing
+ * nullifiers during an open election would break anti-double-vote checks.
+ */
+async function computeAndPersistTally(
+  electionId: string,
+  privateKeyPem: string,
+  choices: Array<{ id: string }>,
+): Promise<{ tally: Record<string, number>; totalBallots: number }> {
+  const { tally, totalBallots } = await computeTallyInMemory(electionId, privateKeyPem, choices);
+
   await prisma.$transaction([
     ...choices.map((c) =>
       prisma.electionChoice.update({
@@ -76,7 +90,7 @@ async function computeAndPersistTally(
 
   await invalidateElections();
 
-  return { tally, totalBallots: ballots.length };
+  return { tally, totalBallots };
 }
 
 function buildTallyResults(
@@ -285,9 +299,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const now = new Date();
   const isClosed = now > electionData.closesAt;
   const isOpen = now >= electionData.opensAt && now <= electionData.closesAt;
+  const { anonymous } = electionData;
 
   const privateKeyPem = decryptField(electionData.privateKey);
   const { winningConditions } = electionData;
+
+  // Non-anonymous elections are simultaneously "open" — tally and private key
+  // are exposed during voting, not only after close.  For anonymous elections
+  // we keep the zero-knowledge gate until the election closes.
+  const exposeResults = isClosed || (!anonymous && isOpen);
 
   let tallyResults: TallyResult[] | undefined;
   if (isClosed) {
@@ -314,6 +334,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         winningConditions,
       );
     }
+  } else if (!anonymous && isOpen && electionData.ballotCount > 0) {
+    // Live in-memory tally for non-anonymous open elections. No DB writes —
+    // we must not clear IssuedToken/UsedTokenNullifier while voting is active.
+    const { tally, totalBallots } = await computeTallyInMemory(
+      electionId,
+      privateKeyPem,
+      electionData.choices,
+    );
+    tallyResults = buildTallyResults(tally, totalBallots, electionData.choices, winningConditions);
   }
 
   // ── hasVoted ──────────────────────────────────────────────────────────────
@@ -372,7 +401,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
   let choices = electionData.choices.map((c) => {
     const base = { id: c.id, choice: c.choice, position: c.position };
-    if (isClosed && tallyResults) {
+    if (exposeResults && tallyResults) {
       const r = tallyMap.get(c.id);
       return { ...base, votes: r?.votes ?? 0, winner: r?.winner ?? false };
     }
@@ -398,7 +427,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     publicKey: electionData.publicKey,
     publicViewing,
     anonymous: electionData.anonymous,
-    privateKey: isClosed ? privateKeyPem : undefined,
+    privateKey: exposeResults ? privateKeyPem : undefined,
     creator: electionData.creator,
     choices,
     ballotCount: electionData.ballotCount,

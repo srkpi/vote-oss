@@ -63,8 +63,14 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
   const [isMyBallotVisible, setIsMyBallotVisible] = useState(false);
 
   const isClosed = election.status === 'closed';
+  const isOpen = election.status === 'open';
+  // Decryption is allowed either after the election closes (anonymous contract)
+  // or live during voting for non-anonymous elections.  The backend already
+  // gates `privateKey` on this rule — this second check is defense in depth so
+  // a backend regression can't surface the key in the UI unexpectedly.
+  const canDecryptByStatus = isClosed || (isOpen && !election.anonymous);
   const privateKey = election.privateKey;
-  const canDecrypt = isClosed && !!privateKey && election.ballotCount > 0;
+  const canDecrypt = canDecryptByStatus && !!privateKey && election.ballotCount > 0;
   const choices: ElectionChoice[] = election.choices;
   const electionId = election.id;
 
@@ -234,9 +240,9 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
           <span className="flex items-start gap-2">
             <Eye className="mt-0.5 h-4 w-4 shrink-0" />
             <span>
-              У зашифрованих бюлетенях цього голосування міститься ПІБ та ідентифікатор
-              голосуючого. Після розшифрування (коли голосування буде закрите) ця інформація стане
-              доступною всім, хто має право переглядати бюлетені.
+              У зашифрованих бюлетенях цього голосування міститься ПІБ та ідентифікатор голосуючого.
+              Результати та особи голосуючих доступні для перегляду одразу — ще під час відкритого
+              голосування.
             </span>
           </span>
         </Alert>

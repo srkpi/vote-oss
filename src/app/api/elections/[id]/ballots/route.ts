@@ -171,8 +171,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // ── Fetch ballots ─────────────────────────────────────────────────────────
   const now = new Date();
   const isClosed = now > electionData.closes_at;
+  const isOpen = now >= electionData.opens_at && now <= electionData.closes_at;
   const status =
     now < electionData.opens_at ? 'upcoming' : now <= electionData.closes_at ? 'open' : 'closed';
+  // Non-anonymous elections expose the decryption key while voting is live —
+  // they carry no zero-knowledge guarantee to preserve.
+  const exposePrivateKey = isClosed || (!electionData.anonymous && isOpen);
 
   const ballots = await prisma.ballot.findMany({
     where: { election_id: electionId },
@@ -221,7 +225,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       choices,
       minChoices: electionData.min_choices,
       maxChoices: electionData.max_choices,
-      ...(isClosed && { privateKey: decryptField(electionData.private_key) }),
+      ...(exposePrivateKey && { privateKey: decryptField(electionData.private_key) }),
     },
     ballots: ballots.map((b) => ({
       id: b.id,

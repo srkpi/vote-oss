@@ -53,9 +53,9 @@ export function ConfirmChoice({
         <div className="border-kpi-orange/30 bg-warning-bg flex items-start gap-2 rounded-lg border p-3">
           <Eye className="text-kpi-orange mt-0.5 h-4 w-4 shrink-0" />
           <p className="font-body text-foreground/80 text-sm leading-relaxed">
-            <span className="text-kpi-orange font-semibold">Увага:</span> це неанонімне
-            голосування — ваші ПІБ та ID зберігаються у зашифрованому бюлетені і стануть видимі
-            після його закриття.
+            <span className="text-kpi-orange font-semibold">Увага:</span> це неанонімне голосування
+            — ваші ПІБ та ID зберігаються у зашифрованому бюлетені і стануть видимі одразу після
+            подання, ще під час голосування.
           </p>
         </div>
       )}

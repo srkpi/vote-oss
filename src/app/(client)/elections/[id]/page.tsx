@@ -106,7 +106,10 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   const isOpen = election.status === 'open';
   const isUpcoming = election.status === 'upcoming';
   const isClosed = election.status === 'closed';
-  const hasResults = isClosed && election.choices.some((c) => c.votes !== undefined);
+  // Non-anonymous open elections expose live results; the API sets `votes`
+  // on choices in that case too.
+  const hasResults = election.choices.some((c) => c.votes !== undefined);
+  const showLiveResults = isOpen && !election.anonymous && hasResults;
 
   const bypassedTypes = election.bypassedTypes ?? null;
   const canParticipate = checkRestrictionsWithBypass(
@@ -185,10 +188,10 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </div>
             )}
 
-            {isClosed && hasResults && (
+            {(isClosed || showLiveResults) && hasResults && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
                 <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
-                  Результати
+                  {showLiveResults ? 'Поточні результати' : 'Результати'}
                 </h2>
                 <ResultsChart
                   choices={election.choices}
@@ -249,7 +252,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                       'Анонімне голосування'
                     ) : (
                       <span className="text-kpi-orange font-semibold">
-                        Неанонімне — ПІБ голосуючих буде розкрито після завершення
+                        Неанонімне — ПІБ голосуючих видимі під час голосування
                       </span>
                     )
                   }
@@ -277,7 +280,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   keyValue={election.publicKey}
                 />
 
-                {isClosed && election.privateKey && (
+                {(isClosed || showLiveResults) && election.privateKey && (
                   <EncryptionKey
                     isPrivate
                     title="Приватний ключ"
