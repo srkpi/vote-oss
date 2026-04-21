@@ -11,6 +11,11 @@ import {
   randomBytes,
 } from 'crypto';
 
+import {
+  BALLOT_PADDING,
+  BALLOT_VERSION_ANONYMOUS,
+  BALLOT_VERSION_IDENTIFIED,
+} from '@/lib/constants';
 import type { Ballot } from '@/types/ballot';
 
 // ---------------------------------------------------------------------------
@@ -67,9 +72,10 @@ export function computeNullifier(token: string): string {
 // ---------------------------------------------------------------------------
 
 /** Sentinel used to pad a choice array to maxChoices length. */
-const BALLOT_PADDING = '00000000-0000-0000-0000-000000000000';
-export const BALLOT_VERSION = 1;
-
+/**
+ * v1 – anonymous: plaintext is a JSON array of (padded) choice IDs.
+ * v2 – identified: plaintext is a JSON object with choices + voter identity.
+ */
 interface BallotEnvelope {
   v: number;
   wrappedKey: string; // base64 – RSA-OAEP encrypted AES key
@@ -78,21 +84,55 @@ interface BallotEnvelope {
   ciphertext: string; // base64 – AES-256-GCM encrypted payload
 }
 
+/** Voter identity embedded in v2 (identified) ballot payloads. */
+export interface BallotVoterIdentity {
+  userId: string;
+  fullName: string;
+}
+
+/** v2 identified ballot payload. */
+interface IdentifiedBallotPayload {
+  choices: string[]; // padded with BALLOT_PADDING sentinels
+  voterId: string;
+  voterName: string;
+}
+
+/** Return value of decryptBallot — carries choices and optional voter identity. */
+export interface BallotDecryptResult {
+  choiceIds: string[];
+  voter?: BallotVoterIdentity;
+}
+
 /**
  * Encrypt an array of choice IDs using hybrid AES-256-GCM + RSA-OAEP.
  *
- * The choice array is padded to `maxChoices` with empty-string sentinels so
- * every ballot has identical plaintext length, hiding how many options were
- * selected. The result is a base64-encoded JSON envelope.
+ * When `voter` is provided the ballot is encoded as v2 (identified) and the
+ * voter's identity is cryptographically bound to the ciphertext so it can
+ * only be revealed after the election closes (when the private key is
+ * published).
+ *
+ * The choice array is always padded to `maxChoices` with sentinels so every
+ * ballot has identical plaintext length, hiding the selection count.
  */
 export function encryptBallot(
   publicKeyPem: string,
   choiceIds: string[],
   maxChoices: number,
+  voter?: BallotVoterIdentity,
 ): string {
   // Pad to maxChoices so all ciphertexts are the same size
   const padded = [...choiceIds];
   while (padded.length < maxChoices) padded.push(BALLOT_PADDING);
+
+  // Build plaintext based on ballot version
+  const version = voter ? BALLOT_VERSION_IDENTIFIED : BALLOT_VERSION_ANONYMOUS;
+  const plaintext = voter
+    ? JSON.stringify({
+        choices: padded,
+        voterId: voter.userId,
+        voterName: voter.fullName,
+      } satisfies IdentifiedBallotPayload)
+    : JSON.stringify(padded);
 
   // Generate fresh AES-256 key and 96-bit IV
   const aesKey = randomBytes(32);
@@ -101,7 +141,7 @@ export function encryptBallot(
   // Encrypt plaintext with AES-256-GCM
   const cipher = createCipheriv('aes-256-gcm', aesKey, iv);
   const ciphertext = Buffer.concat([
-    cipher.update(Buffer.from(JSON.stringify(padded), 'utf-8')),
+    cipher.update(Buffer.from(plaintext, 'utf-8')),
     cipher.final(),
   ]);
   const tag = cipher.getAuthTag(); // 16 bytes
@@ -113,7 +153,7 @@ export function encryptBallot(
   );
 
   const envelope: BallotEnvelope = {
-    v: BALLOT_VERSION,
+    v: version,
     wrappedKey: wrappedKey.toString('base64'),
     iv: iv.toString('base64'),
     tag: tag.toString('base64'),
@@ -125,9 +165,16 @@ export function encryptBallot(
 
 /**
  * Decrypt a hybrid AES-256-GCM + RSA-OAEP ballot envelope.
- * Returns the array of real choice IDs (padding sentinels are stripped).
+ *
+ * Returns the real choice IDs (padding sentinels stripped) and — for v2
+ * identified ballots — the embedded voter identity.
+ *
+ * Backward-compatible: v1 anonymous ballots produce a result with no `voter`.
  */
-export function decryptBallot(privateKeyPem: string, encryptedBallotBase64: string): string[] {
+export function decryptBallot(
+  privateKeyPem: string,
+  encryptedBallotBase64: string,
+): BallotDecryptResult {
   let envelope: BallotEnvelope;
   try {
     const json = Buffer.from(encryptedBallotBase64, 'base64').toString('utf-8');
@@ -136,7 +183,7 @@ export function decryptBallot(privateKeyPem: string, encryptedBallotBase64: stri
     throw new Error('Failed to parse ballot envelope');
   }
 
-  if (envelope.v !== BALLOT_VERSION) {
+  if (envelope.v !== BALLOT_VERSION_ANONYMOUS && envelope.v !== BALLOT_VERSION_IDENTIFIED) {
     throw new Error(`Unsupported ballot version: ${envelope.v}`);
   }
 
@@ -154,13 +201,36 @@ export function decryptBallot(privateKeyPem: string, encryptedBallotBase64: stri
   // Decrypt — AES-GCM verifies the auth tag automatically and throws on tamper
   const decipher = createDecipheriv('aes-256-gcm', aesKey, iv);
   decipher.setAuthTag(tag);
-  const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString(
+    'utf-8',
+  );
 
-  const parsed: unknown = JSON.parse(plaintext.toString('utf-8'));
-  if (!Array.isArray(parsed)) throw new Error('Invalid ballot payload');
+  if (envelope.v === BALLOT_VERSION_ANONYMOUS) {
+    // v1 anonymous: plaintext is a JSON array of choice IDs
+    const parsed: unknown = JSON.parse(plaintext);
+    if (!Array.isArray(parsed)) throw new Error('Invalid v1 ballot payload');
+    return {
+      choiceIds: (parsed as string[]).filter((id) => id !== BALLOT_PADDING),
+    };
+  }
 
-  // Strip padding sentinels; keep only real choice IDs
-  return (parsed as string[]).filter((id) => id !== BALLOT_PADDING);
+  // v2 identified: plaintext is a JSON object with choices + voter identity
+  const parsed: unknown = JSON.parse(plaintext);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('Invalid v2 ballot payload');
+  }
+  const payload = parsed as IdentifiedBallotPayload;
+  if (
+    !Array.isArray(payload.choices) ||
+    typeof payload.voterId !== 'string' ||
+    typeof payload.voterName !== 'string'
+  ) {
+    throw new Error('Malformed v2 ballot payload fields');
+  }
+  return {
+    choiceIds: payload.choices.filter((id) => id !== BALLOT_PADDING),
+    voter: { userId: payload.voterId, fullName: payload.voterName },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -224,17 +294,28 @@ function bufToBase64(buf: ArrayBuffer | Uint8Array): string {
 /**
  * Encrypt choice IDs using hybrid AES-256-GCM + RSA-OAEP (browser WebCrypto).
  *
- * The array is padded to `maxChoices` with empty-string sentinels so every
- * ballot ciphertext is the same size. Returns a base64-encoded JSON envelope
- * identical in structure to the server-side `encryptBallot` output.
+ * When `voter` is provided the envelope is encoded as v2 (identified) and the
+ * voter identity is bound to the ciphertext — mirroring the server-side
+ * `encryptBallot` function exactly.
  */
 export async function encryptBallotClient(
   publicKeyPem: string,
   choiceIds: string[],
   maxChoices: number,
+  voter?: BallotVoterIdentity,
 ): Promise<string> {
   const padded = [...choiceIds];
   while (padded.length < maxChoices) padded.push(BALLOT_PADDING);
+
+  // Build plaintext matching the server-side format
+  const version = voter ? BALLOT_VERSION_IDENTIFIED : BALLOT_VERSION_ANONYMOUS;
+  const plaintextStr = voter
+    ? JSON.stringify({
+        choices: padded,
+        voterId: voter.userId,
+        voterName: voter.fullName,
+      } satisfies IdentifiedBallotPayload)
+    : JSON.stringify(padded);
 
   // Generate AES-256-GCM key (extractable so we can wrap it)
   const aesKey = await window.crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
@@ -245,7 +326,7 @@ export async function encryptBallotClient(
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
   // Encrypt plaintext
-  const encoded = new TextEncoder().encode(JSON.stringify(padded));
+  const encoded = new TextEncoder().encode(plaintextStr);
   const encryptedRaw = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, encoded);
 
   // WebCrypto appends the 16-byte auth tag at the end
@@ -273,7 +354,7 @@ export async function encryptBallotClient(
   });
 
   const envelope = {
-    v: BALLOT_VERSION,
+    v: version,
     wrappedKey: bufToBase64(wrappedKey),
     iv: bufToBase64(iv),
     tag: bufToBase64(tag),
@@ -302,14 +383,24 @@ export async function importPrivateKey(privateKeyPem: string): Promise<CryptoKey
   );
 }
 
+/** Result of decrypting a single ballot on the client. */
+export interface DecryptedBallotData {
+  choiceIds: string[];
+  voter?: BallotVoterIdentity;
+}
+
 /**
  * Decrypt a ballot envelope in the browser using the election RSA private key.
- * Returns the array of real choice IDs (padding stripped), or null on failure.
+ *
+ * Returns the decrypted choice IDs (padding stripped) and — for v2 identified
+ * ballots — the embedded voter identity.  Returns `null` on any error.
+ *
+ * Backward-compatible: v1 anonymous ballots produce a result with no `voter`.
  */
 export async function decryptBallotData(
   key: CryptoKey,
   encryptedBase64: string,
-): Promise<string[] | null> {
+): Promise<DecryptedBallotData | null> {
   try {
     const envelopeJson = atob(encryptedBase64);
     const envelope = JSON.parse(envelopeJson) as {
@@ -320,7 +411,9 @@ export async function decryptBallotData(
       ciphertext: string;
     };
 
-    if (envelope.v !== BALLOT_VERSION) return null;
+    if (envelope.v !== BALLOT_VERSION_ANONYMOUS && envelope.v !== BALLOT_VERSION_IDENTIFIED) {
+      return null;
+    }
 
     const fromBase64 = (s: string): Uint8Array => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
@@ -353,10 +446,29 @@ export async function decryptBallotData(
 
     const text = new TextDecoder().decode(decrypted);
     const parsed = JSON.parse(text) as unknown;
-    if (!Array.isArray(parsed)) return null;
 
-    // Strip padding sentinels
-    return (parsed as string[]).filter((id: string) => id !== BALLOT_PADDING);
+    if (envelope.v === BALLOT_VERSION_ANONYMOUS) {
+      // v1 anonymous: JSON array of choice IDs
+      if (!Array.isArray(parsed)) return null;
+      return {
+        choiceIds: (parsed as string[]).filter((id: string) => id !== BALLOT_PADDING),
+      };
+    }
+
+    // v2 identified: JSON object with choices + voter identity
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const payload = parsed as IdentifiedBallotPayload;
+    if (
+      !Array.isArray(payload.choices) ||
+      typeof payload.voterId !== 'string' ||
+      typeof payload.voterName !== 'string'
+    ) {
+      return null;
+    }
+    return {
+      choiceIds: payload.choices.filter((id: string) => id !== BALLOT_PADDING),
+      voter: { userId: payload.voterId, fullName: payload.voterName },
+    };
   } catch {
     return null;
   }

@@ -64,6 +64,7 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
     quorum: null,
   },
   publicViewing: false,
+  anonymous: true,
 };
 
 const SAMPLE_ADMIN: Admin = {

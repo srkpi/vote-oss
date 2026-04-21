@@ -35,9 +35,9 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Compute vote tallies from raw ballots, persist them to ElectionChoice,
- * clean up issued tokens + nullifiers, and invalidate the elections cache.
- * Returns the tally and total ballot count.
+ * Compute vote tallies from raw ballots (supports both v1 anonymous and v2
+ * identified ballot formats), persist them to ElectionChoice, clean up issued
+ * tokens + nullifiers, and invalidate the elections cache.
  */
 async function computeAndPersistTally(
   electionId: string,
@@ -54,7 +54,7 @@ async function computeAndPersistTally(
 
   for (const ballot of ballots) {
     try {
-      const choiceIds = decryptBallot(privateKeyPem, ballot.encrypted_ballot);
+      const { choiceIds } = decryptBallot(privateKeyPem, ballot.encrypted_ballot);
       for (const choiceId of choiceIds) {
         if (choiceId in tally) tally[choiceId]++;
       }
@@ -106,12 +106,9 @@ function buildTallyResults(
  *     summary: Get a single election
  *     description: >
  *       Returns full election details including choices, ballot count, and
- *       winning conditions.  Access is subject to faculty/group eligibility.
- *       The private key is only included after the election has closed.  For
- *       open elections a `hasVoted` flag indicates whether the caller has
- *       already been issued a vote token.  For closed elections, choices
- *       include `votes` and `winner` fields computed using the election's
- *       winning conditions.
+ *       winning conditions.  The `anonymous` field indicates whether voter
+ *       identities are cryptographically embedded in ballots.  Access is
+ *       subject to faculty/group eligibility.
  *     tags:
  *       - Elections
  *     security:
@@ -187,6 +184,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       winningConditions,
       shuffleChoices: found.shuffleChoices ?? false,
       publicViewing: found.publicViewing ?? false,
+      anonymous: found.anonymous ?? true,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -228,6 +226,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       winningConditions: parseWinningConditions(dbElection.winning_conditions),
       shuffleChoices: dbElection.shuffle_choices,
       publicViewing: dbElection.public_viewing,
+      anonymous: dbElection.anonymous,
     };
   }
 
@@ -278,7 +277,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (groupMembershipRestrictionsIds.length > 0) {
     restrictedGroups = await prisma.group.findMany({
       select: { id: true, name: true },
-      where: { id: { in: groupMembershipRestrictionsIds } }, // IMPORTANT FIX
+      where: { id: { in: groupMembershipRestrictionsIds } },
     });
   }
 
@@ -398,6 +397,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     maxChoices: electionData.maxChoices,
     publicKey: electionData.publicKey,
     publicViewing,
+    anonymous: electionData.anonymous,
     privateKey: isClosed ? privateKeyPem : undefined,
     creator: electionData.creator,
     choices,

@@ -1,3 +1,9 @@
+// Ballot versions
+export const BALLOT_VERSION_ANONYMOUS = 1;
+export const BALLOT_VERSION_IDENTIFIED = 2;
+
+export const BALLOT_PADDING = '00000000-0000-0000-0000-000000000000';
+
 // Election limits
 export const ELECTION_TITLE_MAX_LENGTH = 255;
 export const ELECTION_CHOICES_MIN = 1;

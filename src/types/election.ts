@@ -105,6 +105,7 @@ export interface Election {
   restrictions: ElectionRestriction[];
   winningConditions: WinningConditions;
   shuffleChoices: boolean;
+  anonymous: boolean;
   minChoices: number;
   maxChoices: number;
   creator: ElectionCreator;
@@ -141,6 +142,7 @@ export interface CachedElection {
   creator: ElectionCreator;
   choices: CachedElectionChoice[];
   publicViewing: boolean;
+  anonymous: boolean;
   ballotCount: number;
   createdBy: string;
   deletedAt: string | null;
@@ -172,6 +174,8 @@ export interface CreateElectionRequest {
   winningConditions?: Partial<WinningConditions>;
   shuffleChoices?: boolean;
   publicViewing?: boolean;
+  /** Defaults to `true` (anonymous) when omitted. */
+  anonymous?: boolean;
 }
 
 export interface CreateElectionResponse {
@@ -186,4 +190,5 @@ export interface CreateElectionResponse {
   restrictions: ElectionRestriction[];
   winningConditions: WinningConditions;
   shuffleChoices: boolean;
+  anonymous: boolean;
 }

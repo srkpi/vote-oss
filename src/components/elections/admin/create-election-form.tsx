@@ -175,6 +175,13 @@ export function CreateElectionForm({
   // Election options
   const [shuffleChoices, setShuffleChoices] = useState(false);
   const [publicViewing, setPublicViewing] = useState(false);
+  /**
+   * Privacy: when `true` (default) voter identities are never stored in
+   * ballots.  When `false` (non-anonymous), every ballot v2 envelope will
+   * embed the voter's userId and fullName; this information is revealed when
+   * the election closes and the RSA private key is published.
+   */
+  const [anonymous, setAnonymous] = useState(true);
 
   const [choices, setChoices] = useState(['', '']);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -385,6 +392,7 @@ export function CreateElectionForm({
       winningConditions: wcStateToPayload(winningConditionsState, filteredChoices.length),
       shuffleChoices,
       publicViewing: restrictions.length === 0 || publicViewing,
+      anonymous,
     });
 
     if (result.success) {
@@ -837,6 +845,21 @@ export function CreateElectionForm({
               checked={publicViewing}
               onChange={setPublicViewing}
             />
+          )}
+
+          <ToggleField
+            label="Анонімне голосування"
+            description="Особи учасників криптографічно захищені й не можуть бути розкриті"
+            checked={anonymous}
+            onChange={setAnonymous}
+          />
+
+          {!anonymous && (
+            <Alert variant="warning" title="Голосування не є анонімним">
+              Після завершення голосування ПІБ та ідентифікатор кожного учасника будуть відображені
+              поруч із їхнім зашифрованим бюлетенем. Ця інформація стане доступною для всіх, хто має
+              право переглядати сторінку бюлетенів.
+            </Alert>
           )}
         </div>
       </section>

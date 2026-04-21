@@ -80,6 +80,7 @@ model Election {
   max_choices     Int     @default(1)
   shuffle_choices Boolean @default(false)
   public_viewing  Boolean @default(false)
+  anonymous       Boolean @default(true)
 
   restrictions  ElectionRestriction[]
   winning_conditions Json @default("{}")

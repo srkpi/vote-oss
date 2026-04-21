@@ -180,6 +180,7 @@ function toClientElections(
         winningConditions: e.winningConditions,
         shuffleChoices: e.shuffleChoices,
         publicViewing: e.publicViewing,
+        anonymous: e.anonymous ?? true,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
         creator: e.creator,
@@ -312,6 +313,7 @@ export async function GET(req: NextRequest) {
       winning_conditions: true,
       shuffle_choices: true,
       public_viewing: true,
+      anonymous: true,
       creator: { select: { full_name: true, faculty: true } },
       deleter: { select: { full_name: true } },
       choices: {
@@ -339,6 +341,7 @@ export async function GET(req: NextRequest) {
     winningConditions: parseWinningConditions(e.winning_conditions),
     shuffleChoices: e.shuffle_choices,
     publicViewing: e.public_viewing,
+    anonymous: e.anonymous,
     creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
     choices: e.choices.map((c) => ({
       id: c.id,
@@ -389,7 +392,11 @@ export async function GET(req: NextRequest) {
  *       Faculty and group values are validated against the campus API.
  *       Winning conditions are validated and stored; they affect how the
  *       winner is determined when tallying closed-election results.
- *       Requires admin authentication.
+ *       The `anonymous` field (default `true`) controls whether voter
+ *       identities are embedded in ballot envelopes.  When set to `false`,
+ *       each ballot will include the voter's userId and fullName in the
+ *       encrypted payload; this information is revealed when the election
+ *       closes and the private key is published.  Requires admin authentication.
  *     tags:
  *       - Elections
  *     security:
@@ -432,6 +439,7 @@ export async function POST(req: NextRequest) {
     winningConditions?: unknown;
     shuffleChoices?: boolean;
     publicViewing?: boolean;
+    anonymous?: boolean;
   };
 
   try {
@@ -447,6 +455,8 @@ export async function POST(req: NextRequest) {
   const shuffleChoices = body.shuffleChoices === true;
   const publicViewing =
     body.publicViewing === undefined ? !restrictions.length : body.publicViewing === true;
+  // Default anonymous = true (opt-in non-anonymous)
+  const anonymous = body.anonymous === false ? false : true;
 
   // ── Basic validation ───────────────────────────────────────────────────────
 
@@ -706,6 +716,7 @@ export async function POST(req: NextRequest) {
       winning_conditions: winningConditions,
       shuffle_choices: shuffleChoices,
       public_viewing: publicViewing,
+      anonymous,
       choices: {
         create: choices.map((choice, i) => ({ choice, position: i })),
       },
@@ -743,6 +754,7 @@ export async function POST(req: NextRequest) {
       winningConditions,
       shuffleChoices,
       publicViewing,
+      anonymous,
       status: computeStatus(election.opens_at, election.closes_at),
       publicKey: election.public_key,
       creator: { fullName: admin.full_name, faculty: admin.faculty },

@@ -20,6 +20,8 @@ export interface BallotsElection {
   privateKey?: string;
   deletedAt: string | null;
   shuffleChoices: boolean;
+  publicViewing: boolean;
+  anonymous: boolean;
   minChoices: number;
   maxChoices: number;
 }
@@ -35,6 +37,11 @@ export interface DecryptionResult {
   choiceLabels: string[] | null;
   valid: boolean;
   hashValid: boolean;
+  /**
+   * Populated after decrypting a v2 (identified) ballot in a non-anonymous
+   * election.  `null` for anonymous ballots or when decryption failed.
+   */
+  voter: { userId: string; fullName: string } | null;
 }
 
 export type DecryptedMap = Map<string, DecryptionResult>;
