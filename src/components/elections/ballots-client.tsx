@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleSlash2,
+  Eye,
   FileText,
   ShieldAlert,
   ShieldCheck,
@@ -16,6 +17,7 @@ import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel
 import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/ui/search-input';
 import type { Tab } from '@/components/ui/tabs';
@@ -86,22 +88,27 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
       for (let i = 0; i < ballots.length; i += BATCH) {
         await Promise.all(
           ballots.slice(i, i + BATCH).map(async (ballot) => {
-            const [decryptedIds, hashValid] = await Promise.all([
+            const [decrypted, hashValid] = await Promise.all([
               decryptBallotData(key, ballot.encryptedBallot),
               verifyBallotHash(ballot, electionId),
             ]);
             let choiceIds: string[] | null = null;
             let choiceLabels: string[] | null = null;
             let valid = false;
-            if (decryptedIds !== null) {
+            let voter: { userId: string; fullName: string } | null = null;
+            if (decrypted !== null) {
+              const decryptedIds = decrypted.choiceIds;
               const validIds = decryptedIds.filter((id) => choices.some((c) => c.id === id));
               if (validIds.length === decryptedIds.length && validIds.length > 0) {
                 choiceIds = validIds;
                 choiceLabels = validIds.map((id) => choices.find((c) => c.id === id)?.choice ?? id);
                 valid = true;
               }
+              if (decrypted.voter) {
+                voter = decrypted.voter;
+              }
             }
-            map.set(ballot.id, { choiceIds, choiceLabels, valid, hashValid });
+            map.set(ballot.id, { choiceIds, choiceLabels, valid, hashValid, voter });
           }),
         );
         await new Promise((r) => setTimeout(r, 0));
@@ -222,6 +229,19 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
 
   return (
     <div className="space-y-5">
+      {!election.anonymous && (
+        <Alert variant="warning" title="Неанонімне голосування">
+          <span className="flex items-start gap-2">
+            <Eye className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              У зашифрованих бюлетенях цього голосування міститься ПІБ та ідентифікатор
+              голосуючого. Після розшифрування (коли голосування буде закрите) ця інформація стане
+              доступною всім, хто має право переглядати бюлетені.
+            </span>
+          </span>
+        </Alert>
+      )}
+
       {myVoteRecord && (
         <MyVoteBanner
           record={myVoteRecord}

@@ -1,4 +1,4 @@
-import { Check, HelpCircle } from 'lucide-react';
+import { Check, Eye, HelpCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/common';
@@ -6,12 +6,19 @@ import type { ElectionChoice } from '@/types/election';
 
 interface ConfirmChoiceProps {
   choices: ElectionChoice[];
+  anonymous: boolean;
   onBack: () => void;
   onConfirm: () => void;
   loading: boolean;
 }
 
-export function ConfirmChoice({ choices, onBack, onConfirm, loading }: ConfirmChoiceProps) {
+export function ConfirmChoice({
+  choices,
+  anonymous,
+  onBack,
+  onConfirm,
+  loading,
+}: ConfirmChoiceProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
@@ -41,6 +48,17 @@ export function ConfirmChoice({ choices, onBack, onConfirm, loading }: ConfirmCh
           </div>
         ))}
       </div>
+
+      {!anonymous && (
+        <div className="border-kpi-orange/30 bg-warning-bg flex items-start gap-2 rounded-lg border p-3">
+          <Eye className="text-kpi-orange mt-0.5 h-4 w-4 shrink-0" />
+          <p className="font-body text-foreground/80 text-sm leading-relaxed">
+            <span className="text-kpi-orange font-semibold">Увага:</span> це неанонімне
+            голосування — ваші ПІБ та ID зберігаються у зашифрованому бюлетені і стануть видимі
+            після його закриття.
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <Button variant="secondary" size="lg" fullWidth onClick={onBack} disabled={loading}>

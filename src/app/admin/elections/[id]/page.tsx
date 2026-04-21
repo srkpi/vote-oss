@@ -1,4 +1,14 @@
-import { AlertTriangle, ExternalLink, FileText, Play, Plus, StopCircle, Trash } from 'lucide-react';
+import {
+  AlertTriangle,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  FileText,
+  Play,
+  Plus,
+  StopCircle,
+  Trash,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -232,6 +242,26 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                     status="done"
                   />
                 )}
+                <TimelineItem
+                  label="Конфіденційність"
+                  value={
+                    election.anonymous ? (
+                      'Анонімне голосування'
+                    ) : (
+                      <span className="text-kpi-orange font-semibold">
+                        Неанонімне — ПІБ голосуючих буде розкрито після завершення
+                      </span>
+                    )
+                  }
+                  icon={
+                    election.anonymous ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )
+                  }
+                  status="done"
+                />
               </div>
             </div>
 

@@ -5,6 +5,7 @@ import {
   LinkIcon,
   ShieldAlert,
   ShieldCheck,
+  User,
   UserCheck,
   XCircle,
 } from 'lucide-react';
@@ -96,6 +97,12 @@ export function BallotRow({
               )}
             </p>
           )}
+          {decryption?.voter && (
+            <p className="font-body text-muted-foreground truncate text-xs">
+              <User className="mr-1 inline h-3 w-3" />
+              {decryption.voter.fullName}
+            </p>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
@@ -179,6 +186,25 @@ export function BallotRow({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {decryption?.voter && (
+              <div>
+                <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
+                  Голосуючий
+                </p>
+                <div className="border-kpi-blue-light/30 bg-info-bg flex items-center gap-2 rounded-(--radius) border p-3">
+                  <User className="text-kpi-blue-light h-4 w-4 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
+                      {decryption.voter.fullName}
+                    </p>
+                    <p className="font-body text-muted-foreground mt-0.5 font-mono text-[10px] break-all">
+                      ID: {decryption.voter.userId}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 

@@ -1,4 +1,4 @@
-import { Calendar, ChevronRight, Clock, FileText, User } from 'lucide-react';
+import { Calendar, ChevronRight, Clock, Eye, EyeOff, FileText, User } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -234,6 +234,25 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                   icon={<Clock className="h-4 w-4" />}
                   label="Завершення"
                   value={<LocalDateTime date={election.closesAt} />}
+                />
+                <InfoRow
+                  icon={
+                    election.anonymous ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )
+                  }
+                  label="Конфіденційність"
+                  value={
+                    election.anonymous ? (
+                      'Анонімне голосування'
+                    ) : (
+                      <span className="text-kpi-orange font-semibold">
+                        Неанонімне — ПІБ голосуючих буде розкрито після завершення
+                      </span>
+                    )
+                  }
                 />
               </div>
             </div>
