@@ -1,18 +1,17 @@
 'use client';
 
 import { FileText, LayoutGrid, LayoutList } from 'lucide-react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
 import { ElectionListItem } from '@/components/elections/election-list-item';
 import { ElectionsFiltersButton } from '@/components/elections/elections-filter-panel';
-import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs } from '@/components/ui/tabs';
 import { ELECTIONS_PAGE_SIZE, LOCAL_STORAGE_ELECTIONS_VIEW_KEY } from '@/lib/constants';
-import { cn, pluralize } from '@/lib/utils/common';
+import { pluralize } from '@/lib/utils/common';
 import type { Election, ElectionsFilterMeta } from '@/types/election';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -147,75 +146,6 @@ function computeAdaptiveCount(
   return elections.filter(
     (e) => matchesFilters(e, { ...filters, ...overrides }) && matchesSearch(e, search),
   ).length;
-}
-
-// ─── Pagination ───────────────────────────────────────────────────────────────
-
-const MAX_PAGE_BTNS = 5;
-const HALFWAY = Math.ceil(MAX_PAGE_BTNS / 2);
-
-function Pagination({
-  page,
-  totalPages,
-  onPage,
-}: {
-  page: number;
-  totalPages: number;
-  onPage: (p: number) => void;
-}) {
-  if (totalPages <= 1) return null;
-
-  const pageNumbers = Array.from({ length: Math.min(MAX_PAGE_BTNS, totalPages) }, (_, i) => {
-    if (totalPages <= MAX_PAGE_BTNS) return i + 1;
-    if (page <= HALFWAY) return i + 1;
-    if (page >= totalPages - (HALFWAY - 1)) return totalPages - MAX_PAGE_BTNS + i + 1;
-    return page - (HALFWAY - 1) + i;
-  });
-
-  return (
-    <div className="flex flex-col items-center justify-between gap-4 py-2 sm:flex-row">
-      <p className="font-body text-muted-foreground text-sm">
-        Сторінка {page} з {totalPages}
-      </p>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => onPage(page - 1)}
-          icon={<ChevronLeft className="h-4 w-4" />}
-        >
-          Назад
-        </Button>
-        <div className="flex items-center gap-1">
-          {pageNumbers.map((p) => (
-            <button
-              key={p}
-              onClick={() => onPage(p)}
-              className={cn(
-                'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
-                p === page
-                  ? 'bg-kpi-navy shadow-shadow-sm text-white'
-                  : 'text-muted-foreground hover:bg-surface hover:text-foreground',
-              )}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onPage(page + 1)}
-          icon={<ChevronRight className="h-4 w-4" />}
-          iconPosition="right"
-        >
-          Вперед
-        </Button>
-      </div>
-    </div>
-  );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -448,7 +378,7 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
         </div>
       )}
 
-      <Pagination page={safePage} totalPages={totalPages} onPage={setPage} />
+      <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
     </div>
   );
 }
