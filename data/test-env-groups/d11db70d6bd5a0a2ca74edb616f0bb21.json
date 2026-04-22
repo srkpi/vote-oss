@@ -1,1 +1,1 @@
-{"id":"d11db70d6bd5a0a2ca74edb616f0bb21","fullName":"src/__tests__/lib/crypto.test.ts#crypto computeBallotHash returns a 64-char hex string","name":"returns a 64-char hex string","status":"passed","testResultsByEnv":{"default":"46a5c2e87cfac0f8e2aed3c52baa99ce"}}
+{"id":"d11db70d6bd5a0a2ca74edb616f0bb21","fullName":"src/__tests__/lib/crypto.test.ts#crypto computeBallotHash returns a 64-char hex string","name":"returns a 64-char hex string","status":"passed","testResultsByEnv":{"default":"adb45aeed384c60d94e3610788bd737d"}}

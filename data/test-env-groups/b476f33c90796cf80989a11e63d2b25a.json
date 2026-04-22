@@ -1,1 +1,1 @@
-{"id":"b476f33c90796cf80989a11e63d2b25a","fullName":"src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"c7d2ea2ba9c6d3ebfe818c0ff07f97ab"}}
+{"id":"b476f33c90796cf80989a11e63d2b25a","fullName":"src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"56bbf7f29897276331dbfa0a90451ea3"}}
