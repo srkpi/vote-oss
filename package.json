@@ -33,6 +33,7 @@
     "clsx": "^2.1.1",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^17.4.2",
+    "framer-motion": "^12.38.0",
     "ioredis": "^5.10.0",
     "isbot": "^5.1.39",
     "jose": "^6.1.3",
