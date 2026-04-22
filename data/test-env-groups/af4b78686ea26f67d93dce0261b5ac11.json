@@ -1,1 +1,1 @@
-{"id":"af4b78686ea26f67d93dce0261b5ac11","fullName":"src/__tests__/lib/crypto.test.ts#crypto computeNullifier returns a 64-char hex SHA-256 hash","name":"returns a 64-char hex SHA-256 hash","status":"passed","testResultsByEnv":{"default":"e46b97634a867ddd3097af9b29c97eaa"}}
+{"id":"af4b78686ea26f67d93dce0261b5ac11","fullName":"src/__tests__/lib/crypto.test.ts#crypto computeNullifier returns a 64-char hex SHA-256 hash","name":"returns a 64-char hex SHA-256 hash","status":"passed","testResultsByEnv":{"default":"94c98fd65cd27b6fe478090a85d4c9b4"}}
