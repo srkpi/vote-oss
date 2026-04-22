@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  BarChart2,
-  ChevronLeft,
-  ChevronRight,
-  CircleSlash2,
-  FileText,
-  ShieldAlert,
-  ShieldCheck,
-} from 'lucide-react';
+import { BarChart2, CircleSlash2, FileText, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
@@ -17,10 +9,11 @@ import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
 import { Alert } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import type { Tab } from '@/components/ui/tabs';
 import { Tabs } from '@/components/ui/tabs';
+import { BALLOTS_PAGE_SIZE } from '@/lib/constants';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
@@ -31,10 +24,6 @@ import type { VoteRecord } from '@/types/vote';
 interface BallotsClientProps {
   initialData: BallotsResponse;
 }
-
-const PAGE_SIZE = 20;
-const MAX_VISIBLE_PAGES_BUTTONS = 5;
-const MAX_VISIBLE_PAGES_BUTTONS_HALFWAY = Math.ceil(MAX_VISIBLE_PAGES_BUTTONS / 2);
 
 type ActiveTab = 'ballots' | 'analytics';
 
@@ -155,16 +144,19 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
     setPage(1);
   };
 
-  const totalPages = Math.max(1, Math.ceil(filteredBallots.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filteredBallots.length / BALLOTS_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pagedBallots = filteredBallots.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pagedBallots = filteredBallots.slice(
+    (safePage - 1) * BALLOTS_PAGE_SIZE,
+    safePage * BALLOTS_PAGE_SIZE,
+  );
 
   useEffect(() => {
     if (!myVoteRecord) return;
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPage(Math.floor(idx / PAGE_SIZE) + 1);
+      setPage(Math.floor(idx / BALLOTS_PAGE_SIZE) + 1);
     }
   }, [myVoteRecord, filteredBallots]);
 
@@ -188,7 +180,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
     if (!myVoteRecord) return;
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
-      const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
+      const targetPage = Math.floor(idx / BALLOTS_PAGE_SIZE) + 1;
       if (safePage !== targetPage) {
         setPage(targetPage);
         setTimeout(() => {
@@ -364,7 +356,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
                     >
                       <BallotRow
                         ballot={ballot}
-                        index={(safePage - 1) * PAGE_SIZE + index + 1}
+                        index={(safePage - 1) * BALLOTS_PAGE_SIZE + index + 1}
                         isExpanded={expandedIds.has(ballot.id)}
                         onToggle={() => toggleExpand(ballot.id)}
                         decryption={
@@ -382,62 +374,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
           )}
 
           {totalPages > 1 && (
-            <div className="flex flex-col items-center justify-between gap-4 py-2 sm:flex-row">
-              <p className="font-body text-muted-foreground text-center sm:text-left">
-                Сторінка {safePage} з {totalPages}
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={safePage <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                  icon={<ChevronLeft className="h-4 w-4" />}
-                >
-                  Назад
-                </Button>
-
-                <div className="flex items-center gap-1">
-                  {Array.from(
-                    { length: Math.min(MAX_VISIBLE_PAGES_BUTTONS, totalPages) },
-                    (_, i) => {
-                      let p: number;
-                      if (totalPages <= MAX_VISIBLE_PAGES_BUTTONS) p = i + 1;
-                      else if (safePage <= MAX_VISIBLE_PAGES_BUTTONS_HALFWAY) p = i + 1;
-                      else if (safePage >= totalPages - (MAX_VISIBLE_PAGES_BUTTONS_HALFWAY - 1))
-                        p = totalPages - MAX_VISIBLE_PAGES_BUTTONS + i;
-                      else p = safePage - (MAX_VISIBLE_PAGES_BUTTONS_HALFWAY - 1) + i;
-
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => setPage(p)}
-                          className={cn(
-                            'font-body h-8 w-8 rounded-(--radius) text-sm font-medium transition-all duration-150',
-                            p === safePage
-                              ? 'bg-kpi-navy shadow-shadow-sm text-white'
-                              : 'text-muted-foreground hover:bg-surface hover:text-foreground',
-                          )}
-                        >
-                          {p}
-                        </button>
-                      );
-                    },
-                  )}
-                </div>
-
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={safePage >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                  icon={<ChevronRight className="h-4 w-4" />}
-                  iconPosition="right"
-                >
-                  Вперед
-                </Button>
-              </div>
-            </div>
+            <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
           )}
         </>
       )}

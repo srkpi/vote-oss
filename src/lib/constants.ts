@@ -20,6 +20,7 @@ export const ELECTION_MAX_CHOICES_MAX = 20;
  * Changing this constant automatically propagates to both the API and UI.
  */
 export const ELECTIONS_PAGE_SIZE = 24;
+export const BALLOTS_PAGE_SIZE = 20;
 
 // Admin invite token limits
 export const INVITE_TOKEN_LENGTH = 16;
