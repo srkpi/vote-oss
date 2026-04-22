@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleSlash2,
-  Eye,
   FileText,
   ShieldAlert,
   ShieldCheck,
@@ -237,14 +236,9 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
     <div className="space-y-5">
       {!election.anonymous && (
         <Alert variant="warning" title="Неанонімне голосування">
-          <span className="flex items-start gap-2">
-            <Eye className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>
-              У зашифрованих бюлетенях цього голосування міститься ПІБ та ідентифікатор голосуючого.
-              Результати та особи голосуючих доступні для перегляду одразу — ще під час відкритого
-              голосування.
-            </span>
-          </span>
+          У зашифрованих бюлетенях цього голосування міститься ПІБ та ідентифікатор голосуючого.
+          Результати та особи голосуючих доступні для перегляду одразу — ще під час відкритого
+          голосування.
         </Alert>
       )}
 

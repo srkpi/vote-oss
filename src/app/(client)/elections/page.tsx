@@ -41,18 +41,8 @@ export default async function ElectionsPage() {
 
   const { data, error } = await serverApi.elections.list();
 
-  const elections = (data ?? []).filter((e) => !e.deletedAt);
-  const counts = elections.reduce(
-    (acc, e) => {
-      if (e.status === 'open') acc.open++;
-      else if (e.status === 'upcoming') acc.upcoming++;
-      else if (e.status === 'closed') acc.closed++;
-      return acc;
-    },
-    { open: 0, upcoming: 0, closed: 0 },
-  );
-
-  const { open, upcoming, closed } = counts;
+  const elections = (data?.elections ?? []).filter((e) => !e.deletedAt);
+  const meta = data?.meta ?? { faculties: [], studyForms: [] };
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
@@ -78,10 +68,7 @@ export default async function ElectionsPage() {
             <ErrorState title="Не вдалося завантажити голосування" description={error} />
           </div>
         ) : (
-          <ElectionsFilter
-            elections={elections ?? []}
-            counts={{ open, upcoming, closed, total: (elections ?? []).length }}
-          />
+          <ElectionsFilter elections={elections} meta={meta} />
         )}
       </div>
     </div>

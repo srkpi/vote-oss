@@ -11,8 +11,8 @@ import type {
 import type {
   CreateElectionRequest,
   CreateElectionResponse,
-  Election,
   ElectionDetail,
+  ElectionsListResponse,
 } from '@/types/election';
 import type {
   FaqCategoryCreated,
@@ -53,7 +53,7 @@ export function createApiClient(fetcher: Fetcher) {
     },
 
     elections: {
-      list: () => fetcher<Election[]>('/elections'),
+      list: () => fetcher<ElectionsListResponse>('/elections'),
       get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
       og: (id: string) => fetcher<{ title: string }>(`/elections/${id}/og`),
       create: (data: CreateElectionRequest) =>
@@ -200,8 +200,6 @@ export function createApiClient(fetcher: Fetcher) {
           }),
       },
     },
-
-    // ── Groups ───────────────────────────────────────────────────────────────
 
     groups: {
       list: () => fetcher<Group[]>('/groups'),

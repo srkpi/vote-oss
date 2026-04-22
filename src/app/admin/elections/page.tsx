@@ -21,9 +21,10 @@ export default async function AdminElectionsPage() {
     redirect('/login');
   }
 
-  const { data: elections, error } = await serverApi.elections.list();
+  const { data, error } = await serverApi.elections.list();
 
-  const all = elections ?? [];
+  // New envelope shape: { elections, total, meta }
+  const all = data?.elections ?? [];
   const { openCount, upcomingCount, closedCount, totalBallots } = all.reduce(
     (acc, e) => {
       if (e.deletedAt) return acc;

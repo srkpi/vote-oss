@@ -11,6 +11,18 @@ export type RestrictionType =
   | 'BYPASS_REQUIRED'
   | 'GROUP_MEMBERSHIP';
 
+/**
+ * Indicates whether the authenticated user can participate in an election.
+ *
+ * - `can_vote`     – election is open and the user is eligible and has not voted yet
+ * - `voted`        – the user has already cast their ballot (token was issued)
+ * - `cannot_vote`  – election is open but the user does not meet the restrictions
+ *
+ * This field is only populated for regular user responses from the elections
+ * list endpoint.  Admin responses omit it.
+ */
+export type ElectionVoteStatus = 'can_vote' | 'voted' | 'cannot_vote';
+
 export interface ElectionRestriction {
   type: RestrictionType;
   value: string;
@@ -114,6 +126,13 @@ export interface Election {
   ballotCount: number;
   restrictedGroups?: ElectionRestrictedGroups[];
 
+  /**
+   * Whether this user can vote / has voted / cannot vote.
+   * Populated only in regular-user responses from the elections list endpoint.
+   * Absent for election detail endpoint.
+   */
+  voteStatus?: ElectionVoteStatus;
+
   /** Only present for admin-authenticated responses */
   deletedAt?: string | null;
   deletedBy?: ElectionDeleter | null;
@@ -191,4 +210,37 @@ export interface CreateElectionResponse {
   winningConditions: WinningConditions;
   shuffleChoices: boolean;
   anonymous: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Elections list API response
+// ---------------------------------------------------------------------------
+
+/**
+ * Metadata about the available filter options derived from the elections the
+ * caller can see.  Sent alongside the elections array so the client does not
+ * need an extra round-trip to populate filter dropdowns.
+ */
+export interface ElectionsFilterMeta {
+  /** All faculty codes that appear in at least one visible election's FACULTY restrictions. */
+  faculties: string[];
+  /** All study-form values that appear in at least one visible election's STUDY_FORM restrictions. */
+  studyForms: string[];
+}
+
+/**
+ * Response shape for `GET /api/elections`.
+ *
+ * Changed from a bare `Election[]` to a structured envelope so we can include
+ * pagination metadata and filter dropdown data without extra round-trips.
+ *
+ * **Backward-compat note for admin pages:** update callers from
+ * `data ?? []` to `data?.elections ?? []`.
+ */
+export interface ElectionsListResponse {
+  elections: Election[];
+  /** Total number of elections matching the caller's visibility rules (before client-side filter). */
+  total: number;
+  /** Populated filter option data so the client can build dropdowns. */
+  meta: ElectionsFilterMeta;
 }

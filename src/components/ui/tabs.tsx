@@ -2,21 +2,31 @@ import { cn } from '@/lib/utils/common';
 
 export type Tab<T extends string> = {
   key: T;
-  label: string;
+  label?: string;
   icon?: React.ReactNode;
 };
 
 export type TabsProps<T extends string> = {
   tabs: Tab<T>[];
   activeTab: T;
+  className?: string;
   onTabChange: (key: T) => void;
   tabBadge?: (key: T) => React.ReactNode;
 };
 
-export function Tabs<T extends string>({ tabs, activeTab, onTabChange, tabBadge }: TabsProps<T>) {
+export function Tabs<T extends string>({
+  tabs,
+  activeTab,
+  className,
+  onTabChange,
+  tabBadge,
+}: TabsProps<T>) {
   return (
     <div
-      className="no-scrollbar border-border-subtle shadow-shadow-xs overflow-x-auto rounded-lg border bg-white p-1"
+      className={cn(
+        'no-scrollbar border-border-subtle shadow-shadow-xs overflow-x-auto rounded-lg border bg-white p-1',
+        className,
+      )}
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       <div className="flex min-w-full gap-1">

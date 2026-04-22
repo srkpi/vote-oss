@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Eye, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { ChoiceButton } from '@/components/elections/choice-button';
@@ -138,14 +138,9 @@ export function VoteForm({ election }: VoteFormProps) {
 
       {!election.anonymous && step !== 'submitting' && (
         <Alert variant="warning" title="Голосування не анонімне">
-          <span className="flex items-start gap-2">
-            <Eye className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>
-              Ваші ПІБ та ідентифікатор будуть криптографічно прив&apos;язані до зашифрованого
-              бюлетеня. Ваш вибір одразу після подання стане відомий усім, хто має право переглядати
-              бюлетені — ще під час голосування.
-            </span>
-          </span>
+          Ваші ПІБ та ідентифікатор будуть криптографічно прив&apos;язані до зашифрованого бюлетеня.
+          Ваш вибір одразу після подання стане відомий усім, хто має право переглядати бюлетені — ще
+          під час голосування.
         </Alert>
       )}
 
@@ -195,7 +190,6 @@ export function VoteForm({ election }: VoteFormProps) {
       {step === 'confirm' && selectedChoices.length > 0 && (
         <ConfirmChoice
           choices={selectedChoices}
-          anonymous={election.anonymous}
           onBack={() => setStep('select')}
           onConfirm={handleSubmit}
           loading={false}

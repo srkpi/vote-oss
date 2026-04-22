@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { getElectionBypassForUser } from '@/lib/bypass';
+import { addToUserVotedElections } from '@/lib/cache';
 import { generateVoteToken, signVoteToken } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
@@ -22,11 +23,12 @@ import type { ElectionRestriction } from '@/types/election';
  *       the specified open election. Enforces faculty/group eligibility and
  *       prevents issuing more than one token per user per election.
  *
- *       For non-anonymous elections (`anonymous: false`) the response also
- *       includes a `voterIdentity` object containing the caller's userId and
- *       fullName.  The client must embed this identity inside the v2 ballot
- *       envelope so voter attribution is cryptographically bound and can only
- *       be revealed after the election closes.
+ *       After issuing the token the user's voted-elections cache is updated so
+ *       the elections list page immediately reflects the new `voted` status
+ *       without a DB round-trip on the next list request.
+ *
+ *       For non-anonymous elections the response also includes a `voterIdentity`
+ *       object that the client must embed inside the v2 ballot envelope.
  *     tags:
  *       - Elections
  *     security:
@@ -72,11 +74,11 @@ import type { ElectionRestriction } from '@/types/election';
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: User is not eligible for this election
+ *         description: User not eligible
  *       404:
  *         description: Election not found
  *       409:
- *         description: Vote token already issued for this user/election pair
+ *         description: Token already issued
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -121,9 +123,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   await prisma.issuedToken.create({ data: { election_id: electionId, user_id: user.sub } });
 
-  // For non-anonymous elections the client needs the caller's identity so it
-  // can embed it into the v2 ballot envelope.  This is intentional — the voter
-  // confirms their identity is being cryptographically bound to their ballot.
+  // ── Warm the voted-elections cache so the list page shows "voted" immediately ──
+  // Fire-and-forget: a Redis error here is non-fatal; the list endpoint will
+  // re-derive the voted status from IssuedToken on the next request.
+  addToUserVotedElections(user.sub, electionId).catch(() => {
+    /* non-fatal */
+  });
+
   const voterIdentity = election.anonymous
     ? undefined
     : { userId: user.sub, fullName: user.fullName };

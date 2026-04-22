@@ -13,6 +13,14 @@ export const ELECTION_MAX_CLOSES_AT_DAYS = 30;
 export const ELECTION_MIN_CHOICES_MIN = 1;
 export const ELECTION_MAX_CHOICES_MAX = 20;
 
+// Elections list / pagination
+/**
+ * Number of elections per page on the client /elections list.
+ * Must remain divisible by both 2 (two-column mobile) and 3 (three-column desktop).
+ * Changing this constant automatically propagates to both the API and UI.
+ */
+export const ELECTIONS_PAGE_SIZE = 24;
+
 // Admin invite token limits
 export const INVITE_TOKEN_LENGTH = 16;
 export const INVITE_TOKEN_MAX_USAGE_MIN = 1;
@@ -53,6 +61,20 @@ export const CACHE_TTL_FAQ_SECS = 5 * 60;
 export const CACHE_TTL_BYPASS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_MEMBERSHIPS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_OWNED_SECS = 5 * 60;
+/**
+ * Real-time ballot-count counter TTL.
+ * Short enough to be "live" on the client elections page but long enough to
+ * avoid a DB round-trip on every single read.  After this many seconds the
+ * counter expires and falls back to the value stored in the elections metadata
+ * cache (which itself refreshes every CACHE_TTL_ELECTIONS_SECS).
+ */
+export const CACHE_TTL_ELECTION_VOTE_COUNT_SECS = 90;
+/**
+ * Per-user voted-elections set TTL.
+ * After expiry the list is re-fetched from IssuedToken on the next elections
+ * list request and the cache is repopulated.
+ */
+export const CACHE_TTL_USER_VOTED_SECS = 5 * 60;
 
 // Cache keys
 export const CACHE_KEY_ELECTIONS = 'cache:elections';
@@ -61,6 +83,7 @@ export const CACHE_KEY_INVITE_TOKENS = 'cache:invite-tokens';
 export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
 export const CACHE_KEY_FAQ = 'cache:faq';
 export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
+export const LOCAL_STORAGE_ELECTIONS_VIEW_KEY = 'elections_view';
 export const SESSION_USER_KEY = 'session_user_id';
 export const CONFETTI_KEY_PREFIX = 'election_confetti_shown_';
 
