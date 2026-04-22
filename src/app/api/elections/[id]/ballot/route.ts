@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
-import { invalidateElections } from '@/lib/cache';
+import { incrementLiveElectionBallotCount, setLiveElectionBallotCount } from '@/lib/cache';
 import {
   computeBallotHash,
   computeNullifier,
@@ -24,8 +24,20 @@ import { isValidUuid } from '@/lib/utils/common';
  *       Submits an encrypted ballot for an open election. The endpoint
  *       verifies the vote token signature, checks that the nullifier has not
  *       been used before (replay protection), decrypts the ballot to validate
- *       the selected choice, and appends the ballot to the hash chain. Requires
- *       any authenticated user.
+ *       the selected choice(s), and appends the ballot to the hash chain.
+ *
+ *       After the ballot is persisted the live ballot counter in Redis is
+ *       incremented via INCR — the elections metadata cache is NOT invalidated,
+ *       so concurrent reads continue to be served from cache without a DB
+ *       round-trip.  The live counter expires after CACHE_TTL_ELECTION_VOTE_COUNT_SECS
+ *       and falls back to the ballotCount stored in the metadata cache.
+ *
+ *       For non-anonymous elections the ballot must be encoded as a v2
+ *       envelope containing the voter's userId and fullName.  The server
+ *       validates that the embedded voterId matches the authenticated caller.
+ *       This ensures voters cannot impersonate others in identified elections.
+ *
+ *       Requires any authenticated user.
  *     tags:
  *       - Elections
  *     security:
@@ -69,18 +81,20 @@ import { isValidUuid } from '@/lib/utils/common';
  *           application/json:
  *             schema:
  *               type: object
+ *               required:
+ *                 - ballotHash
  *               properties:
  *                 ballotHash:
  *                   type: string
  *                   description: Current hash in the ballot chain for this ballot
  *       400:
- *         description: Validation error (bad UUID, invalid signature, bad nullifier, bad ballot, election not open)
+ *         description: Validation error
  *       401:
  *         description: Unauthorized
  *       404:
  *         description: Election not found
  *       409:
- *         description: This vote token has already been used
+ *         description: Vote token already used
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -141,13 +155,35 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
   if (usedNullifier) return Errors.conflict('This vote token has already been used');
 
-  let choiceIds: string[];
+  let decryptResult: ReturnType<typeof decryptBallot>;
   try {
-    choiceIds = decryptBallot(privateKeyPem, encryptedBallot);
+    decryptResult = decryptBallot(privateKeyPem, encryptedBallot);
   } catch {
     return Errors.badRequest('Failed to decrypt ballot – check encryption format');
   }
 
+  const { choiceIds, voter } = decryptResult;
+
+  // ── Non-anonymous election: validate embedded voter identity ──────────────
+  // The token endpoint included voterIdentity so the client could embed it in
+  // the v2 envelope.  We now verify the embedded identity matches the
+  // authenticated caller, preventing impersonation.
+  if (!election.anonymous) {
+    if (!voter) {
+      return Errors.badRequest(
+        'This election requires identified ballots (v2 format). ' +
+          'Submit a ballot that includes voter identity.',
+      );
+    }
+    if (voter.userId !== auth.user.sub) {
+      return Errors.badRequest(
+        'Voter identity embedded in the ballot does not match the authenticated user. ' +
+          'Use the identity returned by the token endpoint.',
+      );
+    }
+  }
+
+  // ── Choice validation ─────────────────────────────────────────────────────
   if (choiceIds.length < election.min_choices || choiceIds.length > election.max_choices) {
     return Errors.badRequest(
       `Must select between ${election.min_choices} and ${election.max_choices} choices`,
@@ -162,6 +198,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   }
 
+  // ── Append to hash chain ──────────────────────────────────────────────────
   const lastBallot = await prisma.ballot.findFirst({
     where: { election_id: electionId },
     orderBy: { created_at: 'desc' },
@@ -198,7 +235,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }),
   ]);
 
-  await invalidateElections();
+  // ── Update real-time vote count cache ─────────────────────────────────────
+  // We INCR the per-election counter instead of invalidating the whole elections
+  // cache.  This keeps the metadata cache warm while still serving live counts.
+  //
+  // If INCR returns 1 the counter key didn't exist (expired) — we correct the
+  // value by querying the actual ballot count from the DB and overwriting.
+  const newCountFromIncr = await incrementLiveElectionBallotCount(electionId);
+  if (newCountFromIncr === 1) {
+    // Counter was just created at 1; likely wrong — resync from DB.
+    const actualCount = await prisma.ballot.count({ where: { election_id: electionId } });
+    await setLiveElectionBallotCount(electionId, actualCount);
+  }
 
   return NextResponse.json({ ballotHash: currentHash }, { status: 201 });
 }

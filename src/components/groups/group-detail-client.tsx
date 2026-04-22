@@ -677,8 +677,8 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
               </DialogHeader>
               <DialogBody>
                 <Alert variant="warning">
-                  Група <strong>«{group.name}»</strong> буде видалена разом з усією статистикою.
-                  Учасники втратять членство. Цю дію неможливо скасувати.
+                  Група <strong>«{group.name}»</strong> буде видалена. Учасники втратять членство.
+                  Цю дію неможливо скасувати.
                 </Alert>
               </DialogBody>
               <DialogFooter>

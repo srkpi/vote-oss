@@ -73,8 +73,8 @@ export function DeleteElectionButton({
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              Голосування <strong className="wrap-break-word">«{electionTitle}»</strong> та всі
-              пов&apos;язані бюлетені будуть видалені. Цю дію неможливо скасувати.
+              Голосування <strong className="wrap-break-word">«{electionTitle}»</strong> буде
+              видалено.
             </Alert>
           </DialogBody>
           <DialogFooter>

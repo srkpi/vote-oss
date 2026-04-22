@@ -2,9 +2,8 @@ import * as allure from 'allure-js-commons';
 import { randomUUID } from 'crypto';
 
 import { MOCK_ELECTION_ID } from '@/__tests__/helpers/fixtures';
-import { INVITE_TOKEN_LENGTH } from '@/lib/constants';
+import { BALLOT_VERSION_ANONYMOUS, INVITE_TOKEN_LENGTH } from '@/lib/constants';
 import {
-  BALLOT_VERSION,
   computeBallotHash,
   computeNullifier,
   decryptBallot,
@@ -153,7 +152,7 @@ describe('crypto', () => {
       const encryptedEnvelope = encryptBallot(publicKey, choices, maxChoices);
       const decryptedChoices = decryptBallot(privateKey, encryptedEnvelope);
 
-      expect(decryptedChoices).toEqual(choices);
+      expect(decryptedChoices.choiceIds).toEqual(choices);
     });
 
     it('produces a base64 encoded JSON envelope with expected version', () => {
@@ -162,7 +161,7 @@ describe('crypto', () => {
       const envelope = JSON.parse(json);
 
       expect(envelope).toMatchObject({
-        v: BALLOT_VERSION,
+        v: BALLOT_VERSION_ANONYMOUS,
         wrappedKey: expect.any(String),
         iv: expect.any(String),
         tag: expect.any(String),

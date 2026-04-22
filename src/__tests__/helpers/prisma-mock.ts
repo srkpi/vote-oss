@@ -43,6 +43,7 @@ export const prismaMock = {
   },
   issuedToken: {
     findUnique: jest.fn(),
+    findMany: jest.fn(),
     create: jest.fn(),
     deleteMany: jest.fn(),
   },
@@ -143,6 +144,7 @@ export function resetPrismaMock() {
   prismaMock.faqItem.create.mockImplementation((args: unknown) => args);
   prismaMock.faqItem.update.mockImplementation((args: unknown) => args);
   prismaMock.issuedToken.findUnique.mockResolvedValue(null);
+  prismaMock.issuedToken.findMany.mockResolvedValue([]);
 
   prismaMock.globalBypassToken.findUnique.mockReset().mockResolvedValue(null);
   prismaMock.globalBypassToken.findMany.mockReset().mockResolvedValue([]);

@@ -62,7 +62,15 @@ export function VoteForm({ election }: VoteFormProps) {
       voteTokenRef.current = tokenResult.data;
     }
 
-    const { token, signature } = voteTokenRef.current;
+    const { token, signature, voterIdentity } = voteTokenRef.current;
+
+    if (!election.anonymous && !voterIdentity) {
+      setError(
+        'Не вдалося отримати особу голосуючого для неанонімного голосування. Оновіть сторінку та спробуйте знову.',
+      );
+      setStep('confirm');
+      return;
+    }
 
     let encryptedBallot: string;
     let nullifier: string;
@@ -71,6 +79,7 @@ export function VoteForm({ election }: VoteFormProps) {
         election.publicKey,
         selectedChoices.map((c) => c.id),
         election.maxChoices,
+        election.anonymous ? undefined : voterIdentity,
       );
       nullifier = await computeNullifierClient(token);
     } catch {
@@ -127,6 +136,14 @@ export function VoteForm({ election }: VoteFormProps) {
         </Alert>
       )}
 
+      {!election.anonymous && step !== 'submitting' && (
+        <Alert variant="warning" title="Голосування не анонімне">
+          Ваші ПІБ та ідентифікатор будуть криптографічно прив&apos;язані до зашифрованого бюлетеня.
+          Ваш вибір одразу після подання стане відомий усім, хто має право переглядати бюлетені — ще
+          під час голосування.
+        </Alert>
+      )}
+
       {step === 'select' && (
         <>
           <p className="font-body text-muted-foreground text-sm">{selectionHint}</p>
@@ -163,7 +180,9 @@ export function VoteForm({ election }: VoteFormProps) {
           </Button>
 
           <p className="font-body text-muted-foreground text-center text-xs leading-relaxed">
-            Ваш голос зашифровано та анонімізовано. Після подання змінити вибір неможливо.
+            Ваш голос зашифровано
+            {election.anonymous ? ' та анонімізовано' : ' разом із вашим ПІБ та ідентифікатором'}.
+            Після подання змінити вибір неможливо.
           </p>
         </>
       )}

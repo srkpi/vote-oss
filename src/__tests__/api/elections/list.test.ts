@@ -85,10 +85,10 @@ describe('GET /api/elections', () => {
     cacheMock.getCachedElections.mockResolvedValueOnce(cached as any);
 
     const res = await GET(req);
-    const { status, body } = await parseJson<any[]>(res);
+    const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    expect(body).toHaveLength(1);
+    expect(body.total).toBe(1);
     expect(prismaMock.election.findMany).not.toHaveBeenCalled();
   });
 
@@ -150,10 +150,10 @@ describe('GET /api/elections', () => {
     cacheMock.getCachedElections.mockResolvedValueOnce([ficeElection, otherElection] as any);
 
     const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
+    const { body } = await parseJson<any>(res);
 
-    expect(body).toHaveLength(1);
-    expect(body[0].restrictions).toContainEqual({ type: 'FACULTY', value: 'FICE' });
+    expect(body.total).toBe(1);
+    expect(body.elections[0].restrictions).toContainEqual({ type: 'FACULTY', value: 'FICE' });
   });
 
   it('filters cached elections by the requesting user group', async () => {
@@ -173,10 +173,10 @@ describe('GET /api/elections', () => {
     cacheMock.getCachedElections.mockResolvedValueOnce([myGroup, otherGroup] as any);
 
     const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
+    const { body } = await parseJson<any>(res);
 
-    expect(body).toHaveLength(1);
-    expect(body[0].restrictions).toContainEqual({ type: 'GROUP', value: 'KV-91' });
+    expect(body.total).toBe(1);
+    expect(body.elections[0].restrictions).toContainEqual({ type: 'GROUP', value: 'KV-91' });
   });
 
   it('includes status field computed at serve time (upcoming/open/closed)', async () => {
@@ -194,8 +194,8 @@ describe('GET /api/elections', () => {
     ]);
 
     const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
-    expect(body[0].status).toBe('open');
+    const { body } = await parseJson<any>(res);
+    expect(body.elections[0].status).toBe('open');
   });
 
   it('computes correct status from cached elections at serve time', async () => {
@@ -216,9 +216,9 @@ describe('GET /api/elections', () => {
     ] as any);
 
     const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
+    const { body } = await parseJson<any>(res);
 
-    const statuses = body.map((e: any) => e.status);
+    const statuses = body.elections.map((e: any) => e.status);
     expect(statuses).toContain('open');
     expect(statuses).toContain('upcoming');
     expect(statuses).toContain('closed');
@@ -239,11 +239,11 @@ describe('GET /api/elections', () => {
     ]);
 
     const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
+    const { body } = await parseJson<any>(res);
 
-    expect(body[0].choices[0].votes).toBeUndefined();
-    expect(body[0].choices[0].winner).toBeUndefined();
-    expect(body[0].results).toBeUndefined();
+    expect(body.elections[0].choices[0].votes).toBeUndefined();
+    expect(body.elections[0].choices[0].winner).toBeUndefined();
+    expect(body.elections[0].results).toBeUndefined();
   });
 
   it('embeds votes and winner in choices for closed elections with tally data', async () => {
@@ -263,15 +263,15 @@ describe('GET /api/elections', () => {
     cacheMock.getCachedElections.mockResolvedValueOnce([closedWithTally] as any);
 
     const res = await GET(req);
-    const { body } = await parseJson<any[]>(res);
+    const { body } = await parseJson<any>(res);
 
-    const choice0 = body[0].choices[0];
-    const choice1 = body[0].choices[1];
+    const choice0 = body.elections[0].choices[0];
+    const choice1 = body.elections[0].choices[1];
     expect(choice0.votes).toBe(10);
     expect(choice0.winner).toBe(true);
     expect(choice1.votes).toBe(3);
     expect(choice1.winner).toBe(false);
-    expect(body[0].results).toBeUndefined();
+    expect(body.elections[0].results).toBeUndefined();
   });
 
   it('returns 200 with empty array when no elections exist', async () => {
@@ -279,9 +279,9 @@ describe('GET /api/elections', () => {
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
     prismaMock.election.findMany.mockResolvedValueOnce([]);
 
-    const { status, body } = await parseJson<any[]>(await GET(req));
+    const { status, body } = await parseJson<any>(await GET(req));
     expect(status).toBe(200);
-    expect(body).toEqual([]);
+    expect(body.elections).toEqual([]);
   });
 });
 

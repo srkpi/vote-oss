@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { APP_NAME } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
-import type { Election } from '@/types/election';
+import type { Election, ElectionVoteStatus } from '@/types/election';
 
 const features = [
   {
@@ -58,7 +58,19 @@ export default async function HomePage() {
   let featuredElections: Election[] = [];
   if (session) {
     const { data } = await serverApi.elections.list();
-    featuredElections = (data || []).filter((e) => e.status === 'open' && !e.deletedAt).slice(0, 3);
+    const priority: Record<ElectionVoteStatus, number> = {
+      can_vote: 0,
+      voted: 1,
+      cannot_vote: 2,
+    };
+
+    const getPriority = (status?: ElectionVoteStatus): number =>
+      status ? priority[status] : Number.MAX_SAFE_INTEGER;
+
+    featuredElections = (data?.elections ?? [])
+      .filter((e) => e.status === 'open' && !e.deletedAt)
+      .sort((a, b) => getPriority(a.voteStatus) - getPriority(b.voteStatus))
+      .slice(0, 3);
   }
 
   return (

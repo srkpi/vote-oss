@@ -1,7 +1,17 @@
-import { Calendar, ChevronRight, Crown, FileText, User } from 'lucide-react';
+import {
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Crown,
+  Eye,
+  FileText,
+  User,
+  XCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
+import { Badge } from '@/components/ui/badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { cn, pluralize } from '@/lib/utils/common';
 import type { Election } from '@/types/election';
@@ -41,10 +51,13 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
   const isOpen = election.status === 'open';
   const isUpcoming = election.status === 'upcoming';
   const isClosed = election.status === 'closed';
+  const isNonAnonymous = !election.anonymous;
 
   const displayChoices = sortedChoicesForDisplay(election);
   const shownChoices = displayChoices.slice(0, 3);
   const hiddenCount = election.choices.length - shownChoices.length;
+
+  const voteStatus = election.voteStatus;
 
   return (
     <Link
@@ -62,18 +75,30 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
+      {/* Status stripe */}
       <div
         className={cn(
           'h-1',
-          isOpen && 'from-success bg-linear-to-r to-emerald-400',
+          isOpen && voteStatus === 'can_vote' && 'from-success bg-linear-to-r to-emerald-400',
+          isOpen && voteStatus === 'voted' && 'from-kpi-blue-light bg-linear-to-r to-blue-400',
+          isOpen && voteStatus === 'cannot_vote' && 'bg-linear-to-r from-rose-400 to-rose-300',
+          isOpen && !voteStatus && 'from-success bg-linear-to-r to-emerald-400',
           isUpcoming && 'from-kpi-orange bg-linear-to-r to-amber-400',
           isClosed && 'from-kpi-gray-light bg-linear-to-r to-gray-300',
         )}
       />
 
       <div className="p-6">
-        <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="mb-3 flex items-start justify-between gap-3">
           <ElectionStatusBadge status={election.status} />
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+            {isNonAnonymous && (
+              <Badge size="md" variant="warning">
+                <Eye className="h-3.5 w-3.5" />
+                Не анонімне
+              </Badge>
+            )}
+          </div>
         </div>
 
         <h3
@@ -141,9 +166,23 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         </div>
 
         <div className="border-border-subtle flex items-center justify-between border-t pt-4">
-          <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-            <FileText className="text-kpi-gray-mid h-4 w-4" />
-            <span>{pluralize(election.ballotCount, ['голос', 'голоси', 'голосів'])}</span>
+          <div className="flex items-center gap-3">
+            <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+              <FileText className="text-kpi-gray-mid h-4 w-4" />
+              <span>{pluralize(election.ballotCount, ['голос', 'голоси', 'голосів'])}</span>
+            </div>
+            {voteStatus === 'cannot_vote' && (
+              <Badge size="md" variant="error">
+                <XCircle className="h-3 w-3" />
+                Не доступне
+              </Badge>
+            )}
+            {voteStatus === 'voted' && (
+              <Badge size="md" variant="info">
+                <CheckCircle2 className="h-3 w-3" />
+                Проголосовано
+              </Badge>
+            )}
           </div>
 
           <div
@@ -153,7 +192,13 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
               'transition-opacity duration-200',
             )}
           >
-            <span>{isOpen ? 'Проголосувати' : 'Переглянути'}</span>
+            <span>
+              {isOpen && voteStatus === 'can_vote'
+                ? 'Голосувати'
+                : isOpen && voteStatus === 'voted'
+                  ? 'Переглянути'
+                  : 'Детальніше'}
+            </span>
             <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </div>
         </div>

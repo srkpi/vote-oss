@@ -278,8 +278,8 @@ describe('GET /api/elections — shuffleChoices', () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce([makeCachedElection()] as any);
 
-    const { body } = await parseJson<any[]>(await getList(req));
-    expect(body[0].shuffleChoices).toBe(false);
+    const { body } = await parseJson<any>(await getList(req));
+    expect(body.elections[0].shuffleChoices).toBe(false);
   });
 
   it('includes shuffleChoices: true when enabled', async () => {
@@ -288,8 +288,8 @@ describe('GET /api/elections — shuffleChoices', () => {
       { ...makeCachedElection(), shuffleChoices: true },
     ] as any);
 
-    const { body } = await parseJson<any[]>(await getList(req));
-    expect(body[0].shuffleChoices).toBe(true);
+    const { body } = await parseJson<any>(await getList(req));
+    expect(body.elections[0].shuffleChoices).toBe(true);
   });
 
   it('shuffles choices for the requesting user when shuffleChoices is true', async () => {
@@ -297,14 +297,14 @@ describe('GET /api/elections — shuffleChoices', () => {
     const cached = { ...makeCachedElection(), shuffleChoices: true };
     cacheMock.getCachedElections.mockResolvedValueOnce([cached] as any);
 
-    const { body } = await parseJson<any[]>(await getList(req));
-    const returnedIds = body[0].choices.map((c: any) => c.id);
+    const { body } = await parseJson<any>(await getList(req));
+    const returnedIds = body.elections[0].choices.map((c: any) => c.id);
     const originalIds = cached.choices.map((c: any) => c.id);
 
     // All choices present
     expect(returnedIds.sort()).toEqual(originalIds.sort());
     // Positions reassigned as 0-based indices
-    body[0].choices.forEach((c: any, i: number) => expect(c.position).toBe(i));
+    body.elections[0].choices.forEach((c: any, i: number) => expect(c.position).toBe(i));
   });
 
   it('does not shuffle choices when shuffleChoices is false', async () => {
@@ -312,9 +312,9 @@ describe('GET /api/elections — shuffleChoices', () => {
     const cached = { ...makeCachedElection(), shuffleChoices: false };
     cacheMock.getCachedElections.mockResolvedValueOnce([cached] as any);
 
-    const { body } = await parseJson<any[]>(await getList(req));
+    const { body } = await parseJson<any>(await getList(req));
     // The returned choices order must match the cached order (sorted by original position)
-    const returnedIds = body[0].choices.map((c: any) => c.id);
+    const returnedIds = body.elections[0].choices.map((c: any) => c.id);
     const originalIds = cached.choices.map((c: any) => c.id);
     expect(returnedIds).toEqual(originalIds);
   });

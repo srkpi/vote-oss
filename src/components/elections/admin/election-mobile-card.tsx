@@ -62,7 +62,6 @@ export function ElectionMobileCard({
         >
           {election.ballotCount}
         </span>
-        Голосів
         {election.restrictions.length > 0 && (
           <Badge variant="info" size="sm" className="ml-2" muted={isDeleted}>
             Обмежено

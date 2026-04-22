@@ -47,7 +47,7 @@ export default async function AdminDashboardPage() {
     serverApi.admins.list(),
   ]);
 
-  const elections = (electionsResult.data ?? []).filter((e) => !e.deletedAt);
+  const elections = (electionsResult.data?.elections ?? []).filter((e) => !e.deletedAt);
   const admins = adminsResult.data ?? [];
 
   const openElections = elections.filter((e) => e.status === 'open');

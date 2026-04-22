@@ -8,6 +8,7 @@ import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel
 import { BallotRow } from '@/components/elections/ballot-row';
 import { DecryptionPanel } from '@/components/elections/decryption-panel';
 import { MyVoteBanner } from '@/components/elections/my-vote-banner';
+import { Alert } from '@/components/ui/alert';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import type { Tab } from '@/components/ui/tabs';
@@ -50,8 +51,14 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
   const [isMyBallotVisible, setIsMyBallotVisible] = useState(false);
 
   const isClosed = election.status === 'closed';
+  const isOpen = election.status === 'open';
+  // Decryption is allowed either after the election closes (anonymous contract)
+  // or live during voting for non-anonymous elections.  The backend already
+  // gates `privateKey` on this rule — this second check is defense in depth so
+  // a backend regression can't surface the key in the UI unexpectedly.
+  const canDecryptByStatus = isClosed || (isOpen && !election.anonymous);
   const privateKey = election.privateKey;
-  const canDecrypt = isClosed && !!privateKey && election.ballotCount > 0;
+  const canDecrypt = canDecryptByStatus && !!privateKey && election.ballotCount > 0;
   const choices: ElectionChoice[] = election.choices;
   const electionId = election.id;
 
@@ -75,22 +82,27 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
       for (let i = 0; i < ballots.length; i += BATCH) {
         await Promise.all(
           ballots.slice(i, i + BATCH).map(async (ballot) => {
-            const [decryptedIds, hashValid] = await Promise.all([
+            const [decrypted, hashValid] = await Promise.all([
               decryptBallotData(key, ballot.encryptedBallot),
               verifyBallotHash(ballot, electionId),
             ]);
             let choiceIds: string[] | null = null;
             let choiceLabels: string[] | null = null;
             let valid = false;
-            if (decryptedIds !== null) {
+            let voter: { userId: string; fullName: string } | null = null;
+            if (decrypted !== null) {
+              const decryptedIds = decrypted.choiceIds;
               const validIds = decryptedIds.filter((id) => choices.some((c) => c.id === id));
               if (validIds.length === decryptedIds.length && validIds.length > 0) {
                 choiceIds = validIds;
                 choiceLabels = validIds.map((id) => choices.find((c) => c.id === id)?.choice ?? id);
                 valid = true;
               }
+              if (decrypted.voter) {
+                voter = decrypted.voter;
+              }
             }
-            map.set(ballot.id, { choiceIds, choiceLabels, valid, hashValid });
+            map.set(ballot.id, { choiceIds, choiceLabels, valid, hashValid, voter });
           }),
         );
         await new Promise((r) => setTimeout(r, 0));
@@ -214,6 +226,14 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
 
   return (
     <div className="space-y-5">
+      {!election.anonymous && (
+        <Alert variant="warning" title="Неанонімне голосування">
+          У зашифрованих бюлетенях цього голосування міститься ПІБ та ідентифікатор голосуючого.
+          Результати та особи голосуючих доступні для перегляду одразу — ще під час відкритого
+          голосування.
+        </Alert>
+      )}
+
       {myVoteRecord && (
         <MyVoteBanner
           record={myVoteRecord}

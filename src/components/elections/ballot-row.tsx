@@ -5,7 +5,9 @@ import {
   LinkIcon,
   ShieldAlert,
   ShieldCheck,
+  User,
   UserCheck,
+  Vote,
   XCircle,
 } from 'lucide-react';
 
@@ -30,6 +32,7 @@ export function BallotRow({
   isExpanded,
   onToggle,
   decryption,
+  choices,
   isMyBallot = false,
   myStoredChoiceLabels,
 }: BallotRowProps) {
@@ -77,16 +80,16 @@ export function BallotRow({
 
         <div className="min-w-0 flex-1 space-y-0.5">
           <p className="text-foreground truncate font-mono text-xs">{ballot.currentHash}</p>
-          {decryption && (
+          {decryption && (!decryption.valid || choices.length > 1) && (
             <p
               className={cn(
                 'font-body text-xs font-medium',
-                decryption.valid ? 'text-kpi-navy' : 'text-error',
+                decryption.valid ? 'text-muted-foreground' : 'text-error',
               )}
             >
               {decryption.valid && decryption.choiceLabels ? (
                 <>
-                  <span className="text-muted-foreground font-normal">Вибір: </span>
+                  <Vote className="mr-1 inline h-3 w-3" />
                   {decryption.choiceLabels.join(', ')}
                 </>
               ) : (
@@ -94,6 +97,12 @@ export function BallotRow({
                   Неможливо розшифрувати або невалідний вибір
                 </span>
               )}
+            </p>
+          )}
+          {decryption?.voter && (
+            <p className="font-body text-muted-foreground truncate text-xs">
+              <User className="mr-1 inline h-3 w-3" />
+              {decryption.voter.fullName}
             </p>
           )}
         </div>
@@ -182,44 +191,57 @@ export function BallotRow({
               </div>
             )}
 
-            {decryption && (
+            {decryption?.voter && (
+              <div>
+                <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
+                  Голосуючий
+                </p>
+                <div className="border-kpi-blue-light/30 bg-info-bg flex items-center gap-2 rounded-(--radius) border p-3">
+                  <User className="text-kpi-blue-light h-4 w-4 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
+                      {decryption.voter.fullName}
+                    </p>
+                    <p className="font-body text-muted-foreground mt-0.5 font-mono text-[10px] break-all">
+                      ID: {decryption.voter.userId}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {decryption && (!decryption.valid || choices.length > 1) && (
               <div>
                 <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                   Розшифрований вибір
                 </p>
-                <div
-                  className={cn(
-                    'flex items-center gap-2 rounded-(--radius) border p-3',
-                    decryption.valid
-                      ? 'border-success/30 bg-success-bg'
-                      : 'border-error/30 bg-error-bg',
-                  )}
-                >
-                  {decryption.valid ? (
-                    <>
-                      <CheckCircle className="text-success h-4 w-4 shrink-0" />
-                      <div>
-                        <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
-                          {decryption.choiceLabels?.join(', ')}
-                        </p>
-                        <p className="font-body text-muted-foreground text-xs wrap-break-word">
-                          ID{' '}
-                          {decryption.choiceIds?.length && decryption.choiceIds?.length > 1
-                            ? 'варіантів'
-                            : 'варіанту'}
-                          : {decryption.choiceIds?.join(', ')}
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="text-error h-4 w-4 shrink-0" />
-                      <p className="font-body text-error text-sm">
-                        Бюлетень не вдалося розшифрувати або він містить невалідний ID
+
+                {decryption.valid && choices.length > 1 && (
+                  <div className="border-success/30 bg-success-bg flex items-center gap-2 rounded-(--radius) border p-3">
+                    <CheckCircle className="text-success h-4 w-4 shrink-0" />
+                    <div>
+                      <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
+                        {decryption.choiceLabels?.join(', ')}
                       </p>
-                    </>
-                  )}
-                </div>
+                      <p className="font-body text-muted-foreground text-xs wrap-break-word">
+                        ID{' '}
+                        {decryption.choiceIds?.length && decryption.choiceIds?.length > 1
+                          ? 'варіантів'
+                          : 'варіанту'}
+                        : {decryption.choiceIds?.join(', ')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!decryption.valid && (
+                  <div className="border-error/30 bg-error-bg flex items-center gap-2 rounded-(--radius) border p-3">
+                    <XCircle className="text-error h-4 w-4 shrink-0" />
+                    <p className="font-body text-error text-sm">
+                      Бюлетень не вдалося розшифрувати або він містить невалідний ID
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

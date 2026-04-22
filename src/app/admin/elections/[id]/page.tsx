@@ -1,4 +1,14 @@
-import { AlertTriangle, ExternalLink, FileText, Play, Plus, StopCircle, Trash } from 'lucide-react';
+import {
+  AlertTriangle,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  FileText,
+  Play,
+  Plus,
+  StopCircle,
+  Trash,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -49,8 +59,10 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';
-  // Choices carry votes/winner for closed elections.
-  const hasResults = isClosed && election.choices.some((c) => c.votes !== undefined);
+  // Choices carry votes/winner whenever the API attaches them — that is for
+  // closed elections and for open non-anonymous elections (live tally).
+  const hasResults = election.choices.some((c) => c.votes !== undefined);
+  const showLiveResults = isOpen && !election.anonymous && hasResults;
 
   let bypassTokens;
   if (election.canDelete || election.canRestore) {
@@ -150,11 +162,11 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             )}
 
-            {isClosed && hasResults && (
+            {(isClosed || showLiveResults) && hasResults && (
               <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
                   <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
-                    Результати голосування
+                    {showLiveResults ? 'Поточні результати' : 'Результати голосування'}
                   </h2>
                   <Badge variant="secondary" size="md">
                     {pluralize(election.ballotCount, ['бюлетень', 'бюлетені', 'бюлетенів'])}
@@ -232,6 +244,26 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                     status="done"
                   />
                 )}
+                <TimelineItem
+                  label="Конфіденційність"
+                  value={
+                    election.anonymous ? (
+                      'Анонімне голосування'
+                    ) : (
+                      <span className="text-kpi-orange font-semibold">
+                        Неанонімне — ПІБ голосуючих видимі під час голосування
+                      </span>
+                    )
+                  }
+                  icon={
+                    election.anonymous ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )
+                  }
+                  status="done"
+                />
               </div>
             </div>
 
@@ -254,7 +286,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 keyValue={election.publicKey}
               />
 
-              {isClosed && election.privateKey && (
+              {(isClosed || showLiveResults) && election.privateKey && (
                 <EncryptionKey
                   isPrivate
                   title="Приватний ключ"

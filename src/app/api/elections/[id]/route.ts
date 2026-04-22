@@ -35,11 +35,10 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Compute vote tallies from raw ballots, persist them to ElectionChoice,
- * clean up issued tokens + nullifiers, and invalidate the elections cache.
- * Returns the tally and total ballot count.
+ * Decrypt all ballots for an election and count votes in-memory.  Works for
+ * both v1 anonymous and v2 identified ballot formats.  Performs no DB writes.
  */
-async function computeAndPersistTally(
+async function computeTallyInMemory(
   electionId: string,
   privateKeyPem: string,
   choices: Array<{ id: string }>,
@@ -54,7 +53,7 @@ async function computeAndPersistTally(
 
   for (const ballot of ballots) {
     try {
-      const choiceIds = decryptBallot(privateKeyPem, ballot.encrypted_ballot);
+      const { choiceIds } = decryptBallot(privateKeyPem, ballot.encrypted_ballot);
       for (const choiceId of choiceIds) {
         if (choiceId in tally) tally[choiceId]++;
       }
@@ -62,6 +61,21 @@ async function computeAndPersistTally(
       console.error(`[tally] Failed to decrypt ballot for election ${electionId}`);
     }
   }
+
+  return { tally, totalBallots: ballots.length };
+}
+
+/**
+ * Compute tally AND persist it: writes vote_count on each choice and clears
+ * issued tokens + nullifiers.  Only safe for closed elections — clearing
+ * nullifiers during an open election would break anti-double-vote checks.
+ */
+async function computeAndPersistTally(
+  electionId: string,
+  privateKeyPem: string,
+  choices: Array<{ id: string }>,
+): Promise<{ tally: Record<string, number>; totalBallots: number }> {
+  const { tally, totalBallots } = await computeTallyInMemory(electionId, privateKeyPem, choices);
 
   await prisma.$transaction([
     ...choices.map((c) =>
@@ -76,7 +90,7 @@ async function computeAndPersistTally(
 
   await invalidateElections();
 
-  return { tally, totalBallots: ballots.length };
+  return { tally, totalBallots };
 }
 
 function buildTallyResults(
@@ -106,12 +120,9 @@ function buildTallyResults(
  *     summary: Get a single election
  *     description: >
  *       Returns full election details including choices, ballot count, and
- *       winning conditions.  Access is subject to faculty/group eligibility.
- *       The private key is only included after the election has closed.  For
- *       open elections a `hasVoted` flag indicates whether the caller has
- *       already been issued a vote token.  For closed elections, choices
- *       include `votes` and `winner` fields computed using the election's
- *       winning conditions.
+ *       winning conditions.  The `anonymous` field indicates whether voter
+ *       identities are cryptographically embedded in ballots.  Access is
+ *       subject to faculty/group eligibility.
  *     tags:
  *       - Elections
  *     security:
@@ -187,6 +198,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       winningConditions,
       shuffleChoices: found.shuffleChoices ?? false,
       publicViewing: found.publicViewing ?? false,
+      anonymous: found.anonymous ?? true,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -228,6 +240,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       winningConditions: parseWinningConditions(dbElection.winning_conditions),
       shuffleChoices: dbElection.shuffle_choices,
       publicViewing: dbElection.public_viewing,
+      anonymous: dbElection.anonymous,
     };
   }
 
@@ -278,7 +291,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (groupMembershipRestrictionsIds.length > 0) {
     restrictedGroups = await prisma.group.findMany({
       select: { id: true, name: true },
-      where: { id: { in: groupMembershipRestrictionsIds } }, // IMPORTANT FIX
+      where: { id: { in: groupMembershipRestrictionsIds } },
     });
   }
 
@@ -286,9 +299,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const now = new Date();
   const isClosed = now > electionData.closesAt;
   const isOpen = now >= electionData.opensAt && now <= electionData.closesAt;
+  const { anonymous } = electionData;
 
   const privateKeyPem = decryptField(electionData.privateKey);
   const { winningConditions } = electionData;
+
+  // Non-anonymous elections are simultaneously "open" — tally and private key
+  // are exposed during voting, not only after close.  For anonymous elections
+  // we keep the zero-knowledge gate until the election closes.
+  const exposeResults = isClosed || (!anonymous && isOpen);
 
   let tallyResults: TallyResult[] | undefined;
   if (isClosed) {
@@ -315,6 +334,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         winningConditions,
       );
     }
+  } else if (!anonymous && isOpen && electionData.ballotCount > 0) {
+    // Live in-memory tally for non-anonymous open elections. No DB writes —
+    // we must not clear IssuedToken/UsedTokenNullifier while voting is active.
+    const { tally, totalBallots } = await computeTallyInMemory(
+      electionId,
+      privateKeyPem,
+      electionData.choices,
+    );
+    tallyResults = buildTallyResults(tally, totalBallots, electionData.choices, winningConditions);
   }
 
   // ── hasVoted ──────────────────────────────────────────────────────────────
@@ -373,7 +401,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
   let choices = electionData.choices.map((c) => {
     const base = { id: c.id, choice: c.choice, position: c.position };
-    if (isClosed && tallyResults) {
+    if (exposeResults && tallyResults) {
       const r = tallyMap.get(c.id);
       return { ...base, votes: r?.votes ?? 0, winner: r?.winner ?? false };
     }
@@ -398,7 +426,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     maxChoices: electionData.maxChoices,
     publicKey: electionData.publicKey,
     publicViewing,
-    privateKey: isClosed ? privateKeyPem : undefined,
+    anonymous: electionData.anonymous,
+    privateKey: exposeResults ? privateKeyPem : undefined,
     creator: electionData.creator,
     choices,
     ballotCount: electionData.ballotCount,

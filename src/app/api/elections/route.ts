@@ -3,10 +3,12 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import {
-  getCachedAdmins,
   getCachedElections,
+  getCachedUserVotedElections,
   invalidateElections,
+  overlayLiveBallotCounts,
   setCachedElections,
+  setCachedUserVotedElections,
 } from '@/lib/cache';
 import { fetchFacultyGroups } from '@/lib/campus-api';
 import type { StudyFormValue, StudyYearValue } from '@/lib/constants';
@@ -25,12 +27,14 @@ import {
 import { generateElectionKeyPair } from '@/lib/crypto';
 import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
+import { buildAdminGraph } from '@/lib/graph';
+import { getUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
 import {
   adminCanAccessElection,
   adminCanDeleteElection,
   adminCanRestoreElection,
-  checkRestrictions,
+  checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
@@ -44,7 +48,9 @@ import type {
   CachedElectionChoice,
   CreateElectionRestriction,
   Election,
+  ElectionsListResponse,
   ElectionStatus,
+  ElectionVoteStatus,
   RestrictionType,
   TallyResult,
   WinningConditions,
@@ -93,24 +99,42 @@ function buildTallyResults(
   }));
 }
 
-/** Build a userId → promoted_by map from cache or DB. */
-async function buildAdminGraph(): Promise<Map<string, string | null>> {
-  const cachedAdmins = await getCachedAdmins();
-  if (cachedAdmins) {
-    return new Map(cachedAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]));
-  }
-  const dbAdmins = await prisma.admin.findMany({
-    where: { deleted_at: null },
-    select: { user_id: true, promoted_by: true },
-  });
-  return new Map(dbAdmins.map((a) => [a.user_id, a.promoted_by]));
-}
-
 type AdminContext = {
   user_id: string;
   restricted_to_faculty: boolean;
   faculty: string;
 };
+
+/**
+ * Derive the unique set of FACULTY restriction values that appear across all
+ * elections visible to the caller.  Used to populate the faculty filter dropdown.
+ */
+function extractFacultiesFromElections(elections: CachedElection[]): string[] {
+  const set = new Set<string>();
+  for (const e of elections) {
+    for (const r of e.restrictions) {
+      if (r.type === 'FACULTY') set.add(r.value);
+    }
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, 'uk'));
+}
+
+/**
+ * Derive the unique set of STUDY_FORM restriction values across all visible elections.
+ */
+function extractStudyFormsFromElections(elections: CachedElection[]): string[] {
+  const set = new Set<string>();
+  for (const e of elections) {
+    for (const r of e.restrictions) {
+      if (r.type === 'STUDY_FORM') set.add(r.value);
+    }
+  }
+  return [...set].sort();
+}
+
+// ---------------------------------------------------------------------------
+// toClientElections
+// ---------------------------------------------------------------------------
 
 function toClientElections(
   cached: CachedElection[],
@@ -124,6 +148,8 @@ function toClientElections(
     isAdmin?: boolean;
     restrictedToFaculty?: boolean;
   },
+  votedSet: Set<string>,
+  groupMemberships: string[],
   adminRecord?: AdminContext,
   adminGraph?: Map<string, string | null>,
 ): Election[] {
@@ -138,12 +164,11 @@ function toClientElections(
       if (isAdmin && isAdminRestricted) {
         return adminCanAccessElection(user.faculty, e.restrictions);
       }
-      // Regular users: only show elections they're eligible for
-      // (GROUP_MEMBERSHIP is always checked against memberships, but for the
-      // list view we don't fetch memberships — elections with GROUP_MEMBERSHIP
-      // restrictions are intentionally excluded from the list for non-members;
-      // they can still be accessed directly if publicViewing=true)
-      return checkRestrictions(e.restrictions, user);
+      // Regular users: only show elections they're eligible for (OR publicViewing=true)
+      // GROUP_MEMBERSHIP is now checked with actual memberships from cache.
+      return (
+        checkRestrictionsWithBypass(e.restrictions, user, null, groupMemberships) || e.publicViewing
+      );
     })
     .map((e) => {
       const isClosed = Date.now() > new Date(e.closesAt).getTime();
@@ -169,6 +194,15 @@ function toClientElections(
         choices = shuffleChoicesForUser(choices, user.sub, e.id);
       }
 
+      // ── voteStatus (regular users only) ──────────────────────────────────
+      let voteStatus: ElectionVoteStatus;
+      if (votedSet.has(e.id)) {
+        voteStatus = 'voted';
+      } else {
+        const canVote = checkRestrictionsWithBypass(e.restrictions, user, null, groupMemberships);
+        voteStatus = canVote ? 'can_vote' : 'cannot_vote';
+      }
+
       const base: Election = {
         id: e.id,
         title: e.title,
@@ -180,11 +214,13 @@ function toClientElections(
         winningConditions: e.winningConditions,
         shuffleChoices: e.shuffleChoices,
         publicViewing: e.publicViewing,
+        anonymous: e.anonymous ?? true,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
         creator: e.creator,
         choices,
         ballotCount: e.ballotCount,
+        voteStatus,
       };
 
       if (isAdmin && adminRecord && adminGraph) {
@@ -227,26 +263,28 @@ function toClientElections(
  *   get:
  *     summary: List elections visible to the caller
  *     description: >
- *       Returns all elections the caller is eligible to see, filtered by
- *       their faculty/group and admin status. Results are served from cache
- *       when available. For closed elections, choices include `votes` and
- *       `winner` fields. Deleted elections are included only for admin users.
- *       Status (`upcoming` | `open` | `closed`) is computed at response time.
- *       Winning conditions are NOT included in this response; use the detail
- *       endpoint to retrieve them.
+ *       Returns all elections the caller is eligible to see, with real-time
+ *       ballot counts and per-election `voteStatus` for regular users.
+ *
+ *       The response shape changed from a bare array to a structured envelope:
+ *       `{ elections, total, meta: { faculties, studyForms } }`.  The `meta`
+ *       field contains unique faculty/studyForm values across all visible
+ *       elections so the client can populate filter dropdowns without an
+ *       extra round-trip.
+ *
+ *       Ballot counts are served from short-lived real-time Redis counters
+ *       (updated via INCR on each vote) overlaid on the longer-lived metadata
+ *       cache, so counts are always fresh without evicting election metadata on
+ *       every vote.
+ *
+ *       `voteStatus` is populated only for regular users (not admins).
  *     tags:
  *       - Elections
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Array of elections
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Election'
+ *         description: Elections list response
  *       401:
  *         description: Unauthorized
  */
@@ -274,104 +312,151 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const cached = await getCachedElections();
+  // ── Fetch elections metadata (cache-first) ────────────────────────────────
+  let cachedRaw = await getCachedElections();
 
-  if (cached) {
-    return NextResponse.json(
-      toClientElections(
-        cached,
-        {
-          sub: user.sub,
-          faculty: user.faculty,
-          group: user.group,
-          speciality: user.speciality,
-          studyYear: user.studyYear,
-          studyForm: user.studyForm,
-          isAdmin,
-          restrictedToFaculty: user.restrictedToFaculty,
+  if (!cachedRaw) {
+    const elections = await prisma.election.findMany({
+      select: {
+        id: true,
+        title: true,
+        created_at: true,
+        opens_at: true,
+        closes_at: true,
+        min_choices: true,
+        max_choices: true,
+        created_by: true,
+        restrictions: { select: { type: true, value: true } },
+        public_key: true,
+        private_key: true,
+        winning_conditions: true,
+        shuffle_choices: true,
+        public_viewing: true,
+        anonymous: true,
+        creator: { select: { full_name: true, faculty: true } },
+        deleter: { select: { full_name: true } },
+        choices: {
+          select: { id: true, choice: true, position: true, vote_count: true },
+          orderBy: { position: 'asc' },
         },
-        adminRecord,
-        adminGraph,
-      ),
-    );
+        _count: { select: { ballots: true } },
+        deleted_at: true,
+        deleted_by: true,
+      },
+      orderBy: { opens_at: 'desc' },
+    });
+
+    cachedRaw = elections.map((e) => ({
+      id: e.id,
+      title: e.title,
+      createdAt: e.created_at.toISOString(),
+      opensAt: e.opens_at.toISOString(),
+      closesAt: e.closes_at.toISOString(),
+      minChoices: e.min_choices,
+      maxChoices: e.max_choices,
+      restrictions: e.restrictions as { type: RestrictionType; value: string }[],
+      publicKey: e.public_key,
+      privateKey: e.private_key,
+      winningConditions: parseWinningConditions(e.winning_conditions),
+      shuffleChoices: e.shuffle_choices,
+      publicViewing: e.public_viewing,
+      anonymous: e.anonymous,
+      creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
+      choices: e.choices.map((c) => ({
+        id: c.id,
+        choice: c.choice,
+        position: c.position,
+        voteCount: c.vote_count ?? null,
+      })) as CachedElectionChoice[],
+      ballotCount: e._count.ballots,
+      createdBy: e.created_by,
+      deletedAt: e.deleted_at?.toISOString() ?? null,
+      deletedByUserId: e.deleted_by,
+      deletedByName: e.deleter?.full_name ?? null,
+    }));
+
+    await setCachedElections(cachedRaw);
   }
 
-  const elections = await prisma.election.findMany({
-    select: {
-      id: true,
-      title: true,
-      created_at: true,
-      opens_at: true,
-      closes_at: true,
-      min_choices: true,
-      max_choices: true,
-      created_by: true,
-      restrictions: { select: { type: true, value: true } },
-      public_key: true,
-      private_key: true,
-      winning_conditions: true,
-      shuffle_choices: true,
-      public_viewing: true,
-      creator: { select: { full_name: true, faculty: true } },
-      deleter: { select: { full_name: true } },
-      choices: {
-        select: { id: true, choice: true, position: true, vote_count: true },
-        orderBy: { position: 'asc' },
-      },
-      _count: { select: { ballots: true } },
-      deleted_at: true,
-      deleted_by: true,
-    },
-    orderBy: { opens_at: 'desc' },
-  });
+  // ── Overlay real-time ballot counts ──────────────────────────────────────
+  // This is a single Redis pipeline call regardless of election count.
+  const cachedWithLiveCounts = await overlayLiveBallotCounts(cachedRaw);
 
-  const rawResult: CachedElection[] = elections.map((e) => ({
-    id: e.id,
-    title: e.title,
-    createdAt: e.created_at.toISOString(),
-    opensAt: e.opens_at.toISOString(),
-    closesAt: e.closes_at.toISOString(),
-    minChoices: e.min_choices,
-    maxChoices: e.max_choices,
-    restrictions: e.restrictions as { type: RestrictionType; value: string }[],
-    publicKey: e.public_key,
-    privateKey: e.private_key,
-    winningConditions: parseWinningConditions(e.winning_conditions),
-    shuffleChoices: e.shuffle_choices,
-    publicViewing: e.public_viewing,
-    creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
-    choices: e.choices.map((c) => ({
-      id: c.id,
-      choice: c.choice,
-      position: c.position,
-      voteCount: c.vote_count ?? null,
-    })) as CachedElectionChoice[],
-    ballotCount: e._count.ballots,
-    createdBy: e.created_by,
-    deletedAt: e.deleted_at?.toISOString() ?? null,
-    deletedByUserId: e.deleted_by,
-    deletedByName: e.deleter?.full_name ?? null,
-  }));
+  // ── Voted-elections set (regular users only) ─────────────────────────────
+  let votedSet = new Set<string>();
+  let groupMemberships: string[] = [];
 
-  await setCachedElections(rawResult);
-
-  return NextResponse.json(
-    toClientElections(
-      rawResult,
-      {
-        sub: user.sub,
-        faculty: user.faculty,
-        group: user.group,
-        speciality: user.speciality,
-        studyYear: user.studyYear,
-        studyForm: user.studyForm,
-        isAdmin,
-        restrictedToFaculty: user.restrictedToFaculty,
-      },
-      adminRecord,
-      adminGraph,
-    ),
+  // Check group memberships for GROUP_MEMBERSHIP restriction evaluation.
+  const hasGroupMembershipElections = cachedWithLiveCounts.some((e) =>
+    e.restrictions.some((r) => r.type === 'GROUP_MEMBERSHIP'),
   );
+
+  // Fetch voted set and group memberships concurrently.
+  const openElectionIds = cachedWithLiveCounts
+    .filter((e) => computeStatus(e.opensAt, e.closesAt) === 'open' && !e.deletedAt)
+    .map((e) => e.id);
+
+  const [cachedVoted, memberships] = await Promise.all([
+    getCachedUserVotedElections(user.sub),
+    hasGroupMembershipElections ? getUserGroupMemberships(user.sub) : Promise.resolve([]),
+  ]);
+
+  groupMemberships = memberships;
+
+  if (cachedVoted !== null) {
+    votedSet = cachedVoted;
+  } else if (openElectionIds.length > 0) {
+    // Cache miss — query DB and repopulate.
+    const issuedTokens = await prisma.issuedToken.findMany({
+      where: { user_id: user.sub, election_id: { in: openElectionIds } },
+      select: { election_id: true },
+    });
+    votedSet = new Set(issuedTokens.map((t) => t.election_id));
+    // Non-blocking cache write — error here is non-fatal.
+    setCachedUserVotedElections(user.sub, [...votedSet]).catch(() => {
+      /* non-fatal */
+    });
+  }
+
+  // ── Build client-visible elections list ──────────────────────────────────
+  const elections = toClientElections(
+    cachedWithLiveCounts,
+    {
+      sub: user.sub,
+      faculty: user.faculty,
+      group: user.group,
+      speciality: user.speciality,
+      studyYear: user.studyYear,
+      studyForm: user.studyForm,
+      isAdmin,
+      restrictedToFaculty: user.restrictedToFaculty,
+    },
+    votedSet,
+    groupMemberships,
+    adminRecord,
+    adminGraph,
+  );
+
+  // ── Compute filter metadata from all visible elections ───────────────────
+  // We use the raw (pre-user-filter) cached list so admins see the full set.
+  const faculties = extractFacultiesFromElections(
+    isAdmin
+      ? cachedWithLiveCounts
+      : cachedWithLiveCounts.filter((e) => elections.some((ce) => ce.id === e.id)),
+  );
+  const studyForms = extractStudyFormsFromElections(
+    isAdmin
+      ? cachedWithLiveCounts
+      : cachedWithLiveCounts.filter((e) => elections.some((ce) => ce.id === e.id)),
+  );
+
+  const response: ElectionsListResponse = {
+    elections,
+    total: elections.length,
+    meta: { faculties, studyForms },
+  };
+
+  return NextResponse.json(response);
 }
 
 // ---------------------------------------------------------------------------
@@ -389,7 +474,11 @@ export async function GET(req: NextRequest) {
  *       Faculty and group values are validated against the campus API.
  *       Winning conditions are validated and stored; they affect how the
  *       winner is determined when tallying closed-election results.
- *       Requires admin authentication.
+ *       The `anonymous` field (default `true`) controls whether voter
+ *       identities are embedded in ballot envelopes.  When set to `false`,
+ *       each ballot will include the voter's userId and fullName in the
+ *       encrypted payload; this information is revealed when the election
+ *       closes and the private key is published.  Requires admin authentication.
  *     tags:
  *       - Elections
  *     security:
@@ -412,9 +501,9 @@ export async function GET(req: NextRequest) {
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – caller is not an admin
+ *         description: Forbidden
  *       500:
- *         description: Campus API unavailable for faculty/group validation
+ *         description: Campus API unavailable
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -432,6 +521,7 @@ export async function POST(req: NextRequest) {
     winningConditions?: unknown;
     shuffleChoices?: boolean;
     publicViewing?: boolean;
+    anonymous?: boolean;
   };
 
   try {
@@ -447,6 +537,8 @@ export async function POST(req: NextRequest) {
   const shuffleChoices = body.shuffleChoices === true;
   const publicViewing =
     body.publicViewing === undefined ? !restrictions.length : body.publicViewing === true;
+  // Default anonymous = true (opt-in non-anonymous)
+  const anonymous = body.anonymous === false ? false : true;
 
   // ── Basic validation ───────────────────────────────────────────────────────
 
@@ -706,6 +798,7 @@ export async function POST(req: NextRequest) {
       winning_conditions: winningConditions,
       shuffle_choices: shuffleChoices,
       public_viewing: publicViewing,
+      anonymous,
       choices: {
         create: choices.map((choice, i) => ({ choice, position: i })),
       },
@@ -743,6 +836,7 @@ export async function POST(req: NextRequest) {
       winningConditions,
       shuffleChoices,
       publicViewing,
+      anonymous,
       status: computeStatus(election.opens_at, election.closes_at),
       publicKey: election.public_key,
       creator: { fullName: admin.full_name, faculty: admin.faculty },

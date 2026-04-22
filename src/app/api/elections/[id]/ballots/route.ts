@@ -21,11 +21,10 @@ import type { ElectionRestriction } from '@/types/election';
  *       Returns the full ordered ballot chain for the given election together
  *       with complete election metadata (status, choices, ballot count, and —
  *       for closed elections — the private key for client-side decryption).
- *       This single request replaces the previous pattern of fetching ballots
- *       and election detail separately. Access is subject to faculty/group
- *       eligibility rules identical to those applied when viewing the election.
- *       When `publicViewing` is true on the election, any authenticated user
- *       may view the ballots regardless of voting eligibility.
+ *
+ *       The `anonymous` field on the returned election indicates whether voter
+ *       identities are embedded in ballots.  When `false`, decrypting ballots
+ *       on the client will reveal each voter's `userId` and `fullName`.
  *     tags:
  *       - Elections
  *     security:
@@ -82,6 +81,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     max_choices: number;
     shuffle_choices: boolean;
     public_viewing: boolean;
+    anonymous: boolean;
   };
 
   const cached = await getCachedElections();
@@ -102,6 +102,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       max_choices: found.maxChoices,
       shuffle_choices: found.shuffleChoices ?? false,
       public_viewing: found.publicViewing ?? false,
+      anonymous: found.anonymous ?? true,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -115,6 +116,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         deleted_at: true,
         shuffle_choices: true,
         public_viewing: true,
+        anonymous: true,
         restrictions: { select: { type: true, value: true } },
         choices: {
           select: { id: true, choice: true, position: true },
@@ -169,8 +171,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // ── Fetch ballots ─────────────────────────────────────────────────────────
   const now = new Date();
   const isClosed = now > electionData.closes_at;
+  const isOpen = now >= electionData.opens_at && now <= electionData.closes_at;
   const status =
     now < electionData.opens_at ? 'upcoming' : now <= electionData.closes_at ? 'open' : 'closed';
+  // Non-anonymous elections expose the decryption key while voting is live —
+  // they carry no zero-knowledge guarantee to preserve.
+  const exposePrivateKey = isClosed || (!electionData.anonymous && isOpen);
 
   const ballots = await prisma.ballot.findMany({
     where: { election_id: electionId },
@@ -215,10 +221,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedAt: electionData.deleted_at,
       shuffleChoices: electionData.shuffle_choices,
       publicViewing,
+      anonymous: electionData.anonymous,
       choices,
       minChoices: electionData.min_choices,
       maxChoices: electionData.max_choices,
-      ...(isClosed && { privateKey: decryptField(electionData.private_key) }),
+      ...(exposePrivateKey && { privateKey: decryptField(electionData.private_key) }),
     },
     ballots: ballots.map((b) => ({
       id: b.id,
