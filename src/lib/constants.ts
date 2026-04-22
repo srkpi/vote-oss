@@ -69,7 +69,7 @@ export const CACHE_TTL_GROUP_OWNED_SECS = 5 * 60;
  * counter expires and falls back to the value stored in the elections metadata
  * cache (which itself refreshes every CACHE_TTL_ELECTIONS_SECS).
  */
-export const CACHE_TTL_ELECTION_VOTE_COUNT_SECS = 90;
+export const CACHE_TTL_ELECTION_VOTE_COUNT_SECS = 10 * 60;
 /**
  * Per-user voted-elections set TTL.
  * After expiry the list is re-fetched from IssuedToken on the next elections
