@@ -152,7 +152,7 @@ describe('crypto', () => {
       const encryptedEnvelope = encryptBallot(publicKey, choices, maxChoices);
       const decryptedChoices = decryptBallot(privateKey, encryptedEnvelope);
 
-      expect(decryptedChoices).toEqual(choices);
+      expect(decryptedChoices.choiceIds).toEqual(choices);
     });
 
     it('produces a base64 encoded JSON envelope with expected version', () => {

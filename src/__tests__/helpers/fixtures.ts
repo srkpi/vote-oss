@@ -187,6 +187,8 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     min_choices: 1,
     max_choices: 1,
     shuffle_choices: false,
+    public_viewing: false,
+    anonymous: true,
     restrictions: [] as { type: string; value: string }[],
     winning_conditions: DEFAULT_WINNING_CONDITIONS as unknown,
     public_key: keys.publicKey,

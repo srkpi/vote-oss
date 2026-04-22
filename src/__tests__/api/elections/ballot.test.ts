@@ -256,7 +256,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
   });
 
-  it('invalidate elections cache to ensure correct vote count', async () => {
+  it('increment elections ballot count cache to ensure correct vote count', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq(ballot);
@@ -268,6 +268,6 @@ describe('POST /api/elections/[id]/ballot', () => {
 
     await POST(req, PARAMS);
 
-    expect(cacheMock.invalidateElections).toHaveBeenCalledTimes(1);
+    expect(cacheMock.incrementLiveElectionBallotCount).toHaveBeenCalledTimes(1);
   });
 });
