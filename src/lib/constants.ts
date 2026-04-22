@@ -7,6 +7,8 @@ export const ELECTION_MAX_CLOSES_AT_DAYS = 30;
 export const ELECTION_MIN_CHOICES_MIN = 1;
 export const ELECTION_MAX_CHOICES_MAX = 20;
 
+export const BALLOTS_PAGE_SIZE = 20;
+
 // Admin invite token limits
 export const INVITE_TOKEN_LENGTH = 16;
 export const INVITE_TOKEN_MAX_USAGE_MIN = 1;
