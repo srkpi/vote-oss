@@ -113,7 +113,7 @@ pnpm db:generate
 
 ### Environment Variables
 
-Copy the example file and fill in the required values:
+Copy the example file and fill in the required values or use default ones with the default `docker-compose.yml` file:
 
 ```bash
 cp .env.example .env
@@ -159,6 +159,12 @@ pnpm db:studio
 ### Running the App
 
 ```bash
+# If you are testing app locally you need to launch:
+# - PostgreSQL database
+# - Redis
+# - Mock integrations API
+docker compose up
+
 # Start the development server (also regenerates the OpenAPI spec)
 pnpm dev
 
