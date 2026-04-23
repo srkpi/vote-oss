@@ -1,4 +1,4 @@
-import { Check, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -247,36 +247,15 @@ export default function LoginPage() {
           <div className="space-y-6">
             <KpiIdButton fullWidth />
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="border-border-subtle w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="font-body text-muted-foreground bg-white px-3">
-                  Авторизація через KPI ID
-                </span>
-              </div>
-            </div>
-
-            <div className="w-full space-y-3">
-              {[
-                'Голосують лише справжні студенти',
-                'Твій голос анонімний та захищений',
-                'Результати перевіряються публічно',
-              ].map((item, i) => (
-                <div
-                  key={item}
-                  className="font-body animate-fade-up text-muted-foreground flex items-center justify-center gap-2.5 text-sm opacity-0"
-                  style={{
-                    animationDelay: `${200 + i * 80}ms`,
-                    willChange: 'transform, opacity',
-                  }}
-                >
-                  <Check color="var(--success)" className="h-4 w-4 shrink-0" />
-                  {item}
-                </div>
-              ))}
-            </div>
+            <p className="font-body text-muted-foreground text-center text-xs">
+              Натисканням на кнопку ви погоджуєтесь з{' '}
+              <Link
+                href="/privacy"
+                className="hover:text-kpi-navy underline underline-offset-2 transition-colors"
+              >
+                Політикою конфіденційності
+              </Link>
+            </p>
           </div>
         </div>
       </div>
