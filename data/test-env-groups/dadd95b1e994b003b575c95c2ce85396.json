@@ -1,1 +1,1 @@
-{"id":"dadd95b1e994b003b575c95c2ce85396","fullName":"src/__tests__/lib/auth.test.ts#auth requireAdmin returns ok=false when auth fails (no cookie)","name":"returns ok=false when auth fails (no cookie)","status":"passed","testResultsByEnv":{"default":"65a500ef5cffd6252c82d80b663800e8"}}
+{"id":"dadd95b1e994b003b575c95c2ce85396","fullName":"src/__tests__/lib/auth.test.ts#auth requireAdmin returns ok=false when auth fails (no cookie)","name":"returns ok=false when auth fails (no cookie)","status":"passed","testResultsByEnv":{"default":"d79d23c6ecdcde556e9150671c1ca357"}}
