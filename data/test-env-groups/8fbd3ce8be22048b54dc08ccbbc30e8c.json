@@ -1,1 +1,1 @@
-{"id":"8fbd3ce8be22048b54dc08ccbbc30e8c","fullName":"src/__tests__/api/admins/list.test.ts#GET /api/admins returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"2487c759ae69e01e4e4de24100eedc25"}}
+{"id":"8fbd3ce8be22048b54dc08ccbbc30e8c","fullName":"src/__tests__/api/admins/list.test.ts#GET /api/admins returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"731e073e6143f6bc0aee7f1a8cc37cdd"}}
