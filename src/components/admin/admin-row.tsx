@@ -69,16 +69,24 @@ export function AdminRow({
               Керування групами
             </Badge>
           )}
+          {admin.managePetitions && (
+            <Badge variant="info" size="sm">
+              Керування петиціями
+            </Badge>
+          )}
           {admin.restrictedToFaculty && (
             <Badge variant="warning" size="sm">
               Обмежений до підрозділу
             </Badge>
           )}
-          {!admin.manageAdmins && !admin.manageGroups && !admin.restrictedToFaculty && (
-            <Badge variant="default" size="sm">
-              Базові
-            </Badge>
-          )}
+          {!admin.manageAdmins &&
+            !admin.manageGroups &&
+            !admin.managePetitions &&
+            !admin.restrictedToFaculty && (
+              <Badge variant="default" size="sm">
+                Базові
+              </Badge>
+            )}
         </div>
       </td>
       <td className="px-4 py-3.5">

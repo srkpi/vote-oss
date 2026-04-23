@@ -84,6 +84,11 @@ export function createApiClient(fetcher: Fetcher) {
         }),
       getBallots: (electionId: string) =>
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
+      getSignatories: (electionId: string) =>
+        fetcher<{
+          signatories: { userId: string; fullName: string; signedAt: string }[];
+          total: number;
+        }>(`/elections/${electionId}/signatories`),
 
       bypass: {
         list: (electionId: string) =>

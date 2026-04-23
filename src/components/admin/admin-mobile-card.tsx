@@ -83,16 +83,24 @@ export function AdminMobileCard({
             Керування групами
           </Badge>
         )}
+        {admin.managePetitions && (
+          <Badge variant="info" size="sm">
+            Керування петиціями
+          </Badge>
+        )}
         {admin.restrictedToFaculty && (
           <Badge variant="warning" size="sm">
             Обмежений до підрозділу
           </Badge>
         )}
-        {!admin.manageAdmins && !admin.manageGroups && !admin.restrictedToFaculty && (
-          <Badge variant="default" size="sm">
-            Базові
-          </Badge>
-        )}
+        {!admin.manageAdmins &&
+          !admin.manageGroups &&
+          !admin.managePetitions &&
+          !admin.restrictedToFaculty && (
+            <Badge variant="default" size="sm">
+              Базові
+            </Badge>
+          )}
       </div>
 
       <p className="font-body text-muted-foreground mt-2 text-xs">

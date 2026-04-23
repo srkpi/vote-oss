@@ -68,8 +68,7 @@ export function CreatePetitionForm() {
       )}
 
       <Alert variant="info">
-        Петиція має {PETITION_QUORUM} підписів для успіху і діє 1 місяць з моменту апруву
-        адміністратором. Автоматично закривається при досягненні кворуму.
+        Кворум — {PETITION_QUORUM} підписів. Діє 1 місяць від апруву адміністратором.
       </Alert>
 
       <FormField label="Назва петиції" required htmlFor="title">

@@ -1,13 +1,15 @@
-import { CheckCircle2, ChevronLeft, CreditCard, FileText, Users } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, CreditCard, FileText, Megaphone, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { AdminGreeting } from '@/components/admin/admin-greeting';
 import { StatCard } from '@/components/admin/stat-card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { serverApi } from '@/lib/api/server';
+import { PETITION_QUORUM } from '@/lib/constants';
 import { getServerSession } from '@/lib/server-auth';
 import { cn, pluralize } from '@/lib/utils/common';
 
@@ -42,12 +44,14 @@ export default async function AdminDashboardPage() {
     redirect('/login');
   }
 
-  const [electionsResult, adminsResult] = await Promise.all([
+  const [electionsResult, petitionsResult, adminsResult] = await Promise.all([
     serverApi.elections.list(),
+    serverApi.elections.list({ type: 'PETITION' }),
     serverApi.admins.list(),
   ]);
 
   const elections = (electionsResult.data?.elections ?? []).filter((e) => !e.deletedAt);
+  const petitions = (petitionsResult.data?.elections ?? []).filter((p) => !p.deletedAt);
   const admins = adminsResult.data ?? [];
 
   const openElections = elections.filter((e) => e.status === 'open');
@@ -55,6 +59,10 @@ export default async function AdminDashboardPage() {
 
   const recentElections = [...elections]
     .filter((e) => !e.deletedAt)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 8);
+
+  const recentPetitions = [...petitions]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 8);
 
@@ -76,7 +84,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="space-y-6 p-4 sm:p-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
           <StatCard
             label="Активних"
             value={openElections.length.toLocaleString('uk-UA')}
@@ -88,6 +96,12 @@ export default async function AdminDashboardPage() {
             value={elections.length.toLocaleString('uk-UA')}
             accent="navy"
             icon={<FileText className="h-4 w-4 sm:h-5 sm:w-5" />}
+          />
+          <StatCard
+            label={pluralize(petitions.length, ['Петиція', 'Петиції', 'Петицій'], false)}
+            value={petitions.length.toLocaleString('uk-UA')}
+            accent="info"
+            icon={<Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
           <StatCard
             label={pluralize(totalBallots, ['Бюлетень', 'Бюлетені', 'Бюлетенів'], false)}
@@ -107,7 +121,7 @@ export default async function AdminDashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
             <h2 className="font-display border-border-subtle text-foreground border-b px-4 py-4 text-base font-semibold sm:px-6 sm:text-lg">
               Нещодавні голосування
@@ -158,6 +172,72 @@ export default async function AdminDashboardPage() {
                         </span>
                         <span className="font-body text-muted-foreground hidden text-xs sm:inline">
                           {election.ballotCount} голосів
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+            <h2 className="font-display border-border-subtle text-foreground border-b px-4 py-4 text-base font-semibold sm:px-6 sm:text-lg">
+              Нещодавні петиції
+            </h2>
+
+            {recentPetitions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                <div className="border-border-subtle bg-surface mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
+                  <Megaphone className="text-kpi-gray-mid h-7 w-7" strokeWidth={1.5} />
+                </div>
+                <p className="font-display text-foreground text-base font-semibold">
+                  Петицій поки немає
+                </p>
+                <p className="font-body text-muted-foreground mt-1 mb-4 text-sm">
+                  Створіть першу петицію або дочекайтесь користувацьких ініціатив
+                </p>
+                <Button variant="accent" size="sm" asChild>
+                  <Link href="/petitions/new">Створити петицію</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-border-subtle divide-y">
+                {recentPetitions.map((petition) => {
+                  const pct = Math.min(
+                    100,
+                    Math.round((petition.ballotCount / PETITION_QUORUM) * 100),
+                  );
+                  return (
+                    <Link
+                      key={petition.id}
+                      href={`/petitions/${petition.id}`}
+                      className="group hover:bg-surface flex items-center gap-3 px-4 py-3 transition-colors sm:gap-4 sm:px-6 sm:py-4"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-body text-foreground group-hover:text-kpi-navy truncate text-sm font-medium transition-colors">
+                          {petition.title}
+                        </p>
+                        <p className="font-body text-muted-foreground mt-0.5 truncate text-xs">
+                          {petition.createdBy.fullName}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                        {!petition.approved ? (
+                          <Badge variant="warning" size="sm">
+                            Очікує
+                          </Badge>
+                        ) : petition.status === 'closed' ? (
+                          <Badge variant="secondary" size="sm">
+                            Закрита
+                          </Badge>
+                        ) : (
+                          <Badge variant="success" size="sm">
+                            Активна
+                          </Badge>
+                        )}
+                        <span className="font-body text-muted-foreground hidden text-xs sm:inline">
+                          {petition.ballotCount}/{PETITION_QUORUM} ({pct}%)
                         </span>
                       </div>
                     </Link>

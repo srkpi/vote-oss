@@ -1,12 +1,12 @@
-import { Calendar, Clock, Megaphone, User } from 'lucide-react';
+import { Calendar, Clock, User } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { PetitionAdminActions } from '@/components/petitions/petition-admin-actions';
+import { PetitionSignatories } from '@/components/petitions/petition-signatories';
 import { SignPetitionPanel } from '@/components/petitions/sign-petition-panel';
 import { Badge } from '@/components/ui/badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
@@ -88,13 +88,10 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
         isContainer
       />
       <div className="container py-8">
-        <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-6">
-            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6 sm:p-8">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <div className="navy-gradient flex h-8 w-8 items-center justify-center rounded-lg">
-                  <Megaphone className="h-4 w-4 text-white" />
-                </div>
+        <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 space-y-6">
+            <div className="border-border-color shadow-shadow-sm min-w-0 rounded-xl border bg-white p-6 sm:p-8">
+              <div className="flex flex-wrap items-center gap-2">
                 {petition.approved ? (
                   <ElectionStatusBadge status={petition.status} />
                 ) : (
@@ -103,33 +100,33 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                 {reached && <Badge variant="success">Досягнуто кворум</Badge>}
               </div>
 
-              <h1 className="font-display text-foreground text-2xl leading-tight font-semibold sm:text-3xl">
-                {petition.title}
-              </h1>
-
-              <div className="font-body text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                <span className="flex items-center gap-1.5">
-                  <User className="h-4 w-4" />
-                  {petition.createdBy.fullName}
+              <div className="font-body text-muted-foreground mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <User className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{petition.createdBy.fullName}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-4 w-4 shrink-0" />
                   <LocalDateTime date={petition.createdAt} />
                 </span>
                 {petition.approved && (
                   <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-4 w-4 shrink-0" />
                     діє до <LocalDate date={petition.closesAt} />
                   </span>
                 )}
               </div>
 
               {petition.description && (
-                <div className="font-body text-foreground mt-6 text-sm leading-relaxed whitespace-pre-wrap">
+                <div className="font-body text-foreground mt-6 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
                   {petition.description}
                 </div>
               )}
             </div>
+
+            {petition.approved && (
+              <PetitionSignatories petitionId={petition.id} ballotCount={petition.ballotCount} />
+            )}
           </div>
 
           <aside className="space-y-4">
@@ -201,12 +198,6 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                 />
               </div>
             )}
-
-            <div className="font-body text-muted-foreground text-center text-xs">
-              <Link href="/petitions" className="hover:text-foreground transition-colors">
-                ← До всіх петицій
-              </Link>
-            </div>
           </aside>
         </div>
       </div>

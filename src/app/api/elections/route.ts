@@ -108,6 +108,7 @@ type AdminContext = {
   user_id: string;
   restricted_to_faculty: boolean;
   faculty: string;
+  manage_petitions: boolean;
 };
 
 function parseTypeFilter(req: NextRequest): ElectionType {
@@ -189,12 +190,11 @@ function toClientElections(
       const isDeleted = !!e.deletedAt;
       if (!isAdmin && isDeleted) return false;
 
-      // Petitions: unapproved petitions are visible only to their creator and
-      // admins with manage_petitions.  Approved petitions follow normal access
-      // rules (they have no restrictions, so anyone can see them).
+      // Petitions: unapproved petitions are only visible to admins with
+      // manage_petitions.  Approved petitions follow normal access rules (they
+      // have no restrictions, so anyone can see them).
       if (e.type === 'PETITION' && !e.approved) {
-        if (isPetitionManager) return true;
-        return e.createdBy === user.sub;
+        return isPetitionManager;
       }
 
       if (isAdmin && !isAdminRestricted) return true;
@@ -269,20 +269,27 @@ function toClientElections(
       };
 
       if (isAdmin && adminRecord && adminGraph) {
-        const canDelete =
-          !isDeleted &&
-          adminCanDeleteElection(
-            adminRecord,
-            { restrictions: e.restrictions, created_by: e.createdBy },
-            adminGraph,
-          );
-        const canRestore =
-          isDeleted &&
-          adminCanRestoreElection(
-            adminRecord,
-            { restrictions: e.restrictions, deletedByUserId: e.deletedByUserId },
-            adminGraph,
-          );
+        let canDelete: boolean;
+        let canRestore: boolean;
+        if (e.type === 'PETITION') {
+          canDelete = !isDeleted && adminRecord.manage_petitions;
+          canRestore = isDeleted && adminRecord.manage_petitions;
+        } else {
+          canDelete =
+            !isDeleted &&
+            adminCanDeleteElection(
+              adminRecord,
+              { restrictions: e.restrictions, created_by: e.createdBy },
+              adminGraph,
+            );
+          canRestore =
+            isDeleted &&
+            adminCanRestoreElection(
+              adminRecord,
+              { restrictions: e.restrictions, deletedByUserId: e.deletedByUserId },
+              adminGraph,
+            );
+        }
         return {
           ...base,
           deletedAt: e.deletedAt,
@@ -352,6 +359,7 @@ export async function GET(req: NextRequest) {
         user_id: dbAdmin.user_id,
         restricted_to_faculty: dbAdmin.restricted_to_faculty,
         faculty: dbAdmin.faculty,
+        manage_petitions: dbAdmin.manage_petitions,
       };
       adminGraph = await buildAdminGraph();
     }

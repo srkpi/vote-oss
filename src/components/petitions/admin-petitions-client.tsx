@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, Megaphone, Trash2 } from 'lucide-react';
+import { CheckCircle2, Megaphone, RotateCcw, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
@@ -25,12 +25,13 @@ import { api } from '@/lib/api/browser';
 import { PETITION_QUORUM } from '@/lib/constants';
 import type { Election } from '@/types/election';
 
-type TabKey = 'pending' | 'approved' | 'all';
+type TabKey = 'pending' | 'approved' | 'all' | 'deleted';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'pending', label: 'Очікують' },
   { key: 'approved', label: 'Затверджені' },
   { key: 'all', label: 'Всі' },
+  { key: 'deleted', label: 'Видалені' },
 ];
 
 interface AdminPetitionsClientProps {
@@ -43,11 +44,24 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
   const [tab, setTab] = useState<TabKey>('pending');
   const [search, setSearch] = useState('');
   const [approving, setApproving] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Election | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const counts = useMemo(() => {
+    const active = petitions.filter((p) => !p.deletedAt);
+    return {
+      pending: active.filter((p) => !p.approved).length,
+      approved: active.filter((p) => p.approved).length,
+      all: active.length,
+      deleted: petitions.filter((p) => !!p.deletedAt).length,
+    };
+  }, [petitions]);
+
   const visible = useMemo(() => {
-    let list = petitions.filter((p) => !p.deletedAt);
+    let list: Election[];
+    if (tab === 'deleted') list = petitions.filter((p) => !!p.deletedAt);
+    else list = petitions.filter((p) => !p.deletedAt);
     if (tab === 'pending') list = list.filter((p) => !p.approved);
     if (tab === 'approved') list = list.filter((p) => p.approved);
     const q = search.toLowerCase().trim();
@@ -82,12 +96,29 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
     setApproving(null);
   };
 
+  const handleRestore = async (id: string) => {
+    setRestoring(id);
+    const res = await api.elections.restore(id);
+    if (res.success) {
+      setPetitions((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, deletedAt: null, deletedBy: null } : p)),
+      );
+      toast({ title: 'Петицію відновлено', variant: 'success' });
+    } else {
+      toast({ title: 'Помилка', description: res.error, variant: 'error' });
+    }
+    setRestoring(null);
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
     const res = await api.elections.delete(deleteTarget.id);
     if (res.success) {
-      setPetitions((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      const now = new Date().toISOString();
+      setPetitions((prev) =>
+        prev.map((p) => (p.id === deleteTarget.id ? { ...p, deletedAt: now } : p)),
+      );
       toast({ title: 'Петицію видалено', variant: 'success' });
       setDeleteTarget(null);
     } else {
@@ -96,22 +127,31 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
     setDeleting(false);
   };
 
-  const pendingCount = petitions.filter((p) => !p.approved && !p.deletedAt).length;
-
   return (
     <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
       <div className="border-border-subtle space-y-4 border-b p-4 sm:p-6">
-        {pendingCount > 0 && (
+        {counts.pending > 0 && (
           <Alert variant="info">
-            Очікують на апрув: <strong>{pendingCount}</strong>
+            Очікують на апрув: <strong>{counts.pending}</strong>
           </Alert>
         )}
-        <Tabs tabs={TABS} activeTab={tab} onTabChange={setTab} />
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Пошук за назвою або автором…"
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Пошук за назвою або автором…"
+            />
+          </div>
+          <div className="shrink-0 overflow-x-auto sm:max-w-full">
+            <Tabs
+              tabs={TABS}
+              activeTab={tab}
+              onTabChange={setTab}
+              tabBadge={(key) => counts[key]}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="p-4 sm:p-6">
@@ -125,6 +165,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
           <div className="space-y-3">
             {visible.map((p) => {
               const pct = Math.min(100, Math.round((p.ballotCount / PETITION_QUORUM) * 100));
+              const isDeleted = !!p.deletedAt;
               return (
                 <div
                   key={p.id}
@@ -132,7 +173,9 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                 >
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
-                      {!p.approved ? (
+                      {isDeleted ? (
+                        <Badge variant="secondary">Видалена</Badge>
+                      ) : !p.approved ? (
                         <Badge variant="warning">Очікує</Badge>
                       ) : (
                         <Badge variant="success">Активна</Badge>
@@ -152,7 +195,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    {!p.approved && (
+                    {!isDeleted && !p.approved && (
                       <Button
                         variant="accent"
                         size="sm"
@@ -163,14 +206,28 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                         Затвердити
                       </Button>
                     )}
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setDeleteTarget(p)}
-                      icon={<Trash2 className="h-4 w-4" />}
-                    >
-                      Видалити
-                    </Button>
+                    {isDeleted ? (
+                      p.canRestore && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          loading={restoring === p.id}
+                          onClick={() => handleRestore(p.id)}
+                          icon={<RotateCcw className="h-4 w-4" />}
+                        >
+                          Відновити
+                        </Button>
+                      )
+                    ) : (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => setDeleteTarget(p)}
+                        icon={<Trash2 className="h-4 w-4" />}
+                      >
+                        Видалити
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
@@ -187,7 +244,8 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
           </DialogHeader>
           <DialogBody>
             <Alert variant="warning">
-              <strong>{deleteTarget?.title}</strong>. Цю дію неможливо скасувати.
+              <strong>{deleteTarget?.title}</strong>. Петицію можна буде відновити з вкладки
+              «Видалені».
             </Alert>
           </DialogBody>
           <DialogFooter>

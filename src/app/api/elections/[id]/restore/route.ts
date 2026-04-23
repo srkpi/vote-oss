@@ -80,22 +80,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const restrictions = election.restrictions as ElectionRestriction[];
-  const adminGraph = await buildAdminGraph();
 
-  if (
-    !adminCanRestoreElection(
-      {
-        restricted_to_faculty: admin.restricted_to_faculty,
-        faculty: admin.faculty,
-        user_id: admin.user_id,
-      },
-      { restrictions, deletedByUserId: election.deleted_by },
-      adminGraph,
-    )
-  ) {
-    return Errors.forbidden(
-      'You can only restore elections that you deleted or that were deleted by your subordinates within your faculty',
-    );
+  // Petitions are restored by manage_petitions admins regardless of hierarchy.
+  if (election.type === 'PETITION') {
+    if (!admin.manage_petitions) {
+      return Errors.forbidden('Only petition managers can restore petitions');
+    }
+  } else {
+    const adminGraph = await buildAdminGraph();
+    if (
+      !adminCanRestoreElection(
+        {
+          restricted_to_faculty: admin.restricted_to_faculty,
+          faculty: admin.faculty,
+          user_id: admin.user_id,
+        },
+        { restrictions, deletedByUserId: election.deleted_by },
+        adminGraph,
+      )
+    ) {
+      return Errors.forbidden(
+        'You can only restore elections that you deleted or that were deleted by your subordinates within your faculty',
+      );
+    }
   }
 
   await prisma.election.update({

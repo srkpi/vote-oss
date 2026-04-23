@@ -22,7 +22,7 @@ import {
   WINNING_CONDITION_QUORUM_MIN,
   WINNING_CONDITION_VOTES_MAX,
   WINNING_CONDITION_VOTES_MIN,
-} from '@/lib/constants';
+} from '../src/lib/constants';
 
 const spec = createSwaggerSpec({
   apiFolder: 'src/app/api',

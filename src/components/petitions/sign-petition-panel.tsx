@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle2, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { Alert } from '@/components/ui/alert';
@@ -16,6 +17,7 @@ interface SignPetitionPanelProps {
 }
 
 export function SignPetitionPanel({ petition }: SignPetitionPanelProps) {
+  const router = useRouter();
   const { toast } = useToast();
   const [alreadySigned, setAlreadySigned] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -114,6 +116,7 @@ export function SignPetitionPanel({ petition }: SignPetitionPanelProps) {
       variant: 'success',
       duration: 6000,
     });
+    router.refresh();
   };
 
   return (

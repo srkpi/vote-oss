@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getElectionBypassForUser } from '@/lib/bypass';
-import { getCachedElections, invalidateElections } from '@/lib/cache';
+import { getCachedElections, invalidateElections, overlayLiveBallotCounts } from '@/lib/cache';
 import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
@@ -175,8 +175,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const cached = await getCachedElections();
 
   if (cached) {
-    const found = cached.find((e) => e.id === electionId);
-    if (!found) return Errors.notFound('Election not found');
+    const rawFound = cached.find((e) => e.id === electionId);
+    if (!rawFound) return Errors.notFound('Election not found');
+    // Overlay real-time ballot count so freshly-cast ballots are reflected
+    // without waiting for full cache invalidation.
+    const [found] = await overlayLiveBallotCounts([rawFound]);
 
     let winningConditions = found.winningConditions;
     if (!winningConditions) {
@@ -394,32 +397,39 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { user_id: user.sub, deleted_at: null },
     });
     if (adminRecord) {
-      const adminGraph = await buildAdminGraph();
       const isDeleted = !!electionData.deletedAt;
 
-      canDelete =
-        !isDeleted &&
-        adminCanDeleteElection(
-          {
-            restricted_to_faculty: adminRecord.restricted_to_faculty,
-            faculty: adminRecord.faculty,
-            user_id: adminRecord.user_id,
-          },
-          { restrictions, created_by: electionData.createdBy },
-          adminGraph,
-        );
+      // Petitions bypass the admin-hierarchy gating used for regular elections:
+      // any admin with `manage_petitions` may delete or restore a petition.
+      if (electionData.type === 'PETITION') {
+        canDelete = !isDeleted && adminRecord.manage_petitions;
+        canRestore = isDeleted && adminRecord.manage_petitions;
+      } else {
+        const adminGraph = await buildAdminGraph();
+        canDelete =
+          !isDeleted &&
+          adminCanDeleteElection(
+            {
+              restricted_to_faculty: adminRecord.restricted_to_faculty,
+              faculty: adminRecord.faculty,
+              user_id: adminRecord.user_id,
+            },
+            { restrictions, created_by: electionData.createdBy },
+            adminGraph,
+          );
 
-      canRestore =
-        isDeleted &&
-        adminCanRestoreElection(
-          {
-            restricted_to_faculty: adminRecord.restricted_to_faculty,
-            faculty: adminRecord.faculty,
-            user_id: adminRecord.user_id,
-          },
-          { restrictions, deletedByUserId: electionData.deletedByUserId },
-          adminGraph,
-        );
+        canRestore =
+          isDeleted &&
+          adminCanRestoreElection(
+            {
+              restricted_to_faculty: adminRecord.restricted_to_faculty,
+              faculty: adminRecord.faculty,
+              user_id: adminRecord.user_id,
+            },
+            { restrictions, deletedByUserId: electionData.deletedByUserId },
+            adminGraph,
+          );
+      }
     }
 
     deletedByField = electionData.deletedByUserId

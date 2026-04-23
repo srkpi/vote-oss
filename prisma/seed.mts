@@ -34,6 +34,7 @@ async function main() {
       faculty: 'SYSTEM',
       manage_admins: true,
       manage_groups: true,
+      manage_petitions: true,
       restricted_to_faculty: false,
     },
   });
@@ -50,6 +51,7 @@ async function main() {
       current_usage: 0,
       manage_admins: true,
       manage_groups: true,
+      manage_petitions: true,
       restricted_to_faculty: false,
       valid_due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Valid for 7 days
       created_by: testAdmin.user_id,
