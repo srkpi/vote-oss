@@ -162,7 +162,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
               </div>
             )}
 
-            {(isClosed || showLiveResults) && hasResults && (
+            {(isClosed || showLiveResults) && hasResults ? (
               <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
                   <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
@@ -181,9 +181,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   />
                 </div>
               </div>
-            )}
-
-            {!isClosed && (
+            ) : (
               <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle border-b px-4 py-4 sm:px-6">
                   <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
@@ -262,7 +260,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                       <Eye className="h-4 w-4" />
                     )
                   }
-                  status="done"
+                  status={election.anonymous ? 'pending' : 'done'}
                 />
               </div>
             </div>

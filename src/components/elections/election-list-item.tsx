@@ -116,7 +116,7 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
               <span
                 key={i}
                 className={cn(
-                  'font-body max-w-36 truncate text-xs sm:max-w-52',
+                  'font-body truncate text-xs',
                   c.winner ? 'text-kpi-navy font-medium' : 'text-muted-foreground',
                 )}
               >
@@ -135,12 +135,9 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
 
       {/* ── Right: ballot count — always visible on all screen sizes ───────── */}
       <div className="flex shrink-0 items-center gap-1.5 self-center">
-        <span className="font-body text-muted-foreground text-sm tabular-nums">
-          {election.ballotCount}
-        </span>
+        <span className="font-body text-muted-foreground text-sm">{election.ballotCount}</span>
         <FileText className="text-kpi-gray-mid h-4 w-4" />
       </div>
-      {/* No ChevronRight — hover bg + title colour change are sufficient click cues */}
     </Link>
   );
 }

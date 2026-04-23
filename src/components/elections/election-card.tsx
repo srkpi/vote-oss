@@ -1,13 +1,4 @@
-import {
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Crown,
-  Eye,
-  FileText,
-  User,
-  XCircle,
-} from 'lucide-react';
+import { Calendar, CheckCircle2, Crown, Eye, FileText, User, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
@@ -183,23 +174,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
                 Проголосовано
               </Badge>
             )}
-          </div>
-
-          <div
-            className={cn(
-              'flex items-center gap-1.5 text-sm font-medium',
-              'text-kpi-navy opacity-0 group-hover:opacity-100',
-              'transition-opacity duration-200',
-            )}
-          >
-            <span>
-              {isOpen && voteStatus === 'can_vote'
-                ? 'Голосувати'
-                : isOpen && voteStatus === 'voted'
-                  ? 'Переглянути'
-                  : 'Детальніше'}
-            </span>
-            <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </div>
         </div>
       </div>
