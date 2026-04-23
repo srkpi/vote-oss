@@ -1,58 +1,68 @@
 import 'dotenv/config';
 
+import { createHash, randomBytes } from 'node:crypto';
+
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+
+function generateBase64Token(length: number): string {
+  const bytes = Math.ceil((length * 3) / 4);
+  const token = randomBytes(bytes).toString('base64');
+  return token.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, length);
+}
+
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
 
 async function main() {
-  console.log('🌱  Seeding admins...');
+  console.log('🧪  Generating test admin and invite token...');
 
-  // -------------------------------------------------------------------------
-  // Super-admin — unrestricted, can manage other admins
-  // -------------------------------------------------------------------------
-  const superAdmin = await prisma.admin.upsert({
-    where: { user_id: 'superadmin-001' },
+  // 1. Create the Creator Admin
+  // This admin is needed because the InviteToken has a required 'created_by' relation
+  const testAdmin = await prisma.admin.upsert({
+    where: { user_id: 'test-admin-id' },
     update: {},
     create: {
-      user_id: 'superadmin-001',
-      full_name: 'Super Admin User',
-      group: 'KV-11',
-      faculty: 'FICE',
-      promoted_by: null,
+      user_id: 'test-admin-id',
+      full_name: 'Test Admin',
+      group: 'DEBUG',
+      faculty: 'SYSTEM',
       manage_admins: true,
+      manage_groups: true,
       restricted_to_faculty: false,
     },
   });
-  console.log(`  ✓ superadmin: ${superAdmin.user_id} (${superAdmin.full_name})`);
 
-  // -------------------------------------------------------------------------
-  // Faculty-scoped admin — can only manage elections for FICE faculty,
-  // promoted by the super-admin above
-  // -------------------------------------------------------------------------
-  const facultyAdmin = await prisma.admin.upsert({
-    where: { user_id: 'admin-002' },
-    update: {},
-    create: {
-      user_id: 'admin-002',
-      full_name: 'Faculty Admin FICE',
-      group: 'KV-12',
-      faculty: 'FICE',
-      promoted_by: 'superadmin-001',
-      manage_admins: false,
-      restricted_to_faculty: true,
+  // 2. Generate a random secure token
+  const rawToken = generateBase64Token(16);
+  const tokenHash = hashToken(rawToken);
+
+  // 3. Create the Invite Token in the database
+  await prisma.adminInviteToken.create({
+    data: {
+      token_hash: tokenHash,
+      max_usage: 1,
+      current_usage: 0,
+      manage_admins: true,
+      manage_groups: true,
+      restricted_to_faculty: false,
+      valid_due: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Valid for 7 days
+      created_by: testAdmin.user_id,
     },
   });
-  console.log(`  ✓ faculty admin: ${facultyAdmin.user_id} (${facultyAdmin.full_name})`);
 
-  console.log('✅  Seed complete.');
+  console.log(`Token: ${rawToken}`);
+  console.log(`Join URL: http://localhost:3000/join/${rawToken}`);
 }
 
 main()
   .catch((err) => {
-    console.error('❌  Seed failed:', err);
+    console.error('❌  Script failed:', err);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());
