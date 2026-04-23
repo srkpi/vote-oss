@@ -1,1 +1,1 @@
-{"id":"5d04f3baa7652e33cbf38e561f59a5c5","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 403 for restricted admin","name":"returns 403 for restricted admin","status":"passed","testResultsByEnv":{"default":"6074b82700dd8cbfb86aed76388a78e3"}}
+{"id":"5d04f3baa7652e33cbf38e561f59a5c5","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 403 for restricted admin","name":"returns 403 for restricted admin","status":"passed","testResultsByEnv":{"default":"3e20db672dfa7f4458ab21a99fbc0d0e"}}

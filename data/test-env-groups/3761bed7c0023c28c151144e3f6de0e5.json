@@ -1,1 +1,1 @@
-{"id":"3761bed7c0023c28c151144e3f6de0e5","fullName":"src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 400 when title is missing","name":"returns 400 when title is missing","status":"passed","testResultsByEnv":{"default":"f7b3f9c23dece6140a7e62b353c78f2e"}}
+{"id":"3761bed7c0023c28c151144e3f6de0e5","fullName":"src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 400 when title is missing","name":"returns 400 when title is missing","status":"passed","testResultsByEnv":{"default":"6f34bd3ad4178cecfea5665fe7a7cae9"}}

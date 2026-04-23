@@ -1,1 +1,1 @@
-{"id":"2ac03aac76e23ef3a947c6ac580a719d","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave deletes own invite tokens when leaving","name":"deletes own invite tokens when leaving","status":"passed","testResultsByEnv":{"default":"686856a81e18053ad06ee01e95ea6a21"}}
+{"id":"2ac03aac76e23ef3a947c6ac580a719d","fullName":"src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave deletes own invite tokens when leaving","name":"deletes own invite tokens when leaving","status":"passed","testResultsByEnv":{"default":"ffccebb71cf793c0bf301a7448585b71"}}

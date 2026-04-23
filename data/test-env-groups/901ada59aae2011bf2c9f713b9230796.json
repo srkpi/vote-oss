@@ -1,1 +1,1 @@
-{"id":"901ada59aae2011bf2c9f713b9230796","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/items/[id] returns 403 when restricted admin","name":"returns 403 when restricted admin","status":"passed","testResultsByEnv":{"default":"07f65812429c9e93cd3fe4fbf82532ec"}}
+{"id":"901ada59aae2011bf2c9f713b9230796","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/items/[id] returns 403 when restricted admin","name":"returns 403 when restricted admin","status":"passed","testResultsByEnv":{"default":"70fa45a2342e024097c2989e693e71fa"}}

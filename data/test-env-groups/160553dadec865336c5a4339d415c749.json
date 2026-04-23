@@ -1,1 +1,1 @@
-{"id":"160553dadec865336c5a4339d415c749","fullName":"src/__tests__/api/auth/diia-check.test.ts#POST /api/auth/diia/check revokes existing session if present","name":"revokes existing session if present","status":"passed","testResultsByEnv":{"default":"c61945b226a54dabb0c1562032c81f74"}}
+{"id":"160553dadec865336c5a4339d415c749","fullName":"src/__tests__/api/auth/diia-check.test.ts#POST /api/auth/diia/check revokes existing session if present","name":"revokes existing session if present","status":"passed","testResultsByEnv":{"default":"c493c6be3892b8ff2aeeaf380cf0878c"}}

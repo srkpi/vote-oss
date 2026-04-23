@@ -1,1 +1,1 @@
-{"id":"dd80c3f5e06581f6001b9ed3e9e93982","fullName":"src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init returns 200 on a successful request","name":"returns 200 on a successful request","status":"passed","testResultsByEnv":{"default":"21e725f9249aff7a08008d3bf5105a0f"}}
+{"id":"dd80c3f5e06581f6001b9ed3e9e93982","fullName":"src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init returns 200 on a successful request","name":"returns 200 on a successful request","status":"passed","testResultsByEnv":{"default":"315021d24e0bb96f44ab9fc5b6a68c80"}}

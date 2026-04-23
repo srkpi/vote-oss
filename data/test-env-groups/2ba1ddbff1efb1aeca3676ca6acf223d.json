@@ -1,1 +1,1 @@
-{"id":"2ba1ddbff1efb1aeca3676ca6acf223d","fullName":"src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"47d84ee3b49940a6cc71ed53984fcb2e"}}
+{"id":"2ba1ddbff1efb1aeca3676ca6acf223d","fullName":"src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"6c8608c8e9303d154c22c14c69125bec"}}
