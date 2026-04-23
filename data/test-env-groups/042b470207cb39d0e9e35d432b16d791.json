@@ -1,1 +1,1 @@
-{"id":"042b470207cb39d0e9e35d432b16d791","fullName":"src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns 400 when token field is missing","name":"returns 400 when token field is missing","status":"passed","testResultsByEnv":{"default":"c6114b6480eb6635ce6fce44b238ee08"}}
+{"id":"042b470207cb39d0e9e35d432b16d791","fullName":"src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns 400 when token field is missing","name":"returns 400 when token field is missing","status":"passed","testResultsByEnv":{"default":"9e7edd7dc894c925814b622fef709b4b"}}
