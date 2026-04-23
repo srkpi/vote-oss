@@ -22,6 +22,7 @@ export function SignPetitionPanel({ petition }: SignPetitionPanelProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAlreadySigned(petition.hasVoted || !!getVote(petition.id));
   }, [petition.id, petition.hasVoted]);
 
