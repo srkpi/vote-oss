@@ -24,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminSidebar
         manageAdmins={session.manageAdmins}
         manageGroups={session.manageGroups}
+        managePetitions={session.managePetitions}
         restrictedToFaculty={session.restrictedToFaculty}
       />
       <div className="flex min-w-0 flex-1 flex-col">

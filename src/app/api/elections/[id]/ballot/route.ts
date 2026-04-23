@@ -2,7 +2,12 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
-import { incrementLiveElectionBallotCount, setLiveElectionBallotCount } from '@/lib/cache';
+import {
+  incrementLiveElectionBallotCount,
+  invalidateElections,
+  setLiveElectionBallotCount,
+} from '@/lib/cache';
+import { PETITION_QUORUM } from '@/lib/constants';
 import {
   computeBallotHash,
   computeNullifier,
@@ -242,10 +247,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // If INCR returns 1 the counter key didn't exist (expired) — we correct the
   // value by querying the actual ballot count from the DB and overwriting.
   const newCountFromIncr = await incrementLiveElectionBallotCount(electionId);
+  let effectiveCount: number | null = newCountFromIncr;
   if (newCountFromIncr === 1) {
     // Counter was just created at 1; likely wrong — resync from DB.
     const actualCount = await prisma.ballot.count({ where: { election_id: electionId } });
     await setLiveElectionBallotCount(electionId, actualCount);
+    effectiveCount = actualCount;
+  }
+
+  // ── Petition quorum: auto-close once the threshold is hit ─────────────────
+  // Once a petition reaches PETITION_QUORUM supporters it's considered passed
+  // and must not accept further votes, so we set closes_at to now and invalidate
+  // the metadata cache so the status transitions to "closed" immediately.
+  if (
+    election.type === 'PETITION' &&
+    effectiveCount !== null &&
+    effectiveCount >= PETITION_QUORUM &&
+    election.closes_at > now
+  ) {
+    await prisma.election.update({
+      where: { id: electionId },
+      data: { closes_at: now },
+    });
+    await invalidateElections();
   }
 
   return NextResponse.json({ ballotHash: currentHash }, { status: 201 });

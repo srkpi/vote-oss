@@ -22,7 +22,7 @@ import {
   WINNING_CONDITION_QUORUM_MIN,
   WINNING_CONDITION_VOTES_MAX,
   WINNING_CONDITION_VOTES_MIN,
-} from '../src/lib/constants';
+} from '@/lib/constants';
 
 const spec = createSwaggerSpec({
   apiFolder: 'src/app/api',
@@ -233,13 +233,18 @@ const spec = createSwaggerSpec({
           ],
         },
 
-        ElectionCreator: {
+        ElectionAuthor: {
           type: 'object',
-          required: ['fullName', 'faculty'],
+          required: ['userId', 'fullName'],
           properties: {
+            userId: { type: 'string' },
             fullName: { type: 'string' },
-            faculty: { type: 'string' },
           },
+        },
+
+        ElectionType: {
+          type: 'string',
+          enum: ['ELECTION', 'PETITION'],
         },
 
         ElectionStatus: {
@@ -306,9 +311,11 @@ const spec = createSwaggerSpec({
 
         ElectionCreateBody: {
           type: 'object',
-          required: ['title', 'opensAt', 'closesAt', 'choices'],
+          required: ['title'],
           properties: {
+            type: { $ref: '#/components/schemas/ElectionType' },
             title: { type: 'string', minLength: 1, maxLength: ELECTION_TITLE_MAX_LENGTH },
+            description: { type: 'string', nullable: true },
             opensAt: { type: 'string', format: 'date-time' },
             closesAt: { type: 'string', format: 'date-time' },
             choices: {
@@ -343,21 +350,30 @@ const spec = createSwaggerSpec({
               type: 'object',
               required: [
                 'id',
+                'type',
                 'createdAt',
                 'minChoices',
                 'maxChoices',
                 'shuffleChoices',
                 'restrictions',
                 'status',
-                'creator',
+                'createdBy',
+                'approved',
                 'ballotCount',
                 'choices',
               ],
               properties: {
                 id: { type: 'string', format: 'uuid' },
+                type: { $ref: '#/components/schemas/ElectionType' },
                 createdAt: { type: 'string', format: 'date-time' },
                 status: { $ref: '#/components/schemas/ElectionStatus' },
-                creator: { $ref: '#/components/schemas/ElectionCreator' },
+                createdBy: { $ref: '#/components/schemas/ElectionAuthor' },
+                approved: { type: 'boolean' },
+                approvedBy: {
+                  allOf: [{ $ref: '#/components/schemas/ElectionAuthor' }],
+                  nullable: true,
+                },
+                approvedAt: { type: 'string', format: 'date-time', nullable: true },
                 ballotCount: { type: 'integer', minimum: 0 },
                 choices: {
                   type: 'array',

@@ -69,6 +69,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       promoted_at: true,
       manage_admins: true,
       manage_groups: true,
+      manage_petitions: true,
       restricted_to_faculty: true,
     },
   });
@@ -86,6 +87,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     promotedAt: admin.promoted_at.toISOString(),
     manageAdmins: admin.manage_admins,
     manageGroups: admin.manage_groups,
+    managePetitions: admin.manage_petitions,
     restrictedToFaculty: admin.restricted_to_faculty,
   });
 }
@@ -156,6 +158,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
   let body: {
     manageAdmins?: boolean;
     manageGroups?: boolean;
+    managePetitions?: boolean;
     restrictedToFaculty?: boolean;
   };
   try {
@@ -164,15 +167,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const { manageAdmins, manageGroups, restrictedToFaculty } = body;
+  const { manageAdmins, manageGroups, managePetitions, restrictedToFaculty } = body;
 
   if (
     manageAdmins === undefined &&
     manageGroups === undefined &&
+    managePetitions === undefined &&
     restrictedToFaculty === undefined
   ) {
     return Errors.badRequest(
-      'At least one of manageAdmins, manageGroups, or restrictedToFaculty must be provided',
+      'At least one of manageAdmins, manageGroups, managePetitions, or restrictedToFaculty must be provided',
     );
   }
 
@@ -183,8 +187,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     );
   }
 
-  // manage_groups can be granted regardless of restricted_to_faculty since it's
-  // a cross-platform permission unrelated to faculty boundaries
+  // manage_groups/manage_petitions can be granted regardless of restricted_to_faculty:
+  // they are cross-platform permissions unrelated to faculty boundaries.
   const targetAdmin = await prisma.admin.findUnique({ where: { user_id: targetUserId } });
   if (!targetAdmin || targetAdmin.deleted_at !== null) {
     return Errors.notFound('Admin not found');
@@ -198,10 +202,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
   const updateData: {
     manage_admins?: boolean;
     manage_groups?: boolean;
+    manage_petitions?: boolean;
     restricted_to_faculty?: boolean;
   } = {};
   if (manageAdmins !== undefined) updateData.manage_admins = manageAdmins;
   if (manageGroups !== undefined) updateData.manage_groups = manageGroups;
+  if (managePetitions !== undefined) updateData.manage_petitions = managePetitions;
   if (restrictedToFaculty !== undefined) updateData.restricted_to_faculty = restrictedToFaculty;
 
   await prisma.admin.update({

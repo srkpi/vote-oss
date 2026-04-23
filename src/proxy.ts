@@ -156,6 +156,7 @@ export async function proxy(req: NextRequest) {
       requestHeaders.set('x-user-restricted-to-faculty', String(user.restrictedToFaculty ?? true));
       requestHeaders.set('x-user-manage-admins', String(user.manageAdmins ?? false));
       requestHeaders.set('x-user-manage-groups', String(user.manageGroups ?? false));
+      requestHeaders.set('x-user-manage-petitions', String(user.managePetitions ?? false));
     }
   }
 

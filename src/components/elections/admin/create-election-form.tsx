@@ -9,7 +9,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CharCounter } from '@/components/ui/char-counter';
 import { ChipSelect } from '@/components/ui/chip-select';
-import { FormField, Input } from '@/components/ui/form';
+import { FormField, Input, Textarea } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { MultiCombobox } from '@/components/ui/multi-combobox';
 import { Slider } from '@/components/ui/slider';
@@ -20,6 +20,7 @@ import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
+  ELECTION_DESCRIPTION_MAX_LENGTH,
   ELECTION_MAX_CHOICES_MAX,
   ELECTION_MAX_CLOSES_AT_DAYS,
   ELECTION_MIN_CHOICES_MIN,
@@ -140,6 +141,7 @@ export function CreateElectionForm({
   // Form state
   const [form, setForm] = useState({
     title: '',
+    description: '',
     opensAt: '',
     closesAt: '',
     minChoices: 1,
@@ -331,6 +333,9 @@ export function CreateElectionForm({
     else if (form.title.length > ELECTION_TITLE_MAX_LENGTH)
       errors.title = `Назва не може перевищувати ${ELECTION_TITLE_MAX_LENGTH} символів`;
 
+    if (form.description.length > ELECTION_DESCRIPTION_MAX_LENGTH)
+      errors.description = `Опис не може перевищувати ${ELECTION_DESCRIPTION_MAX_LENGTH} символів`;
+
     if (!form.opensAt) errors.opensAt = "Дата початку обов'язкова";
     if (!form.closesAt) errors.closesAt = "Дата завершення обов'язкова";
 
@@ -381,8 +386,10 @@ export function CreateElectionForm({
     setError(null);
 
     const filteredChoices = choices.filter((c) => c.trim());
+    const trimmedDescription = form.description.trim();
     const result = await api.elections.create({
       title: form.title.trim(),
+      description: trimmedDescription ? trimmedDescription : null,
       opensAt: new Date(form.opensAt).toISOString(),
       closesAt: new Date(form.closesAt).toISOString(),
       choices: filteredChoices,
@@ -444,6 +451,31 @@ export function CreateElectionForm({
               />
               <div className="flex justify-end">
                 <CharCounter value={form.title} max={ELECTION_TITLE_MAX_LENGTH} />
+              </div>
+            </div>
+          </FormField>
+
+          <FormField
+            label="Опис голосування"
+            error={fieldErrors.description}
+            htmlFor="description"
+            hint="Необов'язково"
+          >
+            <div className="space-y-1">
+              <Textarea
+                id="description"
+                value={form.description}
+                onChange={(e) => updateForm('description', e.target.value)}
+                placeholder="Коротко опишіть мету голосування, контекст і деталі"
+                rows={4}
+                maxLength={ELECTION_DESCRIPTION_MAX_LENGTH}
+                error={
+                  !!fieldErrors.description ||
+                  form.description.length > ELECTION_DESCRIPTION_MAX_LENGTH
+                }
+              />
+              <div className="flex justify-end">
+                <CharCounter value={form.description} max={ELECTION_DESCRIPTION_MAX_LENGTH} />
               </div>
             </div>
           </FormField>

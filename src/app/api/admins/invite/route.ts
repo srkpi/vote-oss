@@ -63,6 +63,7 @@ export async function GET(req: NextRequest) {
         current_usage: true,
         manage_admins: true,
         manage_groups: true,
+        manage_petitions: true,
         restricted_to_faculty: true,
         valid_due: true,
         created_at: true,
@@ -77,6 +78,7 @@ export async function GET(req: NextRequest) {
       currentUsage: t.current_usage,
       manageAdmins: t.manage_admins,
       manageGroups: t.manage_groups,
+      managePetitions: t.manage_petitions,
       restrictedToFaculty: t.restricted_to_faculty,
       validDue: t.valid_due.toISOString(),
       createdAt: t.created_at.toISOString(),
@@ -180,6 +182,7 @@ export async function POST(req: NextRequest) {
     maxUsage?: number;
     manageAdmins?: boolean;
     manageGroups?: boolean;
+    managePetitions?: boolean;
     restrictedToFaculty?: boolean;
     validDue?: string;
   };
@@ -190,7 +193,13 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const { maxUsage = 1, manageAdmins = false, manageGroups = false, validDue } = body;
+  const {
+    maxUsage = 1,
+    manageAdmins = false,
+    manageGroups = false,
+    managePetitions = false,
+    validDue,
+  } = body;
   let { restrictedToFaculty = true } = body;
 
   if (!validDue) return Errors.badRequest('validDue is required');
@@ -218,6 +227,11 @@ export async function POST(req: NextRequest) {
   // manage_groups can only be granted by admins who themselves have manage_groups
   if (manageGroups && !admin.manage_groups) {
     return Errors.forbidden('Cannot grant manage_groups permission you do not have');
+  }
+
+  // manage_petitions can only be granted by admins who themselves have manage_petitions
+  if (managePetitions && !admin.manage_petitions) {
+    return Errors.forbidden('Cannot grant manage_petitions permission you do not have');
   }
 
   if (admin.restricted_to_faculty) {
@@ -249,6 +263,7 @@ export async function POST(req: NextRequest) {
       current_usage: 0,
       manage_admins: manageAdmins,
       manage_groups: manageGroups,
+      manage_petitions: managePetitions,
       restricted_to_faculty: restrictedToFaculty,
       valid_due: validDueDate,
       created_at: now,
@@ -264,6 +279,7 @@ export async function POST(req: NextRequest) {
       maxUsage,
       manageAdmins,
       manageGroups,
+      managePetitions,
       restrictedToFaculty,
       validDue: validDueDate,
     },

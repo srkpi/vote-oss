@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { requireAdmin, requireAuth } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import {
   getCachedElections,
   getCachedUserVotedElections,
@@ -16,16 +16,19 @@ import {
   ELECTION_CHOICE_MAX_LENGTH,
   ELECTION_CHOICES_MAX,
   ELECTION_CHOICES_MIN,
+  ELECTION_DESCRIPTION_MAX_LENGTH,
   ELECTION_MAX_CHOICES_MAX,
   ELECTION_MAX_CLOSES_AT_DAYS,
   ELECTION_MIN_CHOICES_MIN,
   ELECTION_TITLE_MAX_LENGTH,
+  PETITION_QUORUM,
+  PETITION_SUPPORT_CHOICE_LABEL,
   STUDY_FORMS,
   STUDY_YEARS,
   VALID_LEVEL_COURSES,
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
-import { encryptField } from '@/lib/encryption';
+import { decryptField, encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { buildAdminGraph } from '@/lib/graph';
 import { getUserGroupMemberships } from '@/lib/groups';
@@ -37,6 +40,7 @@ import {
   checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
+import { computePetitionClosesAt } from '@/lib/utils/petition-date';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import {
   computeWinners,
@@ -50,6 +54,7 @@ import type {
   Election,
   ElectionsListResponse,
   ElectionStatus,
+  ElectionType,
   ElectionVoteStatus,
   RestrictionType,
   TallyResult,
@@ -105,6 +110,24 @@ type AdminContext = {
   faculty: string;
 };
 
+function parseTypeFilter(req: NextRequest): ElectionType {
+  const raw = req.nextUrl.searchParams.get('type');
+  return raw === 'PETITION' ? 'PETITION' : 'ELECTION';
+}
+
+/**
+ * Decrypt a stored ciphertext field, falling back to the raw value if the
+ * input doesn't look encrypted (protects against stale rows predating the
+ * encryption backfill).
+ */
+function safeDecrypt(value: string): string {
+  try {
+    return decryptField(value);
+  } catch {
+    return value;
+  }
+}
+
 /**
  * Derive the unique set of FACULTY restriction values that appear across all
  * elections visible to the caller.  Used to populate the faculty filter dropdown.
@@ -147,19 +170,33 @@ function toClientElections(
     studyForm?: string;
     isAdmin?: boolean;
     restrictedToFaculty?: boolean;
+    managePetitions?: boolean;
   },
   votedSet: Set<string>,
   groupMemberships: string[],
+  typeFilter: ElectionType,
   adminRecord?: AdminContext,
   adminGraph?: Map<string, string | null>,
 ): Election[] {
   const isAdmin = user.isAdmin ?? false;
   const isAdminRestricted = user.restrictedToFaculty ?? true;
+  const isPetitionManager = isAdmin && (user.managePetitions ?? false);
 
   return cached
     .filter((e) => {
+      if (e.type !== typeFilter) return false;
+
       const isDeleted = !!e.deletedAt;
       if (!isAdmin && isDeleted) return false;
+
+      // Petitions: unapproved petitions are visible only to their creator and
+      // admins with manage_petitions.  Approved petitions follow normal access
+      // rules (they have no restrictions, so anyone can see them).
+      if (e.type === 'PETITION' && !e.approved) {
+        if (isPetitionManager) return true;
+        return e.createdBy === user.sub;
+      }
+
       if (isAdmin && !isAdminRestricted) return true;
       if (isAdmin && isAdminRestricted) {
         return adminCanAccessElection(user.faculty, e.restrictions);
@@ -205,7 +242,9 @@ function toClientElections(
 
       const base: Election = {
         id: e.id,
+        type: e.type,
         title: e.title,
+        description: e.description,
         createdAt: e.createdAt,
         opensAt: e.opensAt,
         closesAt: e.closesAt,
@@ -217,7 +256,13 @@ function toClientElections(
         anonymous: e.anonymous ?? true,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
-        creator: e.creator,
+        createdBy: { userId: e.createdBy, fullName: e.createdByFullName },
+        approved: e.approved,
+        approvedBy:
+          e.approvedById && e.approvedByFullName
+            ? { userId: e.approvedById, fullName: e.approvedByFullName }
+            : null,
+        approvedAt: e.approvedAt,
         choices,
         ballotCount: e.ballotCount,
         voteStatus,
@@ -319,13 +364,20 @@ export async function GET(req: NextRequest) {
     const elections = await prisma.election.findMany({
       select: {
         id: true,
+        type: true,
         title: true,
+        description: true,
         created_at: true,
         opens_at: true,
         closes_at: true,
         min_choices: true,
         max_choices: true,
         created_by: true,
+        created_by_full_name: true,
+        approved: true,
+        approved_by_id: true,
+        approved_by_full_name: true,
+        approved_at: true,
         restrictions: { select: { type: true, value: true } },
         public_key: true,
         private_key: true,
@@ -333,7 +385,6 @@ export async function GET(req: NextRequest) {
         shuffle_choices: true,
         public_viewing: true,
         anonymous: true,
-        creator: { select: { full_name: true, faculty: true } },
         deleter: { select: { full_name: true } },
         choices: {
           select: { id: true, choice: true, position: true, vote_count: true },
@@ -348,7 +399,9 @@ export async function GET(req: NextRequest) {
 
     cachedRaw = elections.map((e) => ({
       id: e.id,
+      type: e.type as ElectionType,
       title: e.title,
+      description: e.description ?? null,
       createdAt: e.created_at.toISOString(),
       opensAt: e.opens_at.toISOString(),
       closesAt: e.closes_at.toISOString(),
@@ -361,7 +414,11 @@ export async function GET(req: NextRequest) {
       shuffleChoices: e.shuffle_choices,
       publicViewing: e.public_viewing,
       anonymous: e.anonymous,
-      creator: { fullName: e.creator.full_name, faculty: e.creator.faculty },
+      createdByFullName: safeDecrypt(e.created_by_full_name),
+      approved: e.approved,
+      approvedById: e.approved_by_id,
+      approvedByFullName: e.approved_by_full_name ? safeDecrypt(e.approved_by_full_name) : null,
+      approvedAt: e.approved_at?.toISOString() ?? null,
       choices: e.choices.map((c) => ({
         id: c.id,
         choice: c.choice,
@@ -419,6 +476,7 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Build client-visible elections list ──────────────────────────────────
+  const typeFilter = parseTypeFilter(req);
   const elections = toClientElections(
     cachedWithLiveCounts,
     {
@@ -430,9 +488,11 @@ export async function GET(req: NextRequest) {
       studyForm: user.studyForm,
       isAdmin,
       restrictedToFaculty: user.restrictedToFaculty,
+      managePetitions: user.managePetitions,
     },
     votedSet,
     groupMemberships,
+    typeFilter,
     adminRecord,
     adminGraph,
   );
@@ -506,12 +566,14 @@ export async function GET(req: NextRequest) {
  *         description: Campus API unavailable
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAdmin(req);
-  if (!auth.ok) return Errors.forbidden(auth.error);
-  const { user, admin } = auth;
+  const auth = await requireAuth(req);
+  if (!auth.ok) return Errors.unauthorized(auth.error);
+  const { user } = auth;
 
   let body: {
+    type?: ElectionType;
     title?: string;
+    description?: string | null;
     opensAt?: string;
     closesAt?: string;
     choices?: string[];
@@ -530,7 +592,29 @@ export async function POST(req: NextRequest) {
     return Errors.badRequest('Invalid JSON body');
   }
 
+  // Non-admin users may only create PETITION.  Coerce silently so naive
+  // clients that forget to set the flag still land in the right code path.
+  const isAdmin = user.isAdmin ?? false;
+  const requestedType: ElectionType = body.type === 'PETITION' ? 'PETITION' : 'ELECTION';
+  const type: ElectionType = isAdmin ? requestedType : 'PETITION';
+
+  if (type === 'PETITION') {
+    return handlePetitionCreate(user, body);
+  }
+
+  // ── Election branch (admin-only) ───────────────────────────────────────
+  if (!isAdmin) {
+    return Errors.forbidden('Only admins can create elections');
+  }
+  const admin = await prisma.admin.findUnique({
+    where: { user_id: user.sub, deleted_at: null },
+  });
+  if (!admin) {
+    return Errors.forbidden('Admin record not found');
+  }
+
   const { title, opensAt, closesAt, choices } = body;
+  const description = typeof body.description === 'string' ? body.description.trim() : null;
   const minChoices = body.minChoices ?? ELECTION_MIN_CHOICES_MIN;
   const maxChoices = body.maxChoices ?? ELECTION_MIN_CHOICES_MIN;
   const restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
@@ -550,6 +634,11 @@ export async function POST(req: NextRequest) {
   }
   if (title.length > ELECTION_TITLE_MAX_LENGTH) {
     return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
+  }
+  if (description && description.length > ELECTION_DESCRIPTION_MAX_LENGTH) {
+    return Errors.badRequest(
+      `Description must be at most ${ELECTION_DESCRIPTION_MAX_LENGTH} characters`,
+    );
   }
   if (choices.length < ELECTION_CHOICES_MIN) {
     if (ELECTION_CHOICES_MIN === 1) {
@@ -783,11 +872,19 @@ export async function POST(req: NextRequest) {
   // ── Create election ────────────────────────────────────────────────────────
   const { publicKey, privateKey } = generateElectionKeyPair();
   const encryptedPrivateKey = encryptField(privateKey);
+  const encryptedCreatedByName = encryptField(admin.full_name);
 
   const election = await prisma.election.create({
     data: {
+      type: 'ELECTION',
       title,
+      description,
       created_by: user.sub,
+      created_by_full_name: encryptedCreatedByName,
+      approved: true,
+      approved_by_id: user.sub,
+      approved_by_full_name: encryptedCreatedByName,
+      approved_at: now,
       created_at: now,
       opens_at: now > openDate ? now : openDate,
       closes_at: closeDate,
@@ -826,7 +923,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(
     {
       id: election.id,
+      type: election.type,
       title: election.title,
+      description: election.description,
       createdAt: election.created_at,
       opensAt: election.opens_at,
       closesAt: election.closes_at,
@@ -839,13 +938,134 @@ export async function POST(req: NextRequest) {
       anonymous,
       status: computeStatus(election.opens_at, election.closes_at),
       publicKey: election.public_key,
-      creator: { fullName: admin.full_name, faculty: admin.faculty },
+      createdBy: { userId: user.sub, fullName: admin.full_name },
+      approved: true,
+      approvedBy: { userId: user.sub, fullName: admin.full_name },
+      approvedAt: election.approved_at?.toISOString() ?? null,
       choices: responseChoices,
       ballotCount: 0,
       deletedAt: null,
       deletedBy: null,
       canDelete: true,
       canRestore: false,
+    },
+    { status: 201 },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Petition creation (delegated from POST)
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a petition.  Non-admin users may call this path; admins with
+ * `manage_petitions` have petitions auto-approved on creation.
+ *
+ * Petitions ignore most body fields: they always have a single
+ * `PETITION_SUPPORT_CHOICE_LABEL` choice, no restrictions, public viewing,
+ * non-anonymous, fixed quorum.  Unapproved petitions open immediately but
+ * close at `createdAt` (effectively closed) until an admin approves — the
+ * approve endpoint resets opens_at/closes_at.
+ */
+async function handlePetitionCreate(
+  user: { sub: string; fullName: string; isAdmin?: boolean; managePetitions?: boolean },
+  body: { title?: string; description?: string | null },
+) {
+  const title = typeof body.title === 'string' ? body.title.trim() : '';
+  const description = typeof body.description === 'string' ? body.description.trim() : '';
+
+  if (!title) return Errors.badRequest('title is required');
+  if (title.length > ELECTION_TITLE_MAX_LENGTH) {
+    return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
+  }
+  if (!description) return Errors.badRequest('description is required for petitions');
+  if (description.length > ELECTION_DESCRIPTION_MAX_LENGTH) {
+    return Errors.badRequest(
+      `Description must be at most ${ELECTION_DESCRIPTION_MAX_LENGTH} characters`,
+    );
+  }
+
+  const isAdmin = user.isAdmin ?? false;
+  const canAutoApprove = isAdmin && (user.managePetitions ?? false);
+  const now = new Date();
+
+  const { publicKey, privateKey } = generateElectionKeyPair();
+  const encryptedPrivateKey = encryptField(privateKey);
+  const encryptedCreatedByName = encryptField(user.fullName);
+
+  // Winning conditions: single choice, quorum 250, no hasMostVotes.
+  const winningConditions: WinningConditions = {
+    hasMostVotes: false,
+    reachesPercentage: null,
+    reachesVotes: null,
+    quorum: PETITION_QUORUM,
+  };
+
+  const opensAt = now;
+  const closesAt = canAutoApprove ? computePetitionClosesAt(now) : now;
+
+  const election = await prisma.election.create({
+    data: {
+      type: 'PETITION',
+      title,
+      description,
+      created_by: user.sub,
+      created_by_full_name: encryptedCreatedByName,
+      approved: canAutoApprove,
+      approved_by_id: canAutoApprove ? user.sub : null,
+      approved_by_full_name: canAutoApprove ? encryptedCreatedByName : null,
+      approved_at: canAutoApprove ? now : null,
+      created_at: now,
+      opens_at: opensAt,
+      closes_at: closesAt,
+      min_choices: 1,
+      max_choices: 1,
+      public_key: publicKey,
+      private_key: encryptedPrivateKey,
+      winning_conditions: winningConditions,
+      shuffle_choices: false,
+      public_viewing: true,
+      anonymous: false,
+      choices: {
+        create: [{ choice: PETITION_SUPPORT_CHOICE_LABEL, position: 0 }],
+      },
+    },
+    include: {
+      choices: { orderBy: { position: 'asc' } },
+      restrictions: { select: { type: true, value: true } },
+    },
+  });
+
+  await invalidateElections();
+
+  return NextResponse.json(
+    {
+      id: election.id,
+      type: election.type,
+      title: election.title,
+      description: election.description,
+      createdAt: election.created_at,
+      opensAt: election.opens_at,
+      closesAt: election.closes_at,
+      minChoices: election.min_choices,
+      maxChoices: election.max_choices,
+      restrictions: [],
+      winningConditions,
+      shuffleChoices: false,
+      publicViewing: true,
+      anonymous: false,
+      status: computeStatus(election.opens_at, election.closes_at),
+      publicKey: election.public_key,
+      createdBy: { userId: user.sub, fullName: user.fullName },
+      approved: canAutoApprove,
+      approvedBy: canAutoApprove ? { userId: user.sub, fullName: user.fullName } : null,
+      approvedAt: election.approved_at?.toISOString() ?? null,
+      choices: election.choices.map((c) => ({
+        id: c.id,
+        choice: c.choice,
+        position: c.position,
+      })),
+      ballotCount: 0,
     },
     { status: 201 },
   );

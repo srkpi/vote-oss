@@ -122,7 +122,8 @@ function matchesSearch(election: Election, query: string): boolean {
   if (!query) return true;
   const q = query.toLowerCase();
   return (
-    election.title.toLowerCase().includes(q) || election.creator.fullName.toLowerCase().includes(q)
+    election.title.toLowerCase().includes(q) ||
+    election.createdBy.fullName.toLowerCase().includes(q)
   );
 }
 

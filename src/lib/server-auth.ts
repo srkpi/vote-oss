@@ -33,5 +33,6 @@ export async function getServerSession(): Promise<User | null> {
     restrictedToFaculty: !isAdmin || h.get('x-user-restricted-to-faculty') === 'true',
     manageAdmins: isAdmin && h.get('x-user-manage-admins') === 'true',
     manageGroups: isAdmin && h.get('x-user-manage-groups') === 'true',
+    managePetitions: isAdmin && h.get('x-user-manage-petitions') === 'true',
   };
 }

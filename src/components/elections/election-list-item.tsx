@@ -90,7 +90,7 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
             <User className="h-3.5 w-3.5 shrink-0" />
-            {election.creator.fullName}
+            {election.createdBy.fullName}
           </span>
           <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
             <Calendar className="h-3.5 w-3.5 shrink-0" />

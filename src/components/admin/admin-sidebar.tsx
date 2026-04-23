@@ -6,6 +6,7 @@ import {
   Key,
   LayoutGrid,
   LogOut,
+  Megaphone,
   Settings,
   ShieldCheck,
   Users,
@@ -59,6 +60,13 @@ const GROUPS_NAV_ITEM = {
   icon: <UsersRound className="h-4 w-4" />,
 };
 
+const PETITIONS_NAV_ITEM = {
+  label: 'Петиції',
+  href: '/admin/petitions',
+  exact: true,
+  icon: <Megaphone className="h-4 w-4" />,
+};
+
 const FAQ_NAV_ITEM = {
   label: 'FAQ',
   href: '/admin/faq',
@@ -69,12 +77,14 @@ const FAQ_NAV_ITEM = {
 interface AdminSidebarProps {
   manageAdmins?: boolean;
   manageGroups?: boolean;
+  managePetitions?: boolean;
   restrictedToFaculty?: boolean;
 }
 
 export function AdminSidebar({
   manageAdmins = false,
   manageGroups = false,
+  managePetitions = false,
   restrictedToFaculty = true,
 }: AdminSidebarProps) {
   const pathname = usePathname();
@@ -91,6 +101,10 @@ export function AdminSidebar({
 
   if (manageGroups) {
     navItems.push(GROUPS_NAV_ITEM);
+  }
+
+  if (managePetitions) {
+    navItems.push(PETITIONS_NAV_ITEM);
   }
 
   const isActive = (href: string, exact: boolean) =>

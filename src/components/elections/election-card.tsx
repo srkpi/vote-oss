@@ -125,7 +125,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <User className="text-kpi-gray-mid h-4 w-4 shrink-0" />
-            <span>{election.creator.fullName}</span>
+            <span>{election.createdBy.fullName}</span>
           </div>
         </div>
 

@@ -53,7 +53,10 @@ export function createApiClient(fetcher: Fetcher) {
     },
 
     elections: {
-      list: () => fetcher<ElectionsListResponse>('/elections'),
+      list: (params?: { type?: 'ELECTION' | 'PETITION' }) => {
+        const qs = params?.type ? `?type=${params.type}` : '';
+        return fetcher<ElectionsListResponse>(`/elections${qs}`);
+      },
       get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
       og: (id: string) => fetcher<{ title: string }>(`/elections/${id}/og`),
       create: (data: CreateElectionRequest) =>
@@ -63,6 +66,11 @@ export function createApiClient(fetcher: Fetcher) {
         }),
       delete: (id: string) => fetcher<void>(`/elections/${id}`, { method: 'DELETE' }),
       restore: (id: string) => fetcher<void>(`/elections/${id}/restore`, { method: 'POST' }),
+      approve: (id: string) =>
+        fetcher<{ id: string; approved: true; approvedAt: string; closesAt: string }>(
+          `/elections/${id}/approve`,
+          { method: 'POST' },
+        ),
 
       getVoteToken: (electionId: string) =>
         fetcher<VoteToken>(`/elections/${electionId}/token`, { method: 'POST' }),
@@ -100,7 +108,12 @@ export function createApiClient(fetcher: Fetcher) {
       delete: (userId: string) => fetcher<void>(`/admins/${userId}`, { method: 'DELETE' }),
       patch: (
         userId: string,
-        data: { manageAdmins?: boolean; manageGroups?: boolean; restrictedToFaculty?: boolean },
+        data: {
+          manageAdmins?: boolean;
+          manageGroups?: boolean;
+          managePetitions?: boolean;
+          restrictedToFaculty?: boolean;
+        },
       ) =>
         fetcher<void>(`/admins/${userId}`, {
           method: 'PATCH',

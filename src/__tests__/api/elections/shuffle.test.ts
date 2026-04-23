@@ -62,7 +62,9 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
   const e = makeElection(overrides);
   return {
     id: e.id,
+    type: e.type,
     title: e.title,
+    description: e.description,
     createdAt: e.created_at.toISOString(),
     opensAt: e.opens_at.toISOString(),
     closesAt: e.closes_at.toISOString(),
@@ -71,7 +73,11 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
     maxChoices: e.max_choices,
     publicKey: e.public_key,
     privateKey: e.private_key,
-    creator: e.creator,
+    createdByFullName: e.created_by_full_name,
+    approved: e.approved,
+    approvedById: e.approved_by_id,
+    approvedByFullName: e.approved_by_full_name,
+    approvedAt: e.approved_at?.toISOString() ?? null,
     choices: e.choices.map((c) => ({ ...c, voteCount: c.vote_count ?? null })),
     ballotCount: 0,
     createdBy: e.created_by,

@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
     tokenPayload.manageAdmins = adminRecord.manage_admins;
     tokenPayload.restrictedToFaculty = adminRecord.restricted_to_faculty;
     tokenPayload.manageGroups = adminRecord.manage_groups;
+    tokenPayload.managePetitions = adminRecord.manage_petitions;
   }
 
   const [{ token: accessToken, jti: accessJti }, { token: refreshToken, jti: refreshJti }] =

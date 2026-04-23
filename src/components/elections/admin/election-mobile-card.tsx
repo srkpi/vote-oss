@@ -32,7 +32,7 @@ export function ElectionMobileCard({
         {election.title}
       </p>
       <p className="font-body text-muted-foreground/60 mt-0.5 text-xs">
-        {election.creator.fullName}
+        {election.createdBy.fullName}
       </p>
       {isDeleted && election.deletedBy && (
         <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 text-xs">

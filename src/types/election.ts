@@ -1,6 +1,13 @@
 import type { Prisma } from '@prisma/client';
 
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';
+/**
+ * Discriminates regular elections from petitions.  Most fields on the
+ * Election interface are shared, but PETITION-type records are subject to
+ * additional invariants (single "Підтримати" choice, non-anonymous, fixed
+ * quorum, admin-approval workflow for non-admin creators).
+ */
+export type ElectionType = 'ELECTION' | 'PETITION';
 export type RestrictionType =
   | 'FACULTY'
   | 'GROUP'
@@ -42,9 +49,14 @@ export interface CachedElectionChoice extends ElectionChoice {
   voteCount: number | null;
 }
 
-export interface ElectionCreator {
+/**
+ * Reference to a user who authored an election or petition.  For petitions
+ * this user may be a regular (non-admin) student, so `userId` is intentionally
+ * not constrained to the Admin table.
+ */
+export interface ElectionAuthor {
+  userId: string;
   fullName: string;
-  faculty: string;
 }
 
 export interface ElectionDeleter {
@@ -109,7 +121,9 @@ export interface ElectionRestrictedGroups {
 
 export interface Election {
   id: string;
+  type: ElectionType;
   title: string;
+  description: string | null;
   createdAt: string;
   opensAt: string;
   closesAt: string;
@@ -120,7 +134,12 @@ export interface Election {
   anonymous: boolean;
   minChoices: number;
   maxChoices: number;
-  creator: ElectionCreator;
+  /** Decoupled from the Admin table so that regular users can create petitions. */
+  createdBy: ElectionAuthor;
+  /** Petition approval metadata.  `approved=true` for all non-petition elections. */
+  approved: boolean;
+  approvedBy: ElectionAuthor | null;
+  approvedAt: string | null;
   choices: ElectionChoice[];
   publicViewing: boolean;
   ballotCount: number;
@@ -149,7 +168,9 @@ export interface ElectionDetail extends Election {
 
 export interface CachedElection {
   id: string;
+  type: ElectionType;
   title: string;
+  description: string | null;
   createdAt: string;
   opensAt: string;
   closesAt: string;
@@ -158,12 +179,18 @@ export interface CachedElection {
   maxChoices: number;
   publicKey: string;
   privateKey: string;
-  creator: ElectionCreator;
+  /** Decrypted at cache-populate time; safe to serve directly to clients. */
+  createdByFullName: string;
   choices: CachedElectionChoice[];
   publicViewing: boolean;
   anonymous: boolean;
   ballotCount: number;
   createdBy: string;
+  approved: boolean;
+  approvedById: string | null;
+  /** Decrypted at cache-populate time; safe to serve directly to clients. */
+  approvedByFullName: string | null;
+  approvedAt: string | null;
   deletedAt: string | null;
   deletedByUserId: string | null;
   deletedByName: string | null;
@@ -183,23 +210,30 @@ export interface CreateElectionRestriction {
 }
 
 export interface CreateElectionRequest {
+  /** Defaults to ELECTION when omitted. Only admins with `manage_petitions` (or self-approved as creator) can set PETITION; for non-admin users, the server coerces this to PETITION regardless of payload. */
+  type?: ElectionType;
   title: string;
-  opensAt: string;
-  closesAt: string;
-  choices: string[];
+  description?: string | null;
+  /** Ignored for PETITION (server fills with PETITION_OPEN_MONTHS on approval). */
+  opensAt?: string;
+  closesAt?: string;
+  /** Ignored for PETITION (server seeds single PETITION_SUPPORT_CHOICE_LABEL). */
+  choices?: string[];
   minChoices?: number;
   maxChoices?: number;
   restrictions?: CreateElectionRestriction[];
   winningConditions?: Partial<WinningConditions>;
   shuffleChoices?: boolean;
   publicViewing?: boolean;
-  /** Defaults to `true` (anonymous) when omitted. */
+  /** Defaults to `true` (anonymous) when omitted. Forced to `false` for PETITION. */
   anonymous?: boolean;
 }
 
 export interface CreateElectionResponse {
   id: string;
+  type: ElectionType;
   title: string;
+  description: string | null;
   opensAt: string;
   closesAt: string;
   minChoices: number;
@@ -210,6 +244,8 @@ export interface CreateElectionResponse {
   winningConditions: WinningConditions;
   shuffleChoices: boolean;
   anonymous: boolean;
+  approved: boolean;
+  approvedAt: string | null;
 }
 
 // ---------------------------------------------------------------------------

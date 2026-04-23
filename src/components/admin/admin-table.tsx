@@ -26,10 +26,16 @@ interface AdminTableProps {
   canManageAdmins: boolean;
   callerRestrictedToFaculty: boolean;
   callerManageGroups: boolean;
+  callerManagePetitions: boolean;
   onDelete: (userId: string) => void;
   onUpdate: (
     userId: string,
-    updates: { manageAdmins: boolean; manageGroups: boolean; restrictedToFaculty: boolean },
+    updates: {
+      manageAdmins: boolean;
+      manageGroups: boolean;
+      managePetitions: boolean;
+      restrictedToFaculty: boolean;
+    },
   ) => void;
 }
 
@@ -39,6 +45,7 @@ export function AdminTable({
   canManageAdmins,
   callerRestrictedToFaculty,
   callerManageGroups,
+  callerManagePetitions,
   onDelete,
   onUpdate,
 }: AdminTableProps) {
@@ -147,6 +154,7 @@ export function AdminTable({
           admin={editTarget}
           callerRestrictedToFaculty={callerRestrictedToFaculty}
           callerManageGroups={callerManageGroups}
+          callerManagePetitions={callerManagePetitions}
           onUpdate={(userId, updates) => {
             onUpdate(userId, updates);
             setEditTarget(null);
