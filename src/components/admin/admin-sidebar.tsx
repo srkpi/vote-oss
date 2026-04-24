@@ -78,6 +78,7 @@ interface AdminSidebarProps {
   manageAdmins?: boolean;
   manageGroups?: boolean;
   managePetitions?: boolean;
+  manageFaq?: boolean;
   restrictedToFaculty?: boolean;
 }
 
@@ -85,6 +86,7 @@ export function AdminSidebar({
   manageAdmins = false,
   manageGroups = false,
   managePetitions = false,
+  manageFaq = false,
   restrictedToFaculty = true,
 }: AdminSidebarProps) {
   const pathname = usePathname();
@@ -96,7 +98,6 @@ export function AdminSidebar({
 
   if (!restrictedToFaculty) {
     navItems.push(BYPASS_NAV_ITEM);
-    navItems.push(FAQ_NAV_ITEM);
   }
 
   if (manageGroups) {
@@ -105,6 +106,10 @@ export function AdminSidebar({
 
   if (managePetitions) {
     navItems.push(PETITIONS_NAV_ITEM);
+  }
+
+  if (manageFaq) {
+    navItems.push(FAQ_NAV_ITEM);
   }
 
   const isActive = (href: string, exact: boolean) =>

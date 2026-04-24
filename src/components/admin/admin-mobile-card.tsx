@@ -88,6 +88,11 @@ export function AdminMobileCard({
             Петиції
           </Badge>
         )}
+        {admin.manageFaq && (
+          <Badge variant="default" size="sm">
+            FAQ
+          </Badge>
+        )}
         {admin.restrictedToFaculty && (
           <Badge variant="error" size="sm">
             Обмежений до підрозділу
@@ -96,7 +101,8 @@ export function AdminMobileCard({
         {!admin.manageAdmins &&
           !admin.manageGroups &&
           !admin.managePetitions &&
-          !admin.restrictedToFaculty && (
+          !admin.restrictedToFaculty &&
+          !admin.manageFaq && (
             <Badge variant="default" size="sm">
               Базові
             </Badge>

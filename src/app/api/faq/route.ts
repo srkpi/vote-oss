@@ -64,7 +64,7 @@ export async function GET() {
  *     summary: Create a FAQ category
  *     description: >
  *       Creates a new FAQ category appended at the end of the existing order.
- *       Restricted to non-faculty-restricted (root) admins.
+ *       Restricted to admins with the `manage_faq` permission.
  *     tags:
  *       - FAQ
  *     security:
@@ -87,7 +87,7 @@ export async function GET() {
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – restricted admins cannot manage FAQ
+ *         description: Forbidden – admin does not have FAQ management rights
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -97,8 +97,8 @@ export async function POST(req: NextRequest) {
 
   const { admin, user } = auth;
 
-  if (admin.restricted_to_faculty) {
-    return Errors.forbidden('Only non restricted admins can manage FAQ');
+  if (!admin.manage_faq) {
+    return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
   let body: { title?: string };

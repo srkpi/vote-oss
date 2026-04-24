@@ -12,7 +12,7 @@ import { prisma } from '@/lib/prisma';
  * /api/faq/categories/{id}:
  *   put:
  *     summary: Update a FAQ category title
- *     description: Renames the specified FAQ category. Root admins only.
+ *     description: Renames the specified FAQ category. Requires the `manage_faq` permission.
  *     tags:
  *       - FAQ
  *     security:
@@ -54,8 +54,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { admin, user } = auth;
 
-  if (admin.restricted_to_faculty) {
-    return Errors.forbidden('Only non restricted admins can manage FAQ');
+  if (!admin.manage_faq) {
+    return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
   const { id } = await params;
@@ -108,7 +108,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
  * /api/faq/categories/{id}:
  *   delete:
  *     summary: Delete a FAQ category
- *     description: Permanently deletes the category and all its items. Root admins only.
+ *     description: Permanently deletes the category and all its items. Requires the `manage_faq` permission.
  *     tags:
  *       - FAQ
  *     security:
@@ -138,8 +138,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { admin } = auth;
 
-  if (admin.restricted_to_faculty) {
-    return Errors.forbidden('Only non restricted admins can manage FAQ');
+  if (!admin.manage_faq) {
+    return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
   const { id } = await params;

@@ -32,6 +32,7 @@ interface InviteAdminDialogProps {
   canGrantManageAdmins: boolean;
   canGrantManageGroups: boolean;
   canGrantManagePetitions: boolean;
+  canGrantManageFaq: boolean;
   restrictedToFaculty: boolean;
 }
 
@@ -41,6 +42,7 @@ export function InviteAdminDialog({
   canGrantManageAdmins,
   canGrantManageGroups,
   canGrantManagePetitions,
+  canGrantManageFaq,
   restrictedToFaculty,
 }: InviteAdminDialogProps) {
   const { toast } = useToast();
@@ -64,6 +66,7 @@ export function InviteAdminDialog({
     manageAdmins: false,
     manageGroups: false,
     managePetitions: false,
+    manageFaq: false,
     restrictedToFaculty: true,
   });
 
@@ -77,6 +80,7 @@ export function InviteAdminDialog({
       manageAdmins: form.manageAdmins,
       manageGroups: form.manageGroups,
       managePetitions: form.managePetitions,
+      manageFaq: form.manageFaq,
       restrictedToFaculty: form.restrictedToFaculty,
     });
 
@@ -117,6 +121,7 @@ export function InviteAdminDialog({
       manageAdmins: false,
       manageGroups: false,
       managePetitions: false,
+      manageFaq: false,
       restrictedToFaculty: restrictedToFaculty,
     });
     onClose();
@@ -166,14 +171,6 @@ export function InviteAdminDialog({
 
               <div className="space-y-3">
                 <ToggleField
-                  label="Обмежити підрозділом"
-                  description="Новий адмін зможе керувати опитуваннями лише свого підрозділу"
-                  checked={form.restrictedToFaculty}
-                  onChange={(v) => setForm((p) => ({ ...p, restrictedToFaculty: v }))}
-                  disabled={restrictedToFaculty}
-                />
-
-                <ToggleField
                   label="Керувати адмінами"
                   description="Дозволити запрошеному адміну запрошувати інших"
                   checked={form.manageAdmins}
@@ -203,6 +200,26 @@ export function InviteAdminDialog({
                   checked={form.managePetitions}
                   onChange={(v) => setForm((p) => ({ ...p, managePetitions: v }))}
                   disabled={!canGrantManagePetitions}
+                />
+
+                <ToggleField
+                  label="Редагування FAQ"
+                  description={
+                    !canGrantManageFaq
+                      ? 'Ви не маєте цього права, тому не можете його передати'
+                      : 'Дозволити редагувати FAQ'
+                  }
+                  checked={form.manageFaq}
+                  onChange={(v) => setForm((p) => ({ ...p, manageFaq: v }))}
+                  disabled={!canGrantManageFaq}
+                />
+
+                <ToggleField
+                  label="Обмежити підрозділом"
+                  description="Новий адмін зможе керувати опитуваннями лише свого підрозділу"
+                  checked={form.restrictedToFaculty}
+                  onChange={(v) => setForm((p) => ({ ...p, restrictedToFaculty: v }))}
+                  disabled={restrictedToFaculty}
                 />
               </div>
             </>

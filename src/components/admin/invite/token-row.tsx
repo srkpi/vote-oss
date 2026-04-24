@@ -38,19 +38,38 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
         <div className="flex flex-wrap gap-1.5">
           {token.manageAdmins && (
             <Badge variant="info" size="sm">
-              Керування адмінами
+              Адміни
+            </Badge>
+          )}
+          {token.manageGroups && (
+            <Badge variant="success" size="sm">
+              Групи
+            </Badge>
+          )}
+          {token.managePetitions && (
+            <Badge variant="warning" size="sm">
+              Петиції
+            </Badge>
+          )}
+          {token.manageFaq && (
+            <Badge variant="default" size="sm">
+              FAQ
             </Badge>
           )}
           {token.restrictedToFaculty && (
-            <Badge variant="warning" size="sm">
-              Керувати підрозділом
+            <Badge variant="error" size="sm">
+              Обмежений до підрозділу
             </Badge>
           )}
-          {!token.manageAdmins && !token.restrictedToFaculty && (
-            <Badge variant="default" size="sm">
-              Базові
-            </Badge>
-          )}
+          {!token.manageAdmins &&
+            !token.manageGroups &&
+            !token.managePetitions &&
+            !token.restrictedToFaculty &&
+            !token.manageFaq && (
+              <Badge variant="default" size="sm">
+                Базові
+              </Badge>
+            )}
         </div>
       </td>
 

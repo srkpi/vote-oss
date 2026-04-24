@@ -15,7 +15,7 @@ import { deltaToPlainText, parseQuillDelta } from '@/lib/utils/common';
  *     summary: Update a FAQ item
  *     description: >
  *       Replaces the title and content of an existing FAQ item. Content must
- *       be a valid serialised Quill Delta JSON string. Root admins only.
+ *       be a valid serialised Quill Delta JSON string. Requires the `manage_faq` permission.
  *     tags:
  *       - FAQ
  *     security:
@@ -57,8 +57,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { admin, user } = auth;
 
-  if (admin.restricted_to_faculty) {
-    return Errors.forbidden('Only non restricted admins can manage FAQ');
+  if (!admin.manage_faq) {
+    return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
   const { id } = await params;
@@ -132,7 +132,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
  * /api/faq/items/{id}:
  *   delete:
  *     summary: Delete a FAQ item
- *     description: Permanently deletes the specified FAQ item. Root admins only.
+ *     description: Permanently deletes the specified FAQ item. Requires the `manage_faq` permission.
  *     tags:
  *       - FAQ
  *     security:
@@ -162,8 +162,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { admin } = auth;
 
-  if (admin.restricted_to_faculty) {
-    return Errors.forbidden('Only non restricted admins can manage FAQ');
+  if (!admin.manage_faq) {
+    return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
   const { id } = await params;

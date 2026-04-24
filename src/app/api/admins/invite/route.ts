@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
         manage_admins: true,
         manage_groups: true,
         manage_petitions: true,
+        manage_faq: true,
         restricted_to_faculty: true,
         valid_due: true,
         created_at: true,
@@ -79,6 +80,7 @@ export async function GET(req: NextRequest) {
       manageAdmins: t.manage_admins,
       manageGroups: t.manage_groups,
       managePetitions: t.manage_petitions,
+      manageFaq: t.manage_faq,
       restrictedToFaculty: t.restricted_to_faculty,
       validDue: t.valid_due.toISOString(),
       createdAt: t.created_at.toISOString(),
@@ -183,6 +185,7 @@ export async function POST(req: NextRequest) {
     manageAdmins?: boolean;
     manageGroups?: boolean;
     managePetitions?: boolean;
+    manageFaq?: boolean;
     restrictedToFaculty?: boolean;
     validDue?: string;
   };
@@ -198,6 +201,7 @@ export async function POST(req: NextRequest) {
     manageAdmins = false,
     manageGroups = false,
     managePetitions = false,
+    manageFaq = false,
     validDue,
   } = body;
   let { restrictedToFaculty = true } = body;
@@ -234,6 +238,11 @@ export async function POST(req: NextRequest) {
     return Errors.forbidden('Cannot grant manage_petitions permission you do not have');
   }
 
+  // manage_faq can only be granted by admins who themselves have manage_faq
+  if (manageFaq && !admin.manage_faq) {
+    return Errors.forbidden('Cannot grant manage_faq permission you do not have');
+  }
+
   if (admin.restricted_to_faculty) {
     restrictedToFaculty = true;
   }
@@ -264,6 +273,7 @@ export async function POST(req: NextRequest) {
       manage_admins: manageAdmins,
       manage_groups: manageGroups,
       manage_petitions: managePetitions,
+      manage_faq: manageFaq,
       restricted_to_faculty: restrictedToFaculty,
       valid_due: validDueDate,
       created_at: now,
@@ -280,6 +290,7 @@ export async function POST(req: NextRequest) {
       manageAdmins,
       manageGroups,
       managePetitions,
+      manageFaq,
       restrictedToFaculty,
       validDue: validDueDate,
     },

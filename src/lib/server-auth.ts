@@ -34,5 +34,6 @@ export async function getServerSession(): Promise<User | null> {
     manageAdmins: isAdmin && h.get('x-user-manage-admins') === 'true',
     manageGroups: isAdmin && h.get('x-user-manage-groups') === 'true',
     managePetitions: isAdmin && h.get('x-user-manage-petitions') === 'true',
+    manageFaq: isAdmin && h.get('x-user-manage-faq') === 'true',
   };
 }

@@ -147,7 +147,7 @@ describe('POST /api/faq (create category)', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 403 when admin is not a root admin (has promoted_by)', async () => {
+  it('returns 403 when admin does not have FAQ management rights', async () => {
     const req = await restrictedAdminReq({ title: 'Test' });
     const res = await POST(req);
     expect(res.status).toBe(403);

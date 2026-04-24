@@ -28,6 +28,7 @@ model Admin {
   manage_admins         Boolean   @default(false)
   manage_groups         Boolean   @default(false)
   manage_petitions      Boolean   @default(false)
+  manage_faq            Boolean   @default(false)
   restricted_to_faculty Boolean   @default(true)
   deleted_at            DateTime?
   deleted_by            String?
@@ -58,6 +59,7 @@ model AdminInviteToken {
   manage_admins         Boolean  @default(false)
   manage_groups         Boolean  @default(false)
   manage_petitions      Boolean  @default(false)
+  manage_faq            Boolean  @default(false)
   restricted_to_faculty Boolean  @default(true)
   valid_due             DateTime
   created_at            DateTime @default(now())

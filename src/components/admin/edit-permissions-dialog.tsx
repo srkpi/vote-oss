@@ -25,12 +25,14 @@ interface EditPermissionsDialogProps {
   callerRestrictedToFaculty: boolean;
   callerManageGroups: boolean;
   callerManagePetitions: boolean;
+  callerManageFaq: boolean;
   onUpdate: (
     userId: string,
     updates: {
       manageAdmins: boolean;
       manageGroups: boolean;
       managePetitions: boolean;
+      manageFaq: boolean;
       restrictedToFaculty: boolean;
     },
   ) => void;
@@ -43,6 +45,7 @@ export function EditPermissionsDialog({
   callerRestrictedToFaculty,
   callerManageGroups,
   callerManagePetitions,
+  callerManageFaq,
   onUpdate,
 }: EditPermissionsDialogProps) {
   const { toast } = useToast();
@@ -50,6 +53,7 @@ export function EditPermissionsDialog({
   const [manageAdmins, setManageAdmins] = useState(admin.manageAdmins);
   const [manageGroups, setManageGroups] = useState(admin.manageGroups);
   const [managePetitions, setManagePetitions] = useState(admin.managePetitions);
+  const [manageFaq, setManageFaq] = useState(admin.manageFaq);
   const [restrictedToFaculty, setRestrictedToFaculty] = useState(admin.restrictedToFaculty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +62,7 @@ export function EditPermissionsDialog({
     manageAdmins !== admin.manageAdmins ||
     manageGroups !== admin.manageGroups ||
     managePetitions !== admin.managePetitions ||
+    manageFaq !== admin.manageFaq ||
     restrictedToFaculty !== admin.restrictedToFaculty;
 
   const handleSubmit = async () => {
@@ -73,6 +78,7 @@ export function EditPermissionsDialog({
       manageAdmins,
       manageGroups,
       managePetitions,
+      manageFaq,
       restrictedToFaculty,
     });
 
@@ -81,6 +87,7 @@ export function EditPermissionsDialog({
         manageAdmins,
         manageGroups,
         managePetitions,
+        manageFaq,
         restrictedToFaculty,
       });
       toast({
@@ -102,6 +109,7 @@ export function EditPermissionsDialog({
     setManageAdmins(admin.manageAdmins);
     setManageGroups(admin.manageGroups);
     setManagePetitions(admin.managePetitions);
+    setManageFaq(admin.manageFaq);
     setRestrictedToFaculty(admin.restrictedToFaculty);
     onClose();
   };
@@ -151,6 +159,18 @@ export function EditPermissionsDialog({
               checked={managePetitions}
               onChange={setManagePetitions}
               disabled={!callerManagePetitions}
+            />
+
+            <ToggleField
+              label="Редагування FAQ"
+              description={
+                !callerManageFaq
+                  ? 'Ви не можете надати цей дозвіл, оскільки самі його не маєте'
+                  : 'Дозволяє редагувати FAQ'
+              }
+              checked={manageFaq}
+              onChange={setManageFaq}
+              disabled={!callerManageFaq}
             />
 
             <ToggleField

@@ -117,6 +117,7 @@ export function createApiClient(fetcher: Fetcher) {
           manageAdmins?: boolean;
           manageGroups?: boolean;
           managePetitions?: boolean;
+          manageFaq?: boolean;
           restrictedToFaculty?: boolean;
         },
       ) =>
