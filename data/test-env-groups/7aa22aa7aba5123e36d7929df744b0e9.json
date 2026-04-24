@@ -1,1 +1,1 @@
-{"id":"7aa22aa7aba5123e36d7929df744b0e9","fullName":"src/__tests__/lib/cache.test.ts#cache getCachedElections returns null on a cache miss","name":"returns null on a cache miss","status":"passed","testResultsByEnv":{"default":"1bd8e69cb1ba78de91d0ff3c799fe5b3"}}
+{"id":"7aa22aa7aba5123e36d7929df744b0e9","fullName":"src/__tests__/lib/cache.test.ts#cache getCachedElections returns null on a cache miss","name":"returns null on a cache miss","status":"passed","testResultsByEnv":{"default":"7f848bfb87d5c6b2b93b617060790cd3"}}

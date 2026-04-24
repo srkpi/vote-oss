@@ -1,1 +1,1 @@
-{"id":"8d7c07e00c1787fb5163a8b835749c3b","fullName":"src/__tests__/lib/cache.test.ts#cache getCachedElections uses the correct cache key","name":"uses the correct cache key","status":"passed","testResultsByEnv":{"default":"eb9d5cab39973942e46e81723d3cacc9"}}
+{"id":"8d7c07e00c1787fb5163a8b835749c3b","fullName":"src/__tests__/lib/cache.test.ts#cache getCachedElections uses the correct cache key","name":"uses the correct cache key","status":"passed","testResultsByEnv":{"default":"127d997b71daeda29c5df33078b7f86f"}}

@@ -1,1 +1,1 @@
-{"id":"6e9a77e985c6bcdb0a9177c918a88c40","fullName":"src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/items/[id] returns 404 when item does not exist","name":"returns 404 when item does not exist","status":"passed","testResultsByEnv":{"default":"7bcbaa394e4daa74502fa5a08d665f3b"}}
+{"id":"6e9a77e985c6bcdb0a9177c918a88c40","fullName":"src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/items/[id] returns 404 when item does not exist","name":"returns 404 when item does not exist","status":"passed","testResultsByEnv":{"default":"9a9e4d6f026d8c1c4496223be979c67c"}}

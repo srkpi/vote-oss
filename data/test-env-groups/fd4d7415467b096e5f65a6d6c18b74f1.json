@@ -1,1 +1,1 @@
-{"id":"fd4d7415467b096e5f65a6d6c18b74f1","fullName":"src/__tests__/api/info/info.test.ts#GET /api/info returns app info","name":"returns app info","status":"passed","testResultsByEnv":{"default":"2472bd0369539d742b90507daa52bd33"}}
+{"id":"fd4d7415467b096e5f65a6d6c18b74f1","fullName":"src/__tests__/api/info/info.test.ts#GET /api/info returns app info","name":"returns app info","status":"passed","testResultsByEnv":{"default":"aa70e006d9f662750dbba90f24d0236f"}}
