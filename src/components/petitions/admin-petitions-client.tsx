@@ -52,7 +52,7 @@ function PetitionStatusBadge({
   if (petition.deletedAt) {
     return (
       <Badge variant="secondary" size={size}>
-        Видалена
+        Видалене
       </Badge>
     );
   }
@@ -70,13 +70,13 @@ function PetitionStatusBadge({
       </Badge>
     ) : (
       <Badge variant="secondary" size={size}>
-        Закрита
+        Закрите
       </Badge>
     );
   }
   return (
     <Badge variant="success" size={size}>
-      Активна
+      Активне
     </Badge>
   );
 }

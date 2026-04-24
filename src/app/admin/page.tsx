@@ -227,11 +227,11 @@ export default async function AdminDashboardPage() {
                           </Badge>
                         ) : petition.status === 'closed' ? (
                           <Badge variant="secondary" size="sm">
-                            Закрита
+                            Завершено
                           </Badge>
                         ) : (
                           <Badge variant="success" size="sm">
-                            Активна
+                            Активне
                           </Badge>
                         )}
                         <span className="font-body text-muted-foreground hidden text-xs sm:inline">

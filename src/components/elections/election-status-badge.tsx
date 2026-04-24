@@ -12,7 +12,7 @@ export function ElectionStatusBadge({ status, size = 'md', muted }: ElectionStat
   const config = {
     upcoming: { variant: 'warning' as const, dot: true },
     open: { variant: 'success' as const, dot: false },
-    closed: { variant: 'default' as const, dot: false },
+    closed: { variant: 'secondary' as const, dot: false },
   };
 
   return (
