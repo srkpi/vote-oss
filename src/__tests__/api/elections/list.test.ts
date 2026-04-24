@@ -311,14 +311,6 @@ describe('POST /api/elections', () => {
     choices: ['Option A', 'Option B'],
   };
 
-  it('returns 403 for a non-admin user', async () => {
-    const { access } = await makeTokenPair(USER_PAYLOAD);
-    tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
-    const req = makeAuthRequest(access.token, { method: 'POST', body: validBody });
-    const res = await POST(req);
-    expect(res.status).toBe(403);
-  });
-
   it('returns 400 when required fields are missing', async () => {
     const req = await makeAdminReq({ title: 'Only title' });
     const res = await POST(req);

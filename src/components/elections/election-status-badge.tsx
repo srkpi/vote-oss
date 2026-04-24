@@ -6,9 +6,15 @@ interface ElectionStatusBadgeProps {
   status: ElectionStatus;
   size?: 'sm' | 'md';
   muted?: boolean;
+  isPetition?: boolean;
 }
 
-export function ElectionStatusBadge({ status, size = 'md', muted }: ElectionStatusBadgeProps) {
+export function ElectionStatusBadge({
+  status,
+  size = 'md',
+  isPetition = false,
+  muted,
+}: ElectionStatusBadgeProps) {
   const config = {
     upcoming: { variant: 'warning' as const, dot: true },
     open: { variant: 'success' as const, dot: false },
@@ -23,7 +29,7 @@ export function ElectionStatusBadge({ status, size = 'md', muted }: ElectionStat
           <span className="bg-success relative inline-flex h-1.5 w-1.5 rounded-full" />
         </span>
       )}
-      {getStatusLabel(status)}
+      {getStatusLabel(status, isPetition)}
     </Badge>
   );
 }

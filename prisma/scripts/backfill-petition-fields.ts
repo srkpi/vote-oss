@@ -10,6 +10,8 @@
  * decryptField (same format used for private keys).
  */
 
+import 'dotenv/config';
+
 import { encryptField } from '@/lib/encryption';
 import { prisma } from '@/lib/prisma';
 

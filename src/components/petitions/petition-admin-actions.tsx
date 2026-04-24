@@ -71,7 +71,7 @@ export function PetitionAdminActions({
 
   return (
     <div className="space-y-3">
-      <Alert variant="info">Адмін-дії</Alert>
+      <p className="font-display text-foreground mb-2 text-base font-semibold">Адмін-дії</p>
       <div className="flex flex-wrap gap-2">
         {canApprove && !approved && (
           <Button
@@ -103,7 +103,7 @@ export function PetitionAdminActions({
             <DialogCloseButton onClose={() => setDeleteOpen(false)} />
           </DialogHeader>
           <DialogBody>
-            <Alert variant="warning">Цю дію неможливо скасувати.</Alert>
+            <Alert variant="warning">Петицію можна буде відновити з панелі адміністраторів.</Alert>
           </DialogBody>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteOpen(false)} disabled={deleting}>

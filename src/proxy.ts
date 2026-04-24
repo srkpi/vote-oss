@@ -13,7 +13,7 @@ import {
 import { verifyAccessToken, verifyRefreshToken } from '@/lib/jwt';
 import type { VerifiedPayload } from '@/types/auth';
 
-const PROTECTED_PATHS = ['/elections', '/admin', '/join', '/use', '/groups'];
+const PROTECTED_PATHS = ['/elections', '/admin', '/join', '/use', '/groups', '/petitions'];
 const GUEST_ONLY_PATHS = ['/login'];
 const ADMIN_ONLY_PATHS = ['/admin'];
 

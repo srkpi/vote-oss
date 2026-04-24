@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { AdminGreeting } from '@/components/admin/admin-greeting';
 import { StatCard } from '@/components/admin/stat-card';
+import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
@@ -15,27 +16,6 @@ import { cn, pluralize } from '@/lib/utils/common';
 
 export const metadata: Metadata = {
   title: 'Адмін панель',
-};
-
-const statusConfig = {
-  open: {
-    label: 'Активне',
-    dot: 'bg-success',
-    text: 'text-success',
-    bg: 'bg-success-bg',
-  },
-  upcoming: {
-    label: 'Очікується',
-    dot: 'bg-kpi-orange',
-    text: 'text-kpi-orange',
-    bg: 'bg-warning-bg',
-  },
-  closed: {
-    label: 'Завершено',
-    dot: 'bg-kpi-gray-light',
-    text: 'text-muted-foreground',
-    bg: 'bg-surface',
-  },
 };
 
 export default async function AdminDashboardPage() {
@@ -145,16 +125,12 @@ export default async function AdminDashboardPage() {
             ) : (
               <div className="divide-border-subtle divide-y">
                 {recentElections.map((election) => {
-                  const status = statusConfig[election.status];
                   return (
                     <Link
                       key={election.id}
                       href={`/admin/elections/${election.id}`}
                       className="group hover:bg-surface flex items-center gap-3 px-4 py-3 transition-colors sm:gap-4 sm:px-6 sm:py-4"
                     >
-                      <div
-                        className={`h-2 w-2 shrink-0 rounded-full ${status.dot} ${election.status === 'open' ? 'animate-pulse' : ''}`}
-                      />
                       <div className="min-w-0 flex-1">
                         <p className="font-body text-foreground group-hover:text-kpi-navy truncate text-sm font-medium transition-colors">
                           {election.title}
@@ -165,11 +141,7 @@ export default async function AdminDashboardPage() {
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.bg} ${status.text}`}
-                        >
-                          {status.label}
-                        </span>
+                        <ElectionStatusBadge status={election.status} size="sm" />
                         <span className="font-body text-muted-foreground hidden text-xs sm:inline">
                           {election.ballotCount} голосів
                         </span>
@@ -225,14 +197,8 @@ export default async function AdminDashboardPage() {
                           <Badge variant="warning" size="sm">
                             Очікує
                           </Badge>
-                        ) : petition.status === 'closed' ? (
-                          <Badge variant="secondary" size="sm">
-                            Завершено
-                          </Badge>
                         ) : (
-                          <Badge variant="success" size="sm">
-                            Активне
-                          </Badge>
+                          <ElectionStatusBadge status={petition.status} size="sm" isPetition />
                         )}
                         <span className="font-body text-muted-foreground hidden text-xs sm:inline">
                           {petition.ballotCount}/{quorum} ({pct}%)

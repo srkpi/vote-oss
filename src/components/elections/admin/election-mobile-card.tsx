@@ -21,9 +21,8 @@ export function ElectionMobileCard({
   onRestore,
 }: ElectionMobileCardProps) {
   const isDeleted = !!election.deletedAt;
-
   const titleContent = (
-    <div>
+    <>
       <p
         className={`font-body text-sm leading-snug font-semibold wrap-break-word ${
           isDeleted ? 'text-muted-foreground/60' : 'text-foreground'
@@ -40,7 +39,7 @@ export function ElectionMobileCard({
           {election.deletedBy.fullName}
         </p>
       )}
-    </div>
+    </>
   );
 
   const metaContent = (

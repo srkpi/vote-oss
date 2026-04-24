@@ -31,12 +31,12 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
-      <div className="min-w-0 space-y-4 p-5">
+      <div className="flex h-full min-w-0 flex-col space-y-4 p-5">
         <div className="flex flex-wrap items-center gap-2">
-          {isPending && <Badge variant="warning">Очікує апруву</Badge>}
+          {isPending && <Badge variant="warning">Очікує модерацію</Badge>}
           {!isPending && isClosed && reached && <Badge variant="info">Досягнуто кворум</Badge>}
-          {!isPending && isClosed && !reached && <Badge variant="secondary">Завершено</Badge>}
-          {!isPending && !isClosed && <Badge variant="success">Активне</Badge>}
+          {!isPending && isClosed && !reached && <Badge variant="secondary">Завершена</Badge>}
+          {!isPending && !isClosed && <Badge variant="success">Активна</Badge>}
         </div>
 
         <h3 className="font-display text-foreground line-clamp-2 text-xl leading-snug font-semibold wrap-break-word">
@@ -49,7 +49,7 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           </p>
         )}
 
-        <div className="space-y-1.5">
+        <div className="mt-auto space-y-1.5">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-body text-muted-foreground text-xs">
               Підписів: <strong className="text-foreground">{petition.ballotCount}</strong> /{' '}

@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar, CheckCircle2, FileText, Megaphone, RotateCcw, Trash2 } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
@@ -23,14 +23,15 @@ import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { PETITION_QUORUM } from '@/lib/constants';
+import { cn } from '@/lib/utils/common';
 import type { Election } from '@/types/election';
 
 type TabKey = 'pending' | 'approved' | 'all' | 'deleted';
 
 const TABS: { key: TabKey; label: string }[] = [
+  { key: 'all', label: 'Всі' },
   { key: 'pending', label: 'Очікують' },
   { key: 'approved', label: 'Затверджені' },
-  { key: 'all', label: 'Всі' },
   { key: 'deleted', label: 'Видалені' },
 ];
 
@@ -52,14 +53,14 @@ function PetitionStatusBadge({
   if (petition.deletedAt) {
     return (
       <Badge variant="secondary" size={size}>
-        Видалене
+        Видалена
       </Badge>
     );
   }
   if (!petition.approved) {
     return (
       <Badge variant="warning" size={size}>
-        Очікує
+        Очікує модерацію
       </Badge>
     );
   }
@@ -70,13 +71,13 @@ function PetitionStatusBadge({
       </Badge>
     ) : (
       <Badge variant="secondary" size={size}>
-        Закрите
+        Закрита
       </Badge>
     );
   }
   return (
     <Badge variant="success" size={size}>
-      Активне
+      Активна
     </Badge>
   );
 }
@@ -84,7 +85,7 @@ function PetitionStatusBadge({
 function ProgressCell({ petition, dim }: { petition: Election; dim?: boolean }) {
   const quorum = petitionQuorum(petition);
   const pct = Math.min(100, Math.round((petition.ballotCount / quorum) * 100));
-  const reached = petition.ballotCount >= quorum;
+
   return (
     <div className="min-w-32 space-y-1">
       <div className="flex items-baseline justify-between gap-2">
@@ -114,8 +115,9 @@ function ProgressCell({ petition, dim }: { petition: Election; dim?: boolean }) 
 
 export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientProps) {
   const { toast } = useToast();
+  const router = useRouter();
   const [petitions, setPetitions] = useState<Election[]>(initialPetitions);
-  const [tab, setTab] = useState<TabKey>('pending');
+  const [tab, setTab] = useState<TabKey>('all');
   const [search, setSearch] = useState('');
   const [approving, setApproving] = useState<string | null>(null);
   const [restoring, setRestoring] = useState<string | null>(null);
@@ -254,11 +256,6 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
   return (
     <div className="space-y-4">
       <div className="border-border-color shadow-shadow-sm space-y-4 rounded-xl">
-        {counts.pending > 0 && (
-          <Alert variant="info">
-            Очікують на апрув: <strong>{counts.pending}</strong>
-          </Alert>
-        )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="shrink-0 overflow-x-auto sm:max-w-full">
             <Tabs
@@ -283,7 +280,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
           <EmptyState
             icon={<Megaphone className="h-10 w-10" />}
             title="Петицій не знайдено"
-            description={search ? 'Спробуйте інший запит.' : 'Тут поки порожньо.'}
+            description={search ? 'Спробуйте інший запит' : 'У цій категорії петицій не знайдено'}
           />
         </div>
       ) : (
@@ -305,31 +302,40 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
               <tbody className="divide-border-subtle divide-y">
                 {visible.map((p) => {
                   const isDeleted = !!p.deletedAt;
+                  const cellClass = cn('px-4 py-3.5', !isDeleted && 'cursor-pointer');
+                  const handleClick = !isDeleted
+                    ? () => router.push(`/petitions/${p.id}`)
+                    : undefined;
+
                   return (
                     <tr
                       key={p.id}
                       className="group hover:bg-surface transition-colors duration-150"
                     >
-                      <td className="max-w-xs px-4 py-3.5">
-                        <Link href={`/petitions/${p.id}`} className="block">
-                          <p
-                            className={`font-body truncate text-sm font-medium transition-colors ${
-                              isDeleted
-                                ? 'text-muted-foreground/60'
-                                : 'text-foreground group-hover:text-kpi-navy'
-                            }`}
-                          >
-                            {p.title}
+                      <td className={cn('max-w-xs', cellClass)} onClick={handleClick}>
+                        <p
+                          className={`font-body truncate text-sm font-medium transition-colors ${
+                            isDeleted
+                              ? 'text-muted-foreground/60'
+                              : 'text-foreground group-hover:text-kpi-navy'
+                          }`}
+                        >
+                          {p.title}
+                        </p>
+                        <p className="font-body text-muted-foreground/60 mt-0.5 truncate text-xs">
+                          {p.createdBy.fullName}
+                        </p>
+                        {isDeleted && p.deletedBy && (
+                          <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 truncate text-xs">
+                            <Trash2 className="h-3 w-3" />
+                            {p.deletedBy.fullName}
                           </p>
-                          <p className="font-body text-muted-foreground/60 mt-0.5 truncate text-xs">
-                            {p.createdBy.fullName}
-                          </p>
-                        </Link>
+                        )}
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className={cellClass} onClick={handleClick}>
                         <PetitionStatusBadge petition={p} size="md" />
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className={cellClass} onClick={handleClick}>
                         <p
                           className={`font-body text-xs ${
                             isDeleted ? 'text-muted-foreground/50' : 'text-foreground'
@@ -338,10 +344,12 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                           <LocalDateTime date={p.createdAt} />
                         </p>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className={cellClass} onClick={handleClick}>
                         <ProgressCell petition={p} dim={isDeleted} />
                       </td>
-                      <td className="px-4 py-3.5 text-right">{renderActions(p)}</td>
+                      <td className={cellClass} onClick={handleClick}>
+                        {renderActions(p)}
+                      </td>
                     </tr>
                   );
                 })}
@@ -352,10 +360,14 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
           <div className="divide-border-subtle divide-y border-t lg:hidden">
             {visible.map((p) => {
               const isDeleted = !!p.deletedAt;
+
               return (
                 <div key={p.id} className="space-y-3 p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <Link href={`/petitions/${p.id}`} className="min-w-0 flex-1">
+                    <div
+                      onClick={!isDeleted ? () => router.push(`/petitions/${p.id}`) : undefined}
+                      className={cn('min-w-0 flex-1', isDeleted && 'cursor-pointer')}
+                    >
                       <p
                         className={`font-body text-sm leading-snug font-semibold wrap-break-word ${
                           isDeleted ? 'text-muted-foreground/60' : 'text-foreground'
@@ -366,7 +378,13 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                       <p className="font-body text-muted-foreground/60 mt-0.5 text-xs">
                         {p.createdBy.fullName}
                       </p>
-                    </Link>
+                      {isDeleted && p.deletedBy && (
+                        <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 text-xs">
+                          <Trash2 className="h-3 w-3" />
+                          {p.deletedBy.fullName}
+                        </p>
+                      )}
+                    </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <PetitionStatusBadge petition={p} size="sm" />
                       {renderActions(p)}
@@ -374,9 +392,13 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                   </div>
 
                   <div
-                    className={`font-body space-y-2 text-xs ${
-                      isDeleted ? 'text-muted-foreground/50' : 'text-muted-foreground'
-                    }`}
+                    onClick={!isDeleted ? () => router.push(`/petitions/${p.id}`) : undefined}
+                    className={cn(
+                      'font-body space-y-2 text-xs',
+                      isDeleted
+                        ? 'text-muted-foreground/50'
+                        : 'text-muted-foreground cursor-pointer',
+                    )}
                   >
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3.5 w-3.5 shrink-0" />

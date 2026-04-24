@@ -99,7 +99,9 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
             <div className="border-border-color shadow-shadow-sm min-w-0 rounded-xl border bg-white p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-2">
                 {petition.approved ? (
-                  petition.status !== 'closed' && <ElectionStatusBadge status={petition.status} />
+                  petition.status !== 'closed' && (
+                    <ElectionStatusBadge status={petition.status} isPetition />
+                  )
                 ) : (
                   <Badge variant="warning">Очікує апруву</Badge>
                 )}
@@ -174,7 +176,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
             {!petition.approved && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
-                <p className="font-display text-foreground mb-1 text-sm font-semibold">
+                <p className="font-display text-foreground mb-2 text-base font-semibold">
                   Петиція очікує апруву
                 </p>
                 <p className="font-body text-muted-foreground text-sm">
@@ -187,7 +189,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
             {petition.approved && petition.status === 'closed' && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
-                <p className="font-display text-foreground text-sm font-semibold">
+                <p className="font-display text-foreground mb-2 text-base font-semibold">
                   {reached ? 'Петиція зібрала кворум' : 'Петиція завершена'}
                 </p>
                 <p className="font-body text-muted-foreground mt-1 text-sm">
