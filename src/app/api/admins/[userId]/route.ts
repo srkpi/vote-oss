@@ -70,6 +70,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
       manage_admins: true,
       manage_groups: true,
       manage_petitions: true,
+      manage_faq: true,
       restricted_to_faculty: true,
     },
   });
@@ -88,6 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     manageAdmins: admin.manage_admins,
     manageGroups: admin.manage_groups,
     managePetitions: admin.manage_petitions,
+    manageFaq: admin.manage_faq,
     restrictedToFaculty: admin.restricted_to_faculty,
   });
 }
@@ -159,6 +161,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     manageAdmins?: boolean;
     manageGroups?: boolean;
     managePetitions?: boolean;
+    manageFaq?: boolean;
     restrictedToFaculty?: boolean;
   };
   try {
@@ -167,16 +170,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const { manageAdmins, manageGroups, managePetitions, restrictedToFaculty } = body;
+  const { manageAdmins, manageGroups, managePetitions, manageFaq, restrictedToFaculty } = body;
 
   if (
     manageAdmins === undefined &&
     manageGroups === undefined &&
     managePetitions === undefined &&
+    manageFaq === undefined &&
     restrictedToFaculty === undefined
   ) {
     return Errors.badRequest(
-      'At least one of manageAdmins, manageGroups, managePetitions, or restrictedToFaculty must be provided',
+      'At least one of manageAdmins, manageGroups, managePetitions, manageFaq, or restrictedToFaculty must be provided',
     );
   }
 
@@ -203,11 +207,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     manage_admins?: boolean;
     manage_groups?: boolean;
     manage_petitions?: boolean;
+    manage_faq?: boolean;
     restricted_to_faculty?: boolean;
   } = {};
   if (manageAdmins !== undefined) updateData.manage_admins = manageAdmins;
   if (manageGroups !== undefined) updateData.manage_groups = manageGroups;
   if (managePetitions !== undefined) updateData.manage_petitions = managePetitions;
+  if (manageFaq !== undefined) updateData.manage_faq = manageFaq;
   if (restrictedToFaculty !== undefined) updateData.restricted_to_faculty = restrictedToFaculty;
 
   await prisma.admin.update({

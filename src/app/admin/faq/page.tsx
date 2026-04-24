@@ -17,7 +17,7 @@ export default async function AdminFaqPage() {
     redirect('/login');
   }
 
-  if (session.restrictedToFaculty) {
+  if (!session.manageFaq) {
     redirect('/admin');
   }
 

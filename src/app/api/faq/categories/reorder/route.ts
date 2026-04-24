@@ -13,7 +13,7 @@ import { prisma } from '@/lib/prisma';
  *     summary: Reorder FAQ categories
  *     description: >
  *       Accepts a complete ordered array of category IDs and updates their
- *       `position` values atomically. Root admins only.
+ *       `position` values atomically. Requires the `manage_faq` permission.
  *     tags:
  *       - FAQ
  *     security:
@@ -50,8 +50,8 @@ export async function PATCH(req: NextRequest) {
 
   const { admin } = auth;
 
-  if (admin.restricted_to_faculty) {
-    return Errors.forbidden('Only non restricted admins can manage FAQ');
+  if (!admin.manage_faq) {
+    return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
   let body: { order?: string[] };

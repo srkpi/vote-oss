@@ -32,6 +32,7 @@ export const ADMIN_PAYLOAD: TokenPayload = {
   isAdmin: true,
   restrictedToFaculty: false,
   manageAdmins: true,
+  manageFaq: true,
 };
 
 export const RESTRICTED_ADMIN_PAYLOAD: TokenPayload = {
@@ -42,6 +43,7 @@ export const RESTRICTED_ADMIN_PAYLOAD: TokenPayload = {
   isAdmin: true,
   restrictedToFaculty: true,
   manageAdmins: false,
+  manageFaq: false,
 };
 
 export const OTHER_FACULTY_PAYLOAD: TokenPayload = {
@@ -78,6 +80,7 @@ export const ADMIN_RECORD = {
   promoter: null as null | { user_id: string; full_name: string },
   promoted_at: new Date('2024-01-01'),
   manage_admins: true,
+  manage_faq: true,
   restricted_to_faculty: false,
   deleted_at: null as Date | null,
   deleted_by: null as string | null,
@@ -95,6 +98,7 @@ export const RESTRICTED_ADMIN_RECORD = {
   },
   promoted_at: new Date('2024-01-02'),
   manage_admins: true,
+  manage_faq: false,
   restricted_to_faculty: true,
   deleted_at: null as Date | null,
   deleted_by: null as string | null,
@@ -122,6 +126,7 @@ export const ADMIN_API: Admin = {
   restrictedToFaculty: false,
   manageGroups: true,
   managePetitions: true,
+  manageFaq: true,
 };
 
 export const RESTRICTED_ADMIN_API: Admin = {
@@ -135,6 +140,7 @@ export const RESTRICTED_ADMIN_API: Admin = {
   restrictedToFaculty: true,
   manageGroups: false,
   managePetitions: false,
+  manageFaq: false,
 };
 
 export const MOCK_ADMIN_GRAPH = new Map<string, string | null>([

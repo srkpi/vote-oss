@@ -16,6 +16,7 @@ interface TokensPageClientProps {
   canGrantManageAdmins: boolean;
   canGrantManageGroups: boolean;
   canGrantManagePetitions: boolean;
+  canGrantManageFaq: boolean;
   restrictedToFaculty: boolean;
   error: string | null;
 }
@@ -25,6 +26,7 @@ export function TokensPageClient({
   canGrantManageAdmins,
   canGrantManageGroups,
   canGrantManagePetitions,
+  canGrantManageFaq,
   restrictedToFaculty,
   error,
 }: TokensPageClientProps) {
@@ -118,6 +120,7 @@ export function TokensPageClient({
         restrictedToFaculty={restrictedToFaculty}
         canGrantManageGroups={canGrantManageGroups}
         canGrantManagePetitions={canGrantManagePetitions}
+        canGrantManageFaq={canGrantManageFaq}
       />
     </div>
   );

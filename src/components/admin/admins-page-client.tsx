@@ -19,6 +19,7 @@ interface AdminsPageClientProps {
   canGrantManageAdmins: boolean;
   canGrantManageGroups: boolean;
   canGrantManagePetitions: boolean;
+  canGrantManageFaq: boolean;
   restrictedToFaculty: boolean;
   error: string | null;
 }
@@ -30,6 +31,7 @@ export function AdminsPageClient({
   canGrantManageAdmins,
   canGrantManageGroups,
   canGrantManagePetitions,
+  canGrantManageFaq,
   restrictedToFaculty,
   error,
 }: AdminsPageClientProps) {
@@ -47,6 +49,7 @@ export function AdminsPageClient({
       manageAdmins: boolean;
       manageGroups: boolean;
       managePetitions: boolean;
+      manageFaq: boolean;
       restrictedToFaculty: boolean;
     },
   ) => {
@@ -58,6 +61,7 @@ export function AdminsPageClient({
               manageAdmins: updates.manageAdmins,
               manageGroups: updates.manageGroups,
               managePetitions: updates.managePetitions,
+              manageFaq: updates.manageFaq,
               restrictedToFaculty: updates.restrictedToFaculty,
             }
           : a,
@@ -70,6 +74,7 @@ export function AdminsPageClient({
   const canInviteCount = admins.filter((a) => a.manageAdmins).length;
   const manageGroupsCount = admins.filter((a) => a.manageGroups).length;
   const managePetitionsCount = admins.filter((a) => a.managePetitions).length;
+  const manageFaqCount = admins.filter((a) => a.manageFaq).length;
 
   return (
     <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
@@ -106,31 +111,35 @@ export function AdminsPageClient({
 
       {!error && currentUser && (
         <div className="space-y-5 p-4 sm:p-6">
-          <div className="font-body text-muted-foreground flex flex-col gap-2 px-1 text-sm md:flex-row md:items-center md:gap-4">
-            <span>
-              <strong className="text-foreground">{adminsCount}</strong>{' '}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1">
+            <span className="text-muted-foreground text-sm whitespace-nowrap">
+              <strong className="text-foreground font-bold">{adminsCount}</strong>{' '}
               {pluralize(
                 adminsCount,
                 ['адміністратор', 'адміністратори', 'адміністраторів'],
                 false,
               )}
             </span>
-            <span>
-              <strong className="text-foreground">{canInviteCount}</strong> з правом керування
-              адмінами
+            <span className="text-muted-foreground text-sm whitespace-nowrap">
+              <strong className="text-foreground font-bold">{canInviteCount}</strong> керує адмінами
             </span>
-            <span>
-              <strong className="text-foreground">{manageGroupsCount}</strong> керує групами
+            <span className="text-muted-foreground text-sm whitespace-nowrap">
+              <strong className="text-foreground font-bold">{manageGroupsCount}</strong> керує
+              групами
             </span>
-            <span>
-              <strong className="text-foreground">{managePetitionsCount}</strong> керує петиціями
+            <span className="text-muted-foreground text-sm whitespace-nowrap">
+              <strong className="text-foreground font-bold">{managePetitionsCount}</strong> керує
+              петиціями
             </span>
-            <span>
-              <strong className="text-foreground">{restrictedCount}</strong>{' '}
-              {pluralize(restrictedCount, ['обмежений', 'обмежені', 'обмежених'], false)} до
-              підрозділу
+            <span className="text-muted-foreground text-sm whitespace-nowrap">
+              <strong className="text-foreground font-bold">{manageFaqCount}</strong> редагує FAQ
+            </span>
+            <span className="text-muted-foreground text-sm whitespace-nowrap">
+              <strong className="text-foreground font-bold">{restrictedCount}</strong>{' '}
+              {pluralize(restrictedCount, ['обмежений', 'обмежені', 'обмежених'], false)}
             </span>
           </div>
+
           <AdminTable
             admins={admins}
             currentUserId={currentUser.userId}
@@ -138,6 +147,7 @@ export function AdminsPageClient({
             callerRestrictedToFaculty={restrictedToFaculty}
             callerManageGroups={canGrantManageGroups}
             callerManagePetitions={canGrantManagePetitions}
+            callerManageFaq={canGrantManageFaq}
             onDelete={handleDelete}
             onUpdate={handleUpdate}
           />
@@ -151,6 +161,7 @@ export function AdminsPageClient({
           canGrantManageAdmins={canGrantManageAdmins}
           canGrantManageGroups={canGrantManageGroups}
           canGrantManagePetitions={canGrantManagePetitions}
+          canGrantManageFaq={canGrantManageFaq}
           restrictedToFaculty={restrictedToFaculty}
         />
       )}

@@ -38,6 +38,7 @@ export default async function TokensPage() {
           canGrantManageAdmins={session.manageAdmins}
           canGrantManageGroups={session.manageGroups}
           canGrantManagePetitions={session.managePetitions ?? false}
+          canGrantManageFaq={session.manageFaq ?? false}
           restrictedToFaculty={session.restrictedToFaculty}
           error={error}
         />

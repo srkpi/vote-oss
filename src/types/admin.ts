@@ -13,6 +13,7 @@ export interface Admin {
   manageAdmins: boolean;
   manageGroups: boolean;
   managePetitions: boolean;
+  manageFaq: boolean;
   restrictedToFaculty: boolean;
   deletable?: boolean;
 }
@@ -23,6 +24,7 @@ export interface InviteTokenRequest {
   manageAdmins?: boolean;
   manageGroups?: boolean;
   managePetitions?: boolean;
+  manageFaq?: boolean;
   restrictedToFaculty?: boolean;
 }
 
@@ -32,6 +34,7 @@ export interface InviteTokenResponse {
   manageAdmins: boolean;
   manageGroups: boolean;
   managePetitions: boolean;
+  manageFaq: boolean;
   restrictedToFaculty: boolean;
   validDue: string;
 }
@@ -43,6 +46,7 @@ export interface InviteToken {
   manageAdmins: boolean;
   manageGroups: boolean;
   managePetitions: boolean;
+  manageFaq: boolean;
   restrictedToFaculty: boolean;
   validDue: string;
   createdAt: string;

@@ -23,6 +23,7 @@ export default async function AdminsPage() {
   const canGrantManageAdmins = session.manageAdmins ?? false;
   const canGrantManageGroups = session.manageGroups ?? false;
   const canGrantManagePetitions = session.managePetitions ?? false;
+  const canGrantManageFaq = session.manageFaq ?? false;
   const restrictedToFaculty = session.restrictedToFaculty ?? false;
 
   return (
@@ -41,6 +42,7 @@ export default async function AdminsPage() {
           canGrantManageAdmins={canGrantManageAdmins}
           canGrantManageGroups={canGrantManageGroups}
           canGrantManagePetitions={canGrantManagePetitions}
+          canGrantManageFaq={canGrantManageFaq}
           restrictedToFaculty={restrictedToFaculty}
           error={error}
         />

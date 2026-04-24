@@ -16,7 +16,7 @@ import { deltaToPlainText, parseQuillDelta } from '@/lib/utils/common';
  *     description: >
  *       Creates a new FAQ item appended at the end of the category's item
  *       list. Content must be a valid serialised Quill Delta JSON string.
- *       Root admins only.
+ *       Requires the `manage_faq` permission.
  *     tags:
  *       - FAQ
  *     security:
@@ -58,8 +58,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { admin, user } = auth;
 
-  if (admin.restricted_to_faculty) {
-    return Errors.forbidden('Only non restricted admins can manage FAQ');
+  if (!admin.manage_faq) {
+    return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
   const { id: categoryId } = await params;

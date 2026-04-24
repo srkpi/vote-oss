@@ -84,6 +84,7 @@ const SAMPLE_ADMIN: Admin = {
   restrictedToFaculty: false,
   manageGroups: false,
   managePetitions: false,
+  manageFaq: false,
 };
 
 describe('cache', () => {
