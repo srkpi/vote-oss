@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { pluralize } from '@/lib/utils/common';
-import type { PetitionSignatoriesResponse } from '@/types/election';
+import type { PetitionSignatoriesResponse } from '@/types/ballot';
 
 interface Signatory {
   ballotId: string;

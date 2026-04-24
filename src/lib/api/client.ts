@@ -1,7 +1,7 @@
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
 import type { DiiaInitResponse } from '@/types/auth';
-import type { BallotsResponse } from '@/types/ballot';
+import type { BallotsResponse, PetitionSignatoriesResponse } from '@/types/ballot';
 import type {
   CreateElectionBypassTokenRequest,
   CreateGlobalBypassTokenRequest,
@@ -13,7 +13,6 @@ import type {
   CreateElectionResponse,
   ElectionDetail,
   ElectionsListResponse,
-  PetitionSignatoriesResponse,
 } from '@/types/election';
 import type {
   FaqCategoryCreated,

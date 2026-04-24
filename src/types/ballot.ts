@@ -52,3 +52,11 @@ export interface BallotSubmission {
   encryptedBallot: string;
   nullifier: string;
 }
+
+export interface PetitionSignatoriesResponse {
+  petition: {
+    id: string;
+    privateKey: string;
+  };
+  ballots: Ballot[];
+}
