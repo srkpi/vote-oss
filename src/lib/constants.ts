@@ -7,11 +7,11 @@ export const BALLOT_PADDING = '00000000-0000-0000-0000-000000000000';
 // Election limits
 export const ELECTION_TITLE_MAX_LENGTH = 255;
 export const ELECTION_CHOICES_MIN = 1;
-export const ELECTION_CHOICES_MAX = 20;
+export const ELECTION_CHOICES_MAX = 100;
 export const ELECTION_CHOICE_MAX_LENGTH = 100;
 export const ELECTION_MAX_CLOSES_AT_DAYS = 30;
 export const ELECTION_MIN_CHOICES_MIN = 1;
-export const ELECTION_MAX_CHOICES_MAX = 20;
+export const ELECTION_MAX_CHOICES_MAX = 100;
 
 // Petitions
 /**
