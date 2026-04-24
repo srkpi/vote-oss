@@ -13,6 +13,7 @@ import type {
   CreateElectionResponse,
   ElectionDetail,
   ElectionsListResponse,
+  PetitionSignatoriesResponse,
 } from '@/types/election';
 import type {
   FaqCategoryCreated,
@@ -53,9 +54,12 @@ export function createApiClient(fetcher: Fetcher) {
     },
 
     elections: {
-      list: (params?: { type?: 'ELECTION' | 'PETITION' }) => {
-        const qs = params?.type ? `?type=${params.type}` : '';
-        return fetcher<ElectionsListResponse>(`/elections${qs}`);
+      list: (params?: { type?: 'ELECTION' | 'PETITION'; sort?: 'createdAt' | 'votes' }) => {
+        const search = new URLSearchParams();
+        if (params?.type) search.set('type', params.type);
+        if (params?.sort) search.set('sort', params.sort);
+        const qs = search.toString();
+        return fetcher<ElectionsListResponse>(`/elections${qs ? `?${qs}` : ''}`);
       },
       get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
       og: (id: string) => fetcher<{ title: string }>(`/elections/${id}/og`),
@@ -85,10 +89,7 @@ export function createApiClient(fetcher: Fetcher) {
       getBallots: (electionId: string) =>
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
       getSignatories: (electionId: string) =>
-        fetcher<{
-          signatories: { userId: string; fullName: string; signedAt: string }[];
-          total: number;
-        }>(`/elections/${electionId}/signatories`),
+        fetcher<PetitionSignatoriesResponse>(`/elections/${electionId}/signatories`),
 
       bypass: {
         list: (electionId: string) =>

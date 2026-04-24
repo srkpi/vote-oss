@@ -204,10 +204,8 @@ export default async function AdminDashboardPage() {
             ) : (
               <div className="divide-border-subtle divide-y">
                 {recentPetitions.map((petition) => {
-                  const pct = Math.min(
-                    100,
-                    Math.round((petition.ballotCount / PETITION_QUORUM) * 100),
-                  );
+                  const quorum = petition.winningConditions.quorum ?? PETITION_QUORUM;
+                  const pct = Math.min(100, Math.round((petition.ballotCount / quorum) * 100));
                   return (
                     <Link
                       key={petition.id}
@@ -237,7 +235,7 @@ export default async function AdminDashboardPage() {
                           </Badge>
                         )}
                         <span className="font-body text-muted-foreground hidden text-xs sm:inline">
-                          {petition.ballotCount}/{PETITION_QUORUM} ({pct}%)
+                          {petition.ballotCount}/{quorum} ({pct}%)
                         </span>
                       </div>
                     </Link>

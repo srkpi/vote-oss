@@ -31,7 +31,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function PetitionsPage() {
+type SortKey = 'createdAt' | 'votes';
+
+interface PetitionsPageProps {
+  searchParams: Promise<{ sort?: string }>;
+}
+
+export default async function PetitionsPage({ searchParams }: PetitionsPageProps) {
   if (await isBotRequest()) return null;
 
   const session = await getServerSession();
@@ -39,7 +45,10 @@ export default async function PetitionsPage() {
     redirect('/login');
   }
 
-  const { data, error } = await serverApi.elections.list({ type: 'PETITION' });
+  const { sort: sortParam } = await searchParams;
+  const sort: SortKey = sortParam === 'votes' ? 'votes' : 'createdAt';
+
+  const { data, error } = await serverApi.elections.list({ type: 'PETITION', sort });
   const petitions = data?.elections ?? [];
 
   return (
@@ -64,7 +73,7 @@ export default async function PetitionsPage() {
             <ErrorState title="Не вдалося завантажити петиції" description={error} />
           </div>
         ) : (
-          <PetitionsListClient petitions={petitions} />
+          <PetitionsListClient petitions={petitions} sort={sort} />
         )}
       </div>
     </div>

@@ -280,3 +280,25 @@ export interface ElectionsListResponse {
   /** Populated filter option data so the client can build dropdowns. */
   meta: ElectionsFilterMeta;
 }
+
+// ---------------------------------------------------------------------------
+// Petition signatories API response
+// ---------------------------------------------------------------------------
+
+/**
+ * Response shape for `GET /api/elections/{id}/signatories`.
+ *
+ * Mirrors the `/ballots` endpoint: the server hands the petition's private key
+ * and raw encrypted ballot envelopes to the browser, which decrypts voter
+ * identities and verifies the integrity of the ballot hash chain itself.
+ *
+ * Petitions are non-anonymous by design, so live private-key exposure is
+ * intentional.
+ */
+export interface PetitionSignatoriesResponse {
+  petition: {
+    id: string;
+    privateKey: string;
+  };
+  ballots: import('@/types/ballot').Ballot[];
+}

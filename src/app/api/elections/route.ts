@@ -116,6 +116,31 @@ function parseTypeFilter(req: NextRequest): ElectionType {
   return raw === 'PETITION' ? 'PETITION' : 'ELECTION';
 }
 
+export type PetitionsSort = 'createdAt' | 'votes';
+
+function parsePetitionsSort(req: NextRequest): PetitionsSort {
+  const raw = req.nextUrl.searchParams.get('sort');
+  return raw === 'votes' ? 'votes' : 'createdAt';
+}
+
+/**
+ * Fetch petition IDs from the DB pre-sorted by the requested key.  Uses
+ * Prisma's `orderBy: { ballots: { _count: 'desc' } }` so the ordering is
+ * computed at the database level — the metadata itself still comes from the
+ * elections cache, we only use this query to drive the row order.
+ */
+async function getSortedPetitionIds(sort: PetitionsSort): Promise<string[]> {
+  const rows = await prisma.election.findMany({
+    where: { type: 'PETITION' },
+    select: { id: true },
+    orderBy:
+      sort === 'votes'
+        ? [{ ballots: { _count: 'desc' } }, { created_at: 'desc' }]
+        : { created_at: 'desc' },
+  });
+  return rows.map((r) => r.id);
+}
+
 /**
  * Decrypt a stored ciphertext field, falling back to the raw value if the
  * input doesn't look encrypted (protects against stale rows predating the
@@ -485,6 +510,13 @@ export async function GET(req: NextRequest) {
 
   // ── Build client-visible elections list ──────────────────────────────────
   const typeFilter = parseTypeFilter(req);
+
+  // For petitions we sort at the DB level (createdAt | votes) and reorder the
+  // cached rows to match.  For regular elections the existing cache order
+  // (opens_at desc) is preserved.
+  const petitionsSort = typeFilter === 'PETITION' ? parsePetitionsSort(req) : null;
+  const sortedPetitionIds = petitionsSort ? await getSortedPetitionIds(petitionsSort) : null;
+
   const elections = toClientElections(
     cachedWithLiveCounts,
     {
@@ -504,6 +536,11 @@ export async function GET(req: NextRequest) {
     adminRecord,
     adminGraph,
   );
+
+  if (sortedPetitionIds) {
+    const order = new Map(sortedPetitionIds.map((id, i) => [id, i]));
+    elections.sort((a, b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity));
+  }
 
   // ── Compute filter metadata from all visible elections ───────────────────
   // We use the raw (pre-user-filter) cached list so admins see the full set.

@@ -1,18 +1,33 @@
 'use client';
 
-import { Megaphone } from 'lucide-react';
+import { Clock, Megaphone, TrendingUp } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { PetitionCard } from '@/components/petitions/petition-card';
 import { SearchInput } from '@/components/ui/search-input';
+import type { Tab } from '@/components/ui/tabs';
+import { Tabs } from '@/components/ui/tabs';
 import type { Election } from '@/types/election';
+
+type SortKey = 'createdAt' | 'votes';
+
+const SORT_TABS: Tab<SortKey>[] = [
+  { key: 'createdAt', label: 'Спочатку нові', icon: <Clock className="h-3.5 w-3.5" /> },
+  { key: 'votes', label: 'Найбільше голосів', icon: <TrendingUp className="h-3.5 w-3.5" /> },
+];
 
 interface PetitionsListClientProps {
   petitions: Election[];
+  sort: SortKey;
 }
 
-export function PetitionsListClient({ petitions }: PetitionsListClientProps) {
+export function PetitionsListClient({ petitions, sort }: PetitionsListClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [search, setSearch] = useState('');
 
   const visible = useMemo(() => petitions.filter((p) => !p.deletedAt), [petitions]);
@@ -24,6 +39,14 @@ export function PetitionsListClient({ petitions }: PetitionsListClientProps) {
       (p) => p.title.toLowerCase().includes(q) || p.createdBy.fullName.toLowerCase().includes(q),
     );
   }, [visible, search]);
+
+  const handleSortChange = (next: SortKey) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === 'createdAt') params.delete('sort');
+    else params.set('sort', next);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
 
   if (visible.length === 0) {
     return (
@@ -39,7 +62,20 @@ export function PetitionsListClient({ petitions }: PetitionsListClientProps) {
 
   return (
     <div className="space-y-5">
-      <SearchInput value={search} onChange={setSearch} placeholder="Пошук за назвою або автором…" />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Пошук за назвою або автором…"
+          className="flex-1"
+        />
+        <Tabs
+          tabs={SORT_TABS}
+          activeTab={sort}
+          onTabChange={handleSortChange}
+          className="sm:w-auto sm:shrink-0"
+        />
+      </div>
 
       {filtered.length === 0 ? (
         <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">

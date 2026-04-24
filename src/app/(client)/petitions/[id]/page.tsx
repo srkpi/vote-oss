@@ -42,6 +42,11 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
   const { data: petition, error, status } = await serverApi.elections.get(id);
 
+  const signatoriesResult =
+    petition && petition.type === 'PETITION' && petition.approved && !petition.deletedAt
+      ? await serverApi.elections.getSignatories(id)
+      : null;
+
   if (status === 404) notFound();
   if (!petition) {
     return (
@@ -76,8 +81,9 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
   const canApprove = isPetitionManager && !petition.approved;
   const canDelete = isPetitionManager;
 
-  const pct = Math.min(100, Math.round((petition.ballotCount / PETITION_QUORUM) * 100));
-  const reached = petition.ballotCount >= PETITION_QUORUM;
+  const quorum = petition.winningConditions.quorum ?? PETITION_QUORUM;
+  const pct = Math.min(100, Math.round((petition.ballotCount / quorum) * 100));
+  const reached = petition.ballotCount >= quorum;
   const canSign = petition.approved && petition.status === 'open';
 
   return (
@@ -93,14 +99,14 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
             <div className="border-border-color shadow-shadow-sm min-w-0 rounded-xl border bg-white p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-2">
                 {petition.approved ? (
-                  <ElectionStatusBadge status={petition.status} />
+                  petition.status !== 'closed' && <ElectionStatusBadge status={petition.status} />
                 ) : (
                   <Badge variant="warning">Очікує апруву</Badge>
                 )}
-                {reached && <Badge variant="success">Досягнуто кворум</Badge>}
+                {reached && <Badge variant="info">Досягнуто кворум</Badge>}
               </div>
 
-              <div className="font-body text-muted-foreground mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              <div className="font-body text-muted-foreground mt-4 space-y-1 text-sm">
                 <span className="flex min-w-0 items-center gap-1.5">
                   <User className="h-4 w-4 shrink-0" />
                   <span className="truncate">{petition.createdBy.fullName}</span>
@@ -109,7 +115,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                   <Calendar className="h-4 w-4 shrink-0" />
                   <LocalDateTime date={petition.createdAt} />
                 </span>
-                {petition.approved && (
+                {petition.approved && !reached && (
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 shrink-0" />
                     діє до <LocalDate date={petition.closesAt} />
@@ -125,7 +131,11 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
             </div>
 
             {petition.approved && (
-              <PetitionSignatories petitionId={petition.id} ballotCount={petition.ballotCount} />
+              <PetitionSignatories
+                ballotCount={petition.ballotCount}
+                initialData={signatoriesResult?.data ?? null}
+                fetchError={signatoriesResult?.error ?? null}
+              />
             )}
           </div>
 
@@ -137,7 +147,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
               <div className="mb-1.5 flex items-baseline justify-between gap-2">
                 <span className="font-body text-muted-foreground text-sm">
                   <strong className="text-foreground text-lg">{petition.ballotCount}</strong> /{' '}
-                  {PETITION_QUORUM}
+                  {quorum}
                 </span>
                 <span className="font-body text-foreground text-sm font-semibold">{pct}%</span>
               </div>
@@ -145,14 +155,14 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                 <div
                   className={
                     reached
-                      ? 'bg-kpi-green h-full rounded-full transition-all duration-500'
+                      ? 'bg-kpi-navy h-full rounded-full transition-all duration-500'
                       : 'bg-kpi-navy h-full rounded-full transition-all duration-500'
                   }
                   style={{ width: `${pct}%` }}
                 />
               </div>
               <p className="font-body text-muted-foreground mt-2 text-xs">
-                Петиція автоматично закриється після {PETITION_QUORUM} підписів.
+                Петиція автоматично закриється після {quorum} підписів.
               </p>
             </div>
 
@@ -183,7 +193,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                 <p className="font-body text-muted-foreground mt-1 text-sm">
                   {reached
                     ? 'Дякуємо всім, хто підписав. Її направлено на розгляд.'
-                    : 'Кворум у ' + PETITION_QUORUM + ' підписів не досягнуто.'}
+                    : 'Кворум у ' + quorum + ' підписів не досягнуто.'}
                 </p>
               </div>
             )}

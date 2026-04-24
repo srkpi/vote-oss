@@ -13,8 +13,9 @@ interface PetitionCardProps {
 }
 
 export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
-  const pct = Math.min(100, Math.round((petition.ballotCount / PETITION_QUORUM) * 100));
-  const reached = petition.ballotCount >= PETITION_QUORUM;
+  const quorum = petition.winningConditions.quorum ?? PETITION_QUORUM;
+  const pct = Math.min(100, Math.round((petition.ballotCount / quorum) * 100));
+  const reached = petition.ballotCount >= quorum;
   const isPending = !petition.approved;
   const isClosed = petition.status === 'closed';
 
@@ -33,12 +34,12 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
       <div className="min-w-0 space-y-4 p-5">
         <div className="flex flex-wrap items-center gap-2">
           {isPending && <Badge variant="warning">Очікує апруву</Badge>}
-          {!isPending && isClosed && reached && <Badge variant="success">Досягнуто кворум</Badge>}
-          {!isPending && isClosed && !reached && <Badge variant="secondary">Закрито</Badge>}
-          {!isPending && !isClosed && <Badge variant="success">Активна</Badge>}
+          {!isPending && isClosed && reached && <Badge variant="info">Досягнуто кворум</Badge>}
+          {!isPending && isClosed && !reached && <Badge variant="secondary">Завершено</Badge>}
+          {!isPending && !isClosed && <Badge variant="success">Активне</Badge>}
         </div>
 
-        <h3 className="font-display text-foreground line-clamp-2 text-base leading-snug font-semibold wrap-break-word">
+        <h3 className="font-display text-foreground line-clamp-2 text-xl leading-snug font-semibold wrap-break-word">
           {petition.title}
         </h3>
 
@@ -52,31 +53,30 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-body text-muted-foreground text-xs">
               Підписів: <strong className="text-foreground">{petition.ballotCount}</strong> /{' '}
-              {PETITION_QUORUM}
+              {quorum}
             </span>
             <span className="font-body text-foreground text-xs font-semibold">{pct}%</span>
           </div>
           <div className="bg-surface h-1.5 w-full overflow-hidden rounded-full">
             <div
-              className={cn(
-                'h-full rounded-full transition-all duration-500',
-                reached ? 'bg-kpi-green' : 'bg-kpi-navy',
-              )}
+              className={cn('bg-kpi-navy h-full rounded-full transition-all duration-500')}
               style={{ width: `${pct}%` }}
             />
           </div>
         </div>
 
-        <div className="text-muted-foreground font-body flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <span className="flex min-w-0 items-center gap-1.5">
+        <div className="text-muted-foreground font-body min-w-0 space-y-1 text-xs">
+          <div className="flex min-w-0 items-center gap-1.5">
             <User className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{petition.createdBy.fullName}</span>
-          </span>
+          </div>
           {petition.approved && (
-            <span className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 shrink-0" />
-              до <LocalDate date={petition.closesAt} />
-            </span>
+              <span>
+                до <LocalDate date={petition.closesAt} />
+              </span>
+            </div>
           )}
         </div>
       </div>
