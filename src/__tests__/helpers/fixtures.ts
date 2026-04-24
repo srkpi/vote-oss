@@ -121,6 +121,7 @@ export const ADMIN_API: Admin = {
   manageAdmins: true,
   restrictedToFaculty: false,
   manageGroups: true,
+  managePetitions: true,
 };
 
 export const RESTRICTED_ADMIN_API: Admin = {
@@ -133,6 +134,7 @@ export const RESTRICTED_ADMIN_API: Admin = {
   manageAdmins: true,
   restrictedToFaculty: true,
   manageGroups: false,
+  managePetitions: false,
 };
 
 export const MOCK_ADMIN_GRAPH = new Map<string, string | null>([
@@ -179,8 +181,11 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
   const now = new Date();
   return {
     id: MOCK_ELECTION_ID,
+    type: 'ELECTION' as 'ELECTION' | 'PETITION',
     title: 'Test Election',
+    description: null as string | null,
     created_by: 'superadmin-001',
+    created_by_full_name: 'Super Admin User',
     created_at: new Date('2024-01-01'),
     opens_at: new Date(now.getTime() - 60_000),
     closes_at: new Date(now.getTime() + 3_600_000),
@@ -189,11 +194,14 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     shuffle_choices: false,
     public_viewing: false,
     anonymous: true,
+    approved: true,
+    approved_by_id: 'superadmin-001' as string | null,
+    approved_by_full_name: 'Super Admin User' as string | null,
+    approved_at: new Date('2024-01-01') as Date | null,
     restrictions: [] as { type: string; value: string }[],
     winning_conditions: DEFAULT_WINNING_CONDITIONS as unknown,
     public_key: keys.publicKey,
     private_key: keys.privateKey,
-    creator: { full_name: 'Super Admin User', faculty: 'FICE' },
     deleter: null as { full_name: string } | null,
     choices: MOCK_ELECTION_CHOICES,
     _count: { ballots: 0 },

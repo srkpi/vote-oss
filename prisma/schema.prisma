@@ -27,11 +27,11 @@ model Admin {
   promoted_at           DateTime  @default(now())
   manage_admins         Boolean   @default(false)
   manage_groups         Boolean   @default(false)
+  manage_petitions      Boolean   @default(false)
   restricted_to_faculty Boolean   @default(true)
   deleted_at            DateTime?
   deleted_by            String?
 
-  created_elections              Election[]
   deleted_elections              Election[]             @relation("ElectionDeleter")
   created_invite_tokens          AdminInviteToken[]
   created_global_bypass_tokens   GlobalBypassToken[]
@@ -57,6 +57,7 @@ model AdminInviteToken {
   current_usage         Int      @default(0)
   manage_admins         Boolean  @default(false)
   manage_groups         Boolean  @default(false)
+  manage_petitions      Boolean  @default(false)
   restricted_to_faculty Boolean  @default(true)
   valid_due             DateTime
   created_at            DateTime @default(now())
@@ -67,14 +68,26 @@ model AdminInviteToken {
   @@map("admin_invite_tokens")
 }
 
+enum ElectionType {
+  ELECTION
+  PETITION
+}
+
 model Election {
-  id            String   @id @default(uuid()) @db.Uuid
-  title         String
-  created_by    String
-  creator       Admin    @relation(fields: [created_by], references: [user_id], onDelete: Restrict)
-  created_at    DateTime @default(now())
-  opens_at      DateTime
-  closes_at     DateTime
+  id                   String       @id @default(uuid()) @db.Uuid
+  type                 ElectionType @default(ELECTION)
+  title                String
+  description          String?      @db.Text
+  created_by           String
+  created_by_full_name String       @db.Text
+  created_at           DateTime     @default(now())
+  opens_at             DateTime
+  closes_at            DateTime
+
+  approved             Boolean   @default(false)
+  approved_by_id       String?
+  approved_by_full_name String?  @db.Text
+  approved_at          DateTime?
 
   min_choices     Int     @default(1)
   max_choices     Int     @default(1)
@@ -98,6 +111,7 @@ model Election {
   deleter                Admin?              @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
   election_bypass_tokens ElectionBypassToken[]
 
+  @@index([type])
   @@map("elections")
 }
 

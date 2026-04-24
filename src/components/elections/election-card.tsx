@@ -79,7 +79,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         )}
       />
 
-      <div className="p-6">
+      <div className="flex h-full flex-col p-6">
         <div className="mb-3 flex items-start justify-between gap-3">
           <ElectionStatusBadge status={election.status} />
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
@@ -125,7 +125,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <User className="text-kpi-gray-mid h-4 w-4 shrink-0" />
-            <span>{election.creator.fullName}</span>
+            <span>{election.createdBy.fullName}</span>
           </div>
         </div>
 
@@ -156,7 +156,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           )}
         </div>
 
-        <div className="border-border-subtle flex items-center justify-between border-t pt-4">
+        <div className="border-border-subtle mt-auto flex items-center justify-between border-t pt-4">
           <div className="flex items-center gap-3">
             <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
               <FileText className="text-kpi-gray-mid h-4 w-4" />

@@ -102,11 +102,11 @@ export function getElectionStatus(opensAt: string, closesAt: string): ElectionSt
   return 'closed';
 }
 
-export function getStatusLabel(status: ElectionStatus): string {
+export function getStatusLabel(status: ElectionStatus, isPetition: boolean = false): string {
   const labels: Record<ElectionStatus, string> = {
     upcoming: 'Очікується',
-    open: 'Активне',
-    closed: 'Завершено',
+    open: isPetition ? 'Активна' : 'Активне',
+    closed: isPetition ? 'Завершена' : 'Завершено',
   };
   return labels[status];
 }

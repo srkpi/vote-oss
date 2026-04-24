@@ -1,7 +1,7 @@
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
 import type { DiiaInitResponse } from '@/types/auth';
-import type { BallotsResponse } from '@/types/ballot';
+import type { BallotsResponse, PetitionSignatoriesResponse } from '@/types/ballot';
 import type {
   CreateElectionBypassTokenRequest,
   CreateGlobalBypassTokenRequest,
@@ -53,7 +53,13 @@ export function createApiClient(fetcher: Fetcher) {
     },
 
     elections: {
-      list: () => fetcher<ElectionsListResponse>('/elections'),
+      list: (params?: { type?: 'ELECTION' | 'PETITION'; sort?: 'createdAt' | 'votes' }) => {
+        const search = new URLSearchParams();
+        if (params?.type) search.set('type', params.type);
+        if (params?.sort) search.set('sort', params.sort);
+        const qs = search.toString();
+        return fetcher<ElectionsListResponse>(`/elections${qs ? `?${qs}` : ''}`);
+      },
       get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
       og: (id: string) => fetcher<{ title: string }>(`/elections/${id}/og`),
       create: (data: CreateElectionRequest) =>
@@ -63,6 +69,11 @@ export function createApiClient(fetcher: Fetcher) {
         }),
       delete: (id: string) => fetcher<void>(`/elections/${id}`, { method: 'DELETE' }),
       restore: (id: string) => fetcher<void>(`/elections/${id}/restore`, { method: 'POST' }),
+      approve: (id: string) =>
+        fetcher<{ id: string; approved: true; approvedAt: string; closesAt: string }>(
+          `/elections/${id}/approve`,
+          { method: 'POST' },
+        ),
 
       getVoteToken: (electionId: string) =>
         fetcher<VoteToken>(`/elections/${electionId}/token`, { method: 'POST' }),
@@ -76,6 +87,8 @@ export function createApiClient(fetcher: Fetcher) {
         }),
       getBallots: (electionId: string) =>
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
+      getSignatories: (electionId: string) =>
+        fetcher<PetitionSignatoriesResponse>(`/elections/${electionId}/signatories`),
 
       bypass: {
         list: (electionId: string) =>
@@ -100,7 +113,12 @@ export function createApiClient(fetcher: Fetcher) {
       delete: (userId: string) => fetcher<void>(`/admins/${userId}`, { method: 'DELETE' }),
       patch: (
         userId: string,
-        data: { manageAdmins?: boolean; manageGroups?: boolean; restrictedToFaculty?: boolean },
+        data: {
+          manageAdmins?: boolean;
+          manageGroups?: boolean;
+          managePetitions?: boolean;
+          restrictedToFaculty?: boolean;
+        },
       ) =>
         fetcher<void>(`/admins/${userId}`, {
           method: 'PATCH',

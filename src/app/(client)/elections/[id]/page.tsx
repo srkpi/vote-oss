@@ -140,7 +140,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               <div className="font-body text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
                 <span className="flex items-center gap-1.5">
                   <User className="h-4 w-4" />
-                  {election.creator.fullName}
+                  {election.createdBy.fullName}
                 </span>
 
                 <Button variant="secondary" size="sm" asChild>
@@ -158,6 +158,15 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
       <div className="container py-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
+            {election.description && (
+              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+                <h2 className="font-display text-foreground mb-3 text-xl font-semibold">Опис</h2>
+                <p className="font-body text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                  {election.description}
+                </p>
+              </div>
+            )}
+
             {(isOpen || isUpcoming) && (
               <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
                 <p className="font-body text-muted-foreground mb-4 text-xs font-semibold tracking-wider uppercase">

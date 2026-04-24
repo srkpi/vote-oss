@@ -24,9 +24,15 @@ interface EditPermissionsDialogProps {
   admin: Admin;
   callerRestrictedToFaculty: boolean;
   callerManageGroups: boolean;
+  callerManagePetitions: boolean;
   onUpdate: (
     userId: string,
-    updates: { manageAdmins: boolean; manageGroups: boolean; restrictedToFaculty: boolean },
+    updates: {
+      manageAdmins: boolean;
+      manageGroups: boolean;
+      managePetitions: boolean;
+      restrictedToFaculty: boolean;
+    },
   ) => void;
 }
 
@@ -36,12 +42,14 @@ export function EditPermissionsDialog({
   admin,
   callerRestrictedToFaculty,
   callerManageGroups,
+  callerManagePetitions,
   onUpdate,
 }: EditPermissionsDialogProps) {
   const { toast } = useToast();
 
   const [manageAdmins, setManageAdmins] = useState(admin.manageAdmins);
   const [manageGroups, setManageGroups] = useState(admin.manageGroups);
+  const [managePetitions, setManagePetitions] = useState(admin.managePetitions);
   const [restrictedToFaculty, setRestrictedToFaculty] = useState(admin.restrictedToFaculty);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +57,7 @@ export function EditPermissionsDialog({
   const hasChanges =
     manageAdmins !== admin.manageAdmins ||
     manageGroups !== admin.manageGroups ||
+    managePetitions !== admin.managePetitions ||
     restrictedToFaculty !== admin.restrictedToFaculty;
 
   const handleSubmit = async () => {
@@ -63,11 +72,17 @@ export function EditPermissionsDialog({
     const result = await api.admins.patch(admin.userId, {
       manageAdmins,
       manageGroups,
+      managePetitions,
       restrictedToFaculty,
     });
 
     if (result.success) {
-      onUpdate(admin.userId, { manageAdmins, manageGroups, restrictedToFaculty });
+      onUpdate(admin.userId, {
+        manageAdmins,
+        manageGroups,
+        managePetitions,
+        restrictedToFaculty,
+      });
       toast({
         title: 'Права оновлено',
         description: `Права адміністратора ${admin.fullName} успішно змінено.`,
@@ -86,6 +101,7 @@ export function EditPermissionsDialog({
     setError(null);
     setManageAdmins(admin.manageAdmins);
     setManageGroups(admin.manageGroups);
+    setManagePetitions(admin.managePetitions);
     setRestrictedToFaculty(admin.restrictedToFaculty);
     onClose();
   };
@@ -123,6 +139,18 @@ export function EditPermissionsDialog({
               checked={manageGroups}
               onChange={setManageGroups}
               disabled={!callerManageGroups}
+            />
+
+            <ToggleField
+              label="Керування петиціями"
+              description={
+                !callerManagePetitions
+                  ? 'Ви не можете надати цей дозвіл, оскільки самі його не маєте'
+                  : 'Дозволяє апрувати петиції користувачів та видаляти петиції'
+              }
+              checked={managePetitions}
+              onChange={setManagePetitions}
+              disabled={!callerManagePetitions}
             />
 
             <ToggleField

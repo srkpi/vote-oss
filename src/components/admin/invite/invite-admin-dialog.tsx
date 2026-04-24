@@ -31,6 +31,7 @@ interface InviteAdminDialogProps {
   onClose: () => void;
   canGrantManageAdmins: boolean;
   canGrantManageGroups: boolean;
+  canGrantManagePetitions: boolean;
   restrictedToFaculty: boolean;
 }
 
@@ -39,6 +40,7 @@ export function InviteAdminDialog({
   onClose,
   canGrantManageAdmins,
   canGrantManageGroups,
+  canGrantManagePetitions,
   restrictedToFaculty,
 }: InviteAdminDialogProps) {
   const { toast } = useToast();
@@ -61,6 +63,7 @@ export function InviteAdminDialog({
     maxUsage: String(INVITE_TOKEN_MAX_USAGE_MIN),
     manageAdmins: false,
     manageGroups: false,
+    managePetitions: false,
     restrictedToFaculty: true,
   });
 
@@ -73,6 +76,7 @@ export function InviteAdminDialog({
       maxUsage: parseInt(form.maxUsage, 10),
       manageAdmins: form.manageAdmins,
       manageGroups: form.manageGroups,
+      managePetitions: form.managePetitions,
       restrictedToFaculty: form.restrictedToFaculty,
     });
 
@@ -112,6 +116,7 @@ export function InviteAdminDialog({
       maxUsage: String(INVITE_TOKEN_MAX_USAGE_MIN),
       manageAdmins: false,
       manageGroups: false,
+      managePetitions: false,
       restrictedToFaculty: restrictedToFaculty,
     });
     onClose();
@@ -186,6 +191,18 @@ export function InviteAdminDialog({
                   checked={form.manageGroups}
                   onChange={(v) => setForm((p) => ({ ...p, manageGroups: v }))}
                   disabled={!canGrantManageGroups}
+                />
+
+                <ToggleField
+                  label="Керувати петиціями"
+                  description={
+                    !canGrantManagePetitions
+                      ? 'Ви не маєте цього права, тому не можете його передати'
+                      : 'Дозволити апрувати петиції користувачів та видаляти їх'
+                  }
+                  checked={form.managePetitions}
+                  onChange={(v) => setForm((p) => ({ ...p, managePetitions: v }))}
+                  disabled={!canGrantManagePetitions}
                 />
               </div>
             </>

@@ -40,7 +40,9 @@ import type { Admin } from '@/types/admin';
 
 const SAMPLE_CACHED_ELECTION: CachedElection = {
   id: 'sample-uuid',
+  type: 'ELECTION',
   title: 'Test Election',
+  description: null,
   createdAt: '2024-01-01T00:00:00.000Z',
   opensAt: new Date(Date.now() - 60_000).toISOString(),
   closesAt: new Date(Date.now() + 3_600_000).toISOString(),
@@ -50,10 +52,14 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
   restrictions: [],
   publicKey: '-----BEGIN PUBLIC KEY-----\nfake\n-----END PUBLIC KEY-----',
   privateKey: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----',
-  creator: { fullName: 'Admin', faculty: 'FICE' },
+  createdByFullName: 'Admin',
   choices: [],
   ballotCount: 0,
   createdBy: 'admin-001',
+  approved: true,
+  approvedById: 'admin-001',
+  approvedByFullName: 'Admin',
+  approvedAt: '2024-01-01T00:00:00.000Z',
   deletedAt: null,
   deletedByUserId: null,
   deletedByName: null,
@@ -77,6 +83,7 @@ const SAMPLE_ADMIN: Admin = {
   manageAdmins: true,
   restrictedToFaculty: false,
   manageGroups: false,
+  managePetitions: false,
 };
 
 describe('cache', () => {

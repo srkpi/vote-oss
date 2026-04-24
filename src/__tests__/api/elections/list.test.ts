@@ -45,7 +45,9 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
   const e = makeElection(overrides);
   return {
     id: e.id,
+    type: e.type,
     title: e.title,
+    description: e.description,
     createdAt: e.created_at.toISOString(),
     opensAt: e.opens_at.toISOString(),
     closesAt: e.closes_at.toISOString(),
@@ -54,7 +56,12 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
     maxChoices: e.max_choices,
     publicKey: e.public_key,
     privateKey: e.private_key,
-    creator: e.creator,
+    createdBy: e.created_by,
+    createdByFullName: e.created_by_full_name,
+    approved: e.approved,
+    approvedById: e.approved_by_id,
+    approvedByFullName: e.approved_by_full_name,
+    approvedAt: e.approved_at?.toISOString() ?? null,
     choices: e.choices,
     ballotCount: 0,
     winningConditions: (e.winning_conditions ??
@@ -109,7 +116,7 @@ describe('GET /api/elections', () => {
       {
         ...election,
         private_key: election.private_key,
-        creator: { full_name: 'Admin', faculty: 'FICE' },
+        created_by_full_name: 'Admin',
         choices: election.choices,
         _count: { ballots: 0 },
       },
@@ -127,7 +134,7 @@ describe('GET /api/elections', () => {
       {
         ...election,
         private_key: election.private_key,
-        creator: { full_name: 'Admin', faculty: 'FICE' },
+        created_by_full_name: 'Admin',
         choices: election.choices,
         _count: { ballots: 0 },
       },
@@ -187,7 +194,7 @@ describe('GET /api/elections', () => {
       {
         ...election,
         private_key: election.private_key,
-        creator: { full_name: 'Admin', faculty: 'FICE' },
+        created_by_full_name: 'Admin',
         choices: election.choices,
         _count: { ballots: 0 },
       },
@@ -232,7 +239,7 @@ describe('GET /api/elections', () => {
       {
         ...election,
         private_key: election.private_key,
-        creator: { full_name: 'Admin', faculty: 'FICE' },
+        created_by_full_name: 'Admin',
         choices: election.choices,
         _count: { ballots: 0 },
       },
@@ -303,14 +310,6 @@ describe('POST /api/elections', () => {
     closesAt: new Date(Date.now() + 7_200_000).toISOString(),
     choices: ['Option A', 'Option B'],
   };
-
-  it('returns 403 for a non-admin user', async () => {
-    const { access } = await makeTokenPair(USER_PAYLOAD);
-    tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
-    const req = makeAuthRequest(access.token, { method: 'POST', body: validBody });
-    const res = await POST(req);
-    expect(res.status).toBe(403);
-  });
 
   it('returns 400 when required fields are missing', async () => {
     const req = await makeAdminReq({ title: 'Only title' });

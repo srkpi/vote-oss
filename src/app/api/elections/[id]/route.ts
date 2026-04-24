@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getElectionBypassForUser } from '@/lib/bypass';
-import { getCachedElections, invalidateElections } from '@/lib/cache';
+import { getCachedElections, invalidateElections, overlayLiveBallotCounts } from '@/lib/cache';
 import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
@@ -22,9 +22,18 @@ import { computeWinners, parseWinningConditions } from '@/lib/winning-conditions
 import type {
   ElectionRestrictedGroups,
   ElectionRestriction,
+  ElectionType,
   TallyResult,
   WinningConditions,
 } from '@/types/election';
+
+function safeDecrypt(value: string): string {
+  try {
+    return decryptField(value);
+  } catch {
+    return value;
+  }
+}
 import {
   DEFAULT_WINNING_CONDITIONS,
   DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
@@ -166,8 +175,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const cached = await getCachedElections();
 
   if (cached) {
-    const found = cached.find((e) => e.id === electionId);
-    if (!found) return Errors.notFound('Election not found');
+    const rawFound = cached.find((e) => e.id === electionId);
+    if (!rawFound) return Errors.notFound('Election not found');
+    // Overlay real-time ballot count so freshly-cast ballots are reflected
+    // without waiting for full cache invalidation.
+    const [found] = await overlayLiveBallotCounts([rawFound]);
 
     let winningConditions = found.winningConditions;
     if (!winningConditions) {
@@ -179,7 +191,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     electionData = {
       id: found.id,
+      type: found.type,
       title: found.title,
+      description: found.description,
       createdAt: new Date(found.createdAt),
       opensAt: new Date(found.opensAt),
       closesAt: new Date(found.closesAt),
@@ -188,7 +202,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       publicKey: found.publicKey,
       privateKey: found.privateKey,
       restrictions: found.restrictions as ElectionRestriction[],
-      creator: found.creator,
+      createdByFullName: found.createdByFullName,
+      approved: found.approved,
+      approvedById: found.approvedById,
+      approvedByFullName: found.approvedByFullName,
+      approvedAt: found.approvedAt ? new Date(found.approvedAt) : null,
       choices: found.choices,
       ballotCount: found.ballotCount,
       createdBy: found.createdBy,
@@ -205,7 +223,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { id: electionId },
       include: {
         choices: { orderBy: { position: 'asc' } },
-        creator: { select: { full_name: true, faculty: true } },
         deleter: { select: { full_name: true } },
         restrictions: { select: { type: true, value: true } },
         _count: { select: { ballots: true } },
@@ -216,7 +233,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     electionData = {
       id: dbElection.id,
+      type: dbElection.type as ElectionType,
       title: dbElection.title,
+      description: dbElection.description ?? null,
       createdAt: dbElection.created_at,
       opensAt: dbElection.opens_at,
       closesAt: dbElection.closes_at,
@@ -225,7 +244,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       publicKey: dbElection.public_key,
       privateKey: dbElection.private_key,
       restrictions: dbElection.restrictions as ElectionRestriction[],
-      creator: { fullName: dbElection.creator.full_name, faculty: dbElection.creator.faculty },
+      createdByFullName: safeDecrypt(dbElection.created_by_full_name),
+      approved: dbElection.approved,
+      approvedById: dbElection.approved_by_id,
+      approvedByFullName: dbElection.approved_by_full_name
+        ? safeDecrypt(dbElection.approved_by_full_name)
+        : null,
+      approvedAt: dbElection.approved_at,
       choices: dbElection.choices.map((c) => ({
         id: c.id,
         choice: c.choice,
@@ -247,6 +272,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // Hidden from non-admins when deleted
   if (!isAdmin && electionData.deletedAt) {
     return Errors.notFound('Election not found');
+  }
+
+  // Unapproved petitions: visible only to creator and manage_petitions admins
+  if (electionData.type === 'PETITION' && !electionData.approved) {
+    const isPetitionManager = isAdmin && user.managePetitions === true;
+    if (!isPetitionManager && electionData.createdBy !== user.sub) {
+      return Errors.notFound('Election not found');
+    }
   }
 
   const restrictions = electionData.restrictions;
@@ -364,32 +397,39 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { user_id: user.sub, deleted_at: null },
     });
     if (adminRecord) {
-      const adminGraph = await buildAdminGraph();
       const isDeleted = !!electionData.deletedAt;
 
-      canDelete =
-        !isDeleted &&
-        adminCanDeleteElection(
-          {
-            restricted_to_faculty: adminRecord.restricted_to_faculty,
-            faculty: adminRecord.faculty,
-            user_id: adminRecord.user_id,
-          },
-          { restrictions, created_by: electionData.createdBy },
-          adminGraph,
-        );
+      // Petitions bypass the admin-hierarchy gating used for regular elections:
+      // any admin with `manage_petitions` may delete or restore a petition.
+      if (electionData.type === 'PETITION') {
+        canDelete = !isDeleted && adminRecord.manage_petitions;
+        canRestore = isDeleted && adminRecord.manage_petitions;
+      } else {
+        const adminGraph = await buildAdminGraph();
+        canDelete =
+          !isDeleted &&
+          adminCanDeleteElection(
+            {
+              restricted_to_faculty: adminRecord.restricted_to_faculty,
+              faculty: adminRecord.faculty,
+              user_id: adminRecord.user_id,
+            },
+            { restrictions, created_by: electionData.createdBy },
+            adminGraph,
+          );
 
-      canRestore =
-        isDeleted &&
-        adminCanRestoreElection(
-          {
-            restricted_to_faculty: adminRecord.restricted_to_faculty,
-            faculty: adminRecord.faculty,
-            user_id: adminRecord.user_id,
-          },
-          { restrictions, deletedByUserId: electionData.deletedByUserId },
-          adminGraph,
-        );
+        canRestore =
+          isDeleted &&
+          adminCanRestoreElection(
+            {
+              restricted_to_faculty: adminRecord.restricted_to_faculty,
+              faculty: adminRecord.faculty,
+              user_id: adminRecord.user_id,
+            },
+            { restrictions, deletedByUserId: electionData.deletedByUserId },
+            adminGraph,
+          );
+      }
     }
 
     deletedByField = electionData.deletedByUserId
@@ -415,7 +455,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   return NextResponse.json({
     id: electionData.id,
+    type: electionData.type,
     title: electionData.title,
+    description: electionData.description,
     createdAt: electionData.createdAt,
     opensAt: electionData.opensAt,
     closesAt: electionData.closesAt,
@@ -428,7 +470,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     publicViewing,
     anonymous: electionData.anonymous,
     privateKey: exposeResults ? privateKeyPem : undefined,
-    creator: electionData.creator,
+    createdBy: {
+      userId: electionData.createdBy,
+      fullName: electionData.createdByFullName,
+    },
+    approved: electionData.approved,
+    approvedBy:
+      electionData.approvedById && electionData.approvedByFullName
+        ? { userId: electionData.approvedById, fullName: electionData.approvedByFullName }
+        : null,
+    approvedAt: electionData.approvedAt?.toISOString?.() ?? electionData.approvedAt ?? null,
     choices,
     ballotCount: electionData.ballotCount,
     winningConditions,
@@ -503,22 +554,29 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (election.deleted_at) return Errors.notFound('Election not found');
 
   const restrictions = election.restrictions as ElectionRestriction[];
-  const adminGraph = await buildAdminGraph();
 
-  if (
-    !adminCanDeleteElection(
-      {
-        restricted_to_faculty: admin.restricted_to_faculty,
-        faculty: admin.faculty,
-        user_id: admin.user_id,
-      },
-      { restrictions, created_by: election.created_by },
-      adminGraph,
-    )
-  ) {
-    return Errors.forbidden(
-      'You can only delete elections you created or that were created by your subordinates',
-    );
+  // Petitions are deleted by manage_petitions admins regardless of hierarchy.
+  if (election.type === 'PETITION') {
+    if (!admin.manage_petitions) {
+      return Errors.forbidden('Only petition managers can delete petitions');
+    }
+  } else {
+    const adminGraph = await buildAdminGraph();
+    if (
+      !adminCanDeleteElection(
+        {
+          restricted_to_faculty: admin.restricted_to_faculty,
+          faculty: admin.faculty,
+          user_id: admin.user_id,
+        },
+        { restrictions, created_by: election.created_by },
+        adminGraph,
+      )
+    ) {
+      return Errors.forbidden(
+        'You can only delete elections you created or that were created by your subordinates',
+      );
+    }
   }
 
   await prisma.election.update({

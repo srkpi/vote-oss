@@ -7,11 +7,33 @@ export const BALLOT_PADDING = '00000000-0000-0000-0000-000000000000';
 // Election limits
 export const ELECTION_TITLE_MAX_LENGTH = 255;
 export const ELECTION_CHOICES_MIN = 1;
-export const ELECTION_CHOICES_MAX = 20;
+export const ELECTION_CHOICES_MAX = 100;
 export const ELECTION_CHOICE_MAX_LENGTH = 100;
 export const ELECTION_MAX_CLOSES_AT_DAYS = 30;
 export const ELECTION_MIN_CHOICES_MIN = 1;
-export const ELECTION_MAX_CHOICES_MAX = 20;
+export const ELECTION_MAX_CHOICES_MAX = 100;
+
+// Petitions
+/**
+ * Number of "support" votes at which a petition is considered to have
+ * reached quorum.  When a ballot pushes the tally to this threshold the
+ * petition is automatically closed (closes_at = now) and the result is
+ * exposed immediately, same as for any closed election.
+ */
+export const PETITION_QUORUM = 250;
+/**
+ * Single choice all petitions have.  Petitions only ask whether the signer
+ * *supports* the initiative — there is no "against".
+ */
+export const PETITION_SUPPORT_CHOICE_LABEL = 'Підтримати';
+/**
+ * Duration a petition stays open after approval.  Using a calendar month
+ * (same day-of-month + 1) rather than a fixed 30 days so a petition
+ * approved on e.g. Feb 15 closes on Mar 15 regardless of month length.
+ */
+export const PETITION_OPEN_MONTHS = 1;
+/** Max length of the optional description field on elections and petitions. */
+export const ELECTION_DESCRIPTION_MAX_LENGTH = 5000;
 
 // Elections list / pagination
 /**

@@ -89,7 +89,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
     if (search.trim()) {
       const q = search.toLowerCase().trim();
       result = result.filter(
-        (e) => e.title.toLowerCase().includes(q) || e.creator.fullName.toLowerCase().includes(q),
+        (e) => e.title.toLowerCase().includes(q) || e.createdBy.fullName.toLowerCase().includes(q),
       );
     }
     return result;

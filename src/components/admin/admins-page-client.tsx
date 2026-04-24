@@ -18,6 +18,7 @@ interface AdminsPageClientProps {
   canInvite: boolean;
   canGrantManageAdmins: boolean;
   canGrantManageGroups: boolean;
+  canGrantManagePetitions: boolean;
   restrictedToFaculty: boolean;
   error: string | null;
 }
@@ -28,6 +29,7 @@ export function AdminsPageClient({
   canInvite,
   canGrantManageAdmins,
   canGrantManageGroups,
+  canGrantManagePetitions,
   restrictedToFaculty,
   error,
 }: AdminsPageClientProps) {
@@ -41,7 +43,12 @@ export function AdminsPageClient({
 
   const handleUpdate = (
     userId: string,
-    updates: { manageAdmins: boolean; manageGroups: boolean; restrictedToFaculty: boolean },
+    updates: {
+      manageAdmins: boolean;
+      manageGroups: boolean;
+      managePetitions: boolean;
+      restrictedToFaculty: boolean;
+    },
   ) => {
     setAdmins((prev) =>
       prev.map((a) =>
@@ -50,6 +57,7 @@ export function AdminsPageClient({
               ...a,
               manageAdmins: updates.manageAdmins,
               manageGroups: updates.manageGroups,
+              managePetitions: updates.managePetitions,
               restrictedToFaculty: updates.restrictedToFaculty,
             }
           : a,
@@ -61,6 +69,7 @@ export function AdminsPageClient({
   const restrictedCount = admins.filter((a) => a.restrictedToFaculty).length;
   const canInviteCount = admins.filter((a) => a.manageAdmins).length;
   const manageGroupsCount = admins.filter((a) => a.manageGroups).length;
+  const managePetitionsCount = admins.filter((a) => a.managePetitions).length;
 
   return (
     <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
@@ -114,6 +123,9 @@ export function AdminsPageClient({
               <strong className="text-foreground">{manageGroupsCount}</strong> керує групами
             </span>
             <span>
+              <strong className="text-foreground">{managePetitionsCount}</strong> керує петиціями
+            </span>
+            <span>
               <strong className="text-foreground">{restrictedCount}</strong>{' '}
               {pluralize(restrictedCount, ['обмежений', 'обмежені', 'обмежених'], false)} до
               підрозділу
@@ -125,6 +137,7 @@ export function AdminsPageClient({
             canManageAdmins={canGrantManageAdmins}
             callerRestrictedToFaculty={restrictedToFaculty}
             callerManageGroups={canGrantManageGroups}
+            callerManagePetitions={canGrantManagePetitions}
             onDelete={handleDelete}
             onUpdate={handleUpdate}
           />
@@ -137,6 +150,7 @@ export function AdminsPageClient({
           onClose={() => setInviteOpen(false)}
           canGrantManageAdmins={canGrantManageAdmins}
           canGrantManageGroups={canGrantManageGroups}
+          canGrantManagePetitions={canGrantManagePetitions}
           restrictedToFaculty={restrictedToFaculty}
         />
       )}

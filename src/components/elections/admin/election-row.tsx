@@ -33,7 +33,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
             {election.title}
           </p>
           <p className="font-body text-muted-foreground/60 mt-0.5 truncate text-xs">
-            {election.creator.fullName}
+            {election.createdBy.fullName}
           </p>
           {isDeleted && election.deletedBy && (
             <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 truncate text-xs">

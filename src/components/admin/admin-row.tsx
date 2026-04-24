@@ -61,24 +61,32 @@ export function AdminRow({
         <div className="flex flex-wrap gap-1.5">
           {admin.manageAdmins && (
             <Badge variant="info" size="sm">
-              Керування адмінами
+              Адміни
             </Badge>
           )}
           {admin.manageGroups && (
             <Badge variant="success" size="sm">
-              Керування групами
+              Групи
+            </Badge>
+          )}
+          {admin.managePetitions && (
+            <Badge variant="warning" size="sm">
+              Петиції
             </Badge>
           )}
           {admin.restrictedToFaculty && (
-            <Badge variant="warning" size="sm">
+            <Badge variant="error" size="sm">
               Обмежений до підрозділу
             </Badge>
           )}
-          {!admin.manageAdmins && !admin.manageGroups && !admin.restrictedToFaculty && (
-            <Badge variant="default" size="sm">
-              Базові
-            </Badge>
-          )}
+          {!admin.manageAdmins &&
+            !admin.manageGroups &&
+            !admin.managePetitions &&
+            !admin.restrictedToFaculty && (
+              <Badge variant="default" size="sm">
+                Базові
+              </Badge>
+            )}
         </div>
       </td>
       <td className="px-4 py-3.5">

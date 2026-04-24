@@ -87,6 +87,7 @@ export async function GET(req: NextRequest) {
       promoted_at: true,
       manage_admins: true,
       manage_groups: true,
+      manage_petitions: true,
       restricted_to_faculty: true,
     },
     orderBy: { promoted_at: 'asc' },
@@ -102,6 +103,7 @@ export async function GET(req: NextRequest) {
     manageAdmins: a.manage_admins,
     restrictedToFaculty: a.restricted_to_faculty,
     manageGroups: a.manage_groups,
+    managePetitions: a.manage_petitions,
   }));
 
   await setCachedAdmins(camelAdmins);
