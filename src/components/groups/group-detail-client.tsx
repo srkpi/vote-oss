@@ -14,11 +14,18 @@ import {
   Trash2,
   UserMinus,
   Users,
+  Vote,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
+import { ElectionListItem } from '@/components/elections/election-list-item';
+import {
+  FilterMultiDropdown,
+  type FilterOption,
+} from '@/components/elections/elections-filter-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +40,8 @@ import {
 import { FormField, Input } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { Pagination } from '@/components/ui/pagination';
+import { SearchInput } from '@/components/ui/search-input';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
@@ -41,9 +50,20 @@ import {
   GROUP_INVITE_LINK_MIN_HOURS,
   GROUP_NAME_MAX_LENGTH,
 } from '@/lib/constants';
-import { cn, pluralize } from '@/lib/utils/common';
+import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
+import type { ElectionStatus } from '@/types/election';
 import type { GroupDetail, GroupInviteLink, GroupMemberSummary } from '@/types/group';
+
+const GROUP_ELECTIONS_PAGE_SIZE = 5;
+
+const ELECTION_STATUS_LABELS: Record<ElectionStatus, string> = {
+  open: 'Активні',
+  upcoming: 'Заплановані',
+  closed: 'Завершені',
+};
+
+const ELECTION_STATUS_ORDER: ElectionStatus[] = ['open', 'upcoming', 'closed'];
 
 // ────────────────────────────────────────────────────────────────────────────
 // Invite link token result card
@@ -213,6 +233,67 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
   const isOwner = group.ownerId === session.userId;
   const isAdminWithManageGroups = session.isAdmin && session.manageGroups;
   const canManage = isOwner || isAdminWithManageGroups;
+  // Admins who own the group (or have manage_groups) may create elections
+  // pre-restricted to this group's membership.
+  const canCreateElection = session.isAdmin && canManage;
+
+  // ── Elections filter / pagination ─────────────────────────────────────────
+  const [electionSearch, setElectionSearch] = useState('');
+  const [electionStatuses, setElectionStatuses] = useState<string[]>([]);
+  const [electionPage, setElectionPage] = useState(1);
+
+  const filteredElections = useMemo(() => {
+    const q = electionSearch.trim().toLowerCase();
+    return group.elections.filter((e) => {
+      if (electionStatuses.length > 0 && !electionStatuses.includes(e.status)) return false;
+      if (q) {
+        const inTitle = e.title.toLowerCase().includes(q);
+        const inAuthor = e.createdBy.fullName.toLowerCase().includes(q);
+        if (!inTitle && !inAuthor) return false;
+      }
+      return true;
+    });
+  }, [group.elections, electionSearch, electionStatuses]);
+
+  const electionStatusOptions = useMemo<FilterOption[]>(() => {
+    const q = electionSearch.trim().toLowerCase();
+    const counts: Record<ElectionStatus, number> = { open: 0, upcoming: 0, closed: 0 };
+    for (const e of group.elections) {
+      if (q) {
+        const inTitle = e.title.toLowerCase().includes(q);
+        const inAuthor = e.createdBy.fullName.toLowerCase().includes(q);
+        if (!inTitle && !inAuthor) continue;
+      }
+      counts[e.status] = (counts[e.status] ?? 0) + 1;
+    }
+    return ELECTION_STATUS_ORDER.map((s) => ({
+      value: s,
+      label: ELECTION_STATUS_LABELS[s],
+      count: counts[s],
+    }));
+  }, [group.elections, electionSearch]);
+
+  const electionTotalPages = Math.max(
+    1,
+    Math.ceil(filteredElections.length / GROUP_ELECTIONS_PAGE_SIZE),
+  );
+  const safeElectionPage = Math.min(electionPage, electionTotalPages);
+  const pagedElections = filteredElections.slice(
+    (safeElectionPage - 1) * GROUP_ELECTIONS_PAGE_SIZE,
+    safeElectionPage * GROUP_ELECTIONS_PAGE_SIZE,
+  );
+
+  const handleElectionSearchChange = (value: string) => {
+    setElectionSearch(value);
+    setElectionPage(1);
+  };
+
+  const handleElectionStatusesChange = (values: string[]) => {
+    setElectionStatuses(values);
+    setElectionPage(1);
+  };
+
+  const hasElectionFilters = electionStatuses.length > 0 || electionSearch.trim().length > 0;
 
   // ── Rename ────────────────────────────────────────────────────────────────
   const [renameOpen, setRenameOpen] = useState(false);
@@ -312,7 +393,8 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
     setTransferring(false);
   };
 
-  // ── Invite link create ────────────────────────────────────────────────────
+  // ── Invite links — list modal + create modal ──────────────────────────────
+  const [invitesViewOpen, setInvitesViewOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteLabel, setInviteLabel] = useState('');
   const [inviteMaxUsage, setInviteMaxUsage] = useState(10);
@@ -399,14 +481,96 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
 
       <div className="container py-8">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Members panel */}
           <div className="space-y-6 lg:col-span-2">
+            {/* Elections panel */}
+            <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
+              <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <Vote className="text-kpi-gray-mid h-4 w-4" />
+                  <h2 className="font-display text-foreground text-base font-semibold">
+                    Голосування
+                  </h2>
+                </div>
+                {canCreateElection ? (
+                  <Button variant="accent" size="sm" asChild>
+                    <Link href={`/admin/elections/new?groupId=${group.id}`}>
+                      <Plus className="h-3.5 w-3.5" />
+                      <span className="fony-body text-sm">Нове</span>
+                    </Link>
+                  </Button>
+                ) : (
+                  <span className="font-body text-muted-foreground text-sm">
+                    {group.elections.length}
+                  </span>
+                )}
+              </div>
+
+              {group.elections.length === 0 ? (
+                <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+                  Для цієї групи ще немає голосувань
+                </p>
+              ) : (
+                <>
+                  <div className="border-border-subtle flex flex-wrap items-center gap-3 border-b px-5 py-3">
+                    <FilterMultiDropdown
+                      label="Статус"
+                      options={electionStatusOptions}
+                      value={electionStatuses}
+                      onChange={handleElectionStatusesChange}
+                    />
+                    <div className="min-w-40 flex-1">
+                      <SearchInput
+                        value={electionSearch}
+                        onChange={handleElectionSearchChange}
+                        placeholder="Пошук голосувань…"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-b-xl">
+                    {pagedElections.length === 0 ? (
+                      <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+                        {hasElectionFilters
+                          ? 'За заданими критеріями нічого не знайдено'
+                          : 'Для цієї групи ще немає голосувань'}
+                      </p>
+                    ) : (
+                      <div className="divide-border-subtle divide-y">
+                        {pagedElections.map((election, i) => (
+                          <ElectionListItem
+                            key={election.id}
+                            election={election}
+                            index={(safeElectionPage - 1) * GROUP_ELECTIONS_PAGE_SIZE + i}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {electionTotalPages > 1 && (
+                      <div className="border-border-subtle border-t px-5 py-3">
+                        <Pagination
+                          page={safeElectionPage}
+                          totalPages={electionTotalPages}
+                          setPage={setElectionPage}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar: group info + members + actions */}
+          <div className="space-y-4">
+            {/* Members panel — moved into sidebar above management */}
             <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
               <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
                 <div className="flex items-center gap-2">
                   <Users className="text-kpi-gray-mid h-4 w-4" />
                   <h2 className="font-display text-foreground text-base font-semibold">Учасники</h2>
                 </div>
+                <span className="font-body text-muted-foreground text-sm">{group.memberCount}</span>
               </div>
 
               <div className="divide-border-subtle divide-y">
@@ -471,73 +635,6 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
               </div>
             </div>
 
-            {/* Invite links panel — only for owner/admin */}
-            {canManage && (
-              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
-                <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <Key className="text-kpi-gray-mid h-4 w-4" />
-                    <h2 className="font-display text-foreground text-base font-semibold">
-                      Запрошення
-                    </h2>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setInviteOpen(true)}
-                    icon={<Plus className="h-3.5 w-3.5" />}
-                  >
-                    <span className="hidden sm:inline">Нове посилання</span>
-                  </Button>
-                </div>
-
-                <div className="p-4 sm:p-5">
-                  {group.inviteLinks.length === 0 ? (
-                    <p className="font-body text-muted-foreground py-4 text-center text-sm">
-                      Немає посилань для запрошення
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {group.inviteLinks.map((link) => (
-                        <InviteLinkCard
-                          key={link.id}
-                          link={link}
-                          onRevoke={() => setRevokeTarget(link.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar: group info + actions */}
-          <div className="space-y-4">
-            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white p-5">
-              <h3 className="font-display text-foreground mb-4 text-base font-semibold">
-                Деталі групи
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="font-body text-muted-foreground mb-0.5 text-xs font-semibold tracking-wider uppercase">
-                    Власник
-                  </p>
-                  <p className="font-body text-foreground">
-                    {group.members.find((m) => m.isOwner)?.displayName ?? group.ownerId}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-body text-muted-foreground mb-0.5 text-xs font-semibold tracking-wider uppercase">
-                    Учасників
-                  </p>
-                  <p className="font-body text-foreground">
-                    {pluralize(group.memberCount, ['учасник', 'учасники', 'учасників'])}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Owner actions */}
             {isOwner && (
               <div className="border-border-color shadow-shadow-card space-y-3 overflow-hidden rounded-xl border bg-white p-5">
@@ -554,6 +651,16 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                   icon={<Pencil className="h-3.5 w-3.5" />}
                 >
                   Перейменувати
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  fullWidth
+                  onClick={() => setInvitesViewOpen(true)}
+                  icon={<Key className="h-3.5 w-3.5" />}
+                >
+                  Переглянути запрошення
                 </Button>
 
                 {transferCandidates.length > 0 && (
@@ -590,11 +697,22 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                   variant="secondary"
                   size="sm"
                   fullWidth
-                  onClick={() => setTransferOpen(true)}
-                  icon={<Crown className="h-3.5 w-3.5" />}
+                  onClick={() => setInvitesViewOpen(true)}
+                  icon={<Key className="h-3.5 w-3.5" />}
                 >
-                  Взяти право власника
+                  Переглянути запрошення
                 </Button>
+                {group.isMember && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    fullWidth
+                    onClick={() => setTransferOpen(true)}
+                    icon={<Crown className="h-3.5 w-3.5" />}
+                  >
+                    Взяти право власника
+                  </Button>
+                )}
                 <Button
                   variant="danger"
                   size="sm"
@@ -605,21 +723,6 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                   Видалити групу
                 </Button>
               </div>
-            )}
-
-            {/* Non-owner leave button */}
-            {!isOwner && group.isMember && (
-              <Button
-                variant="danger"
-                size="sm"
-                fullWidth
-                onClick={() =>
-                  setKickTarget(group.members.find((m) => m.userId === session.userId) ?? null)
-                }
-                icon={<LogOut className="h-3.5 w-3.5" />}
-              >
-                Вийти з групи
-              </Button>
             )}
           </div>
 
@@ -801,6 +904,43 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                   disabled={!(isAdminWithManageGroups && !isOwner) && !selectedNewOwner}
                 >
                   {isAdminWithManageGroups && !isOwner ? 'Перейняти власність' : 'Передати'}
+                </Button>
+              </DialogFooter>
+            </DialogPanel>
+          </Dialog>
+
+          {/* View invite links */}
+          <Dialog open={invitesViewOpen} onClose={() => setInvitesViewOpen(false)}>
+            <DialogPanel maxWidth="md">
+              <DialogHeader>
+                <DialogTitle>Запрошення</DialogTitle>
+                <DialogCloseButton onClose={() => setInvitesViewOpen(false)} />
+              </DialogHeader>
+              <DialogBody className="space-y-4">
+                {group.inviteLinks.length === 0 ? (
+                  <p className="font-body text-muted-foreground py-4 text-center text-sm">
+                    Немає посилань для запрошення
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {group.inviteLinks.map((link) => (
+                      <InviteLinkCard
+                        key={link.id}
+                        link={link}
+                        onRevoke={() => setRevokeTarget(link.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </DialogBody>
+              <DialogFooter>
+                <Button
+                  variant="accent"
+                  fullWidth
+                  onClick={() => setInviteOpen(true)}
+                  icon={<Plus className="h-3.5 w-3.5" />}
+                >
+                  Нове посилання
                 </Button>
               </DialogFooter>
             </DialogPanel>

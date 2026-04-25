@@ -28,36 +28,28 @@ import {
   VALID_LEVEL_COURSES,
 } from '@/lib/constants';
 import { generateElectionKeyPair } from '@/lib/crypto';
-import { decryptField, encryptField } from '@/lib/encryption';
+import {
+  type AdminContext,
+  computeStatus,
+  safeDecrypt,
+  toClientElections,
+} from '@/lib/elections-view';
+import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { buildAdminGraph } from '@/lib/graph';
 import { getUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
-import {
-  adminCanAccessElection,
-  adminCanDeleteElection,
-  adminCanRestoreElection,
-  checkRestrictionsWithBypass,
-} from '@/lib/restrictions';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
 import { computePetitionClosesAt } from '@/lib/utils/petition-date';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
-import {
-  computeWinners,
-  parseWinningConditions,
-  validateWinningConditions,
-} from '@/lib/winning-conditions';
+import { parseWinningConditions, validateWinningConditions } from '@/lib/winning-conditions';
 import type {
   CachedElection,
   CachedElectionChoice,
   CreateElectionRestriction,
-  Election,
   ElectionsListResponse,
-  ElectionStatus,
   ElectionType,
-  ElectionVoteStatus,
   RestrictionType,
-  TallyResult,
   WinningConditions,
 } from '@/types/election';
 import {
@@ -68,48 +60,6 @@ import {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function computeStatus(opensAt: string | Date, closesAt: string | Date): ElectionStatus {
-  const now = Date.now();
-  const open = typeof opensAt === 'string' ? new Date(opensAt).getTime() : opensAt.getTime();
-  const close = typeof closesAt === 'string' ? new Date(closesAt).getTime() : closesAt.getTime();
-
-  if (now < open) return 'upcoming';
-  if (now <= close) return 'open';
-  return 'closed';
-}
-
-/**
- * Build tally results from cached choices using winning conditions.
- * Returns null if any voteCount is still null (tallies not yet computed).
- */
-function buildTallyResults(
-  choices: CachedElectionChoice[],
-  ballotCount: number,
-  conditions: WinningConditions,
-): TallyResult[] | null {
-  if (choices.some((c) => c.voteCount === null)) return null;
-
-  const tally: Record<string, number> = {};
-  for (const c of choices) tally[c.id] = c.voteCount!;
-
-  const winners = computeWinners(tally, ballotCount, conditions);
-
-  return choices.map((c) => ({
-    choiceId: c.id,
-    choice: c.choice,
-    position: c.position,
-    votes: c.voteCount!,
-    winner: winners[c.id] ?? false,
-  }));
-}
-
-type AdminContext = {
-  user_id: string;
-  restricted_to_faculty: boolean;
-  faculty: string;
-  manage_petitions: boolean;
-};
 
 function parseTypeFilter(req: NextRequest): ElectionType {
   const raw = req.nextUrl.searchParams.get('type');
@@ -142,19 +92,6 @@ async function getSortedPetitionIds(sort: PetitionsSort): Promise<string[]> {
 }
 
 /**
- * Decrypt a stored ciphertext field, falling back to the raw value if the
- * input doesn't look encrypted (protects against stale rows predating the
- * encryption backfill).
- */
-function safeDecrypt(value: string): string {
-  try {
-    return decryptField(value);
-  } catch {
-    return value;
-  }
-}
-
-/**
  * Derive the unique set of FACULTY restriction values that appear across all
  * elections visible to the caller.  Used to populate the faculty filter dropdown.
  */
@@ -179,155 +116,6 @@ function extractStudyFormsFromElections(elections: CachedElection[]): string[] {
     }
   }
   return [...set].sort();
-}
-
-// ---------------------------------------------------------------------------
-// toClientElections
-// ---------------------------------------------------------------------------
-
-function toClientElections(
-  cached: CachedElection[],
-  user: {
-    sub: string;
-    faculty: string;
-    group: string;
-    speciality?: string;
-    studyYear?: number;
-    studyForm?: string;
-    isAdmin?: boolean;
-    restrictedToFaculty?: boolean;
-    managePetitions?: boolean;
-  },
-  votedSet: Set<string>,
-  groupMemberships: string[],
-  typeFilter: ElectionType,
-  adminRecord?: AdminContext,
-  adminGraph?: Map<string, string | null>,
-): Election[] {
-  const isAdmin = user.isAdmin ?? false;
-  const isAdminRestricted = user.restrictedToFaculty ?? true;
-  const isPetitionManager = isAdmin && (user.managePetitions ?? false);
-
-  return cached
-    .filter((e) => {
-      if (e.type !== typeFilter) return false;
-
-      const isDeleted = !!e.deletedAt;
-      if (!isAdmin && isDeleted) return false;
-
-      // Petitions: unapproved petitions are only visible to admins with
-      // manage_petitions.  Approved petitions follow normal access rules (they
-      // have no restrictions, so anyone can see them).
-      if (e.type === 'PETITION' && !e.approved) {
-        return isPetitionManager;
-      }
-
-      if (isAdmin && !isAdminRestricted) return true;
-      if (isAdmin && isAdminRestricted) {
-        return adminCanAccessElection(user.faculty, e.restrictions);
-      }
-      // Regular users: only show elections they're eligible for (OR publicViewing=true)
-      // GROUP_MEMBERSHIP is now checked with actual memberships from cache.
-      return (
-        checkRestrictionsWithBypass(e.restrictions, user, null, groupMemberships) || e.publicViewing
-      );
-    })
-    .map((e) => {
-      const isClosed = Date.now() > new Date(e.closesAt).getTime();
-      const status = computeStatus(e.opensAt, e.closesAt);
-      const isDeleted = !!e.deletedAt;
-
-      const tallyResults = isClosed
-        ? buildTallyResults(e.choices, e.ballotCount, e.winningConditions)
-        : null;
-      const tallyMap = new Map(tallyResults?.map((r) => [r.choiceId, r]));
-
-      // Build choices with tally data, then apply shuffle if enabled
-      let choices = e.choices.map((c) => {
-        const base = { id: c.id, choice: c.choice, position: c.position };
-        if (tallyResults) {
-          const r = tallyMap.get(c.id);
-          return { ...base, votes: r?.votes ?? 0, winner: r?.winner ?? false };
-        }
-        return base;
-      });
-
-      if (e.shuffleChoices) {
-        choices = shuffleChoicesForUser(choices, user.sub, e.id);
-      }
-
-      // ── voteStatus (regular users only) ──────────────────────────────────
-      let voteStatus: ElectionVoteStatus;
-      if (votedSet.has(e.id)) {
-        voteStatus = 'voted';
-      } else {
-        const canVote = checkRestrictionsWithBypass(e.restrictions, user, null, groupMemberships);
-        voteStatus = canVote ? 'can_vote' : 'cannot_vote';
-      }
-
-      const base: Election = {
-        id: e.id,
-        type: e.type,
-        title: e.title,
-        description: e.description,
-        createdAt: e.createdAt,
-        opensAt: e.opensAt,
-        closesAt: e.closesAt,
-        status,
-        restrictions: e.restrictions,
-        winningConditions: e.winningConditions,
-        shuffleChoices: e.shuffleChoices,
-        publicViewing: e.publicViewing,
-        anonymous: e.anonymous ?? true,
-        minChoices: e.minChoices,
-        maxChoices: e.maxChoices,
-        createdBy: { userId: e.createdBy, fullName: e.createdByFullName },
-        approved: e.approved,
-        approvedBy:
-          e.approvedById && e.approvedByFullName
-            ? { userId: e.approvedById, fullName: e.approvedByFullName }
-            : null,
-        approvedAt: e.approvedAt,
-        choices,
-        ballotCount: e.ballotCount,
-        voteStatus,
-      };
-
-      if (isAdmin && adminRecord && adminGraph) {
-        let canDelete: boolean;
-        let canRestore: boolean;
-        if (e.type === 'PETITION') {
-          canDelete = !isDeleted && adminRecord.manage_petitions;
-          canRestore = isDeleted && adminRecord.manage_petitions;
-        } else {
-          canDelete =
-            !isDeleted &&
-            adminCanDeleteElection(
-              adminRecord,
-              { restrictions: e.restrictions, created_by: e.createdBy },
-              adminGraph,
-            );
-          canRestore =
-            isDeleted &&
-            adminCanRestoreElection(
-              adminRecord,
-              { restrictions: e.restrictions, deletedByUserId: e.deletedByUserId },
-              adminGraph,
-            );
-        }
-        return {
-          ...base,
-          deletedAt: e.deletedAt,
-          deletedBy: e.deletedByUserId
-            ? { userId: e.deletedByUserId, fullName: e.deletedByName ?? '' }
-            : null,
-          canDelete,
-          canRestore,
-        };
-      }
-
-      return base;
-    });
 }
 
 // ---------------------------------------------------------------------------

@@ -1,4 +1,12 @@
-import { CheckCircle2, ChevronLeft, CreditCard, FileText, Megaphone, Users } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronLeft,
+  CreditCard,
+  FileText,
+  Megaphone,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -24,15 +32,17 @@ export default async function AdminDashboardPage() {
     redirect('/login');
   }
 
-  const [electionsResult, petitionsResult, adminsResult] = await Promise.all([
+  const [electionsResult, petitionsResult, adminsResult, groupsResult] = await Promise.all([
     serverApi.elections.list(),
     serverApi.elections.list({ type: 'PETITION' }),
     serverApi.admins.list(),
+    serverApi.groups.list(),
   ]);
 
   const elections = (electionsResult.data?.elections ?? []).filter((e) => !e.deletedAt);
   const petitions = (petitionsResult.data?.elections ?? []).filter((p) => !p.deletedAt);
   const admins = adminsResult.data ?? [];
+  const groups = groupsResult.data ?? [];
 
   const openElections = elections.filter((e) => e.status === 'open');
   const totalBallots = elections.reduce((sum, e) => sum + e.ballotCount, 0);
@@ -64,31 +74,35 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="space-y-6 p-4 sm:p-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 2xl:grid-cols-6">
           <StatCard
             label="Активних"
             value={openElections.length.toLocaleString('uk-UA')}
             accent="success"
             icon={<CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
+
           <StatCard
             label={pluralize(elections.length, ['Голосування', 'Голосування', 'Голосувань'], false)}
             value={elections.length.toLocaleString('uk-UA')}
             accent="navy"
             icon={<FileText className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
+
           <StatCard
             label={pluralize(petitions.length, ['Петиція', 'Петиції', 'Петицій'], false)}
             value={petitions.length.toLocaleString('uk-UA')}
             accent="info"
             icon={<Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
+
           <StatCard
             label={pluralize(totalBallots, ['Бюлетень', 'Бюлетені', 'Бюлетенів'], false)}
             value={totalBallots.toLocaleString('uk-UA')}
             accent="orange"
             icon={<CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
+
           <StatCard
             label={pluralize(
               admins.length,
@@ -96,7 +110,14 @@ export default async function AdminDashboardPage() {
               false,
             )}
             value={admins.length.toLocaleString('uk-UA')}
-            accent="info"
+            accent="purple"
+            icon={<ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />}
+          />
+
+          <StatCard
+            label={pluralize(groups.length, ['Група', 'Групи', 'Груп'], false)}
+            value={groups.length.toLocaleString('uk-UA')}
+            accent="teal"
             icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}
           />
         </div>

@@ -110,24 +110,25 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
 
         {/* Choices — own line, separate from author/date */}
         {orderedChoices.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5">
-            {hasWinners && <Crown className="text-kpi-navy h-3 w-3 shrink-0" />}
-            {visibleChoices.map((c, i) => (
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+            {visibleChoices.map((c) => (
               <span
-                key={i}
+                key={c.id}
                 className={cn(
-                  'font-body truncate text-xs',
-                  c.winner ? 'text-kpi-navy font-medium' : 'text-muted-foreground',
+                  'font-body flex items-center gap-1 truncate rounded-full border px-2 py-0.5 text-xs',
+                  c.winner
+                    ? 'border-kpi-navy/30 bg-kpi-navy/8 text-kpi-navy font-semibold'
+                    : 'bg-surface text-muted-foreground border-border-subtle',
                 )}
               >
+                {c.winner && <Crown className="h-2.5 w-2.5 shrink-0" />}
                 {c.choice}
-                {i < visibleChoices.length - 1 && (
-                  <span className="text-muted-foreground/40">,</span>
-                )}
               </span>
             ))}
             {hiddenCount > 0 && (
-              <span className="font-body text-muted-foreground/60 text-xs">+{hiddenCount}</span>
+              <span className="font-body text-muted-foreground/70 border-border-subtle bg-surface rounded-full border px-2 py-0.5 text-xs">
+                +{hiddenCount}
+              </span>
             )}
           </div>
         )}

@@ -9,11 +9,17 @@ export const metadata: Metadata = {
   title: 'Нове голосування',
 };
 
-export default async function NewElectionPage() {
+interface NewElectionPageProps {
+  searchParams: Promise<{ groupId?: string }>;
+}
+
+export default async function NewElectionPage({ searchParams }: NewElectionPageProps) {
   const session = await getServerSession();
   if (!session) {
     redirect('/login');
   }
+
+  const { groupId } = await searchParams;
 
   return (
     <div className="flex-1 overflow-auto">
@@ -33,6 +39,7 @@ export default async function NewElectionPage() {
             <CreateElectionForm
               restrictedToFaculty={session.restrictedToFaculty ? session.faculty : null}
               manageGroups={session.manageGroups}
+              initialGroupMembershipId={groupId ?? null}
             />
           </div>
         </div>

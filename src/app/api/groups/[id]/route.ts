@@ -2,9 +2,23 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
-import { GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
-import { Errors } from '@/lib/errors';
 import {
+  getCachedElections,
+  getCachedUserVotedElections,
+  overlayLiveBallotCounts,
+  setCachedUserVotedElections,
+} from '@/lib/cache';
+import { GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
+import {
+  type AdminContext,
+  computeStatus,
+  safeDecrypt,
+  toClientElections,
+} from '@/lib/elections-view';
+import { Errors } from '@/lib/errors';
+import { buildAdminGraph } from '@/lib/graph';
+import {
+  getUserGroupMemberships,
   GroupForbiddenError,
   GroupNotFoundError,
   invalidateGroupMembershipsForUsers,
@@ -12,6 +26,15 @@ import {
 } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
+import { parseWinningConditions } from '@/lib/winning-conditions';
+import type { VerifiedPayload } from '@/types/auth';
+import type {
+  CachedElection,
+  CachedElectionChoice,
+  Election,
+  ElectionType,
+  RestrictionType,
+} from '@/types/election';
 
 const MEMBER_SELECT = {
   id: true,
@@ -37,11 +60,197 @@ const INVITE_LINK_SELECT = {
   },
 } as const;
 
-async function fetchGroupDetail(
+/**
+ * Fallback DB query used when the elections cache is cold — fetches only the
+ * elections restricted to this group and shapes them into the CachedElection
+ * structure expected by toClientElections.  Avoids duplicating the full
+ * cache-fill in /api/elections, which reads every election in the DB.
+ */
+async function fetchGroupElectionsFromDb(groupId: string): Promise<CachedElection[]> {
+  const rows = await prisma.election.findMany({
+    where: {
+      deleted_at: null,
+      restrictions: {
+        some: { type: 'GROUP_MEMBERSHIP', value: groupId },
+      },
+    },
+    select: {
+      id: true,
+      type: true,
+      title: true,
+      description: true,
+      created_at: true,
+      opens_at: true,
+      closes_at: true,
+      min_choices: true,
+      max_choices: true,
+      created_by: true,
+      created_by_full_name: true,
+      approved: true,
+      approved_by_id: true,
+      approved_by_full_name: true,
+      approved_at: true,
+      restrictions: { select: { type: true, value: true } },
+      public_key: true,
+      private_key: true,
+      winning_conditions: true,
+      shuffle_choices: true,
+      public_viewing: true,
+      anonymous: true,
+      deleter: { select: { full_name: true } },
+      choices: {
+        select: { id: true, choice: true, position: true, vote_count: true },
+        orderBy: { position: 'asc' },
+      },
+      _count: { select: { ballots: true } },
+      deleted_at: true,
+      deleted_by: true,
+    },
+    orderBy: { opens_at: 'desc' },
+  });
+
+  return rows.map((e) => ({
+    id: e.id,
+    type: e.type as ElectionType,
+    title: e.title,
+    description: e.description ?? null,
+    createdAt: e.created_at.toISOString(),
+    opensAt: e.opens_at.toISOString(),
+    closesAt: e.closes_at.toISOString(),
+    minChoices: e.min_choices,
+    maxChoices: e.max_choices,
+    restrictions: e.restrictions as { type: RestrictionType; value: string }[],
+    publicKey: e.public_key,
+    privateKey: e.private_key,
+    winningConditions: parseWinningConditions(e.winning_conditions),
+    shuffleChoices: e.shuffle_choices,
+    publicViewing: e.public_viewing,
+    anonymous: e.anonymous,
+    createdByFullName: safeDecrypt(e.created_by_full_name),
+    approved: e.approved,
+    approvedById: e.approved_by_id,
+    approvedByFullName: e.approved_by_full_name ? safeDecrypt(e.approved_by_full_name) : null,
+    approvedAt: e.approved_at?.toISOString() ?? null,
+    choices: e.choices.map((c) => ({
+      id: c.id,
+      choice: c.choice,
+      position: c.position,
+      voteCount: c.vote_count ?? null,
+    })) as CachedElectionChoice[],
+    ballotCount: e._count.ballots,
+    createdBy: e.created_by,
+    deletedAt: e.deleted_at?.toISOString() ?? null,
+    deletedByUserId: e.deleted_by,
+    deletedByName: e.deleter?.full_name ?? null,
+  }));
+}
+
+/**
+ * Load the elections restricted to this group, transformed into the shape
+ * the client consumes.  Non-members only receive publicly-viewable elections.
+ */
+async function fetchGroupElections(
   groupId: string,
-  callerId: string,
+  user: VerifiedPayload,
+  isMember: boolean,
   isAdminWithManageGroups: boolean,
-) {
+): Promise<{ elections: Election[]; hasAnyPublic: boolean }> {
+  const cached = await getCachedElections();
+
+  let groupElections: CachedElection[];
+  if (cached) {
+    const withLiveCounts = await overlayLiveBallotCounts(cached);
+    groupElections = withLiveCounts.filter(
+      (e) =>
+        !e.deletedAt &&
+        e.restrictions.some((r) => r.type === 'GROUP_MEMBERSHIP' && r.value === groupId),
+    );
+  } else {
+    // Cache cold — scoped DB query so public-viewing access doesn't rely on
+    // the /api/elections endpoint having been hit first.  Live ballot counts
+    // aren't overlaid here; the counts from the DB _count are fresh enough.
+    groupElections = await fetchGroupElectionsFromDb(groupId);
+  }
+
+  const hasAnyPublic = groupElections.some((e) => e.publicViewing);
+
+  // Resolve admin context (only meaningful when caller is admin).
+  const isAdmin = user.isAdmin ?? false;
+  let adminRecord: AdminContext | undefined;
+  let adminGraph: Map<string, string | null> | undefined;
+  if (isAdmin) {
+    const dbAdmin = await prisma.admin.findUnique({
+      where: { user_id: user.sub, deleted_at: null },
+    });
+    if (dbAdmin) {
+      adminRecord = {
+        user_id: dbAdmin.user_id,
+        restricted_to_faculty: dbAdmin.restricted_to_faculty,
+        faculty: dbAdmin.faculty,
+        manage_petitions: dbAdmin.manage_petitions,
+      };
+      adminGraph = await buildAdminGraph();
+    }
+  }
+
+  // Voted set (open elections only — same contract as /api/elections).
+  const openElectionIds = groupElections
+    .filter((e) => computeStatus(e.opensAt, e.closesAt) === 'open')
+    .map((e) => e.id);
+
+  const [cachedVoted, memberships] = await Promise.all([
+    getCachedUserVotedElections(user.sub),
+    getUserGroupMemberships(user.sub),
+  ]);
+
+  let votedSet: Set<string>;
+  if (cachedVoted !== null) {
+    votedSet = cachedVoted;
+  } else if (openElectionIds.length > 0) {
+    const issuedTokens = await prisma.issuedToken.findMany({
+      where: { user_id: user.sub, election_id: { in: openElectionIds } },
+      select: { election_id: true },
+    });
+    votedSet = new Set(issuedTokens.map((t) => t.election_id));
+    setCachedUserVotedElections(user.sub, [...votedSet]).catch(() => {
+      /* non-fatal */
+    });
+  } else {
+    votedSet = new Set();
+  }
+
+  let elections = toClientElections(
+    groupElections,
+    {
+      sub: user.sub,
+      faculty: user.faculty,
+      group: user.group,
+      speciality: user.speciality,
+      studyYear: user.studyYear,
+      studyForm: user.studyForm,
+      isAdmin,
+      restrictedToFaculty: user.restrictedToFaculty,
+      managePetitions: user.managePetitions,
+    },
+    votedSet,
+    memberships,
+    null,
+    adminRecord,
+    adminGraph,
+  );
+
+  // Non-members (and non-manage-groups admins) should only ever see the
+  // publicly-viewable elections targeting this group.
+  if (!isMember && !isAdminWithManageGroups) {
+    elections = elections.filter((e) => e.publicViewing);
+  }
+
+  return { elections, hasAnyPublic };
+}
+
+async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
+  const isAdminWithManageGroups = (user.isAdmin ?? false) && (user.manageGroups ?? false);
+
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     select: {
@@ -72,12 +281,21 @@ async function fetchGroupDetail(
 
   if (!group) throw new GroupNotFoundError();
 
-  const isOwner = group.owner_id === callerId;
-  const isMember = group.members.some((m) => m.user_id === callerId);
+  const isOwner = group.owner_id === user.sub;
+  const isMember = group.members.some((m) => m.user_id === user.sub);
   const canManage = isOwner || isAdminWithManageGroups;
 
-  // Non-members who are not admins with manage_groups cannot see group details
-  if (!isMember && !isAdminWithManageGroups) {
+  // Fetch elections restricted to this group.  Non-members fall back on the
+  // presence of ≥1 publicly-viewable election to decide whether they may see
+  // the group at all.
+  const { elections, hasAnyPublic } = await fetchGroupElections(
+    groupId,
+    user,
+    isMember,
+    isAdminWithManageGroups,
+  );
+
+  if (!isMember && !isAdminWithManageGroups && !hasAnyPublic) {
     throw new GroupForbiddenError('You are not a member of this group');
   }
 
@@ -119,6 +337,7 @@ async function fetchGroupDetail(
           canRevoke: !link.deleted_at,
         }))
       : [],
+    elections,
   };
 }
 
@@ -138,10 +357,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
 
-  const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
-
   try {
-    const detail = await fetchGroupDetail(id, auth.user.sub, isAdminWithManageGroups);
+    const detail = await fetchGroupDetail(id, auth.user);
     return NextResponse.json(detail);
   } catch (err) {
     if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);

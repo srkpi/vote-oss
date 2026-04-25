@@ -52,6 +52,12 @@ import type { AdminGroupSummary, GroupOption } from '@/types/group';
 interface CreateElectionFormProps {
   restrictedToFaculty: string | null;
   manageGroups: boolean;
+  /**
+   * Pre-applies a GROUP_MEMBERSHIP restriction targeting this group id.
+   * Used to deep-link from the group detail page so admins can create a
+   * poll already scoped to that group's members.
+   */
+  initialGroupMembershipId?: string | null;
 }
 
 // Graduate level ('g') is intentionally excluded — graduate students cannot
@@ -92,6 +98,7 @@ function wcStateToPayload(wc: WinningConditionsState, choicesCount: number): Win
 export function CreateElectionForm({
   restrictedToFaculty = null,
   manageGroups,
+  initialGroupMembershipId = null,
 }: CreateElectionFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -158,7 +165,9 @@ export function CreateElectionForm({
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [selectedForms, setSelectedForms] = useState<string[]>([]);
   const [selectedLevelCourses, setSelectedLevelCourses] = useState<string[]>([]);
-  const [selectedGroupMemberships, setSelectedGroupMemberships] = useState<string[]>([]);
+  const [selectedGroupMemberships, setSelectedGroupMemberships] = useState<string[]>(
+    initialGroupMembershipId ? [initialGroupMembershipId] : [],
+  );
   const [bypassRequired, setBypassRequired] = useState(false);
 
   // When the admin is faculty-restricted but has ≥1 GROUP_MEMBERSHIP restriction,
@@ -888,9 +897,9 @@ export function CreateElectionForm({
 
           {!anonymous && (
             <Alert variant="warning" title="Голосування не є анонімним">
-              Після завершення голосування ПІБ та ідентифікатор кожного учасника будуть відображені
-              поруч із їхнім зашифрованим бюлетенем. Ця інформація стане доступною для всіх, хто має
-              право переглядати сторінку бюлетенів.
+              Під час голосування ПІБ та ідентифікатор кожного учасника будуть відображені поруч із
+              їхнім зашифрованим бюлетенем. Ця інформація стане доступною для всіх, хто має право
+              переглядати сторінку бюлетенів.
             </Alert>
           )}
         </div>

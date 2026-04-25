@@ -13,7 +13,7 @@ export type StatusTabKey = 'all' | 'open' | 'upcoming' | 'closed';
 
 // ─── Shared option type ───────────────────────────────────────────────────────
 
-interface FilterOption<T extends string = string> {
+export interface FilterOption<T extends string = string> {
   value: T;
   label: string;
   count: number;
@@ -141,7 +141,7 @@ function FilterDropdown<T extends string>({
 
 // ─── Multi-select dropdown with optional search + counts ─────────────────────
 
-function FilterMultiDropdown({
+export function FilterMultiDropdown({
   label,
   options,
   value,

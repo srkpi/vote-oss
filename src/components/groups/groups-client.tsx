@@ -22,7 +22,7 @@ import { FormField, Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
-import { cn, pluralize } from '@/lib/utils/common';
+import { cn } from '@/lib/utils/common';
 import type { Group } from '@/types/group';
 
 interface GroupsClientProps {
@@ -38,41 +38,56 @@ function GroupCard({ group }: { group: Group }) {
       className={cn(
         'group border-border-color shadow-shadow-card block rounded-xl border bg-white',
         'hover:shadow-shadow-card-hover transition-all duration-200 hover:-translate-y-0.5',
-        'overflow-hidden',
+        'flex flex-col overflow-hidden',
       )}
     >
       <div
         className={cn(
-          'h-1',
+          'h-1 bg-linear-to-r',
           group.isOwner
-            ? 'from-kpi-orange bg-linear-to-r to-amber-400'
-            : 'from-kpi-navy to-kpi-blue-mid bg-linear-to-r',
+            ? 'from-kpi-orange to-amber-400'
+            : group.isMember
+              ? 'from-kpi-navy to-kpi-blue-mid'
+              : 'from-kpi-gray-light to-gray-300',
         )}
       />
-      <div className="p-5">
-        <div className="mb-3 flex items-start justify-between gap-3">
+
+      <div className="flex h-full flex-col p-5">
+        <div className="mb-4 flex items-center gap-3">
           <div
             className={cn(
               'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white',
-              group.isOwner ? 'bg-kpi-orange' : 'navy-gradient',
+              group.isOwner ? 'bg-kpi-orange' : group.isMember ? 'navy-gradient' : 'bg-gray-400',
             )}
           >
             {group.name.charAt(0).toUpperCase()}
           </div>
+          <h3 className="font-display text-foreground group-hover:text-kpi-navy line-clamp-2 text-base leading-tight font-semibold transition-colors">
+            {group.name}
+          </h3>
+        </div>
+
+        <div className="mt-auto flex flex-wrap items-center gap-2">
+          <div className="font-body text-muted-foreground flex items-center gap-1.5 rounded-full text-xs font-medium">
+            <Users className="h-3 w-3" />
+            <span>{group.memberCount}</span>
+          </div>
+
           {group.isOwner && (
-            <span className="font-body text-kpi-orange border-kpi-orange/30 bg-warning-bg rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+            <span className="font-body text-kpi-orange border-kpi-orange/30 bg-warning-bg rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
               Власник
             </span>
           )}
-        </div>
-
-        <h3 className="font-display text-foreground group-hover:text-kpi-navy mb-1 truncate text-base font-semibold transition-colors">
-          {group.name}
-        </h3>
-
-        <div className="font-body text-muted-foreground flex items-center gap-1.5 text-sm">
-          <Users className="h-3.5 w-3.5" />
-          <span>{pluralize(group.memberCount, ['учасник', 'учасники', 'учасників'])}</span>
+          {!group.isOwner && group.isMember && (
+            <span className="font-body text-kpi-navy border-kpi-navy/30 bg-kpi-navy/8 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+              Учасник
+            </span>
+          )}
+          {!group.isOwner && !group.isMember && (
+            <span className="font-body rounded-full border border-gray-300 bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-gray-500 uppercase">
+              Публічна
+            </span>
+          )}
         </div>
       </div>
     </Link>
@@ -116,8 +131,8 @@ export function GroupsClient({ initialGroups, canCreateGroups, error }: GroupsCl
   return (
     <>
       <PageHeader
-        title="Мої групи"
-        description="Групи, до яких ви належите або якими керуєте"
+        title="Групи"
+        description="Ваші групи та ті, що мають публічні голосування"
         isContainer
       >
         {canCreateGroups && (

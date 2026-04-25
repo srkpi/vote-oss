@@ -9,7 +9,7 @@ import {
   Megaphone,
   Settings,
   ShieldCheck,
-  Users,
+  Unlock,
   UsersRound,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -35,7 +35,7 @@ const BASE_NAV_ITEMS = [
     label: 'Адміністратори',
     href: '/admin/admins',
     exact: true,
-    icon: <Users className="h-4 w-4" />,
+    icon: <ShieldCheck className="h-4 w-4" />,
   },
 ];
 
@@ -50,7 +50,7 @@ const BYPASS_NAV_ITEM = {
   label: 'Доступ',
   href: '/admin/bypass',
   exact: true,
-  icon: <ShieldCheck className="h-4 w-4" />,
+  icon: <Unlock className="h-4 w-4" />,
 };
 
 const GROUPS_NAV_ITEM = {
