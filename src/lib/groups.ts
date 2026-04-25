@@ -7,7 +7,11 @@
  *  - Core query helpers used by API routes
  */
 
-import { CACHE_TTL_GROUP_MEMBERSHIPS_SECS, CACHE_TTL_GROUP_OWNED_SECS } from '@/lib/constants';
+import {
+  CACHE_TTL_GROUP_MEMBERSHIPS_SECS,
+  CACHE_TTL_GROUP_OWNED_SECS,
+  CACHE_TTL_GROUP_VKSU_IDS_SECS,
+} from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { redis, safeRedis } from '@/lib/redis';
 import type { GroupOption } from '@/types/group';
@@ -23,6 +27,8 @@ function membershipCacheKey(userId: string): string {
 function ownedGroupsCacheKey(userId: string): string {
   return `cache:group-owned:user:${userId}`;
 }
+
+const VKSU_GROUP_IDS_CACHE_KEY = 'cache:group-vksu-ids';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Membership cache
@@ -129,6 +135,60 @@ export async function getUserOwnedGroups(userId: string): Promise<GroupOption[]>
 
 export async function invalidateUserOwnedGroups(userId: string): Promise<void> {
   await safeRedis(() => redis.del(ownedGroupsCacheKey(userId)));
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// VKSU group IDs cache
+//
+// A single Redis key holds the IDs of every active group with type=VKSU.
+// The set is small (one entry per ВКСУ group) and changes only when an admin
+// flips a group's type, so a global cache is cheaper than per-user keys —
+// `isVKSUMember` then only needs to intersect this with the caller's
+// memberships, which are already cached.
+// ────────────────────────────────────────────────────────────────────────────
+
+async function getCachedVKSUGroupIds(): Promise<string[]> {
+  const raw = await safeRedis(() => redis.get(VKSU_GROUP_IDS_CACHE_KEY));
+  if (raw !== null) {
+    try {
+      return JSON.parse(raw) as string[];
+    } catch {
+      // fall through
+    }
+  }
+
+  const groups = await prisma.group.findMany({
+    where: { type: 'VKSU', deleted_at: null },
+    select: { id: true },
+  });
+
+  const ids = groups.map((g) => g.id);
+  await safeRedis(() =>
+    redis.set(VKSU_GROUP_IDS_CACHE_KEY, JSON.stringify(ids), 'EX', CACHE_TTL_GROUP_VKSU_IDS_SECS),
+  );
+
+  return ids;
+}
+
+/** Invalidate the global VKSU-group-IDs cache (call when a group's type changes or a VKSU group is deleted). */
+export async function invalidateVKSUGroupIds(): Promise<void> {
+  await safeRedis(() => redis.del(VKSU_GROUP_IDS_CACHE_KEY));
+}
+
+/**
+ * Returns true when `userId` is an active member of at least one VKSU group.
+ * ВКСУ membership grants the same privileges as ВКСУ — used to gate candidate
+ * registration form management.
+ */
+export async function isVKSUMember(userId: string): Promise<boolean> {
+  const [memberships, vksuIds] = await Promise.all([
+    getUserGroupMemberships(userId),
+    getCachedVKSUGroupIds(),
+  ]);
+
+  if (memberships.length === 0 || vksuIds.length === 0) return false;
+  const vksuSet = new Set(vksuIds);
+  return memberships.some((id) => vksuSet.has(id));
 }
 
 // ────────────────────────────────────────────────────────────────────────────

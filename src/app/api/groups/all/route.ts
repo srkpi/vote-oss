@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
     select: {
       id: true,
       name: true,
+      type: true,
       owner_id: true,
       created_at: true,
       deleted_at: true,
@@ -60,6 +61,7 @@ export async function GET(req: NextRequest) {
       return {
         id: g.id,
         name: g.name,
+        type: g.type,
         ownerId: g.owner_id,
         ownerName: ownerMember?.display_name ?? null,
         memberCount: g._count.members,

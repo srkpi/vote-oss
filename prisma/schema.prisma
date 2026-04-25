@@ -290,9 +290,15 @@ model FaqItem {
   @@map("faq_items")
 }
 
+enum GroupType {
+  VKSU
+  OTHER
+}
+
 model Group {
   id         String    @id @default(uuid()) @db.Uuid
   name       String
+  type       GroupType @default(OTHER)
   owner_id   String
   created_by String
   created_at DateTime  @default(now())
@@ -305,6 +311,7 @@ model Group {
   invite_links GroupInviteLink[]
 
   @@index([owner_id])
+  @@index([type])
   @@map("groups")
 }
 

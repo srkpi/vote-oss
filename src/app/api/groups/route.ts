@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
   const groupSelect = {
     id: true,
     name: true,
+    type: true,
     owner_id: true,
     created_by: true,
     created_at: true,
@@ -105,6 +106,7 @@ export async function GET(req: NextRequest) {
   const shape = (group: {
     id: string;
     name: string;
+    type: 'VKSU' | 'OTHER';
     owner_id: string;
     created_by: string;
     created_at: Date;
@@ -114,6 +116,7 @@ export async function GET(req: NextRequest) {
   }) => ({
     id: group.id,
     name: group.name,
+    type: group.type,
     ownerId: group.owner_id,
     createdBy: group.created_by,
     createdAt: group.created_at.toISOString(),
@@ -220,6 +223,7 @@ export async function POST(req: NextRequest) {
     {
       id: group.id,
       name: group.name,
+      type: group.type,
       ownerId: group.owner_id,
       createdBy: group.created_by,
       createdAt: group.created_at.toISOString(),

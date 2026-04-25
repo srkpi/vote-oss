@@ -1,6 +1,6 @@
 'use client';
 
-import { Crown, ExternalLink, Trash2, Users } from 'lucide-react';
+import { Crown, ExternalLink, ShieldCheck, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
@@ -19,12 +19,18 @@ import {
 import { SearchInput } from '@/components/ui/search-input';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { pluralize } from '@/lib/utils/common';
-import type { AdminGroupSummary } from '@/types/group';
+import { cn, pluralize } from '@/lib/utils/common';
+import type { AdminGroupSummary, GroupType } from '@/types/group';
+import { GROUP_TYPE_LABELS } from '@/types/group';
 
 interface AdminGroupsClientProps {
   initialGroups: AdminGroupSummary[];
   error: string | null;
+}
+
+interface TypeChange {
+  group: AdminGroupSummary;
+  nextType: GroupType;
 }
 
 export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientProps) {
@@ -33,6 +39,8 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
   const [search, setSearch] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<AdminGroupSummary | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [typeChange, setTypeChange] = useState<TypeChange | null>(null);
+  const [savingType, setSavingType] = useState(false);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return groups;
@@ -57,6 +65,26 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
       toast({ title: 'Помилка', description: result.error, variant: 'error' });
     }
     setDeleting(false);
+  };
+
+  const handleTypeChange = async () => {
+    if (!typeChange) return;
+    setSavingType(true);
+    const result = await api.groups.setType(typeChange.group.id, typeChange.nextType);
+    if (result.success) {
+      toast({
+        title: 'Тип групи оновлено',
+        description: `${typeChange.group.name} — ${GROUP_TYPE_LABELS[typeChange.nextType]}`,
+        variant: 'success',
+      });
+      setGroups((prev) =>
+        prev.map((g) => (g.id === typeChange.group.id ? { ...g, type: typeChange.nextType } : g)),
+      );
+      setTypeChange(null);
+    } else {
+      toast({ title: 'Помилка', description: result.error, variant: 'error' });
+    }
+    setSavingType(false);
   };
 
   return (
@@ -103,7 +131,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
             <table className="w-full">
               <thead>
                 <tr className="border-border-subtle border-b">
-                  {['Назва', 'Власник', 'Учасники', ''].map((h) => (
+                  {['Назва', 'Тип', 'Власник', 'Учасники', ''].map((h) => (
                     <th
                       key={h}
                       className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
@@ -125,6 +153,14 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                           {group.name}
                         </p>
                       </div>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <GroupTypeSelect
+                        value={group.type}
+                        onChange={(nextType) => {
+                          if (nextType !== group.type) setTypeChange({ group, nextType });
+                        }}
+                      />
                     </td>
                     <td className="px-4 py-3.5">
                       <p className="font-body text-foreground text-sm">
@@ -204,6 +240,15 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                     </Button>
                   </div>
                 </div>
+                <div className="mt-3">
+                  <p className="text-muted-foreground mb-1 text-xs">Тип групи</p>
+                  <GroupTypeSelect
+                    value={group.type}
+                    onChange={(nextType) => {
+                      if (nextType !== group.type) setTypeChange({ group, nextType });
+                    }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -233,6 +278,62 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
           </DialogFooter>
         </DialogPanel>
       </Dialog>
+
+      {/* Type change confirm */}
+      <Dialog open={!!typeChange} onClose={() => !savingType && setTypeChange(null)}>
+        <DialogPanel maxWidth="sm">
+          <DialogHeader>
+            <DialogTitle>Змінити тип групи?</DialogTitle>
+            <DialogCloseButton onClose={() => setTypeChange(null)} />
+          </DialogHeader>
+          <DialogBody>
+            {typeChange?.nextType === 'VKSU' ? (
+              <Alert variant="warning" title="Учасники отримають права ВКСУ">
+                Усі активні учасники групи <strong>«{typeChange?.group.name}»</strong> зможуть
+                створювати форми реєстрації кандидатів і керувати ними.
+              </Alert>
+            ) : (
+              <Alert variant="info">
+                Група <strong>«{typeChange?.group.name}»</strong> більше не вважатиметься ВКСУ.
+                Учасники втратять права на створення форм реєстрації.
+              </Alert>
+            )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setTypeChange(null)} disabled={savingType}>
+              Скасувати
+            </Button>
+            <Button variant="primary" onClick={handleTypeChange} loading={savingType}>
+              Підтвердити
+            </Button>
+          </DialogFooter>
+        </DialogPanel>
+      </Dialog>
+    </div>
+  );
+}
+
+interface GroupTypeSelectProps {
+  value: GroupType;
+  onChange: (next: GroupType) => void;
+}
+
+function GroupTypeSelect({ value, onChange }: GroupTypeSelectProps) {
+  return (
+    <div className="inline-flex items-center gap-2">
+      {value === 'VKSU' && <ShieldCheck className="text-kpi-navy h-3.5 w-3.5" />}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as GroupType)}
+        className={cn(
+          'border-border-color rounded-md border bg-white px-2 py-1',
+          'font-body text-foreground text-xs',
+          'focus:ring-kpi-navy focus:ring-2 focus:outline-none',
+        )}
+      >
+        <option value="OTHER">{GROUP_TYPE_LABELS.OTHER}</option>
+        <option value="VKSU">{GROUP_TYPE_LABELS.VKSU}</option>
+      </select>
     </div>
   );
 }

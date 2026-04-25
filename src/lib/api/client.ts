@@ -28,6 +28,7 @@ import type {
   GroupDetail,
   GroupInviteLink,
   GroupOption,
+  GroupType,
   JoinGroupResponse,
 } from '@/types/group';
 import type { VoteToken } from '@/types/vote';
@@ -229,6 +230,8 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<Group>('/groups', { method: 'POST', body: JSON.stringify({ name }) }),
       rename: (id: string, name: string) =>
         fetcher<void>(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+      setType: (id: string, type: GroupType) =>
+        fetcher<void>(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ type }) }),
       delete: (id: string) => fetcher<void>(`/groups/${id}`, { method: 'DELETE' }),
 
       join: (token: string) =>

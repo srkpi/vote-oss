@@ -84,6 +84,7 @@ export const CACHE_TTL_FAQ_SECS = 5 * 60;
 export const CACHE_TTL_BYPASS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_MEMBERSHIPS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_OWNED_SECS = 5 * 60;
+export const CACHE_TTL_GROUP_VKSU_IDS_SECS = 5 * 60;
 /**
  * Real-time ballot-count counter TTL.
  * Short enough to be "live" on the client elections page but long enough to
