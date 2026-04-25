@@ -1,1 +1,1 @@
-{"id":"e1b6001dd9919a68cfab291f456b8098","fullName":"src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"b0d0237b4009005806c1dc4feec90a61"}}
+{"id":"e1b6001dd9919a68cfab291f456b8098","fullName":"src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"6eb0e5ec6f0db93b48bb36928c540b46"}}

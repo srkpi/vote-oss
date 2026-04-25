@@ -1,1 +1,1 @@
-{"id":"0004e57fada8e1bd0b44e5cf39042e9c","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/items/[id] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"841a13aade30981aab8b9b99da201326"}}
+{"id":"0004e57fada8e1bd0b44e5cf39042e9c","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/items/[id] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"21fac4d9793cf894f64500e24e45b213"}}

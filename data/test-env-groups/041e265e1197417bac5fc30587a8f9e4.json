@@ -1,1 +1,1 @@
-{"id":"041e265e1197417bac5fc30587a8f9e4","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] marks all tied choices as winners","name":"marks all tied choices as winners","status":"passed","testResultsByEnv":{"default":"b31f30bafa7a992f82be383ecba653d7"}}
+{"id":"041e265e1197417bac5fc30587a8f9e4","fullName":"src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] marks all tied choices as winners","name":"marks all tied choices as winners","status":"passed","testResultsByEnv":{"default":"878e1d8b42591b88244dece8b8a3bc31"}}

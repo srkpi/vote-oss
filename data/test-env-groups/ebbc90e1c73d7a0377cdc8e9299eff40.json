@@ -1,1 +1,1 @@
-{"id":"ebbc90e1c73d7a0377cdc8e9299eff40","fullName":"src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 400 when maxUsage is 0","name":"returns 400 when maxUsage is 0","status":"passed","testResultsByEnv":{"default":"1b3c2c0ba30451570cc6b11392008243"}}
+{"id":"ebbc90e1c73d7a0377cdc8e9299eff40","fullName":"src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 400 when maxUsage is 0","name":"returns 400 when maxUsage is 0","status":"passed","testResultsByEnv":{"default":"8479713d7dbb2d3ea6958a83d12b7ec8"}}
