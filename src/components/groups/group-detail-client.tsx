@@ -724,21 +724,6 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                 </Button>
               </div>
             )}
-
-            {/* Non-owner leave button */}
-            {!isOwner && group.isMember && (
-              <Button
-                variant="danger"
-                size="sm"
-                fullWidth
-                onClick={() =>
-                  setKickTarget(group.members.find((m) => m.userId === session.userId) ?? null)
-                }
-                icon={<LogOut className="h-3.5 w-3.5" />}
-              >
-                Вийти з групи
-              </Button>
-            )}
           </div>
 
           {/* ── Dialogs ─────────────────────────────────────────────────────── */}
