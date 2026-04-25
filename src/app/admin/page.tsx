@@ -36,7 +36,7 @@ export default async function AdminDashboardPage() {
     serverApi.elections.list(),
     serverApi.elections.list({ type: 'PETITION' }),
     serverApi.admins.list(),
-    serverApi.groups.list(),
+    serverApi.groups.all(),
   ]);
 
   const elections = (electionsResult.data?.elections ?? []).filter((e) => !e.deletedAt);
