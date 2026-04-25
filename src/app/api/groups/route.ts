@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
+import { getCachedElections } from '@/lib/cache';
 import { GROUP_MAX_OWNED, GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { invalidateUserOwnedGroups } from '@/lib/groups';
@@ -11,12 +12,14 @@ import { prisma } from '@/lib/prisma';
  * @swagger
  * /api/groups:
  *   get:
- *     summary: List groups the caller belongs to or owns
+ *     summary: List groups the caller belongs to or can view
  *     description: >
- *       Returns all non-deleted groups the caller is an active member of.
- *       Each entry includes a computed `isOwner` and `isMember` flag.
- *       Admins with `manage_groups` additionally receive every group in the
- *       system via the `/api/admin/groups` endpoint.
+ *       Returns all non-deleted groups the caller is an active member of, plus
+ *       any group that has at least one publicly-viewable, non-deleted election
+ *       restricted to its membership (so non-members can still discover the
+ *       group via its public poll).  Each entry includes computed `isOwner`
+ *       and `isMember` flags.  Admins with `manage_groups` additionally
+ *       receive every group in the system via the `/api/admin/groups` endpoint.
  *     tags: [Groups]
  *     security:
  *       - cookieAuth: []
@@ -32,6 +35,19 @@ export async function GET(req: NextRequest) {
 
   const { user } = auth;
 
+  const groupSelect = {
+    id: true,
+    name: true,
+    owner_id: true,
+    created_by: true,
+    created_at: true,
+    updated_at: true,
+    deleted_at: true,
+    _count: {
+      select: { members: { where: { deleted_at: null } } },
+    },
+  } as const;
+
   // Fetch all active memberships for the caller, including soft-deleted groups
   // so we can surface "you were removed from X" if needed in future — for now
   // we only return active groups.
@@ -42,38 +58,76 @@ export async function GET(req: NextRequest) {
       group: { deleted_at: null },
     },
     select: {
-      group: {
-        select: {
-          id: true,
-          name: true,
-          owner_id: true,
-          created_by: true,
-          created_at: true,
-          updated_at: true,
-          deleted_at: true,
-          _count: {
-            select: { members: { where: { deleted_at: null } } },
-          },
-        },
-      },
+      group: { select: groupSelect },
     },
     orderBy: { joined_at: 'asc' },
   });
 
-  return NextResponse.json(
-    memberships.map(({ group }) => ({
-      id: group.id,
-      name: group.name,
-      ownerId: group.owner_id,
-      createdBy: group.created_by,
-      createdAt: group.created_at.toISOString(),
-      updatedAt: group.updated_at.toISOString(),
-      memberCount: group._count.members,
-      isOwner: group.owner_id === user.sub,
-      isMember: true,
-      deletedAt: group.deleted_at?.toISOString() ?? null,
-    })),
-  );
+  const memberGroupIds = new Set(memberships.map((m) => m.group.id));
+
+  // Discover groups with publicly-viewable, non-deleted elections that
+  // restrict to their membership — these are visible to non-members too.
+  // Cache-first: derive group IDs from the elections cache when warm; fall
+  // back to a scoped DB query against election_restrictions otherwise.
+  const cachedElections = await getCachedElections();
+  let publicGroupIds: string[];
+  if (cachedElections) {
+    const set = new Set<string>();
+    for (const e of cachedElections) {
+      if (!e.publicViewing || e.deletedAt) continue;
+      for (const r of e.restrictions) {
+        if (r.type === 'GROUP_MEMBERSHIP') set.add(r.value);
+      }
+    }
+    publicGroupIds = [...set];
+  } else {
+    const rows = await prisma.electionRestriction.findMany({
+      where: {
+        type: 'GROUP_MEMBERSHIP',
+        election: { public_viewing: true, deleted_at: null },
+      },
+      select: { value: true },
+      distinct: ['value'],
+    });
+    publicGroupIds = rows.map((r) => r.value);
+  }
+
+  const newPublicGroupIds = publicGroupIds.filter((id) => !memberGroupIds.has(id));
+
+  const publicGroups = newPublicGroupIds.length
+    ? await prisma.group.findMany({
+        where: { id: { in: newPublicGroupIds }, deleted_at: null },
+        select: groupSelect,
+        orderBy: { created_at: 'desc' },
+      })
+    : [];
+
+  const shape = (group: {
+    id: string;
+    name: string;
+    owner_id: string;
+    created_by: string;
+    created_at: Date;
+    updated_at: Date;
+    deleted_at: Date | null;
+    _count: { members: number };
+  }) => ({
+    id: group.id,
+    name: group.name,
+    ownerId: group.owner_id,
+    createdBy: group.created_by,
+    createdAt: group.created_at.toISOString(),
+    updatedAt: group.updated_at.toISOString(),
+    memberCount: group._count.members,
+    isOwner: group.owner_id === user.sub,
+    isMember: memberGroupIds.has(group.id),
+    deletedAt: group.deleted_at?.toISOString() ?? null,
+  });
+
+  return NextResponse.json([
+    ...memberships.map(({ group }) => shape(group)),
+    ...publicGroups.map(shape),
+  ]);
 }
 
 /**

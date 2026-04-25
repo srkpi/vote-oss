@@ -1,3 +1,5 @@
+import type { Election } from './election';
+
 export interface GroupMemberSummary {
   userId: string;
   displayName: string;
@@ -42,6 +44,16 @@ export interface Group {
 export interface GroupDetail extends Group {
   members: GroupMemberSummary[];
   inviteLinks: GroupInviteLink[];
+  /**
+   * Elections that restrict eligibility to this group's membership
+   * (ElectionRestriction.type = GROUP_MEMBERSHIP).
+   *
+   * For members (and admins with manage_groups) this includes every
+   * non-deleted election targeting the group.  For non-member viewers
+   * (allowed through because at least one such election is public), this
+   * contains only the public ones.
+   */
+  elections: Election[];
 }
 
 // For election restriction display / selection
