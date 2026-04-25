@@ -1,5 +1,9 @@
 import * as allure from 'allure-js-commons';
 
+import { prismaMock } from '@/__tests__/helpers/prisma-mock';
+
+jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+
 import { checkRestrictions, checkRestrictionsWithBypass } from '@/lib/restrictions';
 import type { ElectionRestriction } from '@/types/election';
 

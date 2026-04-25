@@ -23,8 +23,8 @@ import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionListItem } from '@/components/elections/election-list-item';
 import {
-  type FilterOption,
   FilterMultiDropdown,
+  type FilterOption,
 } from '@/components/elections/elections-filter-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -702,15 +702,17 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                 >
                   Переглянути запрошення
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  fullWidth
-                  onClick={() => setTransferOpen(true)}
-                  icon={<Crown className="h-3.5 w-3.5" />}
-                >
-                  Взяти право власника
-                </Button>
+                {group.isMember && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    fullWidth
+                    onClick={() => setTransferOpen(true)}
+                    icon={<Crown className="h-3.5 w-3.5" />}
+                  >
+                    Взяти право власника
+                  </Button>
+                )}
                 <Button
                   variant="danger"
                   size="sm"

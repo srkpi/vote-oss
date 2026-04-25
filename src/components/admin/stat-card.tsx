@@ -2,14 +2,17 @@ interface StatCardProps {
   label: string;
   value: string | number;
   icon: React.ReactNode;
-  accent: 'navy' | 'orange' | 'success' | 'info';
+  accent: 'navy' | 'orange' | 'success' | 'info' | 'purple' | 'teal' | 'amber';
 }
 
 const accentStyles = {
-  navy: 'navy-gradient',
-  orange: 'bg-kpi-orange',
-  success: 'bg-success',
-  info: 'bg-kpi-blue-light',
+  navy: 'navy-gradient', // Total Elections
+  orange: 'bg-kpi-orange', // Ballots
+  success: 'bg-success', // Active
+  info: 'bg-kpi-blue-light', // Petitions
+  purple: 'bg-purple-600', // Admins (Authority)
+  teal: 'bg-teal-500', // Groups (Community)
+  amber: 'bg-amber-500', // Alternative for Ballots/Alerts
 };
 
 export function StatCard({ label, value, accent, icon }: StatCardProps) {
