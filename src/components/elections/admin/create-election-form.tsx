@@ -632,14 +632,17 @@ export function CreateElectionForm({
         )}
       </section>
 
-      {/* ── Winning conditions ──────────────────────────────────────────────── */}
+      {/* ── Election validity ──────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">Умови перемоги</h2>
+        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
+          Умови дійсності голосування
+        </h2>
         <p className="font-body text-muted-foreground mb-4 text-sm">
-          Визначте, за якими критеріями обирається переможець. Усі вибрані умови застосовуються
-          одночасно.
+          Визначте, які критерії встановлюють дійсність голосування. Якщо критерії не встановлено,
+          достатньо одного голосу.
         </p>
         <WinningConditionsSection
+          section="validity"
           state={winningConditionsState}
           validChoicesCount={choices.length}
           onChange={(next) => {
@@ -655,10 +658,40 @@ export function CreateElectionForm({
           }}
           errors={fieldErrors}
         />
-        {fieldErrors.winningConditions && (
-          <p className="text-error mt-2 text-sm">{fieldErrors.winningConditions}</p>
-        )}
       </section>
+
+      {/* ── Winning conditions ──────────────────────────────────────────────── */}
+      {choices.length > 1 && (
+        <section>
+          <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
+            Умови перемоги
+          </h2>
+          <p className="font-body text-muted-foreground mb-4 text-sm">
+            Визначте, за якими критеріями обирається переможець. Усі вибрані умови застосовуються
+            одночасно.
+          </p>
+          <WinningConditionsSection
+            section="winning"
+            state={winningConditionsState}
+            validChoicesCount={choices.length}
+            onChange={(next) => {
+              setWinningConditionsState(next);
+              setFieldErrors((prev) => ({
+                ...prev,
+                winningConditions: '',
+                reachesPercentage: '',
+                reachesVotes: '',
+                quorum: '',
+              }));
+              setError(null);
+            }}
+            errors={fieldErrors}
+          />
+          {fieldErrors.winningConditions && (
+            <p className="text-error mt-2 text-sm">{fieldErrors.winningConditions}</p>
+          )}
+        </section>
+      )}
 
       {/* ── Access restrictions ─────────────────────────────────────────────── */}
       <section>

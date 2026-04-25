@@ -15,6 +15,7 @@ interface WinningConditionsSectionProps {
   validChoicesCount: number;
   onChange: (next: WinningConditionsState) => void;
   errors: Record<string, string>;
+  section?: 'validity' | 'winning' | 'all';
 }
 
 export function WinningConditionsSection({
@@ -22,12 +23,15 @@ export function WinningConditionsSection({
   validChoicesCount,
   onChange,
   errors,
+  section = 'all',
 }: WinningConditionsSectionProps) {
   const set = (patch: Partial<WinningConditionsState>) => onChange({ ...state, ...patch });
+  const showWinning = section === 'all' || section === 'winning';
+  const showValidity = section === 'all' || section === 'validity';
 
   return (
     <div className="space-y-4">
-      {validChoicesCount > 1 && (
+      {showWinning && validChoicesCount > 1 && (
         <>
           <label className="flex cursor-pointer items-start gap-3">
             <input
@@ -130,49 +134,51 @@ export function WinningConditionsSection({
         </>
       )}
 
-      <div className="space-y-2">
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            checked={state.quorumEnabled}
-            onChange={(e) => set({ quorumEnabled: e.target.checked })}
-            className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
-          />
-          <span className="font-body text-foreground text-sm font-medium">
-            Кворум{' '}
-            {state.quorumEnabled ? (
-              <>
-                <span className="text-kpi-navy">{state.quorum}</span>{' '}
-                {pluralize(state.quorum, ['голос', 'голоси', 'голосів'], false)}
-              </>
-            ) : (
-              'N голосів'
-            )}
-          </span>
-        </label>
-
-        {state.quorumEnabled && (
-          <div className="ml-7">
-            <Input
-              type="number"
-              value={state.quorum}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                if (!isNaN(v)) set({ quorum: v });
-              }}
-              min={WINNING_CONDITION_QUORUM_MIN}
-              max={WINNING_CONDITION_QUORUM_MAX}
-              step={1}
-              error={!!errors.quorum}
-              className="w-32"
+      {showValidity && (
+        <div className="space-y-2">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={state.quorumEnabled}
+              onChange={(e) => set({ quorumEnabled: e.target.checked })}
+              className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
             />
-            {errors.quorum && <p className="text-error mt-1 text-xs">{errors.quorum}</p>}
-          </div>
-        )}
-        {!state.quorumEnabled && errors.quorum && (
-          <p className="text-error mt-1 text-xs">{errors.quorum}</p>
-        )}
-      </div>
+            <span className="font-body text-foreground text-sm font-medium">
+              Кворум{' '}
+              {state.quorumEnabled ? (
+                <>
+                  <span className="text-kpi-navy">{state.quorum}</span>{' '}
+                  {pluralize(state.quorum, ['голос', 'голоси', 'голосів'], false)}
+                </>
+              ) : (
+                'N голосів'
+              )}
+            </span>
+          </label>
+
+          {state.quorumEnabled && (
+            <div className="ml-7">
+              <Input
+                type="number"
+                value={state.quorum}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v)) set({ quorum: v });
+                }}
+                min={WINNING_CONDITION_QUORUM_MIN}
+                max={WINNING_CONDITION_QUORUM_MAX}
+                step={1}
+                error={!!errors.quorum}
+                className="w-32"
+              />
+              {errors.quorum && <p className="text-error mt-1 text-xs">{errors.quorum}</p>}
+            </div>
+          )}
+          {!state.quorumEnabled && errors.quorum && (
+            <p className="text-error mt-1 text-xs">{errors.quorum}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
