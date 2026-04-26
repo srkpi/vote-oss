@@ -1,1 +1,1 @@
-{"id":"51d06df16772ca5375008cf7ca59308c","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/items/[id] returns 400 when content is missing","name":"returns 400 when content is missing","status":"passed","testResultsByEnv":{"default":"d50bbbfec8ad4a941d5a6f5f45b6a6d9"}}
+{"id":"51d06df16772ca5375008cf7ca59308c","fullName":"src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/items/[id] returns 400 when content is missing","name":"returns 400 when content is missing","status":"passed","testResultsByEnv":{"default":"b868e6d574ceddffaf93410449501009"}}

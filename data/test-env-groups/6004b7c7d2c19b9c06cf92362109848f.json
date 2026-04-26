@@ -1,1 +1,1 @@
-{"id":"6004b7c7d2c19b9c06cf92362109848f","fullName":"src/__tests__/lib/group-utils.test.ts#parseGroupStudyFormLetter returns \"п\" for Shortened groups","name":"returns \"п\" for Shortened groups","status":"passed","testResultsByEnv":{"default":"dee27a6ee2260b7eccc5afd65076237b"}}
+{"id":"6004b7c7d2c19b9c06cf92362109848f","fullName":"src/__tests__/lib/group-utils.test.ts#parseGroupStudyFormLetter returns \"п\" for Shortened groups","name":"returns \"п\" for Shortened groups","status":"passed","testResultsByEnv":{"default":"b89c41f5bfe6142d0060653ba20faa19"}}
