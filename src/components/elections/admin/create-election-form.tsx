@@ -915,7 +915,7 @@ export function CreateElectionForm({
           {restrictions.length > 0 && (
             <ToggleField
               label="Публічний перегляд"
-              description="Будь-який авторизований користувач може переглядати сторінку голосування за посиланням. Однак у загальному списку вона не відображатиметься для користувачів, які не відповідають умовам участі."
+              description="Будь-який авторизований користувач може переглядати сторінку голосування."
               checked={publicViewing}
               onChange={setPublicViewing}
             />

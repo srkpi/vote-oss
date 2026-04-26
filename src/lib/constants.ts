@@ -85,6 +85,28 @@ export const CACHE_TTL_BYPASS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_MEMBERSHIPS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_OWNED_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_VKSU_IDS_SECS = 5 * 60;
+
+// Candidate registration forms
+export const REGISTRATION_FORM_TITLE_MAX_LENGTH = 255;
+export const REGISTRATION_FORM_DESCRIPTION_MAX_LENGTH = 5000;
+export const REGISTRATION_FORM_RESTRICTION_VALUE_MAX_LENGTH = 100;
+export const REGISTRATION_FORM_MAX_RESTRICTIONS = 50;
+/** Maximum days between opens_at and closes_at for a registration form. */
+export const REGISTRATION_FORM_MAX_DURATION_DAYS = 90;
+/** Maximum number of additional team members a candidate can be required to invite (0..N). */
+export const REGISTRATION_FORM_MAX_TEAM_SIZE = 10;
+
+// Candidate registrations (submissions)
+export const REGISTRATION_PHONE_MAX_LENGTH = 30;
+export const REGISTRATION_TELEGRAM_TAG_MAX_LENGTH = 64;
+export const REGISTRATION_PROGRAM_URL_MAX_LENGTH = 2048;
+export const REGISTRATION_REJECTION_REASON_MAX_LENGTH = 1000;
+/** Allowed hosts for the campaign program URL. */
+export const REGISTRATION_PROGRAM_URL_ALLOWED_HOSTS = ['drive.google.com', 'docs.google.com'];
+
+// Team invite tokens
+export const TEAM_INVITE_TOKEN_LENGTH = 24;
+export const TEAM_INVITE_TOKEN_TTL_DAYS = 7;
 /**
  * Real-time ballot-count counter TTL.
  * Short enough to be "live" on the client elections page but long enough to

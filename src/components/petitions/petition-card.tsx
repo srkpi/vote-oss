@@ -1,8 +1,8 @@
 import { Clock, User } from 'lucide-react';
 import Link from 'next/link';
 
-import { Badge } from '@/components/ui/badge';
 import { LocalDate } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { PETITION_QUORUM } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type { Election } from '@/types/election';
@@ -33,10 +33,10 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
     >
       <div className="flex h-full min-w-0 flex-col space-y-4 p-5">
         <div className="flex flex-wrap items-center gap-2">
-          {isPending && <Badge variant="warning">Очікує модерацію</Badge>}
-          {!isPending && isClosed && reached && <Badge variant="info">Досягнуто кворум</Badge>}
-          {!isPending && isClosed && !reached && <Badge variant="secondary">Завершена</Badge>}
-          {!isPending && !isClosed && <Badge variant="success">Активна</Badge>}
+          {isPending && <StatusBadge status="pending" />}
+          {!isPending && isClosed && reached && <StatusBadge status="quorum" />}
+          {!isPending && isClosed && !reached && <StatusBadge status="closed" />}
+          {!isPending && !isClosed && <StatusBadge status="open" />}
         </div>
 
         <h3 className="font-display text-foreground line-clamp-2 text-xl leading-snug font-semibold wrap-break-word">

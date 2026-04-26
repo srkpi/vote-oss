@@ -1,10 +1,10 @@
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import type { Election } from '@/types/election';
 
 interface ElectionRowProps {
@@ -47,7 +47,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
         className="cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
-        <ElectionStatusBadge status={election.status} size="md" muted={isDeleted} />
+        <StatusBadge status={election.status} size="md" muted={isDeleted} />
       </td>
       <td
         className="cursor-pointer px-4 py-3.5"
@@ -89,9 +89,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
         onClick={() => router.push(`/admin/elections/${election.id}`)}
       >
         {election.restrictions.length ? (
-          <Badge variant="info" size="md" muted={isDeleted}>
-            Обмежено
-          </Badge>
+          <StatusBadge status="restricted" size="md" muted={isDeleted} />
         ) : (
           <Badge variant="success" size="md" muted={isDeleted}>
             Всі

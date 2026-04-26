@@ -235,6 +235,36 @@ export async function requireGroupMember(groupId: string, userId: string): Promi
   }
 }
 
+/**
+ * Verify that `groupId` is an active VKSU group AND `userId` is an active
+ * member.  Used to gate candidate registration form management.
+ */
+export async function requireVKSUGroupMember(
+  groupId: string,
+  userId: string,
+): Promise<{ id: string; name: string }> {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: { id: true, name: true, type: true, deleted_at: true },
+  });
+
+  if (!group || group.deleted_at) throw new GroupNotFoundError();
+  if (group.type !== 'VKSU') {
+    throw new GroupForbiddenError('Group is not a ВКСУ group');
+  }
+
+  const member = await prisma.groupMember.findUnique({
+    where: { group_id_user_id: { group_id: groupId, user_id: userId } },
+    select: { deleted_at: true },
+  });
+
+  if (!member || member.deleted_at) {
+    throw new GroupForbiddenError('Only ВКСУ members can manage registration forms');
+  }
+
+  return { id: group.id, name: group.name };
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Custom errors
 // ────────────────────────────────────────────────────────────────────────────

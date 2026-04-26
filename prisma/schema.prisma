@@ -307,12 +307,119 @@ model Group {
   deleted_at DateTime?
   deleted_by String?
 
-  members      GroupMember[]
-  invite_links GroupInviteLink[]
+  members            GroupMember[]
+  invite_links       GroupInviteLink[]
+  registration_forms CandidateRegistrationForm[]
 
   @@index([owner_id])
   @@index([type])
   @@map("groups")
+}
+
+model CandidateRegistrationForm {
+  id          String  @id @default(uuid()) @db.Uuid
+  group_id    String  @db.Uuid
+  group       Group   @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  title       String
+  description String? @db.Text
+  requires_campaign_program Boolean @default(false)
+  team_size                 Int     @default(0)
+  opens_at             DateTime
+  closes_at            DateTime
+  created_by           String
+  created_by_full_name String    @db.Text
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+  updated_by           String?
+  deleted_at           DateTime?
+  deleted_by           String?
+
+  restrictions  CandidateRegistrationFormRestriction[]
+  registrations CandidateRegistration[]
+
+  @@index([group_id])
+  @@index([deleted_at])
+  @@map("candidate_registration_forms")
+}
+
+enum CandidateRegistrationStatus {
+  DRAFT
+  AWAITING_TEAM
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model CandidateRegistration {
+  id        String                    @id @default(uuid()) @db.Uuid
+  form_id   String                    @db.Uuid
+  form      CandidateRegistrationForm @relation(fields: [form_id], references: [id], onDelete: Cascade)
+  user_id   String
+  full_name String                    @db.Text
+
+  phone_number         String
+  telegram_tag         String
+  campaign_program_url String?
+
+  status CandidateRegistrationStatus @default(DRAFT)
+
+  submitted_at DateTime?
+
+  reviewed_by_user_id   String?
+  reviewed_by_full_name String?   @db.Text
+  reviewed_at           DateTime?
+  rejection_reason      String?   @db.Text
+
+  withdrawn_at DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  team_invite_tokens TeamMemberInviteToken[]
+
+  @@unique([form_id, user_id])
+  @@index([user_id])
+  @@index([status])
+  @@map("candidate_registrations")
+}
+
+enum TeamInviteResponse {
+  ACCEPTED
+  REJECTED
+}
+
+model TeamMemberInviteToken {
+  token_hash        String                @id
+  registration_id   String                @db.Uuid
+  registration      CandidateRegistration @relation(fields: [registration_id], references: [id], onDelete: Cascade)
+  slot              Int
+  created_at        DateTime              @default(now())
+  expires_at        DateTime
+  used_at           DateTime?
+  used_by_user_id   String?
+  used_by_full_name String?               @db.Text
+  response          TeamInviteResponse?
+  revoked_at        DateTime?
+
+  @@index([registration_id])
+  @@index([registration_id, slot])
+  @@map("team_member_invite_tokens")
+}
+
+/// Per-form eligibility restriction.  Reuses RestrictionType from elections so
+/// FACULTY = "підрозділ" (the primary use case for ВКСУ — limit a delegate or
+/// student-council form to candidates from one or more faculties).  Multiple
+/// rows of the same type are ORed; rows of different types are ANDed.
+model CandidateRegistrationFormRestriction {
+  id      String                    @id @default(uuid()) @db.Uuid
+  form_id String                    @db.Uuid
+  form    CandidateRegistrationForm @relation(fields: [form_id], references: [id], onDelete: Cascade)
+  type    RestrictionType
+  value   String
+
+  @@index([form_id, type])
+  @@map("candidate_registration_form_restrictions")
 }
 
 model GroupMember {

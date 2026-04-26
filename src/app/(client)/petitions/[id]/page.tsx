@@ -4,12 +4,11 @@ import { notFound, redirect } from 'next/navigation';
 
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { PetitionAdminActions } from '@/components/petitions/petition-admin-actions';
 import { PetitionSignatories } from '@/components/petitions/petition-signatories';
 import { SignPetitionPanel } from '@/components/petitions/sign-petition-panel';
-import { Badge } from '@/components/ui/badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { serverApi } from '@/lib/api/server';
 import { APP_URL } from '@/lib/config/client';
 import { PETITION_QUORUM } from '@/lib/constants';
@@ -99,13 +98,11 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
             <div className="border-border-color shadow-shadow-sm min-w-0 rounded-xl border bg-white p-6 sm:p-8">
               <div className="flex flex-wrap items-center gap-2">
                 {petition.approved ? (
-                  petition.status !== 'closed' && (
-                    <ElectionStatusBadge status={petition.status} isPetition />
-                  )
+                  petition.status !== 'closed' && <StatusBadge status={petition.status} />
                 ) : (
-                  <Badge variant="warning">Очікує апруву</Badge>
+                  <StatusBadge status="pending" />
                 )}
-                {reached && <Badge variant="info">Досягнуто кворум</Badge>}
+                {reached && <StatusBadge status="quorum" />}
               </div>
 
               <div className="font-body text-muted-foreground mt-4 space-y-1 text-sm">

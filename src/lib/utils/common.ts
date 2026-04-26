@@ -102,24 +102,6 @@ export function getElectionStatus(opensAt: string, closesAt: string): ElectionSt
   return 'closed';
 }
 
-export function getStatusLabel(status: ElectionStatus, isPetition: boolean = false): string {
-  const labels: Record<ElectionStatus, string> = {
-    upcoming: 'Очікується',
-    open: isPetition ? 'Активна' : 'Активне',
-    closed: isPetition ? 'Завершена' : 'Завершено',
-  };
-  return labels[status];
-}
-
-export function getStatusColor(status: ElectionStatus): string {
-  const colors: Record<ElectionStatus, string> = {
-    upcoming: 'warning',
-    open: 'success',
-    closed: 'secondary',
-  };
-  return colors[status];
-}
-
 export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength - 3) + '…';

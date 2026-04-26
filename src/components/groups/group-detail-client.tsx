@@ -26,6 +26,7 @@ import {
   FilterMultiDropdown,
   type FilterOption,
 } from '@/components/elections/elections-filter-panel';
+import { RegistrationFormsPanel } from '@/components/groups/registration-forms-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -236,6 +237,10 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
   // Admins who own the group (or have manage_groups) may create elections
   // pre-restricted to this group's membership.
   const canCreateElection = session.isAdmin && canManage;
+  // ВКСУ-tab visibility: only active members of a VKSU-typed group can manage
+  // candidate registration forms.
+  const isActiveMember = group.members.some((m) => m.userId === session.userId);
+  const canManageRegistrationForms = group.type === 'VKSU' && isActiveMember;
 
   // ── Elections filter / pagination ─────────────────────────────────────────
   const [electionSearch, setElectionSearch] = useState('');
@@ -559,6 +564,8 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                 </>
               )}
             </div>
+
+            {canManageRegistrationForms && <RegistrationFormsPanel groupId={group.id} />}
           </div>
 
           {/* Sidebar: group info + members + actions */}

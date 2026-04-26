@@ -31,7 +31,7 @@
 
 - **RSA-2048 ballot encryption** — each ballot is encrypted with the election's public key; the private key is revealed only after the election closes
 - **Chained ballot ledger** — every ballot is SHA-256 hashed and linked to the previous one, making any tampering immediately detectable
-- **Zero-knowledge anonymity** — the system records *that* a user voted, but never *what* they chose
+- **Zero-knowledge anonymity** — the system records _that_ a user voted, but never _what_ they chose
 - **Diia-based identity verification** — login is handled exclusively through the Ukrainian government's Diia app via KPI ID, ensuring only real, verified students can vote
 - **Access restrictions** — elections can be scoped to specific faculties and groups
 - **Public ballot verification** — anyone can inspect the full ballot chain and independently verify results using the published private key
@@ -41,23 +41,23 @@
 
 ## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router, React Server Components) |
-| **Language** | [TypeScript 5](https://www.typescriptlang.org/) |
-| **UI** | [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/) |
-| **Database** | [PostgreSQL](https://www.postgresql.org/) |
-| **ORM** | [Prisma 7](https://www.prisma.io/) with `@prisma/adapter-pg` |
-| **Cache / Session Store** | [Redis](https://redis.io/) via [ioredis](https://github.com/redis/ioredis) |
-| **Authentication** | [KPI ID](https://auth.kpi.ua) (CAS-based) + Diia verification, JWT (access + refresh) via [jose](https://github.com/panva/jose) |
-| **Cryptography** | Node.js built-in `crypto` — RSA-2048 key generation, ECDSA signing, SHA-256 hashing |
-| **Rich Text** | [Quill](https://quilljs.com/) (Delta format) |
-| **API Docs** | [next-swagger-doc](https://github.com/jellydn/next-swagger-doc) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react) |
-| **Testing** | [Jest 30](https://jestjs.io/), [ts-jest](https://github.com/kulshekhar/ts-jest), [Allure](https://allurereport.org/) |
-| **Linting / Formatting** | [ESLint 9](https://eslint.org/) (flat config), [Prettier](https://prettier.io/), [simple-import-sort](https://github.com/lydell/eslint-plugin-simple-import-sort) |
-| **Package Manager** | [pnpm 10](https://pnpm.io/) |
-| **Containerisation** | [Docker](https://www.docker.com/) (multi-stage build) |
-| **CI/CD** | GitHub Actions |
+| Layer                     | Technology                                                                                                                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Framework**             | [Next.js 16](https://nextjs.org/) (App Router, React Server Components)                                                                                                                      |
+| **Language**              | [TypeScript 5](https://www.typescriptlang.org/)                                                                                                                                              |
+| **UI**                    | [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/) |
+| **Database**              | [PostgreSQL](https://www.postgresql.org/)                                                                                                                                                    |
+| **ORM**                   | [Prisma 7](https://www.prisma.io/) with `@prisma/adapter-pg`                                                                                                                                 |
+| **Cache / Session Store** | [Redis](https://redis.io/) via [ioredis](https://github.com/redis/ioredis)                                                                                                                   |
+| **Authentication**        | [KPI ID](https://auth.kpi.ua) (CAS-based) + Diia verification, JWT (access + refresh) via [jose](https://github.com/panva/jose)                                                              |
+| **Cryptography**          | Node.js built-in `crypto` — RSA-2048 key generation, ECDSA signing, SHA-256 hashing                                                                                                          |
+| **Rich Text**             | [Quill](https://quilljs.com/) (Delta format)                                                                                                                                                 |
+| **API Docs**              | [next-swagger-doc](https://github.com/jellydn/next-swagger-doc) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                                         |
+| **Testing**               | [Jest 30](https://jestjs.io/), [ts-jest](https://github.com/kulshekhar/ts-jest), [Allure](https://allurereport.org/)                                                                         |
+| **Linting / Formatting**  | [ESLint 9](https://eslint.org/) (flat config), [Prettier](https://prettier.io/), [simple-import-sort](https://github.com/lydell/eslint-plugin-simple-import-sort)                            |
+| **Package Manager**       | [pnpm 10](https://pnpm.io/)                                                                                                                                                                  |
+| **Containerisation**      | [Docker](https://www.docker.com/) (multi-stage build)                                                                                                                                        |
+| **CI/CD**                 | GitHub Actions                                                                                                                                                                               |
 
 ## Architecture Overview
 
@@ -73,19 +73,19 @@ The application uses **PostgreSQL** as its primary database and connects to it t
 
 ### Models
 
-| Model | Description |
-| --- | --- |
-| `JwtToken` | Stores access/refresh JTI pairs for revocation tracking |
-| `Admin` | Admin users with a self-referential hierarchy tree (`promoter` → `subordinates`) |
-| `AdminInviteToken` | Hashed, time-limited, multi-use tokens for onboarding new admins |
-| `Election` | An election with RSA key pair, open/close timestamps, and choice constraints |
-| `ElectionRestriction` | Scoping rules attached to an election (faculty, group, study year, etc.) |
-| `ElectionChoice` | An individual answer option within an election |
-| `IssuedToken` | Records which users have been issued a vote token (prevents double-token issuance) |
-| `Ballot` | An encrypted, signed, chained ballot entry |
-| `UsedTokenNullifier` | SHA-256 hash of spent vote tokens (prevents double-voting) |
-| `FaqCategory` | A top-level FAQ section with an ordered position |
-| `FaqItem` | A single Q&A entry inside a category, storing content as a Quill Delta JSON string |
+| Model                 | Description                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `JwtToken`            | Stores access/refresh JTI pairs for revocation tracking                            |
+| `Admin`               | Admin users with a self-referential hierarchy tree (`promoter` → `subordinates`)   |
+| `AdminInviteToken`    | Hashed, time-limited, multi-use tokens for onboarding new admins                   |
+| `Election`            | An election with RSA key pair, open/close timestamps, and choice constraints       |
+| `ElectionRestriction` | Scoping rules attached to an election (faculty, group, study year, etc.)           |
+| `ElectionChoice`      | An individual answer option within an election                                     |
+| `IssuedToken`         | Records which users have been issued a vote token (prevents double-token issuance) |
+| `Ballot`              | An encrypted, signed, chained ballot entry                                         |
+| `UsedTokenNullifier`  | SHA-256 hash of spent vote tokens (prevents double-voting)                         |
+| `FaqCategory`         | A top-level FAQ section with an ordered position                                   |
+| `FaqItem`             | A single Q&A entry inside a category, storing content as a Quill Delta JSON string |
 
 ## Getting Started
 
@@ -119,22 +119,22 @@ Copy the example file and fill in the required values or use default ones with t
 cp .env.example .env
 ```
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `NEXT_PUBLIC_APP_NAME` | No | Display name shown in the UI (default: `"Vote OSS"`) |
-| `NEXT_PUBLIC_APP_URL` | **Yes** | Full public URL of the app, e.g. `https://voteoss.kpi.ua` |
-| `DATABASE_URL` | **Yes** | PostgreSQL connection string, e.g. `postgresql://user:pass@host:5432/voteoss` |
-| `REDIS_URL` | **Yes** | Redis connection string, e.g. `redis://localhost:6379` |
-| `JWT_ACCESS_SECRET` | **Yes** | Random secret for signing access tokens — **minimum 32 characters** |
-| `JWT_REFRESH_SECRET` | **Yes** | Random secret for signing refresh tokens — **minimum 32 characters** |
-| `DATABASE_ENCRYPTION_KEY` | **Yes** | Random secret for elections private key encryption — **64 characters, hex format** |
-| `CAMPUS_API_URL` | **Yes** | Base URL of the KPI Campus API used for faculty/group validation |
-| `CAMPUS_INTEGRATION_API_KEY` | **Yes** | KPI Campus API key used for retrieving user data by user id from KPI ID |
-| `NEXT_PUBLIC_KPI_AUTH_URL` | No | KPI ID auth base URL (default: `https://auth.kpi.ua`) |
-| `NEXT_PUBLIC_KPI_APP_ID` | **Yes** | Your registered KPI ID application ID |
-| `KPI_APP_SECRET` | **Yes** | Your KPI ID application secret |
-| `CRON_SECRET` | **Yes** | Bearer secret for protecting cron endpoints — **minimum 32 characters** |
-| `TRUSTED_PROXY_COUNT` | No | Number of trusted reverse proxies in front of the app (default: `1`). Used for correct client IP extraction in rate limiting |
+| Variable                     | Required | Description                                                                                                                  |
+| ---------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_NAME`       | No       | Display name shown in the UI (default: `"Vote OSS"`)                                                                         |
+| `NEXT_PUBLIC_APP_URL`        | **Yes**  | Full public URL of the app, e.g. `https://voteoss.kpi.ua`                                                                    |
+| `DATABASE_URL`               | **Yes**  | PostgreSQL connection string, e.g. `postgresql://user:pass@host:5432/voteoss`                                                |
+| `REDIS_URL`                  | **Yes**  | Redis connection string, e.g. `redis://localhost:6379`                                                                       |
+| `JWT_ACCESS_SECRET`          | **Yes**  | Random secret for signing access tokens — **minimum 32 characters**                                                          |
+| `JWT_REFRESH_SECRET`         | **Yes**  | Random secret for signing refresh tokens — **minimum 32 characters**                                                         |
+| `DATABASE_ENCRYPTION_KEY`    | **Yes**  | Random secret for elections private key encryption — **64 characters, hex format**                                           |
+| `CAMPUS_API_URL`             | **Yes**  | Base URL of the KPI Campus API used for faculty/group validation                                                             |
+| `CAMPUS_INTEGRATION_API_KEY` | **Yes**  | KPI Campus API key used for retrieving user data by user id from KPI ID                                                      |
+| `NEXT_PUBLIC_KPI_AUTH_URL`   | No       | KPI ID auth base URL (default: `https://auth.kpi.ua`)                                                                        |
+| `NEXT_PUBLIC_KPI_APP_ID`     | **Yes**  | Your registered KPI ID application ID                                                                                        |
+| `KPI_APP_SECRET`             | **Yes**  | Your KPI ID application secret                                                                                               |
+| `CRON_SECRET`                | **Yes**  | Bearer secret for protecting cron endpoints — **minimum 32 characters**                                                      |
+| `TRUSTED_PROXY_COUNT`        | No       | Number of trusted reverse proxies in front of the app (default: `1`). Used for correct client IP extraction in rate limiting |
 
 #### Build-time vs Runtime Variables
 
@@ -179,28 +179,28 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Start Next.js development server with hot reload |
-| `pnpm build` | Build the application for production |
-| `pnpm start` | Start the production server |
-| `pnpm lint` | Run ESLint across the entire codebase |
-| `pnpm type-check` | Run TypeScript type checking without emitting files |
-| `pnpm format` | Format all files with Prettier |
-| `pnpm format:check` | Check formatting without writing changes |
-| `pnpm test` | Run the Jest test suite |
-| `pnpm test:watch` | Run Jest in watch mode |
-| `pnpm test:coverage` | Run Jest and collect coverage reports |
-| `pnpm test:ci` | Run Jest in CI mode (no watch, force exit) |
-| `pnpm allure:generate` | Generate an Allure HTML report from test results |
-| `pnpm allure:open` | Open the generated Allure report in a browser |
-| `pnpm allure:serve` | Serve Allure results interactively |
-| `pnpm db:migrate` | Run Prisma migrations (dev — with prompts) |
-| `pnpm db:migrate:prod` | Run Prisma migrations (production — no prompts) |
-| `pnpm db:generate` | Regenerate the Prisma client after schema changes |
-| `pnpm db:studio` | Launch Prisma Studio |
-| `pnpm db:reset` | Reset the database and re-run all migrations |
-| `pnpm db:seed` | Seed the database with initial data |
+| Command                 | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| `pnpm dev`              | Start Next.js development server with hot reload        |
+| `pnpm build`            | Build the application for production                    |
+| `pnpm start`            | Start the production server                             |
+| `pnpm lint`             | Run ESLint across the entire codebase                   |
+| `pnpm type-check`       | Run TypeScript type checking without emitting files     |
+| `pnpm format`           | Format all files with Prettier                          |
+| `pnpm format:check`     | Check formatting without writing changes                |
+| `pnpm test`             | Run the Jest test suite                                 |
+| `pnpm test:watch`       | Run Jest in watch mode                                  |
+| `pnpm test:coverage`    | Run Jest and collect coverage reports                   |
+| `pnpm test:ci`          | Run Jest in CI mode (no watch, force exit)              |
+| `pnpm allure:generate`  | Generate an Allure HTML report from test results        |
+| `pnpm allure:open`      | Open the generated Allure report in a browser           |
+| `pnpm allure:serve`     | Serve Allure results interactively                      |
+| `pnpm db:migrate`       | Run Prisma migrations (dev — with prompts)              |
+| `pnpm db:migrate:prod`  | Run Prisma migrations (production — no prompts)         |
+| `pnpm db:generate`      | Regenerate the Prisma client after schema changes       |
+| `pnpm db:studio`        | Launch Prisma Studio                                    |
+| `pnpm db:reset`         | Reset the database and re-run all migrations            |
+| `pnpm db:seed`          | Seed the database with initial data                     |
 | `pnpm generate:openapi` | Regenerate `public/openapi.json` from JSDoc annotations |
 
 ## Testing

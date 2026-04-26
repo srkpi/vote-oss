@@ -13,10 +13,9 @@ import { redirect } from 'next/navigation';
 
 import { AdminGreeting } from '@/components/admin/admin-greeting';
 import { StatCard } from '@/components/admin/stat-card';
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { serverApi } from '@/lib/api/server';
 import { PETITION_QUORUM } from '@/lib/constants';
 import { getServerSession } from '@/lib/server-auth';
@@ -162,7 +161,7 @@ export default async function AdminDashboardPage() {
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                        <ElectionStatusBadge status={election.status} size="sm" />
+                        <StatusBadge status={election.status} size="sm" />
                         <span className="font-body text-muted-foreground hidden text-xs sm:inline">
                           {election.ballotCount} голосів
                         </span>
@@ -215,11 +214,9 @@ export default async function AdminDashboardPage() {
                       </div>
                       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                         {!petition.approved ? (
-                          <Badge variant="warning" size="sm">
-                            Очікує
-                          </Badge>
+                          <StatusBadge status="pending" size="sm" />
                         ) : (
-                          <ElectionStatusBadge status={petition.status} size="sm" isPetition />
+                          <StatusBadge status={petition.status} size="sm" />
                         )}
                         <span className="font-body text-muted-foreground hidden text-xs sm:inline">
                           {petition.ballotCount}/{quorum} ({pct}%)

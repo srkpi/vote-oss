@@ -1,9 +1,8 @@
-import { Calendar, CheckCircle2, Crown, Eye, FileText, User, XCircle } from 'lucide-react';
+import { Calendar, Crown, FileText, User } from 'lucide-react';
 import Link from 'next/link';
 
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { Badge } from '@/components/ui/badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { cn, pluralize } from '@/lib/utils/common';
 import type { Election } from '@/types/election';
 
@@ -81,14 +80,9 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 
       <div className="flex h-full flex-col p-6">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <ElectionStatusBadge status={election.status} />
+          <StatusBadge status={election.status} />
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-            {isNonAnonymous && (
-              <Badge size="md" variant="warning">
-                <Eye className="h-3.5 w-3.5" />
-                Не анонімне
-              </Badge>
-            )}
+            {isNonAnonymous && <StatusBadge status="nonanonymous" />}
           </div>
         </div>
 
@@ -162,18 +156,8 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
               <FileText className="text-kpi-gray-mid h-4 w-4" />
               <span>{pluralize(election.ballotCount, ['голос', 'голоси', 'голосів'])}</span>
             </div>
-            {voteStatus === 'cannot_vote' && (
-              <Badge size="md" variant="error">
-                <XCircle className="h-3 w-3" />
-                Не доступне
-              </Badge>
-            )}
-            {voteStatus === 'voted' && (
-              <Badge size="md" variant="info">
-                <CheckCircle2 className="h-3 w-3" />
-                Проголосовано
-              </Badge>
-            )}
+            {voteStatus === 'cannot_vote' && <StatusBadge status="unavailable" />}
+            {voteStatus === 'voted' && <StatusBadge status="voted" />}
           </div>
         </div>
       </div>

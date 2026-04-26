@@ -443,8 +443,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return Errors.forbidden('Only the group owner can rename the group');
   }
 
-  const isAdminWithManageGroups =
-    (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
+  const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
   if (wantsTypeChange && !isAdminWithManageGroups) {
     return Errors.forbidden('Only admins with manage_groups can change group type');
   }
