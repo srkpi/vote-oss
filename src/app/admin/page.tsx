@@ -74,7 +74,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="space-y-6 p-4 sm:p-8">
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 2xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 2xl:grid-cols-6">
           <StatCard
             label="Активних"
             value={openElections.length.toLocaleString('uk-UA')}
