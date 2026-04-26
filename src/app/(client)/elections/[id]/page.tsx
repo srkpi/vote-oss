@@ -11,7 +11,7 @@ import { EncryptionKey } from '@/components/elections/encryption-key';
 import { InfoRow } from '@/components/elections/info-row';
 import { KeyDisclosure } from '@/components/elections/key-disclosure';
 import { RestrictedVoteBanner } from '@/components/elections/restricted-vote-banner';
-import { ResultsChart } from '@/components/elections/result-chart';
+import { ResultsSection } from '@/components/elections/results-section';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { WinningConditionsDisplay } from '@/components/elections/winning-conditions-display';
 import { Button } from '@/components/ui/button';
@@ -198,16 +198,12 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
 
             {(isClosed || showLiveResults) && hasResults && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
-                <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
-                  {showLiveResults ? 'Поточні результати' : 'Результати'}
-                </h2>
-                <ResultsChart
-                  choices={election.choices}
-                  totalBallots={election.ballotCount}
-                  electionId={election.id}
-                />
-              </div>
+              <ResultsSection
+                title={showLiveResults ? 'Поточні результати' : 'Результати'}
+                choices={election.choices}
+                totalBallots={election.ballotCount}
+                electionId={election.id}
+              />
             )}
 
             {isUpcoming && (

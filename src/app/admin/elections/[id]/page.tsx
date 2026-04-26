@@ -20,9 +20,8 @@ import { RestoreElectionButton } from '@/components/elections/admin/restore-elec
 import { AccessRestrictions } from '@/components/elections/election-restrictions';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { KeyDisclosure } from '@/components/elections/key-disclosure';
-import { ResultsChart } from '@/components/elections/result-chart';
+import { ResultsSection } from '@/components/elections/results-section';
 import { WinningConditionsDisplay } from '@/components/elections/winning-conditions-display';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { TimelineItem } from '@/components/ui/timeline-item';
@@ -163,24 +162,14 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             )}
 
             {(isClosed || showLiveResults) && hasResults ? (
-              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
-                <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
-                  <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
-                    {showLiveResults ? 'Поточні результати' : 'Результати голосування'}
-                  </h2>
-                  <Badge variant="secondary" size="md">
-                    {pluralize(election.ballotCount, ['бюлетень', 'бюлетені', 'бюлетенів'])}
-                  </Badge>
-                </div>
-                <div className="p-4 sm:p-6">
-                  <ResultsChart
-                    choices={election.choices}
-                    totalBallots={election.ballotCount}
-                    electionId={election.id}
-                    hideOwnVote
-                  />
-                </div>
-              </div>
+              <ResultsSection
+                variant="admin"
+                title={showLiveResults ? 'Поточні результати' : 'Результати'}
+                choices={election.choices}
+                totalBallots={election.ballotCount}
+                electionId={election.id}
+                hideOwnVote
+              />
             ) : (
               <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle border-b px-4 py-4 sm:px-6">
