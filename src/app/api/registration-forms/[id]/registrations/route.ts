@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { GroupForbiddenError, GroupNotFoundError, requireVKSUGroupMember } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
@@ -145,10 +146,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const data = {
-    phone_number: phone.value,
-    telegram_tag: tag.value,
-    campaign_program_url: programUrl,
-    full_name: auth.user.fullName,
+    phone_number: encryptField(phone.value),
+    telegram_tag: encryptField(tag.value),
+    campaign_program_url: programUrl ? encryptField(programUrl) : null,
+    full_name: encryptField(auth.user.fullName),
   };
 
   const saved = existing

@@ -2,6 +2,8 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { safeDecrypt } from '@/lib/elections-view';
+import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import {
@@ -80,16 +82,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!eligible) return Errors.forbidden('Ви не відповідаєте обмеженням цієї форми');
 
   // Hard-validate every required field at submit time.
-  const phone = validatePhoneNumber(reg.phone_number);
+  const phone = validatePhoneNumber(safeDecrypt(reg.phone_number));
   if (!phone.ok) return Errors.badRequest(phone.error);
-  const tag = validateTelegramTag(reg.telegram_tag);
+  const tag = validateTelegramTag(safeDecrypt(reg.telegram_tag));
   if (!tag.ok) return Errors.badRequest(tag.error);
 
   if (form.requires_campaign_program) {
     if (!reg.campaign_program_url) {
       return Errors.badRequest('Для цієї форми обовʼязкове посилання на передвиборчу програму');
     }
-    const res = validateCampaignProgramUrl(reg.campaign_program_url);
+    const res = validateCampaignProgramUrl(safeDecrypt(reg.campaign_program_url));
     if (!res.ok) return Errors.badRequest(res.error);
   }
 
@@ -99,8 +101,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id },
     data: {
       status: nextStatus,
-      phone_number: phone.value,
-      telegram_tag: tag.value,
+      phone_number: encryptField(phone.value),
+      telegram_tag: encryptField(tag.value),
       submitted_at: new Date(),
     },
   });

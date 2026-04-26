@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { GroupForbiddenError, GroupNotFoundError, requireVKSUGroupMember } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       opens_at: opensAt,
       closes_at: closesAt,
       created_by: auth.user.sub,
-      created_by_full_name: auth.user.fullName,
+      created_by_full_name: encryptField(auth.user.fullName),
       restrictions: restrictions.length
         ? { create: restrictions.map((r) => ({ type: r.type, value: r.value })) }
         : undefined,

@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { GroupForbiddenError, GroupNotFoundError, requireVKSUGroupMember } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     data: {
       status: 'APPROVED',
       reviewed_by_user_id: auth.user.sub,
-      reviewed_by_full_name: auth.user.fullName,
+      reviewed_by_full_name: encryptField(auth.user.fullName),
       reviewed_at: new Date(),
     },
   });

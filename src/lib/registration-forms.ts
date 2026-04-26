@@ -18,6 +18,7 @@ import {
   REGISTRATION_FORM_RESTRICTION_VALUE_MAX_LENGTH,
   REGISTRATION_FORM_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
+import { safeDecrypt } from '@/lib/elections-view';
 import type {
   CandidateRegistrationForm,
   CandidateRegistrationFormRestriction,
@@ -45,7 +46,7 @@ export function shapeForm(form: FormWithRestrictions): CandidateRegistrationForm
     closesAt: form.closes_at.toISOString(),
     restrictions: form.restrictions.map((r) => ({ type: r.type, value: r.value })),
     createdBy: form.created_by,
-    createdByFullName: form.created_by_full_name,
+    createdByFullName: safeDecrypt(form.created_by_full_name),
     createdAt: form.created_at.toISOString(),
     updatedAt: form.updated_at.toISOString(),
   };
