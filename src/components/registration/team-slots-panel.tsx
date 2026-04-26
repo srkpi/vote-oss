@@ -113,9 +113,7 @@ export function TeamSlotsPanel({
   return (
     <div
       className={
-        compact
-          ? ''
-          : 'border-border-color shadow-shadow-card mb-6 rounded-xl border bg-white p-5'
+        compact ? '' : 'border-border-color shadow-shadow-card mb-6 rounded-xl border bg-white p-5'
       }
     >
       <div className={cn('flex items-center gap-2', compact ? 'mb-1.5' : 'mb-3')}>
@@ -123,7 +121,7 @@ export function TeamSlotsPanel({
         <h2
           className={cn(
             'font-display text-foreground font-semibold',
-            compact ? 'text-xs uppercase tracking-wider' : 'text-base',
+            compact ? 'text-xs tracking-wider uppercase' : 'text-base',
           )}
         >
           {compact
@@ -154,9 +152,7 @@ export function TeamSlotsPanel({
             return (
               <li
                 key={s.slot}
-                className={
-                  compact ? '' : 'border-border-subtle rounded-lg border p-3'
-                }
+                className={compact ? '' : 'border-border-subtle rounded-lg border p-3'}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <UserPlus className="text-muted-foreground h-3.5 w-3.5" />
