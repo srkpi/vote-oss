@@ -11,7 +11,9 @@ import type {
 import type {
   CandidateRegistration,
   CandidateRegistrationForm,
+  CandidateRegistrationFormAdminSummary,
   CandidateRegistrationFormDetail,
+  CandidateRegistrationFormSummary,
   CreateCandidateRegistrationFormRequest,
   RegenerateTeamInviteResponse,
   TeamInvitePreview,
@@ -278,9 +280,9 @@ export function createApiClient(fetcher: Fetcher) {
 
       registrationForms: {
         list: (groupId: string) =>
-          fetcher<CandidateRegistrationForm[]>(`/groups/${groupId}/registration-forms`),
+          fetcher<CandidateRegistrationFormAdminSummary[]>(`/groups/${groupId}/registration-forms`),
         create: (groupId: string, data: CreateCandidateRegistrationFormRequest) =>
-          fetcher<CandidateRegistrationForm>(`/groups/${groupId}/registration-forms`, {
+          fetcher<CandidateRegistrationFormAdminSummary>(`/groups/${groupId}/registration-forms`, {
             method: 'POST',
             body: JSON.stringify(data),
           }),
@@ -296,8 +298,7 @@ export function createApiClient(fetcher: Fetcher) {
       delete: (id: string) => fetcher<void>(`/registration-forms/${id}`, { method: 'DELETE' }),
 
       // Candidate-facing
-      list: () =>
-        fetcher<(CandidateRegistrationForm & { eligible: boolean })[]>(`/registration-forms`),
+      list: () => fetcher<CandidateRegistrationFormSummary[]>(`/registration-forms`),
       get: (id: string) => fetcher<CandidateRegistrationFormDetail>(`/registration-forms/${id}`),
       saveDraft: (formId: string, data: UpsertCandidateRegistrationDraftRequest) =>
         fetcher<CandidateRegistration>(`/registration-forms/${formId}/registrations`, {

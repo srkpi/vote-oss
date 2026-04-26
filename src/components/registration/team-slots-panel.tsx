@@ -13,6 +13,10 @@ import type { TeamSlot } from '@/types/candidate-registration';
 
 interface TeamSlotsPanelProps {
   registrationId: string;
+  /** Hide invite-link generation actions; show slot states only. */
+  readOnly?: boolean;
+  /** Strip outer card chrome and condense slot rows for nesting in another container. */
+  compact?: boolean;
 }
 
 interface FreshToken {
@@ -37,7 +41,11 @@ const STATE_BADGE: Record<TeamSlot['state'], string> = {
   accepted: 'text-success bg-success-bg',
 };
 
-export function TeamSlotsPanel({ registrationId }: TeamSlotsPanelProps) {
+export function TeamSlotsPanel({
+  registrationId,
+  readOnly = false,
+  compact = false,
+}: TeamSlotsPanelProps) {
   const { toast } = useToast();
   const [slots, setSlots] = useState<TeamSlot[]>([]);
   const [teamSize, setTeamSize] = useState(0);
@@ -103,24 +111,39 @@ export function TeamSlotsPanel({ registrationId }: TeamSlotsPanelProps) {
   };
 
   return (
-    <div className="border-border-color shadow-shadow-card mb-6 rounded-xl border bg-white p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <Users className="text-kpi-gray-mid h-4 w-4" />
-        <h2 className="font-display text-foreground text-base font-semibold">
-          Команда ({teamSize} {teamSize === 1 ? 'учасник' : 'учасники'})
+    <div
+      className={
+        compact
+          ? ''
+          : 'border-border-color shadow-shadow-card mb-6 rounded-xl border bg-white p-5'
+      }
+    >
+      <div className={cn('flex items-center gap-2', compact ? 'mb-1.5' : 'mb-3')}>
+        <Users className={cn('text-kpi-gray-mid', compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} />
+        <h2
+          className={cn(
+            'font-display text-foreground font-semibold',
+            compact ? 'text-xs uppercase tracking-wider' : 'text-base',
+          )}
+        >
+          {compact
+            ? `Команда (${teamSize})`
+            : `Команда (${teamSize} ${teamSize === 1 ? 'учасник' : 'учасники'})`}
         </h2>
       </div>
-      <p className="text-muted-foreground mb-4 text-sm">
-        Створіть посилання для кожного слота і надішліть їх відповідним людям. Заявка перейде на
-        розгляд після того, як усі слоти будуть прийняті.
-      </p>
+      {!readOnly && (
+        <p className="text-muted-foreground mb-4 text-sm">
+          Створіть посилання для кожного слота і надішліть їх відповідним людям. Заявка перейде на
+          розгляд після того, як усі слоти будуть прийняті.
+        </p>
+      )}
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Завантажуємо…</p>
+        <p className="text-muted-foreground text-xs">Завантажуємо…</p>
       ) : loadError ? (
         <Alert variant="error">{loadError}</Alert>
       ) : (
-        <ul className="space-y-3">
+        <ul className={compact ? 'space-y-1' : 'space-y-3'}>
           {slots.map((s) => {
             const fresh = freshTokens[s.slot];
             const link = fresh
@@ -129,10 +152,20 @@ export function TeamSlotsPanel({ registrationId }: TeamSlotsPanelProps) {
                 : ''
               : '';
             return (
-              <li key={s.slot} className="border-border-subtle rounded-lg border p-3">
+              <li
+                key={s.slot}
+                className={
+                  compact ? '' : 'border-border-subtle rounded-lg border p-3'
+                }
+              >
                 <div className="flex flex-wrap items-center gap-2">
                   <UserPlus className="text-muted-foreground h-3.5 w-3.5" />
-                  <span className="font-body text-foreground text-sm font-semibold">
+                  <span
+                    className={cn(
+                      'font-body text-foreground font-semibold',
+                      compact ? 'text-xs' : 'text-sm',
+                    )}
+                  >
                     Слот {s.slot}
                   </span>
                   <span
@@ -148,14 +181,19 @@ export function TeamSlotsPanel({ registrationId }: TeamSlotsPanelProps) {
                       до <LocalDateTime date={s.expiresAt} />
                     </span>
                   )}
+                  {compact && s.member && (
+                    <span className="text-foreground text-xs">
+                      · <span className="font-medium">{s.member.fullName || s.member.userId}</span>
+                    </span>
+                  )}
                 </div>
-                {s.member && (
+                {!compact && s.member && (
                   <p className="text-foreground mt-1 text-xs">
                     {s.state === 'accepted' ? 'Учасник: ' : 'Останній отримувач: '}
                     <span className="font-medium">{s.member.fullName || s.member.userId}</span>
                   </p>
                 )}
-                {fresh && (
+                {!readOnly && fresh && (
                   <div className="mt-2 space-y-1">
                     <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
                       Посилання (показано лише зараз)
@@ -178,7 +216,7 @@ export function TeamSlotsPanel({ registrationId }: TeamSlotsPanelProps) {
                     </div>
                   </div>
                 )}
-                {s.state !== 'accepted' && (
+                {!readOnly && s.state !== 'accepted' && (
                   <div className="mt-2">
                     <Button
                       variant="outline"

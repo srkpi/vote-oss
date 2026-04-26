@@ -72,6 +72,26 @@ export interface CandidateRegistrationFormDetail extends CandidateRegistrationFo
   eligible: boolean;
 }
 
+/** List item shape returned from `GET /api/registration-forms`. */
+export interface CandidateRegistrationFormSummary extends CandidateRegistrationForm {
+  /** Whether the caller satisfies every restriction on the form. */
+  eligible: boolean;
+  /** Status of the caller's existing registration on this form, if any. */
+  myRegistrationStatus: CandidateRegistrationStatus | null;
+}
+
+/**
+ * Form shape returned from `GET /api/groups/{id}/registration-forms` (admin /
+ * ВКСУ view).  Includes per-form aggregate counts so the management UI can
+ * surface workload at a glance.
+ */
+export interface CandidateRegistrationFormAdminSummary extends CandidateRegistrationForm {
+  /** All registrations on this form except DRAFT (which are private to the candidate). */
+  submittedCount: number;
+  /** Submissions currently awaiting reviewer action (status = PENDING_REVIEW). */
+  pendingReviewCount: number;
+}
+
 export interface UpsertCandidateRegistrationDraftRequest {
   phoneNumber?: string;
   telegramTag?: string;

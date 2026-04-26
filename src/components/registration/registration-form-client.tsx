@@ -242,8 +242,35 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
           </div>
         )}
 
-        {registration && status === 'AWAITING_TEAM' && (
-          <TeamSlotsPanel registrationId={registration.id} />
+        {registration && status !== null && status !== 'DRAFT' && (
+          <div className="border-border-color shadow-shadow-card mb-6 space-y-3 rounded-xl border bg-white p-5">
+            <p className="font-display text-foreground text-sm font-semibold">Ваша заявка</p>
+            <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
+              <dt className="text-muted-foreground text-xs uppercase">Телефон</dt>
+              <dd className="text-foreground wrap-break-word">{registration.phoneNumber}</dd>
+              <dt className="text-muted-foreground text-xs uppercase">Telegram</dt>
+              <dd className="text-foreground wrap-break-word">{registration.telegramTag}</dd>
+              {form.requiresCampaignProgram && registration.campaignProgramUrl && (
+                <>
+                  <dt className="text-muted-foreground text-xs uppercase">Програма</dt>
+                  <dd className="wrap-break-word">
+                    <a
+                      href={registration.campaignProgramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-kpi-navy hover:underline"
+                    >
+                      {registration.campaignProgramUrl}
+                    </a>
+                  </dd>
+                </>
+              )}
+            </dl>
+          </div>
+        )}
+
+        {registration && form.teamSize > 0 && status !== null && status !== 'DRAFT' && (
+          <TeamSlotsPanel registrationId={registration.id} readOnly={status !== 'AWAITING_TEAM'} />
         )}
 
         {editable && form.eligible && !closed && !notYetOpen && (

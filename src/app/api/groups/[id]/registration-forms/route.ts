@@ -48,7 +48,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     orderBy: { created_at: 'desc' },
   });
 
-  return NextResponse.json(forms.map(shapeForm));
+  const counts = await prisma.candidateRegistration.groupBy({
+    by: ['form_id', 'status'],
+    where: { form_id: { in: forms.map((f) => f.id) }, status: { not: 'DRAFT' } },
+    _count: { _all: true },
+  });
+
+  const countsByForm = new Map<string, { submitted: number; pending: number }>();
+  for (const row of counts) {
+    const entry = countsByForm.get(row.form_id) ?? { submitted: 0, pending: 0 };
+    entry.submitted += row._count._all;
+    if (row.status === 'PENDING_REVIEW') entry.pending += row._count._all;
+    countsByForm.set(row.form_id, entry);
+  }
+
+  return NextResponse.json(
+    forms.map((f) => {
+      const c = countsByForm.get(f.id) ?? { submitted: 0, pending: 0 };
+      return {
+        ...shapeForm(f),
+        submittedCount: c.submitted,
+        pendingReviewCount: c.pending,
+      };
+    }),
+  );
 }
 
 /**
@@ -113,5 +136,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     include: FORM_INCLUDE,
   });
 
-  return NextResponse.json(shapeForm(created), { status: 201 });
+  return NextResponse.json(
+    { ...shapeForm(created), submittedCount: 0, pendingReviewCount: 0 },
+    { status: 201 },
+  );
 }

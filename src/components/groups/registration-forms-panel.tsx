@@ -5,7 +5,6 @@ import {
   ClipboardList,
   FileText,
   Inbox,
-  Pencil,
   Plus,
   ShieldCheck,
   Trash2,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { TeamSlotsPanel } from '@/components/registration/team-slots-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +41,7 @@ import { cn } from '@/lib/utils/common';
 import type {
   CandidateRegistration,
   CandidateRegistrationForm,
+  CandidateRegistrationFormAdminSummary,
   CandidateRegistrationFormRestriction,
   CandidateRegistrationStatus,
 } from '@/types/candidate-registration';
@@ -60,17 +61,17 @@ function computeStatus(opensAt: string, closesAt: string): FormStatus {
 
 export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps) {
   const { toast } = useToast();
-  const [forms, setForms] = useState<CandidateRegistrationForm[]>([]);
+  const [forms, setForms] = useState<CandidateRegistrationFormAdminSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [editTarget, setEditTarget] = useState<CandidateRegistrationForm | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<CandidateRegistrationForm | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [submissionsTarget, setSubmissionsTarget] = useState<CandidateRegistrationForm | null>(
+  const [deleteTarget, setDeleteTarget] = useState<CandidateRegistrationFormAdminSummary | null>(
     null,
   );
+  const [deleting, setDeleting] = useState(false);
+  const [submissionsTarget, setSubmissionsTarget] =
+    useState<CandidateRegistrationFormAdminSummary | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,7 +103,7 @@ export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps)
     setDeleting(false);
   };
 
-  const upsertForm = (form: CandidateRegistrationForm) => {
+  const upsertForm = (form: CandidateRegistrationFormAdminSummary) => {
     setForms((prev) => {
       const idx = prev.findIndex((f) => f.id === form.id);
       if (idx === -1) return [form, ...prev];
@@ -123,7 +124,7 @@ export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps)
         </div>
         <Button variant="accent" size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-3.5 w-3.5" />
-          <span className="font-body text-sm">Нова форма</span>
+          <span className="font-body text-sm">Нова</span>
         </Button>
       </div>
 
@@ -176,14 +177,20 @@ export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps)
                     <p className="text-muted-foreground mt-1 text-xs">
                       <LocalDateTime date={form.opensAt} /> — <LocalDateTime date={form.closesAt} />
                     </p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      Заявок —{' '}
+                      <span className="text-foreground font-semibold">{form.submittedCount}</span>{' '}
+                      (з них на розгляді —{' '}
+                      <span className="text-foreground font-semibold">
+                        {form.pendingReviewCount}
+                      </span>
+                      )
+                    </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <Button variant="ghost" size="sm" onClick={() => setSubmissionsTarget(form)}>
                       <Inbox className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">Заявки</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setEditTarget(form)}>
-                      <Pencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -204,22 +211,10 @@ export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps)
       <RegistrationFormDialog
         groupId={groupId}
         open={createOpen}
-        initial={null}
         onClose={() => setCreateOpen(false)}
         onSaved={(form) => {
           upsertForm(form);
           setCreateOpen(false);
-        }}
-      />
-
-      <RegistrationFormDialog
-        groupId={groupId}
-        open={!!editTarget}
-        initial={editTarget}
-        onClose={() => setEditTarget(null)}
-        onSaved={(form) => {
-          upsertForm(form);
-          setEditTarget(null);
         }}
       />
 
@@ -258,9 +253,8 @@ export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps)
 interface RegistrationFormDialogProps {
   groupId: string;
   open: boolean;
-  initial: CandidateRegistrationForm | null;
   onClose: () => void;
-  onSaved: (form: CandidateRegistrationForm) => void;
+  onSaved: (form: CandidateRegistrationFormAdminSummary) => void;
 }
 
 function defaultStartDate(): Date {
@@ -276,13 +270,7 @@ function defaultEndDate(): Date {
   return d;
 }
 
-function RegistrationFormDialog({
-  groupId,
-  open,
-  initial,
-  onClose,
-  onSaved,
-}: RegistrationFormDialogProps) {
+function RegistrationFormDialog({ groupId, open, onClose, onSaved }: RegistrationFormDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [requiresCampaignProgram, setRequiresCampaignProgram] = useState(false);
@@ -295,29 +283,18 @@ function RegistrationFormDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Hydrate from initial / reset when dialog opens
   useEffect(() => {
     if (!open) return;
-    if (initial) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTitle(initial.title);
-      setDescription(initial.description ?? '');
-      setRequiresCampaignProgram(initial.requiresCampaignProgram);
-      setTeamSize(initial.teamSize);
-      setOpensAt(new Date(initial.opensAt));
-      setClosesAt(new Date(initial.closesAt));
-      setFaculties(initial.restrictions.filter((r) => r.type === 'FACULTY').map((r) => r.value));
-    } else {
-      setTitle('');
-      setDescription('');
-      setRequiresCampaignProgram(false);
-      setTeamSize(0);
-      setOpensAt(defaultStartDate());
-      setClosesAt(defaultEndDate());
-      setFaculties([]);
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTitle('');
+    setDescription('');
+    setRequiresCampaignProgram(false);
+    setTeamSize(0);
+    setOpensAt(defaultStartDate());
+    setClosesAt(defaultEndDate());
+    setFaculties([]);
     setError(null);
-  }, [open, initial]);
+  }, [open]);
 
   // Load faculty list once
   useEffect(() => {
@@ -358,9 +335,7 @@ function RegistrationFormDialog({
       restrictions,
     };
 
-    const result = initial
-      ? await api.registrationForms.update(initial.id, payload)
-      : await api.groups.registrationForms.create(groupId, payload);
+    const result = await api.groups.registrationForms.create(groupId, payload);
 
     if (result.success) {
       onSaved(result.data);
@@ -382,7 +357,7 @@ function RegistrationFormDialog({
     <Dialog open={open} onClose={() => !submitting && onClose()}>
       <DialogPanel maxWidth="lg">
         <DialogHeader>
-          <DialogTitle>{initial ? 'Редагувати форму' : 'Нова форма реєстрації'}</DialogTitle>
+          <DialogTitle>Нова форма реєстрації</DialogTitle>
           <DialogCloseButton onClose={onClose} />
         </DialogHeader>
         <DialogBody className="space-y-4">
@@ -505,7 +480,7 @@ function RegistrationFormDialog({
             loading={submitting}
             disabled={!canSubmit}
           >
-            {initial ? 'Зберегти' : 'Створити'}
+            Створити
           </Button>
         </DialogFooter>
       </DialogPanel>
@@ -661,6 +636,9 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                   {reg.status === 'REJECTED' && reg.rejectionReason && (
                     <p className="text-error text-xs">Відхилено: {reg.rejectionReason}</p>
                   )}
+                  {form && form.teamSize > 0 && (
+                    <TeamSlotsPanel registrationId={reg.id} readOnly compact />
+                  )}
                   {reg.status === 'PENDING_REVIEW' && (
                     <div className="flex gap-2 pt-1">
                       <Button
@@ -690,11 +668,6 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
               ))
             )}
           </DialogBody>
-          <DialogFooter>
-            <Button variant="secondary" onClick={onClose}>
-              Закрити
-            </Button>
-          </DialogFooter>
         </DialogPanel>
       </Dialog>
 

@@ -42,6 +42,7 @@ export const ELECTION_DESCRIPTION_MAX_LENGTH = 5000;
  * Changing this constant automatically propagates to both the API and UI.
  */
 export const ELECTIONS_PAGE_SIZE = 24;
+export const REGISTRATION_FORMS_PAGE_SIZE = 24;
 export const BALLOTS_PAGE_SIZE = 20;
 
 // Admin invite token limits
@@ -130,6 +131,7 @@ export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
 export const CACHE_KEY_FAQ = 'cache:faq';
 export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
 export const LOCAL_STORAGE_ELECTIONS_VIEW_KEY = 'elections_view';
+export const LOCAL_STORAGE_REGISTRATION_VIEW_KEY = 'registration_view';
 export const SESSION_USER_KEY = 'session_user_id';
 export const CONFETTI_KEY_PREFIX = 'election_confetti_shown_';
 

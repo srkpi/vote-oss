@@ -41,7 +41,7 @@ interface FiltersPanelProps {
 
 // ─── Single-select dropdown with per-option counts ────────────────────────────
 
-function FilterDropdown<T extends string>({
+export function FilterDropdown<T extends string>({
   label,
   options,
   value,

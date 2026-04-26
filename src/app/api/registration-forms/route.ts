@@ -35,6 +35,12 @@ export async function GET(req: NextRequest) {
     orderBy: { closes_at: 'asc' },
   });
 
+  const myRegistrations = await prisma.candidateRegistration.findMany({
+    where: { user_id: auth.user.sub, form_id: { in: forms.map((f) => f.id) } },
+    select: { form_id: true, status: true },
+  });
+  const statusByFormId = new Map(myRegistrations.map((r) => [r.form_id, r.status]));
+
   const userCtx = {
     faculty: auth.user.faculty,
     group: auth.user.group,
@@ -50,6 +56,7 @@ export async function GET(req: NextRequest) {
         f.restrictions.map((r) => ({ type: r.type, value: r.value })),
         userCtx,
       ),
+      myRegistrationStatus: statusByFormId.get(f.id) ?? null,
     })),
   );
 }
