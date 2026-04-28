@@ -1,9 +1,8 @@
-import { Calendar, CheckCircle2, Crown, Eye, FileText, User, XCircle } from 'lucide-react';
+import { Calendar, Crown, FileText, User } from 'lucide-react';
 import Link from 'next/link';
 
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { Badge } from '@/components/ui/badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils/common';
 import type { Election } from '@/types/election';
 
@@ -58,27 +57,12 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
       <div className="min-w-0 flex-1 space-y-1.5 self-center">
         {/* Badge row */}
         <div className="flex flex-wrap items-center gap-2">
-          <ElectionStatusBadge status={election.status} size="sm" />
+          <StatusBadge status={election.status} size="sm" />
 
-          {!election.anonymous && (
-            <Badge size="sm" variant="warning">
-              <Eye className="h-2.5 w-2.5" />
-              Не анонімне
-            </Badge>
-          )}
+          {!election.anonymous && <StatusBadge status="nonanonymous" size="sm" />}
 
-          {voteStatus === 'cannot_vote' && (
-            <Badge size="sm" variant="error">
-              <XCircle className="h-2.5 w-2.5" />
-              Не доступне
-            </Badge>
-          )}
-          {voteStatus === 'voted' && (
-            <Badge size="sm" variant="info">
-              <CheckCircle2 className="h-2.5 w-2.5" />
-              Проголосовано
-            </Badge>
-          )}
+          {voteStatus === 'cannot_vote' && <StatusBadge status="unavailable" />}
+          {voteStatus === 'voted' && <StatusBadge status="voted" />}
         </div>
 
         {/* Title */}

@@ -1,10 +1,9 @@
 import { FileText, Play, RotateCcw, StopCircle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import type { Election } from '@/types/election';
 
 interface ElectionMobileCardProps {
@@ -62,9 +61,7 @@ export function ElectionMobileCard({
           {election.ballotCount}
         </span>
         {election.restrictions.length > 0 && (
-          <Badge variant="info" size="sm" className="ml-2" muted={isDeleted}>
-            Обмежено
-          </Badge>
+          <StatusBadge status="restricted" size="sm" muted={isDeleted} />
         )}
       </div>
     </div>
@@ -77,7 +74,7 @@ export function ElectionMobileCard({
           {titleContent}
         </Link>
         <div className="flex shrink-0 items-center gap-2">
-          <ElectionStatusBadge status={election.status} size="sm" muted={isDeleted} />
+          <StatusBadge status={election.status} size="sm" muted={isDeleted} />
           {isDeleted && election.canRestore ? (
             <Button
               variant="ghost"

@@ -30,6 +30,7 @@ export function Header({ session }: HeaderProps) {
   const navLinks = [
     { label: 'Голосування', href: '/elections' },
     { label: 'Групи', href: '/groups' },
+    { label: 'Кандидатам', href: '/registration' },
     { label: 'Петиції', href: '/petitions' },
     { label: 'FAQ', href: '/faq' },
     ...(session?.isAdmin ? [{ label: 'Адмін-панель', href: '/admin' }] : []),

@@ -6,7 +6,6 @@ import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { Alert } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { SearchInput } from '@/components/ui/search-input';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
@@ -50,36 +50,16 @@ function PetitionStatusBadge({
   petition: Election;
   size?: 'sm' | 'md';
 }) {
-  if (petition.deletedAt) {
-    return (
-      <Badge variant="secondary" size={size}>
-        Видалена
-      </Badge>
-    );
-  }
-  if (!petition.approved) {
-    return (
-      <Badge variant="warning" size={size}>
-        Очікує модерацію
-      </Badge>
-    );
-  }
+  if (petition.deletedAt) return <StatusBadge status="deleted" size={size} />;
+  if (!petition.approved) return <StatusBadge status="pending" size={size} />;
   if (petition.status === 'closed') {
     return petition.ballotCount >= petitionQuorum(petition) ? (
-      <Badge variant="info" size={size}>
-        Кворум
-      </Badge>
+      <StatusBadge status="quorum" size={size} />
     ) : (
-      <Badge variant="secondary" size={size}>
-        Закрита
-      </Badge>
+      <StatusBadge status="closed" size={size} />
     );
   }
-  return (
-    <Badge variant="success" size={size}>
-      Активна
-    </Badge>
-  );
+  return <StatusBadge status="open" size={size} />;
 }
 
 function ProgressCell({ petition, dim }: { petition: Election; dim?: boolean }) {

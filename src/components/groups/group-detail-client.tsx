@@ -22,10 +22,7 @@ import { useMemo, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionListItem } from '@/components/elections/election-list-item';
-import {
-  FilterMultiDropdown,
-  type FilterOption,
-} from '@/components/elections/elections-filter-panel';
+import { RegistrationFormsPanel } from '@/components/groups/registration-forms-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,6 +34,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FilterMultiDropdown, type FilterOption } from '@/components/ui/filters-shell';
 import { FormField, Input } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
@@ -52,6 +50,7 @@ import {
 } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
+import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 import type { ElectionStatus } from '@/types/election';
 import type { GroupDetail, GroupInviteLink, GroupMemberSummary } from '@/types/group';
 
@@ -223,9 +222,16 @@ function InviteLinkCard({ link, onRevoke }: { link: GroupInviteLink; onRevoke: (
 interface GroupDetailClientProps {
   group: GroupDetail;
   session: User;
+  registrationForms: CandidateRegistrationFormAdminSummary[];
+  registrationFormsError: string | null;
 }
 
-export function GroupDetailClient({ group: initialGroup, session }: GroupDetailClientProps) {
+export function GroupDetailClient({
+  group: initialGroup,
+  session,
+  registrationForms,
+  registrationFormsError,
+}: GroupDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [group, setGroup] = useState<GroupDetail>(initialGroup);
@@ -236,6 +242,10 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
   // Admins who own the group (or have manage_groups) may create elections
   // pre-restricted to this group's membership.
   const canCreateElection = session.isAdmin && canManage;
+  // ВКСУ-tab visibility: only active members of a VKSU-typed group can manage
+  // candidate registration forms.
+  const isActiveMember = group.members.some((m) => m.userId === session.userId);
+  const canManageRegistrationForms = group.type === 'VKSU' && isActiveMember;
 
   // ── Elections filter / pagination ─────────────────────────────────────────
   const [electionSearch, setElectionSearch] = useState('');
@@ -559,6 +569,14 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
                 </>
               )}
             </div>
+
+            {canManageRegistrationForms && (
+              <RegistrationFormsPanel
+                groupId={group.id}
+                initialForms={registrationForms}
+                initialLoadError={registrationFormsError}
+              />
+            )}
           </div>
 
           {/* Sidebar: group info + members + actions */}

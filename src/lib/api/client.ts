@@ -9,6 +9,19 @@ import type {
   GlobalBypassToken,
 } from '@/types/bypass';
 import type {
+  CandidateRegistration,
+  CandidateRegistrationForm,
+  CandidateRegistrationFormAdminSummary,
+  CandidateRegistrationFormDetail,
+  CandidateRegistrationFormSummary,
+  CreateCandidateRegistrationFormRequest,
+  RegenerateTeamInviteResponse,
+  TeamInvitePreview,
+  TeamSlot,
+  UpdateCandidateRegistrationFormRequest,
+  UpsertCandidateRegistrationDraftRequest,
+} from '@/types/candidate-registration';
+import type {
   CreateElectionRequest,
   CreateElectionResponse,
   ElectionDetail,
@@ -28,6 +41,7 @@ import type {
   GroupDetail,
   GroupInviteLink,
   GroupOption,
+  GroupType,
   JoinGroupResponse,
 } from '@/types/group';
 import type { VoteToken } from '@/types/vote';
@@ -229,6 +243,8 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<Group>('/groups', { method: 'POST', body: JSON.stringify({ name }) }),
       rename: (id: string, name: string) =>
         fetcher<void>(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
+      setType: (id: string, type: GroupType) =>
+        fetcher<void>(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ type }) }),
       delete: (id: string) => fetcher<void>(`/groups/${id}`, { method: 'DELETE' }),
 
       join: (token: string) =>
@@ -261,6 +277,71 @@ export function createApiClient(fetcher: Fetcher) {
 
       owned: () => fetcher<GroupOption[]>('/groups/owned'),
       all: () => fetcher<AdminGroupSummary[]>('/groups/all'),
+
+      registrationForms: {
+        list: (groupId: string) =>
+          fetcher<CandidateRegistrationFormAdminSummary[]>(`/groups/${groupId}/registration-forms`),
+        create: (groupId: string, data: CreateCandidateRegistrationFormRequest) =>
+          fetcher<CandidateRegistrationFormAdminSummary>(`/groups/${groupId}/registration-forms`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+          }),
+      },
+    },
+
+    registrationForms: {
+      update: (id: string, data: UpdateCandidateRegistrationFormRequest) =>
+        fetcher<CandidateRegistrationForm>(`/registration-forms/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(data),
+        }),
+      delete: (id: string) => fetcher<void>(`/registration-forms/${id}`, { method: 'DELETE' }),
+
+      // Candidate-facing
+      list: () => fetcher<CandidateRegistrationFormSummary[]>(`/registration-forms`),
+      get: (id: string) => fetcher<CandidateRegistrationFormDetail>(`/registration-forms/${id}`),
+      saveDraft: (formId: string, data: UpsertCandidateRegistrationDraftRequest) =>
+        fetcher<CandidateRegistration>(`/registration-forms/${formId}/registrations`, {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }),
+
+      // Reviewer-facing list of submissions for a form
+      submissions: (formId: string) =>
+        fetcher<CandidateRegistration[]>(`/registration-forms/${formId}/registrations`),
+    },
+
+    registrations: {
+      submit: (id: string) =>
+        fetcher<CandidateRegistration>(`/registrations/${id}/submit`, { method: 'POST' }),
+      withdraw: (id: string) =>
+        fetcher<CandidateRegistration>(`/registrations/${id}/withdraw`, { method: 'POST' }),
+      approve: (id: string) =>
+        fetcher<CandidateRegistration>(`/registrations/${id}/approve`, { method: 'POST' }),
+      reject: (id: string, reason: string) =>
+        fetcher<CandidateRegistration>(`/registrations/${id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        }),
+
+      // Team invites
+      team: (id: string) =>
+        fetcher<{ teamSize: number; slots: TeamSlot[] }>(`/registrations/${id}/team`),
+      regenerateTeamSlot: (id: string, slot: number) =>
+        fetcher<RegenerateTeamInviteResponse>(`/registrations/${id}/team/${slot}`, {
+          method: 'POST',
+        }),
+    },
+
+    teamInvites: {
+      get: (token: string) => fetcher<TeamInvitePreview>(`/team-invites/${token}`),
+      accept: (token: string) =>
+        fetcher<{ accepted: true; registrationStatus: 'AWAITING_TEAM' | 'PENDING_REVIEW' }>(
+          `/team-invites/${token}/accept`,
+          { method: 'POST' },
+        ),
+      reject: (token: string) =>
+        fetcher<{ rejected: true }>(`/team-invites/${token}/reject`, { method: 'POST' }),
     },
   };
 }

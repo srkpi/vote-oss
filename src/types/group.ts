@@ -1,5 +1,12 @@
 import type { Election } from './election';
 
+export type GroupType = 'VKSU' | 'OTHER';
+
+export const GROUP_TYPE_LABELS: Record<GroupType, string> = {
+  VKSU: 'ВКСУ',
+  OTHER: 'Інша',
+};
+
 export interface GroupMemberSummary {
   userId: string;
   displayName: string;
@@ -31,6 +38,7 @@ export interface GroupInviteLink {
 export interface Group {
   id: string;
   name: string;
+  type: GroupType;
   ownerId: string;
   createdBy: string;
   createdAt: string;
@@ -66,6 +74,8 @@ export interface GroupOption {
 // Request / response shapes
 export interface UpdateGroupRequest {
   name?: string;
+  /** Only admins with `manage_groups` may set `type`. */
+  type?: GroupType;
 }
 
 export interface CreateInviteLinkRequest {
@@ -82,6 +92,7 @@ export interface JoinGroupResponse {
 export interface AdminGroupSummary {
   id: string;
   name: string;
+  type: GroupType;
   ownerId: string;
   ownerName: string | null;
   memberCount: number;

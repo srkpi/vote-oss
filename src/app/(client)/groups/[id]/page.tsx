@@ -7,6 +7,7 @@ import { APP_URL } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
+import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -52,9 +53,30 @@ export default async function GroupDetailPage({ params }: Props) {
 
   if (status === 404 || !group) notFound();
 
+  // Mirror the gating in GroupDetailClient so we only fetch forms when the
+  // panel will actually render.
+  const isActiveMember = group.members.some((m) => m.userId === session.userId);
+  const canManageRegistrationForms = group.type === 'VKSU' && isActiveMember;
+
+  let registrationForms: CandidateRegistrationFormAdminSummary[] = [];
+  let registrationFormsError: string | null = null;
+  if (canManageRegistrationForms) {
+    const formsResult = await serverApi.groups.registrationForms.list(id);
+    if (formsResult.success) {
+      registrationForms = formsResult.data;
+    } else {
+      registrationFormsError = formsResult.error;
+    }
+  }
+
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
-      <GroupDetailClient group={group} session={session} />
+      <GroupDetailClient
+        group={group}
+        session={session}
+        registrationForms={registrationForms}
+        registrationFormsError={registrationFormsError}
+      />
     </div>
   );
 }

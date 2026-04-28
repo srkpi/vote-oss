@@ -6,7 +6,6 @@ import { notFound, redirect } from 'next/navigation';
 import { ErrorState } from '@/components/common/error-state';
 import { CountdownTimer } from '@/components/elections/countdown-timer';
 import { AccessRestrictions } from '@/components/elections/election-restrictions';
-import { ElectionStatusBadge } from '@/components/elections/election-status-badge';
 import { EncryptionKey } from '@/components/elections/encryption-key';
 import { InfoRow } from '@/components/elections/info-row';
 import { KeyDisclosure } from '@/components/elections/key-disclosure';
@@ -16,6 +15,7 @@ import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { WinningConditionsDisplay } from '@/components/elections/winning-conditions-display';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { serverApi } from '@/lib/api/server';
 import { APP_URL } from '@/lib/config/client';
 import { checkRestrictionsWithBypass } from '@/lib/restrictions';
@@ -133,7 +133,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
 
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
             <div className="min-w-0 space-y-3">
-              <ElectionStatusBadge status={election.status} size="md" />
+              <StatusBadge status={election.status} size="md" />
               <h1 className="font-display text-foreground text-3xl leading-tight font-bold wrap-break-word md:text-4xl">
                 {election.title}
               </h1>

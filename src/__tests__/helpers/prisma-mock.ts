@@ -111,6 +111,28 @@ export const prismaMock = {
     updateMany: jest.fn(),
     delete: jest.fn(),
   },
+  group: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
+  },
+  groupMember: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  groupInviteLink: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
   $transaction: jest.fn(),
   $queryRaw: jest.fn(),
 };
@@ -175,4 +197,16 @@ export function resetPrismaMock() {
     .mockImplementation((args: unknown) => args);
   prismaMock.electionBypassTokenUsage.update.mockReset().mockResolvedValue({});
   prismaMock.electionBypassTokenUsage.updateMany.mockReset().mockResolvedValue({ count: 0 });
+
+  prismaMock.group.findUnique.mockReset().mockResolvedValue(null);
+  prismaMock.group.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.group.create.mockReset().mockImplementation((args: unknown) => args);
+  prismaMock.group.update.mockReset().mockResolvedValue({});
+  prismaMock.group.count.mockReset().mockResolvedValue(0);
+  prismaMock.groupMember.findUnique.mockReset().mockResolvedValue(null);
+  prismaMock.groupMember.findMany.mockReset().mockResolvedValue([]);
+  prismaMock.groupMember.create.mockReset().mockImplementation((args: unknown) => args);
+  prismaMock.groupMember.update.mockReset().mockResolvedValue({});
+  prismaMock.groupInviteLink.findUnique.mockReset().mockResolvedValue(null);
+  prismaMock.groupInviteLink.findMany.mockReset().mockResolvedValue([]);
 }

@@ -42,6 +42,7 @@ export const ELECTION_DESCRIPTION_MAX_LENGTH = 5000;
  * Changing this constant automatically propagates to both the API and UI.
  */
 export const ELECTIONS_PAGE_SIZE = 24;
+export const REGISTRATION_FORMS_PAGE_SIZE = 24;
 export const BALLOTS_PAGE_SIZE = 20;
 
 // Admin invite token limits
@@ -84,6 +85,29 @@ export const CACHE_TTL_FAQ_SECS = 5 * 60;
 export const CACHE_TTL_BYPASS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_MEMBERSHIPS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_OWNED_SECS = 5 * 60;
+export const CACHE_TTL_GROUP_VKSU_IDS_SECS = 5 * 60;
+
+// Candidate registration forms
+export const REGISTRATION_FORM_TITLE_MAX_LENGTH = 255;
+export const REGISTRATION_FORM_DESCRIPTION_MAX_LENGTH = 5000;
+export const REGISTRATION_FORM_RESTRICTION_VALUE_MAX_LENGTH = 100;
+export const REGISTRATION_FORM_MAX_RESTRICTIONS = 50;
+/** Maximum days between opens_at and closes_at for a registration form. */
+export const REGISTRATION_FORM_MAX_DURATION_DAYS = 90;
+/** Maximum number of additional team members a candidate can be required to invite (0..N). */
+export const REGISTRATION_FORM_MAX_TEAM_SIZE = 10;
+
+// Candidate registrations (submissions)
+export const REGISTRATION_PHONE_MAX_LENGTH = 30;
+export const REGISTRATION_TELEGRAM_TAG_MAX_LENGTH = 64;
+export const REGISTRATION_PROGRAM_URL_MAX_LENGTH = 2048;
+export const REGISTRATION_REJECTION_REASON_MAX_LENGTH = 1000;
+/** Allowed hosts for the campaign program URL. */
+export const REGISTRATION_PROGRAM_URL_ALLOWED_HOSTS = ['drive.google.com', 'docs.google.com'];
+
+// Team invite tokens
+export const TEAM_INVITE_TOKEN_LENGTH = 24;
+export const TEAM_INVITE_TOKEN_TTL_DAYS = 7;
 /**
  * Real-time ballot-count counter TTL.
  * Short enough to be "live" on the client elections page but long enough to
@@ -107,6 +131,7 @@ export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
 export const CACHE_KEY_FAQ = 'cache:faq';
 export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
 export const LOCAL_STORAGE_ELECTIONS_VIEW_KEY = 'elections_view';
+export const LOCAL_STORAGE_REGISTRATION_VIEW_KEY = 'registration_view';
 export const SESSION_USER_KEY = 'session_user_id';
 export const CONFETTI_KEY_PREFIX = 'election_confetti_shown_';
 

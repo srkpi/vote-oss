@@ -23,6 +23,7 @@ import {
   GroupNotFoundError,
   invalidateGroupMembershipsForUsers,
   invalidateUserOwnedGroups,
+  invalidateVKSUGroupIds,
 } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
@@ -256,6 +257,7 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
     select: {
       id: true,
       name: true,
+      type: true,
       owner_id: true,
       created_by: true,
       created_at: true,
@@ -302,6 +304,7 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
   return {
     id: group.id,
     name: group.name,
+    type: group.type,
     ownerId: group.owner_id,
     createdBy: group.created_by,
     createdAt: group.created_at.toISOString(),
@@ -371,11 +374,30 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * @swagger
  * /api/groups/{id}:
  *   patch:
- *     summary: Rename a group
- *     description: Only the group owner may rename the group.
+ *     summary: Update a group (rename and/or change type)
+ *     description: >
+ *       Two independent fields, each gated by its own permission:
+ *
+ *       - `name` — only the group owner may rename the group.
+ *       - `type` — only admins with `manage_groups` may change the group type.
+ *
+ *       The body may contain either or both fields.  At least one must be present.
  *     tags: [Groups]
  *     security:
  *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 maxLength: 100
+ *               type:
+ *                 type: string
+ *                 enum: [VKSU, OTHER]
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -384,36 +406,64 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
 
-  let body: { name?: string };
+  let body: { name?: string; type?: 'VKSU' | 'OTHER' };
   try {
     body = await req.json();
   } catch {
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const name = body.name?.trim();
-  if (!name) return Errors.badRequest('name is required');
-  if (name.length > GROUP_NAME_MAX_LENGTH) {
-    return Errors.badRequest(`name must be at most ${GROUP_NAME_MAX_LENGTH} characters`);
+  const wantsRename = body.name !== undefined;
+  const wantsTypeChange = body.type !== undefined;
+  if (!wantsRename && !wantsTypeChange) {
+    return Errors.badRequest('At least one of name or type is required');
+  }
+
+  let trimmedName: string | undefined;
+  if (wantsRename) {
+    trimmedName = body.name?.trim();
+    if (!trimmedName) return Errors.badRequest('name is required');
+    if (trimmedName.length > GROUP_NAME_MAX_LENGTH) {
+      return Errors.badRequest(`name must be at most ${GROUP_NAME_MAX_LENGTH} characters`);
+    }
+  }
+
+  if (wantsTypeChange && body.type !== 'VKSU' && body.type !== 'OTHER') {
+    return Errors.badRequest('type must be VKSU or OTHER');
   }
 
   const group = await prisma.group.findUnique({
     where: { id },
-    select: { owner_id: true, deleted_at: true },
+    select: { owner_id: true, deleted_at: true, type: true },
   });
 
   if (!group || group.deleted_at) return Errors.notFound('Group not found');
-  if (group.owner_id !== auth.user.sub) {
+
+  if (wantsRename && group.owner_id !== auth.user.sub) {
     return Errors.forbidden('Only the group owner can rename the group');
   }
 
-  await prisma.group.update({
-    where: { id },
-    data: { name, updated_by: auth.user.sub },
-  });
+  const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
+  if (wantsTypeChange && !isAdminWithManageGroups) {
+    return Errors.forbidden('Only admins with manage_groups can change group type');
+  }
 
-  // Invalidate owned-groups cache so the election form reflects the new name
-  await invalidateUserOwnedGroups(auth.user.sub);
+  const update: { name?: string; type?: 'VKSU' | 'OTHER'; updated_by: string } = {
+    updated_by: auth.user.sub,
+  };
+  if (wantsRename) update.name = trimmedName!;
+  if (wantsTypeChange) update.type = body.type;
+
+  await prisma.group.update({ where: { id }, data: update });
+
+  const invalidations: Promise<unknown>[] = [];
+  if (wantsRename) {
+    invalidations.push(invalidateUserOwnedGroups(auth.user.sub));
+  }
+  if (wantsTypeChange && group.type !== body.type) {
+    invalidations.push(invalidateVKSUGroupIds());
+  }
+  await Promise.all(invalidations);
 
   return new NextResponse(null, { status: 204 });
 }
@@ -444,6 +494,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     select: {
       owner_id: true,
       deleted_at: true,
+      type: true,
       members: {
         where: { deleted_at: null },
         select: { user_id: true },
@@ -467,10 +518,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   // Invalidate membership caches for all members so their election eligibility
   // is immediately re-evaluated
   const memberIds = group.members.map((m) => m.user_id);
-  await Promise.all([
+  const invalidations: Promise<unknown>[] = [
     invalidateGroupMembershipsForUsers(memberIds),
     invalidateUserOwnedGroups(group.owner_id),
-  ]);
+  ];
+  if (group.type === 'VKSU') invalidations.push(invalidateVKSUGroupIds());
+  await Promise.all(invalidations);
 
   return new NextResponse(null, { status: 204 });
 }

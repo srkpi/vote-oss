@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Users } from 'lucide-react';
+import { Plus, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -86,6 +86,12 @@ function GroupCard({ group }: { group: Group }) {
           {!group.isOwner && !group.isMember && (
             <span className="font-body rounded-full border border-gray-300 bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-gray-500 uppercase">
               Публічна
+            </span>
+          )}
+          {group.type === 'VKSU' && (
+            <span className="font-body text-kpi-navy border-kpi-navy/30 bg-kpi-navy/8 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+              <ShieldCheck className="h-3 w-3" />
+              ВКСУ
             </span>
           )}
         </div>
