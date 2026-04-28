@@ -22,10 +22,6 @@ import { useMemo, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionListItem } from '@/components/elections/election-list-item';
-import {
-  FilterMultiDropdown,
-  type FilterOption,
-} from '@/components/elections/elections-filter-panel';
 import { RegistrationFormsPanel } from '@/components/groups/registration-forms-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -38,6 +34,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FilterMultiDropdown, type FilterOption } from '@/components/ui/filters-shell';
 import { FormField, Input } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
@@ -53,6 +50,7 @@ import {
 } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
+import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 import type { ElectionStatus } from '@/types/election';
 import type { GroupDetail, GroupInviteLink, GroupMemberSummary } from '@/types/group';
 
@@ -224,9 +222,16 @@ function InviteLinkCard({ link, onRevoke }: { link: GroupInviteLink; onRevoke: (
 interface GroupDetailClientProps {
   group: GroupDetail;
   session: User;
+  registrationForms: CandidateRegistrationFormAdminSummary[];
+  registrationFormsError: string | null;
 }
 
-export function GroupDetailClient({ group: initialGroup, session }: GroupDetailClientProps) {
+export function GroupDetailClient({
+  group: initialGroup,
+  session,
+  registrationForms,
+  registrationFormsError,
+}: GroupDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [group, setGroup] = useState<GroupDetail>(initialGroup);
@@ -565,7 +570,13 @@ export function GroupDetailClient({ group: initialGroup, session }: GroupDetailC
               )}
             </div>
 
-            {canManageRegistrationForms && <RegistrationFormsPanel groupId={group.id} />}
+            {canManageRegistrationForms && (
+              <RegistrationFormsPanel
+                groupId={group.id}
+                initialForms={registrationForms}
+                initialLoadError={registrationFormsError}
+              />
+            )}
           </div>
 
           {/* Sidebar: group info + members + actions */}

@@ -21,17 +21,17 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
   const isOpen = status === 'open';
   const isUpcoming = status === 'upcoming';
   const isClosed = status === 'closed';
-  const clickable = form.eligible && isOpen;
+  const actionable = form.eligible && isOpen;
 
-  const card = (
-    <div
+  return (
+    <Link
+      href={`/registration/${form.id}`}
       className={cn(
         'group block h-full overflow-hidden rounded-xl bg-white',
         'border-border-color border',
         'shadow-shadow-card',
-        clickable &&
-          'hover:shadow-shadow-card-hover transition-all duration-300 hover:-translate-y-1',
-        !clickable && 'opacity-90',
+        'hover:shadow-shadow-card-hover transition-all duration-300 hover:-translate-y-1',
+        !actionable && 'opacity-90 hover:opacity-100',
         'animate-fade-up',
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
@@ -58,7 +58,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
         <h3
           className={cn(
             'font-display text-foreground mb-3 text-xl leading-snug font-semibold',
-            clickable && 'group-hover:text-kpi-navy',
+            'group-hover:text-kpi-navy',
             'line-clamp-2 wrap-break-word transition-colors duration-200',
           )}
         >
@@ -120,17 +120,8 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
-
-  if (clickable) {
-    return (
-      <Link href={`/registration/${form.id}`} className="block h-full">
-        {card}
-      </Link>
-    );
-  }
-  return card;
 }
 
 export function RegistrationCardSkeleton({ index = 0 }: { index?: number }) {

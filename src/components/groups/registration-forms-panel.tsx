@@ -48,6 +48,8 @@ import type {
 
 interface RegistrationFormsPanelProps {
   groupId: string;
+  initialForms: CandidateRegistrationFormAdminSummary[];
+  initialLoadError: string | null;
 }
 
 type FormStatus = 'upcoming' | 'open' | 'closed';
@@ -59,11 +61,13 @@ function computeStatus(opensAt: string, closesAt: string): FormStatus {
   return 'open';
 }
 
-export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps) {
+export function RegistrationFormsPanel({
+  groupId,
+  initialForms,
+  initialLoadError,
+}: RegistrationFormsPanelProps) {
   const { toast } = useToast();
-  const [forms, setForms] = useState<CandidateRegistrationFormAdminSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [forms, setForms] = useState<CandidateRegistrationFormAdminSummary[]>(initialForms);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CandidateRegistrationFormAdminSummary | null>(
@@ -72,22 +76,6 @@ export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps)
   const [deleting, setDeleting] = useState(false);
   const [submissionsTarget, setSubmissionsTarget] =
     useState<CandidateRegistrationFormAdminSummary | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    api.groups.registrationForms.list(groupId).then((res) => {
-      if (cancelled) return;
-      if (res.success) {
-        setForms(res.data);
-      } else {
-        setLoadError(res.error);
-      }
-      setLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [groupId]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -128,13 +116,9 @@ export function RegistrationFormsPanel({ groupId }: RegistrationFormsPanelProps)
         </Button>
       </div>
 
-      {loading ? (
-        <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
-          Завантажуємо форми…
-        </p>
-      ) : loadError ? (
+      {initialLoadError ? (
         <div className="p-4">
-          <Alert variant="error">{loadError}</Alert>
+          <Alert variant="error">{initialLoadError}</Alert>
         </div>
       ) : forms.length === 0 ? (
         <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">

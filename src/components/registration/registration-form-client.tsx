@@ -7,15 +7,30 @@ import { PageHeader } from '@/components/common/page-header';
 import { TeamSlotsPanel } from '@/components/registration/team-slots-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogBody,
+  DialogCloseButton,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
   REGISTRATION_PHONE_MAX_LENGTH,
+  REGISTRATION_PROGRAM_URL_ALLOWED_HOSTS,
   REGISTRATION_PROGRAM_URL_MAX_LENGTH,
   REGISTRATION_TELEGRAM_TAG_MAX_LENGTH,
 } from '@/lib/constants';
+import {
+  validateCampaignProgramUrl,
+  validatePhoneNumber,
+  validateTelegramTag,
+} from '@/lib/registration-validators';
 import { cn } from '@/lib/utils/common';
 import type {
   CandidateRegistration,
@@ -66,12 +81,29 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const status = registration?.status ?? null;
   const [now] = useState(() => Date.now());
   const closed = now > new Date(form.closesAt).getTime();
   const notYetOpen = now < new Date(form.opensAt).getTime();
+
+  const phoneCheck = phone.trim() ? validatePhoneNumber(phone) : null;
+  const tagCheck = tag.trim() ? validateTelegramTag(tag) : null;
+  const programCheck =
+    form.requiresCampaignProgram && programUrl.trim()
+      ? validateCampaignProgramUrl(programUrl)
+      : null;
+  const phoneError = phoneCheck && !phoneCheck.ok ? phoneCheck.error : null;
+  const tagError = tagCheck && !tagCheck.ok ? tagCheck.error : null;
+  const programError = programCheck && !programCheck.ok ? programCheck.error : null;
+  const hasFieldErrors = !!(phoneError || tagError || programError);
+  const allRequiredFilled =
+    phone.trim().length > 0 &&
+    tag.trim().length > 0 &&
+    (!form.requiresCampaignProgram || programUrl.trim().length > 0);
+  const canSubmit = !hasFieldErrors && allRequiredFilled;
 
   const saveDraft = async (): Promise<CandidateRegistration | null> => {
     setSaving(true);
@@ -119,6 +151,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
   const handleWithdraw = async () => {
     if (!registration) return;
     setWithdrawing(true);
+    const wasDraft = registration.status === 'DRAFT';
     const result = await api.registrations.withdraw(registration.id);
     setWithdrawing(false);
     if (!result.success) {
@@ -126,7 +159,11 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
       return;
     }
     setRegistration(result.data);
-    toast({ title: 'Заявку відкликано', variant: 'success' });
+    setWithdrawConfirmOpen(false);
+    toast({
+      title: wasDraft ? 'Чернетку видалено' : 'Заявку відкликано',
+      variant: 'success',
+    });
   };
 
   return (
@@ -281,47 +318,98 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
               </Alert>
             )}
 
-            <FormField label="Номер телефону" required htmlFor="phone">
+            <FormField
+              label="Номер телефону"
+              required
+              htmlFor="phone"
+              error={phoneError ?? undefined}
+              hint={phoneError ? undefined : 'Наприклад: +380 67 123 45 67 — щонайменше 10 цифр'}
+            >
               <Input
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+380 XX XXX XX XX"
                 maxLength={REGISTRATION_PHONE_MAX_LENGTH}
+                error={!!phoneError}
+                inputMode="tel"
               />
             </FormField>
 
-            <FormField label="Telegram-тег" required htmlFor="telegram">
+            <FormField
+              label="Telegram-тег"
+              required
+              htmlFor="telegram"
+              error={tagError ?? undefined}
+              hint={
+                tagError
+                  ? undefined
+                  : 'Наприклад: @username — 5–32 латинських символи, цифри або _, починається з літери'
+              }
+            >
               <Input
                 id="telegram"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
                 placeholder="@username"
                 maxLength={REGISTRATION_TELEGRAM_TAG_MAX_LENGTH}
+                error={!!tagError}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
               />
             </FormField>
 
             {form.requiresCampaignProgram && (
-              <FormField label="Передвиборча програма (Google Drive)" required htmlFor="program">
+              <FormField
+                label="Передвиборча програма (Google Drive)"
+                required
+                htmlFor="program"
+                error={programError ?? undefined}
+                hint={
+                  programError
+                    ? undefined
+                    : `Посилання https на ${REGISTRATION_PROGRAM_URL_ALLOWED_HOSTS.join(' або ')}`
+                }
+              >
                 <Input
                   id="program"
                   value={programUrl}
                   onChange={(e) => setProgramUrl(e.target.value)}
                   placeholder="https://drive.google.com/..."
                   maxLength={REGISTRATION_PROGRAM_URL_MAX_LENGTH}
+                  error={!!programError}
+                  inputMode="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                 />
               </FormField>
             )}
 
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={handleSaveDraft} loading={saving}>
+              <Button
+                variant="secondary"
+                onClick={handleSaveDraft}
+                loading={saving}
+                disabled={hasFieldErrors}
+              >
                 Зберегти чернетку
               </Button>
-              <Button variant="accent" onClick={handleSubmit} loading={submitting}>
+              <Button
+                variant="accent"
+                onClick={handleSubmit}
+                loading={submitting}
+                disabled={!canSubmit}
+              >
                 Подати заявку
               </Button>
               {registration?.status === 'DRAFT' && (
-                <Button variant="ghost" onClick={handleWithdraw} loading={withdrawing}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setWithdrawConfirmOpen(true)}
+                  disabled={withdrawing}
+                >
                   Видалити чернетку
                 </Button>
               )}
@@ -331,12 +419,49 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
 
         {registration && NON_FINAL.has(registration.status) && registration.status !== 'DRAFT' && (
           <div className="mt-4">
-            <Button variant="ghost" onClick={handleWithdraw} loading={withdrawing}>
+            <Button
+              variant="ghost"
+              onClick={() => setWithdrawConfirmOpen(true)}
+              disabled={withdrawing}
+            >
               Відкликати заявку
             </Button>
           </div>
         )}
       </div>
+
+      <Dialog
+        open={withdrawConfirmOpen}
+        onClose={() => !withdrawing && setWithdrawConfirmOpen(false)}
+      >
+        <DialogPanel maxWidth="sm">
+          <DialogHeader>
+            <DialogTitle>
+              {registration?.status === 'DRAFT' ? 'Видалити чернетку?' : 'Відкликати заявку?'}
+            </DialogTitle>
+            <DialogCloseButton onClose={() => setWithdrawConfirmOpen(false)} />
+          </DialogHeader>
+          <DialogBody>
+            <Alert variant="warning">
+              {registration?.status === 'DRAFT'
+                ? 'Чернетку буде видалено. Якщо потім захочете подати заявку, потрібно буде заповнити форму заново.'
+                : 'Заявку буде відкликано і поданню не підлягатиме. Якщо потім захочете балотуватись, нову заявку на цю форму подати неможливо.'}
+            </Alert>
+          </DialogBody>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setWithdrawConfirmOpen(false)}
+              disabled={withdrawing}
+            >
+              Скасувати
+            </Button>
+            <Button variant="danger" onClick={handleWithdraw} loading={withdrawing}>
+              {registration?.status === 'DRAFT' ? 'Видалити' : 'Відкликати'}
+            </Button>
+          </DialogFooter>
+        </DialogPanel>
+      </Dialog>
     </>
   );
 }

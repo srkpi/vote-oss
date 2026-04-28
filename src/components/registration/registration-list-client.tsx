@@ -130,12 +130,10 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
 
   const statusCounts = useMemo(() => {
     return Object.fromEntries(
-      (['open', 'upcoming', 'closed'] as const).map((s) => {
-        const newStatuses = filters.statuses.includes(s)
-          ? filters.statuses
-          : [...filters.statuses, s];
-        return [s, computeAdaptiveCount(forms, filters, search, { statuses: newStatuses })];
-      }),
+      (['open', 'upcoming', 'closed'] as const).map((s) => [
+        s,
+        computeAdaptiveCount(forms, filters, search, { statuses: [s] }),
+      ]),
     );
   }, [forms, filters, search]);
 

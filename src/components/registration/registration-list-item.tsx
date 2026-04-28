@@ -20,7 +20,7 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
   const isOpen = status === 'open';
   const isUpcoming = status === 'upcoming';
   const isClosed = status === 'closed';
-  const clickable = form.eligible && isOpen;
+  const actionable = form.eligible && isOpen;
 
   const stripeClass = cn(
     isOpen && form.eligible && 'bg-success',
@@ -29,17 +29,18 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
     isClosed && 'bg-kpi-gray-light',
   );
 
-  const wrapperClassName = cn(
-    'group flex items-stretch gap-4 px-4 py-4 sm:px-6',
-    'border-border-subtle border-b last:border-b-0',
-    clickable && 'hover:bg-surface transition-colors duration-150',
-    !clickable && 'opacity-70 hover:opacity-100',
-    'animate-fade-up',
-  );
-  const wrapperStyle = { animationDelay: `${index * 40}ms`, animationFillMode: 'both' as const };
-
-  const inner = (
-    <>
+  return (
+    <Link
+      href={`/registration/${form.id}`}
+      className={cn(
+        'group flex items-stretch gap-4 px-4 py-4 sm:px-6',
+        'border-border-subtle border-b last:border-b-0',
+        'hover:bg-surface transition-colors duration-150',
+        !actionable && 'opacity-70 hover:opacity-100',
+        'animate-fade-up',
+      )}
+      style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
+    >
       <div className={cn('w-1 shrink-0 self-stretch rounded-sm', stripeClass)} />
 
       <div className="min-w-0 flex-1 space-y-1.5 self-center">
@@ -54,7 +55,7 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
         <p
           className={cn(
             'font-display text-foreground min-w-0 text-sm font-semibold wrap-break-word transition-colors duration-150 sm:text-base',
-            clickable && 'group-hover:text-kpi-navy',
+            'group-hover:text-kpi-navy',
           )}
         >
           {form.title}
@@ -104,19 +105,6 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
           </div>
         )}
       </div>
-    </>
-  );
-
-  if (clickable) {
-    return (
-      <Link href={`/registration/${form.id}`} className={wrapperClassName} style={wrapperStyle}>
-        {inner}
-      </Link>
-    );
-  }
-  return (
-    <div className={wrapperClassName} style={wrapperStyle}>
-      {inner}
-    </div>
+    </Link>
   );
 }
