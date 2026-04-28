@@ -15,7 +15,11 @@ import {
 
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
-/** Accepts any reasonable phone format, requires ≥10 digits. */
+/**
+ * Accepts a Ukrainian mobile in the form `+380XXXXXXXXX` (exactly 12 digits,
+ * leading `+`). Cosmetic spaces / dashes / parentheses are allowed in input
+ * and stripped on normalisation.
+ */
 export function validatePhoneNumber(raw: string): ValidationResult<string> {
   const trimmed = raw.trim();
   if (!trimmed) return { ok: false, error: 'Номер телефону обовʼязковий' };
@@ -25,11 +29,17 @@ export function validatePhoneNumber(raw: string): ValidationResult<string> {
   if (!/^[+\d\s()-]+$/.test(trimmed)) {
     return { ok: false, error: 'Номер містить недопустимі символи' };
   }
-  const digitCount = trimmed.replace(/\D/g, '').length;
-  if (digitCount < 10) {
-    return { ok: false, error: 'Номер має містити щонайменше 10 цифр' };
+  if (!trimmed.startsWith('+')) {
+    return { ok: false, error: 'Номер має починатися з «+»' };
   }
-  return { ok: true, value: trimmed };
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.length !== 12) {
+    return { ok: false, error: 'Номер має містити рівно 12 цифр' };
+  }
+  if (!digits.startsWith('380')) {
+    return { ok: false, error: 'Номер має починатися з +380' };
+  }
+  return { ok: true, value: `+${digits}` };
 }
 
 /** Accepts `@username` or `username`; normalises to `@username`. */

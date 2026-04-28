@@ -323,7 +323,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
               required
               htmlFor="phone"
               error={phoneError ?? undefined}
-              hint={phoneError ? undefined : 'Наприклад: +380 67 123 45 67 — щонайменше 10 цифр'}
+              hint={
+                phoneError ? undefined : 'Формат: +380XXXXXXXXX — рівно 12 цифр, починається з +380'
+              }
             >
               <Input
                 id="phone"
