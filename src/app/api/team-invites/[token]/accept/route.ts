@@ -5,7 +5,6 @@ import { requireAuth } from '@/lib/auth';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import { allSlotsAccepted, buildSlots } from '@/lib/team-invites';
 
 /**
  * @swagger
@@ -14,9 +13,12 @@ import { allSlotsAccepted, buildSlots } from '@/lib/team-invites';
  *     summary: Accept a team-invite token
  *     description: >
  *       Marks the token as used with response=ACCEPTED.  The caller must be
- *       authenticated and may not be the registration's candidate.  Once the
- *       last outstanding slot is accepted, the registration auto-transitions
- *       from AWAITING_TEAM to PENDING_REVIEW within the same transaction.
+ *       authenticated and may not be the registration's candidate.  After
+ *       this step the slot enters `awaiting_candidate` — the candidate
+ *       reviews each accepted member and either confirms or declines them
+ *       via `PATCH /api/registrations/{id}/team/{slot}/decision`.  The
+ *       registration is only auto-promoted to PENDING_REVIEW once the
+ *       candidate has confirmed every slot.
  *     tags: [TeamInvites]
  *     security:
  *       - cookieAuth: []
@@ -32,11 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   const result = await prisma.$transaction(async (tx) => {
     const row = await tx.teamMemberInviteToken.findUnique({
       where: { token_hash: hash },
-      include: {
-        registration: {
-          select: { id: true, user_id: true, status: true, form: { select: { team_size: true } } },
-        },
-      },
+      include: { registration: { select: { user_id: true, status: true } } },
     });
 
     if (!row) return { ok: false as const, status: 404, error: 'Invite not found' };
@@ -70,24 +68,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       },
     });
 
-    // Re-fetch all tokens for this registration and decide if status flips
-    const all = await tx.teamMemberInviteToken.findMany({
-      where: { registration_id: row.registration.id },
-    });
-    const slots = buildSlots(row.registration.form.team_size, all);
-
-    let newStatus: 'AWAITING_TEAM' | 'PENDING_REVIEW' = 'AWAITING_TEAM';
-    if (allSlotsAccepted(slots)) {
-      newStatus = 'PENDING_REVIEW';
-      await tx.candidateRegistration.update({
-        where: { id: row.registration.id },
-        data: { status: 'PENDING_REVIEW' },
-      });
-    }
-
-    return { ok: true as const, newStatus };
+    return { ok: true as const };
   });
 
   if (!result.ok) return Errors.badRequest(result.error);
-  return NextResponse.json({ accepted: true, registrationStatus: result.newStatus });
+  // Always AWAITING_TEAM at this point: promotion happens on candidate confirm.
+  return NextResponse.json({ accepted: true, registrationStatus: 'AWAITING_TEAM' as const });
 }

@@ -100,9 +100,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
   const programError = programCheck && !programCheck.ok ? programCheck.error : null;
   const hasFieldErrors = !!(phoneError || tagError || programError);
   const allRequiredFilled =
-    phone.trim().length > 0 &&
-    tag.trim().length > 0 &&
-    (!form.requiresCampaignProgram || programUrl.trim().length > 0);
+    phone.trim().length > 0 && (!form.requiresCampaignProgram || programUrl.trim().length > 0);
   const canSubmit = !hasFieldErrors && allRequiredFilled;
 
   const saveDraft = async (): Promise<CandidateRegistration | null> => {
@@ -251,8 +249,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             </div>
             {status === 'AWAITING_TEAM' && (
               <p className="text-muted-foreground mt-2 text-sm">
-                Згенеруйте посилання нижче і надішліть їх членам команди. Заявка перейде на розгляд
-                автоматично, коли всі слоти будуть прийняті.
+                Згенеруйте посилання нижче і надішліть їх членам команди. Коли учасник перейде за
+                посиланням і прийме запрошення — підтвердьте або відхиліть його у себе. Щойно ви
+                підтвердите всіх — заявка автоматично піде на розгляд.
               </p>
             )}
             {status === 'REJECTED' && registration?.rejectionReason && (
@@ -285,8 +284,12 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
               <dt className="text-muted-foreground text-xs uppercase">Телефон</dt>
               <dd className="text-foreground wrap-break-word">{registration.phoneNumber}</dd>
-              <dt className="text-muted-foreground text-xs uppercase">Telegram</dt>
-              <dd className="text-foreground wrap-break-word">{registration.telegramTag}</dd>
+              {registration.telegramTag && (
+                <>
+                  <dt className="text-muted-foreground text-xs uppercase">Telegram</dt>
+                  <dd className="text-foreground wrap-break-word">{registration.telegramTag}</dd>
+                </>
+              )}
               {form.requiresCampaignProgram && registration.campaignProgramUrl && (
                 <>
                   <dt className="text-muted-foreground text-xs uppercase">Програма</dt>
@@ -307,7 +310,15 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {registration && form.teamSize > 0 && status !== null && status !== 'DRAFT' && (
-          <TeamSlotsPanel registrationId={registration.id} readOnly={status !== 'AWAITING_TEAM'} />
+          <TeamSlotsPanel
+            registrationId={registration.id}
+            readOnly={status !== 'AWAITING_TEAM'}
+            onRegistrationStatusChange={(next) =>
+              setRegistration((prev) =>
+                prev ? { ...prev, status: next, submittedAt: prev.submittedAt ?? null } : prev,
+              )
+            }
+          />
         )}
 
         {editable && form.eligible && !closed && !notYetOpen && (
@@ -324,7 +335,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
               htmlFor="phone"
               error={phoneError ?? undefined}
               hint={
-                phoneError ? undefined : 'Формат: +380XXXXXXXXX — рівно 12 цифр, починається з +380'
+                phoneError
+                  ? undefined
+                  : 'Формат E.164: «+» та код країни, наприклад +380 XX XXX XX XX'
               }
             >
               <Input
@@ -339,8 +352,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             </FormField>
 
             <FormField
-              label="Telegram-тег"
-              required
+              label="Telegram-тег (необовʼязково)"
               htmlFor="telegram"
               error={tagError ?? undefined}
               hint={

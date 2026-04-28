@@ -389,18 +389,25 @@ enum TeamInviteResponse {
   REJECTED
 }
 
+enum TeamCandidateDecision {
+  CONFIRMED
+  DECLINED
+}
+
 model TeamMemberInviteToken {
-  token_hash        String                @id
-  registration_id   String                @db.Uuid
-  registration      CandidateRegistration @relation(fields: [registration_id], references: [id], onDelete: Cascade)
-  slot              Int
-  created_at        DateTime              @default(now())
-  expires_at        DateTime
-  used_at           DateTime?
-  used_by_user_id   String?
-  used_by_full_name String?               @db.Text
-  response          TeamInviteResponse?
-  revoked_at        DateTime?
+  token_hash           String                 @id
+  registration_id      String                 @db.Uuid
+  registration         CandidateRegistration  @relation(fields: [registration_id], references: [id], onDelete: Cascade)
+  slot                 Int
+  created_at           DateTime               @default(now())
+  expires_at           DateTime
+  used_at              DateTime?
+  used_by_user_id      String?
+  used_by_full_name    String?                @db.Text
+  response             TeamInviteResponse?
+  candidate_decision   TeamCandidateDecision?
+  candidate_decided_at DateTime?
+  revoked_at           DateTime?
 
   @@index([registration_id])
   @@index([registration_id, slot])

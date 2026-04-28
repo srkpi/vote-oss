@@ -84,8 +84,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Hard-validate every required field at submit time.
   const phone = validatePhoneNumber(safeDecrypt(reg.phone_number));
   if (!phone.ok) return Errors.badRequest(phone.error);
-  const tag = validateTelegramTag(safeDecrypt(reg.telegram_tag));
-  if (!tag.ok) return Errors.badRequest(tag.error);
+
+  // Telegram tag is optional — only validate when the candidate provided one.
+  const decryptedTag = safeDecrypt(reg.telegram_tag).trim();
+  let normalisedTag = '';
+  if (decryptedTag) {
+    const tag = validateTelegramTag(decryptedTag);
+    if (!tag.ok) return Errors.badRequest(tag.error);
+    normalisedTag = tag.value;
+  }
 
   if (form.requires_campaign_program) {
     if (!reg.campaign_program_url) {
@@ -102,7 +109,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     data: {
       status: nextStatus,
       phone_number: encryptField(phone.value),
-      telegram_tag: encryptField(tag.value),
+      telegram_tag: encryptField(normalisedTag),
       submitted_at: new Date(),
     },
   });

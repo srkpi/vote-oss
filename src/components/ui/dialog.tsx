@@ -65,8 +65,9 @@ export function DialogPanel({ className, maxWidth = 'md', children, ...props }: 
   return (
     <div
       className={cn(
-        'mx-auto w-full',
+        'mx-auto flex w-full flex-col',
         maxWidths[maxWidth],
+        'max-h-[calc(100dvh-2rem)]',
         'rounded-xl bg-white',
         'shadow-shadow-xl',
         'overflow-hidden',
@@ -85,7 +86,10 @@ export function DialogHeader({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('flex items-start justify-between gap-4', 'p-6 pb-0', className)} {...props}>
+    <div
+      className={cn('flex shrink-0 items-start justify-between gap-4', 'p-6 pb-0', className)}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -121,7 +125,7 @@ export function DialogBody({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('p-6', className)} {...props}>
+    <div className={cn('min-h-0 flex-1 overflow-y-auto p-6', className)} {...props}>
       {children}
     </div>
   );
@@ -135,7 +139,7 @@ export function DialogFooter({
   return (
     <div
       className={cn(
-        'flex flex-col-reverse gap-3 sm:flex-row sm:justify-end',
+        'flex shrink-0 flex-col-reverse gap-3 sm:flex-row sm:justify-end',
         'p-6 pt-0',
         className,
       )}

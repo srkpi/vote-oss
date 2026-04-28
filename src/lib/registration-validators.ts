@@ -16,9 +16,10 @@ import {
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
 /**
- * Accepts a Ukrainian mobile in the form `+380XXXXXXXXX` (exactly 12 digits,
- * leading `+`). Cosmetic spaces / dashes / parentheses are allowed in input
- * and stripped on normalisation.
+ * Accepts any international phone number in E.164 form `+<country><number>`
+ * (7–15 digits in total, leading `+`, country code may not start with 0).
+ * Cosmetic spaces / dashes / parentheses are allowed in input and stripped
+ * on normalisation.
  */
 export function validatePhoneNumber(raw: string): ValidationResult<string> {
   const trimmed = raw.trim();
@@ -30,14 +31,14 @@ export function validatePhoneNumber(raw: string): ValidationResult<string> {
     return { ok: false, error: 'Номер містить недопустимі символи' };
   }
   if (!trimmed.startsWith('+')) {
-    return { ok: false, error: 'Номер має починатися з «+»' };
+    return { ok: false, error: 'Номер має починатися з «+» та коду країни' };
   }
   const digits = trimmed.replace(/\D/g, '');
-  if (digits.length !== 12) {
-    return { ok: false, error: 'Номер має містити рівно 12 цифр' };
+  if (digits.length < 7 || digits.length > 15) {
+    return { ok: false, error: 'Номер має містити 7–15 цифр з кодом країни' };
   }
-  if (!digits.startsWith('380')) {
-    return { ok: false, error: 'Номер має починатися з +380' };
+  if (digits.startsWith('0')) {
+    return { ok: false, error: 'Код країни не може починатися з 0' };
   }
   return { ok: true, value: `+${digits}` };
 }

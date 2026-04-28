@@ -84,7 +84,12 @@ export const AccessRestrictions = ({
 
               <div className="flex flex-wrap gap-1.5">
                 {sortedValues.map((val, index) => (
-                  <Badge key={index} variant={getVariant(type)} size="md">
+                  <Badge
+                    key={index}
+                    variant={getVariant(type)}
+                    size="md"
+                    className="h-auto min-h-5 max-w-full py-0.5 wrap-anywhere whitespace-normal"
+                  >
                     {formatRestrictionValue(type, val, restrictedGroups)}
                   </Badge>
                 ))}

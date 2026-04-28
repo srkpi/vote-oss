@@ -28,6 +28,7 @@ import {
 import { FormField, Input, Textarea } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { Pagination } from '@/components/ui/pagination';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
@@ -35,7 +36,9 @@ import {
   REGISTRATION_FORM_DESCRIPTION_MAX_LENGTH,
   REGISTRATION_FORM_MAX_TEAM_SIZE,
   REGISTRATION_FORM_TITLE_MAX_LENGTH,
+  REGISTRATION_FORMS_ADMIN_PAGE_SIZE,
   REGISTRATION_REJECTION_REASON_MAX_LENGTH,
+  REGISTRATION_SUBMISSIONS_PAGE_SIZE,
 } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type {
@@ -68,6 +71,7 @@ export function RegistrationFormsPanel({
 }: RegistrationFormsPanelProps) {
   const { toast } = useToast();
   const [forms, setForms] = useState<CandidateRegistrationFormAdminSummary[]>(initialForms);
+  const [page, setPage] = useState(1);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CandidateRegistrationFormAdminSummary | null>(
@@ -76,6 +80,13 @@ export function RegistrationFormsPanel({
   const [deleting, setDeleting] = useState(false);
   const [submissionsTarget, setSubmissionsTarget] =
     useState<CandidateRegistrationFormAdminSummary | null>(null);
+
+  const totalPages = Math.max(1, Math.ceil(forms.length / REGISTRATION_FORMS_ADMIN_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedForms = forms.slice(
+    (safePage - 1) * REGISTRATION_FORMS_ADMIN_PAGE_SIZE,
+    safePage * REGISTRATION_FORMS_ADMIN_PAGE_SIZE,
+  );
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -126,7 +137,7 @@ export function RegistrationFormsPanel({
         </p>
       ) : (
         <ul className="divide-border-subtle divide-y">
-          {forms.map((form) => {
+          {pagedForms.map((form) => {
             const status = computeStatus(form.opensAt, form.closesAt);
             return (
               <li key={form.id} className="px-5 py-4">
@@ -190,6 +201,12 @@ export function RegistrationFormsPanel({
             );
           })}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <div className="border-border-subtle border-t px-5 py-3">
+          <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
+        </div>
       )}
 
       <RegistrationFormDialog
@@ -508,17 +525,20 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
   const [rejectTarget, setRejectTarget] = useState<CandidateRegistration | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!form) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setItems([]);
       setLoadError(null);
+      setPage(1);
       return;
     }
     let cancelled = false;
     setLoading(true);
     setLoadError(null);
+    setPage(1);
     api.registrationForms.submissions(form.id).then((res) => {
       if (cancelled) return;
       if (res.success) setItems(res.data);
@@ -529,6 +549,13 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
       cancelled = true;
     };
   }, [form]);
+
+  const totalPages = Math.max(1, Math.ceil(items.length / REGISTRATION_SUBMISSIONS_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedItems = items.slice(
+    (safePage - 1) * REGISTRATION_SUBMISSIONS_PAGE_SIZE,
+    safePage * REGISTRATION_SUBMISSIONS_PAGE_SIZE,
+  );
 
   const replace = (next: CandidateRegistration) => {
     setItems((prev) => prev.map((r) => (r.id === next.id ? next : r)));
@@ -579,7 +606,7 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                 Поки що жодних поданих заявок
               </p>
             ) : (
-              items.map((reg) => (
+              pagedItems.map((reg) => (
                 <div key={reg.id} className="border-border-subtle space-y-2 rounded-lg border p-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-body text-foreground text-sm font-semibold">
@@ -597,7 +624,7 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                   <p className="text-muted-foreground font-mono text-xs">{reg.userId}</p>
                   <div className="text-foreground space-y-0.5 text-xs">
                     <p>Тел.: {reg.phoneNumber}</p>
-                    <p>Telegram: {reg.telegramTag}</p>
+                    {reg.telegramTag && <p>Telegram: {reg.telegramTag}</p>}
                     {reg.campaignProgramUrl && (
                       <p>
                         Програма:{' '}
@@ -650,6 +677,11 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                   )}
                 </div>
               ))
+            )}
+            {totalPages > 1 && (
+              <div className="pt-2">
+                <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
+              </div>
             )}
           </DialogBody>
         </DialogPanel>
