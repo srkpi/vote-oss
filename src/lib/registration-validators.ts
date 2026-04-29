@@ -6,6 +6,8 @@
  * submit-time UI.
  */
 
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+
 import {
   REGISTRATION_PHONE_MAX_LENGTH,
   REGISTRATION_PROGRAM_URL_ALLOWED_HOSTS,
@@ -16,10 +18,9 @@ import {
 export type ValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
 /**
- * Accepts any international phone number in E.164 form `+<country><number>`
- * (7–15 digits in total, leading `+`, country code may not start with 0).
- * Cosmetic spaces / dashes / parentheses are allowed in input and stripped
- * on normalisation.
+ * Validates an international phone number using libphonenumber-js and returns
+ * it normalised to E.164 (`+<country><number>`).  Defaults parsing to UA so
+ * locally-formatted Ukrainian numbers (`0XX XXX XX XX`) are also accepted.
  */
 export function validatePhoneNumber(raw: string): ValidationResult<string> {
   const trimmed = raw.trim();
@@ -27,20 +28,12 @@ export function validatePhoneNumber(raw: string): ValidationResult<string> {
   if (trimmed.length > REGISTRATION_PHONE_MAX_LENGTH) {
     return { ok: false, error: `Номер не довший за ${REGISTRATION_PHONE_MAX_LENGTH} символів` };
   }
-  if (!/^[+\d\s()-]+$/.test(trimmed)) {
-    return { ok: false, error: 'Номер містить недопустимі символи' };
+
+  const parsed = parsePhoneNumberFromString(trimmed, 'UA');
+  if (!parsed || !parsed.isValid()) {
+    return { ok: false, error: 'Невалідний номер телефону' };
   }
-  if (!trimmed.startsWith('+')) {
-    return { ok: false, error: 'Номер має починатися з «+» та коду країни' };
-  }
-  const digits = trimmed.replace(/\D/g, '');
-  if (digits.length < 7 || digits.length > 15) {
-    return { ok: false, error: 'Номер має містити 7–15 цифр з кодом країни' };
-  }
-  if (digits.startsWith('0')) {
-    return { ok: false, error: 'Код країни не може починатися з 0' };
-  }
-  return { ok: true, value: `+${digits}` };
+  return { ok: true, value: parsed.number };
 }
 
 /** Accepts `@username` or `username`; normalises to `@username`. */

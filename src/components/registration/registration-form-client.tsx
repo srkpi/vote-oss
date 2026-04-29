@@ -281,7 +281,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         {registration && status !== null && status !== 'DRAFT' && (
           <div className="border-border-color shadow-shadow-card mb-6 space-y-3 rounded-xl border bg-white p-5">
             <p className="font-display text-foreground text-sm font-semibold">Ваша заявка</p>
-            <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
+            <dl className="grid items-baseline gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
               <dt className="text-muted-foreground text-xs uppercase">Телефон</dt>
               <dd className="text-foreground wrap-break-word">{registration.phoneNumber}</dd>
               {registration.telegramTag && (
