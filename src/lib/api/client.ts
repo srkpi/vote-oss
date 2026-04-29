@@ -331,6 +331,15 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<RegenerateTeamInviteResponse>(`/registrations/${id}/team/${slot}`, {
           method: 'POST',
         }),
+      decideTeamSlot: (id: string, slot: number, decision: 'CONFIRMED' | 'DECLINED') =>
+        fetcher<{
+          slot: number;
+          decision: 'CONFIRMED' | 'DECLINED';
+          registrationStatus: 'AWAITING_TEAM' | 'PENDING_REVIEW';
+        }>(`/registrations/${id}/team/${slot}/decision`, {
+          method: 'PATCH',
+          body: JSON.stringify({ decision }),
+        }),
     },
 
     teamInvites: {

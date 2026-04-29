@@ -54,7 +54,7 @@ export function Header({ session }: HeaderProps) {
     <header
       className={cn(
         'fixed top-0 right-0 left-0 z-40',
-        'glass border-b border-white/60',
+        mobileOpen ? 'border-border-color border-b bg-white' : 'glass border-b border-white/60',
         'h-(--header-height)',
       )}
     >
@@ -71,7 +71,7 @@ export function Header({ session }: HeaderProps) {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-2 md:flex">
+        <nav className="hidden items-center gap-2 lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -201,7 +201,7 @@ export function Header({ session }: HeaderProps) {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
-              'rounded-(--radius) p-2 md:hidden',
+              'rounded-(--radius) p-2 lg:hidden',
               'text-muted-foreground hover:bg-surface',
               'transition-colors',
             )}
@@ -215,12 +215,12 @@ export function Header({ session }: HeaderProps) {
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm md:hidden"
+            className="fixed top-(--header-height) right-0 bottom-0 left-0 bg-black/20 backdrop-blur-sm lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
           <div
             className={cn(
-              'absolute top-full right-0 left-0 md:hidden',
+              'absolute top-full right-0 left-0 lg:hidden',
               'border-border-color border-b bg-white',
               'shadow-shadow-lg',
               'animate-fade-down',

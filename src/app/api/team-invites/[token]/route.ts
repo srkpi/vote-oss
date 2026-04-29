@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { hashToken } from '@/lib/crypto';
+import { safeDecrypt } from '@/lib/elections-view';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
@@ -48,13 +49,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     token,
     registrationId: row.registration_id,
     slot: row.slot,
-    candidate: { userId: row.registration.user_id, fullName: row.registration.full_name },
+    candidate: {
+      userId: row.registration.user_id,
+      fullName: safeDecrypt(row.registration.full_name),
+    },
     formId: row.registration.form.id,
     formTitle: row.registration.form.title,
     groupName: row.registration.form.group.name,
     expiresAt: row.expires_at.toISOString(),
     used: row.used_at !== null,
     response: row.response,
+    candidateDecision: row.candidate_decision,
     revoked: row.revoked_at !== null,
   });
 }

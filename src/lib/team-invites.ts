@@ -6,14 +6,17 @@
  * from the *most recent* token (or absence of one).
  *
  * State machine:
- *  - empty     — no token has ever been issued for this slot
- *  - pending   — there's a non-revoked, non-expired, non-used token
- *  - rejected  — most recent token was used with response=REJECTED
- *  - expired   — most recent token was revoked or its expires_at is past
- *  - accepted  — most recent token was used with response=ACCEPTED  (terminal)
+ *  - empty               — no token has ever been issued for this slot
+ *  - pending             — non-revoked, non-expired, non-used token outstanding
+ *  - rejected            — invitee responded REJECTED
+ *  - expired             — token was revoked or its expires_at is past
+ *  - awaiting_candidate  — invitee accepted; candidate has not yet decided
+ *  - declined            — candidate decided not to keep the invitee
+ *  - accepted            — invitee accepted AND candidate confirmed (terminal)
  *
- * The candidate may regenerate a token for any non-`accepted` slot.  Once a
- * slot is `accepted`, it is locked.
+ * The candidate may regenerate a token for any non-`accepted` slot, except
+ * `awaiting_candidate` where they are expected to make a decision first.
+ * Once a slot is `accepted`, it is locked.
  */
 
 import type { TeamMemberInviteToken } from '@prisma/client';
@@ -27,7 +30,10 @@ import type { TeamSlot, TeamSlotState } from '@/types/candidate-registration';
 function classifyToken(t: TeamMemberInviteToken | null, now: Date): TeamSlotState {
   if (!t) return 'empty';
   if (t.used_at) {
-    return t.response === 'ACCEPTED' ? 'accepted' : 'rejected';
+    if (t.response === 'REJECTED') return 'rejected';
+    if (t.candidate_decision === 'CONFIRMED') return 'accepted';
+    if (t.candidate_decision === 'DECLINED') return 'declined';
+    return 'awaiting_candidate';
   }
   if (t.revoked_at) return 'expired';
   if (t.expires_at <= now) return 'expired';
@@ -62,7 +68,11 @@ export function buildSlots(
           ? { userId: t.used_by_user_id, fullName: t.used_by_full_name ?? '' }
           : null,
       expiresAt: state === 'pending' && t ? t.expires_at.toISOString() : null,
-      resolvedAt: t?.used_at?.toISOString() ?? t?.revoked_at?.toISOString() ?? null,
+      resolvedAt:
+        t?.candidate_decided_at?.toISOString() ??
+        t?.used_at?.toISOString() ??
+        t?.revoked_at?.toISOString() ??
+        null,
     });
   }
   return slots;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Copy, RefreshCw, UserPlus, Users } from 'lucide-react';
+import { Check, Copy, RefreshCw, UserPlus, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Alert } from '@/components/ui/alert';
@@ -17,6 +17,8 @@ interface TeamSlotsPanelProps {
   readOnly?: boolean;
   /** Strip outer card chrome and condense slot rows for nesting in another container. */
   compact?: boolean;
+  /** Notified when the candidate's decision flips the registration status. */
+  onRegistrationStatusChange?: (status: 'AWAITING_TEAM' | 'PENDING_REVIEW') => void;
 }
 
 interface FreshToken {
@@ -30,6 +32,8 @@ const STATE_LABEL: Record<TeamSlot['state'], string> = {
   pending: 'Очікує відповіді',
   rejected: 'Відмовлено',
   expired: 'Минув термін / відкликано',
+  awaiting_candidate: 'Очікує підтвердження',
+  declined: 'Не підтверджено',
   accepted: 'Прийнято',
 };
 
@@ -38,6 +42,8 @@ const STATE_BADGE: Record<TeamSlot['state'], string> = {
   pending: 'text-kpi-navy bg-kpi-navy/10',
   rejected: 'text-error bg-error-bg',
   expired: 'text-muted-foreground bg-gray-100',
+  awaiting_candidate: 'text-kpi-orange bg-warning-bg',
+  declined: 'text-error bg-error-bg',
   accepted: 'text-success bg-success-bg',
 };
 
@@ -45,13 +51,14 @@ export function TeamSlotsPanel({
   registrationId,
   readOnly = false,
   compact = false,
+  onRegistrationStatusChange,
 }: TeamSlotsPanelProps) {
   const { toast } = useToast();
   const [slots, setSlots] = useState<TeamSlot[]>([]);
   const [teamSize, setTeamSize] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<number | null>(null);
+  const [busy, setBusy] = useState<{ slot: number; action: 'regen' | 'decision' } | null>(null);
   /** Plaintext tokens generated this session — keyed by slot. */
   const [freshTokens, setFreshTokens] = useState<Record<number, FreshToken>>({});
   const [copiedSlot, setCopiedSlot] = useState<number | null>(null);
@@ -74,7 +81,7 @@ export function TeamSlotsPanel({
   }, [registrationId]);
 
   const handleRegenerate = async (slot: number) => {
-    setBusy(slot);
+    setBusy({ slot, action: 'regen' });
     const result = await api.registrations.regenerateTeamSlot(registrationId, slot);
     setBusy(null);
     if (!result.success) {
@@ -94,6 +101,38 @@ export function TeamSlotsPanel({
       description: 'Скопіюйте і надішліть члену команди — токен показано лише зараз',
       variant: 'success',
     });
+  };
+
+  const handleDecision = async (slot: number, decision: 'CONFIRMED' | 'DECLINED') => {
+    setBusy({ slot, action: 'decision' });
+    const result = await api.registrations.decideTeamSlot(registrationId, slot, decision);
+    setBusy(null);
+    if (!result.success) {
+      toast({ title: 'Помилка', description: result.error, variant: 'error' });
+      return;
+    }
+    setSlots((prev) =>
+      prev.map((s) =>
+        s.slot === slot ? { ...s, state: decision === 'CONFIRMED' ? 'accepted' : 'declined' } : s,
+      ),
+    );
+    if (decision === 'CONFIRMED' && result.data.registrationStatus === 'PENDING_REVIEW') {
+      onRegistrationStatusChange?.('PENDING_REVIEW');
+      toast({
+        title: 'Команду підтверджено',
+        description: 'Усі учасники підтверджені — заявка пішла на розгляд',
+        variant: 'success',
+      });
+    } else {
+      toast({
+        title: decision === 'CONFIRMED' ? 'Учасника підтверджено' : 'Учасника відхилено',
+        description:
+          decision === 'DECLINED'
+            ? 'Слот звільнено — згенеруйте нове посилання, щоб запросити іншу людину'
+            : undefined,
+        variant: 'success',
+      });
+    }
   };
 
   const copyLink = async (slot: number, token: string) => {
@@ -185,7 +224,11 @@ export function TeamSlotsPanel({
                 </div>
                 {!compact && s.member && (
                   <p className="text-foreground mt-1 text-xs">
-                    {s.state === 'accepted' ? 'Учасник: ' : 'Останній отримувач: '}
+                    {s.state === 'accepted'
+                      ? 'Учасник: '
+                      : s.state === 'awaiting_candidate'
+                        ? 'Прийняв(-ла) запрошення: '
+                        : 'Останній отримувач: '}
                     <span className="font-medium">{s.member.fullName || s.member.userId}</span>
                   </p>
                 )}
@@ -212,13 +255,38 @@ export function TeamSlotsPanel({
                     </div>
                   </div>
                 )}
-                {!readOnly && s.state !== 'accepted' && (
+                {!readOnly && s.state === 'awaiting_candidate' && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleDecision(s.slot, 'CONFIRMED')}
+                      loading={busy?.slot === s.slot && busy.action === 'decision'}
+                      disabled={busy !== null && busy.slot === s.slot}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Підтвердити
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecision(s.slot, 'DECLINED')}
+                      loading={busy?.slot === s.slot && busy.action === 'decision'}
+                      disabled={busy !== null && busy.slot === s.slot}
+                      className="text-error hover:bg-error-bg"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Відхилити
+                    </Button>
+                  </div>
+                )}
+                {!readOnly && s.state !== 'accepted' && s.state !== 'awaiting_candidate' && (
                   <div className="mt-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleRegenerate(s.slot)}
-                      loading={busy === s.slot}
+                      loading={busy?.slot === s.slot && busy.action === 'regen'}
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                       {s.state === 'empty' ? 'Створити посилання' : 'Згенерувати нове'}

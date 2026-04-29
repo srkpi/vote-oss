@@ -57,10 +57,7 @@ export function TeamAcceptClient({
     setDone('accept');
     toast({
       title: 'Дякуємо!',
-      description:
-        result.data.registrationStatus === 'PENDING_REVIEW'
-          ? 'Усі учасники команди підтвердили — заявка пішла на розгляд'
-          : 'Запрошення прийнято',
+      description: 'Запрошення прийнято — очікуйте підтвердження кандидата',
       variant: 'success',
     });
     router.refresh();
@@ -109,8 +106,26 @@ export function TeamAcceptClient({
           )}
 
           {exhausted && !done && (
-            <Alert variant={preview.response === 'ACCEPTED' ? 'success' : 'warning'}>
-              {preview.response === 'ACCEPTED' && 'Запрошення вже було прийнято.'}
+            <Alert
+              variant={
+                preview.candidateDecision === 'CONFIRMED'
+                  ? 'success'
+                  : preview.candidateDecision === 'DECLINED' ||
+                      preview.response === 'REJECTED' ||
+                      preview.revoked
+                    ? 'warning'
+                    : preview.response === 'ACCEPTED'
+                      ? 'info'
+                      : 'warning'
+              }
+            >
+              {preview.response === 'ACCEPTED' &&
+                preview.candidateDecision === null &&
+                'Ви вже прийняли це запрошення — чекаємо підтвердження кандидата.'}
+              {preview.candidateDecision === 'CONFIRMED' &&
+                'Кандидат підтвердив вашу участь у команді.'}
+              {preview.candidateDecision === 'DECLINED' &&
+                'Кандидат вирішив не включати вас у команду.'}
               {preview.response === 'REJECTED' && 'Запрошення вже було відхилено.'}
               {preview.revoked && 'Запрошення відкликане кандидатом.'}
               {expired && !preview.used && !preview.revoked && 'Термін дії запрошення минув.'}
@@ -119,7 +134,8 @@ export function TeamAcceptClient({
 
           {done === 'accept' && (
             <Alert variant="success" title="Дякуємо!">
-              Запрошення прийнято.
+              Запрошення прийнято. Кандидат побачить вас серед своєї команди і має підтвердити вашу
+              участь — дочекайтеся підтвердження.
             </Alert>
           )}
           {done === 'reject' && <Alert variant="info">Запрошення відхилено.</Alert>}

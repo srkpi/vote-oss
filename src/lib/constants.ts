@@ -43,6 +43,8 @@ export const ELECTION_DESCRIPTION_MAX_LENGTH = 5000;
  */
 export const ELECTIONS_PAGE_SIZE = 24;
 export const REGISTRATION_FORMS_PAGE_SIZE = 24;
+export const REGISTRATION_FORMS_ADMIN_PAGE_SIZE = 10;
+export const REGISTRATION_SUBMISSIONS_PAGE_SIZE = 10;
 export const BALLOTS_PAGE_SIZE = 20;
 
 // Admin invite token limits

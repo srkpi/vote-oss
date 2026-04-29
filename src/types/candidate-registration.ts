@@ -105,12 +105,26 @@ export interface RejectCandidateRegistrationRequest {
 // ── Team invites ───────────────────────────────────────────────────────────
 
 /**
- * Per-slot view served to the candidate.  Either a slot is filled (someone
- * accepted), pending (active token outstanding), empty (no live token), or
- * rejected (last invitee declined).  In every non-`accepted` state the
- * candidate may regenerate a fresh share link.
+ * Per-slot view served to the candidate.  States:
+ *  - empty               no token has ever been issued
+ *  - pending             token outstanding, awaiting invitee response
+ *  - rejected            invitee declined the invite
+ *  - expired             token was revoked or its TTL is past
+ *  - awaiting_candidate  invitee accepted; candidate must confirm or decline
+ *  - declined            candidate decided not to keep the invitee
+ *  - accepted            invitee accepted and candidate confirmed (terminal)
+ *
+ * In every non-`accepted` state the candidate may regenerate a fresh share
+ * link, except in `awaiting_candidate` where a decision must be taken first.
  */
-export type TeamSlotState = 'empty' | 'pending' | 'rejected' | 'expired' | 'accepted';
+export type TeamSlotState =
+  | 'empty'
+  | 'pending'
+  | 'rejected'
+  | 'expired'
+  | 'awaiting_candidate'
+  | 'declined'
+  | 'accepted';
 
 export interface TeamSlot {
   slot: number;
@@ -135,6 +149,8 @@ export interface TeamInvitePreview {
   /** Already used? */
   used: boolean;
   response: 'ACCEPTED' | 'REJECTED' | null;
+  /** Candidate's verdict on the invitee.  Only meaningful once response='ACCEPTED'. */
+  candidateDecision: 'CONFIRMED' | 'DECLINED' | null;
   revoked: boolean;
 }
 
