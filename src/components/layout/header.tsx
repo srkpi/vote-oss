@@ -54,7 +54,7 @@ export function Header({ session }: HeaderProps) {
     <header
       className={cn(
         'fixed top-0 right-0 left-0 z-40',
-        'glass border-b border-white/60',
+        mobileOpen ? 'border-border-color border-b bg-white' : 'glass border-b border-white/60',
         'h-(--header-height)',
       )}
     >
