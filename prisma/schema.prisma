@@ -112,6 +112,7 @@ model Election {
   nullifiers             UsedTokenNullifier[]
   deleter                Admin?              @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
   election_bypass_tokens ElectionBypassToken[]
+  protocol_agenda_items  ProtocolAgendaItem[]
 
   @@index([type])
   @@map("elections")
@@ -307,13 +308,43 @@ model Group {
   deleted_at DateTime?
   deleted_by String?
 
+  full_name String?
+  address   String?
+  email     String?
+  contact   String?
+
+  logo_file_id String? @db.Uuid
+  logo_file    File?   @relation("GroupLogo", fields: [logo_file_id], references: [id], onDelete: SetNull)
+
   members            GroupMember[]
   invite_links       GroupInviteLink[]
   registration_forms CandidateRegistrationForm[]
+  protocols          Protocol[]
 
   @@index([owner_id])
   @@index([type])
+  @@index([logo_file_id])
   @@map("groups")
+}
+
+model File {
+  id            String   @id @default(uuid()) @db.Uuid
+  bucket        String
+  object_key    String   @unique
+  mime_type     String
+  byte_size     Int
+  sha256        String
+  original_name String?
+  uploaded_by   String
+  created_at    DateTime @default(now())
+  deleted_at    DateTime?
+  deleted_by    String?
+
+  group_logos Group[] @relation("GroupLogo")
+
+  @@index([uploaded_by])
+  @@index([deleted_at])
+  @@map("files")
 }
 
 model CandidateRegistrationForm {
@@ -435,6 +466,7 @@ model GroupMember {
   group        Group     @relation(fields: [group_id], references: [id], onDelete: Cascade)
   user_id      String
   display_name String
+  role         String?
   joined_at    DateTime  @default(now())
   deleted_at   DateTime?
   deleted_by   String?
@@ -474,4 +506,51 @@ model GroupInviteLinkUsage {
   @@unique([link_id, user_id])
   @@index([user_id])
   @@map("group_invite_link_usages")
+}
+
+model Protocol {
+  id       String @id @default(uuid()) @db.Uuid
+  group_id String @db.Uuid
+  group    Group  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  number   Int
+  name     String   @db.Text
+  date     DateTime @db.Date
+  visitors Int?
+
+  responsibles Json @default("[]")
+  attendance   Json @default("[]")
+  oss_snapshot Json
+
+  created_by String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  updated_by String?
+  deleted_at DateTime?
+  deleted_by String?
+
+  agenda_items ProtocolAgendaItem[]
+
+  @@index([group_id])
+  @@index([deleted_at])
+  @@map("protocols")
+}
+
+model ProtocolAgendaItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  protocol_id String   @db.Uuid
+  protocol    Protocol @relation(fields: [protocol_id], references: [id], onDelete: Cascade)
+
+  position  Int
+  name      String  @db.Text
+  listeners Json    @default("[]")
+  result    String? @db.Text
+
+  election_id    String?   @db.Uuid
+  election       Election? @relation(fields: [election_id], references: [id], onDelete: SetNull)
+  choice_mapping Json?
+
+  @@index([protocol_id, position])
+  @@index([election_id])
+  @@map("protocol_agenda_items")
 }

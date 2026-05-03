@@ -17,9 +17,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { SearchInput } from '@/components/ui/search-input';
+import { StyledSelect } from '@/components/ui/styled-select';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { cn, pluralize } from '@/lib/utils/common';
+import { pluralize } from '@/lib/utils/common';
 import type { AdminGroupSummary, GroupType } from '@/types/group';
 import { GROUP_TYPE_LABELS } from '@/types/group';
 
@@ -322,18 +323,15 @@ function GroupTypeSelect({ value, onChange }: GroupTypeSelectProps) {
   return (
     <div className="inline-flex items-center gap-2">
       {value === 'VKSU' && <ShieldCheck className="text-kpi-navy h-3.5 w-3.5" />}
-      <select
+      <StyledSelect
         value={value}
-        onChange={(e) => onChange(e.target.value as GroupType)}
-        className={cn(
-          'border-border-color rounded-md border bg-white px-2 py-1',
-          'font-body text-foreground text-xs',
-          'focus:ring-kpi-navy focus:ring-2 focus:outline-none',
-        )}
-      >
-        <option value="OTHER">{GROUP_TYPE_LABELS.OTHER}</option>
-        <option value="VKSU">{GROUP_TYPE_LABELS.VKSU}</option>
-      </select>
+        onChange={(v) => onChange(v as GroupType)}
+        className="w-44"
+        options={[
+          { value: 'OTHER', label: GROUP_TYPE_LABELS.OTHER },
+          { value: 'VKSU', label: GROUP_TYPE_LABELS.VKSU },
+        ]}
+      />
     </div>
   );
 }

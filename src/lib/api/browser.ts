@@ -33,10 +33,16 @@ function triggerRefresh(): Promise<boolean> {
 
 async function rawFetch<T>(path: string, options: RequestInit = {}): Promise<ApiResult<T>> {
   try {
+    // Browsers must set the Content-Type for FormData themselves so the
+    // multipart boundary is included — overriding it would break the request.
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+    const defaultHeaders: Record<string, string> = isFormData
+      ? {}
+      : { 'Content-Type': 'application/json' };
     const response = await fetch(`${BASE_URL}${path}`, {
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
+        ...defaultHeaders,
         ...(options.headers instanceof Headers
           ? Object.fromEntries(options.headers.entries())
           : options.headers || {}),

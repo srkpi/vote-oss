@@ -15,6 +15,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { StyledSelect } from '@/components/ui/styled-select';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import type { Admin } from '@/types/admin';
@@ -122,19 +123,16 @@ export function LeaveAdminDialog({ open, onClose, admins, currentUserId }: Leave
                     *
                   </span>
                 </label>
-                <select
+                <StyledSelect
                   id="replacement"
                   value={replacementId}
-                  onChange={(e) => setReplacementId(e.target.value)}
-                  className="border-border-color focus:ring-kpi-blue-light/20 focus:border-kpi-blue-light w-full rounded-(--radius) border bg-white px-3 py-2.5 text-sm transition-colors focus:ring-2 focus:outline-none"
-                >
-                  <option value="">Оберіть адміністратора…</option>
-                  {descendants.map((admin) => (
-                    <option key={admin.userId} value={admin.userId}>
-                      {admin.fullName} · {admin.faculty}, {admin.group}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setReplacementId}
+                  placeholder="Оберіть адміністратора…"
+                  options={descendants.map((admin) => ({
+                    value: admin.userId,
+                    label: `${admin.fullName} · ${admin.faculty}, ${admin.group}`,
+                  }))}
+                />
                 <p className="font-body text-muted-foreground text-xs">
                   Наступник стане безпосереднім батьком усіх ваших підлеглих
                 </p>

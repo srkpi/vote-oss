@@ -8,7 +8,13 @@ import {
   overlayLiveBallotCounts,
   setCachedUserVotedElections,
 } from '@/lib/cache';
-import { GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
+import {
+  GROUP_NAME_MAX_LENGTH,
+  GROUP_REQUISITES_ADDRESS_MAX_LENGTH,
+  GROUP_REQUISITES_CONTACT_MAX_LENGTH,
+  GROUP_REQUISITES_EMAIL_MAX_LENGTH,
+  GROUP_REQUISITES_FULL_NAME_MAX_LENGTH,
+} from '@/lib/constants';
 import {
   type AdminContext,
   computeStatus,
@@ -16,6 +22,7 @@ import {
   toClientElections,
 } from '@/lib/elections-view';
 import { Errors } from '@/lib/errors';
+import { isAllowedImageMime, shapeFileSummary } from '@/lib/files';
 import { buildAdminGraph } from '@/lib/graph';
 import {
   getUserGroupMemberships,
@@ -41,6 +48,7 @@ const MEMBER_SELECT = {
   id: true,
   user_id: true,
   display_name: true,
+  role: true,
   joined_at: true,
   deleted_at: true,
 } as const;
@@ -263,6 +271,11 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
       created_at: true,
       updated_at: true,
       deleted_at: true,
+      full_name: true,
+      address: true,
+      email: true,
+      contact: true,
+      logo_file: true,
       members: {
         where: { deleted_at: null },
         select: MEMBER_SELECT,
@@ -276,7 +289,10 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
         orderBy: { created_at: 'desc' },
       },
       _count: {
-        select: { members: { where: { deleted_at: null } } },
+        select: {
+          members: { where: { deleted_at: null } },
+          protocols: { where: { deleted_at: null } },
+        },
       },
     },
   });
@@ -286,10 +302,11 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
   const isOwner = group.owner_id === user.sub;
   const isMember = group.members.some((m) => m.user_id === user.sub);
   const canManage = isOwner || isAdminWithManageGroups;
+  const hasAnyProtocol = group._count.protocols > 0;
 
   // Fetch elections restricted to this group.  Non-members fall back on the
-  // presence of ≥1 publicly-viewable election to decide whether they may see
-  // the group at all.
+  // presence of ≥1 publicly-viewable election or ≥1 protocol to decide whether
+  // they may see the group at all.
   const { elections, hasAnyPublic } = await fetchGroupElections(
     groupId,
     user,
@@ -297,7 +314,7 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
     isAdminWithManageGroups,
   );
 
-  if (!isMember && !isAdminWithManageGroups && !hasAnyPublic) {
+  if (!isMember && !isAdminWithManageGroups && !hasAnyPublic && !hasAnyProtocol) {
     throw new GroupForbiddenError('You are not a member of this group');
   }
 
@@ -313,9 +330,18 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
     isOwner,
     isMember,
     deletedAt: group.deleted_at?.toISOString() ?? null,
+    requisites: {
+      fullName: group.full_name,
+      address: group.address,
+      email: group.email,
+      contact: group.contact,
+      logo:
+        group.logo_file && !group.logo_file.deleted_at ? shapeFileSummary(group.logo_file) : null,
+    },
     members: group.members.map((m) => ({
       userId: m.user_id,
       displayName: m.display_name,
+      role: m.role,
       joinedAt: m.joined_at.toISOString(),
       isOwner: m.user_id === group.owner_id,
     })),
@@ -399,6 +425,34 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *                 type: string
  *                 enum: [VKSU, OTHER]
  */
+interface RequisitesPatch {
+  fullName?: string | null;
+  address?: string | null;
+  email?: string | null;
+  contact?: string | null;
+  logoFileId?: string | null;
+}
+
+function normalizeRequisiteField(
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+): { ok: true; value: string | null } | { ok: false; error: string } {
+  if (value === null) return { ok: true, value: null };
+  if (typeof value !== 'string') {
+    return { ok: false, error: `requisites.${fieldName} must be a string or null` };
+  }
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return { ok: true, value: null };
+  if (trimmed.length > maxLength) {
+    return {
+      ok: false,
+      error: `requisites.${fieldName} must be at most ${maxLength} characters`,
+    };
+  }
+  return { ok: true, value: trimmed };
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
@@ -406,7 +460,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
 
-  let body: { name?: string; type?: 'VKSU' | 'OTHER' };
+  let body: { name?: string; type?: 'VKSU' | 'OTHER'; requisites?: RequisitesPatch };
   try {
     body = await req.json();
   } catch {
@@ -415,8 +469,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const wantsRename = body.name !== undefined;
   const wantsTypeChange = body.type !== undefined;
-  if (!wantsRename && !wantsTypeChange) {
-    return Errors.badRequest('At least one of name or type is required');
+  const wantsRequisites = body.requisites !== undefined;
+  if (!wantsRename && !wantsTypeChange && !wantsRequisites) {
+    return Errors.badRequest('At least one of name, type or requisites is required');
   }
 
   let trimmedName: string | undefined;
@@ -430,6 +485,61 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (wantsTypeChange && body.type !== 'VKSU' && body.type !== 'OTHER') {
     return Errors.badRequest('type must be VKSU or OTHER');
+  }
+
+  let normalizedRequisites: {
+    full_name?: string | null;
+    address?: string | null;
+    email?: string | null;
+    contact?: string | null;
+    logo_file_id?: string | null;
+  } | null = null;
+
+  if (wantsRequisites) {
+    const r = body.requisites;
+    if (!r || typeof r !== 'object') return Errors.badRequest('requisites must be an object');
+    normalizedRequisites = {};
+    const fields: ReadonlyArray<[keyof RequisitesPatch, string, number, string]> = [
+      ['fullName', 'full_name', GROUP_REQUISITES_FULL_NAME_MAX_LENGTH, 'fullName'],
+      ['address', 'address', GROUP_REQUISITES_ADDRESS_MAX_LENGTH, 'address'],
+      ['email', 'email', GROUP_REQUISITES_EMAIL_MAX_LENGTH, 'email'],
+      ['contact', 'contact', GROUP_REQUISITES_CONTACT_MAX_LENGTH, 'contact'],
+    ];
+    for (const [apiKey, dbKey, max, label] of fields) {
+      if (!(apiKey in r)) continue;
+      const result = normalizeRequisiteField(r[apiKey], label, max);
+      if (!result.ok) return Errors.badRequest(result.error);
+      (normalizedRequisites as Record<string, string | null>)[dbKey] = result.value;
+    }
+    if ('logoFileId' in r) {
+      if (r.logoFileId === null) {
+        normalizedRequisites.logo_file_id = null;
+      } else if (typeof r.logoFileId === 'string' && isValidUuid(r.logoFileId)) {
+        const file = await prisma.file.findUnique({
+          where: { id: r.logoFileId },
+          select: { id: true, mime_type: true, deleted_at: true },
+        });
+        if (!file || file.deleted_at) {
+          return Errors.badRequest('requisites.logoFileId points to a missing file');
+        }
+        if (!isAllowedImageMime(file.mime_type)) {
+          return Errors.badRequest('requisites.logoFileId must reference an image file');
+        }
+        normalizedRequisites.logo_file_id = file.id;
+      } else {
+        return Errors.badRequest('requisites.logoFileId must be a UUID or null');
+      }
+    }
+    if (Object.keys(normalizedRequisites).length === 0) {
+      return Errors.badRequest('requisites must include at least one field');
+    }
+    if ('email' in normalizedRequisites && normalizedRequisites.email) {
+      // Light-touch check — protocol API does its own validation; we just guard
+      // against obvious garbage.
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedRequisites.email)) {
+        return Errors.badRequest('requisites.email must be a valid email address');
+      }
+    }
   }
 
   const group = await prisma.group.findUnique({
@@ -448,11 +558,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return Errors.forbidden('Only admins with manage_groups can change group type');
   }
 
-  const update: { name?: string; type?: 'VKSU' | 'OTHER'; updated_by: string } = {
+  if (wantsRequisites && group.owner_id !== auth.user.sub) {
+    return Errors.forbidden('Only the group owner can edit group requisites');
+  }
+
+  const update: {
+    name?: string;
+    type?: 'VKSU' | 'OTHER';
+    updated_by: string;
+    full_name?: string | null;
+    address?: string | null;
+    email?: string | null;
+    contact?: string | null;
+    logo_file_id?: string | null;
+  } = {
     updated_by: auth.user.sub,
   };
   if (wantsRename) update.name = trimmedName!;
   if (wantsTypeChange) update.type = body.type;
+  if (normalizedRequisites) Object.assign(update, normalizedRequisites);
 
   await prisma.group.update({ where: { id }, data: update });
 

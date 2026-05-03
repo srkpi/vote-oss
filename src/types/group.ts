@@ -1,4 +1,5 @@
 import type { Election } from './election';
+import type { FileSummary } from './file';
 
 export type GroupType = 'VKSU' | 'OTHER';
 
@@ -10,6 +11,7 @@ export const GROUP_TYPE_LABELS: Record<GroupType, string> = {
 export interface GroupMemberSummary {
   userId: string;
   displayName: string;
+  role: string | null;
   joinedAt: string;
   isOwner: boolean;
 }
@@ -35,6 +37,22 @@ export interface GroupInviteLink {
   canRevoke: boolean;
 }
 
+export interface GroupRequisites {
+  fullName: string | null;
+  address: string | null;
+  email: string | null;
+  contact: string | null;
+  logo: FileSummary | null;
+}
+
+export interface UpdateGroupRequisitesPatch {
+  fullName?: string | null;
+  address?: string | null;
+  email?: string | null;
+  contact?: string | null;
+  logoFileId?: string | null;
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -47,6 +65,7 @@ export interface Group {
   isOwner: boolean;
   isMember: boolean;
   deletedAt: string | null;
+  requisites: GroupRequisites;
 }
 
 export interface GroupDetail extends Group {
@@ -74,8 +93,8 @@ export interface GroupOption {
 // Request / response shapes
 export interface UpdateGroupRequest {
   name?: string;
-  /** Only admins with `manage_groups` may set `type`. */
   type?: GroupType;
+  requisites?: UpdateGroupRequisitesPatch;
 }
 
 export interface CreateInviteLinkRequest {

@@ -2,26 +2,34 @@
 
 import {
   ArrowRightLeft,
+  Building2,
   Check,
   ChevronDown,
   ChevronRight,
   Copy,
   Crown,
+  IdCard,
+  ImagePlus,
   Key,
   LogOut,
+  Mail,
+  MapPin,
   Pencil,
+  Phone,
   Plus,
   Trash2,
+  Upload,
   UserMinus,
   Users,
   Vote,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionListItem } from '@/components/elections/election-list-item';
+import { ProtocolsPanel } from '@/components/groups/protocols-panel';
 import { RegistrationFormsPanel } from '@/components/groups/registration-forms-panel';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -40,19 +48,34 @@ import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
+import { StyledSelect } from '@/components/ui/styled-select';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
+  FILE_ALLOWED_IMAGE_MIME_TYPES,
+  FILE_MAX_SIZE_BYTES,
   GROUP_INVITE_LINK_MAX_DAYS,
   GROUP_INVITE_LINK_MAX_USAGE,
   GROUP_INVITE_LINK_MIN_HOURS,
+  GROUP_MEMBER_ROLE_MAX_LENGTH,
   GROUP_NAME_MAX_LENGTH,
+  GROUP_REQUISITES_ADDRESS_MAX_LENGTH,
+  GROUP_REQUISITES_CONTACT_MAX_LENGTH,
+  GROUP_REQUISITES_EMAIL_MAX_LENGTH,
+  GROUP_REQUISITES_FULL_NAME_MAX_LENGTH,
 } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
 import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 import type { ElectionStatus } from '@/types/election';
-import type { GroupDetail, GroupInviteLink, GroupMemberSummary } from '@/types/group';
+import type { FileSummary } from '@/types/file';
+import type {
+  GroupDetail,
+  GroupInviteLink,
+  GroupMemberSummary,
+  GroupRequisites,
+} from '@/types/group';
+import type { ProtocolSummary } from '@/types/protocol';
 
 const GROUP_ELECTIONS_PAGE_SIZE = 5;
 
@@ -216,6 +239,42 @@ function InviteLinkCard({ link, onRevoke }: { link: GroupInviteLink; onRevoke: (
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Requisite row (sidebar list item)
+// ────────────────────────────────────────────────────────────────────────────
+
+function RequisiteRow({
+  icon,
+  label,
+  value,
+  fallback,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | null;
+  fallback?: string;
+}) {
+  const display = value || fallback || null;
+  return (
+    <div className="flex items-start gap-2.5">
+      <div className="text-muted-foreground mt-0.5 shrink-0">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="font-body text-muted-foreground text-xs">{label}</p>
+        {display ? (
+          <p className="font-body text-foreground text-sm wrap-break-word">
+            {display}
+            {!value && fallback && (
+              <span className="text-muted-foreground text-xs"> (з назви групи)</span>
+            )}
+          </p>
+        ) : (
+          <p className="font-body text-muted-foreground text-sm italic">—</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Main component
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -224,6 +283,8 @@ interface GroupDetailClientProps {
   session: User;
   registrationForms: CandidateRegistrationFormAdminSummary[];
   registrationFormsError: string | null;
+  protocols: ProtocolSummary[];
+  protocolsError: string | null;
 }
 
 export function GroupDetailClient({
@@ -231,6 +292,8 @@ export function GroupDetailClient({
   session,
   registrationForms,
   registrationFormsError,
+  protocols,
+  protocolsError,
 }: GroupDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -344,6 +407,50 @@ export function GroupDetailClient({
     }
   };
 
+  // ── Edit member role ──────────────────────────────────────────────────────
+  const [roleTarget, setRoleTarget] = useState<GroupMemberSummary | null>(null);
+  const [roleDraft, setRoleDraft] = useState('');
+  const [roleSaving, setRoleSaving] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
+
+  const openRoleEditor = (member: GroupMemberSummary) => {
+    setRoleTarget(member);
+    setRoleDraft(member.role ?? '');
+    setRoleError(null);
+  };
+
+  const closeRoleEditor = () => {
+    setRoleTarget(null);
+    setRoleDraft('');
+    setRoleError(null);
+  };
+
+  const handleRoleSave = async () => {
+    if (!roleTarget) return;
+    setRoleSaving(true);
+    setRoleError(null);
+    const trimmed = roleDraft.trim();
+    const result = await api.groups.members.updateRole(
+      group.id,
+      roleTarget.userId,
+      trimmed.length === 0 ? null : trimmed,
+    );
+    if (result.success) {
+      const newRole = trimmed.length === 0 ? null : trimmed;
+      setGroup((prev) => ({
+        ...prev,
+        members: prev.members.map((m) =>
+          m.userId === roleTarget.userId ? { ...m, role: newRole } : m,
+        ),
+      }));
+      toast({ title: 'Роль оновлено', variant: 'success' });
+      closeRoleEditor();
+    } else {
+      setRoleError(result.error);
+    }
+    setRoleSaving(false);
+  };
+
   // ── Kick / leave ──────────────────────────────────────────────────────────
   const [kickTarget, setKickTarget] = useState<GroupMemberSummary | null>(null);
   const [kicking, setKicking] = useState(false);
@@ -454,6 +561,125 @@ export function GroupDetailClient({
     setInviteError(null);
   };
 
+  // ── Edit requisites ───────────────────────────────────────────────────────
+  const [requisitesOpen, setRequisitesOpen] = useState(false);
+  const [requisitesDraft, setRequisitesDraft] = useState<GroupRequisites>(group.requisites);
+  const [requisitesSaving, setRequisitesSaving] = useState(false);
+  const [requisitesError, setRequisitesError] = useState<string | null>(null);
+
+  const openRequisites = () => {
+    setRequisitesDraft(group.requisites);
+    setRequisitesError(null);
+    setRequisitesOpen(true);
+  };
+
+  const handleRequisitesSave = async () => {
+    setRequisitesSaving(true);
+    setRequisitesError(null);
+    const fullName = requisitesDraft.fullName?.trim() || null;
+    const address = requisitesDraft.address?.trim() || null;
+    const email = requisitesDraft.email?.trim() || null;
+    const contact = requisitesDraft.contact?.trim() || null;
+    const result = await api.groups.updateRequisites(group.id, {
+      fullName,
+      address,
+      email,
+      contact,
+    });
+    if (result.success) {
+      setGroup((prev) => ({
+        ...prev,
+        requisites: { ...prev.requisites, fullName, address, email, contact },
+      }));
+      toast({ title: 'Реквізити оновлено', variant: 'success' });
+      setRequisitesOpen(false);
+    } else {
+      setRequisitesError(result.error);
+    }
+    setRequisitesSaving(false);
+  };
+
+  // ── Logo upload / remove ─────────────────────────────────────────────────
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+
+  const setLogo = (logo: FileSummary | null) => {
+    setGroup((prev) => ({
+      ...prev,
+      requisites: { ...prev.requisites, logo },
+    }));
+  };
+
+  const handleLogoFileSelected = async (file: File) => {
+    if (
+      !FILE_ALLOWED_IMAGE_MIME_TYPES.includes(
+        file.type as (typeof FILE_ALLOWED_IMAGE_MIME_TYPES)[number],
+      )
+    ) {
+      toast({
+        title: 'Непідтримуваний формат',
+        description: 'Дозволені PNG, JPEG, WebP, GIF (без SVG)',
+        variant: 'error',
+      });
+      return;
+    }
+    if (file.size > FILE_MAX_SIZE_BYTES) {
+      toast({
+        title: 'Файл завеликий',
+        description: `Максимум ${Math.floor(FILE_MAX_SIZE_BYTES / (1024 * 1024))} МБ`,
+        variant: 'error',
+      });
+      return;
+    }
+    setLogoUploading(true);
+    const previousLogoId = group.requisites.logo?.id ?? null;
+    const uploadResult = await api.files.upload(file);
+    if (!uploadResult.success) {
+      toast({ title: 'Не вдалось завантажити', description: uploadResult.error, variant: 'error' });
+      setLogoUploading(false);
+      return;
+    }
+    const uploaded = uploadResult.data;
+    const linkResult = await api.groups.updateRequisites(group.id, {
+      logoFileId: uploaded.id,
+    });
+    if (!linkResult.success) {
+      // Roll back the orphan file we just uploaded
+      api.files.delete(uploaded.id).catch(() => {});
+      toast({ title: 'Не вдалось зберегти', description: linkResult.error, variant: 'error' });
+      setLogoUploading(false);
+      return;
+    }
+    setLogo(uploaded);
+    toast({ title: 'Логотип оновлено', variant: 'success' });
+    if (previousLogoId) {
+      api.files.delete(previousLogoId).catch(() => {});
+    }
+    setLogoUploading(false);
+  };
+
+  const handleLogoRemove = async () => {
+    const previous = group.requisites.logo;
+    if (!previous) return;
+    setLogoUploading(true);
+    const result = await api.groups.updateRequisites(group.id, { logoFileId: null });
+    if (!result.success) {
+      toast({ title: 'Не вдалось видалити', description: result.error, variant: 'error' });
+      setLogoUploading(false);
+      return;
+    }
+    setLogo(null);
+    api.files.delete(previous.id).catch(() => {});
+    toast({ title: 'Логотип видалено', variant: 'success' });
+    setLogoUploading(false);
+  };
+
+  const hasRequisites =
+    !!group.requisites.fullName ||
+    !!group.requisites.address ||
+    !!group.requisites.email ||
+    !!group.requisites.contact;
+
   // ── Revoke invite link ────────────────────────────────────────────────────
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [revoking, setRevoking] = useState(false);
@@ -490,8 +716,8 @@ export function GroupDetailClient({
       />
 
       <div className="container py-8">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <div className="space-y-6 lg:col-span-3">
             {/* Elections panel */}
             <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
               <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
@@ -577,10 +803,33 @@ export function GroupDetailClient({
                 initialLoadError={registrationFormsError}
               />
             )}
+
+            {(isActiveMember || isAdminWithManageGroups || protocols.length > 0) && (
+              <ProtocolsPanel
+                groupId={group.id}
+                canManage={isOwner}
+                initialProtocols={protocols}
+                initialLoadError={protocolsError}
+              />
+            )}
           </div>
 
           {/* Sidebar: group info + members + actions */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:col-span-2">
+            {/* Public logo (visible to everyone when set) */}
+            {!isOwner && group.requisites.logo && (
+              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white p-4">
+                <div className="flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={group.requisites.logo.url}
+                    alt={`Логотип ${group.name}`}
+                    className="max-h-32 w-auto object-contain"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Members panel — moved into sidebar above management */}
             <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
               <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
@@ -619,11 +868,25 @@ export function GroupDetailClient({
                             <span className="font-body text-muted-foreground text-xs">(ви)</span>
                           )}
                         </div>
+                        {member.role ? (
+                          <p className="font-body text-kpi-navy text-xs">{member.role}</p>
+                        ) : null}
                         <p className="font-body text-muted-foreground text-xs">
                           З <LocalDateTime date={member.joinedAt} />
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-1">
+                        {isOwner && (
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            onClick={() => openRoleEditor(member)}
+                            className="text-muted-foreground"
+                            title="Редагувати роль"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         {canKick && (
                           <Button
                             variant="ghost"
@@ -652,6 +915,131 @@ export function GroupDetailClient({
                 })}
               </div>
             </div>
+
+            {/* Requisites */}
+            {isOwner && (
+              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+                <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+                  <div className="flex items-center gap-2">
+                    <IdCard className="text-kpi-gray-mid h-4 w-4" />
+                    <h3 className="font-display text-foreground text-base font-semibold">
+                      Реквізити
+                    </h3>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={openRequisites}
+                    className="text-muted-foreground"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
+                {/* Logo editor — separate row, persists immediately on change */}
+                <div className="border-border-subtle border-b px-5 py-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-muted-foreground mt-0.5 shrink-0">
+                      <ImagePlus className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body text-muted-foreground text-xs">Логотип</p>
+                      {group.requisites.logo ? (
+                        <div className="mt-2 flex items-center gap-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={group.requisites.logo.url}
+                            alt="Логотип"
+                            className="border-border-subtle h-16 w-16 rounded border bg-white object-contain"
+                          />
+                          <div className="flex flex-col gap-1.5">
+                            <Button
+                              variant="secondary"
+                              size="xs"
+                              onClick={() => logoInputRef.current?.click()}
+                              loading={logoUploading}
+                              icon={<Upload className="h-3 w-3" />}
+                            >
+                              Замінити
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              onClick={handleLogoRemove}
+                              disabled={logoUploading}
+                              className="text-error hover:bg-error-bg"
+                              icon={<Trash2 className="h-3 w-3" />}
+                            >
+                              Видалити
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => logoInputRef.current?.click()}
+                            loading={logoUploading}
+                            icon={<Upload className="h-3.5 w-3.5" />}
+                          >
+                            Завантажити
+                          </Button>
+                          <p className="font-body text-muted-foreground mt-1.5 text-xs">
+                            PNG, JPEG, WebP, GIF — до{' '}
+                            {Math.floor(FILE_MAX_SIZE_BYTES / (1024 * 1024))} МБ
+                          </p>
+                        </div>
+                      )}
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept={FILE_ALLOWED_IMAGE_MIME_TYPES.join(',')}
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          e.target.value = '';
+                          if (f) void handleLogoFileSelected(f);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 px-5 py-4">
+                  {hasRequisites ? (
+                    <>
+                      <RequisiteRow
+                        icon={<Building2 className="h-3.5 w-3.5" />}
+                        label="Повна назва"
+                        value={group.requisites.fullName}
+                        fallback={group.name}
+                      />
+                      <RequisiteRow
+                        icon={<MapPin className="h-3.5 w-3.5" />}
+                        label="Адреса"
+                        value={group.requisites.address}
+                      />
+                      <RequisiteRow
+                        icon={<Mail className="h-3.5 w-3.5" />}
+                        label="Ел. пошта"
+                        value={group.requisites.email}
+                      />
+                      <RequisiteRow
+                        icon={<Phone className="h-3.5 w-3.5" />}
+                        label="Контакт"
+                        value={group.requisites.contact}
+                      />
+                    </>
+                  ) : (
+                    <p className="font-body text-muted-foreground text-sm">
+                      Реквізити не заповнені. Вони використовуються для автоматичного формування
+                      протоколів.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Owner actions */}
             {isOwner && (
@@ -817,6 +1205,48 @@ export function GroupDetailClient({
             </DialogPanel>
           </Dialog>
 
+          {/* Edit member role */}
+          <Dialog open={!!roleTarget} onClose={() => !roleSaving && closeRoleEditor()}>
+            <DialogPanel maxWidth="sm">
+              <DialogHeader>
+                <DialogTitle>Роль учасника</DialogTitle>
+                <DialogCloseButton onClose={closeRoleEditor} />
+              </DialogHeader>
+              <DialogBody className="space-y-3">
+                {roleError && (
+                  <Alert variant="error" onDismiss={() => setRoleError(null)}>
+                    {roleError}
+                  </Alert>
+                )}
+                <p className="font-body text-muted-foreground text-sm">
+                  <strong>{roleTarget?.displayName}</strong>
+                </p>
+                <p className="font-body text-muted-foreground text-sm">
+                  Роль використовується у протоколах (наприклад, у листі присутності або серед
+                  відповідальних). Залиште пустим, щоб очистити.
+                </p>
+                <FormField htmlFor="member-role">
+                  <Input
+                    id="member-role"
+                    value={roleDraft}
+                    onChange={(e) => setRoleDraft(e.target.value)}
+                    maxLength={GROUP_MEMBER_ROLE_MAX_LENGTH}
+                    placeholder="Голова, Секретар, Член комісії…"
+                    autoFocus
+                  />
+                </FormField>
+              </DialogBody>
+              <DialogFooter>
+                <Button variant="secondary" onClick={closeRoleEditor} disabled={roleSaving}>
+                  Скасувати
+                </Button>
+                <Button variant="primary" onClick={handleRoleSave} loading={roleSaving}>
+                  Зберегти
+                </Button>
+              </DialogFooter>
+            </DialogPanel>
+          </Dialog>
+
           {/* Kick / leave confirm */}
           <Dialog open={!!kickTarget} onClose={() => setKickTarget(null)}>
             <DialogPanel maxWidth="sm">
@@ -880,18 +1310,15 @@ export function GroupDetailClient({
                     <label className="font-body text-foreground block text-sm font-medium">
                       Новий власник <span className="text-error">*</span>
                     </label>
-                    <select
+                    <StyledSelect
                       value={selectedNewOwner}
-                      onChange={(e) => setSelectedNewOwner(e.target.value)}
-                      className="border-border-color focus:ring-kpi-blue-light/20 focus:border-kpi-blue-light w-full rounded-(--radius) border bg-white px-3 py-2.5 text-sm transition-colors focus:ring-2 focus:outline-none"
-                    >
-                      <option value="">Оберіть учасника…</option>
-                      {transferCandidates.map((m) => (
-                        <option key={m.userId} value={m.userId}>
-                          {m.displayName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setSelectedNewOwner}
+                      placeholder="Оберіть учасника…"
+                      options={transferCandidates.map((m) => ({
+                        value: m.userId,
+                        label: m.displayName,
+                      }))}
+                    />
                   </div>
                 )}
               </DialogBody>
@@ -1032,6 +1459,81 @@ export function GroupDetailClient({
                     Готово
                   </Button>
                 )}
+              </DialogFooter>
+            </DialogPanel>
+          </Dialog>
+
+          {/* Edit requisites */}
+          <Dialog
+            open={requisitesOpen}
+            onClose={() => !requisitesSaving && setRequisitesOpen(false)}
+          >
+            <DialogPanel maxWidth="md">
+              <DialogHeader>
+                <DialogTitle>Реквізити групи</DialogTitle>
+                <DialogCloseButton onClose={() => setRequisitesOpen(false)} />
+              </DialogHeader>
+              <DialogBody className="space-y-4">
+                {requisitesError && (
+                  <Alert variant="error" onDismiss={() => setRequisitesError(null)}>
+                    {requisitesError}
+                  </Alert>
+                )}
+                <p className="font-body text-muted-foreground text-sm">
+                  Використовуються для автоматичного формування протоколів. Якщо повна назва не
+                  задана — у протокол потрапить назва групи.
+                </p>
+                <FormField label="Повна назва (необов'язково)" htmlFor="req-full-name">
+                  <Input
+                    id="req-full-name"
+                    value={requisitesDraft.fullName ?? ''}
+                    onChange={(e) =>
+                      setRequisitesDraft((d) => ({ ...d, fullName: e.target.value }))
+                    }
+                    maxLength={GROUP_REQUISITES_FULL_NAME_MAX_LENGTH}
+                    placeholder={group.name}
+                  />
+                </FormField>
+                <FormField label="Адреса" htmlFor="req-address">
+                  <Input
+                    id="req-address"
+                    value={requisitesDraft.address ?? ''}
+                    onChange={(e) => setRequisitesDraft((d) => ({ ...d, address: e.target.value }))}
+                    maxLength={GROUP_REQUISITES_ADDRESS_MAX_LENGTH}
+                    placeholder="Корпус, кімната"
+                  />
+                </FormField>
+                <FormField label="Електронна пошта" htmlFor="req-email">
+                  <Input
+                    id="req-email"
+                    type="email"
+                    value={requisitesDraft.email ?? ''}
+                    onChange={(e) => setRequisitesDraft((d) => ({ ...d, email: e.target.value }))}
+                    maxLength={GROUP_REQUISITES_EMAIL_MAX_LENGTH}
+                    placeholder="oss@example.com"
+                  />
+                </FormField>
+                <FormField label="Контакт" htmlFor="req-contact">
+                  <Input
+                    id="req-contact"
+                    value={requisitesDraft.contact ?? ''}
+                    onChange={(e) => setRequisitesDraft((d) => ({ ...d, contact: e.target.value }))}
+                    maxLength={GROUP_REQUISITES_CONTACT_MAX_LENGTH}
+                    placeholder="Телефон або @telegram"
+                  />
+                </FormField>
+              </DialogBody>
+              <DialogFooter>
+                <Button
+                  variant="secondary"
+                  onClick={() => setRequisitesOpen(false)}
+                  disabled={requisitesSaving}
+                >
+                  Скасувати
+                </Button>
+                <Button variant="primary" onClick={handleRequisitesSave} loading={requisitesSaving}>
+                  Зберегти
+                </Button>
               </DialogFooter>
             </DialogPanel>
           </Dialog>

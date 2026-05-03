@@ -73,6 +73,47 @@ export const GROUP_INVITE_LINK_LABEL_MAX_LENGTH = 100;
 export const GROUP_INVITE_LINK_MAX_ACTIVE = 10;
 export const GROUP_MAX_OWNED = 20;
 
+// Group requisites (used to populate generated meeting protocols)
+export const GROUP_REQUISITES_FULL_NAME_MAX_LENGTH = 255;
+export const GROUP_REQUISITES_ADDRESS_MAX_LENGTH = 255;
+export const GROUP_REQUISITES_EMAIL_MAX_LENGTH = 255;
+export const GROUP_REQUISITES_CONTACT_MAX_LENGTH = 100;
+
+// Protocols
+export const PROTOCOL_NAME_MAX_LENGTH = 255;
+export const PROTOCOL_AGENDA_ITEM_NAME_MAX_LENGTH = 500;
+export const PROTOCOL_AGENDA_ITEM_RESULT_MAX_LENGTH = 5000;
+export const PROTOCOL_LISTENER_FULLNAME_MAX_LENGTH = 255;
+export const PROTOCOL_LISTENER_SPEECH_MAX_LENGTH = 5000;
+export const PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH = 100;
+export const PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH = 255;
+export const PROTOCOL_MAX_AGENDA_ITEMS = 50;
+export const PROTOCOL_MAX_LISTENERS_PER_ITEM = 20;
+export const PROTOCOL_MAX_RESPONSIBLES = 20;
+export const PROTOCOL_MAX_VISITORS = 9999;
+export const PROTOCOL_MAX_ATTENDEES = 500;
+export const PROTOCOL_ATTENDEE_PRESENT_TEXT_MAX_LENGTH = 100;
+export const GROUP_MEMBER_ROLE_MAX_LENGTH = 100;
+export const PROTOCOL_PRESENT_TEXT_DEFAULT = 'присутній';
+export const PROTOCOL_ABSENT_TEXT_DEFAULT = 'відсутній';
+export const PROTOCOLS_PAGE_SIZE = 10;
+export const PROTOCOL_REQUIRED_ELECTION_CHOICES = 3;
+
+// Files / image uploads
+export const FILE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+export const FILE_ALLOWED_IMAGE_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+] as const;
+export type AllowedImageMimeType = (typeof FILE_ALLOWED_IMAGE_MIME_TYPES)[number];
+export const FILE_ORIGINAL_NAME_MAX_LENGTH = 255;
+
+// Protocol logo dimensions (passed to the docs generator as image props).
+export const PROTOCOL_LOGO_WIDTH_MM = 25;
+export const PROTOCOL_LOGO_HEIGHT_MM = 25;
+
 // FAQ limits
 export const FAQ_CATEGORY_TITLE_MAX_LENGTH = 32;
 export const FAQ_ITEM_TITLE_MAX_LENGTH = 128;
