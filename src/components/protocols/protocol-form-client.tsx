@@ -5,6 +5,7 @@ import {
   ArrowUp,
   BuildingIcon,
   Download,
+  Eye,
   Lock,
   Mail,
   MapPin,
@@ -85,6 +86,10 @@ interface ProtocolFormClientProps {
   canEdit: boolean;
   /** Pre-fetched suggested number for the date's year (creation flow only). */
   initialNextNumber: number | null;
+  /** Optional callback that switches the page to a read-only document view.
+   *  Only available when editing an existing protocol — there's nothing to
+   *  preview during creation. */
+  onPreview?: () => void;
 }
 
 const VOTE_LABELS: Record<AgendaChoiceVote, string> = {
@@ -186,6 +191,7 @@ export function ProtocolFormClient({
   initialProtocol,
   canEdit,
   initialNextNumber,
+  onPreview,
 }: ProtocolFormClientProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -242,6 +248,14 @@ export function ProtocolFormClient({
   const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Errors are reported in two places at once: an inline alert at the top of
+  // the form (for users scrolled to the top) and a toast (visible regardless
+  // of scroll position on long forms).
+  const showError = (message: string) => {
+    setError(message);
+    toast({ title: 'Помилка', description: message, variant: 'error' });
+  };
 
   // ── Auto-suggest protocol number on year change ──────────────────────────
   useEffect(() => {
@@ -566,7 +580,7 @@ export function ProtocolFormClient({
   const handleSubmit = async () => {
     const err = validate();
     if (err) {
-      setError(err);
+      showError(err);
       return;
     }
     setSubmitting(true);
@@ -618,7 +632,7 @@ export function ProtocolFormClient({
         router.refresh();
       }
     } else {
-      setError(result.error);
+      showError(result.error);
     }
     setSubmitting(false);
   };
@@ -640,7 +654,7 @@ export function ProtocolFormClient({
         } catch {
           /* ignore parse errors */
         }
-        setError(message);
+        showError(message);
         return;
       }
       const blob = await response.blob();
@@ -660,7 +674,7 @@ export function ProtocolFormClient({
       URL.revokeObjectURL(url);
       toast({ title: 'PDF згенеровано', variant: 'success' });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Помилка мережі');
+      showError(err instanceof Error ? err.message : 'Помилка мережі');
     } finally {
       setGenerating(false);
     }
@@ -1010,6 +1024,16 @@ export function ProtocolFormClient({
             <Button variant="secondary" asChild disabled={submitting || generating}>
               <Link href={`/groups/${group.id}`}>{canEdit ? 'Скасувати' : 'Назад до групи'}</Link>
             </Button>
+            {onPreview && isEdit && (
+              <Button
+                variant="secondary"
+                onClick={onPreview}
+                disabled={submitting || generating}
+                icon={<Eye className="h-3.5 w-3.5" />}
+              >
+                Переглянути як документ
+              </Button>
+            )}
             {isEdit && (
               <Button
                 variant="outline"

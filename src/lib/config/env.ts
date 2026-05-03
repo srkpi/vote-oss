@@ -127,5 +127,4 @@ export const env = {
   MINIO_ACCESS_KEY: getEnv('MINIO_ACCESS_KEY'),
   MINIO_SECRET_KEY: getEnv('MINIO_SECRET_KEY'),
   MINIO_PUBLIC_BUCKET: getOptionalEnv('MINIO_PUBLIC_BUCKET', 'kpistats-public'),
-  MINIO_PUBLIC_URL_BASE: getOptionalEnv('MINIO_PUBLIC_URL_BASE'),
 };

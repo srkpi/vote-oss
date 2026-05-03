@@ -1,6 +1,6 @@
 'use client';
 
-import { Download } from 'lucide-react';
+import { Download, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
@@ -17,6 +17,7 @@ import type { AgendaChoiceVote, ProtocolAttendee } from '@/types/protocol';
 interface ProtocolDocumentViewProps {
   group: GroupDetail;
   protocol: ProtocolWithCounts;
+  onBackToEdit?: () => void;
 }
 
 function isPresent(attendee: ProtocolAttendee): boolean {
@@ -27,7 +28,7 @@ function attendeeOrderKey(attendee: ProtocolAttendee): number {
   return isPresent(attendee) ? 0 : 1;
 }
 
-export function ProtocolDocumentView({ group, protocol }: ProtocolDocumentViewProps) {
+export function ProtocolDocumentView({ group, protocol, onBackToEdit }: ProtocolDocumentViewProps) {
   const { toast } = useToast();
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +43,11 @@ export function ProtocolDocumentView({ group, protocol }: ProtocolDocumentViewPr
       }),
     [protocol.attendance],
   );
+
+  const showError = (message: string) => {
+    setError(message);
+    toast({ title: 'Помилка', description: message, variant: 'error' });
+  };
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -59,7 +65,7 @@ export function ProtocolDocumentView({ group, protocol }: ProtocolDocumentViewPr
         } catch {
           /* ignore parse errors */
         }
-        setError(message);
+        showError(message);
         return;
       }
       const blob = await response.blob();
@@ -79,7 +85,7 @@ export function ProtocolDocumentView({ group, protocol }: ProtocolDocumentViewPr
       URL.revokeObjectURL(url);
       toast({ title: 'PDF згенеровано', variant: 'success' });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Помилка мережі');
+      showError(err instanceof Error ? err.message : 'Помилка мережі');
     } finally {
       setGenerating(false);
     }
@@ -115,6 +121,16 @@ export function ProtocolDocumentView({ group, protocol }: ProtocolDocumentViewPr
             <Button variant="secondary" asChild disabled={generating}>
               <Link href={`/groups/${group.id}`}>Назад до групи</Link>
             </Button>
+            {onBackToEdit && (
+              <Button
+                variant="secondary"
+                onClick={onBackToEdit}
+                disabled={generating}
+                icon={<Pencil className="h-3.5 w-3.5" />}
+              >
+                Редагувати
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={handleGenerate}

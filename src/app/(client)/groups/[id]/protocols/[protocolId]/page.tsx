@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
 import { ProtocolDocumentView } from '@/components/protocols/protocol-document-view';
-import { ProtocolFormClient } from '@/components/protocols/protocol-form-client';
+import { ProtocolOwnerView } from '@/components/protocols/protocol-owner-view';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
 
@@ -31,12 +31,7 @@ export default async function ProtocolDetailPage({ params }: Props) {
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       {protocolRes.data.isOwner ? (
-        <ProtocolFormClient
-          group={groupRes.data}
-          initialProtocol={protocolRes.data}
-          canEdit
-          initialNextNumber={null}
-        />
+        <ProtocolOwnerView group={groupRes.data} protocol={protocolRes.data} />
       ) : (
         <ProtocolDocumentView group={groupRes.data} protocol={protocolRes.data} />
       )}

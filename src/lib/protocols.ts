@@ -17,8 +17,8 @@ import {
   PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH,
   PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH,
 } from '@/lib/constants';
+import { fileProxyUrl } from '@/lib/files';
 import { prisma } from '@/lib/prisma';
-import { publicUrl } from '@/lib/storage/minio';
 import { isValidUuid } from '@/lib/utils/common';
 import type {
   AgendaChoiceVote,
@@ -662,7 +662,7 @@ export async function buildGeneratorPayload(protocolId: string): Promise<Generat
     payload.logo = {
       _type: 'image',
       _props: {
-        url: publicUrl(logoFile.bucket, logoFile.object_key),
+        url: fileProxyUrl(logoFile.object_key),
         height: { unit: 'mm', value: PROTOCOL_LOGO_HEIGHT_MM },
       },
     };

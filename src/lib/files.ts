@@ -62,18 +62,23 @@ export function detectImageMime(buf: Buffer): AllowedImageMimeType | null {
 }
 
 /**
- * Build a same-origin URL pointing at the streaming proxy.  We never expose
- * raw MinIO URLs to clients or external services — the proxy keeps the
- * scheme/host aligned with the Next deployment so CSP and TLS just work.
+ * Build a same-origin URL pointing at the public file proxy.  In deployment
+ * a Caddy reverse-proxy serves `/files/*` straight from the public MinIO
+ * bucket, so we never expose raw MinIO URLs to clients or external services
+ * — same scheme/host as the Next app keeps CSP and TLS simple.
  */
-export function fileProxyUrl(id: string): string {
-  return `${APP_URL.replace(/\/+$/, '')}/api/files/${id}/raw`;
+export function fileProxyUrl(objectKey: string): string {
+  const safeKey = objectKey
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  return `${APP_URL.replace(/\/+$/, '')}/files/${safeKey}`;
 }
 
 export function shapeFileSummary(row: DbFile): FileSummary {
   return {
     id: row.id,
-    url: fileProxyUrl(row.id),
+    url: fileProxyUrl(row.object_key),
     mimeType: row.mime_type,
     byteSize: row.byte_size,
     originalName: row.original_name,
