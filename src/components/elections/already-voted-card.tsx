@@ -59,13 +59,13 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
         </div>
         <div>
           <p className="font-body text-success text-sm font-semibold">Ви вже проголосували</p>
-          <p className="font-body text-muted-foreground mt-0.5 text-xs">
+          <p className="font-body text-muted-foreground ph-no-capture mt-0.5 text-xs">
             <LocalDateTime date={record.votedAt} />
           </p>
         </div>
       </div>
 
-      <div>
+      <div className="ph-no-capture">
         <p className="font-body text-muted-foreground mb-2 text-[10px] font-semibold tracking-wider uppercase">
           {record.choiceLabels.length > 1 ? 'Ваші вибори' : 'Ваш вибір'}
         </p>
@@ -105,7 +105,7 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
         >
           <div className="flex items-center gap-2">
             <Hash className="text-kpi-gray-mid h-3.5 w-3.5 shrink-0" />
-            <p className="text-foreground flex-1 font-mono text-sm leading-relaxed break-all">
+            <p className="ph-no-capture text-foreground flex-1 font-mono text-sm leading-relaxed break-all">
               {record.ballotHash}
             </p>
             <div
