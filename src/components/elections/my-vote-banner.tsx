@@ -74,7 +74,7 @@ export function MyVoteBanner({
                 : 'Ваш голос збережено локально'}
           </p>
 
-          <div className="font-body flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          <div className="ph-no-capture font-body flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <span className="text-muted-foreground min-w-0 wrap-break-word">
               Збережений вибір: <strong className="text-foreground">{storedChoices}</strong>
             </span>

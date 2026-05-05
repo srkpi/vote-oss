@@ -147,7 +147,7 @@ export function VoteForm({ election }: VoteFormProps) {
       {step === 'select' && (
         <>
           <p className="font-body text-muted-foreground text-sm">{selectionHint}</p>
-          <div className="space-y-3">
+          <div className="ph-no-capture space-y-3">
             {election.choices.map((choice, index) => {
               const isSelected = selectedChoices.some((c) => c.id === choice.id);
               const isDisabled =

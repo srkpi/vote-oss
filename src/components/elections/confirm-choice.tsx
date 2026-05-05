@@ -26,7 +26,7 @@ export function ConfirmChoice({ choices, onBack, onConfirm, loading }: ConfirmCh
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="ph-no-capture space-y-2">
         <p className="font-body text-muted-foreground text-xs tracking-wider uppercase">
           {choices.length > 1 ? 'Ваші вибори:' : 'Ваш вибір:'}
         </p>

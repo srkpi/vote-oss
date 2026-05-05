@@ -297,7 +297,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
               <SearchInput
                 value={searchQuery}
                 onChange={handleSearch}
-                className="max-w-md"
+                className="ph-no-capture max-w-md"
                 placeholder={
                   decryptionDone
                     ? 'Пошук за хешем або варіантом відповіді…'
@@ -342,7 +342,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
                 </div>
               )}
 
-              <div className="divide-border-subtle divide-y">
+              <div className="ph-no-capture divide-border-subtle divide-y">
                 {pagedBallots.map((ballot, index) => {
                   const isMyBallot =
                     myVoteRecord !== null && ballot.currentHash === myVoteRecord.ballotHash;
