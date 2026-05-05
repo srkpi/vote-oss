@@ -1,1 +1,1 @@
-{"id":"553419fde0743835f43dd8236a3711b2","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass stores max_usage in the database","name":"stores max_usage in the database","status":"passed","testResultsByEnv":{"default":"67968fc047c321d3ad7696eba6bd0de1"}}
+{"id":"553419fde0743835f43dd8236a3711b2","fullName":"src/__tests__/api/bypass/global.test.ts#POST /api/bypass stores max_usage in the database","name":"stores max_usage in the database","status":"passed","testResultsByEnv":{"default":"df138de904a38c24c1df29d1952e7d76"}}
