@@ -1,7 +1,7 @@
 import { isbot } from 'isbot';
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { APP_URL } from '@/lib/config/client';
+import { APP_URL, POSTHOG_ASSETS_HOST, POSTHOG_HOST } from '@/lib/config/client';
 import {
   BOT_REQUEST_HEADER,
   COOKIE_ACCESS,
@@ -27,6 +27,24 @@ function parseSetCookie(cookieStr: string): { name: string; value: string } | nu
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  if (pathname.startsWith('/ph')) {
+    const url = req.nextUrl.clone();
+    const base = pathname.startsWith('/ph/static/') ? POSTHOG_ASSETS_HOST : POSTHOG_HOST;
+    const target = new URL(base);
+
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('host', target.hostname);
+
+    url.protocol = target.protocol;
+    url.hostname = target.hostname;
+    url.port = '';
+    url.pathname = url.pathname.replace(/^\/ph/, '');
+
+    return NextResponse.rewrite(url, {
+      headers: requestHeaders,
+    });
+  }
 
   const isProtected = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
   const isGuestOnly = GUEST_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
@@ -196,5 +214,5 @@ export async function proxy(req: NextRequest) {
 export const config = {
   // Run on all routes except Next.js internals, static assets, and API routes
   // (API routes carry their own requireAuth / requireAdmin guards).
-  matcher: ['/((?!api|_next/static|_next/image|favicon\\.ico|.*\\..*$).*)'],
+  matcher: ['/ph/:path*', '/((?!api|_next/static|_next/image|favicon\\.ico|.*\\..*$).*)'],
 };
