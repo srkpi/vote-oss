@@ -564,14 +564,15 @@ export function ProtocolFormClient({
           return `Заповніть слухача #${j + 1} у пункті #${i + 1}`;
         }
       }
-      if (a.electionId) {
-        const votes = new Set(Object.values(a.choiceMapping));
-        if (Object.keys(a.choiceMapping).length !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
-          return `Пункт #${i + 1}: змапте всі варіанти голосування`;
-        }
-        if (votes.size !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
-          return `Пункт #${i + 1}: кожен варіант має відповідати окремому значенню (За/Проти/Утримались)`;
-        }
+      if (!a.electionId) {
+        return `Пункт #${i + 1}: оберіть привʼязане голосування`;
+      }
+      const votes = new Set(Object.values(a.choiceMapping));
+      if (Object.keys(a.choiceMapping).length !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
+        return `Пункт #${i + 1}: змапте всі варіанти голосування`;
+      }
+      if (votes.size !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
+        return `Пункт #${i + 1}: кожен варіант має відповідати окремому значенню (За/Проти/Утримались)`;
       }
     }
     return null;
@@ -1289,7 +1290,8 @@ function AgendaItemEditor({
         </FormField>
 
         <FormField
-          label="Привʼязане голосування (необовʼязково)"
+          label="Привʼязане голосування"
+          required
           hint={
             linkableElections.length === 0 && canEdit
               ? `Доступних немає — потрібно завершене голосування з ${PROTOCOL_REQUIRED_ELECTION_CHOICES} варіантами`
@@ -1301,7 +1303,7 @@ function AgendaItemEditor({
             onChange={(v) => onSelectElection(v || null)}
             disabled={!canEdit}
             options={[
-              { value: '', label: '— Без привʼязки —' },
+              { value: '', label: '— Оберіть голосування —' },
               ...linkableElections.map((e) => ({ value: e.id, label: e.title })),
               ...(item.electionId && !linkableElections.some((e) => e.id === item.electionId)
                 ? [

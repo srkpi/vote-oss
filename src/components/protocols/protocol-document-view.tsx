@@ -277,7 +277,7 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
                     className="grid grid-cols-[1fr_auto_1fr] items-end gap-4 text-sm"
                   >
                     <span className="text-foreground">{r.posada}</span>
-                    <span className="border-border-color text-muted-foreground w-40 border-b pb-0.5 text-center text-xs">
+                    <span className="border-border-color text-muted-foreground w-28 border-b pb-0.5 text-center text-xs">
                       підпис
                     </span>
                     <span className="text-foreground text-right font-medium">{r.fullname}</span>

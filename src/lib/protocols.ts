@@ -354,46 +354,41 @@ export function validateProtocolBody(input: unknown): Validation<ValidatedProtoc
       listeners.push({ fullname: fnRes.data, speech: speechRes.data });
     }
 
-    let electionId: string | null = null;
-    if (a.electionId !== undefined && a.electionId !== null) {
-      if (typeof a.electionId !== 'string' || !isValidUuid(a.electionId)) {
-        return { ok: false, error: `agendaItems[${i}].electionId must be a valid UUID` };
-      }
-      electionId = a.electionId;
-    }
-
-    let choiceMapping: ProtocolChoiceMapping | null = null;
-    if (a.choiceMapping !== undefined && a.choiceMapping !== null) {
-      if (typeof a.choiceMapping !== 'object' || Array.isArray(a.choiceMapping)) {
-        return { ok: false, error: `agendaItems[${i}].choiceMapping must be an object` };
-      }
-      const m = a.choiceMapping as Record<string, unknown>;
-      const out: ProtocolChoiceMapping = {};
-      for (const [cid, vote] of Object.entries(m)) {
-        if (!isValidUuid(cid)) {
-          return { ok: false, error: `agendaItems[${i}].choiceMapping has invalid choice id` };
-        }
-        if (vote !== 'yes' && vote !== 'no' && vote !== 'abstain') {
-          return {
-            ok: false,
-            error: `agendaItems[${i}].choiceMapping[${cid}] must be yes|no|abstain`,
-          };
-        }
-        out[cid] = vote;
-      }
-      choiceMapping = out;
-    }
-
-    if (electionId && !choiceMapping) {
+    if (typeof a.electionId !== 'string' || !isValidUuid(a.electionId)) {
       return {
         ok: false,
-        error: `agendaItems[${i}] linked election requires a choiceMapping`,
+        error: `agendaItems[${i}].electionId is required and must be a valid UUID`,
       };
     }
-    if (!electionId && choiceMapping) {
+    const electionId: string = a.electionId;
+
+    if (!a.choiceMapping || typeof a.choiceMapping !== 'object' || Array.isArray(a.choiceMapping)) {
+      return { ok: false, error: `agendaItems[${i}].choiceMapping is required` };
+    }
+    const m = a.choiceMapping as Record<string, unknown>;
+    const choiceMapping: ProtocolChoiceMapping = {};
+    for (const [cid, vote] of Object.entries(m)) {
+      if (!isValidUuid(cid)) {
+        return { ok: false, error: `agendaItems[${i}].choiceMapping has invalid choice id` };
+      }
+      if (vote !== 'yes' && vote !== 'no' && vote !== 'abstain') {
+        return {
+          ok: false,
+          error: `agendaItems[${i}].choiceMapping[${cid}] must be yes|no|abstain`,
+        };
+      }
+      choiceMapping[cid] = vote;
+    }
+    if (Object.keys(choiceMapping).length !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
       return {
         ok: false,
-        error: `agendaItems[${i}] choiceMapping requires a linked electionId`,
+        error: `agendaItems[${i}].choiceMapping must map all ${PROTOCOL_REQUIRED_ELECTION_CHOICES} choices`,
+      };
+    }
+    if (new Set(Object.values(choiceMapping)).size !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
+      return {
+        ok: false,
+        error: `agendaItems[${i}].choiceMapping must use each of yes/no/abstain exactly once`,
       };
     }
 
