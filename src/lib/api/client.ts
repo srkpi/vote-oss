@@ -341,6 +341,19 @@ export function createApiClient(fetcher: Fetcher) {
             body: JSON.stringify(data),
           }),
       },
+
+      avatar: {
+        set: (groupId: string, file: File) => {
+          const form = new FormData();
+          form.append('file', file);
+          return fetcher<FileSummary>(`/groups/${groupId}/avatar`, {
+            method: 'PUT',
+            body: form,
+          });
+        },
+        remove: (groupId: string) =>
+          fetcher<void>(`/groups/${groupId}/avatar`, { method: 'DELETE' }),
+      },
     },
 
     protocols: {
@@ -404,16 +417,6 @@ export function createApiClient(fetcher: Fetcher) {
           method: 'PATCH',
           body: JSON.stringify({ decision }),
         }),
-    },
-
-    files: {
-      upload: (file: File) => {
-        const form = new FormData();
-        form.append('file', file);
-        return fetcher<FileSummary>('/files', { method: 'POST', body: form });
-      },
-      get: (id: string) => fetcher<FileSummary>(`/files/${id}`),
-      delete: (id: string) => fetcher<void>(`/files/${id}`, { method: 'DELETE' }),
     },
 
     teamInvites: {

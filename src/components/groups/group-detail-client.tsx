@@ -632,44 +632,27 @@ export function GroupDetailClient({
       return;
     }
     setLogoUploading(true);
-    const previousLogoId = group.requisites.logo?.id ?? null;
-    const uploadResult = await api.files.upload(file);
-    if (!uploadResult.success) {
-      toast({ title: 'Не вдалось завантажити', description: uploadResult.error, variant: 'error' });
+    const result = await api.groups.avatar.set(group.id, file);
+    if (!result.success) {
+      toast({ title: 'Не вдалось завантажити', description: result.error, variant: 'error' });
       setLogoUploading(false);
       return;
     }
-    const uploaded = uploadResult.data;
-    const linkResult = await api.groups.updateRequisites(group.id, {
-      logoFileId: uploaded.id,
-    });
-    if (!linkResult.success) {
-      // Roll back the orphan file we just uploaded
-      api.files.delete(uploaded.id).catch(() => {});
-      toast({ title: 'Не вдалось зберегти', description: linkResult.error, variant: 'error' });
-      setLogoUploading(false);
-      return;
-    }
-    setLogo(uploaded);
+    setLogo(result.data);
     toast({ title: 'Логотип оновлено', variant: 'success' });
-    if (previousLogoId) {
-      api.files.delete(previousLogoId).catch(() => {});
-    }
     setLogoUploading(false);
   };
 
   const handleLogoRemove = async () => {
-    const previous = group.requisites.logo;
-    if (!previous) return;
+    if (!group.requisites.logo) return;
     setLogoUploading(true);
-    const result = await api.groups.updateRequisites(group.id, { logoFileId: null });
+    const result = await api.groups.avatar.remove(group.id);
     if (!result.success) {
       toast({ title: 'Не вдалось видалити', description: result.error, variant: 'error' });
       setLogoUploading(false);
       return;
     }
     setLogo(null);
-    api.files.delete(previous.id).catch(() => {});
     toast({ title: 'Логотип видалено', variant: 'success' });
     setLogoUploading(false);
   };

@@ -112,14 +112,8 @@ export const env = {
   NODE_ENV: getOptionalEnv('NODE_ENV', 'production'),
   APP_VERSION: getOptionalEnv('npm_package_version', '1.0.0'),
 
-  PROTOCOL_GENERATOR_URL: getOptionalEnv(
-    'PROTOCOL_GENERATOR_URL',
-    'https://kpi-docs-generator.onrender.com/api',
-  ),
-  PROTOCOL_TEMPLATE_ID: getOptionalEnv(
-    'PROTOCOL_TEMPLATE_ID',
-    '1uRjSw17KziQQsomG8I30tvrnEv0PjM2pcDkVNwzcijw',
-  ),
+  PROTOCOL_GENERATOR_URL: getEnv('PROTOCOL_GENERATOR_URL'),
+  PROTOCOL_TEMPLATE_ID: getEnv('PROTOCOL_TEMPLATE_ID'),
 
   MINIO_ENDPOINT: getEnv('MINIO_ENDPOINT'),
   MINIO_PORT: getNumberEnv('MINIO_PORT', 9000),

@@ -22,7 +22,7 @@ import {
   toClientElections,
 } from '@/lib/elections-view';
 import { Errors } from '@/lib/errors';
-import { isAllowedImageMime, shapeFileSummary } from '@/lib/files';
+import { shapeFileSummary } from '@/lib/files';
 import { buildAdminGraph } from '@/lib/graph';
 import {
   getUserGroupMemberships,
@@ -430,7 +430,6 @@ interface RequisitesPatch {
   address?: string | null;
   email?: string | null;
   contact?: string | null;
-  logoFileId?: string | null;
 }
 
 function normalizeRequisiteField(
@@ -492,7 +491,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     address?: string | null;
     email?: string | null;
     contact?: string | null;
-    logo_file_id?: string | null;
   } | null = null;
 
   if (wantsRequisites) {
@@ -510,25 +508,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       const result = normalizeRequisiteField(r[apiKey], label, max);
       if (!result.ok) return Errors.badRequest(result.error);
       (normalizedRequisites as Record<string, string | null>)[dbKey] = result.value;
-    }
-    if ('logoFileId' in r) {
-      if (r.logoFileId === null) {
-        normalizedRequisites.logo_file_id = null;
-      } else if (typeof r.logoFileId === 'string' && isValidUuid(r.logoFileId)) {
-        const file = await prisma.file.findUnique({
-          where: { id: r.logoFileId },
-          select: { id: true, mime_type: true, deleted_at: true },
-        });
-        if (!file || file.deleted_at) {
-          return Errors.badRequest('requisites.logoFileId points to a missing file');
-        }
-        if (!isAllowedImageMime(file.mime_type)) {
-          return Errors.badRequest('requisites.logoFileId must reference an image file');
-        }
-        normalizedRequisites.logo_file_id = file.id;
-      } else {
-        return Errors.badRequest('requisites.logoFileId must be a UUID or null');
-      }
     }
     if (Object.keys(normalizedRequisites).length === 0) {
       return Errors.badRequest('requisites must include at least one field');
@@ -570,7 +549,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     address?: string | null;
     email?: string | null;
     contact?: string | null;
-    logo_file_id?: string | null;
   } = {
     updated_by: auth.user.sub,
   };

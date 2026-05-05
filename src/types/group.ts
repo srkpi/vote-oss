@@ -50,7 +50,6 @@ export interface UpdateGroupRequisitesPatch {
   address?: string | null;
   email?: string | null;
   contact?: string | null;
-  logoFileId?: string | null;
 }
 
 export interface Group {
