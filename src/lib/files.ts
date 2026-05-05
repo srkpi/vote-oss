@@ -72,7 +72,9 @@ export function fileProxyUrl(objectKey: string): string {
     .split('/')
     .map((segment) => encodeURIComponent(segment))
     .join('/');
-  return `${APP_URL.replace(/\/+$/, '')}/files/${safeKey}`;
+  const base = new URL(APP_URL);
+  base.port = '';
+  return `${base.origin}/files/${safeKey}`;
 }
 
 export function shapeFileSummary(row: DbFile): FileSummary {
