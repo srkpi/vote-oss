@@ -1,0 +1,10 @@
+:80 {
+    handle_path /files/* {
+        rewrite * /vote-oss-public{uri}
+        reverse_proxy host.docker.internal:9000
+    }
+
+    handle {
+        reverse_proxy host.docker.internal:3000
+    }
+}

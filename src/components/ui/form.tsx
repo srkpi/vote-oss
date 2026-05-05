@@ -119,38 +119,6 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 );
 Textarea.displayName = 'Textarea';
 
-export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  error?: boolean;
-}
-
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, error, children, ...props }, ref) => (
-    <select
-      className={cn(
-        'flex h-10 w-full rounded-(--radius) bg-white',
-        'border-border-color border',
-        'font-body text-foreground px-3 py-2 text-sm',
-        'appearance-none',
-        "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")]",
-        'bg-position-[right_12px_center] bg-no-repeat',
-        'pr-10',
-        'cursor-pointer',
-        'transition-colors duration-150',
-        'hover:border-kpi-blue-light',
-        'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
-        error && 'border-error focus:border-error focus:ring-error/20',
-        'disabled:bg-surface disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
-      ref={ref}
-      {...props}
-    >
-      {children}
-    </select>
-  ),
-);
-Select.displayName = 'Select';
-
 interface FormFieldProps {
   label?: string;
   required?: boolean;

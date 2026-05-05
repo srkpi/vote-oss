@@ -8,6 +8,7 @@ import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
+import type { ProtocolSummary } from '@/types/protocol';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -69,6 +70,15 @@ export default async function GroupDetailPage({ params }: Props) {
     }
   }
 
+  let protocols: ProtocolSummary[] = [];
+  let protocolsError: string | null = null;
+  const protocolsResult = await serverApi.groups.protocols.list(id);
+  if (protocolsResult.success) {
+    protocols = protocolsResult.data;
+  } else {
+    protocolsError = protocolsResult.error;
+  }
+
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       <GroupDetailClient
@@ -76,6 +86,8 @@ export default async function GroupDetailPage({ params }: Props) {
         session={session}
         registrationForms={registrationForms}
         registrationFormsError={registrationFormsError}
+        protocols={protocols}
+        protocolsError={protocolsError}
       />
     </div>
   );

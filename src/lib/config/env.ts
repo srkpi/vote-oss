@@ -111,4 +111,14 @@ export const env = {
   TRUSTED_PROXY_COUNT: getNumberEnv('TRUSTED_PROXY_COUNT', 1),
   NODE_ENV: getOptionalEnv('NODE_ENV', 'production'),
   APP_VERSION: getOptionalEnv('npm_package_version', '1.0.0'),
+
+  PROTOCOL_GENERATOR_URL: getEnv('PROTOCOL_GENERATOR_URL'),
+  PROTOCOL_TEMPLATE_ID: getEnv('PROTOCOL_TEMPLATE_ID'),
+
+  MINIO_ENDPOINT: getEnv('MINIO_ENDPOINT'),
+  MINIO_PORT: getNumberEnv('MINIO_PORT', 9000),
+  MINIO_USE_SSL: getBooleanEnv('MINIO_USE_SSL', false),
+  MINIO_ACCESS_KEY: getEnv('MINIO_ACCESS_KEY'),
+  MINIO_SECRET_KEY: getEnv('MINIO_SECRET_KEY'),
+  MINIO_PUBLIC_BUCKET: getOptionalEnv('MINIO_PUBLIC_BUCKET', 'kpistats-public'),
 };

@@ -1,10 +1,14 @@
 import type { NextConfig } from 'next';
 
+// Files (logos, uploads) are now served same-origin via Caddy at `/files/*`,
+// so `'self'` already covers them.  No need to allow direct MinIO origins.
+const IMG_SRC = ["'self'", 'data:', 'blob:', 'https://count.getloli.com'].join(' ');
+
 const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval';
   style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob: https://count.getloli.com;
+  img-src ${IMG_SRC};
   font-src 'self';
   object-src 'none';
   base-uri 'self';

@@ -34,6 +34,7 @@ import type {
   FaqItemCreated,
   FaqItemUpdated,
 } from '@/types/faq';
+import type { FileSummary } from '@/types/file';
 import type {
   AdminGroupSummary,
   CreateInviteLinkRequest,
@@ -43,8 +44,34 @@ import type {
   GroupOption,
   GroupType,
   JoinGroupResponse,
+  UpdateGroupRequisitesPatch,
 } from '@/types/group';
+import type {
+  CreateProtocolRequest,
+  Protocol,
+  ProtocolComputedCounts,
+  ProtocolSummary,
+  UpdateProtocolRequest,
+} from '@/types/protocol';
 import type { VoteToken } from '@/types/vote';
+
+export interface ProtocolAgendaVoteTotals {
+  yes_count: number;
+  no_count: number;
+  not_decided_count: number;
+}
+
+export type ProtocolWithCounts = Protocol & {
+  counts: ProtocolComputedCounts;
+  agendaVoteTotals: Record<string, ProtocolAgendaVoteTotals | null>;
+  isOwner: boolean;
+};
+
+export interface ProtocolsListWithNextNumber {
+  protocols: ProtocolSummary[];
+  nextNumber: number;
+  year: number;
+}
 
 type Fetcher = <T>(path: string, options?: RequestInit) => Promise<ApiResult<T>>;
 
@@ -103,6 +130,10 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
       getSignatories: (electionId: string) =>
         fetcher<PetitionSignatoriesResponse>(`/elections/${electionId}/signatories`),
+      getVoters: (electionId: string) =>
+        fetcher<{ voters: { userId: string; fullName: string }[] }>(
+          `/elections/${electionId}/voters`,
+        ),
 
       bypass: {
         list: (electionId: string) =>
@@ -245,6 +276,11 @@ export function createApiClient(fetcher: Fetcher) {
         fetcher<void>(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) }),
       setType: (id: string, type: GroupType) =>
         fetcher<void>(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ type }) }),
+      updateRequisites: (id: string, requisites: UpdateGroupRequisitesPatch) =>
+        fetcher<void>(`/groups/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ requisites }),
+        }),
       delete: (id: string) => fetcher<void>(`/groups/${id}`, { method: 'DELETE' }),
 
       join: (token: string) =>
@@ -262,6 +298,11 @@ export function createApiClient(fetcher: Fetcher) {
       members: {
         remove: (groupId: string, userId: string) =>
           fetcher<void>(`/groups/${groupId}/members/${userId}`, { method: 'DELETE' }),
+        updateRole: (groupId: string, userId: string, role: string | null) =>
+          fetcher<void>(`/groups/${groupId}/members/${userId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ role }),
+          }),
       },
 
       inviteLinks: {
@@ -287,6 +328,42 @@ export function createApiClient(fetcher: Fetcher) {
             body: JSON.stringify(data),
           }),
       },
+
+      protocols: {
+        list: (groupId: string) => fetcher<ProtocolSummary[]>(`/groups/${groupId}/protocols`),
+        listWithNextNumber: (groupId: string, year: number) =>
+          fetcher<ProtocolsListWithNextNumber>(
+            `/groups/${groupId}/protocols?nextNumberForYear=${year}`,
+          ),
+        create: (groupId: string, data: CreateProtocolRequest) =>
+          fetcher<Protocol>(`/groups/${groupId}/protocols`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+          }),
+      },
+
+      avatar: {
+        set: (groupId: string, file: File) => {
+          const form = new FormData();
+          form.append('file', file);
+          return fetcher<FileSummary>(`/groups/${groupId}/avatar`, {
+            method: 'PUT',
+            body: form,
+          });
+        },
+        remove: (groupId: string) =>
+          fetcher<void>(`/groups/${groupId}/avatar`, { method: 'DELETE' }),
+      },
+    },
+
+    protocols: {
+      get: (id: string) => fetcher<ProtocolWithCounts>(`/protocols/${id}`),
+      update: (id: string, data: UpdateProtocolRequest) =>
+        fetcher<ProtocolWithCounts>(`/protocols/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        }),
+      delete: (id: string) => fetcher<void>(`/protocols/${id}`, { method: 'DELETE' }),
     },
 
     registrationForms: {
