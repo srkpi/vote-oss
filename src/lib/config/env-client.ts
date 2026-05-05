@@ -11,4 +11,11 @@ export const clientEnv = {
     'NEXT_PUBLIC_KPI_APP_ID',
     process.env.NEXT_PUBLIC_KPI_APP_ID,
   ),
+  NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
+  NEXT_PUBLIC_POSTHOG_ASSETS_HOST:
+    process.env.NEXT_PUBLIC_POSTHOG_ASSETS_HOST ?? 'https://eu-assets.i.posthog.com',
+  NEXT_PUBLIC_POSTHOG_TOKEN: requirePublicEnv(
+    'NEXT_PUBLIC_POSTHOG_TOKEN',
+    process.env.NEXT_PUBLIC_POSTHOG_TOKEN,
+  ),
 };
