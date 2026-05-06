@@ -21,9 +21,12 @@ export const loggerProvider = new LoggerProvider({
   ],
 });
 
-export function register() {
+export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     logs.setGlobalLoggerProvider(loggerProvider);
+    // Node-only side-effects (Prisma, node:crypto) live in a separate module
+    // so Next.js's edge-runtime bundler doesn't try to traverse them.
+    await import('@/lib/dev-cron');
   }
 }
 

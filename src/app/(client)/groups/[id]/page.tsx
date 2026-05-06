@@ -7,6 +7,7 @@ import { APP_URL } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
+import type { ElectionCampaign } from '@/types/campaign';
 import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 import type { ProtocolSummary } from '@/types/protocol';
 
@@ -79,6 +80,17 @@ export default async function GroupDetailPage({ params }: Props) {
     protocolsError = protocolsResult.error;
   }
 
+  let campaigns: ElectionCampaign[] = [];
+  let campaignsError: string | null = null;
+  if (canManageRegistrationForms) {
+    const campaignsResult = await serverApi.groups.campaigns.list(id);
+    if (campaignsResult.success) {
+      campaigns = campaignsResult.data;
+    } else {
+      campaignsError = campaignsResult.error;
+    }
+  }
+
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       <GroupDetailClient
@@ -88,6 +100,8 @@ export default async function GroupDetailPage({ params }: Props) {
         registrationFormsError={registrationFormsError}
         protocols={protocols}
         protocolsError={protocolsError}
+        campaigns={campaigns}
+        campaignsError={campaignsError}
       />
     </div>
   );
