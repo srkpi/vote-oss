@@ -11,6 +11,7 @@ const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval' ${POSTHOG_DOMAINS};
   style-src 'self' 'unsafe-inline' ${POSTHOG_DOMAINS};
+  style-src-elem 'self' 'unsafe-inline' ${POSTHOG_DOMAINS};
   img-src ${IMG_SRC};
   font-src 'self';
   connect-src 'self' ${POSTHOG_DOMAINS};
