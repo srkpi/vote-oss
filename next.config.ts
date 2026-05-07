@@ -1,15 +1,20 @@
 import type { NextConfig } from 'next';
 
-// Files (logos, uploads) are now served same-origin via Caddy at `/files/*`,
-// so `'self'` already covers them.  No need to allow direct MinIO origins.
 const IMG_SRC = ["'self'", 'data:', 'blob:', 'https://count.getloli.com'].join(' ');
+const POSTHOG_DOMAINS = [
+  'https://eu.posthog.com',
+  'https://us.posthog.com',
+  'https://internal-j.posthog.com',
+].join(' ');
 
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline' 'unsafe-eval';
-  style-src 'self' 'unsafe-inline';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' ${POSTHOG_DOMAINS};
+  style-src 'self' 'unsafe-inline' ${POSTHOG_DOMAINS};
   img-src ${IMG_SRC};
   font-src 'self';
+  connect-src 'self' ${POSTHOG_DOMAINS};
+  worker-src 'self' blob:;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -23,6 +28,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   reactCompiler: true,
   poweredByHeader: false,
+  skipTrailingSlashRedirect: true,
   async headers() {
     return [
       {
