@@ -101,14 +101,6 @@ export const PROTOCOL_REQUIRED_ELECTION_CHOICES = 3;
 
 // Election campaigns (meta-system orchestrating registration → signatures → final vote)
 export const CAMPAIGN_POSITION_TITLE_MAX_LENGTH = 255;
-export const CAMPAIGN_REGISTRATION_DAYS_MIN = 1;
-export const CAMPAIGN_REGISTRATION_DAYS_MAX = 90;
-export const CAMPAIGN_REGISTRATION_REVIEW_DAYS_MIN = 1;
-export const CAMPAIGN_REGISTRATION_REVIEW_DAYS_MAX = 30;
-export const CAMPAIGN_SIGNATURE_DAYS_MIN = 1;
-export const CAMPAIGN_SIGNATURE_DAYS_MAX = 90;
-export const CAMPAIGN_SIGNATURE_REVIEW_DAYS_MIN = 1;
-export const CAMPAIGN_SIGNATURE_REVIEW_DAYS_MAX = 30;
 export const CAMPAIGN_SIGNATURE_QUORUM_MIN = 1;
 export const CAMPAIGN_SIGNATURE_QUORUM_MAX = 10_000;
 export const CAMPAIGN_TEAM_SIZE_MIN = 0;

@@ -39,52 +39,45 @@ interface TimelineEntry {
   endsAt: Date;
 }
 
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
 function buildTimeline(c: ElectionCampaign): TimelineEntry[] {
   const announced = new Date(c.announcedAt);
-  const registrationOpen = announced;
-  const registrationReview = new Date(registrationOpen.getTime() + c.registrationDays * MS_PER_DAY);
-  const afterRegistrationReview = new Date(
-    registrationReview.getTime() + c.registrationReviewDays * MS_PER_DAY,
-  );
+  const registrationCloses = new Date(c.registrationClosesAt);
+  const votingOpens = new Date(c.votingOpensAt);
+  const votingCloses = new Date(c.votingClosesAt);
+
+  const hasSignaturePhase =
+    c.signatureCollection && c.signaturesOpensAt !== null && c.signaturesClosesAt !== null;
+  const signaturesOpens = hasSignaturePhase ? new Date(c.signaturesOpensAt!) : null;
+  const signaturesCloses = hasSignaturePhase ? new Date(c.signaturesClosesAt!) : null;
 
   const out: TimelineEntry[] = [
     {
       state: 'REGISTRATION_OPEN',
-      startsAt: registrationOpen,
-      endsAt: registrationReview,
+      startsAt: announced,
+      endsAt: registrationCloses,
     },
     {
       state: 'REGISTRATION_REVIEW',
-      startsAt: registrationReview,
-      endsAt: afterRegistrationReview,
+      startsAt: registrationCloses,
+      endsAt: hasSignaturePhase ? signaturesOpens! : votingOpens,
     },
   ];
 
-  if (c.signatureCollection && c.signatureDays !== null && c.signatureReviewDays !== null) {
-    const signaturesOpen = afterRegistrationReview;
-    const signaturesReview = new Date(signaturesOpen.getTime() + c.signatureDays * MS_PER_DAY);
-    const afterSignaturesReview = new Date(
-      signaturesReview.getTime() + c.signatureReviewDays * MS_PER_DAY,
-    );
+  if (hasSignaturePhase) {
     out.push(
-      { state: 'SIGNATURES_OPEN', startsAt: signaturesOpen, endsAt: signaturesReview },
-      {
-        state: 'SIGNATURES_REVIEW',
-        startsAt: signaturesReview,
-        endsAt: afterSignaturesReview,
-      },
+      { state: 'SIGNATURES_OPEN', startsAt: signaturesOpens!, endsAt: signaturesCloses! },
+      { state: 'SIGNATURES_REVIEW', startsAt: signaturesCloses!, endsAt: votingOpens },
     );
   }
 
   out.push({
     state: 'VOTING_OPEN',
-    startsAt: new Date(c.votingOpensAt),
-    endsAt: new Date(c.votingClosesAt),
+    startsAt: votingOpens,
+    endsAt: votingCloses,
   });
 
-  return out;
+  // Hide zero-duration phases (e.g. review windows the user collapsed to 0).
+  return out.filter((e) => e.endsAt.getTime() > e.startsAt.getTime());
 }
 
 function formStatusKind(form: CandidateRegistrationFormAdminSummary): StatusKind {
@@ -460,17 +453,20 @@ export function CampaignDashboard({
                   </dd>
                 </div>
                 <div className="px-5 py-3">
-                  <dt className="text-muted-foreground text-xs">Тривалість реєстрації</dt>
+                  <dt className="text-muted-foreground text-xs">Реєстрація</dt>
                   <dd className="text-foreground text-sm">
-                    {campaign.registrationDays} дн. + {campaign.registrationReviewDays} дн. розгляду
+                    <LocalDateTime date={campaign.announcedAt} /> —{' '}
+                    <LocalDateTime date={campaign.registrationClosesAt} />
                   </dd>
                 </div>
-                {campaign.signatureCollection ? (
+                {campaign.signatureCollection &&
+                campaign.signaturesOpensAt &&
+                campaign.signaturesClosesAt ? (
                   <div className="px-5 py-3">
                     <dt className="text-muted-foreground text-xs">Збір підписів</dt>
                     <dd className="text-foreground text-sm">
-                      {campaign.signatureDays} дн. збору + {campaign.signatureReviewDays} дн.
-                      розгляду
+                      <LocalDateTime date={campaign.signaturesOpensAt} /> —{' '}
+                      <LocalDateTime date={campaign.signaturesClosesAt} />
                       <br />
                       <span className="text-muted-foreground text-xs">
                         Кворум: {campaign.signatureQuorum}

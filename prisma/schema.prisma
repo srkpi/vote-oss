@@ -559,7 +559,7 @@ model Protocol {
 /// candidate registration → optional per-candidate signature elections → final vote.
 /// Once created, fields are immutable: campaigns can only be soft-deleted (CANCELLED)
 /// or replaced by new ones.  State transitions happen automatically via cron based on
-/// `announced_at` and the per-stage durations.
+/// the absolute timestamps configured at creation time.
 enum CampaignState {
   ANNOUNCED
   REGISTRATION_OPEN
@@ -591,24 +591,17 @@ model ElectionCampaign {
   election_kind  ElectionKind
   state          CampaignState @default(ANNOUNCED)
 
-  announced_at             DateTime
-  registration_days        Int
-  registration_review_days Int
+  // Absolute timestamps marking phase boundaries.  Each phase ends and the
+  // next begins at the listed timestamp, so e.g. REGISTRATION_OPEN runs in
+  // [announced_at, registration_closes_at) and REGISTRATION_REVIEW in
+  // [registration_closes_at, signatures_opens_at ?? voting_opens_at).
+  announced_at           DateTime // = registration opens
+  registration_closes_at DateTime
+  signatures_opens_at    DateTime?
+  signatures_closes_at   DateTime?
 
-  // Wall-clock HH:MM (Kyiv timezone) overrides for the registration form's
-  // open/close moments.  Stage 1 used announced_at's time-of-day for both;
-  // these explicit fields let ВКСУ pick e.g. open at 09:00, close at 18:00.
-  registration_opens_time  String
-  registration_closes_time String
-
-  signature_collection  Boolean @default(false)
-  signature_days        Int?
-  signature_review_days Int?
-  signature_quorum      Int?
-  // Wall-clock HH:MM (Kyiv timezone) for the per-candidate signature
-  // election windows.  Null when signature_collection=false.
-  signatures_opens_time  String?
-  signatures_closes_time String?
+  signature_collection Boolean @default(false)
+  signature_quorum     Int?
 
   team_size                 Int     @default(0)
   requires_campaign_program Boolean @default(false)

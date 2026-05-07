@@ -19,22 +19,13 @@ import { FormField, Input } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { StyledSelect } from '@/components/ui/styled-select';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { CAMPAIGN_STATE_BADGE, ELECTION_KIND_LABEL } from '@/lib/campaigns-display';
 import {
   CAMPAIGN_POSITION_TITLE_MAX_LENGTH,
-  CAMPAIGN_REGISTRATION_DAYS_MAX,
-  CAMPAIGN_REGISTRATION_DAYS_MIN,
-  CAMPAIGN_REGISTRATION_REVIEW_DAYS_MAX,
-  CAMPAIGN_REGISTRATION_REVIEW_DAYS_MIN,
-  CAMPAIGN_SIGNATURE_DAYS_MAX,
-  CAMPAIGN_SIGNATURE_DAYS_MIN,
   CAMPAIGN_SIGNATURE_QUORUM_MAX,
   CAMPAIGN_SIGNATURE_QUORUM_MIN,
-  CAMPAIGN_SIGNATURE_REVIEW_DAYS_MAX,
-  CAMPAIGN_SIGNATURE_REVIEW_DAYS_MIN,
   CAMPAIGN_TEAM_SIZE_MAX,
   CAMPAIGN_TEAM_SIZE_MIN,
 } from '@/lib/constants';
@@ -209,75 +200,18 @@ function defaultAnnouncedAt(): Date {
   return d;
 }
 
-// Half-hourly HH:MM options 00:00–23:30 — granular enough for committee
-// schedules without overwhelming the dropdown.
-const TIME_OPTIONS: { value: string; label: string }[] = Array.from({ length: 48 }, (_, i) => {
-  const h = String(Math.floor(i / 2)).padStart(2, '0');
-  const m = i % 2 === 0 ? '00' : '30';
-  const value = `${h}:${m}`;
-  return { value, label: value };
-});
-
-/**
- * Combine a Date (its calendar day in Kyiv) with a `HH:MM` Kyiv-wall-clock
- * time and return the matching UTC instant.  Used on submit so the user-picked
- * announce date + opens-time dropdown collapse into a single `announced_at`.
- */
-function combineKyivDateAndTime(date: Date, hhmm: string): Date {
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Kyiv',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const parts = fmt.formatToParts(date).reduce<Record<string, string>>((acc, p) => {
-    if (p.type !== 'literal') acc[p.type] = p.value;
-    return acc;
-  }, {});
-  // Re-use KyivDateTimePicker's logic by constructing the wall-clock string and
-  // letting the browser parse it with the picker's input format.  Simpler: use
-  // a tiny round-trip — parse YYYY-MM-DDTHH:MM as Kyiv local time.
-  const utcGuess = new Date(`${parts.year}-${parts.month}-${parts.day}T${hhmm}:00Z`);
-  const kyivParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Kyiv',
-    hour12: false,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).formatToParts(utcGuess);
-  const kyivObj = kyivParts.reduce<Record<string, string>>((acc, p) => {
-    if (p.type !== 'literal') acc[p.type] = p.value;
-    return acc;
-  }, {});
-  const kyivAsUtc = Date.UTC(
-    Number(kyivObj.year),
-    Number(kyivObj.month) - 1,
-    Number(kyivObj.day),
-    Number(kyivObj.hour === '24' ? '00' : kyivObj.hour),
-    Number(kyivObj.minute),
-    Number(kyivObj.second),
-  );
-  const offsetMs = kyivAsUtc - utcGuess.getTime();
-  return new Date(utcGuess.getTime() - offsetMs);
-}
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCreateDialogProps) {
   const [positionTitle, setPositionTitle] = useState('');
   const [electionKind, setElectionKind] = useState<ElectionKind>('REGULAR');
   const [announcedAt, setAnnouncedAt] = useState<Date>(defaultAnnouncedAt());
-  const [registrationDays, setRegistrationDays] = useState(7);
-  const [registrationReviewDays, setRegistrationReviewDays] = useState(2);
+  const [registrationClosesAt, setRegistrationClosesAt] = useState<Date | null>(null);
   const [signatureCollection, setSignatureCollection] = useState(false);
-  const [signatureDays, setSignatureDays] = useState(7);
-  const [signatureReviewDays, setSignatureReviewDays] = useState(2);
+  const [signaturesOpensAt, setSignaturesOpensAt] = useState<Date | null>(null);
+  const [signaturesClosesAt, setSignaturesClosesAt] = useState<Date | null>(null);
   const [signatureQuorum, setSignatureQuorum] = useState(100);
-  const [registrationOpensTime, setRegistrationOpensTime] = useState('08:00');
-  const [registrationClosesTime, setRegistrationClosesTime] = useState('20:00');
-  const [signaturesOpensTime, setSignaturesOpensTime] = useState('08:00');
-  const [signaturesClosesTime, setSignaturesClosesTime] = useState('20:00');
   const [teamSize, setTeamSize] = useState(0);
   const [requiresCampaignProgram, setRequiresCampaignProgram] = useState(false);
   const [votingOpensAt, setVotingOpensAt] = useState<Date | null>(null);
@@ -288,54 +222,31 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset state when the dialog opens.
+  // Reset state and seed sensible defaults each time the dialog opens.
   useEffect(() => {
     if (!open) return;
     const announced = defaultAnnouncedAt();
+    const regCloses = new Date(announced.getTime() + 7 * DAY_MS);
+    const sigOpens = new Date(regCloses.getTime() + 2 * DAY_MS);
+    const sigCloses = new Date(sigOpens.getTime() + 7 * DAY_MS);
+    const votingOpens = new Date(sigCloses.getTime() + 2 * DAY_MS);
+    const votingCloses = new Date(votingOpens.getTime() + 3 * DAY_MS);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPositionTitle('');
     setElectionKind('REGULAR');
     setAnnouncedAt(announced);
-    setRegistrationDays(7);
-    setRegistrationReviewDays(2);
+    setRegistrationClosesAt(regCloses);
     setSignatureCollection(false);
-    setSignatureDays(7);
-    setSignatureReviewDays(2);
+    setSignaturesOpensAt(sigOpens);
+    setSignaturesClosesAt(sigCloses);
     setSignatureQuorum(100);
-    setRegistrationOpensTime('08:00');
-    setRegistrationClosesTime('20:00');
-    setSignaturesOpensTime('08:00');
-    setSignaturesClosesTime('20:00');
     setTeamSize(0);
     setRequiresCampaignProgram(false);
-    setVotingOpensAt(null);
-    setVotingClosesAt(null);
+    setVotingOpensAt(votingOpens);
+    setVotingClosesAt(votingCloses);
     setFaculties([]);
     setError(null);
   }, [open]);
-
-  // Auto-suggest votingOpensAt/closesAt based on the chain of stages so the
-  // form is valid by default.  User can still override.
-  useEffect(() => {
-    if (!open) return;
-    const offsetDays =
-      registrationDays +
-      registrationReviewDays +
-      (signatureCollection ? signatureDays + signatureReviewDays : 0);
-    const opens = new Date(announcedAt.getTime() + offsetDays * 24 * 60 * 60 * 1000);
-    const closes = new Date(opens.getTime() + 3 * 24 * 60 * 60 * 1000);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setVotingOpensAt(opens);
-    setVotingClosesAt(closes);
-  }, [
-    open,
-    announcedAt,
-    registrationDays,
-    registrationReviewDays,
-    signatureCollection,
-    signatureDays,
-    signatureReviewDays,
-  ]);
 
   // Load faculty list once.
   useEffect(() => {
@@ -366,30 +277,23 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
   };
 
   const handleSubmit = async () => {
-    if (!votingOpensAt || !votingClosesAt) return;
+    if (!registrationClosesAt || !votingOpensAt || !votingClosesAt) return;
+    if (signatureCollection && (!signaturesOpensAt || !signaturesClosesAt)) return;
     setSubmitting(true);
     setError(null);
     const restrictions: ElectionCampaignRestriction[] = faculties.map((value) => ({
       type: 'FACULTY',
       value,
     }));
-    // announced_at = the user-picked date combined with the opens-time dropdown.
-    // The picker's own time-of-day is overridden so the two inputs stay in sync.
-    const composedAnnouncedAt = combineKyivDateAndTime(announcedAt, registrationOpensTime);
     const payload = {
       positionTitle: positionTitle.trim(),
       electionKind,
-      announcedAt: composedAnnouncedAt.toISOString(),
-      registrationDays,
-      registrationReviewDays,
-      registrationOpensTime,
-      registrationClosesTime,
+      announcedAt: announcedAt.toISOString(),
+      registrationClosesAt: registrationClosesAt.toISOString(),
       signatureCollection,
-      signatureDays: signatureCollection ? signatureDays : null,
-      signatureReviewDays: signatureCollection ? signatureReviewDays : null,
+      signaturesOpensAt: signatureCollection ? signaturesOpensAt!.toISOString() : null,
+      signaturesClosesAt: signatureCollection ? signaturesClosesAt!.toISOString() : null,
       signatureQuorum: signatureCollection ? signatureQuorum : null,
-      signaturesOpensTime: signatureCollection ? signaturesOpensTime : null,
-      signaturesClosesTime: signatureCollection ? signaturesClosesTime : null,
       teamSize,
       requiresCampaignProgram,
       votingOpensAt: votingOpensAt.toISOString(),
@@ -406,7 +310,12 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
   };
 
   const canSubmit =
-    positionTitle.trim().length > 0 && !!votingOpensAt && !!votingClosesAt && !submitting;
+    positionTitle.trim().length > 0 &&
+    !!registrationClosesAt &&
+    !!votingOpensAt &&
+    !!votingClosesAt &&
+    (!signatureCollection || (!!signaturesOpensAt && !!signaturesClosesAt)) &&
+    !submitting;
 
   return (
     <Dialog open={open} onClose={() => !submitting && onClose()}>
@@ -446,49 +355,19 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
             </select>
           </FormField>
 
-          <FormField label="Дата оголошення" required htmlFor="announced-at">
-            <KyivDateTimePicker
-              id="announced-at"
-              value={announcedAt}
-              onChange={(d) => setAnnouncedAt(d)}
-            />
-          </FormField>
-
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField label="Дні реєстрації" required htmlFor="registration-days">
-              <Input
-                id="registration-days"
-                type="number"
-                min={CAMPAIGN_REGISTRATION_DAYS_MIN}
-                max={CAMPAIGN_REGISTRATION_DAYS_MAX}
-                value={registrationDays}
-                onChange={(e) => setRegistrationDays(parseInt(e.target.value, 10) || 0)}
+            <FormField label="Початок реєстрації" required htmlFor="announced-at">
+              <KyivDateTimePicker
+                id="announced-at"
+                value={announcedAt}
+                onChange={(d) => setAnnouncedAt(d)}
               />
             </FormField>
-            <FormField label="Дні обробки заявок" required htmlFor="registration-review-days">
-              <Input
-                id="registration-review-days"
-                type="number"
-                min={CAMPAIGN_REGISTRATION_REVIEW_DAYS_MIN}
-                max={CAMPAIGN_REGISTRATION_REVIEW_DAYS_MAX}
-                value={registrationReviewDays}
-                onChange={(e) => setRegistrationReviewDays(parseInt(e.target.value, 10) || 0)}
-              />
-            </FormField>
-            <FormField label="Час початку реєстрації" required htmlFor="registration-opens-time">
-              <StyledSelect
-                id="registration-opens-time"
-                options={TIME_OPTIONS}
-                value={registrationOpensTime}
-                onChange={setRegistrationOpensTime}
-              />
-            </FormField>
-            <FormField label="Час кінця реєстрації" required htmlFor="registration-closes-time">
-              <StyledSelect
-                id="registration-closes-time"
-                options={TIME_OPTIONS}
-                value={registrationClosesTime}
-                onChange={setRegistrationClosesTime}
+            <FormField label="Кінець реєстрації" required htmlFor="registration-closes-at">
+              <KyivDateTimePicker
+                id="registration-closes-at"
+                value={registrationClosesAt ?? defaultAnnouncedAt()}
+                onChange={(d) => setRegistrationClosesAt(d)}
               />
             </FormField>
           </div>
@@ -505,45 +384,22 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
           </FormField>
 
           {signatureCollection && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <FormField label="Час початку збору" required htmlFor="signatures-opens-time">
-                <StyledSelect
-                  id="signatures-opens-time"
-                  options={TIME_OPTIONS}
-                  value={signaturesOpensTime}
-                  onChange={setSignaturesOpensTime}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <FormField label="Початок збору підписів" required htmlFor="signatures-opens-at">
+                <KyivDateTimePicker
+                  id="signatures-opens-at"
+                  value={signaturesOpensAt ?? defaultAnnouncedAt()}
+                  onChange={(d) => setSignaturesOpensAt(d)}
                 />
               </FormField>
-              <FormField label="Час кінця збору" required htmlFor="signatures-closes-time">
-                <StyledSelect
-                  id="signatures-closes-time"
-                  options={TIME_OPTIONS}
-                  value={signaturesClosesTime}
-                  onChange={setSignaturesClosesTime}
+              <FormField label="Кінець збору підписів" required htmlFor="signatures-closes-at">
+                <KyivDateTimePicker
+                  id="signatures-closes-at"
+                  value={signaturesClosesAt ?? defaultAnnouncedAt()}
+                  onChange={(d) => setSignaturesClosesAt(d)}
                 />
               </FormField>
-              <div className="hidden sm:block" />
-              <FormField label="Дні збору" required htmlFor="signature-days">
-                <Input
-                  id="signature-days"
-                  type="number"
-                  min={CAMPAIGN_SIGNATURE_DAYS_MIN}
-                  max={CAMPAIGN_SIGNATURE_DAYS_MAX}
-                  value={signatureDays}
-                  onChange={(e) => setSignatureDays(parseInt(e.target.value, 10) || 0)}
-                />
-              </FormField>
-              <FormField label="Дні обробки" required htmlFor="signature-review-days">
-                <Input
-                  id="signature-review-days"
-                  type="number"
-                  min={CAMPAIGN_SIGNATURE_REVIEW_DAYS_MIN}
-                  max={CAMPAIGN_SIGNATURE_REVIEW_DAYS_MAX}
-                  value={signatureReviewDays}
-                  onChange={(e) => setSignatureReviewDays(parseInt(e.target.value, 10) || 0)}
-                />
-              </FormField>
-              <FormField label="Кворум" required htmlFor="signature-quorum">
+              <FormField label="Кворум підписів" required htmlFor="signature-quorum">
                 <Input
                   id="signature-quorum"
                   type="number"
