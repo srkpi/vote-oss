@@ -30,7 +30,9 @@ export function VotingSuccess({ hash, electionId }: VotingSuccessProps) {
         <p className="font-body text-muted-foreground mb-1.5 text-xs">
           Хеш бюлетеня (для перевірки):
         </p>
-        <p className="text-foreground font-mono text-xs leading-relaxed break-all">{hash}</p>
+        <p className="text-foreground ph-no-capture font-mono text-xs leading-relaxed break-all">
+          {hash}
+        </p>
       </div>
 
       <div className="flex w-full flex-col gap-3">
