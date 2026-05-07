@@ -1,1 +1,1 @@
-{"id":"6420caf6086327105bf38b6583bac280","fullName":"src/__tests__/api/bypass/election.test.ts#POST /api/elections/[id]/bypass stores maxUsage in the database","name":"stores maxUsage in the database","status":"passed","testResultsByEnv":{"default":"8035887face2907d1e2a596d733ec0d4"}}
+{"id":"6420caf6086327105bf38b6583bac280","fullName":"src/__tests__/api/bypass/election.test.ts#POST /api/elections/[id]/bypass stores maxUsage in the database","name":"stores maxUsage in the database","status":"passed","testResultsByEnv":{"default":"dd1e289a7af5d43b3d95a60db9cdd404"}}
