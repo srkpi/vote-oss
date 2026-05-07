@@ -29,6 +29,7 @@ import { useMemo, useRef, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionListItem } from '@/components/elections/election-list-item';
+import { CampaignsPanel } from '@/components/groups/campaigns-panel';
 import { ProtocolsPanel } from '@/components/groups/protocols-panel';
 import { RegistrationFormsPanel } from '@/components/groups/registration-forms-panel';
 import { Alert } from '@/components/ui/alert';
@@ -66,6 +67,7 @@ import {
 } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
+import type { ElectionCampaign } from '@/types/campaign';
 import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 import type { ElectionStatus } from '@/types/election';
 import type { FileSummary } from '@/types/file';
@@ -285,6 +287,8 @@ interface GroupDetailClientProps {
   registrationFormsError: string | null;
   protocols: ProtocolSummary[];
   protocolsError: string | null;
+  campaigns: ElectionCampaign[];
+  campaignsError: string | null;
 }
 
 export function GroupDetailClient({
@@ -294,6 +298,8 @@ export function GroupDetailClient({
   registrationFormsError,
   protocols,
   protocolsError,
+  campaigns,
+  campaignsError,
 }: GroupDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -784,6 +790,14 @@ export function GroupDetailClient({
                 groupId={group.id}
                 initialForms={registrationForms}
                 initialLoadError={registrationFormsError}
+              />
+            )}
+
+            {canManageRegistrationForms && (
+              <CampaignsPanel
+                groupId={group.id}
+                initialCampaigns={campaigns}
+                initialLoadError={campaignsError}
               />
             )}
 

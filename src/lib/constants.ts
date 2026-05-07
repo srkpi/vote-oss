@@ -99,6 +99,28 @@ export const PROTOCOL_ABSENT_TEXT_DEFAULT = 'відсутній';
 export const PROTOCOLS_PAGE_SIZE = 10;
 export const PROTOCOL_REQUIRED_ELECTION_CHOICES = 3;
 
+// Election campaigns (meta-system orchestrating registration → signatures → final vote)
+export const CAMPAIGN_POSITION_TITLE_MAX_LENGTH = 255;
+export const CAMPAIGN_REGISTRATION_DAYS_MIN = 1;
+export const CAMPAIGN_REGISTRATION_DAYS_MAX = 90;
+export const CAMPAIGN_REGISTRATION_REVIEW_DAYS_MIN = 1;
+export const CAMPAIGN_REGISTRATION_REVIEW_DAYS_MAX = 30;
+export const CAMPAIGN_SIGNATURE_DAYS_MIN = 1;
+export const CAMPAIGN_SIGNATURE_DAYS_MAX = 90;
+export const CAMPAIGN_SIGNATURE_REVIEW_DAYS_MIN = 1;
+export const CAMPAIGN_SIGNATURE_REVIEW_DAYS_MAX = 30;
+export const CAMPAIGN_SIGNATURE_QUORUM_MIN = 1;
+export const CAMPAIGN_SIGNATURE_QUORUM_MAX = 10_000;
+export const CAMPAIGN_TEAM_SIZE_MIN = 0;
+export const CAMPAIGN_TEAM_SIZE_MAX = 10;
+export const CAMPAIGN_MAX_RESTRICTIONS = 50;
+export const CAMPAIGN_RESTRICTION_VALUE_MAX_LENGTH = 100;
+/** Maximum days between voting_opens_at and voting_closes_at on a campaign's final election. */
+export const CAMPAIGN_VOTING_MAX_DURATION_DAYS = 30;
+/** Maximum days the chain announced_at → voting_closes_at may span. */
+export const CAMPAIGN_TOTAL_MAX_DURATION_DAYS = 365;
+export const CAMPAIGNS_PAGE_SIZE = 24;
+
 // Files / image uploads
 export const FILE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 export const FILE_ALLOWED_IMAGE_MIME_TYPES = [

@@ -114,7 +114,17 @@ model Election {
   election_bypass_tokens ElectionBypassToken[]
   protocol_agenda_items  ProtocolAgendaItem[]
 
+  // Stage 3+: link campaign-spawned elections back to their orchestrator.
+  // Both fields are null for admin-created elections.  `candidate_registration_id`
+  // is also null for the campaign's final election (Stage 4) — only signature
+  // elections are 1:1 with a candidate.
+  campaign_id               String?           @db.Uuid
+  campaign                  ElectionCampaign? @relation("CampaignElections", fields: [campaign_id], references: [id], onDelete: SetNull)
+  candidate_registration_id String?           @unique @db.Uuid
+  candidate_registration    CandidateRegistration? @relation("CandidateSignatureElection", fields: [candidate_registration_id], references: [id], onDelete: SetNull)
+
   @@index([type])
+  @@index([campaign_id])
   @@map("elections")
 }
 
@@ -148,7 +158,13 @@ model ElectionChoice {
   position    Int
   vote_count  Int?
 
+  // Stage 4: links a choice in a campaign's final Election back to the
+  // candidate it represents.  Null for admin-created elections.
+  candidate_registration_id String?                @db.Uuid
+  candidate_registration    CandidateRegistration? @relation("FinalElectionChoice", fields: [candidate_registration_id], references: [id], onDelete: SetNull)
+
   @@index([election_id, position])
+  @@index([candidate_registration_id])
   @@map("election_choices")
 }
 
@@ -320,6 +336,7 @@ model Group {
   invite_links       GroupInviteLink[]
   registration_forms CandidateRegistrationForm[]
   protocols          Protocol[]
+  election_campaigns ElectionCampaign[]
 
   @@index([owner_id])
   @@index([type])
@@ -407,7 +424,9 @@ model CandidateRegistration {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  team_invite_tokens TeamMemberInviteToken[]
+  team_invite_tokens     TeamMemberInviteToken[]
+  signature_election     Election?              @relation("CandidateSignatureElection")
+  final_election_choices ElectionChoice[]       @relation("FinalElectionChoice")
 
   @@unique([form_id, user_id])
   @@index([user_id])
@@ -534,6 +553,100 @@ model Protocol {
   @@index([group_id])
   @@index([deleted_at])
   @@map("protocols")
+}
+
+/// Meta-system that orchestrates an entire election process for a VKSU group:
+/// candidate registration → optional per-candidate signature elections → final vote.
+/// Once created, fields are immutable: campaigns can only be soft-deleted (CANCELLED)
+/// or replaced by new ones.  State transitions happen automatically via cron based on
+/// `announced_at` and the per-stage durations.
+enum CampaignState {
+  ANNOUNCED
+  REGISTRATION_OPEN
+  REGISTRATION_REVIEW
+  SIGNATURES_OPEN
+  SIGNATURES_REVIEW
+  VOTING_OPEN
+  VOTING_CLOSED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+/// Class of election as defined by ВКСУ rules.  Captured for record-keeping;
+/// does not change behaviour of the campaign state machine.
+enum ElectionKind {
+  REGULAR     // Чергові
+  BY_ELECTION // Позачергові на дообрання
+  REPLACEMENT // Позачергові на заміщення
+  REPEAT      // Повторні
+}
+
+model ElectionCampaign {
+  id       String @id @default(uuid()) @db.Uuid
+  group_id String @db.Uuid
+  group    Group  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  position_title String        @db.Text
+  election_kind  ElectionKind
+  state          CampaignState @default(ANNOUNCED)
+
+  announced_at             DateTime
+  registration_days        Int
+  registration_review_days Int
+
+  // Wall-clock HH:MM (Kyiv timezone) overrides for the registration form's
+  // open/close moments.  Stage 1 used announced_at's time-of-day for both;
+  // these explicit fields let ВКСУ pick e.g. open at 09:00, close at 18:00.
+  registration_opens_time  String
+  registration_closes_time String
+
+  signature_collection  Boolean @default(false)
+  signature_days        Int?
+  signature_review_days Int?
+  signature_quorum      Int?
+  // Wall-clock HH:MM (Kyiv timezone) for the per-candidate signature
+  // election windows.  Null when signature_collection=false.
+  signatures_opens_time  String?
+  signatures_closes_time String?
+
+  team_size                 Int     @default(0)
+  requires_campaign_program Boolean @default(false)
+
+  voting_opens_at  DateTime
+  voting_closes_at DateTime
+
+  created_by           String
+  created_by_full_name String   @db.Text
+  created_at           DateTime @default(now())
+
+  deleted_at DateTime?
+  deleted_by String?
+
+  // Stage 2+: filled in once child entities are auto-created.
+  registration_form_id String? @db.Uuid
+  final_election_id    String? @db.Uuid
+
+  restrictions    ElectionCampaignRestriction[]
+  child_elections Election[]                    @relation("CampaignElections")
+
+  @@index([group_id, state])
+  @@index([deleted_at])
+  @@map("election_campaigns")
+}
+
+/// Per-campaign eligibility restriction.  Reuses RestrictionType from elections
+/// (same allowed subset as registration forms — no BYPASS_REQUIRED / GROUP_MEMBERSHIP).
+/// Copied verbatim into the auto-created CandidateRegistrationForm and child Elections.
+model ElectionCampaignRestriction {
+  id          String           @id @default(uuid()) @db.Uuid
+  campaign_id String           @db.Uuid
+  campaign    ElectionCampaign @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  type        RestrictionType
+  value       String
+
+  @@index([campaign_id, type])
+  @@map("election_campaign_restrictions")
 }
 
 model ProtocolAgendaItem {

@@ -9,6 +9,12 @@ import type {
   GlobalBypassToken,
 } from '@/types/bypass';
 import type {
+  CampaignFinalElectionSummary,
+  CampaignSignatureElectionSummary,
+  CreateElectionCampaignRequest,
+  ElectionCampaign,
+} from '@/types/campaign';
+import type {
   CandidateRegistration,
   CandidateRegistrationForm,
   CandidateRegistrationFormAdminSummary,
@@ -329,6 +335,15 @@ export function createApiClient(fetcher: Fetcher) {
           }),
       },
 
+      campaigns: {
+        list: (groupId: string) => fetcher<ElectionCampaign[]>(`/groups/${groupId}/campaigns`),
+        create: (groupId: string, data: CreateElectionCampaignRequest) =>
+          fetcher<ElectionCampaign>(`/groups/${groupId}/campaigns`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+          }),
+      },
+
       protocols: {
         list: (groupId: string) => fetcher<ProtocolSummary[]>(`/groups/${groupId}/protocols`),
         listWithNextNumber: (groupId: string, year: number) =>
@@ -354,6 +369,15 @@ export function createApiClient(fetcher: Fetcher) {
         remove: (groupId: string) =>
           fetcher<void>(`/groups/${groupId}/avatar`, { method: 'DELETE' }),
       },
+    },
+
+    campaigns: {
+      get: (id: string) => fetcher<ElectionCampaign>(`/campaigns/${id}`),
+      delete: (id: string) => fetcher<void>(`/campaigns/${id}`, { method: 'DELETE' }),
+      signatureElections: (id: string) =>
+        fetcher<CampaignSignatureElectionSummary[]>(`/campaigns/${id}/signature-elections`),
+      finalElection: (id: string) =>
+        fetcher<CampaignFinalElectionSummary | null>(`/campaigns/${id}/final-election`),
     },
 
     protocols: {
