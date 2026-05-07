@@ -3,9 +3,9 @@
  *  - input validation for POST /campaigns
  *  - canonical Prisma include shape and DB → client transformer
  *  - cron transition helper that walks campaigns through their state machine
- *    based on dates and approved-candidate counts; spawns the registration
- *    form (Stage 2) and per-candidate signature elections (Stage 3) along the
- *    way.  COMPLETED / FAILED-via-quorum logic lands in Stage 4.
+ *    based on absolute phase-boundary timestamps; spawns the registration
+ *    form, per-candidate signature elections, and the final election as the
+ *    campaign progresses through its states.
  */
 
 import type { CampaignState, ElectionKind, Prisma, RestrictionType } from '@prisma/client';
@@ -15,17 +15,9 @@ import { ALLOWED_REGISTRATION_FORM_RESTRICTION_TYPES } from '@/lib/candidate-reg
 import {
   CAMPAIGN_MAX_RESTRICTIONS,
   CAMPAIGN_POSITION_TITLE_MAX_LENGTH,
-  CAMPAIGN_REGISTRATION_DAYS_MAX,
-  CAMPAIGN_REGISTRATION_DAYS_MIN,
-  CAMPAIGN_REGISTRATION_REVIEW_DAYS_MAX,
-  CAMPAIGN_REGISTRATION_REVIEW_DAYS_MIN,
   CAMPAIGN_RESTRICTION_VALUE_MAX_LENGTH,
-  CAMPAIGN_SIGNATURE_DAYS_MAX,
-  CAMPAIGN_SIGNATURE_DAYS_MIN,
   CAMPAIGN_SIGNATURE_QUORUM_MAX,
   CAMPAIGN_SIGNATURE_QUORUM_MIN,
-  CAMPAIGN_SIGNATURE_REVIEW_DAYS_MAX,
-  CAMPAIGN_SIGNATURE_REVIEW_DAYS_MIN,
   CAMPAIGN_TEAM_SIZE_MAX,
   CAMPAIGN_TEAM_SIZE_MIN,
   CAMPAIGN_TOTAL_MAX_DURATION_DAYS,
@@ -53,73 +45,6 @@ export type CampaignWithRelations = Prisma.ElectionCampaignGetPayload<{
 }>;
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-function addDays(date: Date, days: number): Date {
-  return new Date(date.getTime() + days * MS_PER_DAY);
-}
-
-/**
- * Combine a UTC reference Date's calendar day with a `HH:MM` Kyiv-wall-clock
- * time and return the UTC instant.  The day is read in Kyiv time so e.g. a
- * reference 2026-05-07T22:00 UTC + "09:00" Kyiv resolves to 2026-05-08 06:00
- * UTC (= 09:00 on 2026-05-08 in Kyiv), not the prior day.
- */
-function withKyivTime(reference: Date, hhmm: string): Date {
-  const match = TIME_REGEX.exec(hhmm);
-  if (!match) {
-    throw new Error(`Invalid HH:MM time: ${hhmm}`);
-  }
-  // Format the reference as a Kyiv wall-clock date string.
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Kyiv',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  const parts = fmt.formatToParts(reference).reduce<Record<string, string>>((acc, p) => {
-    if (p.type !== 'literal') acc[p.type] = p.value;
-    return acc;
-  }, {});
-  const isoLocal = `${parts.year}-${parts.month}-${parts.day}T${hhmm}:00`;
-  // Translate the naive Kyiv wall-clock into a UTC Date.  Kyiv is UTC+2/+3 and
-  // can DST-shift, so we resolve through Intl with explicit timezone tags.
-  return parseKyivLocal(isoLocal);
-}
-
-/**
- * Parse a `YYYY-MM-DDTHH:MM:SS` string interpreted as Kyiv wall-clock time
- * and return its UTC Date equivalent (DST-aware).
- */
-function parseKyivLocal(isoLocal: string): Date {
-  // Round-trip via Intl: build a date assuming UTC, compute the Kyiv offset
-  // at that instant, then subtract the offset.
-  const utcGuess = new Date(`${isoLocal}Z`);
-  const kyivParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Kyiv',
-    hour12: false,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).formatToParts(utcGuess);
-  const kyivObj = kyivParts.reduce<Record<string, string>>((acc, p) => {
-    if (p.type !== 'literal') acc[p.type] = p.value;
-    return acc;
-  }, {});
-  const kyivAsUtc = Date.UTC(
-    Number(kyivObj.year),
-    Number(kyivObj.month) - 1,
-    Number(kyivObj.day),
-    Number(kyivObj.hour === '24' ? '00' : kyivObj.hour),
-    Number(kyivObj.minute),
-    Number(kyivObj.second),
-  );
-  const offsetMs = kyivAsUtc - utcGuess.getTime();
-  return new Date(utcGuess.getTime() - offsetMs);
-}
 
 export function shapeCampaign(campaign: CampaignWithRelations): ElectionCampaign {
   return {
@@ -130,16 +55,11 @@ export function shapeCampaign(campaign: CampaignWithRelations): ElectionCampaign
     electionKind: campaign.election_kind,
     state: campaign.state,
     announcedAt: campaign.announced_at.toISOString(),
-    registrationDays: campaign.registration_days,
-    registrationReviewDays: campaign.registration_review_days,
-    registrationOpensTime: campaign.registration_opens_time,
-    registrationClosesTime: campaign.registration_closes_time,
+    registrationClosesAt: campaign.registration_closes_at.toISOString(),
+    signaturesOpensAt: campaign.signatures_opens_at?.toISOString() ?? null,
+    signaturesClosesAt: campaign.signatures_closes_at?.toISOString() ?? null,
     signatureCollection: campaign.signature_collection,
-    signatureDays: campaign.signature_days,
-    signatureReviewDays: campaign.signature_review_days,
     signatureQuorum: campaign.signature_quorum,
-    signaturesOpensTime: campaign.signatures_opens_time,
-    signaturesClosesTime: campaign.signatures_closes_time,
     teamSize: campaign.team_size,
     requiresCampaignProgram: campaign.requires_campaign_program,
     votingOpensAt: campaign.voting_opens_at.toISOString(),
@@ -218,16 +138,11 @@ export interface ValidatedCreateCampaignBody {
   positionTitle: string;
   electionKind: ElectionKind;
   announcedAt: Date;
-  registrationDays: number;
-  registrationReviewDays: number;
-  registrationOpensTime: string;
-  registrationClosesTime: string;
+  registrationClosesAt: Date;
   signatureCollection: boolean;
-  signatureDays: number | null;
-  signatureReviewDays: number | null;
+  signaturesOpensAt: Date | null;
+  signaturesClosesAt: Date | null;
   signatureQuorum: number | null;
-  signaturesOpensTime: string | null;
-  signaturesClosesTime: string | null;
   teamSize: number;
   requiresCampaignProgram: boolean;
   votingOpensAt: Date;
@@ -235,11 +150,15 @@ export interface ValidatedCreateCampaignBody {
   restrictions: ElectionCampaignRestriction[];
 }
 
-function validateHHMM(value: unknown, field: string): string | null {
-  if (typeof value !== 'string' || !TIME_REGEX.test(value)) {
-    return `${field} must be a string in "HH:MM" format`;
-  }
-  return null;
+function parseTimestamp(
+  raw: unknown,
+  field: string,
+): { ok: true; date: Date } | { ok: false; error: string } {
+  if (typeof raw !== 'string') return { ok: false, error: `${field} is required` };
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime()))
+    return { ok: false, error: `${field} must be a valid ISO timestamp` };
+  return { ok: true, date: d };
 }
 
 export function validateCreateCampaignBody(
@@ -265,113 +184,46 @@ export function validateCreateCampaignBody(
     };
   }
 
-  if (typeof raw.announcedAt !== 'string') {
-    return { ok: false, error: 'announcedAt is required' };
-  }
-  const announcedAt = new Date(raw.announcedAt);
-  if (Number.isNaN(announcedAt.getTime())) {
-    return { ok: false, error: 'announcedAt must be a valid ISO timestamp' };
-  }
+  const announcedRes = parseTimestamp(raw.announcedAt, 'announcedAt');
+  if (!announcedRes.ok) return announcedRes;
+  const announcedAt = announcedRes.date;
 
-  if (!isInt(raw.registrationDays)) {
-    return { ok: false, error: 'registrationDays must be an integer' };
-  }
-  let err = checkRange(
-    raw.registrationDays,
-    CAMPAIGN_REGISTRATION_DAYS_MIN,
-    CAMPAIGN_REGISTRATION_DAYS_MAX,
-    'registrationDays',
-  );
-  if (err) return { ok: false, error: err };
-
-  if (!isInt(raw.registrationReviewDays)) {
-    return { ok: false, error: 'registrationReviewDays must be an integer' };
-  }
-  err = checkRange(
-    raw.registrationReviewDays,
-    CAMPAIGN_REGISTRATION_REVIEW_DAYS_MIN,
-    CAMPAIGN_REGISTRATION_REVIEW_DAYS_MAX,
-    'registrationReviewDays',
-  );
-  if (err) return { ok: false, error: err };
-
-  err = validateHHMM(raw.registrationOpensTime, 'registrationOpensTime');
-  if (err) return { ok: false, error: err };
-  err = validateHHMM(raw.registrationClosesTime, 'registrationClosesTime');
-  if (err) return { ok: false, error: err };
-  const registrationOpensTime = raw.registrationOpensTime as string;
-  const registrationClosesTime = raw.registrationClosesTime as string;
+  const regClosesRes = parseTimestamp(raw.registrationClosesAt, 'registrationClosesAt');
+  if (!regClosesRes.ok) return regClosesRes;
+  const registrationClosesAt = regClosesRes.date;
 
   if (typeof raw.signatureCollection !== 'boolean') {
     return { ok: false, error: 'signatureCollection must be a boolean' };
   }
 
-  let signatureDays: number | null = null;
-  let signatureReviewDays: number | null = null;
+  let signaturesOpensAt: Date | null = null;
+  let signaturesClosesAt: Date | null = null;
   let signatureQuorum: number | null = null;
-  let signaturesOpensTime: string | null = null;
-  let signaturesClosesTime: string | null = null;
 
   if (raw.signatureCollection) {
-    if (!isInt(raw.signatureDays)) {
-      return {
-        ok: false,
-        error: 'signatureDays is required when signatureCollection=true',
-      };
-    }
-    err = checkRange(
-      raw.signatureDays,
-      CAMPAIGN_SIGNATURE_DAYS_MIN,
-      CAMPAIGN_SIGNATURE_DAYS_MAX,
-      'signatureDays',
-    );
-    if (err) return { ok: false, error: err };
-
-    if (!isInt(raw.signatureReviewDays)) {
-      return {
-        ok: false,
-        error: 'signatureReviewDays is required when signatureCollection=true',
-      };
-    }
-    err = checkRange(
-      raw.signatureReviewDays,
-      CAMPAIGN_SIGNATURE_REVIEW_DAYS_MIN,
-      CAMPAIGN_SIGNATURE_REVIEW_DAYS_MAX,
-      'signatureReviewDays',
-    );
-    if (err) return { ok: false, error: err };
+    const sigOpensRes = parseTimestamp(raw.signaturesOpensAt, 'signaturesOpensAt');
+    if (!sigOpensRes.ok) return sigOpensRes;
+    const sigClosesRes = parseTimestamp(raw.signaturesClosesAt, 'signaturesClosesAt');
+    if (!sigClosesRes.ok) return sigClosesRes;
+    signaturesOpensAt = sigOpensRes.date;
+    signaturesClosesAt = sigClosesRes.date;
 
     if (!isInt(raw.signatureQuorum)) {
-      return {
-        ok: false,
-        error: 'signatureQuorum is required when signatureCollection=true',
-      };
+      return { ok: false, error: 'signatureQuorum is required when signatureCollection=true' };
     }
-    err = checkRange(
+    const err = checkRange(
       raw.signatureQuorum,
       CAMPAIGN_SIGNATURE_QUORUM_MIN,
       CAMPAIGN_SIGNATURE_QUORUM_MAX,
       'signatureQuorum',
     );
     if (err) return { ok: false, error: err };
-
-    err = validateHHMM(raw.signaturesOpensTime, 'signaturesOpensTime');
-    if (err) return { ok: false, error: err };
-    err = validateHHMM(raw.signaturesClosesTime, 'signaturesClosesTime');
-    if (err) return { ok: false, error: err };
-
-    signatureDays = raw.signatureDays;
-    signatureReviewDays = raw.signatureReviewDays;
     signatureQuorum = raw.signatureQuorum;
-    signaturesOpensTime = raw.signaturesOpensTime as string;
-    signaturesClosesTime = raw.signaturesClosesTime as string;
   } else {
     if (
-      (raw.signatureDays !== undefined && raw.signatureDays !== null) ||
-      (raw.signatureReviewDays !== undefined && raw.signatureReviewDays !== null) ||
-      (raw.signatureQuorum !== undefined && raw.signatureQuorum !== null) ||
-      (raw.signaturesOpensTime !== undefined && raw.signaturesOpensTime !== null) ||
-      (raw.signaturesClosesTime !== undefined && raw.signaturesClosesTime !== null)
+      (raw.signaturesOpensAt !== undefined && raw.signaturesOpensAt !== null) ||
+      (raw.signaturesClosesAt !== undefined && raw.signaturesClosesAt !== null) ||
+      (raw.signatureQuorum !== undefined && raw.signatureQuorum !== null)
     ) {
       return {
         ok: false,
@@ -383,7 +235,12 @@ export function validateCreateCampaignBody(
   let teamSize = 0;
   if (raw.teamSize !== undefined) {
     if (!isInt(raw.teamSize)) return { ok: false, error: 'teamSize must be an integer' };
-    err = checkRange(raw.teamSize, CAMPAIGN_TEAM_SIZE_MIN, CAMPAIGN_TEAM_SIZE_MAX, 'teamSize');
+    const err = checkRange(
+      raw.teamSize,
+      CAMPAIGN_TEAM_SIZE_MIN,
+      CAMPAIGN_TEAM_SIZE_MAX,
+      'teamSize',
+    );
     if (err) return { ok: false, error: err };
     teamSize = raw.teamSize;
   }
@@ -396,14 +253,13 @@ export function validateCreateCampaignBody(
     requiresCampaignProgram = raw.requiresCampaignProgram;
   }
 
-  if (typeof raw.votingOpensAt !== 'string' || typeof raw.votingClosesAt !== 'string') {
-    return { ok: false, error: 'votingOpensAt and votingClosesAt are required' };
-  }
-  const votingOpensAt = new Date(raw.votingOpensAt);
-  const votingClosesAt = new Date(raw.votingClosesAt);
-  if (Number.isNaN(votingOpensAt.getTime()) || Number.isNaN(votingClosesAt.getTime())) {
-    return { ok: false, error: 'votingOpensAt/votingClosesAt must be valid ISO timestamps' };
-  }
+  const votingOpensRes = parseTimestamp(raw.votingOpensAt, 'votingOpensAt');
+  if (!votingOpensRes.ok) return votingOpensRes;
+  const votingClosesRes = parseTimestamp(raw.votingClosesAt, 'votingClosesAt');
+  if (!votingClosesRes.ok) return votingClosesRes;
+  const votingOpensAt = votingOpensRes.date;
+  const votingClosesAt = votingClosesRes.date;
+
   if (votingClosesAt <= votingOpensAt) {
     return { ok: false, error: 'votingClosesAt must be after votingOpensAt' };
   }
@@ -415,19 +271,24 @@ export function validateCreateCampaignBody(
     };
   }
 
-  // Date-chain enforcement: voting must not start before all preceding stages finish.
-  const requiredOffsetDays =
-    raw.registrationDays +
-    raw.registrationReviewDays +
-    (raw.signatureCollection ? signatureDays! + signatureReviewDays! : 0);
-  const earliestVotingOpen = addDays(announcedAt, requiredOffsetDays);
-  if (votingOpensAt < earliestVotingOpen) {
-    return {
-      ok: false,
-      error:
-        'votingOpensAt must be at or after the end of the registration ' +
-        '(and signatures, if enabled) stages',
-    };
+  // Phase-boundary chain.  Each boundary must be strictly after the previous
+  // for non-degenerate phases, except review windows which may collapse to
+  // zero duration.
+  if (registrationClosesAt <= announcedAt) {
+    return { ok: false, error: 'registrationClosesAt must be after announcedAt' };
+  }
+  if (signaturesOpensAt && signaturesClosesAt) {
+    if (signaturesOpensAt < registrationClosesAt) {
+      return { ok: false, error: 'signaturesOpensAt must be at or after registrationClosesAt' };
+    }
+    if (signaturesClosesAt <= signaturesOpensAt) {
+      return { ok: false, error: 'signaturesClosesAt must be after signaturesOpensAt' };
+    }
+    if (votingOpensAt < signaturesClosesAt) {
+      return { ok: false, error: 'votingOpensAt must be at or after signaturesClosesAt' };
+    }
+  } else if (votingOpensAt < registrationClosesAt) {
+    return { ok: false, error: 'votingOpensAt must be at or after registrationClosesAt' };
   }
 
   const totalDurationDays = (votingClosesAt.getTime() - announcedAt.getTime()) / MS_PER_DAY;
@@ -446,16 +307,11 @@ export function validateCreateCampaignBody(
     data: {
       positionTitle,
       electionKind: electionKind as ElectionKind,
-      registrationOpensTime,
-      registrationClosesTime,
-      signaturesOpensTime,
-      signaturesClosesTime,
       announcedAt,
-      registrationDays: raw.registrationDays,
-      registrationReviewDays: raw.registrationReviewDays,
+      registrationClosesAt,
       signatureCollection: raw.signatureCollection,
-      signatureDays,
-      signatureReviewDays,
+      signaturesOpensAt,
+      signaturesClosesAt,
       signatureQuorum,
       teamSize,
       requiresCampaignProgram,
@@ -467,26 +323,20 @@ export function validateCreateCampaignBody(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// State machine — Stages 1 & 2
+// State machine
 // Walks date-driven transitions and creates the per-campaign
-// `CandidateRegistrationForm` once the campaign reaches REGISTRATION_OPEN.
-// Per-candidate signature elections (Stage 3) and the final election
-// (Stage 4) land in later stages.
+// `CandidateRegistrationForm`, signature elections, and final election as
+// the campaign reaches each state.
 // ────────────────────────────────────────────────────────────────────────────
 
 interface CampaignTickRow {
   id: string;
   state: CampaignState;
   announced_at: Date;
-  registration_days: number;
-  registration_review_days: number;
-  registration_opens_time: string;
-  registration_closes_time: string;
+  registration_closes_at: Date;
   signature_collection: boolean;
-  signature_days: number | null;
-  signature_review_days: number | null;
-  signatures_opens_time: string | null;
-  signatures_closes_time: string | null;
+  signatures_opens_at: Date | null;
+  signatures_closes_at: Date | null;
   voting_opens_at: Date;
   voting_closes_at: Date;
 }
@@ -509,8 +359,7 @@ const STATES_REQUIRING_REGISTRATION_FORM: CampaignState[] = [
 
 /**
  * States in which signature-collection campaigns must have one Election per
- * APPROVED candidate already created.  Anything from SIGNATURES_OPEN onward
- * (until termination) — earlier states haven't passed REGISTRATION_REVIEW yet.
+ * APPROVED candidate already created.
  */
 const STATES_REQUIRING_SIGNATURE_ELECTIONS: CampaignState[] = [
   'SIGNATURES_OPEN',
@@ -520,22 +369,14 @@ const STATES_REQUIRING_SIGNATURE_ELECTIONS: CampaignState[] = [
   'COMPLETED',
 ];
 
-/**
- * States from which the campaign hasn't yet "decided" whether it can proceed
- * past REGISTRATION_REVIEW.  Used to detect the boundary at which a 0-APPROVED
- * count flips the campaign to FAILED.
- */
+/** States from which the campaign hasn't yet "decided" the registration outcome. */
 const PRE_REVIEW_DECISION_STATES: CampaignState[] = [
   'ANNOUNCED',
   'REGISTRATION_OPEN',
   'REGISTRATION_REVIEW',
 ];
 
-/**
- * States that imply the campaign has progressed past REGISTRATION_REVIEW —
- * either it produced ≥1 APPROVED candidate (signatures/voting/etc.) or it
- * needs the FAILED override applied first.
- */
+/** States that imply the campaign has progressed past REGISTRATION_REVIEW. */
 const POST_REVIEW_PROGRESS_STATES: CampaignState[] = [
   'SIGNATURES_OPEN',
   'SIGNATURES_REVIEW',
@@ -544,23 +385,13 @@ const POST_REVIEW_PROGRESS_STATES: CampaignState[] = [
   'COMPLETED',
 ];
 
-/**
- * States from which the campaign hasn't yet "decided" the signature outcome —
- * used to detect the SIGNATURES_REVIEW → VOTING_OPEN boundary at which a
- * 0-passed-quorum count flips the campaign to FAILED.
- */
+/** States from which the campaign hasn't yet "decided" the signature outcome. */
 const PRE_VOTING_DECISION_STATES: CampaignState[] = ['SIGNATURES_OPEN', 'SIGNATURES_REVIEW'];
 
-/**
- * States that imply voting has been reached (or passed).  After SIGNATURES_REVIEW
- * a campaign either produced ≥1 quorum-passing candidate (advance to voting)
- * or none did (FAILED).
- */
+/** States that imply voting has been reached (or passed). */
 const VOTING_AND_BEYOND_STATES: CampaignState[] = ['VOTING_OPEN', 'VOTING_CLOSED', 'COMPLETED'];
 
-/**
- * States in which the campaign's final `Election` must already exist.
- */
+/** States in which the campaign's final `Election` must already exist. */
 const STATES_REQUIRING_FINAL_ELECTION: CampaignState[] = [
   'VOTING_OPEN',
   'VOTING_CLOSED',
@@ -569,65 +400,38 @@ const STATES_REQUIRING_FINAL_ELECTION: CampaignState[] = [
 
 /**
  * Compute the state a campaign should be in given current time, based purely
- * on its date configuration plus current state for terminal transitions.
+ * on its phase-boundary timestamps plus current state for terminal transitions.
  * Returns null if the current state is correct.
  *
- * Stage 4 progresses VOTING_CLOSED → COMPLETED on the next tick once voting
- * has ended, giving the dashboard a brief "voting closed, finalising" view
- * before the campaign moves into its terminal COMPLETED state.
+ * VOTING_CLOSED → COMPLETED happens on the next tick once voting has ended,
+ * giving the dashboard a brief "voting closed, finalising" view before the
+ * campaign moves into its terminal COMPLETED state.
  */
 export function expectedStateAt(c: CampaignTickRow, now: Date): CampaignState | null {
   if (c.state === 'CANCELLED' || c.state === 'COMPLETED' || c.state === 'FAILED') {
     return null;
   }
 
-  // Registration phase: open at announced_at (which already encodes
-  // registration_opens_time on its calendar day) and close at the same calendar
-  // day + registration_days, but with the explicit close time-of-day applied.
-  const registrationOpenAt = c.announced_at;
-  const registrationReviewAt = withKyivTime(
-    addDays(registrationOpenAt, c.registration_days),
-    c.registration_closes_time,
-  );
-  const afterRegistrationReview = addDays(registrationReviewAt, c.registration_review_days);
-
-  let signaturesOpenAt: Date | null = null;
-  let signaturesReviewAt: Date | null = null;
-  let afterSignaturesReview: Date | null = null;
-  if (
-    c.signature_collection &&
-    c.signature_days !== null &&
-    c.signature_review_days !== null &&
-    c.signatures_opens_time !== null &&
-    c.signatures_closes_time !== null
-  ) {
-    // Signatures phase boundaries also snap to the configured time-of-day.
-    signaturesOpenAt = withKyivTime(afterRegistrationReview, c.signatures_opens_time);
-    signaturesReviewAt = withKyivTime(
-      addDays(signaturesOpenAt, c.signature_days),
-      c.signatures_closes_time,
-    );
-    afterSignaturesReview = addDays(signaturesReviewAt, c.signature_review_days);
-  }
+  const hasSignaturePhase =
+    c.signature_collection && c.signatures_opens_at !== null && c.signatures_closes_at !== null;
 
   let target: CampaignState;
-  if (now < registrationOpenAt) {
+  if (now < c.announced_at) {
     target = 'ANNOUNCED';
-  } else if (now < registrationReviewAt) {
+  } else if (now < c.registration_closes_at) {
     target = 'REGISTRATION_OPEN';
-  } else if (now < afterRegistrationReview) {
+  } else if (hasSignaturePhase && now < c.signatures_opens_at!) {
     target = 'REGISTRATION_REVIEW';
-  } else if (signaturesOpenAt && now < signaturesReviewAt!) {
+  } else if (hasSignaturePhase && now < c.signatures_closes_at!) {
     target = 'SIGNATURES_OPEN';
-  } else if (signaturesReviewAt && now < afterSignaturesReview!) {
+  } else if (hasSignaturePhase && now < c.voting_opens_at) {
     target = 'SIGNATURES_REVIEW';
-  } else if (now < c.voting_opens_at) {
-    // Bridge gap between review-end and voting-open: hold in the latest review state.
-    target = c.signature_collection ? 'SIGNATURES_REVIEW' : 'REGISTRATION_REVIEW';
+  } else if (!hasSignaturePhase && now < c.voting_opens_at) {
+    target = 'REGISTRATION_REVIEW';
   } else if (now < c.voting_closes_at) {
     target = 'VOTING_OPEN';
   } else if (c.state === 'VOTING_CLOSED') {
-    // Stage 4: a tick after voting closes graduates the campaign to COMPLETED.
+    // A tick after voting closes graduates the campaign to COMPLETED.
     target = 'COMPLETED';
   } else {
     target = 'VOTING_CLOSED';
@@ -657,8 +461,7 @@ export async function ensureCampaignRegistrationForm(campaignId: string): Promis
         requires_campaign_program: true,
         team_size: true,
         announced_at: true,
-        registration_days: true,
-        registration_closes_time: true,
+        registration_closes_at: true,
         registration_form_id: true,
         deleted_at: true,
         created_by: true,
@@ -668,12 +471,6 @@ export async function ensureCampaignRegistrationForm(campaignId: string): Promis
     });
     if (!c || c.deleted_at || c.registration_form_id) return;
 
-    const opensAt = c.announced_at;
-    const closesAt = withKyivTime(
-      addDays(opensAt, c.registration_days),
-      c.registration_closes_time,
-    );
-
     const form = await tx.candidateRegistrationForm.create({
       data: {
         group_id: c.group_id,
@@ -681,8 +478,8 @@ export async function ensureCampaignRegistrationForm(campaignId: string): Promis
         description: null,
         requires_campaign_program: c.requires_campaign_program,
         team_size: c.team_size,
-        opens_at: opensAt,
-        closes_at: closesAt,
+        opens_at: c.announced_at,
+        closes_at: c.registration_closes_at,
         created_by: c.created_by,
         created_by_full_name: c.created_by_full_name,
         restrictions: c.restrictions.length
@@ -734,14 +531,10 @@ export async function ensureCampaignSignatureElections(campaignId: string): Prom
       state: true,
       deleted_at: true,
       position_title: true,
-      announced_at: true,
-      registration_days: true,
-      registration_review_days: true,
       signature_collection: true,
-      signature_days: true,
       signature_quorum: true,
-      signatures_opens_time: true,
-      signatures_closes_time: true,
+      signatures_opens_at: true,
+      signatures_closes_at: true,
       registration_form_id: true,
       created_by: true,
       created_by_full_name: true,
@@ -753,22 +546,12 @@ export async function ensureCampaignSignatureElections(campaignId: string): Prom
   if (!campaign.signature_collection) return;
   if (
     !campaign.registration_form_id ||
-    campaign.signature_days === null ||
     campaign.signature_quorum === null ||
-    campaign.signatures_opens_time === null ||
-    campaign.signatures_closes_time === null
+    campaign.signatures_opens_at === null ||
+    campaign.signatures_closes_at === null
   ) {
     return;
   }
-
-  const signaturesOpenAt = withKyivTime(
-    addDays(campaign.announced_at, campaign.registration_days + campaign.registration_review_days),
-    campaign.signatures_opens_time,
-  );
-  const signaturesCloseAt = withKyivTime(
-    addDays(signaturesOpenAt, campaign.signature_days),
-    campaign.signatures_closes_time,
-  );
 
   const approved = await prisma.candidateRegistration.findMany({
     where: { form_id: campaign.registration_form_id, status: 'APPROVED' },
@@ -818,8 +601,8 @@ export async function ensureCampaignSignatureElections(campaignId: string): Prom
             approved_by_id: campaign.created_by,
             approved_by_full_name: campaign.created_by_full_name,
             approved_at: now,
-            opens_at: signaturesOpenAt,
-            closes_at: signaturesCloseAt,
+            opens_at: campaign.signatures_opens_at!,
+            closes_at: campaign.signatures_closes_at!,
             min_choices: 1,
             max_choices: 1,
             public_key: publicKey,
@@ -996,12 +779,12 @@ export async function ensureCampaignFinalElection(campaignId: string): Promise<v
  * Cron tick: advance every non-terminal campaign to the state implied by the
  * current clock, then run any side-effects required by the new state.
  *
- *  - Stage 2: spawn `CandidateRegistrationForm` once registration begins.
- *  - Stage 3: spawn per-candidate signature `Election`s when entering the
- *    signature phase, OR override to FAILED if no candidates were APPROVED
- *    by the time registration review closes.
- *  - Stage 4: spawn the final `Election` when entering VOTING_OPEN, override
- *    to FAILED if no candidates passed the signature quorum, and graduate
+ *  - Spawn `CandidateRegistrationForm` once registration begins.
+ *  - Spawn per-candidate signature `Election`s when entering the signature
+ *    phase, OR override to FAILED if no candidates were APPROVED by the time
+ *    registration review closes.
+ *  - Spawn the final `Election` when entering VOTING_OPEN, override to FAILED
+ *    if no candidates passed the signature quorum, and graduate
  *    VOTING_CLOSED → COMPLETED on the next tick after voting closes.
  *
  * Returns the number of state updates that landed.
@@ -1016,16 +799,11 @@ export async function transitionCampaignsByDate(now: Date = new Date()): Promise
       id: true,
       state: true,
       announced_at: true,
-      registration_days: true,
-      registration_review_days: true,
-      registration_opens_time: true,
-      registration_closes_time: true,
+      registration_closes_at: true,
       signature_collection: true,
-      signature_days: true,
-      signature_review_days: true,
       signature_quorum: true,
-      signatures_opens_time: true,
-      signatures_closes_time: true,
+      signatures_opens_at: true,
+      signatures_closes_at: true,
       voting_opens_at: true,
       voting_closes_at: true,
       registration_form_id: true,
@@ -1037,7 +815,7 @@ export async function transitionCampaignsByDate(now: Date = new Date()): Promise
   for (const row of candidates) {
     let next = expectedStateAt(row, now);
 
-    // Stage 3: 0 APPROVED at REGISTRATION_REVIEW boundary → FAILED.
+    // 0 APPROVED at REGISTRATION_REVIEW boundary → FAILED.
     if (
       next &&
       PRE_REVIEW_DECISION_STATES.includes(row.state) &&
@@ -1049,9 +827,9 @@ export async function transitionCampaignsByDate(now: Date = new Date()): Promise
       }
     }
 
-    // Stage 4: 0 candidates passed signature quorum at SIGNATURES_REVIEW
-    // boundary → FAILED.  Only meaningful for signature campaigns; non-signature
-    // ones already had their FAILED check at REGISTRATION_REVIEW above.
+    // 0 candidates passed signature quorum at SIGNATURES_REVIEW boundary →
+    // FAILED.  Only meaningful for signature campaigns; non-signature ones
+    // already had their FAILED check at REGISTRATION_REVIEW above.
     if (
       next &&
       row.signature_collection &&

@@ -17,17 +17,12 @@ export interface ElectionCampaign {
   state: CampaignState;
 
   announcedAt: string;
-  registrationDays: number;
-  registrationReviewDays: number;
-  registrationOpensTime: string;
-  registrationClosesTime: string;
+  registrationClosesAt: string;
+  signaturesOpensAt: string | null;
+  signaturesClosesAt: string | null;
 
   signatureCollection: boolean;
-  signatureDays: number | null;
-  signatureReviewDays: number | null;
   signatureQuorum: number | null;
-  signaturesOpensTime: string | null;
-  signaturesClosesTime: string | null;
 
   teamSize: number;
   requiresCampaignProgram: boolean;
@@ -80,16 +75,11 @@ export interface CreateElectionCampaignRequest {
   positionTitle: string;
   electionKind: ElectionKind;
   announcedAt: string;
-  registrationDays: number;
-  registrationReviewDays: number;
-  registrationOpensTime: string;
-  registrationClosesTime: string;
+  registrationClosesAt: string;
   signatureCollection: boolean;
-  signatureDays?: number | null;
-  signatureReviewDays?: number | null;
+  signaturesOpensAt?: string | null;
+  signaturesClosesAt?: string | null;
   signatureQuorum?: number | null;
-  signaturesOpensTime?: string | null;
-  signaturesClosesTime?: string | null;
   teamSize?: number;
   requiresCampaignProgram?: boolean;
   votingOpensAt: string;
