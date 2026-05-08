@@ -15,7 +15,7 @@ const ContentSecurityPolicy = `
   img-src ${IMG_SRC};
   font-src 'self';
   connect-src 'self' ${POSTHOG_DOMAINS};
-  worker-src 'self' blob:;
+  worker-src 'self' blob: data:;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -62,7 +62,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
+            value: 'same-origin-allow-popups',
           },
         ],
       },
