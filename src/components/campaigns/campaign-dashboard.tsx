@@ -199,7 +199,6 @@ export function CampaignDashboard({
         ]}
         title={campaign.positionTitle}
         description={ELECTION_KIND_LABEL[campaign.electionKind]}
-        backHref={`/groups/${group.id}`}
         isContainer
       />
 
