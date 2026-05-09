@@ -426,15 +426,11 @@ export function CreateElectionForm({
   };
 
   const [renderTime] = useState(() => Date.now());
-  const minDateTime = new Date(renderTime + 60 * 1000).toISOString().slice(0, 16);
+  const minDateTime = new Date(renderTime + 60 * 1000);
   const maxOpensAt = new Date(
     renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000 - 60 * 1000,
-  )
-    .toISOString()
-    .slice(0, 16);
-  const maxClosesAt = new Date(renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 16);
+  );
+  const maxClosesAt = new Date(renderTime + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000);
 
   const studyFormOptions = UI_STUDY_FORMS.map((f) => ({
     value: f,
@@ -497,6 +493,7 @@ export function CreateElectionForm({
                 onChange={(date) => updateForm('opensAt', date.toISOString())}
                 min={minDateTime}
                 max={maxOpensAt}
+                minuteStep={30}
                 error={!!fieldErrors.opensAt}
               />
             </FormField>
@@ -507,6 +504,7 @@ export function CreateElectionForm({
                 onChange={(date) => updateForm('closesAt', date.toISOString())}
                 min={form.opensAt || minDateTime}
                 max={maxClosesAt}
+                minuteStep={30}
                 error={!!fieldErrors.closesAt}
               />
             </FormField>

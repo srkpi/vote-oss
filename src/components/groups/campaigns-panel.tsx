@@ -222,6 +222,15 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Re-renders every minute so date-pickers and validation stay in sync with "now".
+  const [renderNowMs, setRenderNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!open) return;
+    const id = setInterval(() => setRenderNowMs(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, [open]);
+  const minFutureDate = new Date(renderNowMs + 60 * 1000);
+
   // Reset state and seed sensible defaults each time the dialog opens.
   useEffect(() => {
     if (!open) return;
@@ -279,6 +288,25 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
   const handleSubmit = async () => {
     if (!registrationClosesAt || !votingOpensAt || !votingClosesAt) return;
     if (signatureCollection && (!signaturesOpensAt || !signaturesClosesAt)) return;
+
+    const futureChecks: Array<[Date, string]> = [
+      [registrationClosesAt, 'Кінець реєстрації'],
+      [votingOpensAt, 'Початок голосування'],
+      [votingClosesAt, 'Кінець голосування'],
+    ];
+    if (signatureCollection) {
+      futureChecks.push(
+        [signaturesOpensAt!, 'Початок збору підписів'],
+        [signaturesClosesAt!, 'Кінець збору підписів'],
+      );
+    }
+    const nowMs = Date.now();
+    const pastField = futureChecks.find(([d]) => d.getTime() <= nowMs);
+    if (pastField) {
+      setError(`«${pastField[1]}» має бути після поточного часу`);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     const restrictions: ElectionCampaignRestriction[] = faculties.map((value) => ({
@@ -361,6 +389,7 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                 id="announced-at"
                 value={announcedAt}
                 onChange={(d) => setAnnouncedAt(d)}
+                minuteStep={30}
               />
             </FormField>
             <FormField label="Кінець реєстрації" required htmlFor="registration-closes-at">
@@ -368,6 +397,8 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                 id="registration-closes-at"
                 value={registrationClosesAt ?? defaultAnnouncedAt()}
                 onChange={(d) => setRegistrationClosesAt(d)}
+                min={minFutureDate}
+                minuteStep={30}
               />
             </FormField>
           </div>
@@ -390,6 +421,8 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                   id="signatures-opens-at"
                   value={signaturesOpensAt ?? defaultAnnouncedAt()}
                   onChange={(d) => setSignaturesOpensAt(d)}
+                  min={minFutureDate}
+                  minuteStep={30}
                 />
               </FormField>
               <FormField label="Кінець збору підписів" required htmlFor="signatures-closes-at">
@@ -397,6 +430,8 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                   id="signatures-closes-at"
                   value={signaturesClosesAt ?? defaultAnnouncedAt()}
                   onChange={(d) => setSignaturesClosesAt(d)}
+                  min={minFutureDate}
+                  minuteStep={30}
                 />
               </FormField>
               <FormField label="Кворум підписів" required htmlFor="signature-quorum">
@@ -455,6 +490,8 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                 id="voting-opens-at"
                 value={votingOpensAt ?? defaultAnnouncedAt()}
                 onChange={(d) => setVotingOpensAt(d)}
+                min={minFutureDate}
+                minuteStep={30}
               />
             </FormField>
             <FormField label="Кінець голосування" required htmlFor="voting-closes-at">
@@ -462,6 +499,8 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                 id="voting-closes-at"
                 value={votingClosesAt ?? defaultAnnouncedAt()}
                 onChange={(d) => setVotingClosesAt(d)}
+                min={minFutureDate}
+                minuteStep={30}
               />
             </FormField>
           </div>
