@@ -219,6 +219,12 @@ export function TeamSlotsPanel({
                   {compact && s.member && (
                     <span className="text-foreground text-xs">
                       · <span className="font-medium">{s.member.fullName || s.member.userId}</span>
+                      {(s.member.faculty || s.member.group) && (
+                        <span className="text-muted-foreground">
+                          {' · '}
+                          {[s.member.faculty, s.member.group].filter(Boolean).join(' · ')}
+                        </span>
+                      )}
                     </span>
                   )}
                 </div>
@@ -230,6 +236,12 @@ export function TeamSlotsPanel({
                         ? 'Прийняв(-ла) запрошення: '
                         : 'Останній отримувач: '}
                     <span className="font-medium">{s.member.fullName || s.member.userId}</span>
+                    {(s.member.faculty || s.member.group) && (
+                      <span className="text-muted-foreground">
+                        {' · '}
+                        {[s.member.faculty, s.member.group].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
                   </p>
                 )}
                 {!readOnly && fresh && (

@@ -64,6 +64,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
         used_at: new Date(),
         used_by_user_id: auth.user.sub,
         used_by_full_name: auth.user.fullName,
+        used_by_group: auth.user.group,
+        used_by_faculty: auth.user.faculty,
         response: 'ACCEPTED',
       },
     });

@@ -17,6 +17,8 @@ export function shapeRegistration(reg: RegistrationRow): CandidateRegistration {
     formId: reg.form_id,
     userId: reg.user_id,
     fullName: safeDecrypt(reg.full_name),
+    group: reg.group ? safeDecrypt(reg.group) : null,
+    faculty: reg.faculty ? safeDecrypt(reg.faculty) : null,
     phoneNumber: safeDecrypt(reg.phone_number),
     telegramTag: safeDecrypt(reg.telegram_tag),
     campaignProgramUrl: reg.campaign_program_url ? safeDecrypt(reg.campaign_program_url) : null,

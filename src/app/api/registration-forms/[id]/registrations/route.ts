@@ -150,6 +150,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     telegram_tag: encryptField(tag.value),
     campaign_program_url: programUrl ? encryptField(programUrl) : null,
     full_name: encryptField(auth.user.fullName),
+    group: encryptField(auth.user.group),
+    faculty: encryptField(auth.user.faculty),
   };
 
   const saved = existing

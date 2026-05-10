@@ -371,6 +371,10 @@ export function createApiClient(fetcher: Fetcher) {
       },
     },
 
+    petitions: {
+      og: (id: string) => fetcher<{ title: string }>(`/petitions/${id}/og`),
+    },
+
     campaigns: {
       get: (id: string) => fetcher<ElectionCampaign>(`/campaigns/${id}`),
       delete: (id: string) => fetcher<void>(`/campaigns/${id}`, { method: 'DELETE' }),

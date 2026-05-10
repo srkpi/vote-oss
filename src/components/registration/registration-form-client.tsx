@@ -78,6 +78,8 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
   const [phone, setPhone] = useState(registration?.phoneNumber ?? '');
   const [tag, setTag] = useState(registration?.telegramTag ?? '');
   const [programUrl, setProgramUrl] = useState(registration?.campaignProgramUrl ?? '');
+  const [confirmedNoOverlap, setConfirmedNoOverlap] = useState(false);
+  const [confirmedDataAccurate, setConfirmedDataAccurate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
@@ -101,7 +103,8 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
   const hasFieldErrors = !!(phoneError || tagError || programError);
   const allRequiredFilled =
     phone.trim().length > 0 && (!form.requiresCampaignProgram || programUrl.trim().length > 0);
-  const canSubmit = !hasFieldErrors && allRequiredFilled;
+  const allConfirmed = confirmedNoOverlap && confirmedDataAccurate;
+  const canSubmit = !hasFieldErrors && allRequiredFilled && allConfirmed;
 
   const saveDraft = async (): Promise<CandidateRegistration | null> => {
     setSaving(true);
@@ -282,6 +285,18 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
           <div className="border-border-color shadow-shadow-card mb-6 space-y-3 rounded-xl border bg-white p-5">
             <p className="font-display text-foreground text-sm font-semibold">Ваша заявка</p>
             <dl className="grid items-baseline gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
+              {registration.faculty && (
+                <>
+                  <dt className="text-muted-foreground text-xs uppercase">Підрозділ</dt>
+                  <dd className="text-foreground wrap-break-word">{registration.faculty}</dd>
+                </>
+              )}
+              {registration.group && (
+                <>
+                  <dt className="text-muted-foreground text-xs uppercase">Група</dt>
+                  <dd className="text-foreground wrap-break-word">{registration.group}</dd>
+                </>
+              )}
               <dt className="text-muted-foreground text-xs uppercase">Телефон</dt>
               <dd className="text-foreground wrap-break-word">{registration.phoneNumber}</dd>
               {registration.telegramTag && (
@@ -400,6 +415,32 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
                 />
               </FormField>
             )}
+
+            <div className="border-border-color space-y-3 border-t pt-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={confirmedNoOverlap}
+                  onChange={(e) => setConfirmedNoOverlap(e.target.checked)}
+                  className="accent-kpi-navy mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+                />
+                <span className="text-foreground text-sm">
+                  Я підтверджую, що не займаю посад у Первинній профспілковій організації студентів
+                  та Науковому товаристві студентів та аспірантів
+                </span>
+              </label>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={confirmedDataAccurate}
+                  onChange={(e) => setConfirmedDataAccurate(e.target.checked)}
+                  className="accent-kpi-navy mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+                />
+                <span className="text-foreground text-sm">
+                  Я підтверджую, що надані мною дані правдиві та актуальні
+                </span>
+              </label>
+            </div>
 
             <div className="flex flex-wrap gap-2">
               <Button
