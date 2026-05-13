@@ -65,7 +65,12 @@ export function buildSlots(
       state,
       member:
         t && t.used_at && t.used_by_user_id
-          ? { userId: t.used_by_user_id, fullName: t.used_by_full_name ?? '' }
+          ? {
+              userId: t.used_by_user_id,
+              fullName: t.used_by_full_name ?? '',
+              group: t.used_by_group ?? null,
+              faculty: t.used_by_faculty ?? null,
+            }
           : null,
       expiresAt: state === 'pending' && t ? t.expires_at.toISOString() : null,
       resolvedAt:

@@ -14,6 +14,7 @@ import { APP_URL } from '@/lib/config/client';
 import { PETITION_QUORUM } from '@/lib/constants';
 import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
+import { linkifyText } from '@/lib/utils/linkify';
 
 interface PetitionPageProps {
   params: Promise<{ id: string }>;
@@ -21,7 +22,7 @@ interface PetitionPageProps {
 
 export async function generateMetadata({ params }: PetitionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data, status } = await serverApi.elections.og(id);
+  const { data, status } = await serverApi.petitions.og(id);
   const title = status === 404 ? '404 | Петицію не знайдено' : (data?.title ?? 'Петиція');
   return {
     title,
@@ -124,7 +125,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
               {petition.description && (
                 <div className="font-body text-foreground mt-6 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-                  {petition.description}
+                  {linkifyText(petition.description)}
                 </div>
               )}
             </div>

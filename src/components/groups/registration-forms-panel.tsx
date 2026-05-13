@@ -612,6 +612,11 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                     <p className="font-body text-foreground text-sm font-semibold">
                       {reg.fullName}
                     </p>
+                    {(reg.faculty || reg.group) && (
+                      <span className="text-muted-foreground text-xs">
+                        · {[reg.faculty, reg.group].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
                     <span
                       className={cn(
                         'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase',

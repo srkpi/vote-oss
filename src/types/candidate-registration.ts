@@ -51,6 +51,8 @@ export interface CandidateRegistration {
   formId: string;
   userId: string;
   fullName: string;
+  group: string | null;
+  faculty: string | null;
   phoneNumber: string;
   telegramTag: string;
   campaignProgramUrl: string | null;
@@ -130,7 +132,12 @@ export interface TeamSlot {
   slot: number;
   state: TeamSlotState;
   /** Always set for `accepted`; informative for `rejected`. */
-  member: { userId: string; fullName: string } | null;
+  member: {
+    userId: string;
+    fullName: string;
+    group: string | null;
+    faculty: string | null;
+  } | null;
   /** Active token's expiry (only when `state === 'pending'`). */
   expiresAt: string | null;
   /** When the slot was last filled / decided. */

@@ -405,6 +405,8 @@ model CandidateRegistration {
   form      CandidateRegistrationForm @relation(fields: [form_id], references: [id], onDelete: Cascade)
   user_id   String
   full_name String                    @db.Text
+  group     String?                   @db.Text
+  faculty   String?                   @db.Text
 
   phone_number         String
   telegram_tag         String
@@ -454,6 +456,8 @@ model TeamMemberInviteToken {
   used_at              DateTime?
   used_by_user_id      String?
   used_by_full_name    String?                @db.Text
+  used_by_group        String?                @db.Text
+  used_by_faculty      String?                @db.Text
   response             TeamInviteResponse?
   candidate_decision   TeamCandidateDecision?
   candidate_decided_at DateTime?
