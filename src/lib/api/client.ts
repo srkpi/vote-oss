@@ -59,6 +59,7 @@ import type {
   ProtocolSummary,
   UpdateProtocolRequest,
 } from '@/types/protocol';
+import type { PlatformAdminStats, PlatformStats } from '@/types/stats';
 import type { VoteToken } from '@/types/vote';
 
 export interface ProtocolAgendaVoteTotals {
@@ -83,6 +84,11 @@ type Fetcher = <T>(path: string, options?: RequestInit) => Promise<ApiResult<T>>
 
 export function createApiClient(fetcher: Fetcher) {
   return {
+    stats: {
+      get: () => fetcher<PlatformStats>('/stats'),
+      getAdmin: () => fetcher<PlatformAdminStats>('/stats/admin'),
+    },
+
     auth: {
       loginWithTicket: (ticketId: string) =>
         fetcher<{ redirectTo: string }>('/auth/kpi-id', {
@@ -100,7 +106,7 @@ export function createApiClient(fetcher: Fetcher) {
     },
 
     elections: {
-      list: (params?: { type?: 'ELECTION' | 'PETITION'; sort?: 'createdAt' | 'votes' }) => {
+      list: (params?: { type?: 'ELECTION' | 'PETITION' | 'ALL'; sort?: 'createdAt' | 'votes' }) => {
         const search = new URLSearchParams();
         if (params?.type) search.set('type', params.type);
         if (params?.sort) search.set('sort', params.sort);

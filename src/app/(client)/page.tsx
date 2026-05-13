@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { AnimatedGrid } from '@/components/common/animated-grid';
 import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
+import { PlatformStatsSection } from '@/components/landing/platform-stats-section';
 import { StatItem } from '@/components/landing/stat-item';
 import { VisitorCounter } from '@/components/landing/visitor-counter';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,7 @@ const features = [
   },
 ];
 
-const stats = [
+const infoLabels = [
   { value: '100%', label: 'Анонімність' },
   { value: 'RSA', label: 'Шифрування' },
   { value: '0', label: 'Знань про вибір' },
@@ -54,6 +55,7 @@ const stats = [
 
 export default async function HomePage() {
   const session = await getServerSession();
+  const { data: stats } = await serverApi.stats.get();
 
   let featuredElections: Election[] = [];
   if (session) {
@@ -230,8 +232,10 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {stats && <PlatformStatsSection stats={stats} />}
+
       {/* Features */}
-      <section className="relative z-20 -mt-px bg-white py-20">
+      <section className="relative z-20 my-20 -mt-px bg-white">
         <div className="container">
           <h2 className="font-display text-foreground mb-8 text-center text-4xl font-bold">
             Чому {APP_NAME}?
@@ -304,7 +308,7 @@ export default async function HomePage() {
 
         <div className="relative z-10 container">
           <div className="stagger-children grid grid-cols-2 gap-8 md:grid-cols-4">
-            {stats.map((stat) => (
+            {infoLabels.map((stat) => (
               <StatItem key={stat.label} {...stat} />
             ))}
           </div>

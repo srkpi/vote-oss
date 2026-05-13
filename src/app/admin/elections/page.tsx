@@ -47,7 +47,11 @@ export default async function AdminElectionsPage() {
       <PageHeader
         nav={[{ label: 'Адмін', href: '/admin' }, { label: 'Голосування' }]}
         title="Голосування"
-        description="Керування всіма голосуваннями в системі"
+        description={
+          session.restrictedToFaculty
+            ? 'Керування всіма голосуваннями вашого підрозділу'
+            : 'Керування всіма голосуваннями в системі'
+        }
       >
         <Button variant="accent" size="sm" asChild>
           <Link href="/admin/elections/new" className="inline-flex items-center gap-1.5">

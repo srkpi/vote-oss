@@ -31,27 +31,18 @@ export default async function AdminDashboardPage() {
     redirect('/login');
   }
 
-  const [electionsResult, petitionsResult, adminsResult, groupsResult] = await Promise.all([
-    serverApi.elections.list(),
-    serverApi.elections.list({ type: 'PETITION' }),
-    serverApi.admins.list(),
-    serverApi.groups.all(),
+  const [electionsAndPetitions, statsResult] = await Promise.all([
+    serverApi.elections.list({ type: 'ALL' }),
+    serverApi.stats.getAdmin(),
   ]);
 
-  const elections = (electionsResult.data?.elections ?? []).filter((e) => !e.deletedAt);
-  const petitions = (petitionsResult.data?.elections ?? []).filter((p) => !p.deletedAt);
-  const admins = adminsResult.data ?? [];
-  const groups = groupsResult.data ?? [];
-
-  const openElections = elections.filter((e) => e.status === 'open');
-  const totalBallots = elections.reduce((sum, e) => sum + e.ballotCount, 0);
-
-  const recentElections = [...elections]
-    .filter((e) => !e.deletedAt)
+  const stats = statsResult.data;
+  const recentElections = (electionsAndPetitions.data?.elections ?? [])
+    .filter((e) => !e.deletedAt && e.type === 'ELECTION')
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 8);
-
-  const recentPetitions = [...petitions]
+  const recentPetitions = (electionsAndPetitions.data?.elections ?? [])
+    .filter((p) => !p.deletedAt && p.type === 'PETITION')
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 8);
 
@@ -73,53 +64,59 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="space-y-6 p-4 sm:p-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 2xl:grid-cols-6">
-          <StatCard
-            label="Активних"
-            value={openElections.length.toLocaleString('uk-UA')}
-            accent="success"
-            icon={<CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />}
-          />
+        {stats && (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 2xl:grid-cols-6">
+            <StatCard
+              label="Активних"
+              value={stats.openElections.toLocaleString('uk-UA')}
+              accent="success"
+              icon={<CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+            />
 
-          <StatCard
-            label={pluralize(elections.length, ['Голосування', 'Голосування', 'Голосувань'], false)}
-            value={elections.length.toLocaleString('uk-UA')}
-            accent="navy"
-            icon={<FileText className="h-4 w-4 sm:h-5 sm:w-5" />}
-          />
+            <StatCard
+              label={pluralize(
+                stats.elections,
+                ['Голосування', 'Голосування', 'Голосувань'],
+                false,
+              )}
+              value={stats.elections.toLocaleString('uk-UA')}
+              accent="navy"
+              icon={<FileText className="h-4 w-4 sm:h-5 sm:w-5" />}
+            />
 
-          <StatCard
-            label={pluralize(petitions.length, ['Петиція', 'Петиції', 'Петицій'], false)}
-            value={petitions.length.toLocaleString('uk-UA')}
-            accent="info"
-            icon={<Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />}
-          />
+            <StatCard
+              label={pluralize(stats.petitions, ['Петиція', 'Петиції', 'Петицій'], false)}
+              value={stats.petitions.toLocaleString('uk-UA')}
+              accent="info"
+              icon={<Megaphone className="h-4 w-4 sm:h-5 sm:w-5" />}
+            />
 
-          <StatCard
-            label={pluralize(totalBallots, ['Бюлетень', 'Бюлетені', 'Бюлетенів'], false)}
-            value={totalBallots.toLocaleString('uk-UA')}
-            accent="orange"
-            icon={<CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />}
-          />
+            <StatCard
+              label={pluralize(stats.ballots, ['Бюлетень', 'Бюлетені', 'Бюлетенів'], false)}
+              value={stats.ballots.toLocaleString('uk-UA')}
+              accent="orange"
+              icon={<CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />}
+            />
 
-          <StatCard
-            label={pluralize(
-              admins.length,
-              ['Адміністратор', 'Адміністратори', 'Адміністраторів'],
-              false,
-            )}
-            value={admins.length.toLocaleString('uk-UA')}
-            accent="purple"
-            icon={<ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />}
-          />
+            <StatCard
+              label={pluralize(
+                stats.admins,
+                ['Адміністратор', 'Адміністратори', 'Адміністраторів'],
+                false,
+              )}
+              value={stats.admins.toLocaleString('uk-UA')}
+              accent="purple"
+              icon={<ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />}
+            />
 
-          <StatCard
-            label={pluralize(groups.length, ['Група', 'Групи', 'Груп'], false)}
-            value={groups.length.toLocaleString('uk-UA')}
-            accent="teal"
-            icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}
-          />
-        </div>
+            <StatCard
+              label={pluralize(stats.groups, ['Група', 'Групи', 'Груп'], false)}
+              value={stats.groups.toLocaleString('uk-UA')}
+              accent="teal"
+              icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">

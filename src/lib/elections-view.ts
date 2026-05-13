@@ -107,7 +107,7 @@ export function toClientElections(
   user: ToClientElectionsUser,
   votedSet: Set<string>,
   groupMemberships: string[],
-  typeFilter: ElectionType | null,
+  typeFilter: ElectionType | 'ALL' | null,
   adminRecord?: AdminContext,
   adminGraph?: Map<string, string | null>,
 ): Election[] {
@@ -117,7 +117,7 @@ export function toClientElections(
 
   return cached
     .filter((e) => {
-      if (typeFilter && e.type !== typeFilter) return false;
+      if (typeFilter && typeFilter !== 'ALL' && e.type !== typeFilter) return false;
 
       const isDeleted = !!e.deletedAt;
       if (!isAdmin && isDeleted) return false;

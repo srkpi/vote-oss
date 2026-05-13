@@ -61,10 +61,7 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function parseTypeFilter(req: NextRequest): ElectionType {
-  const raw = req.nextUrl.searchParams.get('type');
-  return raw === 'PETITION' ? 'PETITION' : 'ELECTION';
-}
+const ALLOWED_TYPES = ['ALL', 'ELECTION', 'PETITION'] as const;
 
 export type PetitionsSort = 'createdAt' | 'votes';
 
@@ -297,12 +294,15 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Build client-visible elections list ──────────────────────────────────
-  const typeFilter = parseTypeFilter(req);
+  const type = (req.nextUrl.searchParams.get('type') as ElectionType) ?? 'ELECTION';
+  if (!ALLOWED_TYPES.includes(type)) {
+    return Errors.badRequest('Invalid type filter');
+  }
 
   // For petitions we sort at the DB level (createdAt | votes) and reorder the
   // cached rows to match.  For regular elections the existing cache order
   // (opens_at desc) is preserved.
-  const petitionsSort = typeFilter === 'PETITION' ? parsePetitionsSort(req) : null;
+  const petitionsSort = type === 'PETITION' ? parsePetitionsSort(req) : null;
   const sortedPetitionIds = petitionsSort ? await getSortedPetitionIds(petitionsSort) : null;
 
   const elections = toClientElections(
@@ -320,7 +320,7 @@ export async function GET(req: NextRequest) {
     },
     votedSet,
     groupMemberships,
-    typeFilter,
+    type,
     adminRecord,
     adminGraph,
   );
