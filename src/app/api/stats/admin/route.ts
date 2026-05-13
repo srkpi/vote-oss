@@ -5,6 +5,7 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
 export const revalidate = 5;
+export const dynamic = 'force-dynamic';
 
 /**
  * @swagger
