@@ -1,1 +1,1 @@
-{"id":"ccdc54074be7f7af494aae29b203a918","fullName":"src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups delegates to fetchFacultyGroups","name":"delegates to fetchFacultyGroups","status":"passed","testResultsByEnv":{"default":"2603ec1dfa6375582030722cf8b9d28b"}}
+{"id":"ccdc54074be7f7af494aae29b203a918","fullName":"src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups delegates to fetchFacultyGroups","name":"delegates to fetchFacultyGroups","status":"passed","testResultsByEnv":{"default":"e785cf763b8d5c007a4bd4998f764a14"}}

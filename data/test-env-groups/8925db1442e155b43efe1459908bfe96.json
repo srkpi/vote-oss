@@ -1,1 +1,1 @@
-{"id":"8925db1442e155b43efe1459908bfe96","fullName":"src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"3eb9692d29d096dd86ffeb126fc5f09b"}}
+{"id":"8925db1442e155b43efe1459908bfe96","fullName":"src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"03a3666237a0ce22a14de637189fba37"}}
