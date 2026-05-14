@@ -40,7 +40,7 @@ export function KpiIdButton({
   authUrl = KPI_AUTH_URL,
 }: KpiIdButtonProps) {
   const logoSize = LOGO_SIZES[size];
-  const href = `${authUrl}?appId=${appId}`;
+  const href = `${authUrl}/uk/diia?appId=${appId}`;
 
   return (
     <Button
