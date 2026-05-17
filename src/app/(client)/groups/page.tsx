@@ -9,18 +9,18 @@ import { isBotRequest } from '@/lib/utils/bot';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 
 export const metadata: Metadata = {
-  title: 'Ваші групи',
-  description: 'Керування групами та членством в них',
+  title: 'Групи',
+  description: 'Публічні групи та членство в них',
   openGraph: {
-    title: `Ваші групи | ${APP_NAME}`,
-    description: 'Керування групами та членством в них',
+    title: `Групи | ${APP_NAME}`,
+    description: 'Публічні групи та членство в них',
     url: new URL('/groups', APP_URL),
     images: [OPENGRAPH_IMAGE_DATA],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `Ваші групи | ${APP_NAME}`,
-    description: 'Керування групами та членством в них',
+    title: `Групи | ${APP_NAME}`,
+    description: 'Публічні групи та членство в них',
     images: [OPENGRAPH_IMAGE_DATA],
   },
 };
