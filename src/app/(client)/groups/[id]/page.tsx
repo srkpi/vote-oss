@@ -6,7 +6,6 @@ import { serverApi } from '@/lib/api/server';
 import { APP_URL } from '@/lib/config/client';
 import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
-import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 import type { ElectionCampaign } from '@/types/campaign';
 import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 import type { ProtocolSummary } from '@/types/protocol';
@@ -33,13 +32,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: metaTitle,
       description: 'Керування групою та членством в ній',
       url: new URL(`/groups/${id}`, APP_URL),
-      images: [OPENGRAPH_IMAGE_DATA],
     },
     twitter: {
       card: 'summary_large_image',
       title: metaTitle,
       description: 'Керування групами та членством в них',
-      images: [OPENGRAPH_IMAGE_DATA],
     },
   };
 }

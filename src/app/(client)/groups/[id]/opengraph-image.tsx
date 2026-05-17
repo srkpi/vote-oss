@@ -4,7 +4,7 @@ import {
   buildOgFontConfig,
   buildOgImageElement,
   clampTitle,
-  ICON_PETITION,
+  ICON_GROUPS,
   loadOgFonts,
   ogContentType,
   ogSize,
@@ -12,7 +12,7 @@ import {
 import { serverApi } from '@/lib/api/server';
 
 export const runtime = 'nodejs';
-export const alt = 'Петиція';
+export const alt = 'Група';
 export const size = ogSize;
 export const contentType = ogContentType;
 
@@ -20,24 +20,24 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default async function PetitionOgImage({ params }: Props) {
+export default async function GroupOgImage({ params }: Props) {
   const { id } = await params;
   const { onest, bitter } = await loadOgFonts();
-  const { data, status } = await serverApi.petitions.og(id);
+  const { data, status } = await serverApi.groups.og(id);
 
-  let metaTitle = 'Петиція';
-  if (status === 404) metaTitle = 'Петицію не знайдено';
-  else if (data?.title) metaTitle = data.title;
+  let metaTitle = 'Група';
+  if (status === 404) metaTitle = 'Групу не знайдено';
+  else if (data?.name) metaTitle = data.name;
 
   return new ImageResponse(
     buildOgImageElement({
       title: clampTitle(metaTitle),
-      icon: ICON_PETITION,
-      iconBg: 'rgba(240,125,0,0.18)',
-      iconBorder: '2px solid rgba(240,125,0,0.55)',
-      accentColor: 'rgba(240,125,0,0.35)',
-      label: 'ПЕТИЦІЯ',
-      labelColor: '#f07d00',
+      icon: ICON_GROUPS,
+      iconBg: 'rgba(0,138,207,0.18)',
+      iconBorder: '2px solid rgba(0,138,207,0.55)',
+      accentColor: 'rgba(0,138,207,0.3)',
+      label: 'ГРУПА',
+      labelColor: '#008acf',
     }),
     { ...size, fonts: buildOgFontConfig(onest, bitter) },
   );

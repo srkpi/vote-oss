@@ -5,6 +5,7 @@ import { ProtocolDocumentView } from '@/components/protocols/protocol-document-v
 import { ProtocolOwnerView } from '@/components/protocols/protocol-owner-view';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
+import { isBotRequest } from '@/lib/utils/bot';
 
 export const metadata: Metadata = {
   title: 'Протокол',
@@ -15,6 +16,8 @@ interface Props {
 }
 
 export default async function ProtocolDetailPage({ params }: Props) {
+  if (await isBotRequest()) return null;
+
   const session = await getServerSession();
   if (!session) redirect('/login');
 

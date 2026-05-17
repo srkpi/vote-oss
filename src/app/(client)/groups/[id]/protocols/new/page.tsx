@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ProtocolFormClient } from '@/components/protocols/protocol-form-client';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
+import { isBotRequest } from '@/lib/utils/bot';
 
 export const metadata: Metadata = {
   title: 'Новий протокол',
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export default async function NewProtocolPage({ params }: Props) {
+  if (await isBotRequest()) return null;
+
   const session = await getServerSession();
   if (!session) redirect('/login');
 

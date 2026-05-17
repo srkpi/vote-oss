@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { CampaignDashboard } from '@/components/campaigns/campaign-dashboard';
 import { serverApi } from '@/lib/api/server';
 import { getServerSession } from '@/lib/server-auth';
+import { isBotRequest } from '@/lib/utils/bot';
 import type {
   CampaignFinalElectionSummary,
   CampaignSignatureElectionSummary,
@@ -19,6 +20,8 @@ interface Props {
 }
 
 export default async function CampaignDashboardPage({ params }: Props) {
+  if (await isBotRequest()) return null;
+
   const session = await getServerSession();
   if (!session) redirect('/login');
 
