@@ -12,20 +12,33 @@ import { prisma } from '@/lib/prisma';
  * @swagger
  * /api/groups:
  *   get:
- *     summary: List groups the caller belongs to or can view
+ *     summary: List groups the caller belongs to or can discover
  *     description: >
- *       Returns all non-deleted groups the caller is an active member of, plus
- *       any group that has at least one publicly-viewable, non-deleted election
- *       restricted to its membership (so non-members can still discover the
- *       group via its public poll).  Each entry includes computed `isOwner`
- *       and `isMember` flags.  Admins with `manage_groups` additionally
- *       receive every group in the system via the `/api/admin/groups` endpoint.
- *     tags: [Groups]
+ *       Returns two categories of groups combined into a single array:
+ *
+ *       1. All non-deleted groups the caller is an active member of (ordered
+ *          by join date ascending).
+ *       2. Groups the caller is NOT a member of but which have at least one
+ *          non-deleted, publicly-viewable election restricted to their
+ *          membership (so non-members can discover the group via its public
+ *          poll).
+ *
+ *       Each entry includes computed `isOwner` and `isMember` flags. Admins
+ *       with `manage_groups` who need the full system-wide group list should
+ *       use GET /api/groups/all.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Array of groups
+ *         description: Array of group summaries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/GroupSummary'
  *       401:
  *         description: Unauthorized
  */
@@ -140,8 +153,11 @@ export async function GET(req: NextRequest) {
  *     summary: Create a new group
  *     description: >
  *       Creates a group and automatically adds the creator as its owner and
- *       first member.  A user may own at most GROUP_MAX_OWNED groups at a time.
- *     tags: [Groups]
+ *       first member. Requires admin authentication with `manage_groups`
+ *       permission. A user may own at most `GROUP_MAX_OWNED` groups
+ *       simultaneously.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
  *     requestBody:
@@ -150,18 +166,27 @@ export async function GET(req: NextRequest) {
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name]
+ *             required:
+ *               - name
  *             properties:
  *               name:
  *                 type: string
+ *                 minLength: 1
  *                 maxLength: 100
+ *                 description: Display name for the new group.
  *     responses:
  *       201:
  *         description: Group created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GroupSummary'
  *       400:
- *         description: Validation error or ownership limit reached
+ *         description: Missing or invalid name, or ownership limit reached
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden – caller is not an admin with manage_groups
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);

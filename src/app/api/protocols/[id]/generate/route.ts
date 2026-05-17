@@ -21,14 +21,53 @@ function sanitizeFilename(name: string, fallback: string): string {
  * @swagger
  * /api/protocols/{id}/generate:
  *   post:
- *     summary: Generate the protocol PDF via the external KPI docs generator
+ *     summary: Generate the protocol PDF via the external document generator
  *     description: >
- *       Any authenticated user may generate the PDF for a protocol.  No PDF is
- *       stored on this server — the response is the freshly-rendered binary
- *       streamed straight from the generator.
- *     tags: [Protocols]
+ *       Calls the external KPI docs generator service with the full protocol
+ *       payload and streams the resulting PDF binary directly to the client.
+ *       No PDF is stored on this server; each call produces a fresh render.
+ *       Any authenticated user may generate the PDF for a non-deleted protocol.
+ *
+ *       The endpoint performs a pre-flight check and returns 400 if:
+ *         - The group's requisites are incomplete (all four fields — name,
+ *           address, email, contact — must be non-null).
+ *         - The protocol has no responsibles.
+ *         - The protocol has no agenda items.
+ *     tags:
+ *       - Protocols
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Protocol UUID
+ *     responses:
+ *       200:
+ *         description: PDF binary stream
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *         headers:
+ *           Content-Disposition:
+ *             description: Attachment filename derived from the protocol number and date.
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: >
+ *           Invalid UUID, group requisites incomplete, no responsibles, or no
+ *           agenda items.
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Protocol not found, soft-deleted, or its group is soft-deleted
+ *       502:
+ *         description: Failed to contact the external document generator or the generator returned an error
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

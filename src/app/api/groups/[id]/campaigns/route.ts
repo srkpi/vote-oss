@@ -13,10 +13,36 @@ import { isValidUuid } from '@/lib/utils/common';
  * /api/groups/{id}/campaigns:
  *   get:
  *     summary: List active election campaigns for a group
- *     description: Returns every non-deleted campaign belonging to the group.
- *     tags: [ElectionCampaigns]
+ *     description: >
+ *       Returns every non-deleted (non-cancelled) election campaign belonging
+ *       to the group. Any authenticated user may call this endpoint.
+ *     tags:
+ *       - ElectionCampaigns
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *     responses:
+ *       200:
+ *         description: Array of campaigns (may be empty)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ElectionCampaign'
+ *       400:
+ *         description: Invalid group UUID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Group not found or soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -45,10 +71,49 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * /api/groups/{id}/campaigns:
  *   post:
  *     summary: Create an election campaign for a ВКСУ group
- *     description: Caller must be an active member of the ВКСУ group.
- *     tags: [ElectionCampaigns]
+ *     description: >
+ *       Creates a new election campaign for the specified ВКСУ group. The
+ *       caller must be an active member of the group and the group must be
+ *       of type VKSU. The campaign starts in the ANNOUNCED state; a cron
+ *       job advances it through subsequent states based on the configured
+ *       timestamps. All timestamp fields (except signatures phase timestamps
+ *       when signatureCollection is false) are immutable after creation.
+ *
+ *       When signatureCollection is true, signaturesOpensAt,
+ *       signaturesClosesAt, and signatureQuorum are all required.
+ *     tags:
+ *       - ElectionCampaigns
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateElectionCampaignBody'
+ *     responses:
+ *       201:
+ *         description: Campaign created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ElectionCampaign'
+ *       400:
+ *         description: Invalid UUID or body validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not an active ВКСУ group member
+ *       404:
+ *         description: Group not found, soft-deleted, or not of type VKSU
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

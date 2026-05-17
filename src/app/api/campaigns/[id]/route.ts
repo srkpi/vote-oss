@@ -12,10 +12,35 @@ import { isValidUuid } from '@/lib/utils/common';
  * @swagger
  * /api/campaigns/{id}:
  *   get:
- *     summary: Get an election campaign by id
- *     tags: [ElectionCampaigns]
+ *     summary: Get an election campaign by ID
+ *     description: >
+ *       Returns full campaign details. Any authenticated user may fetch a
+ *       campaign; group membership is not required for reading.
+ *     tags:
+ *       - ElectionCampaigns
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Campaign UUID
+ *     responses:
+ *       200:
+ *         description: Campaign details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ElectionCampaign'
+ *       400:
+ *         description: Invalid campaign UUID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Campaign not found, soft-deleted, or its group is soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -38,11 +63,34 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * @swagger
  * /api/campaigns/{id}:
  *   delete:
- *     summary: Soft-delete an election campaign (state → CANCELLED)
- *     description: Caller must be an active ВКСУ member of the campaign's group.
- *     tags: [ElectionCampaigns]
+ *     summary: Cancel an election campaign (soft-delete, state → CANCELLED)
+ *     description: >
+ *       Soft-deletes the campaign and transitions its state to CANCELLED.
+ *       Cancelled campaigns can no longer advance through their state machine.
+ *       Caller must be an active member of the campaign's ВКСУ group.
+ *     tags:
+ *       - ElectionCampaigns
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Campaign UUID
+ *     responses:
+ *       204:
+ *         description: Campaign cancelled
+ *       400:
+ *         description: Invalid campaign UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not an active member of the campaign's ВКСУ group
+ *       404:
+ *         description: Campaign not found or already soft-deleted
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

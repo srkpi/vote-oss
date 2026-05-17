@@ -21,15 +21,22 @@ import { prisma } from '@/lib/prisma';
  *   get:
  *     summary: List global bypass tokens
  *     description: >
- *       Returns all global bypass tokens visible to the caller, including
- *       soft-deleted ones for audit history. Non-restricted admins only.
+ *       Returns all global bypass tokens whose `valid_until` is in the future,
+ *       regardless of whether they have been soft-deleted. This means tokens
+ *       that have been deleted but have not yet expired are still returned
+ *       (with a non-null `deletedAt`) so that their full usage history remains
+ *       accessible for audit purposes. Fully expired tokens are excluded.
+ *
+ *       Only non-restricted admins may access this endpoint. The `canDelete`
+ *       and `canRevokeUsages` flags on each token indicate what actions the
+ *       calling admin may perform.
  *     tags:
  *       - Bypass
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Array of global bypass tokens
+ *         description: Array of global bypass tokens (including soft-deleted, excluding expired)
  *         content:
  *           application/json:
  *             schema:
@@ -39,7 +46,7 @@ import { prisma } from '@/lib/prisma';
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – restricted admin
+ *         description: Forbidden – caller is a faculty-restricted admin
  */
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);

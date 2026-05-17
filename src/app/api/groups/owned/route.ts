@@ -9,17 +9,37 @@ import { getUserOwnedGroups } from '@/lib/groups';
  * @swagger
  * /api/groups/owned:
  *   get:
- *     summary: List groups owned by the caller (lightweight)
+ *     summary: List groups owned by the authenticated user
  *     description: >
- *       Returns a compact list of groups owned by the authenticated user.
- *       Used in the election creation form to offer GROUP_MEMBERSHIP restrictions.
- *       Results are cached per-user for 5 minutes.
- *     tags: [Groups]
+ *       Returns a compact list of non-deleted groups for which the caller is
+ *       the owner. Primarily used in the election creation form to populate
+ *       GROUP_MEMBERSHIP restriction options. Results are cached per-user.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
  *     responses:
  *       200:
- *         description: Array of owned group summaries
+ *         description: Array of owned group summaries (may be empty)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 required:
+ *                   - id
+ *                   - name
+ *                   - memberCount
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   name:
+ *                     type: string
+ *                   memberCount:
+ *                     type: integer
+ *                     minimum: 0
  *       401:
  *         description: Unauthorized
  */

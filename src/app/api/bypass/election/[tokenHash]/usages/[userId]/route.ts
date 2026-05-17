@@ -13,9 +13,13 @@ import { prisma } from '@/lib/prisma';
  *     summary: Revoke a user's election bypass access
  *     description: >
  *       Sets `revoked_at` and `revoked_by` on the specified election bypass
- *       usage record, immediately removing the user's bypass eligibility for
- *       this election. Non-restricted admins can revoke any usage; restricted
- *       admins can only revoke usages on tokens they created.
+ *       usage record, immediately removing that user's bypass eligibility for
+ *       the associated election. The user's bypass cache is also invalidated.
+ *
+ *       Permission model:
+ *         - Non-restricted admins may revoke any usage.
+ *         - Faculty-restricted admins may only revoke usages on tokens they
+ *           themselves created.
  *     tags:
  *       - Bypass
  *     security:
@@ -26,22 +30,24 @@ import { prisma } from '@/lib/prisma';
  *         required: true
  *         schema:
  *           type: string
+ *         description: SHA-256 hex hash of the raw bypass token
  *       - in: path
  *         name: userId
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID whose bypass usage should be revoked
  *     responses:
  *       204:
  *         description: Usage revoked
- *       400:
- *         description: Usage already revoked
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – insufficient permissions
+ *         description: Forbidden – faculty-restricted admin trying to revoke a usage on a token they did not create
  *       404:
  *         description: Token or usage not found
+ *       409:
+ *         description: Bypass usage is already revoked
  */
 export async function DELETE(
   req: NextRequest,

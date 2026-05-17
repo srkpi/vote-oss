@@ -23,14 +23,41 @@ function computeStatus(
  * @swagger
  * /api/campaigns/{id}/signature-elections:
  *   get:
- *     summary: List per-candidate signature elections spawned for a campaign
+ *     summary: List per-candidate signature elections for a campaign
  *     description: >
- *       Returns one entry per APPROVED candidate that has a spawned signature
- *       election attached.  Caller must be an active member of the campaign's
- *       VKSU group.
- *     tags: [ElectionCampaigns]
+ *       Returns one summary entry per APPROVED candidate who has an
+ *       auto-spawned signature election attached to them. Candidates who were
+ *       not yet approved or whose signature election was not created yet are
+ *       excluded. Caller must be an active member of the campaign's ВКСУ group.
+ *     tags:
+ *       - ElectionCampaigns
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Campaign UUID
+ *     responses:
+ *       200:
+ *         description: Array of signature election summaries (may be empty)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/CampaignSignatureElectionSummary'
+ *       400:
+ *         description: Invalid campaign UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not an active member of the campaign's group
+ *       404:
+ *         description: Campaign not found, soft-deleted, or its group is soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

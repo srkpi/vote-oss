@@ -16,7 +16,7 @@ import { isValidUuid } from '@/lib/utils/common';
  *       previews for a petition.  Public — no authentication required.
  *       Returns 404 when the id refers to a non-petition election.
  *     tags:
- *       - Petitions
+ *       - Elections
  *     parameters:
  *       - in: path
  *         name: id

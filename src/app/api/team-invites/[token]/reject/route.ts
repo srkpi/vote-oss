@@ -10,14 +10,46 @@ import { prisma } from '@/lib/prisma';
  * @swagger
  * /api/team-invites/{token}/reject:
  *   post:
- *     summary: Decline a team-invite token
+ *     summary: Decline a team invite token
  *     description: >
- *       Marks the token as used with response=REJECTED.  The candidate may
- *       then regenerate a fresh invite for the same slot.  Caller must be
- *       authenticated and not the candidate.
- *     tags: [TeamInvites]
+ *       Marks the token as used with response=REJECTED. After this the slot
+ *       returns to `rejected` state and the candidate may regenerate a fresh
+ *       invite token for the same slot. The caller must be authenticated and
+ *       may not be the registration's candidate.
+ *     tags:
+ *       - TeamInvites
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Raw (unhashed) team invite token
+ *     responses:
+ *       200:
+ *         description: Invite declined
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - rejected
+ *               properties:
+ *                 rejected:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Missing token or token has expired
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is the registration's candidate (cannot reject own invite)
+ *       404:
+ *         description: Invite token not found
+ *       409:
+ *         description: Token already used, revoked, or registration no longer accepting team members
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const auth = await requireAuth(req);

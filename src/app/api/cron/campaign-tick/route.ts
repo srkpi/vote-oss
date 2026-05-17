@@ -10,14 +10,34 @@ import { CRON_SECRET } from '@/lib/config/server';
  *   post:
  *     summary: Advance election campaigns through their state machine
  *     description: >
- *       Walks every active campaign and updates its `state` to whatever the
- *       current clock implies (Stage 1 — purely date-driven; child entity
- *       creation lands in later stages).  Must be called with a
- *       `Bearer <CRON_SECRET>` Authorization header.
+ *       Walks every active (non-cancelled, non-completed) campaign and
+ *       transitions its `state` field to whatever the current clock implies
+ *       based on the campaign's configured phase timestamps. Child entity
+ *       creation (registration forms, signature elections, final election)
+ *       happens in subsequent stages. Must be called with a
+ *       `Bearer <CRON_SECRET>` Authorization header. Intended for scheduled
+ *       invocation only (e.g. Vercel Cron).
  *     tags:
  *       - Cron
  *     security:
  *       - cronSecret: []
+ *     responses:
+ *       200:
+ *         description: Tick completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - updated
+ *               properties:
+ *                 updated:
+ *                   type: integer
+ *                   description: Number of campaigns whose state was updated in this tick
+ *       401:
+ *         description: Missing or invalid cron secret
+ *       500:
+ *         description: Unexpected error during state machine processing
  */
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization');

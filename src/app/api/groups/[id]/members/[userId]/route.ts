@@ -14,11 +14,15 @@ import { isValidUuid } from '@/lib/utils/common';
  *   delete:
  *     summary: Remove a member from a group (kick or self-leave)
  *     description: >
- *       - Any member may call this endpoint with their own userId to **leave** the group.
- *       - The group owner may call this to **kick** any member except themselves.
- *         (Owner must transfer ownership first before leaving.)
- *       - Admins with manage_groups may kick any member from any group.
- *     tags: [Groups]
+ *       - Any active member may call this endpoint with their own userId to
+ *         **leave** the group.
+ *       - The group owner may call this to **kick** any member except
+ *         themselves. The owner must transfer ownership before leaving.
+ *       - An admin with `manage_groups` may kick any member from any group.
+ *
+ *       The removed member's group-membership cache is invalidated.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -28,22 +32,24 @@ import { isValidUuid } from '@/lib/utils/common';
  *         schema:
  *           type: string
  *           format: uuid
+ *         description: Group UUID
  *       - in: path
  *         name: userId
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID of the member to remove
  *     responses:
  *       204:
  *         description: Member removed
  *       400:
- *         description: Owner cannot leave without transferring ownership
+ *         description: Invalid group UUID, missing userId, or the target is the group owner (must transfer ownership first)
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Insufficient permissions
+ *         description: Caller is not the target, not the owner, and does not have manage_groups
  *       404:
- *         description: Group or member not found
+ *         description: Group not found or the specified user is not an active member
  */
 export async function DELETE(
   req: NextRequest,
@@ -110,14 +116,54 @@ export async function DELETE(
  * @swagger
  * /api/groups/{id}/members/{userId}:
  *   patch:
- *     summary: Update a member's role (free-form text used in protocol generation)
- *     description:
- *       - Owner-only.
- *       - Body `{ role: string | null }`.
- *       - Empty string clears the role.
- *     tags: [Groups]
+ *     summary: Update a member's role label
+ *     description: >
+ *       Sets or clears the free-form `role` field on a group member record.
+ *       The role is used in protocol document generation (e.g. "Голова",
+ *       "Секретар"). An empty string or null clears the role. Only the
+ *       group owner may call this endpoint.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID of the member whose role should be updated
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - role
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 nullable: true
+ *                 description: New role label. Null or empty string clears the role.
+ *     responses:
+ *       204:
+ *         description: Role updated
+ *       400:
+ *         description: Invalid UUID, missing role field, role value not a string or null, or role exceeds maximum length
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not the group owner
+ *       404:
+ *         description: Group not found or the specified user is not an active member
  */
 export async function PATCH(
   req: NextRequest,

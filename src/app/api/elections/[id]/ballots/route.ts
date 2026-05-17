@@ -19,12 +19,20 @@ import type { ElectionRestriction } from '@/types/election';
  *     summary: List all ballots for an election
  *     description: >
  *       Returns the full ordered ballot chain for the given election together
- *       with complete election metadata (status, choices, ballot count, and —
- *       for closed elections — the private key for client-side decryption).
+ *       with complete election metadata. The `anonymous` field on the returned
+ *       election indicates whether voter identities are embedded in ballots.
+ *       When `anonymous` is false, decrypting ballots on the client will reveal
+ *       each voter's `userId` and `fullName`.
  *
- *       The `anonymous` field on the returned election indicates whether voter
- *       identities are embedded in ballots.  When `false`, decrypting ballots
- *       on the client will reveal each voter's `userId` and `fullName`.
+ *       The private key is included in the response (`privateKey` on the
+ *       election object) once the election is closed, or — for non-anonymous
+ *       elections — while voting is still live (since non-anonymous elections
+ *       carry no zero-knowledge guarantee to preserve).
+ *
+ *       Access rules mirror GET /api/elections/{id}/ballots: unrestricted
+ *       admins always have access; faculty-restricted admins require a matching
+ *       FACULTY restriction or publicViewing; regular users must satisfy the
+ *       election's restrictions or the election must be publicViewing.
  *     tags:
  *       - Elections
  *     security:
@@ -39,11 +47,14 @@ import type { ElectionRestriction } from '@/types/election';
  *         description: Election UUID
  *     responses:
  *       200:
- *         description: Election metadata and ballot list
+ *         description: Election metadata and ordered ballot chain
  *         content:
  *           application/json:
  *             schema:
  *               type: object
+ *               required:
+ *                 - election
+ *                 - ballots
  *               properties:
  *                 election:
  *                   $ref: '#/components/schemas/ElectionForBallotsResponse'
@@ -56,9 +67,9 @@ import type { ElectionRestriction } from '@/types/election';
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: User is not eligible to view this election
+ *         description: Caller is not eligible to view this election and publicViewing is false
  *       404:
- *         description: Election not found
+ *         description: Election not found (non-admins also receive 404 for soft-deleted elections)
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

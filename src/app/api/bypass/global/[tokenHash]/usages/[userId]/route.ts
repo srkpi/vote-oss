@@ -14,11 +14,14 @@ import { prisma } from '@/lib/prisma';
  *     description: >
  *       Sets `revoked_at` and `revoked_by` on the specified usage record,
  *       preventing the user from benefiting from this bypass token in future
- *       requests. Because global bypass tokens gate platform access (not just
- *       a single election), revoking a usage will also block the user's next
- *       token refresh, effectively requiring them to re-authenticate.
- *       Non-restricted admins can revoke any usage; restricted admins can
- *       only revoke usages on tokens they created.
+ *       requests. Because global bypass tokens gate platform access (not
+ *       just a single election), revoking a usage will cause the user's next
+ *       token refresh to fail, effectively forcing re-authentication.
+ *
+ *       Permission model:
+ *         - Non-restricted admins may revoke any usage.
+ *         - Faculty-restricted admins may only revoke usages on tokens they
+ *           themselves created.
  *     tags:
  *       - Bypass
  *     security:
@@ -29,22 +32,24 @@ import { prisma } from '@/lib/prisma';
  *         required: true
  *         schema:
  *           type: string
+ *         description: SHA-256 hex hash of the raw bypass token
  *       - in: path
  *         name: userId
  *         required: true
  *         schema:
  *           type: string
+ *         description: User ID whose bypass usage should be revoked
  *     responses:
  *       204:
  *         description: Usage revoked
- *       400:
- *         description: Usage already revoked
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – insufficient permissions
+ *         description: Forbidden – faculty-restricted admin trying to revoke a usage on a token they did not create
  *       404:
  *         description: Token or usage not found
+ *       409:
+ *         description: Bypass usage is already revoked
  */
 export async function DELETE(
   req: NextRequest,

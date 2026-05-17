@@ -13,15 +13,79 @@ import { isValidUuid } from '@/lib/utils/common';
  *   patch:
  *     summary: Candidate confirms or declines an invitee who already accepted
  *     description: >
- *       After a team member follows their invite link and accepts, the slot
- *       enters `awaiting_candidate` — the candidate must explicitly confirm
- *       or decline that person.  Confirming locks the slot; declining frees
- *       the slot so the candidate can regenerate a fresh invite for someone
- *       else.  Once every slot is confirmed, the registration auto-transitions
- *       from AWAITING_TEAM to PENDING_REVIEW within the same transaction.
- *     tags: [TeamInvites]
+ *       After a team member follows their invite link and accepts (state:
+ *       `awaiting_candidate`), the candidate must explicitly confirm or decline
+ *       that person via this endpoint.
+ *
+ *       - **CONFIRMED**: the slot is locked as accepted. If this was the last
+ *         outstanding slot, the registration is atomically transitioned from
+ *         AWAITING_TEAM to PENDING_REVIEW within the same database transaction.
+ *       - **DECLINED**: the slot is freed. The candidate can then regenerate
+ *         a fresh invite token for the same slot.
+ *
+ *       Only the registration's author (candidate) may call this endpoint.
+ *     tags:
+ *       - TeamInvites
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Registration UUID
+ *       - in: path
+ *         name: slot
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Team slot number (1-indexed, must not exceed the form's team_size)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - decision
+ *             properties:
+ *               decision:
+ *                 type: string
+ *                 enum: [CONFIRMED, DECLINED]
+ *     responses:
+ *       200:
+ *         description: Decision recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - slot
+ *                 - decision
+ *                 - registrationStatus
+ *               properties:
+ *                 slot:
+ *                   type: integer
+ *                 decision:
+ *                   type: string
+ *                   enum: [CONFIRMED, DECLINED]
+ *                 registrationStatus:
+ *                   type: string
+ *                   enum: [AWAITING_TEAM, PENDING_REVIEW]
+ *                   description: The registration's status after this decision. PENDING_REVIEW only when CONFIRMED and all other slots are also accepted.
+ *       400:
+ *         description: Invalid UUID, invalid slot, invalid decision value, or slot out of range
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not the registration author
+ *       404:
+ *         description: Registration not found
+ *       409:
+ *         description: Registration is not in AWAITING_TEAM state, or slot is not in awaiting_candidate state
  */
 export async function PATCH(
   req: NextRequest,

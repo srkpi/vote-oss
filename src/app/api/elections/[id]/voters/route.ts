@@ -19,16 +19,64 @@ import type { ElectionRestriction } from '@/types/election';
  *     summary: Decrypted voter list for a non-anonymous election
  *     description: >
  *       Returns the unique list of voter identities (`userId`, `fullName`)
- *       extracted from v2 (identified) ballot envelopes.
+ *       extracted by decrypting the v2 ballot envelopes on the server.
  *
- *       Available only for non-anonymous, closed elections — for anonymous
- *       ballots the server has no voter mapping to disclose, and during an
- *       open election we still hide who-voted-for-what.  For non-anonymous
- *       open elections, the list of voters (without their choices) is
- *       returned because it is essentially public anyway.
- *     tags: [Elections]
+ *       Availability:
+ *         - Only for non-anonymous elections (`anonymous: false`). Anonymous
+ *           elections carry no voter identity; calling this endpoint for them
+ *           returns 400.
+ *         - The election must have already opened. Upcoming elections return 400.
+ *         - Available during both open and closed phases. While the election
+ *           is open the voter list (without their choices) is returned, since
+ *           it is essentially public in a non-anonymous context.
+ *
+ *       Access rules mirror GET /api/elections/{id}/ballots: unrestricted
+ *       admins always have access; faculty-restricted admins require a matching
+ *       FACULTY restriction or publicViewing; regular users must satisfy the
+ *       restrictions or the election must be publicViewing.
+ *     tags:
+ *       - Elections
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     responses:
+ *       200:
+ *         description: List of unique voters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - voters
+ *               properties:
+ *                 voters:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     required:
+ *                       - userId
+ *                       - fullName
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                       fullName:
+ *                         type: string
+ *       400:
+ *         description: >
+ *           Invalid UUID, election is anonymous, or election has not started yet.
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not eligible to view this election and publicViewing is false
+ *       404:
+ *         description: Election not found (non-admins also receive 404 for soft-deleted elections)
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

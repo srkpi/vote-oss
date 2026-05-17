@@ -10,18 +10,57 @@ import { prisma } from '@/lib/prisma';
  * @swagger
  * /api/team-invites/{token}/accept:
  *   post:
- *     summary: Accept a team-invite token
+ *     summary: Accept a team invite token
  *     description: >
- *       Marks the token as used with response=ACCEPTED.  The caller must be
- *       authenticated and may not be the registration's candidate.  After
- *       this step the slot enters `awaiting_candidate` — the candidate
- *       reviews each accepted member and either confirms or declines them
- *       via `PATCH /api/registrations/{id}/team/{slot}/decision`.  The
- *       registration is only auto-promoted to PENDING_REVIEW once the
- *       candidate has confirmed every slot.
- *     tags: [TeamInvites]
+ *       Marks the token as used with response=ACCEPTED and records the
+ *       invitee's identity (userId, fullName, group, faculty). After this
+ *       the slot enters the `awaiting_candidate` state — the registration's
+ *       author must then explicitly confirm or decline via
+ *       PATCH /api/registrations/{id}/team/{slot}/decision. The registration
+ *       is only auto-promoted to PENDING_REVIEW once the candidate confirms
+ *       every slot.
+ *
+ *       The caller must be authenticated and may not be the registration's
+ *       candidate (you cannot accept your own invite).
+ *     tags:
+ *       - TeamInvites
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Raw (unhashed) team invite token
+ *     responses:
+ *       200:
+ *         description: Invite accepted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - accepted
+ *                 - registrationStatus
+ *               properties:
+ *                 accepted:
+ *                   type: boolean
+ *                   example: true
+ *                 registrationStatus:
+ *                   type: string
+ *                   enum: [AWAITING_TEAM]
+ *                   description: Always AWAITING_TEAM at this point; promotion to PENDING_REVIEW happens on candidate confirmation.
+ *       400:
+ *         description: Token expired, already used, revoked, registration not accepting team members, or any other terminal-state conflict
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is the registration's candidate (cannot accept own invite)
+ *       404:
+ *         description: Invite token not found
+ *       409:
+ *         description: Token already used or revoked
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const auth = await requireAuth(req);

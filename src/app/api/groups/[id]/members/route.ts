@@ -12,11 +12,38 @@ import { isValidUuid } from '@/lib/utils/common';
  *   get:
  *     summary: List active members of a group
  *     description: >
- *       Returns all non-deleted members.  Only accessible to current members
- *       of the group or admins with manage_groups.
- *     tags: [Groups]
+ *       Returns all non-deleted members ordered by join date ascending. Only
+ *       accessible to current active members of the group or admins with
+ *       `manage_groups`.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *     responses:
+ *       200:
+ *         description: Array of active group members
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/GroupMember'
+ *       400:
+ *         description: Invalid group UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not a member of this group and does not have manage_groups
+ *       404:
+ *         description: Group not found or soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

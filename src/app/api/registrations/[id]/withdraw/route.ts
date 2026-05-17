@@ -13,14 +13,42 @@ const NON_FINAL_STATUSES = new Set(['DRAFT', 'AWAITING_TEAM', 'PENDING_REVIEW'])
  * @swagger
  * /api/registrations/{id}/withdraw:
  *   post:
- *     summary: Withdraw a registration
+ *     summary: Withdraw a candidate registration
  *     description: >
- *       Authored candidate withdraws their registration.  Allowed from any
- *       non-final state (DRAFT, AWAITING_TEAM, PENDING_REVIEW).  Final states
- *       (APPROVED, REJECTED, WITHDRAWN) cannot be reverted.
- *     tags: [CandidateRegistrations]
+ *       Transitions the registration to WITHDRAWN. Only the registration's
+ *       author (candidate) may withdraw their registration. Withdrawal is
+ *       allowed from any non-final state: DRAFT, AWAITING_TEAM, or
+ *       PENDING_REVIEW. Final states (APPROVED, REJECTED, WITHDRAWN) cannot
+ *       be reverted.
+ *     tags:
+ *       - CandidateRegistrations
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Registration UUID
+ *     responses:
+ *       200:
+ *         description: Registration withdrawn
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateRegistration'
+ *       400:
+ *         description: Invalid registration UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not the registration author
+ *       404:
+ *         description: Registration not found
+ *       409:
+ *         description: Registration is already in a final state (APPROVED, REJECTED, or WITHDRAWN)
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

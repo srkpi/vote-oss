@@ -100,13 +100,23 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
  *   patch:
  *     summary: Update an admin's permissions
  *     description: >
- *       Updates the `manageAdmins` and/or `restrictedToFaculty` flags for the
- *       target admin. The caller must have `manage_admins` and be a transitive
- *       ancestor of the target in the admin hierarchy. A caller who is
- *       `restricted_to_faculty` cannot grant `restrictedToFaculty: false`.
- *       When `manage_admins` changes all of the target's invite tokens are
- *       revoked. When `restricted_to_faculty` changes from false to true, invite
- *       tokens with `restricted_to_faculty: false` are deleted.
+ *       Updates one or more permission flags for the target admin. Settable
+ *       flags are `manageAdmins`, `manageGroups`, `managePetitions`,
+ *       `manageFaq`, and `restrictedToFaculty`. At least one must be provided.
+ *
+ *       Authorization rules:
+ *         - Caller must have `manage_admins`.
+ *         - Caller must be a transitive ancestor of the target in the admin
+ *           hierarchy.
+ *         - A faculty-restricted caller cannot set `restrictedToFaculty: false`
+ *           (cannot grant broader access than their own).
+ *
+ *       Side-effects on permission change:
+ *         - If `manageAdmins` changes, all invite tokens created by the target
+ *           are hard-deleted (they may have granted incorrect permissions).
+ *         - If `restrictedToFaculty` changes from false → true, invite tokens
+ *           created by the target with `restrictedToFaculty: false` are
+ *           hard-deleted.
  *     tags:
  *       - Admins
  *     security:
@@ -127,19 +137,37 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
  *             properties:
  *               manageAdmins:
  *                 type: boolean
+ *                 description: Grant or revoke the ability to invite/remove other admins.
+ *               manageGroups:
+ *                 type: boolean
+ *                 description: Grant or revoke the ability to manage groups.
+ *               managePetitions:
+ *                 type: boolean
+ *                 description: Grant or revoke the ability to approve/delete petitions.
+ *               manageFaq:
+ *                 type: boolean
+ *                 description: Grant or revoke the ability to manage FAQ content.
  *               restrictedToFaculty:
  *                 type: boolean
+ *                 description: >
+ *                   When true, the admin can only see and manage resources
+ *                   scoped to their own faculty. A faculty-restricted caller
+ *                   cannot set this to false.
  *     responses:
  *       204:
  *         description: Permissions updated successfully
  *       400:
- *         description: Missing userId, attempting to update self, or no fields provided
+ *         description: >
+ *           Missing userId, attempting to update self, no fields provided,
+ *           or faculty-restricted caller trying to grant unrestricted access.
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – no manage_admins, restricted caller granting unrestricted access, or target outside hierarchy
+ *         description: >
+ *           Caller lacks manage_admins, or the target is outside the caller's
+ *           hierarchy branch.
  *       404:
- *         description: Target admin not found
+ *         description: Target admin not found or already deleted
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   const auth = await requireAdmin(req);

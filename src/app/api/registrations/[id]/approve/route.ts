@@ -13,13 +13,40 @@ import { isValidUuid } from '@/lib/utils/common';
  * @swagger
  * /api/registrations/{id}/approve:
  *   post:
- *     summary: Approve a registration
+ *     summary: Approve a candidate registration
  *     description: >
- *       Caller must be an active member of the form's owning group.  Allowed
- *       only from PENDING_REVIEW.
- *     tags: [CandidateRegistrations]
+ *       Transitions the registration from PENDING_REVIEW to APPROVED. Records
+ *       the reviewer's user ID and full name and the review timestamp. Caller
+ *       must be an active member of the form's owning ВКСУ group.
+ *     tags:
+ *       - CandidateRegistrations
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Registration UUID
+ *     responses:
+ *       200:
+ *         description: Registration approved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateRegistration'
+ *       400:
+ *         description: Invalid registration UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not an active member of the owning ВКСУ group
+ *       404:
+ *         description: Registration not found or its form is soft-deleted
+ *       409:
+ *         description: Registration is not in PENDING_REVIEW state
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

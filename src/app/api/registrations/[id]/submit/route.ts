@@ -21,17 +21,51 @@ import { isValidUuid } from '@/lib/utils/common';
  *   post:
  *     summary: Submit a draft registration for review
  *     description: >
- *       Validates that all required fields are present and well-formed, then
- *       transitions DRAFT → AWAITING_TEAM (when the form requires team
- *       members) or DRAFT → PENDING_REVIEW (solo).  Submission is gated by
- *       the form's open window and the caller's eligibility.
+ *       Validates all required fields and transitions the registration:
+ *         - DRAFT → AWAITING_TEAM when the form requires team members
+ *           (team_size > 0).
+ *         - DRAFT → PENDING_REVIEW for solo candidacy (team_size = 0).
  *
- *       Note for stage 3: AWAITING_TEAM is a terminal state until stage 4
- *       wires up team-invite tokens.  Forms with team_size > 0 still accept
- *       submission but the candidate cannot progress further yet.
- *     tags: [CandidateRegistrations]
+ *       Hard validation at submit time (unlike the lenient draft save):
+ *         - Phone number must be non-empty and valid.
+ *         - Telegram tag is optional but must be valid if provided.
+ *         - Campaign programme URL is required and must be valid if the form
+ *           has requiresCampaignProgram = true.
+ *         - The form must be within its open window.
+ *         - The caller must satisfy the form's eligibility restrictions.
+ *
+ *       Only the registration's author may submit it.
+ *     tags:
+ *       - CandidateRegistrations
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Registration UUID
+ *     responses:
+ *       200:
+ *         description: Registration submitted; returns the updated registration with its new status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateRegistration'
+ *       400:
+ *         description: >
+ *           Invalid UUID, form window closed, required field missing or
+ *           invalid, or campaign programme URL required but absent.
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not the registration author, or does not satisfy the form's restrictions
+ *       404:
+ *         description: Registration not found, form soft-deleted, group not VKSU, or group soft-deleted
+ *       409:
+ *         description: Registration is not in DRAFT state
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

@@ -19,13 +19,41 @@ import { isValidUuid } from '@/lib/utils/common';
  * @swagger
  * /api/registration-forms/{id}/registrations:
  *   get:
- *     summary: List registrations submitted to a form (reviewer-only)
+ *     summary: List registrations submitted to a form (reviewer view)
  *     description: >
- *       Caller must be an active member of the form's owning group (currently
- *       always a ВКСУ group).  Returns every non-draft registration.
- *     tags: [CandidateRegistrations]
+ *       Returns every non-draft registration for the form ordered by
+ *       submission date descending. DRAFT registrations (private to the
+ *       candidate) are excluded. Caller must be an active member of the
+ *       form's owning ВКСУ group.
+ *     tags:
+ *       - CandidateRegistrations
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Registration form UUID
+ *     responses:
+ *       200:
+ *         description: Array of candidate registrations (may be empty)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/CandidateRegistration'
+ *       400:
+ *         description: Invalid form UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not an active member of the owning ВКСУ group
+ *       404:
+ *         description: Form not found or soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -62,13 +90,71 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *   post:
  *     summary: Create or update the caller's draft registration for a form
  *     description: >
- *       Idempotent for drafts: if the caller already has a DRAFT for this
- *       form, it is updated.  If a non-DRAFT registration exists, the request
- *       is rejected (409).  Submitting (transitioning out of DRAFT) happens
- *       through `/api/registrations/{id}/submit`.
- *     tags: [CandidateRegistrations]
+ *       Idempotent for draft registrations: if the caller already has a DRAFT
+ *       registration for this form, it is updated in place (200). If no
+ *       registration exists, a new one is created (201). If a non-draft
+ *       registration already exists (submitted), the request is rejected (409).
+ *       Submitting (transitioning out of DRAFT) is done via
+ *       POST /api/registrations/{id}/submit.
+ *
+ *       Validation:
+ *         - The form must be within its open window (opens_at ≤ now ≤ closes_at).
+ *         - The caller must satisfy the form's eligibility restrictions.
+ *         - Non-empty phone and Telegram values are validated on save; blank
+ *           values are accepted in DRAFT state.
+ *         - The campaign programme URL (when provided) must be a valid URL.
+ *     tags:
+ *       - CandidateRegistrations
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Registration form UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               phoneNumber:
+ *                 type: string
+ *                 description: Ukrainian phone number. Blank is accepted in draft state.
+ *               telegramTag:
+ *                 type: string
+ *                 description: Telegram username without the leading @. Blank is accepted in draft state.
+ *               campaignProgramUrl:
+ *                 type: string
+ *                 nullable: true
+ *                 description: URL to the candidate's campaign programme. Required at submission time when requiresCampaignProgram is true.
+ *     responses:
+ *       200:
+ *         description: Existing draft registration updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateRegistration'
+ *       201:
+ *         description: New draft registration created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateRegistration'
+ *       400:
+ *         description: Invalid UUID, form not yet open, form already closed, or field validation failure
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller does not satisfy the form's eligibility restrictions
+ *       404:
+ *         description: Form not found or soft-deleted
+ *       409:
+ *         description: A non-draft registration already exists for this user on this form
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

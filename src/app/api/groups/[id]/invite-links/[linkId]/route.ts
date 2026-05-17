@@ -10,14 +10,42 @@ import { isValidUuid } from '@/lib/utils/common';
  * @swagger
  * /api/groups/{id}/invite-links/{linkId}:
  *   delete:
- *     summary: Revoke an invite link
+ *     summary: Revoke (soft-delete) an invite link
  *     description: >
- *       Soft-deletes the invite link so it can no longer be used to join the group.
- *       Existing memberships obtained through the link are unaffected.
- *       Only the group owner or admins with manage_groups can revoke links.
- *     tags: [Groups]
+ *       Marks the invite link as revoked so it can no longer be used to join
+ *       the group. Existing memberships obtained through the link are
+ *       unaffected. The group owner or an admin with `manage_groups` may
+ *       revoke links.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *       - in: path
+ *         name: linkId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Invite link UUID
+ *     responses:
+ *       204:
+ *         description: Link revoked
+ *       400:
+ *         description: Invalid UUID or link is already revoked
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is neither the group owner nor an admin with manage_groups
+ *       404:
+ *         description: Group not found, link not found, or link does not belong to this group
  */
 export async function DELETE(
   req: NextRequest,

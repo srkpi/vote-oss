@@ -374,10 +374,45 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
  * @swagger
  * /api/groups/{id}:
  *   get:
- *     summary: Get group details including members and invite links
- *     tags: [Groups]
+ *     summary: Get group details including members, invite links, and elections
+ *     description: >
+ *       Returns full group details. Access rules:
+ *         - Active members always have full access.
+ *         - Non-members may access the group if at least one publicly-viewable
+ *           election targets this group's membership, or if the group has at
+ *           least one protocol. Non-members only see publicly-viewable elections.
+ *         - Non-members who do not satisfy any of the above conditions receive 403.
+ *         - Admins with `manage_groups` always have full access.
+ *
+ *       Invite links are only included in the response for the group owner
+ *       and admins with `manage_groups`; all other callers receive an empty array.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *     responses:
+ *       200:
+ *         description: Group details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GroupDetail'
+ *       400:
+ *         description: Invalid group UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not a member and no publicly-viewable election or protocol exists for the group
+ *       404:
+ *         description: Group not found or soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -396,35 +431,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-/**
- * @swagger
- * /api/groups/{id}:
- *   patch:
- *     summary: Update a group (rename and/or change type)
- *     description: >
- *       Two independent fields, each gated by its own permission:
- *
- *       - `name` — only the group owner may rename the group.
- *       - `type` — only admins with `manage_groups` may change the group type.
- *
- *       The body may contain either or both fields.  At least one must be present.
- *     tags: [Groups]
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 maxLength: 100
- *               type:
- *                 type: string
- *                 enum: [VKSU, OTHER]
- */
 interface RequisitesPatch {
   fullName?: string | null;
   address?: string | null;
@@ -452,6 +458,85 @@ function normalizeRequisiteField(
   return { ok: true, value: trimmed };
 }
 
+/**
+ * @swagger
+ * /api/groups/{id}:
+ *   patch:
+ *     summary: Update group properties (name, type, or requisites)
+ *     description: >
+ *       Three independent sub-operations, each gated by its own permission:
+ *
+ *       - `name` — only the group owner may rename the group.
+ *       - `type` — only admins with `manage_groups` may change the group type
+ *         (VKSU ↔ OTHER). Changing type invalidates the VKSU group cache.
+ *       - `requisites` — only the group owner may update the official contact
+ *         details used for protocol document generation. Accepts a partial
+ *         object; only provided fields are updated. Setting a field to null
+ *         clears it.
+ *
+ *       At least one of `name`, `type`, or `requisites` must be present. When
+ *       `requisites` is present it must contain at least one sub-field.
+ *     tags:
+ *       - Groups
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 maxLength: 100
+ *                 description: New display name. Owner-only.
+ *               type:
+ *                 type: string
+ *                 enum: [VKSU, OTHER]
+ *                 description: New group type. Requires manage_groups.
+ *               requisites:
+ *                 type: object
+ *                 description: Partial update to the group's official contact details. Owner-only.
+ *                 properties:
+ *                   fullName:
+ *                     type: string
+ *                     nullable: true
+ *                   address:
+ *                     type: string
+ *                     nullable: true
+ *                   email:
+ *                     type: string
+ *                     nullable: true
+ *                     description: Must be a valid email address when non-null.
+ *                   contact:
+ *                     type: string
+ *                     nullable: true
+ *     responses:
+ *       204:
+ *         description: Group updated
+ *       400:
+ *         description: >
+ *           No fields provided, invalid type value, requisites object has no
+ *           sub-fields, requisites field exceeds maximum length, or email is
+ *           not a valid address.
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: >
+ *           Caller is not the owner when renaming or editing requisites, or
+ *           caller does not have manage_groups when changing type.
+ *       404:
+ *         description: Group not found or soft-deleted
+ */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
@@ -576,11 +661,34 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  *   delete:
  *     summary: Soft-delete a group
  *     description: >
- *       Marks the group as deleted.  Only the group owner or an admin with
- *       manage_groups may delete a group.
- *     tags: [Groups]
+ *       Marks the group as deleted. Only the group owner or an admin with
+ *       `manage_groups` may delete a group. After deletion, the group-membership
+ *       caches of all active members are invalidated so election eligibility
+ *       is immediately re-evaluated. The VKSU group ID cache is also
+ *       invalidated when the deleted group was of type VKSU.
+ *     tags:
+ *       - Groups
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *     responses:
+ *       204:
+ *         description: Group soft-deleted
+ *       400:
+ *         description: Invalid group UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is neither the group owner nor an admin with manage_groups
+ *       404:
+ *         description: Group not found or already soft-deleted
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

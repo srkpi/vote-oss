@@ -15,18 +15,54 @@ import { isValidUuid } from '@/lib/utils/common';
  *   get:
  *     summary: List candidate registration forms for a ВКСУ group
  *     description: >
- *       Returns every non-deleted form belonging to the group.  Caller must be
- *       an active member of the group and the group must be of type=VKSU.
- *     tags: [CandidateRegistrationForms]
+ *       Returns every non-deleted form belonging to the group along with
+ *       aggregated submission counts (`submittedCount` = all non-draft
+ *       registrations; `pendingReviewCount` = registrations in PENDING_REVIEW
+ *       state). Caller must be an active member of the group and the group
+ *       must be of type VKSU.
+ *     tags:
+ *       - CandidateRegistrationForms
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
  *     responses:
  *       200:
- *         description: Array of forms
+ *         description: Array of registration forms with submission counts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/CandidateRegistrationForm'
+ *                   - type: object
+ *                     required:
+ *                       - submittedCount
+ *                       - pendingReviewCount
+ *                     properties:
+ *                       submittedCount:
+ *                         type: integer
+ *                         minimum: 0
+ *                         description: Total registrations excluding drafts.
+ *                       pendingReviewCount:
+ *                         type: integer
+ *                         minimum: 0
+ *                         description: Registrations currently awaiting review.
+ *       400:
+ *         description: Invalid group UUID
+ *       401:
+ *         description: Unauthorized
  *       403:
- *         description: Group is not VKSU or caller is not a member
+ *         description: Caller is not an active member of the ВКСУ group
  *       404:
- *         description: Group not found
+ *         description: Group not found, soft-deleted, or not of type VKSU
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -79,18 +115,56 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * @swagger
  * /api/groups/{id}/registration-forms:
  *   post:
- *     summary: Create a candidate registration form
+ *     summary: Create a candidate registration form for a ВКСУ group
  *     description: >
- *       Creates a new registration form within a ВКСУ group.  Caller must be
- *       an active member.  Validation rules depend on `positionType`:
- *
- *       - `requiresSubdivision` positions must include ≥1 FACULTY restriction.
- *       - `PRESIDENT` may not include any restrictions (university-wide).
- *     tags: [CandidateRegistrationForms]
+ *       Creates a new candidate registration form within the specified ВКСУ
+ *       group. Caller must be an active member of the group. The form's
+ *       restrictions determine which students may submit registrations.
+ *     tags:
+ *       - CandidateRegistrationForms
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
  *     requestBody:
  *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateCandidateRegistrationFormBody'
+ *     responses:
+ *       201:
+ *         description: Form created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/CandidateRegistrationForm'
+ *                 - type: object
+ *                   required:
+ *                     - submittedCount
+ *                     - pendingReviewCount
+ *                   properties:
+ *                     submittedCount:
+ *                       type: integer
+ *                       example: 0
+ *                     pendingReviewCount:
+ *                       type: integer
+ *                       example: 0
+ *       400:
+ *         description: Invalid UUID or body validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not an active ВКСУ group member
+ *       404:
+ *         description: Group not found, soft-deleted, or not of type VKSU
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

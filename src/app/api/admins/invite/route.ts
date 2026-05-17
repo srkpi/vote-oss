@@ -17,11 +17,12 @@ import { prisma } from '@/lib/prisma';
  * @swagger
  * /api/admins/invite:
  *   get:
- *     summary: List visible invite tokens
+ *     summary: List visible admin invite tokens
  *     description: >
  *       Returns all non-expired, non-exhausted invite tokens that the caller
- *       owns or was created by an admin in their hierarchy. Stale tokens are
- *       purged from the database as a side-effect. Requires `manage_admins`.
+ *       created or that were created by an admin in their subordinate
+ *       hierarchy. As a side-effect, stale tokens (expired or exhausted) are
+ *       hard-deleted from the database. Requires `manage_admins`.
  *     tags:
  *       - Admin Invites
  *     security:
@@ -38,7 +39,7 @@ import { prisma } from '@/lib/prisma';
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – no manage_admins permission
+ *         description: Forbidden – caller does not have manage_admins
  */
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -127,10 +128,17 @@ export async function GET(req: NextRequest) {
  *   post:
  *     summary: Create an admin invite token
  *     description: >
- *       Generates a new single-use or multi-use admin invite token. The raw
- *       token is returned once and never stored in plain text. Requires
- *       `manage_admins`. A caller may have at most `INVITE_TOKEN_MAX_COUNT`
+ *       Generates a new admin invite token with the specified permissions and
+ *       validity. The raw plaintext token is returned exactly once and is
+ *       never stored; only its SHA-256 hash is persisted. Requires
+ *       `manage_admins`. A caller may hold at most `INVITE_TOKEN_MAX_COUNT`
  *       active tokens at a time.
+ *
+ *       Permission constraints:
+ *         - A caller may only grant permission flags they themselves hold
+ *           (e.g. cannot grant `manageGroups` without having `manageGroups`).
+ *         - A faculty-restricted caller always creates faculty-restricted tokens
+ *           regardless of the `restrictedToFaculty` field in the request body.
  *     tags:
  *       - Admin Invites
  *     security:
@@ -148,13 +156,28 @@ export async function GET(req: NextRequest) {
  *           application/json:
  *             schema:
  *               type: object
+ *               required:
+ *                 - token
+ *                 - maxUsage
+ *                 - manageAdmins
+ *                 - manageGroups
+ *                 - managePetitions
+ *                 - manageFaq
+ *                 - restrictedToFaculty
+ *                 - validDue
  *               properties:
  *                 token:
  *                   type: string
- *                   description: Raw (unhashed) invite token; share this with the invitee
+ *                   description: Raw (unhashed) invite token. Share this with the invitee; it is not stored on the server.
  *                 maxUsage:
  *                   type: integer
  *                 manageAdmins:
+ *                   type: boolean
+ *                 manageGroups:
+ *                   type: boolean
+ *                 managePetitions:
+ *                   type: boolean
+ *                 manageFaq:
  *                   type: boolean
  *                 restrictedToFaculty:
  *                   type: boolean
@@ -162,11 +185,13 @@ export async function GET(req: NextRequest) {
  *                   type: string
  *                   format: date-time
  *       400:
- *         description: Validation error (missing/invalid fields or token limit reached)
+ *         description: Validation error, missing validDue, invalid date, or token limit reached
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden – no manage_admins or attempting to grant permissions not held
+ *         description: >
+ *           Caller lacks manage_admins, or is attempting to grant a permission
+ *           they do not hold themselves.
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);

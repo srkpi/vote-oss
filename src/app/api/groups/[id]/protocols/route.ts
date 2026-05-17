@@ -30,9 +30,70 @@ async function requireProtocolViewer(groupId: string): Promise<void> {
  * /api/groups/{id}/protocols:
  *   get:
  *     summary: List protocols for a group
- *     tags: [Protocols]
+ *     description: >
+ *       Returns summaries of all non-deleted protocols belonging to the group,
+ *       ordered by date descending then number descending. Any authenticated
+ *       user may access protocols for any non-deleted group. When the optional
+ *       `nextNumberForYear` query parameter is provided, the response includes
+ *       an additional `nextNumber` field containing the next sequential protocol
+ *       number for that calendar year.
+ *     tags:
+ *       - Protocols
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *       - in: query
+ *         name: nextNumberForYear
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1900
+ *           maximum: 9999
+ *         description: >
+ *           When provided, the response changes shape to include a `protocols`
+ *           array, `nextNumber` (the next sequential number for the given year),
+ *           and the `year` echoed back. Without this parameter the response is
+ *           a bare array of protocol summaries.
+ *     responses:
+ *       200:
+ *         description: Protocol summaries (bare array, or object with protocols + nextNumber + year)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ProtocolSummary'
+ *                 - type: object
+ *                   required:
+ *                     - protocols
+ *                     - nextNumber
+ *                     - year
+ *                   properties:
+ *                     protocols:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/ProtocolSummary'
+ *                     nextNumber:
+ *                       type: integer
+ *                       minimum: 1
+ *                       description: Next available sequential protocol number for the given year.
+ *                     year:
+ *                       type: integer
+ *                       description: The year echoed back from the query parameter.
+ *       400:
+ *         description: Invalid group UUID or invalid nextNumberForYear value
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Group not found or soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -87,10 +148,55 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * @swagger
  * /api/groups/{id}/protocols:
  *   post:
- *     summary: Create a protocol
- *     tags: [Protocols]
+ *     summary: Create a protocol for a group
+ *     description: >
+ *       Creates a new meeting protocol for the group. Only the group owner may
+ *       create protocols. The group's current requisites (fullName, address,
+ *       email, contact) are captured as a snapshot at creation time via
+ *       `ossSnapshotOverride` (partial override) or the live group values.
+ *
+ *       Agenda items with a linked `electionId` must satisfy these constraints:
+ *         - The election must have a GROUP_MEMBERSHIP restriction for this group.
+ *         - The election must already be closed.
+ *         - The election must have exactly the required number of choices
+ *           (configured by PROTOCOL_REQUIRED_ELECTION_CHOICES).
+ *         - When `choiceMapping` is provided, every choice in the election
+ *           must be mapped to yes/no/abstain.
+ *     tags:
+ *       - Protocols
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Group UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateProtocolBody'
+ *     responses:
+ *       201:
+ *         description: Protocol created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Protocol'
+ *       400:
+ *         description: >
+ *           Invalid UUID, body validation error, or a linked election fails
+ *           the group/closed/choice-count/mapping constraints.
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not the group owner
+ *       404:
+ *         description: Group not found or soft-deleted
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

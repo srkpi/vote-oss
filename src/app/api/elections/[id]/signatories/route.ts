@@ -9,20 +9,73 @@ import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
 
 /**
- * GET /api/elections/[id]/signatories
+ * @swagger
+ * /api/elections/{id}/signatories:
+ *   get:
+ *     summary: Get the petition's private key and raw ballot envelopes for signatory verification
+ *     description: >
+ *       Returns the petition's RSA private key together with the raw encrypted
+ *       ballot envelopes so the browser can decrypt voter identities client-side
+ *       and verify the integrity of the ballot chain.
  *
- * Returns the petition's private key together with the raw encrypted ballot
- * envelopes so the browser can decrypt voter identities itself and verify the
- * integrity of the ballot chain — mirroring the `/ballots` endpoint used for
- * regular elections.
+ *       Petitions are non-anonymous by design, so the private key is exposed
+ *       regardless of whether the petition is still open or already closed.
  *
- * Petitions are non-anonymous by design, so exposing the private key while the
- * petition is still open carries no zero-knowledge guarantee to preserve.
+ *       Visibility rules:
+ *         - Approved petitions: any authenticated user who can see the petition.
+ *         - Unapproved petitions: admins with manage_petitions or the petition's creator.
+ *         - Deleted petitions: admins only.
  *
- * Visibility:
- *   - approved petitions: any authenticated user who can see the petition
- *   - unapproved petitions: manage_petitions admins or the creator
- *   - deleted petitions: admins only
+ *       This endpoint is petition-exclusive. Calling it with a regular election
+ *       ID returns 400.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Petition UUID
+ *     responses:
+ *       200:
+ *         description: Petition private key and ballot chain
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - petition
+ *                 - ballots
+ *               properties:
+ *                 petition:
+ *                   type: object
+ *                   required:
+ *                     - id
+ *                     - privateKey
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     privateKey:
+ *                       type: string
+ *                       description: PEM-encoded RSA private key for decrypting ballot envelopes.
+ *                 ballots:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Ballot'
+ *       400:
+ *         description: Invalid UUID, or the resource is not a petition
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: >
+ *           Petition not found; also returned for unapproved petitions when the
+ *           caller is not the creator and does not have manage_petitions; and
+ *           for soft-deleted petitions when the caller is not an admin.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);

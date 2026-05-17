@@ -56,10 +56,75 @@ async function loadProtocolAccess(
  * @swagger
  * /api/protocols/{id}:
  *   get:
- *     summary: Get protocol details (with computed counts)
- *     tags: [Protocols]
+ *     summary: Get protocol details including computed counts and vote totals
+ *     description: >
+ *       Returns full protocol details including agenda items, attendance, and
+ *       responsibles. Also includes:
+ *
+ *       - `counts`: quorum-related aggregate (`total`, `present`, `quorum`).
+ *       - `agendaVoteTotals`: per-agenda-item yes/no/abstain vote totals
+ *         derived from the linked election's choice mappings. Null for items
+ *         without a linked election or mapping.
+ *       - `isOwner`: whether the authenticated caller is the group owner.
+ *
+ *       Any authenticated user may view any non-deleted protocol of any
+ *       non-deleted group.
+ *     tags:
+ *       - Protocols
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Protocol UUID
+ *     responses:
+ *       200:
+ *         description: Protocol details with computed counts and vote totals
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Protocol'
+ *                 - type: object
+ *                   required:
+ *                     - counts
+ *                     - agendaVoteTotals
+ *                     - isOwner
+ *                   properties:
+ *                     counts:
+ *                       $ref: '#/components/schemas/ProtocolComputedCounts'
+ *                     agendaVoteTotals:
+ *                       type: object
+ *                       additionalProperties:
+ *                         oneOf:
+ *                           - type: object
+ *                             required:
+ *                               - yes_count
+ *                               - no_count
+ *                               - not_decided_count
+ *                             properties:
+ *                               yes_count:
+ *                                 type: integer
+ *                               no_count:
+ *                                 type: integer
+ *                               not_decided_count:
+ *                                 type: integer
+ *                           - type: 'null'
+ *                       description: >
+ *                         Keyed by agenda item UUID. Null for items without a
+ *                         linked election or choice mapping.
+ *                     isOwner:
+ *                       type: boolean
+ *       400:
+ *         description: Invalid protocol UUID
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Protocol not found, soft-deleted, or its group is soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -133,9 +198,54 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  * /api/protocols/{id}:
  *   put:
  *     summary: Replace a protocol's contents
- *     tags: [Protocols]
+ *     description: >
+ *       Replaces the entire protocol — all fields including agenda items. The
+ *       existing agenda items are hard-deleted and recreated. Only the group
+ *       owner may update a protocol. The same election linking constraints as
+ *       POST /api/groups/{id}/protocols apply.
+ *     tags:
+ *       - Protocols
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Protocol UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateProtocolBody'
+ *     responses:
+ *       200:
+ *         description: Protocol updated; returns the full updated protocol with computed counts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Protocol'
+ *                 - type: object
+ *                   required:
+ *                     - counts
+ *                     - isOwner
+ *                   properties:
+ *                     counts:
+ *                       $ref: '#/components/schemas/ProtocolComputedCounts'
+ *                     isOwner:
+ *                       type: boolean
+ *       400:
+ *         description: Invalid UUID, body validation error, or election linking constraint violation
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not the group owner
+ *       404:
+ *         description: Protocol not found, soft-deleted, or its group is soft-deleted
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -262,9 +372,33 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
  * /api/protocols/{id}:
  *   delete:
  *     summary: Soft-delete a protocol
- *     tags: [Protocols]
+ *     description: >
+ *       Marks the protocol as deleted. Only the group owner may delete
+ *       a protocol. Soft-deleted protocols are not returned in the list
+ *       endpoint.
+ *     tags:
+ *       - Protocols
  *     security:
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Protocol UUID
+ *     responses:
+ *       204:
+ *         description: Protocol soft-deleted
+ *       400:
+ *         description: Invalid protocol UUID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Caller is not the group owner
+ *       404:
+ *         description: Protocol not found, soft-deleted, or its group is soft-deleted
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
