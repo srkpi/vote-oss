@@ -168,7 +168,7 @@ The `docker-compose.yml` in this repository provides sensible defaults for local
 | `MINIO_ACCESS_KEY`                | **Yes**  | MinIO access key                                                                                                             |
 | `MINIO_SECRET_KEY`                | **Yes**  | MinIO secret key                                                                                                             |
 | `TRUSTED_PROXY_COUNT`             | No       | Number of trusted reverse proxies in front of the app (default: `1`). Used for correct client IP extraction in rate limiting |
-| `NEXT_PUBLIC_POSTHOG_TOKEN`       | **Yes**  | PostHog project API key.                                                                                                     |
+| `NEXT_PUBLIC_POSTHOG_TOKEN`       | No       | PostHog project API key.                                                                                                     |
 | `NEXT_PUBLIC_POSTHOG_HOST`        | No       | PostHog ingestion host (default: `https://eu.i.posthog.com`)                                                                 |
 | `NEXT_PUBLIC_POSTHOG_ASSETS_HOST` | No       | PostHog assets host (default: `https://eu-assets.i.posthog.com`)                                                             |
 
@@ -455,13 +455,13 @@ The server-side PostHog client (`src/lib/posthog-server.ts`) is used in `src/ins
 
 ### Configuration
 
-| Variable                          | Description                                           |
-| --------------------------------- | ----------------------------------------------------- |
-| `NEXT_PUBLIC_POSTHOG_TOKEN`       | PostHog project API key                               |
-| `NEXT_PUBLIC_POSTHOG_HOST`        | Ingestion host, e.g. `https://eu.i.posthog.com`       |
-| `NEXT_PUBLIC_POSTHOG_ASSETS_HOST` | Assets host, e.g. `https://eu-assets.i.posthog.com`   |
+| Variable                          | Description                                             |
+| --------------------------------- | ------------------------------------------------------- |
+| `NEXT_PUBLIC_POSTHOG_TOKEN`       | PostHog project API key                                 |
+| `NEXT_PUBLIC_POSTHOG_HOST`        | Ingestion host, default: `https://eu.i.posthog.com`     |
+| `NEXT_PUBLIC_POSTHOG_ASSETS_HOST` | Assets host, default: `https://eu-assets.i.posthog.com` |
 
-Set all three to enable analytics. If `NEXT_PUBLIC_POSTHOG_TOKEN` is absent or empty, PostHog is not initialised and no data is sent.
+If `NEXT_PUBLIC_POSTHOG_TOKEN` is absent or empty, PostHog is not initialised and no data is sent.
 
 ## Security Model
 

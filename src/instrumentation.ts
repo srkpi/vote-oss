@@ -6,24 +6,29 @@ import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs
 import { POSTHOG_HOST, POSTHOG_TOKEN } from '@/lib/config/client';
 import { getPostHogServer } from '@/lib/posthog-server';
 
-export const loggerProvider = new LoggerProvider({
-  resource: resourceFromAttributes({ 'service.name': 'vote-oss' }),
-  processors: [
-    new BatchLogRecordProcessor(
-      new OTLPLogExporter({
-        url: `${POSTHOG_HOST}/i/v1/logs`,
-        headers: {
-          Authorization: `Bearer ${POSTHOG_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-      }),
-    ),
-  ],
-});
+export const loggerProvider = POSTHOG_TOKEN
+  ? new LoggerProvider({
+      resource: resourceFromAttributes({ 'service.name': 'vote-oss' }),
+      processors: [
+        new BatchLogRecordProcessor(
+          new OTLPLogExporter({
+            url: `${POSTHOG_HOST}/i/v1/logs`,
+            headers: {
+              Authorization: `Bearer ${POSTHOG_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+          }),
+        ),
+      ],
+    })
+  : null;
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    logs.setGlobalLoggerProvider(loggerProvider);
+    if (loggerProvider) {
+      logs.setGlobalLoggerProvider(loggerProvider);
+    }
+
     // Node-only side-effects (Prisma, node:crypto) live in a separate module
     // so Next.js's edge-runtime bundler doesn't try to traverse them.
     await import('@/lib/dev-cron');
@@ -41,6 +46,8 @@ export const onRequestError = async (
 ) => {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const posthog = getPostHogServer();
+    if (!posthog) return;
+
     let distinctId = null;
 
     if (request?.headers?.cookie) {
@@ -61,6 +68,6 @@ export const onRequestError = async (
       }
     }
 
-    await posthog.captureException(err, distinctId || undefined);
+    posthog.captureException(err, distinctId || undefined);
   }
 };
