@@ -1,0 +1,1 @@
+{"id":"0db1881984c31df20a2da3f7f51b7e6b","fullName":"vote-oss:src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — restriction validation returns 400 for a valid graduate course value (g1)","name":"returns 400 for a valid graduate course value (g1)","status":"passed","testResultsByEnv":{"default":"2c1b6c38cdd5d5994c4c881124511d8c"}}

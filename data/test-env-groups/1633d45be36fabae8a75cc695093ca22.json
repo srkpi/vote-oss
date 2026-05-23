@@ -1,0 +1,1 @@
+{"id":"1633d45be36fabae8a75cc695093ca22","fullName":"vote-oss:src/__tests__/lib/constants.test.ts#constants JWT TTLs access token TTL is shorter than refresh token TTL","name":"access token TTL is shorter than refresh token TTL","status":"passed","testResultsByEnv":{"default":"6cb86b7cb5d7f4ef67492258c58f7ce9"}}

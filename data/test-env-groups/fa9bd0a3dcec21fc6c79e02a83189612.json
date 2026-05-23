@@ -1,0 +1,1 @@
+{"id":"fa9bd0a3dcec21fc6c79e02a83189612","fullName":"vote-oss:src/__tests__/api/elections/token.test.ts#POST /api/elections/[id]/token returns 200 with token and signature for eligible user","name":"returns 200 with token and signature for eligible user","status":"passed","testResultsByEnv":{"default":"dac9e0e7a001fa759aa660b76e647e83"}}

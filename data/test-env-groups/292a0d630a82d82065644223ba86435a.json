@@ -1,0 +1,1 @@
+{"id":"292a0d630a82d82065644223ba86435a","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups stores the result in Redis after a cache miss","name":"stores the result in Redis after a cache miss","status":"passed","testResultsByEnv":{"default":"dd34c47d3604688713ae503e9993ca4a"}}

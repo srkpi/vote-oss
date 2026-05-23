@@ -1,0 +1,1 @@
+{"id":"55f7d2c5934461bfb0f5527bb42c241d","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id ignores bypass failure and falls back to return_to when applyBypassToken throws","name":"ignores bypass failure and falls back to return_to when applyBypassToken throws","status":"passed","testResultsByEnv":{"default":"2a31bf74e9d5c93e31200303efb1ab6b"}}

@@ -1,0 +1,1 @@
+{"id":"afee30bbba2901f6d772c44c063380ec","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init rounds Retry-After up when resetInMs is not a whole number of seconds","name":"rounds Retry-After up when resetInMs is not a whole number of seconds","status":"passed","testResultsByEnv":{"default":"04e48fc959402e92e981273ab1745281"}}

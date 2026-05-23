@@ -1,0 +1,1 @@
+{"id":"ee97f126e35d6cca1fc6aabf27b52172","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#GET /api/elections/[id]/ballots — shuffleChoices reads shuffleChoices from cache for ballots route","name":"reads shuffleChoices from cache for ballots route","status":"passed","testResultsByEnv":{"default":"01bc0e6a556d49473f1a75860344c44c"}}

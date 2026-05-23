@@ -1,0 +1,1 @@
+{"id":"aee30222c0d9e013dbc366ae8d070dc3","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"5e38645c23ae9cf33db0c61b105951e7"}}

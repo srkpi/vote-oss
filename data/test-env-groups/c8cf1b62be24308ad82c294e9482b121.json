@@ -1,0 +1,1 @@
+{"id":"c8cf1b62be24308ad82c294e9482b121","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#POST /api/elections — winning conditions validation includes bounds in the error message for invalid quorum","name":"includes bounds in the error message for invalid quorum","status":"passed","testResultsByEnv":{"default":"23a1c2052478f20e8e9bcf2dcfd17258"}}

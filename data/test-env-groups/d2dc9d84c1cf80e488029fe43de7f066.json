@@ -1,0 +1,1 @@
+{"id":"d2dc9d84c1cf80e488029fe43de7f066","fullName":"vote-oss:src/__tests__/api/bypass/global-delete.test.ts#DELETE /api/bypass/global/[tokenHash] returns 403 for restricted admin","name":"returns 403 for restricted admin","status":"passed","testResultsByEnv":{"default":"7535afa1749c8c576ff4bb8b29ba561e"}}

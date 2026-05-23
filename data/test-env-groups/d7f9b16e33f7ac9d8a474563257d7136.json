@@ -1,0 +1,1 @@
+{"id":"d7f9b16e33f7ac9d8a474563257d7136","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#GET /api/elections/[id] — winning conditions in response returns winningConditions on the detail response","name":"returns winningConditions on the detail response","status":"passed","testResultsByEnv":{"default":"988ee02e84ae1b83e236422e35c37dbd"}}

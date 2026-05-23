@@ -1,0 +1,1 @@
+{"id":"6c93249596c7c5b0b6f0aa9125b84f83","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/categories/[id] returns 403 when restricted admin","name":"returns 403 when restricted admin","status":"passed","testResultsByEnv":{"default":"b08fbd304ca1f4f5a29af1ab4ca3cb2e"}}

@@ -1,0 +1,1 @@
+{"id":"11d9c02304f6282aa21cd1c4ca461568","fullName":"vote-oss:src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout does NOT call revokeByAccessJti when auth fails","name":"does NOT call revokeByAccessJti when auth fails","status":"passed","testResultsByEnv":{"default":"758065a17360afa3be48bd44a53ec95a"}}

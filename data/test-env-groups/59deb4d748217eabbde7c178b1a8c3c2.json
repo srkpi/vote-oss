@@ -1,0 +1,1 @@
+{"id":"59deb4d748217eabbde7c178b1a8c3c2","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id clears the return_to cookie in the response","name":"clears the return_to cookie in the response","status":"passed","testResultsByEnv":{"default":"eb1832bb818568a88beae836a3858ee8"}}

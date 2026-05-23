@@ -1,0 +1,1 @@
+{"id":"deca9b93923487c664c276dcf41aac3d","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave does not call prisma.admin.findMany (active admins served from cache)","name":"does not call prisma.admin.findMany (active admins served from cache)","status":"passed","testResultsByEnv":{"default":"9755b40581819feade423d163c7f55d0"}}

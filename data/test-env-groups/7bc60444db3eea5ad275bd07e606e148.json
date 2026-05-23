@@ -1,0 +1,1 @@
+{"id":"7bc60444db3eea5ad275bd07e606e148","fullName":"vote-oss:src/__tests__/lib/kpi-id.test.ts#kpi-id module getCampusUserData & Bypasses bypasses NotStudyingError if bypassNotStudying is true","name":"bypasses NotStudyingError if bypassNotStudying is true","status":"passed","testResultsByEnv":{"default":"a227c86f90811569f8982b01814b66bb"}}

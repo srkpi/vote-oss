@@ -1,0 +1,1 @@
+{"id":"dc9ba2f088cea06906ec3292f2682c24","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#shuffleChoicesForUser utility assigns new 0-based positions in shuffled order","name":"assigns new 0-based positions in shuffled order","status":"passed","testResultsByEnv":{"default":"f336731bfcf2aac1581687343cf38869"}}

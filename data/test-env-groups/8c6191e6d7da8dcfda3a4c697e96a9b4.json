@@ -1,0 +1,1 @@
+{"id":"8c6191e6d7da8dcfda3a4c697e96a9b4","fullName":"vote-oss:src/__tests__/api/bypass/election.test.ts#POST /api/elections/[id]/bypass stores correct fields in database (no valid_until, no deleted_at)","name":"stores correct fields in database (no valid_until, no deleted_at)","status":"passed","testResultsByEnv":{"default":"a1948c606cd96d6a71c909ad101d7db7"}}

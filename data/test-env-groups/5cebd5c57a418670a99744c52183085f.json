@@ -1,0 +1,1 @@
+{"id":"5cebd5c57a418670a99744c52183085f","fullName":"vote-oss:src/__tests__/api/admins/list.test.ts#GET /api/admins queries the DB with a deleted_at: null filter to exclude soft-deleted admins","name":"queries the DB with a deleted_at: null filter to exclude soft-deleted admins","status":"passed","testResultsByEnv":{"default":"4a2d25c93b6929e614e49fd0586b2c0b"}}

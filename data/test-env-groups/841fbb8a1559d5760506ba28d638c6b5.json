@@ -1,0 +1,1 @@
+{"id":"841fbb8a1559d5760506ba28d638c6b5","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init response body contains requestId matching provider value","name":"response body contains requestId matching provider value","status":"passed","testResultsByEnv":{"default":"a8e924b1e87489706f93d5c6936955ea"}}

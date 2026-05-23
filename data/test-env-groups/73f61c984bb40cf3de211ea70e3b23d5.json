@@ -1,0 +1,1 @@
+{"id":"73f61c984bb40cf3de211ea70e3b23d5","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init returns 500 when QRCode.toDataURL throws","name":"returns 500 when QRCode.toDataURL throws","status":"passed","testResultsByEnv":{"default":"bda4c67b9a9e42ea0d3e83cb2de5b53b"}}

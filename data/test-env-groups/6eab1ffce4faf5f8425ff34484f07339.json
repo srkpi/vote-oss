@@ -1,0 +1,1 @@
+{"id":"6eab1ffce4faf5f8425ff34484f07339","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id still succeeds even when bypass is invalid (getCampusUserData determines access)","name":"still succeeds even when bypass is invalid (getCampusUserData determines access)","status":"passed","testResultsByEnv":{"default":"6b281c90e3d18df577fd128ab028e987"}}

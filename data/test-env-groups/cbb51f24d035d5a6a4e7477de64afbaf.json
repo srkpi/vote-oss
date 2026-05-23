@@ -1,0 +1,1 @@
+{"id":"cbb51f24d035d5a6a4e7477de64afbaf","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 403 when caller is not an ancestor of the target","name":"returns 403 when caller is not an ancestor of the target","status":"passed","testResultsByEnv":{"default":"d73a5e3474b25af53c0ff04962e49863"}}

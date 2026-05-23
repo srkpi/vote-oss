@@ -1,0 +1,1 @@
+{"id":"c4e69e2ed6ddb91e329f3a85c11bad87","fullName":"vote-oss:src/__tests__/api/admins/get.test.ts#GET /api/admins/[userId] returns 200 and the admin from DB when cache is empty","name":"returns 200 and the admin from DB when cache is empty","status":"passed","testResultsByEnv":{"default":"849868872c680c1069316639f67b0eda"}}

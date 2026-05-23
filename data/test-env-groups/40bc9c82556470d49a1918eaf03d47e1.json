@@ -1,0 +1,1 @@
+{"id":"40bc9c82556470d49a1918eaf03d47e1","fullName":"vote-oss:src/__tests__/api/admins/invite/get.test.ts#GET /api/admins/invite serves from cache without hitting adminInviteToken.findMany","name":"serves from cache without hitting adminInviteToken.findMany","status":"passed","testResultsByEnv":{"default":"c539525eda523d20523457d67c4b737b"}}

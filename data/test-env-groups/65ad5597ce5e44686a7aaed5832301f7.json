@@ -1,0 +1,1 @@
+{"id":"65ad5597ce5e44686a7aaed5832301f7","fullName":"vote-oss:src/__tests__/api/admins/invite/delete.test.ts#DELETE /api/admins/invite/[tokenHash] returns 204 when ancestor deletes a subordinate token","name":"returns 204 when ancestor deletes a subordinate token","status":"passed","testResultsByEnv":{"default":"f54f47738d7054c5809a59202ac89403"}}

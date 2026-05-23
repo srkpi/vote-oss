@@ -1,0 +1,1 @@
+{"id":"8a1e1e3ab1c5ae5cdd5c8a3a88527a11","fullName":"vote-oss:src/__tests__/api/elections/token.test.ts#POST /api/elections/[id]/token returns 400 when election has not started yet","name":"returns 400 when election has not started yet","status":"passed","testResultsByEnv":{"default":"e04fce88bc5da92df224434dc812ea97"}}

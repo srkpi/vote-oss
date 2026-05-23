@@ -1,0 +1,1 @@
+{"id":"0b74a19c75262abcfd81ecab808b7974","fullName":"vote-oss:src/__tests__/api/elections/constants.test.ts#POST /api/elections — constant-driven validation returns 400 when title is empty","name":"returns 400 when title is empty","status":"passed","testResultsByEnv":{"default":"f69a298add9cc82a33ddf8114ef4593e"}}

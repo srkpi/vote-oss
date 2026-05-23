@@ -1,0 +1,1 @@
+{"id":"21d6fa9a390aa6701598d8df5e14dcf5","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#GET /api/elections/[id] — hasMostVotes tally condition marks no winners when all votes are zero","name":"marks no winners when all votes are zero","status":"passed","testResultsByEnv":{"default":"4c8eb934bde3fe134c2c0453410e39a1"}}

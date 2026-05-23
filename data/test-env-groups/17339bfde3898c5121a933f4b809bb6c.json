@@ -1,0 +1,1 @@
+{"id":"17339bfde3898c5121a933f4b809bb6c","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto signBallotEntry returns a non-empty base64 string","name":"returns a non-empty base64 string","status":"passed","testResultsByEnv":{"default":"a79501170eb563d79bd9a1aeeec8c78d"}}

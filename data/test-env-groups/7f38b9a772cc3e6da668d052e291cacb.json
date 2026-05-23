@@ -1,0 +1,1 @@
+{"id":"7f38b9a772cc3e6da668d052e291cacb","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 400 when election has closed","name":"returns 400 when election has closed","status":"passed","testResultsByEnv":{"default":"cac1e06a7056b73a7a89ac6385b56ba7"}}

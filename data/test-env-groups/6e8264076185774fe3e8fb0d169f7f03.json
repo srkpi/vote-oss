@@ -1,0 +1,1 @@
+{"id":"6e8264076185774fe3e8fb0d169f7f03","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto Ballot Encryption (Hybrid AES-GCM + RSA-OAEP) throws on tampered ciphertext (AES-GCM Auth Check)","name":"throws on tampered ciphertext (AES-GCM Auth Check)","status":"passed","testResultsByEnv":{"default":"cc72f17e71c12938460bdf9a3accc7f7"}}

@@ -1,0 +1,1 @@
+{"id":"b66b41c2e2e05bea4f84e0f8088e3489","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init calls getClientIp to extract the caller IP for rate limiting","name":"calls getClientIp to extract the caller IP for rate limiting","status":"passed","testResultsByEnv":{"default":"5d914bb683975625c341b785c925dc06"}}

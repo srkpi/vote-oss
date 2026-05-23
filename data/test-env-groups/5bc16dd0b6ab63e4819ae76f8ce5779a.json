@@ -1,0 +1,1 @@
+{"id":"5bc16dd0b6ab63e4819ae76f8ce5779a","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 400 when replacementId is not within the caller hierarchy branch","name":"returns 400 when replacementId is not within the caller hierarchy branch","status":"passed","testResultsByEnv":{"default":"2b49fb9f41bf4ca97fedd3c1f34cef4c"}}

@@ -1,0 +1,1 @@
+{"id":"2884c3602aeb22220681692f613cf9d9","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto hashToken / generateBase64Token generateBase64Token returns a valid Base64URL string of correct length","name":"generateBase64Token returns a valid Base64URL string of correct length","status":"passed","testResultsByEnv":{"default":"1767adf02c992ccf14cbdb6eebdca5ae"}}

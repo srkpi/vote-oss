@@ -1,0 +1,1 @@
+{"id":"8a6cee9c3f3f114e252d531775dd87eb","fullName":"vote-oss:src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] does not include votes/winner in choices for upcoming elections","name":"does not include votes/winner in choices for upcoming elections","status":"passed","testResultsByEnv":{"default":"ef079e29df006a0a21197c4a99cbb66e"}}

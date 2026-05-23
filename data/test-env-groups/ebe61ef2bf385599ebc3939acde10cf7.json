@@ -1,0 +1,1 @@
+{"id":"ebe61ef2bf385599ebc3939acde10cf7","fullName":"vote-oss:src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups returns 200 with faculty-groups map for authenticated user","name":"returns 200 with faculty-groups map for authenticated user","status":"passed","testResultsByEnv":{"default":"e82e1016bc68784609ecc9be1b74e797"}}

@@ -1,0 +1,1 @@
+{"id":"9ec2b5ba2b157d6bf677c22d5dfeb9ae","fullName":"vote-oss:src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] allows unrestricted admin to delete an open election","name":"allows unrestricted admin to delete an open election","status":"passed","testResultsByEnv":{"default":"b3d54c94139b01ada69e3ac75717e5ed"}}

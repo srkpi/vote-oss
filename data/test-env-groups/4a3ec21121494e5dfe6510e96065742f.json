@@ -1,0 +1,1 @@
+{"id":"4a3ec21121494e5dfe6510e96065742f","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 400 when the caller is the only active admin on the platform","name":"returns 400 when the caller is the only active admin on the platform","status":"passed","testResultsByEnv":{"default":"b95d91eb9ce921e9160409edb8f61442"}}

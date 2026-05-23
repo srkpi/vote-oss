@@ -1,0 +1,1 @@
+{"id":"e010822abdd14cc9868ebe3e94cc6623","fullName":"vote-oss:src/__tests__/api/bypass/election-delete.test.ts#DELETE /api/bypass/election/[tokenHash] invalidates bypass cache for all users who activated the token","name":"invalidates bypass cache for all users who activated the token","status":"passed","testResultsByEnv":{"default":"5f137caf71e4e2bcb20098a20b731f33"}}

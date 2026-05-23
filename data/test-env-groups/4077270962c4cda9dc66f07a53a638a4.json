@@ -1,0 +1,1 @@
+{"id":"4077270962c4cda9dc66f07a53a638a4","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot increment elections ballot count cache to ensure correct vote count","name":"increment elections ballot count cache to ensure correct vote count","status":"passed","testResultsByEnv":{"default":"64435acdb3800ce9916e6e0e349c87a1"}}

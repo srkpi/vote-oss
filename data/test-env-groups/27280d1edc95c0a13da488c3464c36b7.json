@@ -1,0 +1,1 @@
+{"id":"27280d1edc95c0a13da488c3464c36b7","fullName":"vote-oss:src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] returns 404 when election is already soft-deleted","name":"returns 404 when election is already soft-deleted","status":"passed","testResultsByEnv":{"default":"1b8e85674de70255168d5e933a53e0c6"}}

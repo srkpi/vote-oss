@@ -1,0 +1,1 @@
+{"id":"5df8b06d3cb3c59be2ac3a778c5b1286","fullName":"vote-oss:src/__tests__/api/bypass/election.test.ts#POST /api/elections/[id]/bypass returns 400 when maxUsage exceeds BYPASS_TOKEN_MAX_USAGE_MAX","name":"returns 400 when maxUsage exceeds BYPASS_TOKEN_MAX_USAGE_MAX","status":"passed","testResultsByEnv":{"default":"a731bb2c9664b73066ff8d64cd7e67b4"}}

@@ -1,0 +1,1 @@
+{"id":"88c3b11238bfeceb2a52e12da5a131c3","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 400 when encrypted ballot decrypts to invalid choice id","name":"returns 400 when encrypted ballot decrypts to invalid choice id","status":"passed","testResultsByEnv":{"default":"e64ac0e642959c73d5b219fb3cb6ca9e"}}

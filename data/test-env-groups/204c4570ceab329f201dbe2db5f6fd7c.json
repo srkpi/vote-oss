@@ -1,0 +1,1 @@
+{"id":"204c4570ceab329f201dbe2db5f6fd7c","fullName":"vote-oss:src/__tests__/lib/bloom.test.ts#bloom filter isTokenClean returns true when bloomCheck returns \"fp\" (false positive = not actually revoked)","name":"returns true when bloomCheck returns \"fp\" (false positive = not actually revoked)","status":"passed","testResultsByEnv":{"default":"f328f2be2146cc4b3148eceac16e2003"}}

@@ -1,0 +1,1 @@
+{"id":"61535ec99ce53534a64647e32a878456","fullName":"vote-oss:src/__tests__/lib/kpi-id.test.ts#kpi-id module getCampusUserData & Bypasses returns 403 Forbidden for GraduateUserError if no bypass exists","name":"returns 403 Forbidden for GraduateUserError if no bypass exists","status":"passed","testResultsByEnv":{"default":"d35d0bef961299bfe8b58018cf7d21fe"}}

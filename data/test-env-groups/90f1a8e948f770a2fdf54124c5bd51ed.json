@@ -1,0 +1,1 @@
+{"id":"90f1a8e948f770a2fdf54124c5bd51ed","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"a32d08ce2cce5389855bcae343f57d9b"}}

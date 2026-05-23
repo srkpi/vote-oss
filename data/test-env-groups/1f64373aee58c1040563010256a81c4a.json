@@ -1,0 +1,1 @@
+{"id":"1f64373aee58c1040563010256a81c4a","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto computeNullifier returns a 64-char hex SHA-256 hash","name":"returns a 64-char hex SHA-256 hash","status":"passed","testResultsByEnv":{"default":"f4799ebfecaf0760727814761bb37144"}}

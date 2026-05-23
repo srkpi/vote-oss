@@ -1,0 +1,1 @@
+{"id":"8b574946db3a79fdab31295c18068b9f","fullName":"vote-oss:src/__tests__/api/elections/constants.test.ts#POST /api/elections — constant-driven validation returns 400 when title is 256 characters","name":"returns 400 when title is 256 characters","status":"passed","testResultsByEnv":{"default":"808fbd3a52796ed59adda5064cd445fb"}}

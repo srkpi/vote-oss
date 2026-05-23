@@ -1,0 +1,1 @@
+{"id":"78cde54198c1efb718d630e35e71e979","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 404 when replacementId does not exist in active admins","name":"returns 404 when replacementId does not exist in active admins","status":"passed","testResultsByEnv":{"default":"d06f47ec6d815046e5df14fb53340a71"}}

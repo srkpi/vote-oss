@@ -1,0 +1,1 @@
+{"id":"3228601139ec0820203ae7d59c5c837e","fullName":"vote-oss:src/__tests__/api/elections/restore.test.ts#POST /api/elections/[id]/restore returns 404 when election does not exist","name":"returns 404 when election does not exist","status":"passed","testResultsByEnv":{"default":"4873bffc1893abfbf431cd32c2709e28"}}

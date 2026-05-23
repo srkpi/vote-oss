@@ -1,0 +1,1 @@
+{"id":"16d80831fb767761f81a3739095eee01","fullName":"vote-oss:src/__tests__/lib/constants.test.ts#constants election limits ELECTION_MIN_CHOICES_MIN <= ELECTION_MAX_CHOICES_MAX","name":"ELECTION_MIN_CHOICES_MIN <= ELECTION_MAX_CHOICES_MAX","status":"passed","testResultsByEnv":{"default":"887a5b74de864055933f4081f795bef4"}}

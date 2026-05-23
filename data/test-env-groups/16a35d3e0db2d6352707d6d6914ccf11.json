@@ -1,0 +1,1 @@
+{"id":"16a35d3e0db2d6352707d6d6914ccf11","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 401 when resolveTicket throws InvalidTicketError","name":"returns 401 when resolveTicket throws InvalidTicketError","status":"passed","testResultsByEnv":{"default":"5700f008a4a9c2e6192e7d30da5050f3"}}

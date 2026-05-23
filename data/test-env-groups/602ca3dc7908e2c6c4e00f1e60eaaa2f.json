@@ -1,0 +1,1 @@
+{"id":"602ca3dc7908e2c6c4e00f1e60eaaa2f","fullName":"vote-oss:src/__tests__/api/bypass/restriction-bypass.test.ts#checkRestrictions returns false when user does not match a restriction","name":"returns false when user does not match a restriction","status":"passed","testResultsByEnv":{"default":"2daaf3253cb5b3d00e409712f1908c21"}}

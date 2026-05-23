@@ -1,0 +1,1 @@
+{"id":"c774b7aa098ef2ff1212ea631a62f4bb","fullName":"vote-oss:src/__tests__/api/auth/refresh.test.ts#POST /api/auth/refresh re-checks admin status from DB during rotation","name":"re-checks admin status from DB during rotation","status":"passed","testResultsByEnv":{"default":"b53ddc7f18198d5489585fdd424de757"}}

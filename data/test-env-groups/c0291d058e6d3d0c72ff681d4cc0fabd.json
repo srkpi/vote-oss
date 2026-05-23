@@ -1,0 +1,1 @@
+{"id":"c0291d058e6d3d0c72ff681d4cc0fabd","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 400 when neither bypassNotStudying nor bypassGraduate is set","name":"returns 400 when neither bypassNotStudying nor bypassGraduate is set","status":"passed","testResultsByEnv":{"default":"683b4b272858e473bff97d0da0dcad8b"}}

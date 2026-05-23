@@ -1,0 +1,1 @@
+{"id":"ee9d89ef565f7c9c35506c4da1d17b72","fullName":"vote-oss:src/__tests__/api/elections/og.test.ts#GET /api/elections/[id]/og returns 200 from cache when available","name":"returns 200 from cache when available","status":"passed","testResultsByEnv":{"default":"0acc499d876415f3d1b684d389c179f7"}}

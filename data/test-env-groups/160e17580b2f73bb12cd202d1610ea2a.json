@@ -1,0 +1,1 @@
+{"id":"160e17580b2f73bb12cd202d1610ea2a","fullName":"vote-oss:src/__tests__/api/admins/invite/delete.test.ts#DELETE /api/admins/invite/[tokenHash] returns 403 when admin lacks manage_admins","name":"returns 403 when admin lacks manage_admins","status":"passed","testResultsByEnv":{"default":"683990da058fe432960f3834e8c33705"}}

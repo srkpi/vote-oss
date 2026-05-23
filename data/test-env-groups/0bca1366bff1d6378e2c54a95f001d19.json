@@ -1,0 +1,1 @@
+{"id":"0bca1366bff1d6378e2c54a95f001d19","fullName":"vote-oss:src/__tests__/api/elections/restore.test.ts#POST /api/elections/[id]/restore returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"1d9fe713f5c7349669129b60e0948b69"}}

@@ -1,0 +1,1 @@
+{"id":"645f5b9b84b1bdf414ff2369c3a80a8f","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id returns 429 when rate limit is exceeded","name":"returns 429 when rate limit is exceeded","status":"passed","testResultsByEnv":{"default":"3937db5e7ed0176f16294e0f66b41479"}}

@@ -1,0 +1,1 @@
+{"id":"48eaed427528d7c73bff6d31c44a0a0e","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 400 when token belongs to a different election","name":"returns 400 when token belongs to a different election","status":"passed","testResultsByEnv":{"default":"26dac45b2661235fa5a4527ddb15121d"}}

@@ -1,0 +1,1 @@
+{"id":"b4fab8dd95c6a3efe8b15ae159e15564","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#filterGroupsByLevelCourses returns all groups unchanged when levelCourses is empty","name":"returns all groups unchanged when levelCourses is empty","status":"passed","testResultsByEnv":{"default":"0d17de39c5f0fb138dc76241be7c70e2"}}

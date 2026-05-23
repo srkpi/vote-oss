@@ -1,0 +1,1 @@
+{"id":"3818a14e527a6348f72fb05f638a63c2","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init passes the provider deepLink to QRCode.toDataURL","name":"passes the provider deepLink to QRCode.toDataURL","status":"passed","testResultsByEnv":{"default":"e034e3e2e7fe062c6e1c11061365e73b"}}

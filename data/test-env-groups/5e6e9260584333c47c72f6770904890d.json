@@ -1,0 +1,1 @@
+{"id":"5e6e9260584333c47c72f6770904890d","fullName":"vote-oss:src/__tests__/api/elections/og.test.ts#GET /api/elections/[id]/og returns 400 for invalid uuid","name":"returns 400 for invalid uuid","status":"passed","testResultsByEnv":{"default":"b7c0d6b8e32b4a4463aa9ec94bb73e69"}}

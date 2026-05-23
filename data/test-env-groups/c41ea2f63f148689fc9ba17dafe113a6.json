@@ -1,0 +1,1 @@
+{"id":"c41ea2f63f148689fc9ba17dafe113a6","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init includes Retry-After header rounded up to seconds on 429","name":"includes Retry-After header rounded up to seconds on 429","status":"passed","testResultsByEnv":{"default":"a5a231070184f0e00b98b28a88dac31e"}}

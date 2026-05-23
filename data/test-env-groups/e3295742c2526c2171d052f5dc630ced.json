@@ -1,0 +1,1 @@
+{"id":"e3295742c2526c2171d052f5dc630ced","fullName":"vote-oss:src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] returns 400 for a non-uuid id","name":"returns 400 for a non-uuid id","status":"passed","testResultsByEnv":{"default":"635d0820cbc17be0b945f758dbff8f17"}}

@@ -1,0 +1,1 @@
+{"id":"dbc340a2db1e4fa8b1909d0cce9dc569","fullName":"vote-oss:src/__tests__/api/cron/cleanup-tokens.test.ts#POST /api/cron/cleanup-tokens deletes expired tokens and returns count","name":"deletes expired tokens and returns count","status":"passed","testResultsByEnv":{"default":"9fec1912165f8db5045d652f97433127"}}

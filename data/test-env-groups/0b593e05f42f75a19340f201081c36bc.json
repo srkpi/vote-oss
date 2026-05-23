@@ -1,0 +1,1 @@
+{"id":"0b593e05f42f75a19340f201081c36bc","fullName":"vote-oss:src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] invalidates the elections cache after soft deletion","name":"invalidates the elections cache after soft deletion","status":"passed","testResultsByEnv":{"default":"2f4a0319f51a76d9ab8387c6dcb9640e"}}

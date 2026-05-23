@@ -1,0 +1,1 @@
+{"id":"4750270d126c1b70b2a76c9d973e094f","fullName":"vote-oss:src/__tests__/api/elections/list.test.ts#POST /api/elections returns 400 when required fields are missing","name":"returns 400 when required fields are missing","status":"passed","testResultsByEnv":{"default":"0753610e5317ef92ae577df5f807559a"}}

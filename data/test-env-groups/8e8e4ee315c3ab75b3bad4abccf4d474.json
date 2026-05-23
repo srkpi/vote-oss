@@ -1,0 +1,1 @@
+{"id":"8e8e4ee315c3ab75b3bad4abccf4d474","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] invalidates the admins cache after a successful update","name":"invalidates the admins cache after a successful update","status":"passed","testResultsByEnv":{"default":"86ec0a15bf3f9ece52e15706c11c22d2"}}

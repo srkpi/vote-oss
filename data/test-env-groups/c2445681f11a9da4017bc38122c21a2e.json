@@ -1,0 +1,1 @@
+{"id":"c2445681f11a9da4017bc38122c21a2e","fullName":"vote-oss:src/__tests__/api/admins/list.test.ts#GET /api/admins does not include soft-deleted admins returned from cache","name":"does not include soft-deleted admins returned from cache","status":"passed","testResultsByEnv":{"default":"b0d5631ddd7912351dd176859da44b1e"}}

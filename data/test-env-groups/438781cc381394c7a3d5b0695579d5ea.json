@@ -1,0 +1,1 @@
+{"id":"438781cc381394c7a3d5b0695579d5ea","fullName":"vote-oss:src/__tests__/api/cron/cleanup-bypass.test.ts#POST /api/cron/cleanup-bypass deletes expired global bypass tokens and returns count","name":"deletes expired global bypass tokens and returns count","status":"passed","testResultsByEnv":{"default":"4c940f4e803ac3c2c8404413ba463913"}}

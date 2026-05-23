@@ -1,0 +1,1 @@
+{"id":"772b228b5861deb284e97e23e8a9a256","fullName":"vote-oss:src/__tests__/api/cron/cleanup-tokens.test.ts#POST /api/cron/cleanup-tokens returns 401 if no authorization header","name":"returns 401 if no authorization header","status":"passed","testResultsByEnv":{"default":"64c5ba474b2ff7ec1234ff871e2fdd49"}}

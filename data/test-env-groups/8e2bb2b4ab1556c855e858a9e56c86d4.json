@@ -1,0 +1,1 @@
+{"id":"8e2bb2b4ab1556c855e858a9e56c86d4","fullName":"vote-oss:src/__tests__/lib/kpi-id.test.ts#kpi-id module resolveFacultyShortName uses Levenshtein to pick the best short key","name":"uses Levenshtein to pick the best short key","status":"passed","testResultsByEnv":{"default":"b69d58e5af6808ce563df28869beb7be"}}

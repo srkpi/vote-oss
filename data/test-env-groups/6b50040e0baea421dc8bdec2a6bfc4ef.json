@@ -1,0 +1,1 @@
+{"id":"6b50040e0baea421dc8bdec2a6bfc4ef","fullName":"vote-oss:src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] marks no winners when all votes are zero","name":"marks no winners when all votes are zero","status":"passed","testResultsByEnv":{"default":"55b378a3ebc8dd4f12626448b2a26365"}}

@@ -1,0 +1,1 @@
+{"id":"f012ce25229905fa99816b96b7927365","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fixFacultyName leaves plain non-НН faculty names unchanged","name":"leaves plain non-НН faculty names unchanged","status":"passed","testResultsByEnv":{"default":"ce642d9e331167f53c7b502d2697d59b"}}

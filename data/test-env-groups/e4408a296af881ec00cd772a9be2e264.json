@@ -1,0 +1,1 @@
+{"id":"e4408a296af881ec00cd772a9be2e264","fullName":"vote-oss:src/__tests__/lib/jwt.test.ts#jwt tokenCookieOptions sets httpOnly and sameSite=lax in all environments","name":"sets httpOnly and sameSite=lax in all environments","status":"passed","testResultsByEnv":{"default":"7d23d62328cdf9e9a7ddf0ee3975322f"}}

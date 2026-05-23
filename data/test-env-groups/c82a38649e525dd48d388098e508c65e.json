@@ -1,0 +1,1 @@
+{"id":"c82a38649e525dd48d388098e508c65e","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto signVoteToken / verifyVoteTokenSignature returns false for a tampered token","name":"returns false for a tampered token","status":"passed","testResultsByEnv":{"default":"bd002bfd34d31c2d0808b8db4d167258"}}

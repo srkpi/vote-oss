@@ -1,0 +1,1 @@
+{"id":"850edd561771f55cd3e90ae4bb2fda62","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave re-parents sibling children under the replacement when it is a direct child","name":"re-parents sibling children under the replacement when it is a direct child","status":"passed","testResultsByEnv":{"default":"dbb74591a5b9fee1d17f245d1a62524c"}}

@@ -1,0 +1,1 @@
+{"id":"fd5f77b5fb6d7c4aab15b34cc6845367","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#POST /api/faq/categories/[id]/items returns 400 when content is missing","name":"returns 400 when content is missing","status":"passed","testResultsByEnv":{"default":"49c2dc5d7ebf667986ede0ba8a9c9214"}}

@@ -1,0 +1,1 @@
+{"id":"f1a64576f6bc1a75b7b8670f9366d394","fullName":"vote-oss:src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns 201 on successful first-time join","name":"returns 201 on successful first-time join","status":"passed","testResultsByEnv":{"default":"5dee4d41b7c68b672c1783d7003a55a2"}}

@@ -1,0 +1,1 @@
+{"id":"5ad25c9a046a2c1e43af2dc763b53e21","fullName":"vote-oss:src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] invalidates the admins cache after a successful soft-delete","name":"invalidates the admins cache after a successful soft-delete","status":"passed","testResultsByEnv":{"default":"1249cfb6a8ab0b3bd5ba7a1a9b998317"}}

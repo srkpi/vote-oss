@@ -1,0 +1,1 @@
+{"id":"0af8930b38512df282247bfd0d9e3a1d","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 204 when leaving with an indirect child as replacement","name":"returns 204 when leaving with an indirect child as replacement","status":"passed","testResultsByEnv":{"default":"7daf4f33da46a2fad621029e6909f58a"}}

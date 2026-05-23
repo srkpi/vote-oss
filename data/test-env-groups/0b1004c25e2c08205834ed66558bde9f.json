@@ -1,0 +1,1 @@
+{"id":"0b1004c25e2c08205834ed66558bde9f","fullName":"vote-oss:src/__tests__/api/admins/join.test.ts#POST /api/admins/join looks up invite token using SHA-256 hash of provided raw token","name":"looks up invite token using SHA-256 hash of provided raw token","status":"passed","testResultsByEnv":{"default":"a8ba3a8899878de72e57484a61d78e21"}}

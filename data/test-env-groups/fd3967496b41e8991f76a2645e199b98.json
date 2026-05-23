@@ -1,0 +1,1 @@
+{"id":"fd3967496b41e8991f76a2645e199b98","fullName":"vote-oss:src/__tests__/api/elections/constants.test.ts#POST /api/elections — constant-driven validation accepts a choice text exactly 100 characters long","name":"accepts a choice text exactly 100 characters long","status":"passed","testResultsByEnv":{"default":"46fa9430932e0bfc1f509ffae2caa1ca"}}

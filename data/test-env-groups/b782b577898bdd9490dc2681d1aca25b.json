@@ -1,0 +1,1 @@
+{"id":"b782b577898bdd9490dc2681d1aca25b","fullName":"vote-oss:src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite invalidates invite token cache after successful creation","name":"invalidates invite token cache after successful creation","status":"passed","testResultsByEnv":{"default":"a753c71e99d2aa74f9ba4166288002cb"}}

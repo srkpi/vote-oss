@@ -1,0 +1,1 @@
+{"id":"3556db1afcc2e2b0f0495a4e6cad856b","fullName":"vote-oss:src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 400 when admin already holds INVITE_TOKEN_MAX_COUNT active tokens","name":"returns 400 when admin already holds INVITE_TOKEN_MAX_COUNT active tokens","status":"passed","testResultsByEnv":{"default":"4f392d79ca6c9b588c8609dc0c4a6aa9"}}

@@ -1,0 +1,1 @@
+{"id":"9b633f12ee01728e659a288d7a31fd53","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave falls back to prisma.admin.findMany when cache is empty","name":"falls back to prisma.admin.findMany when cache is empty","status":"passed","testResultsByEnv":{"default":"ccc9badfde39f19f57e7658f72e78067"}}

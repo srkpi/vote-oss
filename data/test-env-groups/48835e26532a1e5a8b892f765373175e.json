@@ -1,0 +1,1 @@
+{"id":"48835e26532a1e5a8b892f765373175e","fullName":"vote-oss:src/__tests__/lib/constants.test.ts#constants invite token limits INVITE_TOKEN_MAX_USAGE_MIN < INVITE_TOKEN_MAX_USAGE_MAX","name":"INVITE_TOKEN_MAX_USAGE_MIN < INVITE_TOKEN_MAX_USAGE_MAX","status":"passed","testResultsByEnv":{"default":"0421b08cfba1115c20e7ffb8d4f849f8"}}

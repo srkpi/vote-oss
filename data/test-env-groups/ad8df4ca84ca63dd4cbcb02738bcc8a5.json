@@ -1,0 +1,1 @@
+{"id":"ad8df4ca84ca63dd4cbcb02738bcc8a5","fullName":"vote-oss:src/__tests__/lib/rate-limit.test.ts#rate-limit getClientIp strips trailing whitespace from each hop","name":"strips trailing whitespace from each hop","status":"passed","testResultsByEnv":{"default":"eb3c7f9d266a75d3c775a767d7891c7b"}}

@@ -1,0 +1,1 @@
+{"id":"d007ff6e8bcd23fcfe21c99d963d4c1a","fullName":"vote-oss:src/__tests__/api/elections/restore.test.ts#POST /api/elections/[id]/restore returns 400 when election is not deleted","name":"returns 400 when election is not deleted","status":"passed","testResultsByEnv":{"default":"1754791b41d4cedb01898d1642245778"}}

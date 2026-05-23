@@ -1,0 +1,1 @@
+{"id":"296484ecc39030e78e384f70c0b57b60","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto Ballot Encryption (Hybrid AES-GCM + RSA-OAEP) produces a base64 encoded JSON envelope with expected version","name":"produces a base64 encoded JSON envelope with expected version","status":"passed","testResultsByEnv":{"default":"8f04e52fb2001eebdd5f8cff05716dfa"}}

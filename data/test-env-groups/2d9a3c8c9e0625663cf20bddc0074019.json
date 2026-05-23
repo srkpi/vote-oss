@@ -1,0 +1,1 @@
+{"id":"2d9a3c8c9e0625663cf20bddc0074019","fullName":"vote-oss:src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns 400 when prior global usage exists but is revoked","name":"returns 400 when prior global usage exists but is revoked","status":"passed","testResultsByEnv":{"default":"8914d730dd37e31851d9ffaf0a4978ae"}}

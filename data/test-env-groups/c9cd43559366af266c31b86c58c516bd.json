@@ -1,0 +1,1 @@
+{"id":"c9cd43559366af266c31b86c58c516bd","fullName":"vote-oss:src/__tests__/api/admins/get.test.ts#GET /api/admins/[userId] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"2f09b489d038e0141d31af45970d6c6a"}}

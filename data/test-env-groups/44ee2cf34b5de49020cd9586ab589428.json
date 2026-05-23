@@ -1,0 +1,1 @@
+{"id":"44ee2cf34b5de49020cd9586ab589428","fullName":"vote-oss:src/__tests__/api/health/check.test.ts#GET /api/health returns 200 when both DB and Redis are healthy","name":"returns 200 when both DB and Redis are healthy","status":"passed","testResultsByEnv":{"default":"270e39cc4bb353fe6fad0e90cd08e425"}}

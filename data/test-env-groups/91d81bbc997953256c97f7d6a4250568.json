@@ -1,0 +1,1 @@
+{"id":"91d81bbc997953256c97f7d6a4250568","fullName":"vote-oss:src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout calls revokeByAccessJti with the jti and iat from the token","name":"calls revokeByAccessJti with the jti and iat from the token","status":"passed","testResultsByEnv":{"default":"e25aebb185ef466834b70ffb2c897a4f"}}

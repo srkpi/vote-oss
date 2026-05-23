@@ -1,0 +1,1 @@
+{"id":"1176a586c09e0c0aaec6f89a329ad370","fullName":"vote-oss:src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 404 when target admin has already been soft-deleted","name":"returns 404 when target admin has already been soft-deleted","status":"passed","testResultsByEnv":{"default":"8cb204551f3164a70bde2e1e8a688e80"}}

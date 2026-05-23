@@ -1,0 +1,1 @@
+{"id":"426a44e5ddb57502bda7f327f4999705","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#shuffleChoicesForUser utility returns all original choices (no additions or deletions)","name":"returns all original choices (no additions or deletions)","status":"passed","testResultsByEnv":{"default":"0364e0dcb7984351385b26b55850c1b1"}}

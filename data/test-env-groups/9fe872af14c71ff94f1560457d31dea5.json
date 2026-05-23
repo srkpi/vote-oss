@@ -1,0 +1,1 @@
+{"id":"9fe872af14c71ff94f1560457d31dea5","fullName":"vote-oss:src/__tests__/lib/auth.test.ts#auth requireAuth does not call prisma.jwtToken.findFirst directly (hot path uses token-store)","name":"does not call prisma.jwtToken.findFirst directly (hot path uses token-store)","status":"passed","testResultsByEnv":{"default":"2126cff83d457069b988490899e77218"}}

@@ -1,0 +1,1 @@
+{"id":"f888671014ef912bdae635634e7cddd7","fullName":"vote-oss:src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — restriction validation creates election with group spanning multiple faculties","name":"creates election with group spanning multiple faculties","status":"passed","testResultsByEnv":{"default":"df62e53689471f3dca616218fcea07d3"}}

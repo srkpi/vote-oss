@@ -1,0 +1,1 @@
+{"id":"738012813201041f0c81084e5d55b9d4","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#GET /api/elections/[id]/ballots — shuffleChoices does not shuffle choices in ballot response when disabled","name":"does not shuffle choices in ballot response when disabled","status":"passed","testResultsByEnv":{"default":"57e1eb3280a67f1367d12b06d0b27cdf"}}

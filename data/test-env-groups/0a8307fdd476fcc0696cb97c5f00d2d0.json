@@ -1,0 +1,1 @@
+{"id":"0a8307fdd476fcc0696cb97c5f00d2d0","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#GET /api/faq returns 200 with empty array when no categories exist","name":"returns 200 with empty array when no categories exist","status":"passed","testResultsByEnv":{"default":"296ef1320df37f2773589238c78c202c"}}

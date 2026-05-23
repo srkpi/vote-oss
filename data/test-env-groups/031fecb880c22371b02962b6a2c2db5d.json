@@ -1,0 +1,1 @@
+{"id":"031fecb880c22371b02962b6a2c2db5d","fullName":"vote-oss:src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 403 when the caller admin record has been soft-deleted","name":"returns 403 when the caller admin record has been soft-deleted","status":"passed","testResultsByEnv":{"default":"f11c708078990e47226daa4573fcf987"}}

@@ -1,0 +1,1 @@
+{"id":"5a1e41d3748040547844715daf5c3871","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache getCachedElections returns null on a cache miss","name":"returns null on a cache miss","status":"passed","testResultsByEnv":{"default":"e2edc600fa77b30c289515027a42cb10"}}

@@ -1,0 +1,1 @@
+{"id":"7facd5417b9f2e9995871477ea4308bd","fullName":"vote-oss:src/__tests__/api/admins/list.test.ts#GET /api/admins returns 200 with empty array when no admins exist","name":"returns 200 with empty array when no admins exist","status":"passed","testResultsByEnv":{"default":"05694b33fc336c19f36817a0c8c7f65b"}}

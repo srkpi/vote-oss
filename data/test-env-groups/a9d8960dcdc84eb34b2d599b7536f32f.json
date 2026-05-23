@@ -1,0 +1,1 @@
+{"id":"a9d8960dcdc84eb34b2d599b7536f32f","fullName":"vote-oss:src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] returns 204 when unrestricted admin soft-deletes any election","name":"returns 204 when unrestricted admin soft-deletes any election","status":"passed","testResultsByEnv":{"default":"6c1eb05c60c1a98f84f197c4c854a1d7"}}

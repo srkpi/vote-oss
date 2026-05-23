@@ -1,0 +1,1 @@
+{"id":"eb9c9c1da304a2dd0b34e40e7c238d69","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#POST /api/faq/categories/[id]/items returns 400 when content is not valid Quill Delta JSON","name":"returns 400 when content is not valid Quill Delta JSON","status":"passed","testResultsByEnv":{"default":"81b6e2c0309f7e122e9d187fe0a8cf40"}}

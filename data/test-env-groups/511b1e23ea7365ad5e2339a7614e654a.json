@@ -1,0 +1,1 @@
+{"id":"511b1e23ea7365ad5e2339a7614e654a","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto signVoteToken / verifyVoteTokenSignature returns false for garbage base64 signature","name":"returns false for garbage base64 signature","status":"passed","testResultsByEnv":{"default":"5e957e352dd1e13bd6b047cbf37498d5"}}

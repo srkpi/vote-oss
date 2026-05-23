@@ -1,0 +1,1 @@
+{"id":"e65af6b66a6105bc7947d6c519de033c","fullName":"vote-oss:src/__tests__/api/bypass/election.test.ts#POST /api/elections/[id]/bypass returns 400 when maxUsage is not provided","name":"returns 400 when maxUsage is not provided","status":"passed","testResultsByEnv":{"default":"5b4f892ab49a889c1671e46db690ce6c"}}

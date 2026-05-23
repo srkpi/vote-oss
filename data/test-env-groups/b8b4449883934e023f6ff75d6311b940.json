@@ -1,0 +1,1 @@
+{"id":"b8b4449883934e023f6ff75d6311b940","fullName":"vote-oss:src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout returns 401 when no access token cookie is present","name":"returns 401 when no access token cookie is present","status":"passed","testResultsByEnv":{"default":"f77cf7ec5f62aa17d19323d8a983b8b9"}}

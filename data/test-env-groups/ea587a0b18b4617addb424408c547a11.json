@@ -1,0 +1,1 @@
+{"id":"ea587a0b18b4617addb424408c547a11","fullName":"vote-oss:src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] exposes private key after election closes","name":"exposes private key after election closes","status":"passed","testResultsByEnv":{"default":"3a737b82b167473d0569be1b3d64826d"}}

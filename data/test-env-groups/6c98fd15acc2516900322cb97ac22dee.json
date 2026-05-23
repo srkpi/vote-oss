@@ -1,0 +1,1 @@
+{"id":"6c98fd15acc2516900322cb97ac22dee","fullName":"vote-oss:src/__tests__/api/elections/list.test.ts#POST /api/elections returns 201 with election data on success","name":"returns 201 with election data on success","status":"passed","testResultsByEnv":{"default":"4409ecfe57879cc341086928825f23f8"}}

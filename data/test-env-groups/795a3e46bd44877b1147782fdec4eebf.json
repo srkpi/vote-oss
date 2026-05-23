@@ -1,0 +1,1 @@
+{"id":"795a3e46bd44877b1147782fdec4eebf","fullName":"vote-oss:src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"06cac60ea47a175a1697ce88ad7e939c"}}

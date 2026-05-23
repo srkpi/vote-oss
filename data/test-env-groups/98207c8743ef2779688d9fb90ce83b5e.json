@@ -1,0 +1,1 @@
+{"id":"98207c8743ef2779688d9fb90ce83b5e","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#GET /api/elections/[id] — quorum tally condition no winners when quorum is not met","name":"no winners when quorum is not met","status":"passed","testResultsByEnv":{"default":"680e325adc2d9f0d740451368cbd913a"}}

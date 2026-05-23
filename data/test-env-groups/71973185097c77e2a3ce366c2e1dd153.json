@@ -1,0 +1,1 @@
+{"id":"71973185097c77e2a3ce366c2e1dd153","fullName":"vote-oss:src/__tests__/api/admins/invite/delete.test.ts#DELETE /api/admins/invite/[tokenHash] invalidates invite token cache after deletion","name":"invalidates invite token cache after deletion","status":"passed","testResultsByEnv":{"default":"7f527b01fdb5e982e37eb6361051172f"}}

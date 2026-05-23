@@ -1,0 +1,1 @@
+{"id":"14e00a2d88abee35c3c14eac61c9dd1a","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 409 when nullifier already used (double-vote attempt)","name":"returns 409 when nullifier already used (double-vote attempt)","status":"passed","testResultsByEnv":{"default":"f90fe4fef0c31381dea9ee1626bd3bc1"}}

@@ -1,0 +1,1 @@
+{"id":"8274cb5b008f99bb51a7413beb843566","fullName":"vote-oss:src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 400 when validDue is in the past","name":"returns 400 when validDue is in the past","status":"passed","testResultsByEnv":{"default":"872583a1d902105263349189665bc736"}}

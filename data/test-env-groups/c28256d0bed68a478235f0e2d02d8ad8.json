@@ -1,0 +1,1 @@
+{"id":"c28256d0bed68a478235f0e2d02d8ad8","fullName":"vote-oss:src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"90951445b32aba55b62be8790301d134"}}

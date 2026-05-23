@@ -1,0 +1,1 @@
+{"id":"66198a862c26afd24dfa32c403e65d3c","fullName":"vote-oss:src/__tests__/lib/auth.test.ts#auth requireAuth returns ok=false (401) for a malformed token string","name":"returns ok=false (401) for a malformed token string","status":"passed","testResultsByEnv":{"default":"2609d5c5cd46eb5963d2c7e3b8f54302"}}

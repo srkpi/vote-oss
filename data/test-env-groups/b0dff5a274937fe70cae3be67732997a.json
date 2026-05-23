@@ -1,0 +1,1 @@
+{"id":"b0dff5a274937fe70cae3be67732997a","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) appends new category after the last one (position = last.position + 1)","name":"appends new category after the last one (position = last.position + 1)","status":"passed","testResultsByEnv":{"default":"a75b53c8bcdde575244ed142392d043f"}}

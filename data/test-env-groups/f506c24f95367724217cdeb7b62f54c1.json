@@ -1,0 +1,1 @@
+{"id":"f506c24f95367724217cdeb7b62f54c1","fullName":"vote-oss:src/__tests__/api/elections/list.test.ts#POST /api/elections invalidates the elections cache after creation","name":"invalidates the elections cache after creation","status":"passed","testResultsByEnv":{"default":"19b41a6116a55970e15806afe8ae179f"}}

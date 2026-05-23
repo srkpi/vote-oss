@@ -1,0 +1,1 @@
+{"id":"406a9d44b06d5fa0b546585efc0d1863","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#GET /api/elections/[id]/ballots — shuffleChoices returns shuffleChoices: true when enabled","name":"returns shuffleChoices: true when enabled","status":"passed","testResultsByEnv":{"default":"0414cdbe4d18c90099b13469bd473ebc"}}

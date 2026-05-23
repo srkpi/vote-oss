@@ -1,0 +1,1 @@
+{"id":"cc0b6d26c5a827fc5d43576c6daa39e7","fullName":"vote-oss:src/__tests__/api/admins/invite/delete.test.ts#DELETE /api/admins/invite/[tokenHash] returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"2e6d4e6529c2f4be72ba507669355da8"}}

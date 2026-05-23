@@ -1,0 +1,1 @@
+{"id":"d994f1d99d85c80972d870f4540ec576","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave re-parents all caller direct children under the replacement (indirect case)","name":"re-parents all caller direct children under the replacement (indirect case)","status":"passed","testResultsByEnv":{"default":"4d897ff6f947dc5032e7001a5e7f47d1"}}

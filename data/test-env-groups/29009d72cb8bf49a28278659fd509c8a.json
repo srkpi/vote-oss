@@ -1,0 +1,1 @@
+{"id":"29009d72cb8bf49a28278659fd509c8a","fullName":"vote-oss:src/__tests__/api/elections/constants.test.ts#POST /api/elections — constant-driven validation returns 400 if closesAt is invalid","name":"returns 400 if closesAt is invalid","status":"passed","testResultsByEnv":{"default":"48c549dcfa7bcc115b0242bd001175bc"}}

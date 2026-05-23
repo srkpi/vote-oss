@@ -1,0 +1,1 @@
+{"id":"4ad7d5adbac5536217cb822603993d3a","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups throws when the campus API returns a non-OK status","name":"throws when the campus API returns a non-OK status","status":"passed","testResultsByEnv":{"default":"aeb7b345f885cffa1c9907a2d8b3f8a5"}}

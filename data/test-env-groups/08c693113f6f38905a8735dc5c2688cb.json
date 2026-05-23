@@ -1,0 +1,1 @@
+{"id":"08c693113f6f38905a8735dc5c2688cb","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init returns 500 when the KPI-ID provider returns a non-OK HTTP status","name":"returns 500 when the KPI-ID provider returns a non-OK HTTP status","status":"passed","testResultsByEnv":{"default":"9bba99c36bca09623470a2298627ba1d"}}

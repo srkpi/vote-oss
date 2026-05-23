@@ -1,0 +1,1 @@
+{"id":"c7eb21f67e52ac30a5a7c46e94b6a23a","fullName":"vote-oss:src/__tests__/lib/bloom.test.ts#bloom filter bloomCheck returns \"revoked\" when all bits are set AND confirmed key exists","name":"returns \"revoked\" when all bits are set AND confirmed key exists","status":"passed","testResultsByEnv":{"default":"dd81420888fc671c0efb1f63405f9eb6"}}

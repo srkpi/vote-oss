@@ -1,0 +1,1 @@
+{"id":"6ecab699bdc128e518e4e20f4ee8fec5","fullName":"vote-oss:src/__tests__/api/admins/join.test.ts#POST /api/admins/join invalidates the admins cache on a successful rejoin","name":"invalidates the admins cache on a successful rejoin","status":"passed","testResultsByEnv":{"default":"91a7d82b6fcbcfb779f80137fe2344c1"}}

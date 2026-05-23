@@ -1,0 +1,1 @@
+{"id":"55c7c077e153e633729941e2ffe7677a","fullName":"vote-oss:src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 204 when hierarchy check passes","name":"returns 204 when hierarchy check passes","status":"passed","testResultsByEnv":{"default":"26dce54b8a525cbc93c2ad56cec7c167"}}

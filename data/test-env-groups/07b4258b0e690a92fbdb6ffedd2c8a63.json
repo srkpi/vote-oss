@@ -1,0 +1,1 @@
+{"id":"07b4258b0e690a92fbdb6ffedd2c8a63","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto computeNullifier is deterministic for the same input","name":"is deterministic for the same input","status":"passed","testResultsByEnv":{"default":"14d642c6efeea39798d84f33e246fc99"}}

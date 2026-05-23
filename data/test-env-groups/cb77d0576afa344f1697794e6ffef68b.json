@@ -1,0 +1,1 @@
+{"id":"cb77d0576afa344f1697794e6ffef68b","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 403 for non-admin user","name":"returns 403 for non-admin user","status":"passed","testResultsByEnv":{"default":"5a1a88ed3029478f437b86f123fe5c33"}}

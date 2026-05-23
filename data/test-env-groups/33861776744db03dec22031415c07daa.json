@@ -1,0 +1,1 @@
+{"id":"33861776744db03dec22031415c07daa","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#POST /api/faq/categories/[id]/items returns 404 when category does not exist","name":"returns 404 when category does not exist","status":"passed","testResultsByEnv":{"default":"ff5cb7575bb91a9143b8a50ef1f812c2"}}

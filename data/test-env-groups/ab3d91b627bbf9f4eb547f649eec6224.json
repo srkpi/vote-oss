@@ -1,0 +1,1 @@
+{"id":"ab3d91b627bbf9f4eb547f649eec6224","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 400 when admin has indirect children only but no replacementId","name":"returns 400 when admin has indirect children only but no replacementId","status":"passed","testResultsByEnv":{"default":"96b76db34c538f7e3bcf6dced684a407"}}

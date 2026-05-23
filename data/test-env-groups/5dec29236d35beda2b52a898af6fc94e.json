@@ -1,0 +1,1 @@
+{"id":"5dec29236d35beda2b52a898af6fc94e","fullName":"vote-oss:src/__tests__/api/admins/join.test.ts#POST /api/admins/join increments invite-token usage atomically on rejoin (2-op transaction)","name":"increments invite-token usage atomically on rejoin (2-op transaction)","status":"passed","testResultsByEnv":{"default":"1e59bcf4343e18dadc59a4b1fe095591"}}

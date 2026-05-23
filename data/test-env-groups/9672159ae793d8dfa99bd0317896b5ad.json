@@ -1,0 +1,1 @@
+{"id":"9672159ae793d8dfa99bd0317896b5ad","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 403 when admin does not have manage_admins permission","name":"returns 403 when admin does not have manage_admins permission","status":"passed","testResultsByEnv":{"default":"b6b55df8ac750932a712f0d580af6b72"}}

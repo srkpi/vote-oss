@@ -1,0 +1,1 @@
+{"id":"683ddd9c56467577582ac4474c8ec271","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#GET /api/elections — shuffleChoices includes shuffleChoices: false when not enabled","name":"includes shuffleChoices: false when not enabled","status":"passed","testResultsByEnv":{"default":"d21474fbb508d126448114e89aa94f08"}}

@@ -1,0 +1,1 @@
+{"id":"538b7d45aedf97228232896a07ad5e63","fullName":"vote-oss:src/__tests__/api/bypass/apply.test.ts#POST /api/bypass/apply returns GLOBAL type and null electionId for global token","name":"returns GLOBAL type and null electionId for global token","status":"passed","testResultsByEnv":{"default":"ef1b08277379145defd901a1240934e0"}}

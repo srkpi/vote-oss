@@ -1,0 +1,1 @@
+{"id":"b5ced216851d8622195f1ff12d3fcd17","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/categories/[id] calls prisma.faqCategory.delete with the correct id","name":"calls prisma.faqCategory.delete with the correct id","status":"passed","testResultsByEnv":{"default":"7e2382e240b956d26d30d4992c93a5a5"}}

@@ -1,0 +1,1 @@
+{"id":"d38e4a5192f3760aedb38de3006e9342","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#POST /api/faq/categories/[id]/items returns 400 when plain-text content exceeds 2048 characters","name":"returns 400 when plain-text content exceeds 2048 characters","status":"passed","testResultsByEnv":{"default":"f6c4801b0c3f8d4d1d1adf6334457ff7"}}

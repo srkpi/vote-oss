@@ -1,0 +1,1 @@
+{"id":"30f68676808928d7de687ec4d1ce788d","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#DELETE /api/faq/categories/[id] invalidates the FAQ cache after deleting a category","name":"invalidates the FAQ cache after deleting a category","status":"passed","testResultsByEnv":{"default":"4c6bfb181fbef8f38aa95bda9fbc65ab"}}

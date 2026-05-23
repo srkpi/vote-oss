@@ -1,0 +1,1 @@
+{"id":"5216ae508df13b82c5dd3d308ec8a5dc","fullName":"vote-oss:src/__tests__/lib/kpi-id.test.ts#kpi-id module resolveTicket throws NotStudentError if only EMPLOYEE_ID is present","name":"throws NotStudentError if only EMPLOYEE_ID is present","status":"passed","testResultsByEnv":{"default":"4334078c15bdd06f1eced65cce60d7f4"}}

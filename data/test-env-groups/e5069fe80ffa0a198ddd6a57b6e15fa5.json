@@ -1,0 +1,1 @@
+{"id":"e5069fe80ffa0a198ddd6a57b6e15fa5","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot chains to previous ballot hash when one exists","name":"chains to previous ballot hash when one exists","status":"passed","testResultsByEnv":{"default":"3a3f7206729403fe577b79ca1f11f9e5"}}

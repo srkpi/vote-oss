@@ -1,0 +1,1 @@
+{"id":"cfff4eb0e066452d205378ec8c7172b2","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 400 when title is empty string","name":"returns 400 when title is empty string","status":"passed","testResultsByEnv":{"default":"b4c14753546e6a6df3fa42521b4d4619"}}

@@ -1,0 +1,1 @@
+{"id":"187213b36d30be4977b9027d5c336935","fullName":"vote-oss:src/__tests__/api/elections/restore.test.ts#POST /api/elections/[id]/restore returns 204 when unrestricted admin restores any deleted election","name":"returns 204 when unrestricted admin restores any deleted election","status":"passed","testResultsByEnv":{"default":"4c4a3c87907c29d22b2d3137e1fbf416"}}

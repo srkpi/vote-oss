@@ -1,0 +1,1 @@
+{"id":"9b22edb49cb54417a0e523b613fc0a4d","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] does NOT delete tokens when manage_admins value is the same (no actual change)","name":"does NOT delete tokens when manage_admins value is the same (no actual change)","status":"passed","testResultsByEnv":{"default":"f4fe041b5ef5384ba2a4b7449e3eaa97"}}

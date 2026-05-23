@@ -1,0 +1,1 @@
+{"id":"f2ab50509fdc0862cfd4b27aa8177165","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#POST /api/elections — shuffleChoices passes shuffle_choices: false to prisma when not provided","name":"passes shuffle_choices: false to prisma when not provided","status":"passed","testResultsByEnv":{"default":"e141d4ebf3eabe635ecaefa1813647cf"}}

@@ -1,0 +1,1 @@
+{"id":"0091e41cee2b5d71bba7fb1397388542","fullName":"vote-oss:src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] returns 403 when caller is not an admin","name":"returns 403 when caller is not an admin","status":"passed","testResultsByEnv":{"default":"ba6808219e0c8a037a99a48edbfe06ea"}}

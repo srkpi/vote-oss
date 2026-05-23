@@ -1,0 +1,1 @@
+{"id":"4b1059067b6909180664eca08bd35671","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave returns 204 when leaving with no children (replacementId null)","name":"returns 204 when leaving with no children (replacementId null)","status":"passed","testResultsByEnv":{"default":"4d6a91e36f30d162b647f677fedc0f0a"}}

@@ -1,0 +1,1 @@
+{"id":"2c8a1158a3d719aa1c1dd9389583aedf","fullName":"vote-oss:src/__tests__/api/bypass/election.test.ts#POST /api/elections/[id]/bypass returns 400 when election has no restrictions","name":"returns 400 when election has no restrictions","status":"passed","testResultsByEnv":{"default":"b89a0a47b0087e9c779d1f469e414259"}}

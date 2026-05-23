@@ -1,0 +1,1 @@
+{"id":"84602c840c70caacfd4973d8aac31785","fullName":"vote-oss:src/__tests__/api/admins/get.test.ts#GET /api/admins/[userId] calls prisma.admin.findUnique with the correct userId when cache is empty","name":"calls prisma.admin.findUnique with the correct userId when cache is empty","status":"passed","testResultsByEnv":{"default":"8a10ac6069ad7a1dbcc61777c1a7b5e9"}}

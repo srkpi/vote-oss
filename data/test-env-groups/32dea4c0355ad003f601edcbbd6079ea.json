@@ -1,0 +1,1 @@
+{"id":"32dea4c0355ad003f601edcbbd6079ea","fullName":"vote-oss:src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — restriction validation accepts LEVEL_COURSE combined with FACULTY (AND logic)","name":"accepts LEVEL_COURSE combined with FACULTY (AND logic)","status":"passed","testResultsByEnv":{"default":"f7d8d13695217e8ac897ba8ffd86401c"}}

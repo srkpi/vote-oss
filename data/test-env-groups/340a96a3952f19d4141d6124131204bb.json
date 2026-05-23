@@ -1,0 +1,1 @@
+{"id":"340a96a3952f19d4141d6124131204bb","fullName":"vote-oss:src/__tests__/api/elections/list.test.ts#GET /api/elections includes status field computed at serve time (upcoming/open/closed)","name":"includes status field computed at serve time (upcoming/open/closed)","status":"passed","testResultsByEnv":{"default":"ea3f09142d89d336d52ae364326f331a"}}

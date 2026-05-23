@@ -1,0 +1,1 @@
+{"id":"0a2ee70a76fbb66c8b35045470b18a3b","fullName":"vote-oss:src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] sets deleted_at to a recent timestamp on soft delete","name":"sets deleted_at to a recent timestamp on soft delete","status":"passed","testResultsByEnv":{"default":"79c511fcfc885322938de05d74f2dfc6"}}

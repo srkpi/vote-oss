@@ -1,0 +1,1 @@
+{"id":"651c8f9a6fecaf8645d4c1ce3e14e0f0","fullName":"vote-oss:src/__tests__/api/cron/cleanup-bypass.test.ts#POST /api/cron/cleanup-bypass returns 401 if no authorization header","name":"returns 401 if no authorization header","status":"passed","testResultsByEnv":{"default":"91ab68d03336893d7b21941b4f7755ae"}}

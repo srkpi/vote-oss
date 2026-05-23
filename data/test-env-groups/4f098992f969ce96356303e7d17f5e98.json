@@ -1,0 +1,1 @@
+{"id":"4f098992f969ce96356303e7d17f5e98","fullName":"vote-oss:src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — restriction validation creates election with valid FACULTY + GROUP restrictions","name":"creates election with valid FACULTY + GROUP restrictions","status":"passed","testResultsByEnv":{"default":"5e01c6e5488cbfcb237e2fe0281a724e"}}

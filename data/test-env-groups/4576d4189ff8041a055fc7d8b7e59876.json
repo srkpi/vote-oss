@@ -1,0 +1,1 @@
+{"id":"4576d4189ff8041a055fc7d8b7e59876","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/categories/[id] returns 200 with updated category on success","name":"returns 200 with updated category on success","status":"passed","testResultsByEnv":{"default":"28ff9fd11e2cdd78c0efb13f7e705048"}}

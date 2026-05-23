@@ -1,0 +1,1 @@
+{"id":"bd7810f9b5d56bfb4a85968063cdf926","fullName":"vote-oss:src/__tests__/api/admins/list.test.ts#GET /api/admins marks a soft-deleted admin as not deletable even if promoter points to caller","name":"marks a soft-deleted admin as not deletable even if promoter points to caller","status":"passed","testResultsByEnv":{"default":"640ad9dd3a3547ff09e54ac7d4cad815"}}

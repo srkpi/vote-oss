@@ -1,0 +1,1 @@
+{"id":"af9befeccbcc23e724f11d15657ae5db","fullName":"vote-oss:src/__tests__/api/elections/shuffle.test.ts#GET /api/elections — shuffleChoices shuffles choices for the requesting user when shuffleChoices is true","name":"shuffles choices for the requesting user when shuffleChoices is true","status":"passed","testResultsByEnv":{"default":"6f27af2b9f8dc380c7db8792f80f3db6"}}

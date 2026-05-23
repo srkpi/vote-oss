@@ -1,0 +1,1 @@
+{"id":"fefd6a59ebb0e9f1707ef4f6716ed3ef","fullName":"vote-oss:src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 201 with a raw invite token for a valid request","name":"returns 201 with a raw invite token for a valid request","status":"passed","testResultsByEnv":{"default":"307648f08783126bcda6f7025930355e"}}

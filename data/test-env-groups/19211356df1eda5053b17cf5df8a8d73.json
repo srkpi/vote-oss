@@ -1,0 +1,1 @@
+{"id":"19211356df1eda5053b17cf5df8a8d73","fullName":"vote-oss:src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"e14cd862247f2341edb0fd0e6976f372"}}

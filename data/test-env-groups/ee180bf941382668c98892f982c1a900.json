@@ -1,0 +1,1 @@
+{"id":"ee180bf941382668c98892f982c1a900","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 201 with category data on success","name":"returns 201 with category data on success","status":"passed","testResultsByEnv":{"default":"170902c7ed3b2f7433379fc641a53411"}}

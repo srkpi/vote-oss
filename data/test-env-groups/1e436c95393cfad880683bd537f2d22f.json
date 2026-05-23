@@ -1,0 +1,1 @@
+{"id":"1e436c95393cfad880683bd537f2d22f","fullName":"vote-oss:src/__tests__/api/admins/leave.test.ts#POST /api/admins/leave deletes own invite tokens when leaving","name":"deletes own invite tokens when leaving","status":"passed","testResultsByEnv":{"default":"82975d24f40edf70a70f2d9fea53f2d1"}}

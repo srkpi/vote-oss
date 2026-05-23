@@ -1,0 +1,1 @@
+{"id":"c24685bbeb7ec3a8700062f6d73eda65","fullName":"vote-oss:src/__tests__/api/elections/ballots.test.ts#GET /api/elections/[id]/ballots exposes encryptedBallot, signature and hash chain in camelCase","name":"exposes encryptedBallot, signature and hash chain in camelCase","status":"passed","testResultsByEnv":{"default":"66f3f69860995e307494342e623dff27"}}

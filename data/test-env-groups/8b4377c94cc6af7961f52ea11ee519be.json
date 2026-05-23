@@ -1,0 +1,1 @@
+{"id":"8b4377c94cc6af7961f52ea11ee519be","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 400 when body is not valid JSON","name":"returns 400 when body is not valid JSON","status":"passed","testResultsByEnv":{"default":"dcf2c418ac5e6d294e2652709019c302"}}

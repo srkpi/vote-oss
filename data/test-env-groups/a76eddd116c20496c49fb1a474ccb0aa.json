@@ -1,0 +1,1 @@
+{"id":"a76eddd116c20496c49fb1a474ccb0aa","fullName":"vote-oss:src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns 400 when invite token max_usage is exhausted","name":"returns 400 when invite token max_usage is exhausted","status":"passed","testResultsByEnv":{"default":"aa7c32c11a60bcf9d6296df744751dec"}}

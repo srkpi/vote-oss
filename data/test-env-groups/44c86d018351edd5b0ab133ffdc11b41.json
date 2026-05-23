@@ -1,0 +1,1 @@
+{"id":"44c86d018351edd5b0ab133ffdc11b41","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 400 when nullifier does not match H(token)","name":"returns 400 when nullifier does not match H(token)","status":"passed","testResultsByEnv":{"default":"cb52d033ef41db5881f944be9a4ce94b"}}

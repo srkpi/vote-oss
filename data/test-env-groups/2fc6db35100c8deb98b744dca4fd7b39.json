@@ -1,0 +1,1 @@
+{"id":"2fc6db35100c8deb98b744dca4fd7b39","fullName":"vote-oss:src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — restriction validation accepts valid STUDY_FORM restrictions","name":"accepts valid STUDY_FORM restrictions","status":"passed","testResultsByEnv":{"default":"163edba0281fb67801793572caa2b1be"}}

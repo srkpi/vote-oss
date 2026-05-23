@@ -1,0 +1,1 @@
+{"id":"1005e3c2bb14b1a88d4b0de4ae203dab","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupLevel returns \"m\" for master groups with extra noise letters (e.g. \"мні\")","name":"returns \"m\" for master groups with extra noise letters (e.g. \"мні\")","status":"passed","testResultsByEnv":{"default":"8cecd7554a67ac4cae273d5000f49a78"}}

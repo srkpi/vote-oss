@@ -1,0 +1,1 @@
+{"id":"11489d01c93b1c85e19ba4cf0fd85d74","fullName":"vote-oss:src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout clears the access_token cookie (maxAge=0)","name":"clears the access_token cookie (maxAge=0)","status":"passed","testResultsByEnv":{"default":"bc91204d155a0afff828730a9190f718"}}

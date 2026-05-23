@@ -1,0 +1,1 @@
+{"id":"2c661b6eabbb679cb0fe58f43e6cacb2","fullName":"vote-oss:src/__tests__/api/bypass/restriction-bypass.test.ts#checkRestrictions returns false when user fails one restriction type in an AND group","name":"returns false when user fails one restriction type in an AND group","status":"passed","testResultsByEnv":{"default":"51f216279ca174604e6233ce401f92c7"}}

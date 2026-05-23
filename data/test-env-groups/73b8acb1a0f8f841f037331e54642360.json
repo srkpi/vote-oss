@@ -1,0 +1,1 @@
+{"id":"73b8acb1a0f8f841f037331e54642360","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupLevel returns \"b\" for unparseable group names (safe default)","name":"returns \"b\" for unparseable group names (safe default)","status":"passed","testResultsByEnv":{"default":"182c7b31dbd08052e51a1436d1824874"}}

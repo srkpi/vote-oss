@@ -1,0 +1,1 @@
+{"id":"9831a6a5d8e97b2bf0039ef7d91c621d","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id redirects to the election page when an election bypass was pre-applied","name":"redirects to the election page when an election bypass was pre-applied","status":"passed","testResultsByEnv":{"default":"487944118245f802f418cbc6a38d01d4"}}

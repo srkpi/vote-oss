@@ -1,0 +1,1 @@
+{"id":"0926700cafab5780ede2195f2108e622","fullName":"vote-oss:src/__tests__/api/admins/invite/get.test.ts#GET /api/admins/invite calls setCachedInviteTokens after a DB fetch","name":"calls setCachedInviteTokens after a DB fetch","status":"passed","testResultsByEnv":{"default":"1b537c935d97c8bcfe5e699ad8a19754"}}

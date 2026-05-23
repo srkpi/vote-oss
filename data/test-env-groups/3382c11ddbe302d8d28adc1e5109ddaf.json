@@ -1,0 +1,1 @@
+{"id":"3382c11ddbe302d8d28adc1e5109ddaf","fullName":"vote-oss:src/__tests__/api/elections/create-restrictions.test.ts#POST /api/elections — restriction validation accepts combined FACULTY + STUDY_YEAR (AND logic)","name":"accepts combined FACULTY + STUDY_YEAR (AND logic)","status":"passed","testResultsByEnv":{"default":"9f7224f3765b2e5fe7b5f0d77063c9d8"}}

@@ -1,0 +1,1 @@
+{"id":"d782169ec763572a0bb4adc6382d4463","fullName":"vote-oss:src/__tests__/api/admins/invite/create.test.ts#POST /api/admins/invite returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"e439631a4608afbd9c7ff5e69ded6213"}}

@@ -1,0 +1,1 @@
+{"id":"983350e5e051affa7c019c8a1a41edc0","fullName":"vote-oss:src/__tests__/api/elections/constants.test.ts#POST /api/elections — constant-driven validation returns 400 when a non-first choice exceeds the length limit","name":"returns 400 when a non-first choice exceeds the length limit","status":"passed","testResultsByEnv":{"default":"6da96c026728ec1b0e9570735b48147c"}}

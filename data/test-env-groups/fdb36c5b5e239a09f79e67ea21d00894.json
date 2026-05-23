@@ -1,0 +1,1 @@
+{"id":"fdb36c5b5e239a09f79e67ea21d00894","fullName":"vote-oss:src/__tests__/lib/rate-limit.test.ts#rate-limit rateLimit fails open (limited=false) when safeRedis returns null","name":"fails open (limited=false) when safeRedis returns null","status":"passed","testResultsByEnv":{"default":"2e2f2ff2e27c2d7ed7e4efb2ed4abbcc"}}

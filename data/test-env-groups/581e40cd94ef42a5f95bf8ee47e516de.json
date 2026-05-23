@@ -1,0 +1,1 @@
+{"id":"581e40cd94ef42a5f95bf8ee47e516de","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto Ballot Encryption (Hybrid AES-GCM + RSA-OAEP) throws on invalid envelope version","name":"throws on invalid envelope version","status":"passed","testResultsByEnv":{"default":"ab077c45cbc3ab6bbf843a2c7154d084"}}

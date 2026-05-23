@@ -1,0 +1,1 @@
+{"id":"9c3b118719837fa83105507cf4e444f8","fullName":"vote-oss:src/__tests__/api/bypass/restriction-bypass.test.ts#checkRestrictionsWithBypass — empty bypassedTypes means NO bypass bypassing FACULTY but failing GROUP returns false","name":"bypassing FACULTY but failing GROUP returns false","status":"passed","testResultsByEnv":{"default":"dbef9235bd21f5c2665b4943bebd9084"}}

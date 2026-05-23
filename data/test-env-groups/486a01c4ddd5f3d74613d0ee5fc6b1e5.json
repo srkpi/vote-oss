@@ -1,0 +1,1 @@
+{"id":"486a01c4ddd5f3d74613d0ee5fc6b1e5","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init response body contains deepLink matching provider value","name":"response body contains deepLink matching provider value","status":"passed","testResultsByEnv":{"default":"823a681c18273982cef51fd32cd92863"}}

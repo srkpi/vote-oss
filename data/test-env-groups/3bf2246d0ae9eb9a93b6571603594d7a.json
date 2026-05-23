@@ -1,0 +1,1 @@
+{"id":"3bf2246d0ae9eb9a93b6571603594d7a","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 204 when restricted caller sets restrictedToFaculty=true (allowed)","name":"returns 204 when restricted caller sets restrictedToFaculty=true (allowed)","status":"passed","testResultsByEnv":{"default":"a77fff326addfa98144aa464113c7d28"}}

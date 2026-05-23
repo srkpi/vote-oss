@@ -1,0 +1,1 @@
+{"id":"a44c0501847065ebb837697101c32704","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#POST /api/elections — winning conditions validation accepts reachesVotes at maximum (10000)","name":"accepts reachesVotes at maximum (10000)","status":"passed","testResultsByEnv":{"default":"c795fa2195379b7c6517fc8fa743994c"}}

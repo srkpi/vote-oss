@@ -1,0 +1,1 @@
+{"id":"8c461d902dd5ab5213fb1b26247d08a8","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#GET /api/bypass returns 403 for restricted admin","name":"returns 403 for restricted admin","status":"passed","testResultsByEnv":{"default":"b2c777a7fde7971e7b8b3ea91e5d953a"}}

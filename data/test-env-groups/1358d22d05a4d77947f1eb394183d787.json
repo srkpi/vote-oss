@@ -1,0 +1,1 @@
+{"id":"1358d22d05a4d77947f1eb394183d787","fullName":"vote-oss:src/__tests__/api/admins/delete.test.ts#DELETE /api/admins/[userId] returns 403 when caller is not an ancestor of the target","name":"returns 403 when caller is not an ancestor of the target","status":"passed","testResultsByEnv":{"default":"4540d2dfdaa4225f62fe06f2833edc30"}}
