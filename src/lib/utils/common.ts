@@ -207,3 +207,9 @@ export function deltaToPlainText(content: string): string {
   // Strip the single trailing newline Quill always appends
   return text.endsWith('\n') ? text.slice(0, -1) : text;
 }
+
+/** Capitalizes the first letter of a word. */
+export function capitalizeFirst(str: string): string {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

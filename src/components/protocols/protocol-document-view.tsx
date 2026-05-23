@@ -9,8 +9,8 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { ProtocolWithCounts } from '@/lib/api/client';
-import { PROTOCOL_PRESENT_TEXT_DEFAULT } from '@/lib/constants';
 import { formatDate } from '@/lib/utils/common';
+import { isAttendeePresentByText } from '@/lib/utils/protocol-gender';
 import type { GroupDetail } from '@/types/group';
 import type { AgendaChoiceVote, ProtocolAttendee } from '@/types/protocol';
 
@@ -21,7 +21,7 @@ interface ProtocolDocumentViewProps {
 }
 
 function isPresent(attendee: ProtocolAttendee): boolean {
-  return attendee.present_text.toLowerCase().includes(PROTOCOL_PRESENT_TEXT_DEFAULT);
+  return isAttendeePresentByText(attendee.present_text);
 }
 
 function attendeeOrderKey(attendee: ProtocolAttendee): number {

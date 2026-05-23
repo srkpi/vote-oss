@@ -94,8 +94,12 @@ export const PROTOCOL_MAX_VISITORS = 9999;
 export const PROTOCOL_MAX_ATTENDEES = 500;
 export const PROTOCOL_ATTENDEE_PRESENT_TEXT_MAX_LENGTH = 100;
 export const GROUP_MEMBER_ROLE_MAX_LENGTH = 100;
-export const PROTOCOL_PRESENT_TEXT_DEFAULT = 'присутній';
-export const PROTOCOL_ABSENT_TEXT_DEFAULT = 'відсутній';
+
+export const PRESENT_TEXT_MALE = 'присутній';
+export const PRESENT_TEXT_FEMALE = 'присутня';
+export const ABSENT_TEXT_MALE = 'відсутній';
+export const ABSENT_TEXT_FEMALE = 'відсутня';
+
 export const PROTOCOLS_PAGE_SIZE = 10;
 export const PROTOCOL_REQUIRED_ELECTION_CHOICES = 3;
 
