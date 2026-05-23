@@ -27,7 +27,7 @@ import { StyledSelect } from '@/components/ui/styled-select';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
-  PROTOCOL_ABSENT_TEXT_DEFAULT,
+  PRESENT_TEXT_MALE,
   PROTOCOL_AGENDA_ITEM_NAME_MAX_LENGTH,
   PROTOCOL_AGENDA_ITEM_RESULT_MAX_LENGTH,
   PROTOCOL_LISTENER_FULLNAME_MAX_LENGTH,
@@ -38,12 +38,17 @@ import {
   PROTOCOL_MAX_RESPONSIBLES,
   PROTOCOL_MAX_VISITORS,
   PROTOCOL_NAME_MAX_LENGTH,
-  PROTOCOL_PRESENT_TEXT_DEFAULT,
   PROTOCOL_REQUIRED_ELECTION_CHOICES,
   PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH,
   PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH,
 } from '@/lib/constants';
-import { cn } from '@/lib/utils/common';
+import { capitalizeFirst, cn } from '@/lib/utils/common';
+import {
+  getGenderedAbsentText,
+  getGenderedPresentText,
+  isAttendeePresentByText,
+  rederivePresenceText,
+} from '@/lib/utils/protocol-gender';
 import type { Election } from '@/types/election';
 import type { GroupDetail } from '@/types/group';
 import type {
@@ -146,16 +151,18 @@ function deriveAttendees(
         fullname: s.fullname,
         posada: s.posada,
         present_text: s.present_text,
-        isPresent: s.present_text.toLowerCase().includes(PROTOCOL_PRESENT_TEXT_DEFAULT),
+        // Use the shared helper so both "присутній" and "присутня" are detected
+        isPresent: isAttendeePresentByText(s.present_text),
       });
       savedByUserId.delete(m.userId);
     } else {
+      // New member not yet in saved snapshot — derive gender-aware absent text
       result.push({
         uid: uid(),
         userId: m.userId,
         fullname: m.displayName,
         posada: m.role ?? '',
-        present_text: PROTOCOL_ABSENT_TEXT_DEFAULT,
+        present_text: getGenderedAbsentText(m.displayName),
         isPresent: false,
       });
     }
@@ -169,7 +176,7 @@ function deriveAttendees(
       fullname: s.fullname,
       posada: s.posada,
       present_text: s.present_text,
-      isPresent: s.present_text.toLowerCase().includes(PROTOCOL_PRESENT_TEXT_DEFAULT),
+      isPresent: isAttendeePresentByText(s.present_text),
     });
   }
   // Manually-added rows (no userId)
@@ -180,7 +187,7 @@ function deriveAttendees(
       fullname: s.fullname,
       posada: s.posada,
       present_text: s.present_text,
-      isPresent: s.present_text.toLowerCase().includes(PROTOCOL_PRESENT_TEXT_DEFAULT),
+      isPresent: isAttendeePresentByText(s.present_text),
     });
   }
   return result;
@@ -350,10 +357,8 @@ export function ProtocolFormClient({
   const lockedUserIds = useMemo(() => new Set(voterInfoByUserId.keys()), [voterInfoByUserId]);
 
   // Sync attendees with the decrypted voter set: force voters to present and
-  // append rows for voters who aren't current group members.  This effect is a
-  // legitimate "subscribe to derived external state" pattern — we receive
-  // voters asynchronously from the server-side decryption and have to merge
-  // them into the user-editable attendee list.
+  // append rows for voters who aren't current group members.  Gender-aware
+  // present text is derived from the voter's full name.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAttendees((prev) => {
@@ -365,7 +370,8 @@ export function ProtocolFormClient({
           return {
             ...a,
             isPresent: true,
-            present_text: PROTOCOL_PRESENT_TEXT_DEFAULT,
+            // Derive the gender-appropriate present text from the stored fullname
+            present_text: getGenderedPresentText(a.fullname),
           };
         }
         return a;
@@ -378,7 +384,7 @@ export function ProtocolFormClient({
             userId,
             fullname: info.fullName,
             posada: '',
-            present_text: PROTOCOL_PRESENT_TEXT_DEFAULT,
+            present_text: getGenderedPresentText(info.fullName),
             isPresent: true,
           });
         }
@@ -500,8 +506,24 @@ export function ProtocolFormClient({
   };
 
   // ── Mutations on attendees ────────────────────────────────────────────────
+
+  /**
+   * Update an attendee draft.  When the fullname changes and the current
+   * present_text is one of the four standard gendered variants
+   * (присутній / присутня / відсутній / відсутня), it is automatically
+   * re-derived to match the new name's gender.  Custom values are left alone.
+   */
   const updateAttendee = (idx: number, patch: Partial<AttendeeDraft>) => {
-    setAttendees((prev) => prev.map((a, i) => (i === idx ? { ...a, ...patch } : a)));
+    setAttendees((prev) =>
+      prev.map((a, i) => {
+        if (i !== idx) return a;
+        const merged = { ...a, ...patch };
+        if ('fullname' in patch) {
+          merged.present_text = rederivePresenceText(merged.present_text, merged.fullname);
+        }
+        return merged;
+      }),
+    );
   };
 
   const togglePresence = (idx: number, present: boolean) => {
@@ -514,7 +536,10 @@ export function ProtocolFormClient({
         return {
           ...a,
           isPresent: present,
-          present_text: present ? PROTOCOL_PRESENT_TEXT_DEFAULT : PROTOCOL_ABSENT_TEXT_DEFAULT,
+          // Derive gender-appropriate text from the attendee's stored fullname
+          present_text: present
+            ? getGenderedPresentText(a.fullname)
+            : getGenderedAbsentText(a.fullname),
         };
       }),
     );
@@ -529,7 +554,8 @@ export function ProtocolFormClient({
         userId: null,
         fullname: '',
         posada: '',
-        present_text: PROTOCOL_PRESENT_TEXT_DEFAULT,
+        // Empty name → default to male form; will re-derive once name is typed
+        present_text: PRESENT_TEXT_MALE,
         isPresent: true,
       },
     ]);
@@ -980,8 +1006,14 @@ export function ProtocolFormClient({
                           aria-label="Присутність"
                           className="sm:w-40"
                           options={[
-                            { value: 'present', label: 'Присутній' },
-                            { value: 'absent', label: 'Відсутній' },
+                            {
+                              value: 'present',
+                              label: capitalizeFirst(getGenderedPresentText(a.fullname)),
+                            },
+                            {
+                              value: 'absent',
+                              label: capitalizeFirst(getGenderedAbsentText(a.fullname)),
+                            },
                           ]}
                         />
                         {canDelete ? (

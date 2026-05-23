@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 
+import { serverApi } from '@/lib/api/server';
 import {
   buildOgFontConfig,
   buildOgImageElement,
@@ -8,8 +9,7 @@ import {
   loadOgFonts,
   ogContentType,
   ogSize,
-} from '@/components/common/og-image';
-import { serverApi } from '@/lib/api/server';
+} from '@/lib/utils/og-image';
 
 export const runtime = 'nodejs';
 export const alt = 'Голосування';
