@@ -1,1 +1,1 @@
-{"id":"162ba57551a3fa8f188b84dffffea0e0","fullName":"vote-oss:src/__tests__/api/elections/list.test.ts#GET /api/elections queries the DB on a cache miss","name":"queries the DB on a cache miss","status":"passed","testResultsByEnv":{"default":"101837b222a53bac04e5ef3c06bd367d"}}
+{"id":"162ba57551a3fa8f188b84dffffea0e0","fullName":"vote-oss:src/__tests__/api/elections/list.test.ts#GET /api/elections queries the DB on a cache miss","name":"queries the DB on a cache miss","status":"passed","testResultsByEnv":{"default":"79dcefe3d881dfbdf1e59aff1f996525"}}

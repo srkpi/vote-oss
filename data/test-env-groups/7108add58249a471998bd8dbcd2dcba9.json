@@ -1,1 +1,1 @@
-{"id":"7108add58249a471998bd8dbcd2dcba9","fullName":"vote-oss:src/__tests__/lib/kpi-id.test.ts#kpi-id module getCampusUserData & Bypasses returns UserInfo on success","name":"returns UserInfo on success","status":"passed","testResultsByEnv":{"default":"e19e55c38a875bb10d196e281216eecc"}}
+{"id":"7108add58249a471998bd8dbcd2dcba9","fullName":"vote-oss:src/__tests__/lib/kpi-id.test.ts#kpi-id module getCampusUserData & Bypasses returns UserInfo on success","name":"returns UserInfo on success","status":"passed","testResultsByEnv":{"default":"76c15f95ec5320f820f54187eff3d8a4"}}

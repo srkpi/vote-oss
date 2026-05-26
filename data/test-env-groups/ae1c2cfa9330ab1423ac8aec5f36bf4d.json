@@ -1,1 +1,1 @@
-{"id":"ae1c2cfa9330ab1423ac8aec5f36bf4d","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fixFacultyName leaves empty string unchanged","name":"leaves empty string unchanged","status":"passed","testResultsByEnv":{"default":"43c3eac83deb7a2abd5210ad2c482681"}}
+{"id":"ae1c2cfa9330ab1423ac8aec5f36bf4d","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fixFacultyName leaves empty string unchanged","name":"leaves empty string unchanged","status":"passed","testResultsByEnv":{"default":"538f697eefd3bdbb02111c0dff48fd63"}}
