@@ -5,6 +5,8 @@ const POSTHOG_DOMAINS = [
   'https://eu.posthog.com',
   'https://us.posthog.com',
   'https://internal-j.posthog.com',
+  'https://eu-assets.i.posthog.com',
+  'https://us-assets.i.posthog.com',
 ].join(' ');
 
 const ContentSecurityPolicy = `
