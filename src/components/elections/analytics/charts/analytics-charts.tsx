@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 import { ActivityChart } from '@/components/elections/analytics/charts/chart-activity';
 import { DynamicsChart } from '@/components/elections/analytics/charts/chart-dynamics';
@@ -71,63 +71,50 @@ export function AnalyticsCharts({
   // factory to `downloadChartAsPng`. The factory receives the exact export
   // pixel dimensions and returns the chart element rendered WITHOUT
   // ResponsiveContainer — this is what makes the export viewport-independent.
-  const dynamicsDownloader = useCallback(
-    () =>
-      downloadChartAsPng(
-        (w, h) => (
-          <DynamicsChart
-            data={timeSeries}
-            choices={choices}
-            decryptionDone={decryptionDone}
-            exportSize={{ width: w, height: h }}
-            opensAt={election.opensAt}
-            closesAt={election.closesAt}
-          />
-        ),
-        election,
-        `Динаміка голосування · ${granLabel}`,
-        legendEntries,
-        'dynamics',
+  const dynamicsDownloader = () =>
+    downloadChartAsPng(
+      (w, h) => (
+        <DynamicsChart
+          data={timeSeries}
+          choices={choices}
+          decryptionDone={decryptionDone}
+          exportSize={{ width: w, height: h }}
+          opensAt={election.opensAt}
+          closesAt={election.closesAt}
+        />
       ),
-    [timeSeries, choices, decryptionDone, election, granLabel, legendEntries],
-  );
+      election,
+      `Динаміка голосування · ${granLabel}`,
+      legendEntries,
+      'dynamics',
+    );
 
-  const activityDownloader = useCallback(
-    () =>
-      downloadChartAsPng(
-        (w, h) => (
-          <ActivityChart
-            data={activityData}
-            metrics={metrics}
-            exportSize={{ width: w, height: h }}
-          />
-        ),
-        election,
-        `Активність голосування · ${granLabel}`,
-        [],
-        'activity',
+  const activityDownloader = () =>
+    downloadChartAsPng(
+      (w, h) => (
+        <ActivityChart data={activityData} metrics={metrics} exportSize={{ width: w, height: h }} />
       ),
-    [activityData, metrics, election, granLabel],
-  );
+      election,
+      `Активність голосування · ${granLabel}`,
+      [],
+      'activity',
+    );
 
-  const shareDownloader = useCallback(
-    () =>
-      downloadChartAsPng(
-        (w, h) => (
-          <ShareChart
-            data={shareEvolution}
-            choices={choices}
-            exportSize={{ width: w, height: h }}
-            isMultiChoice={election.maxChoices > 1}
-          />
-        ),
-        election,
-        `Частка голосів · ${granLabel}`,
-        legendEntries,
-        'share',
+  const shareDownloader = () =>
+    downloadChartAsPng(
+      (w, h) => (
+        <ShareChart
+          data={shareEvolution}
+          choices={choices}
+          exportSize={{ width: w, height: h }}
+          isMultiChoice={election.maxChoices > 1}
+        />
       ),
-    [shareEvolution, choices, election, granLabel, legendEntries],
-  );
+      election,
+      `Частка голосів · ${granLabel}`,
+      legendEntries,
+      'share',
+    );
 
   return (
     <div className="space-y-4">

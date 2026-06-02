@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronDown, Search, X } from 'lucide-react';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils/common';
 
@@ -46,7 +46,7 @@ export function Combobox({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const filtered = options.filter((opt) => opt.toLowerCase().includes(search.toLowerCase()));
 
-  const dropdownCallbackRef = useCallback((node: HTMLDivElement | null) => {
+  const dropdownCallbackRef = (node: HTMLDivElement | null) => {
     if (!node || !containerRef.current) return;
 
     const triggerRect = containerRef.current.getBoundingClientRect();
@@ -55,7 +55,7 @@ export function Combobox({
     const spaceAbove = triggerRect.top;
 
     setOpenUpward(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
-  }, []);
+  };
 
   function openDropdown() {
     if (disabled) return;

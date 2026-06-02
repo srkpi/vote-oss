@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { Alert } from '@/components/ui/alert';
@@ -286,24 +286,20 @@ export function ProtocolFormClient({
   }, [date, group.id, isEdit]);
 
   // ── Linkable elections (closed + 3 choices) ────────────────────────────────
-  const linkableElections = useMemo(
-    () =>
-      group.elections.filter(
-        (e) => e.status === 'closed' && e.choices.length === PROTOCOL_REQUIRED_ELECTION_CHOICES,
-      ),
-    [group.elections],
+  const linkableElections = group.elections.filter(
+    (e) => e.status === 'closed' && e.choices.length === PROTOCOL_REQUIRED_ELECTION_CHOICES,
   );
 
-  const electionsById = useMemo(() => {
+  const electionsById = (() => {
     const m = new Map<string, Election>();
     for (const e of group.elections) m.set(e.id, e);
     return m;
-  }, [group.elections]);
+  })();
 
-  const memberUserIds = useMemo(() => new Set(group.members.map((m) => m.userId)), [group.members]);
+  const memberUserIds = new Set(group.members.map((m) => m.userId));
 
   // ── Voter sync from non-anonymous linked elections ─────────────────────────
-  const linkedNonAnonElectionIds = useMemo<string[]>(() => {
+  const linkedNonAnonElectionIds: string[] = (() => {
     const ids = new Set<string>();
     for (const item of agenda) {
       if (!item.electionId) continue;
@@ -313,7 +309,7 @@ export function ProtocolFormClient({
       }
     }
     return Array.from(ids).sort();
-  }, [agenda, electionsById]);
+  })();
 
   const linkedNonAnonElectionIdsKey = linkedNonAnonElectionIds.join(',');
 
@@ -342,7 +338,7 @@ export function ProtocolFormClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedNonAnonElectionIdsKey, canEdit]);
 
-  const voterInfoByUserId = useMemo(() => {
+  const voterInfoByUserId = (() => {
     const map = new Map<string, { userId: string; fullName: string }>();
     for (const electionId of linkedNonAnonElectionIds) {
       const voters = voterCache.get(electionId);
@@ -352,20 +348,21 @@ export function ProtocolFormClient({
       }
     }
     return map;
-  }, [linkedNonAnonElectionIds, voterCache]);
+  })();
 
-  const lockedUserIds = useMemo(() => new Set(voterInfoByUserId.keys()), [voterInfoByUserId]);
+  const lockedUserIds = new Set(voterInfoByUserId.keys());
 
   // Sync attendees with the decrypted voter set: force voters to present and
   // append rows for voters who aren't current group members.  Gender-aware
   // present text is derived from the voter's full name.
   useEffect(() => {
+    const syncedLockedUserIds = new Set(voterInfoByUserId.keys());
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAttendees((prev) => {
       const existingUserIds = new Set(prev.filter((a) => a.userId !== null).map((a) => a.userId!));
       let changed = false;
       const updated = prev.map((a) => {
-        if (a.userId && lockedUserIds.has(a.userId) && !a.isPresent) {
+        if (a.userId && syncedLockedUserIds.has(a.userId) && !a.isPresent) {
           changed = true;
           return {
             ...a,
@@ -392,10 +389,10 @@ export function ProtocolFormClient({
       if (toAdd.length === 0 && !changed) return prev;
       return [...updated, ...toAdd];
     });
-  }, [voterInfoByUserId, lockedUserIds]);
+  }, [voterInfoByUserId]);
 
   // ── Live computed counts ──────────────────────────────────────────────────
-  const counts = useMemo(() => {
+  const counts = (() => {
     const total = group.memberCount;
     const quorum = Math.ceil((total * 2) / 3);
     let present = 0;
@@ -405,9 +402,9 @@ export function ProtocolFormClient({
       if (e && e.ballotCount > present) present = e.ballotCount;
     }
     return { total, quorum, present };
-  }, [group.memberCount, agenda, electionsById]);
+  })();
 
-  const presentCount = useMemo(() => attendees.filter((a) => a.isPresent).length, [attendees]);
+  const presentCount = attendees.filter((a) => a.isPresent).length;
 
   // ── Mutations on agenda ──────────────────────────────────────────────────
   const updateAgenda = (idx: number, patch: Partial<AgendaDraft>) => {
@@ -1199,10 +1196,10 @@ function AgendaItemEditor({
   onSetChoiceVote,
 }: AgendaItemEditorProps) {
   const linkedElection = item.electionId ? (electionsById.get(item.electionId) ?? null) : null;
-  const sortedChoices = useMemo(() => {
+  const sortedChoices = (() => {
     if (!linkedElection) return [];
     return [...linkedElection.choices].sort((a, b) => a.position - b.position);
-  }, [linkedElection]);
+  })();
 
   return (
     <div className="border-border-color rounded-lg border p-4">

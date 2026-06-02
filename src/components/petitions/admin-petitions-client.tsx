@@ -2,7 +2,7 @@
 
 import { Calendar, CheckCircle2, FileText, Megaphone, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { Alert } from '@/components/ui/alert';
@@ -104,7 +104,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
   const [deleteTarget, setDeleteTarget] = useState<Election | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const counts = useMemo(() => {
+  const counts = (() => {
     const active = petitions.filter((p) => !p.deletedAt);
     return {
       pending: active.filter((p) => !p.approved).length,
@@ -112,9 +112,9 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
       all: active.length,
       deleted: petitions.filter((p) => !!p.deletedAt).length,
     };
-  }, [petitions]);
+  })();
 
-  const visible = useMemo(() => {
+  const visible = (() => {
     let list: Election[];
     if (tab === 'deleted') list = petitions.filter((p) => !!p.deletedAt);
     else list = petitions.filter((p) => !p.deletedAt);
@@ -127,7 +127,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
       );
     }
     return list;
-  }, [petitions, tab, search]);
+  })();
 
   const handleApprove = async (id: string) => {
     setApproving(id);

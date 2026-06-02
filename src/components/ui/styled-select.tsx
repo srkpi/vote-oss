@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronDown } from 'lucide-react';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { cn } from '@/lib/utils/common';
@@ -92,11 +92,11 @@ export function StyledSelect({
 
   // Callback ref — runs synchronously when the dropdown DOM node mounts so we
   // can re-measure with its real height and decide whether to flip upward.
-  const dropdownCallbackRef = useCallback((node: HTMLDivElement | null) => {
+  const dropdownCallbackRef = (node: HTMLDivElement | null) => {
     dropdownRef.current = node;
     if (!node || !triggerRef.current) return;
     setPosition(computePosition(triggerRef.current, node.offsetHeight));
-  }, []);
+  };
 
   // Keep position synced while open
   useEffect(() => {

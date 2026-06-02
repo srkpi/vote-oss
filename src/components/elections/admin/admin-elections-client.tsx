@@ -2,7 +2,7 @@
 
 import { FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
@@ -54,7 +54,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
   const [restoring, setRestoring] = useState(false);
 
   const searchTrimmed = search.length > 100 ? search.substring(0, 100) + '...' : search;
-  const counts: Record<TabKey, number> = useMemo(() => {
+  const counts: Record<TabKey, number> = (() => {
     return items.reduce(
       (acc, e) => {
         acc.all++;
@@ -75,9 +75,9 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
         deleted: 0,
       },
     );
-  }, [items]);
+  })();
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     let result = items;
 
     if (activeTab === 'deleted') {
@@ -93,7 +93,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
       );
     }
     return result;
-  }, [items, activeTab, search]);
+  })();
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;

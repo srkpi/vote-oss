@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, type ReactNode, useCallback, useContext, useState } from 'react';
+import { createContext, type ReactNode, useContext, useState } from 'react';
 
 import { generateId } from '@/lib/utils/common';
 
@@ -31,36 +31,33 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const dismiss = useCallback((id: string) => {
+  const dismiss = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  };
 
-  const dismissAll = useCallback(() => {
+  const dismissAll = () => {
     setToasts([]);
-  }, []);
+  };
 
-  const toast = useCallback(
-    ({
-      title,
-      description,
-      variant = 'default',
-      duration = 5000,
-    }: {
-      title: string;
-      description?: string;
-      variant?: ToastVariant;
-      duration?: number;
-    }) => {
-      const id = generateId();
-      const newToast: Toast = { id, title, description, variant, duration };
-      setToasts((prev) => [...prev.slice(-4), newToast]);
+  const toast = ({
+    title,
+    description,
+    variant = 'default',
+    duration = 5000,
+  }: {
+    title: string;
+    description?: string;
+    variant?: ToastVariant;
+    duration?: number;
+  }) => {
+    const id = generateId();
+    const newToast: Toast = { id, title, description, variant, duration };
+    setToasts((prev) => [...prev.slice(-4), newToast]);
 
-      if (duration > 0) {
-        setTimeout(() => dismiss(id), duration);
-      }
-    },
-    [dismiss],
-  );
+    if (duration > 0) {
+      setTimeout(() => dismiss(id), duration);
+    }
+  };
 
   return (
     <ToastContext.Provider value={{ toasts, toast, dismiss, dismissAll }}>

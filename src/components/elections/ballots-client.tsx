@@ -1,7 +1,7 @@
 'use client';
 
 import { BarChart2, CircleSlash2, FileText, ShieldAlert, ShieldCheck } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel';
@@ -124,7 +124,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
   }, [decryptionDone]);
 
   const trimmedQuery = searchQuery.trim();
-  const filteredBallots = useMemo(() => {
+  const filteredBallots = (() => {
     if (!trimmedQuery) return ballots;
     const q = trimmedQuery.toLowerCase();
 
@@ -137,7 +137,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
 
       return isHashMatch || isLabelMatch;
     });
-  }, [ballots, trimmedQuery, decryptionDone, decryptedMap]);
+  })();
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
@@ -214,7 +214,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
 
   const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
 
-  const myVoteMatchesDecryption = useMemo(() => {
+  const myVoteMatchesDecryption = (() => {
     if (!myDecryption || !myVoteRecord || !myDecryption.valid) return null;
     const decryptedIds = myDecryption.choiceIds || [];
     const storedIds = Array.isArray(myVoteRecord.choiceIds)
@@ -222,7 +222,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
       : [myVoteRecord.choiceIds];
     if (decryptedIds.length !== storedIds.length) return false;
     return storedIds.every((id) => decryptedIds.includes(id));
-  }, [myDecryption, myVoteRecord]);
+  })();
 
   return (
     <div className="space-y-5">

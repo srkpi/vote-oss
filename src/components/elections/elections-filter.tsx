@@ -1,7 +1,7 @@
 'use client';
 
 import { FileText, LayoutGrid, LayoutList } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
@@ -178,29 +178,29 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
     }
   };
 
-  const updateFilters = useCallback((next: Partial<ElectionsFilterState>) => {
+  const updateFilters = (next: Partial<ElectionsFilterState>) => {
     setFilters((prev) => ({ ...prev, ...next }));
     setPage(1);
-  }, []);
+  };
 
-  const resetFilters = useCallback(() => {
+  const resetFilters = () => {
     setFilters(DEFAULT_FILTER_STATE);
     setPage(1);
-  }, []);
+  };
 
-  const handleSearch = useCallback((value: string) => {
+  const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
-  }, []);
+  };
 
-  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
+  const activeFilterCount = countActiveFilters(filters);
 
   // ── Adaptive counts ────────────────────────────────────────────────────────
   //
   // Status (multi-select):
   //   selected   → count using current statuses selection (includes this status)
   //   unselected → count with this status added to current selection
-  const statusCounts = useMemo(() => {
+  const statusCounts = (() => {
     return Object.fromEntries(
       (['open', 'upcoming', 'closed'] as const).map((s) => {
         const newStatuses = filters.statuses.includes(s)
@@ -209,33 +209,33 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
         return [s, computeAdaptiveCount(elections, filters, search, { statuses: newStatuses })];
       }),
     );
-  }, [elections, filters, search]);
+  })();
 
   // Vote status (single-select):
   //   Each option shows the count IF that option were active, keeping all other filters.
   //   The currently-selected option therefore shows the actual current result count.
-  const voteStatusCounts = useMemo(() => {
+  const voteStatusCounts = (() => {
     return Object.fromEntries(
       (['all', 'available', 'voted', 'not_voted', 'cannot_vote'] as const).map((opt) => [
         opt,
         computeAdaptiveCount(elections, filters, search, { voteStatus: opt }),
       ]),
     );
-  }, [elections, filters, search]);
+  })();
 
-  const anonymousCounts = useMemo(() => {
+  const anonymousCounts = (() => {
     return Object.fromEntries(
       (['all', 'anonymous', 'non_anonymous'] as const).map((opt) => [
         opt,
         computeAdaptiveCount(elections, filters, search, { anonymous: opt }),
       ]),
     );
-  }, [elections, filters, search]);
+  })();
 
   // Faculty / study form (multi-select):
   //   selected   → count with this option still IN the selection (= current count for this item)
   //   unselected → count with this option ADDED to current selection
-  const facultyCounts = useMemo(() => {
+  const facultyCounts = (() => {
     return Object.fromEntries(
       meta.faculties.map((f) => {
         const newFaculties = filters.faculties.includes(f)
@@ -244,9 +244,9 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
         return [f, computeAdaptiveCount(elections, filters, search, { faculties: newFaculties })];
       }),
     );
-  }, [elections, filters, search, meta.faculties]);
+  })();
 
-  const studyFormCounts = useMemo(() => {
+  const studyFormCounts = (() => {
     return Object.fromEntries(
       meta.studyForms.map((sf) => {
         const newForms = filters.studyForms.includes(sf)
@@ -255,13 +255,10 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
         return [sf, computeAdaptiveCount(elections, filters, search, { studyForms: newForms })];
       }),
     );
-  }, [elections, filters, search, meta.studyForms]);
+  })();
 
   // ── Filtered + paged ──────────────────────────────────────────────────────
-  const filtered = useMemo(
-    () => elections.filter((e) => matchesFilters(e, filters) && matchesSearch(e, search)),
-    [elections, filters, search],
-  );
+  const filtered = elections.filter((e) => matchesFilters(e, filters) && matchesSearch(e, search));
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ELECTIONS_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);

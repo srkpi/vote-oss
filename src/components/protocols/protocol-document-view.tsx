@@ -2,7 +2,7 @@
 
 import { Download, Pencil } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { Alert } from '@/components/ui/alert';
@@ -33,16 +33,12 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sortedAttendees = useMemo(
-    () =>
-      [...protocol.attendance].sort((a, b) => {
-        const ka = attendeeOrderKey(a);
-        const kb = attendeeOrderKey(b);
-        if (ka !== kb) return ka - kb;
-        return a.fullname.localeCompare(b.fullname, 'uk');
-      }),
-    [protocol.attendance],
-  );
+  const sortedAttendees = [...protocol.attendance].sort((a, b) => {
+    const ka = attendeeOrderKey(a);
+    const kb = attendeeOrderKey(b);
+    if (ka !== kb) return ka - kb;
+    return a.fullname.localeCompare(b.fullname, 'uk');
+  });
 
   const showError = (message: string) => {
     setError(message);

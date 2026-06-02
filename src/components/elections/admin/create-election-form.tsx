@@ -2,7 +2,7 @@
 
 import { Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { WinningConditionsSection } from '@/components/elections/admin/winning-conditions-section';
 import { Alert } from '@/components/ui/alert';
@@ -198,7 +198,7 @@ export function CreateElectionForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Available campus groups filtered by faculties + form + level
-  const availableGroups = useMemo(() => {
+  const availableGroups = (() => {
     let groups = Array.from(new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? []))).sort(
       (a, b) => a.localeCompare(b, 'uk'),
     );
@@ -210,7 +210,7 @@ export function CreateElectionForm({
       groups = filterGroupsByLevelCourses(groups, selectedLevelCourses);
     }
     return groups;
-  }, [selectedFaculties, facultyGroups, selectedForms, selectedLevelCourses]);
+  })();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

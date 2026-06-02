@@ -1,7 +1,7 @@
 'use client';
 
 import { ClipboardList, LayoutGrid, LayoutList } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { PageHeader } from '@/components/common/page-header';
@@ -111,51 +111,46 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
     }
   };
 
-  const updateFilters = useCallback((next: Partial<RegistrationFilterState>) => {
+  const updateFilters = (next: Partial<RegistrationFilterState>) => {
     setFilters((prev) => ({ ...prev, ...next }));
     setPage(1);
-  }, []);
+  };
 
-  const resetFilters = useCallback(() => {
+  const resetFilters = () => {
     setFilters(DEFAULT_FILTER_STATE);
     setPage(1);
-  }, []);
+  };
 
-  const handleSearch = useCallback((value: string) => {
+  const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
-  }, []);
+  };
 
-  const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
+  const activeFilterCount = countActiveFilters(filters);
 
-  const statusCounts = useMemo(() => {
+  const statusCounts = (() => {
     return Object.fromEntries(
       (['open', 'upcoming', 'closed'] as const).map((s) => [
         s,
         computeAdaptiveCount(forms, filters, search, { statuses: [s] }),
       ]),
     );
-  }, [forms, filters, search]);
+  })();
 
-  const eligibilityCounts = useMemo(() => {
+  const eligibilityCounts = (() => {
     return Object.fromEntries(
       (['all', 'eligible', 'ineligible'] as const).map((opt) => [
         opt,
         computeAdaptiveCount(forms, filters, search, { eligibility: opt }),
       ]),
     );
-  }, [forms, filters, search]);
+  })();
 
-  const filtered = useMemo(
-    () =>
-      forms
-        .map((f) => ({ form: f, status: statusOf(f) }))
-        .filter(
-          ({ form, status }) =>
-            matchesFilters(form, status, filters) && matchesSearch(form, search),
-        ),
-    [forms, filters, search],
-  );
+  const filtered = forms
+    .map((f) => ({ form: f, status: statusOf(f) }))
+    .filter(
+      ({ form, status }) => matchesFilters(form, status, filters) && matchesSearch(form, search),
+    );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / REGISTRATION_FORMS_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);

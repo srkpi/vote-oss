@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronDown, Search, X } from 'lucide-react';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils/common';
 
@@ -44,13 +44,13 @@ export function MultiCombobox({
 
   const filtered = options.filter((opt) => opt.toLowerCase().includes(search.toLowerCase()));
 
-  const dropdownCallbackRef = useCallback((node: HTMLDivElement | null) => {
+  const dropdownCallbackRef = (node: HTMLDivElement | null) => {
     if (!node || !containerRef.current) return;
     const triggerRect = containerRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - triggerRect.bottom;
     const spaceAbove = triggerRect.top;
     setOpenUpward(spaceBelow < node.offsetHeight && spaceAbove > spaceBelow);
-  }, []);
+  };
 
   useEffect(() => {
     if (open) {

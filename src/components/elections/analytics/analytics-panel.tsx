@@ -1,7 +1,6 @@
 'use client';
 
 import { BarChart2, Unlock } from 'lucide-react';
-import { useMemo } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { AnalyticsCsvPanel } from '@/components/elections/analytics/analytics-csv-panel';
@@ -128,15 +127,15 @@ export function AnalyticsPanel({
   choices,
   election,
 }: AnalyticsPanelProps) {
-  const analyticsResult = useMemo(
-    () => computeAnalytics(election, ballots, decryptedMap, choices, decryptionDone),
-    [election, ballots, decryptedMap, choices, decryptionDone],
+  const analyticsResult = computeAnalytics(
+    election,
+    ballots,
+    decryptedMap,
+    choices,
+    decryptionDone,
   );
 
-  const visibleMetrics = useMemo(
-    () => buildMetrics(election, ballots, decryptedMap, choices, decryptionDone),
-    [election, ballots, decryptedMap, choices, decryptionDone],
-  );
+  const visibleMetrics = buildMetrics(election, ballots, decryptedMap, choices, decryptionDone);
 
   if (ballots.length === 0) {
     return (

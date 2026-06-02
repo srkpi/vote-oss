@@ -1,7 +1,7 @@
 'use client';
 
 import { Crown } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Alert } from '@/components/ui/alert';
 import { calculateVotePercentage, cn, pluralize } from '@/lib/utils/common';
@@ -88,7 +88,7 @@ export function ResultsChart({
   }, [userChoices, choices, electionId, hideOwnVote, totalBallots]);
 
   // Preserve original index for stable colors and animation delays regardless of sort.
-  const sortedChoices = useMemo(() => {
+  const sortedChoices = (() => {
     const indexed = choices.map((choice, originalIndex) => ({ choice, originalIndex }));
     if (sortOrder === 'votes') {
       return [...indexed].sort((a, b) => (b.choice.votes ?? 0) - (a.choice.votes ?? 0));
@@ -97,7 +97,7 @@ export function ResultsChart({
       return [...indexed].sort((a, b) => a.choice.choice.localeCompare(b.choice.choice, 'uk'));
     }
     return indexed;
-  }, [choices, sortOrder]);
+  })();
 
   return (
     <div className="space-y-4">

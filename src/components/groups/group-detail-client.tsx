@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionListItem } from '@/components/elections/election-list-item';
@@ -321,7 +321,7 @@ export function GroupDetailClient({
   const [electionStatuses, setElectionStatuses] = useState<string[]>([]);
   const [electionPage, setElectionPage] = useState(1);
 
-  const filteredElections = useMemo(() => {
+  const filteredElections = (() => {
     const q = electionSearch.trim().toLowerCase();
     return group.elections.filter((e) => {
       if (electionStatuses.length > 0 && !electionStatuses.includes(e.status)) return false;
@@ -332,9 +332,9 @@ export function GroupDetailClient({
       }
       return true;
     });
-  }, [group.elections, electionSearch, electionStatuses]);
+  })();
 
-  const electionStatusOptions = useMemo<FilterOption[]>(() => {
+  const electionStatusOptions: FilterOption[] = (() => {
     const q = electionSearch.trim().toLowerCase();
     const counts: Record<ElectionStatus, number> = { open: 0, upcoming: 0, closed: 0 };
     for (const e of group.elections) {
@@ -350,7 +350,7 @@ export function GroupDetailClient({
       label: ELECTION_STATUS_LABELS[s],
       count: counts[s],
     }));
-  }, [group.elections, electionSearch]);
+  })();
 
   const electionTotalPages = Math.max(
     1,

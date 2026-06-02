@@ -2,7 +2,7 @@
 
 import { Crown, ExternalLink, ShieldCheck, Trash2, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { Alert } from '@/components/ui/alert';
@@ -43,7 +43,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
   const [typeChange, setTypeChange] = useState<TypeChange | null>(null);
   const [savingType, setSavingType] = useState(false);
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     if (!search.trim()) return groups;
     const q = search.toLowerCase().trim();
     return groups.filter(
@@ -52,7 +52,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
         (g.ownerName ?? '').toLowerCase().includes(q) ||
         g.ownerId.toLowerCase().includes(q),
     );
-  }, [groups, search]);
+  })();
 
   const handleDelete = async () => {
     if (!deleteTarget) return;

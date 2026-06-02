@@ -2,7 +2,7 @@
 
 import { Clock, Megaphone, TrendingUp } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { PetitionCard } from '@/components/petitions/petition-card';
@@ -30,15 +30,15 @@ export function PetitionsListClient({ petitions, sort }: PetitionsListClientProp
 
   const [search, setSearch] = useState('');
 
-  const visible = useMemo(() => petitions.filter((p) => !p.deletedAt), [petitions]);
+  const visible = petitions.filter((p) => !p.deletedAt);
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     const q = search.toLowerCase().trim();
     if (!q) return visible;
     return visible.filter(
       (p) => p.title.toLowerCase().includes(q) || p.createdBy.fullName.toLowerCase().includes(q),
     );
-  }, [visible, search]);
+  })();
 
   const handleSortChange = (next: SortKey) => {
     const params = new URLSearchParams(searchParams.toString());

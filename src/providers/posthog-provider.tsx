@@ -2,7 +2,7 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect } from 'react';
 
 import { PostHogPageView } from '@/components/common/posthog-page-view';
 import type { User } from '@/types/auth';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export function PostHogProvider({ children, session }: Props) {
-  useMemo(() => {
+  useEffect(() => {
     if (session?.userId) {
       posthog.identify(session.userId, {
         isAdmin: session.isAdmin,

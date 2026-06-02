@@ -3,7 +3,7 @@
 import { CheckIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import { DiiaLoginButton } from '@/components/auth/diia-login-button';
 import { api } from '@/lib/api/browser';
@@ -128,14 +128,14 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
   const requestIdRef = useRef<string | null>(null);
   const startingRef = useRef(false);
 
-  const stopPoll = useCallback(() => {
+  const stopPoll = () => {
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     }
-  }, []);
+  };
 
-  const startPolling = useCallback(() => {
+  const startPolling = () => {
     stopPoll();
     pollTimerRef.current = setInterval(async () => {
       const requestId = requestIdRef.current;
@@ -157,9 +157,9 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
         /* network silent retry */
       }
     }, DIIA_POLL_INTERVAL_MS);
-  }, [stopPoll, router]);
+  };
 
-  const startFlow = useCallback(async () => {
+  const startFlow = async () => {
     if (startingRef.current) return;
     startingRef.current = true;
 
@@ -184,15 +184,24 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
     } finally {
       startingRef.current = false;
     }
-  }, [stopPoll, startPolling]);
+  };
 
-  useEffect(() => () => stopPoll(), [stopPoll]);
+  const startAutoFlow = useEffectEvent(startFlow);
+
+  useEffect(
+    () => () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+      }
+    },
+    [],
+  );
   useEffect(() => {
     if (shouldAutoStart && phase === 'idle') {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      startFlow();
+      startAutoFlow();
     }
-  }, [shouldAutoStart, phase, startFlow]);
+  }, [shouldAutoStart, phase]);
 
   if (phase === 'idle') {
     return <DiiaLoginButton onClick={startFlow} fullWidth />;
