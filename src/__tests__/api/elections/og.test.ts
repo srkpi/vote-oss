@@ -40,17 +40,18 @@ describe('GET /api/elections/[id]/og', () => {
   it('returns 200 with data from DB when cache is empty', async () => {
     prismaMock.election.findUnique.mockResolvedValueOnce({
       title: 'Student Election',
+      type: 'ELECTION',
     });
 
     const res = await GET(makeRequest(), PARAMS);
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    expect(body).toEqual({ title: 'Student Election' });
+    expect(body).toEqual({ title: 'Student Election', type: 'ELECTION' });
 
     expect(prismaMock.election.findUnique).toHaveBeenCalledWith({
       where: { id: MOCK_ELECTION_ID, deleted_at: null },
-      select: { title: true },
+      select: { title: true, type: true },
     });
   });
 
@@ -59,6 +60,7 @@ describe('GET /api/elections/[id]/og', () => {
       {
         id: MOCK_ELECTION_ID,
         title: 'Cached Election',
+        type: 'ELECTION',
       },
     ] as any);
 
@@ -66,13 +68,15 @@ describe('GET /api/elections/[id]/og', () => {
     const { status, body } = await parseJson<any>(res);
 
     expect(status).toBe(200);
-    expect(body).toEqual({ title: 'Cached Election' });
+    expect(body).toEqual({ title: 'Cached Election', type: 'ELECTION' });
 
     expect(prismaMock.election.findUnique).not.toHaveBeenCalled();
   });
 
   it('returns 404 when cached elections exist but id not found', async () => {
-    cacheMock.getCachedElections.mockResolvedValueOnce([{ id: 'other-id', title: 'Other' }] as any);
+    cacheMock.getCachedElections.mockResolvedValueOnce([
+      { id: 'other-id', title: 'Other', type: 'ELECTION' },
+    ] as any);
 
     const res = await GET(makeRequest(), PARAMS);
 
