@@ -192,7 +192,7 @@ export function PetitionSignatories({
                       {s.fullName}
                     </p>
                     <p className="font-body text-muted-foreground mt-0.5 text-xs">
-                      <LocalDateTime date={s.signedAt} />
+                      <LocalDateTime date={s.signedAt} /> • {s.userId}
                     </p>
                   </div>
                 </li>
