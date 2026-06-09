@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { Alert } from '@/components/ui/alert';
@@ -286,17 +286,21 @@ export function ProtocolFormClient({
   }, [date, group.id, isEdit]);
 
   // ── Linkable elections (closed + 3 choices) ────────────────────────────────
-  const linkableElections = group.elections.filter(
-    (e) => e.status === 'closed' && e.choices.length === PROTOCOL_REQUIRED_ELECTION_CHOICES,
+  const linkableElections = useMemo(
+    () =>
+      group.elections.filter(
+        (e) => e.status === 'closed' && e.choices.length === PROTOCOL_REQUIRED_ELECTION_CHOICES,
+      ),
+    [group.elections],
   );
 
-  const electionsById = (() => {
+  const electionsById = useMemo(() => {
     const m = new Map<string, Election>();
     for (const e of group.elections) m.set(e.id, e);
     return m;
-  })();
+  }, [group.elections]);
 
-  const memberUserIds = new Set(group.members.map((m) => m.userId));
+  const memberUserIds = useMemo(() => new Set(group.members.map((m) => m.userId)), [group.members]);
 
   // ── Voter sync from non-anonymous linked elections ─────────────────────────
   const linkedNonAnonElectionIds: string[] = (() => {
@@ -338,7 +342,7 @@ export function ProtocolFormClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedNonAnonElectionIdsKey, canEdit]);
 
-  const voterInfoByUserId = (() => {
+  const voterInfoByUserId = useMemo(() => {
     const map = new Map<string, { userId: string; fullName: string }>();
     for (const electionId of linkedNonAnonElectionIds) {
       const voters = voterCache.get(electionId);
@@ -348,9 +352,9 @@ export function ProtocolFormClient({
       }
     }
     return map;
-  })();
+  }, [linkedNonAnonElectionIds, voterCache]);
 
-  const lockedUserIds = new Set(voterInfoByUserId.keys());
+  const lockedUserIds = useMemo(() => new Set(voterInfoByUserId.keys()), [voterInfoByUserId]);
 
   // Sync attendees with the decrypted voter set: force voters to present and
   // append rows for voters who aren't current group members.  Gender-aware
