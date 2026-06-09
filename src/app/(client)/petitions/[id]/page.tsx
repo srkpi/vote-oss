@@ -145,6 +145,12 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
               )}
             </div>
 
+            {canSign && (
+              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5 lg:hidden">
+                <SignPetitionPanel petition={petition} />
+              </div>
+            )}
+
             {petition.approved && (
               <PetitionSignatories
                 ballotCount={petition.ballotCount}
@@ -179,7 +185,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
             </div>
 
             {canSign && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
+              <div className="border-border-color shadow-shadow-sm hidden rounded-xl border bg-white p-5 lg:block">
                 <SignPetitionPanel petition={petition} />
               </div>
             )}
