@@ -130,7 +130,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                   <Calendar className="h-4 w-4 shrink-0" />
                   <LocalDateTime date={petition.createdAt} />
                 </span>
-                {petition.approved && !reached && (
+                {petition.approved && petition.status === 'open' && (
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 shrink-0" />
                     діє до <LocalDate date={petition.closesAt} />
@@ -176,9 +176,6 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="font-body text-muted-foreground mt-2 text-xs">
-                Петиція автоматично закриється після {quorum} підписів.
-              </p>
             </div>
 
             {canSign && (
