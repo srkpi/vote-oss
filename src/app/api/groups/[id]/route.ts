@@ -107,6 +107,7 @@ async function fetchGroupElectionsFromDb(groupId: string): Promise<CachedElectio
       public_viewing: true,
       anonymous: true,
       deleter: { select: { full_name: true } },
+      editor: { select: { full_name: true } },
       choices: {
         select: { id: true, choice: true, position: true, vote_count: true },
         orderBy: { position: 'asc' },
@@ -114,6 +115,8 @@ async function fetchGroupElectionsFromDb(groupId: string): Promise<CachedElectio
       _count: { select: { ballots: true } },
       deleted_at: true,
       deleted_by: true,
+      edited_at: true,
+      edited_by: true,
     },
     orderBy: { opens_at: 'desc' },
   });
@@ -151,6 +154,9 @@ async function fetchGroupElectionsFromDb(groupId: string): Promise<CachedElectio
     deletedAt: e.deleted_at?.toISOString() ?? null,
     deletedByUserId: e.deleted_by,
     deletedByName: e.deleter?.full_name ?? null,
+    editedAt: e.edited_at?.toISOString() ?? null,
+    editedByUserId: e.edited_by,
+    editedByName: e.editor?.full_name ?? null,
   }));
 }
 

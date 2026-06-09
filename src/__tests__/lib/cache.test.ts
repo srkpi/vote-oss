@@ -63,6 +63,9 @@ const SAMPLE_CACHED_ELECTION: CachedElection = {
   deletedAt: null,
   deletedByUserId: null,
   deletedByName: null,
+  editedAt: null,
+  editedByName: null,
+  editedByUserId: null,
   winningConditions: {
     hasMostVotes: true,
     reachesPercentage: null,
