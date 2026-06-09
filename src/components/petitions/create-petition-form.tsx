@@ -10,9 +10,9 @@ import { FormField, Input, Textarea } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
-  ELECTION_DESCRIPTION_MAX_LENGTH,
-  ELECTION_TITLE_MAX_LENGTH,
   PETITION_QUORUM,
+  PETITION_TEXT_MAX_LENGTH,
+  PETITION_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
 
 export function CreatePetitionForm() {
@@ -27,8 +27,8 @@ export function CreatePetitionForm() {
   const canSubmit =
     title.trim().length > 0 &&
     description.trim().length > 0 &&
-    title.length <= ELECTION_TITLE_MAX_LENGTH &&
-    description.length <= ELECTION_DESCRIPTION_MAX_LENGTH;
+    title.length <= PETITION_TITLE_MAX_LENGTH &&
+    description.length <= PETITION_TEXT_MAX_LENGTH;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,23 +75,23 @@ export function CreatePetitionForm() {
         <Input
           id="title"
           value={title}
-          maxLength={ELECTION_TITLE_MAX_LENGTH}
+          maxLength={PETITION_TITLE_MAX_LENGTH}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Коротко сформулюйте суть петиції"
         />
-        <CharCounter value={title.length} max={ELECTION_TITLE_MAX_LENGTH} />
+        <CharCounter value={title.length} max={PETITION_TITLE_MAX_LENGTH} />
       </FormField>
 
       <FormField label="Опис" required htmlFor="description">
         <Textarea
           id="description"
           value={description}
-          maxLength={ELECTION_DESCRIPTION_MAX_LENGTH}
+          maxLength={PETITION_TEXT_MAX_LENGTH}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Детально опишіть проблему та пропозицію"
           rows={8}
         />
-        <CharCounter value={description.length} max={ELECTION_DESCRIPTION_MAX_LENGTH} />
+        <CharCounter value={description.length} max={PETITION_TEXT_MAX_LENGTH} />
       </FormField>
 
       <div className="flex justify-end gap-3">

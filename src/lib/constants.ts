@@ -6,6 +6,7 @@ export const BALLOT_PADDING = '00000000-0000-0000-0000-000000000000';
 
 // Election limits
 export const ELECTION_TITLE_MAX_LENGTH = 255;
+export const ELECTION_DESCRIPTION_MAX_LENGTH = 2000;
 export const ELECTION_CHOICES_MIN = 1;
 export const ELECTION_CHOICES_MAX = 100;
 export const ELECTION_CHOICE_MAX_LENGTH = 100;
@@ -32,8 +33,8 @@ export const PETITION_SUPPORT_CHOICE_LABEL = 'Підтримати';
  * approved on e.g. Feb 15 closes on Mar 15 regardless of month length.
  */
 export const PETITION_OPEN_MONTHS = 1;
-/** Max length of the optional description field on elections and petitions. */
-export const ELECTION_DESCRIPTION_MAX_LENGTH = 5000;
+export const PETITION_TITLE_MAX_LENGTH = 255;
+export const PETITION_TEXT_MAX_LENGTH = 5000;
 
 // Elections list / pagination
 /**

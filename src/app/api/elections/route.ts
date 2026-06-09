@@ -23,6 +23,8 @@ import {
   ELECTION_TITLE_MAX_LENGTH,
   PETITION_QUORUM,
   PETITION_SUPPORT_CHOICE_LABEL,
+  PETITION_TEXT_MAX_LENGTH,
+  PETITION_TITLE_MAX_LENGTH,
   STUDY_FORMS,
   STUDY_YEARS,
   VALID_LEVEL_COURSES,
@@ -855,14 +857,12 @@ async function handlePetitionCreate(
   const description = typeof body.description === 'string' ? body.description.trim() : '';
 
   if (!title) return Errors.badRequest('title is required');
-  if (title.length > ELECTION_TITLE_MAX_LENGTH) {
-    return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
+  if (title.length > PETITION_TITLE_MAX_LENGTH) {
+    return Errors.badRequest(`Title must be at most ${PETITION_TITLE_MAX_LENGTH} characters`);
   }
   if (!description) return Errors.badRequest('description is required for petitions');
-  if (description.length > ELECTION_DESCRIPTION_MAX_LENGTH) {
-    return Errors.badRequest(
-      `Description must be at most ${ELECTION_DESCRIPTION_MAX_LENGTH} characters`,
-    );
+  if (description.length > PETITION_TEXT_MAX_LENGTH) {
+    return Errors.badRequest(`Description must be at most ${PETITION_TEXT_MAX_LENGTH} characters`);
   }
 
   const isAdmin = user.isAdmin ?? false;
