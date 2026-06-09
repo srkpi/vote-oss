@@ -1,1 +1,1 @@
-{"id":"90f1a8e948f770a2fdf54124c5bd51ed","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"775862cf4a3ce605e02b9807a0d6ce0b"}}
+{"id":"90f1a8e948f770a2fdf54124c5bd51ed","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"ad2efb3d8cf17a08985d512e4066e2b6"}}

@@ -1,1 +1,1 @@
-{"id":"b4c9def2977187dce867252a405b5c5d","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache getCachedAdmins returns null on malformed JSON","name":"returns null on malformed JSON","status":"passed","testResultsByEnv":{"default":"52c1a4fe21ebfff58d298c6498753c8f"}}
+{"id":"b4c9def2977187dce867252a405b5c5d","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache getCachedAdmins returns null on malformed JSON","name":"returns null on malformed JSON","status":"passed","testResultsByEnv":{"default":"9200536074fb5f59556c63c14ce57f42"}}
