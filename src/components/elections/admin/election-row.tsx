@@ -1,4 +1,5 @@
-import { RotateCcw, Trash2 } from 'lucide-react';
+import { Pencil, RotateCcw, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ interface ElectionRowProps {
 export function ElectionRow({ election, canDelete, onDelete, onRestore }: ElectionRowProps) {
   const router = useRouter();
   const isDeleted = !!election.deletedAt;
+  const canEdit = election.canEdit ?? false;
 
   return (
     <tr className="group hover:bg-surface transition-colors duration-150">
@@ -35,6 +37,12 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
           <p className="font-body text-muted-foreground/60 mt-0.5 truncate text-xs">
             {election.createdBy.fullName}
           </p>
+          {election.editedAt && election.editedBy && (
+            <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 truncate text-xs">
+              <Pencil className="h-3 w-3" />
+              {election.editedBy.fullName}
+            </p>
+          )}
           {isDeleted && election.deletedBy && (
             <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 truncate text-xs">
               <Trash2 className="h-3 w-3" />
@@ -97,31 +105,45 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
         )}
       </td>
       <td className="px-4 py-3.5 text-right">
-        {isDeleted && election.canRestore ? (
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRestore();
-            }}
-            className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-          </Button>
-        ) : canDelete ? (
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="text-error hover:bg-error-bg transition-colors"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        ) : null}
+        <div className="flex items-center justify-end gap-1">
+          {canEdit && !isDeleted && (
+            <Button
+              variant="ghost"
+              size="md"
+              asChild
+              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+            >
+              <Link href={`/admin/elections/${election.id}/edit`}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          )}
+          {isDeleted && election.canRestore ? (
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRestore();
+              }}
+              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </Button>
+          ) : canDelete ? (
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="text-error hover:bg-error-bg transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          ) : null}
+        </div>
       </td>
     </tr>
   );

@@ -4,6 +4,7 @@ import {
   Eye,
   EyeOff,
   FileText,
+  Pencil,
   Play,
   Plus,
   StopCircle,
@@ -35,7 +36,7 @@ interface AdminElectionPageProps {
 
 export async function generateMetadata({ params }: AdminElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data } = await serverApi.elections.get(id);
+  const { data } = await serverApi.elections.og(id);
   return { title: data?.title ? `${data.title} — Деталі` : 'Деталі голосування' };
 }
 
@@ -51,13 +52,14 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   if (status === 404 || !election) notFound();
 
-  // canDelete and canRestore come pre-computed from the API (hierarchy-aware).
   const canDelete = election.canDelete ?? false;
   const canRestore = election.canRestore ?? false;
+  const canEdit = election.canEdit ?? false;
   const isDeleted = !!election.deletedAt;
 
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';
+
   // Choices carry votes/winner whenever the API attaches them — that is for
   // closed elections and for open non-anonymous elections (live tally).
   const hasResults = election.choices.some((c) => c.votes !== undefined);
@@ -93,6 +95,13 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/elections/${id}`}>
                 <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          )}
+          {canEdit && !isDeleted && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/admin/elections/${id}/edit`}>
+                <Pencil className="h-3.5 w-3.5" />
               </Link>
             </Button>
           )}
@@ -211,6 +220,19 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   icon={<Plus className="h-4 w-4" />}
                   status="done"
                 />
+                {election.editedAt && election.editedBy && (
+                  <TimelineItem
+                    label="Відредаговано"
+                    value={
+                      <div className="flex flex-col">
+                        <LocalDateTime date={election.editedAt} />
+                        <span className="font-semibold">{election.editedBy.fullName}</span>
+                      </div>
+                    }
+                    icon={<Pencil className="h-4 w-4" />}
+                    status="done"
+                  />
+                )}
                 <TimelineItem
                   label="Початок"
                   value={<LocalDateTime date={election.opensAt} />}
@@ -223,10 +245,15 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   icon={<StopCircle className="h-4 w-4" />}
                   status={isClosed ? 'done' : 'pending'}
                 />
-                {isDeleted && election.deletedAt && (
+                {isDeleted && election.deletedAt && election.deletedBy && (
                   <TimelineItem
                     label="Видалено"
-                    value={<LocalDateTime date={election.deletedAt} />}
+                    value={
+                      <div className="flex flex-col">
+                        <LocalDateTime date={election.deletedAt} />
+                        <span className="font-semibold">{election.deletedBy.fullName}</span>
+                      </div>
+                    }
                     icon={<Trash className="h-4 w-4" />}
                     status="done"
                   />

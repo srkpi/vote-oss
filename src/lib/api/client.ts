@@ -32,6 +32,8 @@ import type {
   CreateElectionResponse,
   ElectionDetail,
   ElectionsListResponse,
+  ElectionType,
+  UpdateElectionRequest,
 } from '@/types/election';
 import type {
   FaqCategoryCreated,
@@ -114,10 +116,15 @@ export function createApiClient(fetcher: Fetcher) {
         return fetcher<ElectionsListResponse>(`/elections${qs ? `?${qs}` : ''}`);
       },
       get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
-      og: (id: string) => fetcher<{ title: string }>(`/elections/${id}/og`),
+      og: (id: string) => fetcher<{ title: string; type: ElectionType }>(`/elections/${id}/og`),
       create: (data: CreateElectionRequest) =>
         fetcher<CreateElectionResponse>('/elections', {
           method: 'POST',
+          body: JSON.stringify(data),
+        }),
+      update: (id: string, data: UpdateElectionRequest) =>
+        fetcher<void>(`/elections/${id}`, {
+          method: 'PATCH',
           body: JSON.stringify(data),
         }),
       delete: (id: string) => fetcher<void>(`/elections/${id}`, { method: 'DELETE' }),
@@ -375,10 +382,6 @@ export function createApiClient(fetcher: Fetcher) {
         remove: (groupId: string) =>
           fetcher<void>(`/groups/${groupId}/avatar`, { method: 'DELETE' }),
       },
-    },
-
-    petitions: {
-      og: (id: string) => fetcher<{ title: string }>(`/petitions/${id}/og`),
     },
 
     campaigns: {

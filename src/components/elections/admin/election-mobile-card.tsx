@@ -1,4 +1,4 @@
-import { FileText, Play, RotateCcw, StopCircle, Trash2 } from 'lucide-react';
+import { FileText, Pencil, Play, RotateCcw, StopCircle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ export function ElectionMobileCard({
   onRestore,
 }: ElectionMobileCardProps) {
   const isDeleted = !!election.deletedAt;
+  const canEdit = election.canEdit ?? false;
+
   const titleContent = (
     <>
       <p
@@ -32,6 +34,12 @@ export function ElectionMobileCard({
       <p className="font-body text-muted-foreground/60 mt-0.5 text-xs">
         {election.createdBy.fullName}
       </p>
+      {election.editedAt && election.editedBy && (
+        <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 text-xs">
+          <Pencil className="h-3 w-3" />
+          {election.editedBy.fullName}
+        </p>
+      )}
       {isDeleted && election.deletedBy && (
         <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 text-xs">
           <Trash2 className="h-3 w-3" />
@@ -73,8 +81,20 @@ export function ElectionMobileCard({
         <Link href={`/admin/elections/${election.id}`} className="min-w-0 flex-1">
           {titleContent}
         </Link>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           <StatusBadge status={election.status} size="sm" muted={isDeleted} />
+          {canEdit && !isDeleted && (
+            <Button
+              variant="ghost"
+              size="xs"
+              asChild
+              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+            >
+              <Link href={`/admin/elections/${election.id}/edit`}>
+                <Pencil className="h-4 w-4" />
+              </Link>
+            </Button>
+          )}
           {isDeleted && election.canRestore ? (
             <Button
               variant="ghost"

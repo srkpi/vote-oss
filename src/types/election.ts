@@ -64,6 +64,11 @@ export interface ElectionDeleter {
   fullName: string;
 }
 
+export interface ElectionEditor {
+  userId: string;
+  fullName: string;
+}
+
 export interface TallyResult {
   choiceId: string;
   choice: string;
@@ -152,11 +157,14 @@ export interface Election {
    */
   voteStatus?: ElectionVoteStatus;
 
-  /** Only present for admin-authenticated responses */
+  /** Admin-only fields */
   deletedAt?: string | null;
   deletedBy?: ElectionDeleter | null;
   canDelete?: boolean;
   canRestore?: boolean;
+  editedAt?: string | null;
+  editedBy?: ElectionEditor | null;
+  canEdit?: boolean;
 }
 
 export interface ElectionDetail extends Election {
@@ -194,6 +202,9 @@ export interface CachedElection {
   deletedAt: string | null;
   deletedByUserId: string | null;
   deletedByName: string | null;
+  editedAt: string | null;
+  editedByUserId: string | null;
+  editedByName: string | null;
   winningConditions: WinningConditions;
   shuffleChoices: boolean;
 }
@@ -228,6 +239,13 @@ export interface CreateElectionRequest {
   /** Defaults to `true` (anonymous) when omitted. Forced to `false` for PETITION. */
   anonymous?: boolean;
 }
+
+export type UpdateElectionRequest = Omit<CreateElectionRequest, 'type'> & {
+  title: string;
+  opensAt: string;
+  closesAt: string;
+  choices: string[];
+};
 
 export interface CreateElectionResponse {
   id: string;

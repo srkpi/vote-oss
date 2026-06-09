@@ -22,13 +22,28 @@ interface PetitionPageProps {
 
 export async function generateMetadata({ params }: PetitionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data, status } = await serverApi.petitions.og(id);
-  const title = status === 404 ? '404 | Петицію не знайдено' : (data?.title ?? 'Петиція');
+  const { data, status } = await serverApi.elections.og(id);
+
+  let metaTitle = 'Петиція';
+  if (status === 404 || status === 400 || data?.type !== 'PETITION') {
+    metaTitle = 'Петицію не знайдено';
+  } else if (data?.title) {
+    metaTitle = data.title;
+  }
+
   return {
-    title,
-    description: title,
-    openGraph: { title, description: title, url: new URL(`/petitions/${id}`, APP_URL) },
-    twitter: { card: 'summary_large_image', title, description: title },
+    title: metaTitle,
+    description: metaTitle,
+    openGraph: {
+      title: metaTitle,
+      description: metaTitle,
+      url: new URL(`/petitions/${id}`, APP_URL),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: metaTitle,
+      description: metaTitle,
+    },
   };
 }
 

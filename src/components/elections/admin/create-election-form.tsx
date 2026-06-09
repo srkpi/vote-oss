@@ -44,6 +44,7 @@ import {
 } from '@/lib/utils/group-utils';
 import type {
   CreateElectionRestriction,
+  ElectionDetail,
   WinningConditions,
   WinningConditionsState,
 } from '@/types/election';
@@ -52,16 +53,13 @@ import type { AdminGroupSummary, GroupOption } from '@/types/group';
 interface CreateElectionFormProps {
   restrictedToFaculty: string | null;
   manageGroups: boolean;
-  /**
-   * Pre-applies a GROUP_MEMBERSHIP restriction targeting this group id.
-   * Used to deep-link from the group detail page so admins can create a
-   * poll already scoped to that group's members.
-   */
   initialGroupMembershipId?: string | null;
+  /** When provided, the form runs in edit mode */
+  mode?: 'create' | 'edit';
+  electionId?: string;
+  initialData?: ElectionDetail;
 }
 
-// Graduate level ('g') is intentionally excluded — graduate students cannot
-// participate in elections on this platform.
 const LEVEL_COLUMNS = [
   { key: 'b', label: 'Бакалаври', courses: LEVEL_COURSE_BACHELOR_COURSES },
   { key: 'm', label: 'Магістри', courses: LEVEL_COURSE_MASTER_COURSES },
@@ -76,6 +74,18 @@ const DEFAULT_WC_STATE: WinningConditionsState = {
   quorumEnabled: false,
   quorum: 100,
 };
+
+function wcToState(wc: WinningConditions): WinningConditionsState {
+  return {
+    hasMostVotes: wc.hasMostVotes,
+    reachesPercentageEnabled: wc.reachesPercentage !== null,
+    reachesPercentage: wc.reachesPercentage ?? 50,
+    reachesVotesEnabled: wc.reachesVotes !== null,
+    reachesVotes: wc.reachesVotes ?? 10,
+    quorumEnabled: wc.quorum !== null,
+    quorum: wc.quorum ?? 100,
+  };
+}
 
 function wcStateToPayload(wc: WinningConditionsState, choicesCount: number): WinningConditions {
   if (choicesCount === 1) {
@@ -99,19 +109,21 @@ export function CreateElectionForm({
   restrictedToFaculty = null,
   manageGroups,
   initialGroupMembershipId = null,
+  mode = 'create',
+  electionId,
+  initialData,
 }: CreateElectionFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const isEdit = mode === 'edit';
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Campus faculty/group data
   const [facultyGroups, setFacultyGroups] = useState<Record<string, string[]>>({});
   const [groupsLoading, setGroupsLoading] = useState(true);
   const [groupsError, setGroupsError] = useState<string | null>(null);
 
-  // Owned groups for GROUP_MEMBERSHIP restriction
   const [ownedGroups, setOwnedGroups] = useState<GroupOption[] | AdminGroupSummary[]>([]);
   const [ownedGroupsLoading, setOwnedGroupsLoading] = useState(true);
 
@@ -145,30 +157,65 @@ export function CreateElectionForm({
     return a.localeCompare(b, 'uk');
   });
 
+  // ── Derive initial values from initialData when in edit mode ──────────────
+  const getInitialFaculties = () => {
+    if (!initialData) return restrictedToFaculty ? [restrictedToFaculty] : [];
+    return initialData.restrictions.filter((r) => r.type === 'FACULTY').map((r) => r.value);
+  };
+
+  const getInitialGroups = () => {
+    if (!initialData) return [];
+    return initialData.restrictions.filter((r) => r.type === 'GROUP').map((r) => r.value);
+  };
+
+  const getInitialForms = () => {
+    if (!initialData) return [];
+    return initialData.restrictions.filter((r) => r.type === 'STUDY_FORM').map((r) => r.value);
+  };
+
+  const getInitialLevelCourses = () => {
+    if (!initialData) return [];
+    return initialData.restrictions.filter((r) => r.type === 'LEVEL_COURSE').map((r) => r.value);
+  };
+
+  const getInitialGroupMemberships = () => {
+    if (!initialData) return initialGroupMembershipId ? [initialGroupMembershipId] : [];
+    const fromData = initialData.restrictions
+      .filter((r) => r.type === 'GROUP_MEMBERSHIP')
+      .map((r) => r.value);
+    if (fromData.length > 0) return fromData;
+    return initialGroupMembershipId ? [initialGroupMembershipId] : [];
+  };
+
+  const getInitialBypassRequired = () => {
+    if (!initialData) return false;
+    return initialData.restrictions.some((r) => r.type === 'BYPASS_REQUIRED');
+  };
+
   // Form state
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    opensAt: '',
-    closesAt: '',
-    minChoices: 1,
-    maxChoices: 1,
+    title: initialData?.title ?? '',
+    description: initialData?.description ?? '',
+    opensAt: initialData?.opensAt ?? '',
+    closesAt: initialData?.closesAt ?? '',
+    minChoices: initialData?.minChoices ?? 1,
+    maxChoices: initialData?.maxChoices ?? 1,
   });
 
-  const [winningConditionsState, setWinningConditionsState] =
-    useState<WinningConditionsState>(DEFAULT_WC_STATE);
+  const [winningConditionsState, setWinningConditionsState] = useState<WinningConditionsState>(
+    initialData?.winningConditions ? wcToState(initialData.winningConditions) : DEFAULT_WC_STATE,
+  );
 
   // Restriction state
-  const [selectedFaculties, setSelectedFaculties] = useState<string[]>(
-    restrictedToFaculty ? [restrictedToFaculty] : [],
-  );
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [selectedForms, setSelectedForms] = useState<string[]>([]);
-  const [selectedLevelCourses, setSelectedLevelCourses] = useState<string[]>([]);
+  const [selectedFaculties, setSelectedFaculties] = useState<string[]>(getInitialFaculties);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(getInitialGroups);
+  const [selectedForms, setSelectedForms] = useState<string[]>(getInitialForms);
+  const [selectedLevelCourses, setSelectedLevelCourses] =
+    useState<string[]>(getInitialLevelCourses);
   const [selectedGroupMemberships, setSelectedGroupMemberships] = useState<string[]>(
-    initialGroupMembershipId ? [initialGroupMembershipId] : [],
+    getInitialGroupMemberships,
   );
-  const [bypassRequired, setBypassRequired] = useState(false);
+  const [bypassRequired, setBypassRequired] = useState(getInitialBypassRequired);
 
   // When the admin is faculty-restricted but has ≥1 GROUP_MEMBERSHIP restriction,
   // they may opt out of the automatic faculty restriction.
@@ -184,17 +231,13 @@ export function CreateElectionForm({
   }, [canBypassFaculty]);
 
   // Election options
-  const [shuffleChoices, setShuffleChoices] = useState(false);
-  const [publicViewing, setPublicViewing] = useState(false);
-  /**
-   * Privacy: when `true` (default) voter identities are never stored in
-   * ballots.  When `false` (non-anonymous), every ballot v2 envelope will
-   * embed the voter's userId and fullName; this information is revealed when
-   * the election closes and the RSA private key is published.
-   */
-  const [anonymous, setAnonymous] = useState(true);
+  const [shuffleChoices, setShuffleChoices] = useState(initialData?.shuffleChoices ?? false);
+  const [publicViewing, setPublicViewing] = useState(initialData?.publicViewing ?? false);
+  const [anonymous, setAnonymous] = useState(initialData?.anonymous ?? true);
 
-  const [choices, setChoices] = useState(['', '']);
+  const [choices, setChoices] = useState<string[]>(
+    initialData?.choices?.map((c) => c.choice) ?? ['', ''],
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Available campus groups filtered by faculties + form + level
@@ -396,7 +439,7 @@ export function CreateElectionForm({
 
     const filteredChoices = choices.filter((c) => c.trim());
     const trimmedDescription = form.description.trim();
-    const result = await api.elections.create({
+    const payload = {
       title: form.title.trim(),
       description: trimmedDescription ? trimmedDescription : null,
       opensAt: new Date(form.opensAt).toISOString(),
@@ -409,18 +452,35 @@ export function CreateElectionForm({
       shuffleChoices,
       publicViewing: restrictions.length === 0 || publicViewing,
       anonymous,
-    });
+    };
 
-    if (result.success) {
-      toast({
-        title: 'Голосування створено!',
-        description: `"${form.title}" успішно опубліковано.`,
-        variant: 'success',
-        duration: 6000,
-      });
-      router.push(`/admin/elections/${result.data.id}`);
+    if (isEdit && electionId) {
+      const result = await api.elections.update(electionId, payload);
+      if (result.success) {
+        toast({
+          title: 'Голосування оновлено!',
+          description: `"${form.title}" успішно оновлено.`,
+          variant: 'success',
+          duration: 6000,
+        });
+        router.push(`/admin/elections/${electionId}`);
+        router.refresh();
+      } else {
+        setError(result.error);
+      }
     } else {
-      setError(result.error);
+      const result = await api.elections.create(payload);
+      if (result.success) {
+        toast({
+          title: 'Голосування створено!',
+          description: `"${form.title}" успішно опубліковано.`,
+          variant: 'success',
+          duration: 6000,
+        });
+        router.push(`/admin/elections/${result.data.id}`);
+      } else {
+        setError(result.error);
+      }
     }
     setLoading(false);
   };
@@ -954,7 +1014,7 @@ export function CreateElectionForm({
             Скасувати
           </Button>
           <Button type="submit" variant="accent" size="lg" loading={loading}>
-            Створити голосування
+            {isEdit ? 'Зберегти зміни' : 'Створити голосування'}
           </Button>
         </div>
       </div>

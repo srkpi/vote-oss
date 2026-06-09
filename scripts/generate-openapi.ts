@@ -383,11 +383,11 @@ const spec = createSwaggerSpec({
         // ──────────────────────────────────────────────────────────────────
         // Elections – request / response bodies
         // ──────────────────────────────────────────────────────────────────
-        ElectionCreateBody: {
+
+        ElectionEditBody: {
           type: 'object',
-          required: ['title'],
+          required: ['title', 'opensAt', 'closesAt', 'choices'],
           properties: {
-            type: { $ref: '#/components/schemas/ElectionType' },
             title: { type: 'string', minLength: 1, maxLength: ELECTION_TITLE_MAX_LENGTH },
             description: { type: 'string', nullable: true },
             opensAt: {
@@ -442,6 +442,18 @@ const spec = createSwaggerSpec({
             },
             winningConditions: { $ref: '#/components/schemas/WinningCondition' },
           },
+        },
+
+        ElectionCreateBody: {
+          allOf: [
+            {
+              type: 'object',
+              properties: {
+                type: { $ref: '#/components/schemas/ElectionType' },
+              },
+            },
+            { $ref: '#/components/schemas/ElectionEditBody' },
+          ],
         },
 
         Election: {

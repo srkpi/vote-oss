@@ -34,6 +34,7 @@ model Admin {
   deleted_by            String?
 
   deleted_elections              Election[]             @relation("ElectionDeleter")
+  edited_elections               Election[]             @relation("ElectionEditor")
   created_invite_tokens          AdminInviteToken[]
   created_global_bypass_tokens   GlobalBypassToken[]
   deleted_global_bypass_tokens   GlobalBypassToken[]    @relation("GlobalBypassTokenDeleter")
@@ -106,11 +107,15 @@ model Election {
   deleted_at    DateTime?
   deleted_by    String?
 
+  edited_at    DateTime?
+  edited_by    String?
+
   choices                ElectionChoice[]
   issued_tokens          IssuedToken[]
   ballots                Ballot[]
   nullifiers             UsedTokenNullifier[]
   deleter                Admin?              @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
+  editor                 Admin?              @relation("ElectionEditor", fields: [edited_by], references: [user_id], onDelete: SetNull)
   election_bypass_tokens ElectionBypassToken[]
   protocol_agenda_items  ProtocolAgendaItem[]
 

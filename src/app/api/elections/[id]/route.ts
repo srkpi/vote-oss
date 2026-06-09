@@ -4,6 +4,20 @@ import { NextResponse } from 'next/server';
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getElectionBypassForUser } from '@/lib/bypass';
 import { getCachedElections, invalidateElections, overlayLiveBallotCounts } from '@/lib/cache';
+import { fetchFacultyGroups } from '@/lib/campus-api';
+import type { StudyFormValue, StudyYearValue } from '@/lib/constants';
+import {
+  ELECTION_CHOICE_MAX_LENGTH,
+  ELECTION_CHOICES_MAX,
+  ELECTION_CHOICES_MIN,
+  ELECTION_DESCRIPTION_MAX_LENGTH,
+  ELECTION_MAX_CHOICES_MAX,
+  ELECTION_MIN_CHOICES_MIN,
+  ELECTION_TITLE_MAX_LENGTH,
+  STUDY_FORMS,
+  STUDY_YEARS,
+  VALID_LEVEL_COURSES,
+} from '@/lib/constants';
 import { decryptBallot } from '@/lib/crypto';
 import { decryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
@@ -17,14 +31,24 @@ import {
   checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
+import { parseGroupLevel } from '@/lib/utils/group-utils';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
-import { computeWinners, parseWinningConditions } from '@/lib/winning-conditions';
+import {
+  computeWinners,
+  parseWinningConditions,
+  validateWinningConditions,
+} from '@/lib/winning-conditions';
 import type {
+  CreateElectionRestriction,
   ElectionRestrictedGroups,
   ElectionRestriction,
   ElectionType,
   TallyResult,
   WinningConditions,
+} from '@/types/election';
+import {
+  DEFAULT_WINNING_CONDITIONS,
+  DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
 } from '@/types/election';
 
 function safeDecrypt(value: string): string {
@@ -34,19 +58,7 @@ function safeDecrypt(value: string): string {
     return value;
   }
 }
-import {
-  DEFAULT_WINNING_CONDITIONS,
-  DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE,
-} from '@/types/election';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Decrypt all ballots for an election and count votes in-memory.  Works for
- * both v1 anonymous and v2 identified ballot formats.  Performs no DB writes.
- */
 async function computeTallyInMemory(
   electionId: string,
   privateKeyPem: string,
@@ -213,6 +225,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedAt: found.deletedAt ? new Date(found.deletedAt) : null,
       deletedByUserId: found.deletedByUserId,
       deletedByName: found.deletedByName,
+      editedAt: found.editedAt ? new Date(found.editedAt) : null,
+      editedByUserId: found.editedByUserId,
+      editedByName: found.editedByName,
       winningConditions,
       shuffleChoices: found.shuffleChoices ?? false,
       publicViewing: found.publicViewing ?? false,
@@ -224,6 +239,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       include: {
         choices: { orderBy: { position: 'asc' } },
         deleter: { select: { full_name: true } },
+        editor: { select: { full_name: true } },
         restrictions: { select: { type: true, value: true } },
         _count: { select: { ballots: true } },
       },
@@ -262,6 +278,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       deletedAt: dbElection.deleted_at,
       deletedByUserId: dbElection.deleted_by,
       deletedByName: dbElection.deleter?.full_name ?? null,
+      editedAt: dbElection.edited_at,
+      editedByUserId: dbElection.edited_by,
+      editedByName: dbElection.editor?.full_name ?? null,
       winningConditions: parseWinningConditions(dbElection.winning_conditions),
       shuffleChoices: dbElection.shuffle_choices,
       publicViewing: dbElection.public_viewing,
@@ -332,6 +351,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const now = new Date();
   const isClosed = now > electionData.closesAt;
   const isOpen = now >= electionData.opensAt && now <= electionData.closesAt;
+  const isUpcoming = now < electionData.opensAt;
   const { anonymous } = electionData;
 
   const privateKeyPem = decryptField(electionData.privateKey);
@@ -390,7 +410,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // ── Admin extras ──────────────────────────────────────────────────────────
   let canDelete: boolean | undefined;
   let canRestore: boolean | undefined;
+  let canEdit: boolean | undefined;
   let deletedByField: { userId: string; fullName: string } | null | undefined;
+  let editedByField: { userId: string; fullName: string } | null | undefined;
 
   if (isAdmin) {
     const adminRecord = await prisma.admin.findUnique({
@@ -404,6 +426,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       if (electionData.type === 'PETITION') {
         canDelete = !isDeleted && adminRecord.manage_petitions;
         canRestore = isDeleted && adminRecord.manage_petitions;
+        canEdit = false;
       } else {
         const adminGraph = await buildAdminGraph();
         canDelete =
@@ -429,11 +452,28 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             { restrictions, deletedByUserId: electionData.deletedByUserId },
             adminGraph,
           );
+
+        canEdit =
+          !isDeleted &&
+          isUpcoming &&
+          adminCanDeleteElection(
+            {
+              restricted_to_faculty: adminRecord.restricted_to_faculty,
+              faculty: adminRecord.faculty,
+              user_id: adminRecord.user_id,
+            },
+            { restrictions, created_by: electionData.createdBy },
+            adminGraph,
+          );
       }
     }
 
     deletedByField = electionData.deletedByUserId
       ? { userId: electionData.deletedByUserId, fullName: electionData.deletedByName ?? '' }
+      : null;
+
+    editedByField = electionData.editedByUserId
+      ? { userId: electionData.editedByUserId, fullName: electionData.editedByName ?? '' }
       : null;
   }
 
@@ -490,8 +530,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ...(isAdmin && {
       deletedAt: electionData.deletedAt?.toISOString() ?? null,
       deletedBy: deletedByField,
+      editedAt: electionData.editedAt?.toISOString() ?? null,
+      editedBy: editedByField,
       canDelete,
       canRestore,
+      canEdit,
     }),
   });
 }
@@ -582,6 +625,394 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   await prisma.election.update({
     where: { id: electionId },
     data: { deleted_at: new Date(), deleted_by: admin.user_id },
+  });
+
+  await invalidateElections();
+
+  return new NextResponse(null, { status: 204 });
+}
+
+// ---------------------------------------------------------------------------
+// PATCH /api/elections/[id]
+// ---------------------------------------------------------------------------
+
+/**
+ * @swagger
+ * /api/elections/{id}:
+ *   patch:
+ *     summary: Update an upcoming election
+ *     description: >
+ *       Updates the configuration, choices, restrictions, and metadata of an
+ *       existing election. This operation is restricted to administrators.
+ *       An election can only be edited if it has not started yet (current time
+ *       is before `opensAt`) and it is not a petition. The updating admin
+ *       must have created the election or be an ancestor of the creator in
+ *       the admin hierarchy. The update completely replaces existing choices
+ *       and restrictions.
+ *     tags:
+ *       - Elections
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Election UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ElectionEditBody'
+ *     responses:
+ *       204:
+ *         description: Election updated successfully. No content returned.
+ *       400:
+ *         description: >
+ *           Invalid request. Reason can include: invalid UUID, invalid JSON,
+ *           missing required fields, malformed dates, violation of choice
+ *           bounds (min/max constraints), target election is a petition,
+ *           election has already started, or failed restriction validations
+ *           (e.g., graduate course constraints, faculty mismatch).
+ *       401:
+ *         description: Unauthorized. Session cookie missing or invalid.
+ *       403:
+ *         description: >
+ *           Forbidden. User is not an admin, or does not have permissions
+ *           over this election, its faculty scope, or the specified group
+ *           constraints.
+ *       404:
+ *         description: Election not found or has been soft-deleted.
+ */
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAdmin(req);
+  if (!auth.ok) {
+    return auth.status === 401 ? Errors.unauthorized(auth.error) : Errors.forbidden(auth.error);
+  }
+
+  const { id: electionId } = await params;
+  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+
+  const { admin } = auth;
+
+  // Fetch existing election with restrictions
+  const election = await prisma.election.findUnique({
+    where: { id: electionId },
+    include: { restrictions: { select: { type: true, value: true } } },
+  });
+
+  if (!election || election.deleted_at) return Errors.notFound('Election not found');
+  if (election.type === 'PETITION') return Errors.badRequest('Petitions cannot be edited');
+
+  const now = new Date();
+  if (election.opens_at <= now) {
+    return Errors.badRequest('Cannot edit an election that has already started');
+  }
+
+  // Check admin has permission (same as delete)
+  const existingRestrictions = election.restrictions as ElectionRestriction[];
+  const adminGraph = await buildAdminGraph();
+
+  if (
+    !adminCanDeleteElection(
+      {
+        restricted_to_faculty: admin.restricted_to_faculty,
+        faculty: admin.faculty,
+        user_id: admin.user_id,
+      },
+      { restrictions: existingRestrictions, created_by: election.created_by },
+      adminGraph,
+    )
+  ) {
+    return Errors.forbidden(
+      'You can only edit elections you created or that were created by your subordinates',
+    );
+  }
+
+  // Parse body
+  let body: {
+    title?: string;
+    description?: string | null;
+    opensAt?: string;
+    closesAt?: string;
+    choices?: string[];
+    minChoices?: number;
+    maxChoices?: number;
+    restrictions?: CreateElectionRestriction[];
+    winningConditions?: unknown;
+    shuffleChoices?: boolean;
+    publicViewing?: boolean;
+    anonymous?: boolean;
+  };
+
+  try {
+    body = await req.json();
+  } catch {
+    return Errors.badRequest('Invalid JSON body');
+  }
+
+  const { title, opensAt, closesAt, choices } = body;
+  const description = typeof body.description === 'string' ? body.description.trim() : null;
+  const minChoices = body.minChoices ?? ELECTION_MIN_CHOICES_MIN;
+  const maxChoices = body.maxChoices ?? ELECTION_MIN_CHOICES_MIN;
+  const restrictions: CreateElectionRestriction[] = body.restrictions ?? [];
+  const shuffleChoices = body.shuffleChoices === true;
+  const publicViewing =
+    body.publicViewing === undefined ? !restrictions.length : body.publicViewing === true;
+  const anonymous = body.anonymous === false ? false : true;
+
+  // Basic validation
+  if (!title || !opensAt || !closesAt || !choices?.length) {
+    return Errors.badRequest('title, opensAt, closesAt, choices are required');
+  }
+  if (!publicViewing && !restrictions.length) {
+    return Errors.badRequest('publicViewing can not be false if no restrictions applied');
+  }
+  if (title.length > ELECTION_TITLE_MAX_LENGTH) {
+    return Errors.badRequest(`Title must be at most ${ELECTION_TITLE_MAX_LENGTH} characters`);
+  }
+  if (description && description.length > ELECTION_DESCRIPTION_MAX_LENGTH) {
+    return Errors.badRequest(
+      `Description must be at most ${ELECTION_DESCRIPTION_MAX_LENGTH} characters`,
+    );
+  }
+  if (choices.length < ELECTION_CHOICES_MIN) {
+    return Errors.badRequest('At least 1 choice is required');
+  }
+  if (choices.length > ELECTION_CHOICES_MAX) {
+    return Errors.badRequest(`At most ${ELECTION_CHOICES_MAX} choices are allowed`);
+  }
+  if (choices.length === 1 && shuffleChoices) {
+    return Errors.badRequest('Shuffle choices is not possible for a single-choice election');
+  }
+  const tooLongChoice = choices.find((c) => c.length > ELECTION_CHOICE_MAX_LENGTH);
+  if (tooLongChoice) {
+    return Errors.badRequest(
+      `Each choice must be at most ${ELECTION_CHOICE_MAX_LENGTH} characters`,
+    );
+  }
+  if (minChoices < ELECTION_MIN_CHOICES_MIN) {
+    return Errors.badRequest(`minChoices must be at least ${ELECTION_MIN_CHOICES_MIN}`);
+  }
+  if (maxChoices > ELECTION_MAX_CHOICES_MAX) {
+    return Errors.badRequest(`maxChoices must be at most ${ELECTION_MAX_CHOICES_MAX}`);
+  }
+  if (maxChoices < minChoices) {
+    return Errors.badRequest('maxChoices must be >= minChoices');
+  }
+  if (maxChoices > choices.length) {
+    return Errors.badRequest('maxChoices cannot exceed the number of choices');
+  }
+
+  const openDate = new Date(opensAt);
+  const closeDate = new Date(closesAt);
+
+  if (isNaN(openDate.getTime())) return Errors.badRequest('Invalid opensAt date');
+  if (isNaN(closeDate.getTime())) return Errors.badRequest('Invalid closesAt date');
+  if (closeDate <= openDate) return Errors.badRequest('closesAt must be after opensAt');
+  if (closeDate.getTime() <= now.getTime()) {
+    return Errors.badRequest('closesAt must be in the future');
+  }
+
+  // Winning conditions
+  let winningConditionsRaw = body.winningConditions;
+  if (winningConditionsRaw === undefined || winningConditionsRaw === null) {
+    winningConditionsRaw =
+      choices.length === 1 ? DEFAULT_WINNING_CONDITIONS_SINGLE_CHOICE : DEFAULT_WINNING_CONDITIONS;
+  }
+
+  const winningConditionsResult = validateWinningConditions(winningConditionsRaw, choices.length);
+  if (typeof winningConditionsResult === 'string') {
+    return Errors.badRequest(winningConditionsResult);
+  }
+  const winningConditions: WinningConditions = winningConditionsResult;
+
+  // Restriction validation
+  const VALID_RESTRICTION_TYPES = new Set<string>([
+    'FACULTY',
+    'GROUP',
+    'STUDY_YEAR',
+    'STUDY_FORM',
+    'LEVEL_COURSE',
+    'GROUP_MEMBERSHIP',
+    'BYPASS_REQUIRED',
+  ]);
+
+  for (const r of restrictions) {
+    if (!VALID_RESTRICTION_TYPES.has(r.type)) {
+      return Errors.badRequest(`Unknown restriction type "${r.type}"`);
+    }
+    if (typeof r.value !== 'string' || !r.value.trim()) {
+      return Errors.badRequest(`Restriction value must be a non-empty string`);
+    }
+  }
+
+  const groupRestrictions = restrictions.filter((r) => r.type === 'GROUP');
+  const facultyRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
+  const bypassRestrictions = restrictions.filter((r) => r.type === 'BYPASS_REQUIRED');
+  const groupMembershipRestrictions = restrictions.filter((r) => r.type === 'GROUP_MEMBERSHIP');
+
+  if (admin.restricted_to_faculty) {
+    if (facultyRestrictions.length > 0) {
+      if (facultyRestrictions.length > 1 || facultyRestrictions[0].value !== admin.faculty) {
+        return Errors.badRequest(
+          `Faculty-restricted admins may only restrict elections to their own faculty ("${admin.faculty}")`,
+        );
+      }
+    } else if (groupMembershipRestrictions.length === 0) {
+      return Errors.badRequest(
+        `Faculty-restricted admins must include a FACULTY restriction for their faculty ("${admin.faculty}"), unless at least one GROUP_MEMBERSHIP restriction is specified`,
+      );
+    }
+  }
+
+  if (groupRestrictions.length > 0 && facultyRestrictions.length === 0) {
+    return Errors.badRequest('GROUP restrictions require at least one FACULTY restriction');
+  }
+
+  if (bypassRestrictions.length > 1) {
+    return Errors.badRequest('Only one BYPASS_REQUIRED restriction is allowed');
+  }
+
+  if (bypassRestrictions.length === 1 && bypassRestrictions[0].value !== 'true') {
+    return Errors.badRequest('BYPASS_REQUIRED restriction value should be "true"');
+  }
+
+  // GROUP_MEMBERSHIP: allow groups from original election even if admin no longer owns them
+  if (groupMembershipRestrictions.length > 0) {
+    const originalGroupMembershipIds = new Set(
+      existingRestrictions.filter((r) => r.type === 'GROUP_MEMBERSHIP').map((r) => r.value),
+    );
+
+    const groupIds = groupMembershipRestrictions.map((r) => r.value);
+    const existingGroups = await prisma.group.findMany({
+      where: { id: { in: groupIds }, deleted_at: null },
+      select: { id: true, owner_id: true },
+    });
+
+    const existingIds = new Set(existingGroups.map((g) => g.id));
+    for (const gid of groupIds) {
+      if (!existingIds.has(gid) && !originalGroupMembershipIds.has(gid)) {
+        return Errors.badRequest(`Group "${gid}" does not exist or has been deleted`);
+      }
+    }
+
+    if (!admin.manage_groups) {
+      for (const g of existingGroups) {
+        if (g.owner_id !== admin.user_id && !originalGroupMembershipIds.has(g.id)) {
+          return Errors.badRequest(
+            `You can only restrict elections to groups you own. Group "${g.id}" belongs to another user.`,
+          );
+        }
+      }
+    }
+  }
+
+  for (const r of restrictions.filter((r) => r.type === 'STUDY_YEAR')) {
+    const year = Number(r.value);
+    if (!STUDY_YEARS.includes(year as StudyYearValue)) {
+      return Errors.badRequest(
+        `Invalid study year "${r.value}". Must be one of: ${STUDY_YEARS.join(', ')}`,
+      );
+    }
+  }
+
+  for (const r of restrictions.filter((r) => r.type === 'STUDY_FORM')) {
+    if (!STUDY_FORMS.includes(r.value as StudyFormValue)) {
+      return Errors.badRequest(
+        `Invalid study form "${r.value}". Must be one of: ${STUDY_FORMS.join(', ')}`,
+      );
+    }
+  }
+
+  for (const r of restrictions.filter((r) => r.type === 'LEVEL_COURSE')) {
+    if (!VALID_LEVEL_COURSES.includes(r.value)) {
+      return Errors.badRequest(
+        `Invalid level/course value "${r.value}". Must be one of: ${VALID_LEVEL_COURSES.join(', ')}`,
+      );
+    }
+    if (r.value.startsWith('g')) {
+      return Errors.badRequest(`Graduate-level course restrictions are not permitted.`);
+    }
+  }
+
+  if (facultyRestrictions.length > 0 || groupRestrictions.length > 0) {
+    let facultyGroups: Record<string, string[]>;
+    try {
+      facultyGroups = await fetchFacultyGroups();
+    } catch {
+      return Errors.internal(
+        'Could not validate faculty/group: campus API is unavailable. Please try again later.',
+      );
+    }
+
+    for (const r of facultyRestrictions) {
+      if (!facultyGroups[r.value]) {
+        return Errors.badRequest(`Faculty "${r.value}" does not exist`);
+      }
+    }
+
+    if (groupRestrictions.length > 0) {
+      const selectedGroupValues = groupRestrictions.map((r) => r.value);
+      const redundantFaculties = facultyRestrictions.filter((f) => {
+        const groupsInFaculty = facultyGroups[f.value] ?? [];
+        return !selectedGroupValues.some((g) => groupsInFaculty.includes(g));
+      });
+
+      if (redundantFaculties.length > 0) {
+        const names = redundantFaculties.map((f) => f.value).join(', ');
+        return Errors.badRequest(
+          `Redundant faculty restrictions: no selected groups belong to ${names}`,
+        );
+      }
+    }
+
+    for (const r of groupRestrictions) {
+      const validFaculties = facultyRestrictions.map((f) => f.value);
+      const groupExistsInFaculty = validFaculties.some((f) =>
+        (facultyGroups[f] ?? []).includes(r.value),
+      );
+      if (!groupExistsInFaculty) {
+        return Errors.badRequest(`Group "${r.value}" does not exist in the specified faculties`);
+      }
+      if (parseGroupLevel(r.value) === 'g') {
+        return Errors.badRequest(
+          `Group "${r.value}" is a graduate group. Elections targeting graduate students are not permitted.`,
+        );
+      }
+    }
+  }
+
+  // Update in transaction: delete old choices & restrictions, then update
+  await prisma.$transaction(async (tx) => {
+    await tx.electionChoice.deleteMany({ where: { election_id: electionId } });
+    await tx.electionRestriction.deleteMany({ where: { election_id: electionId } });
+    await tx.election.update({
+      where: { id: electionId },
+      data: {
+        title,
+        description,
+        opens_at: now > openDate ? now : openDate,
+        closes_at: closeDate,
+        min_choices: minChoices,
+        max_choices: maxChoices,
+        winning_conditions: winningConditions,
+        shuffle_choices: shuffleChoices,
+        public_viewing: publicViewing,
+        anonymous,
+        edited_at: now,
+        edited_by: admin.user_id,
+        choices: {
+          create: choices.map((choice, i) => ({ choice, position: i })),
+        },
+        restrictions: {
+          create: restrictions.map((r) => ({ type: r.type, value: r.value })),
+        },
+      },
+    });
   });
 
   await invalidateElections();

@@ -155,11 +155,11 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
     React.useImperativeHandle(ref, () => triggerRef.current as HTMLButtonElement);
 
     // Effective parts for time inputs / fallback when value is null.
-    const fallbackParts: KyivParts = (() => {
+    const fallbackParts = React.useMemo<KyivParts>(() => {
       const base = utcValue ?? minDate ?? new Date();
       const p = getKyivParts(base);
       return { ...p, minute: snapToStep(p.minute, minuteStep) };
-    })();
+    }, [utcValue, minDate, minuteStep]);
 
     const currentParts: KyivParts = utcValue ? getKyivParts(utcValue) : fallbackParts;
 
@@ -179,23 +179,23 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open]);
 
-    const openPopover = () => {
+    const openPopover = React.useCallback(() => {
       if (disabled || !triggerRef.current) return;
       setPosition(computePosition(triggerRef.current, 0));
       setOpen(true);
-    };
+    }, [disabled]);
 
-    const closePopover = () => {
+    const closePopover = React.useCallback(() => {
       setOpen(false);
       setPosition(null);
-    };
+    }, []);
 
     // Re-measure once the popover mounts to use its real height.
-    const popoverCallbackRef = (node: HTMLDivElement | null) => {
+    const popoverCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
       popoverRef.current = node;
       if (!node || !triggerRef.current) return;
       setPosition(computePosition(triggerRef.current, node.offsetHeight));
-    };
+    }, []);
 
     // Reposition on scroll/resize while open.
     React.useEffect(() => {
@@ -220,12 +220,11 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
         const t = e.target as Node;
         if (triggerRef.current?.contains(t)) return;
         if (popoverRef.current?.contains(t)) return;
-        setOpen(false);
-        setPosition(null);
+        closePopover();
       };
       document.addEventListener('pointerdown', handler);
       return () => document.removeEventListener('pointerdown', handler);
-    }, [open]);
+    }, [open, closePopover]);
 
     // Esc to close.
     React.useEffect(() => {
@@ -233,22 +232,24 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
       const handler = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           e.preventDefault();
-          setOpen(false);
-          setPosition(null);
+          closePopover();
           triggerRef.current?.focus();
         }
       };
       document.addEventListener('keydown', handler);
       return () => document.removeEventListener('keydown', handler);
-    }, [open]);
+    }, [open, closePopover]);
 
-    const emit = (parts: KyivParts) => {
-      // Clamp to min/max range so the picker never produces an out-of-range value.
-      let candidate = parts;
-      if (minParts && partsCompare(candidate, minParts) < 0) candidate = minParts;
-      if (maxParts && partsCompare(candidate, maxParts) > 0) candidate = maxParts;
-      onChange(buildKyivUtc(candidate));
-    };
+    const emit = React.useCallback(
+      (parts: KyivParts) => {
+        // Clamp to min/max range so the picker never produces an out-of-range value.
+        let candidate = parts;
+        if (minParts && partsCompare(candidate, minParts) < 0) candidate = minParts;
+        if (maxParts && partsCompare(candidate, maxParts) > 0) candidate = maxParts;
+        onChange(buildKyivUtc(candidate));
+      },
+      [minParts, maxParts, onChange],
+    );
 
     const isDayDisabled = (year: number, month: number, day: number): boolean => {
       if (minParts) {

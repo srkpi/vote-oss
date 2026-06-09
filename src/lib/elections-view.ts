@@ -143,6 +143,7 @@ export function toClientElections(
       const isClosed = Date.now() > new Date(e.closesAt).getTime();
       const status = computeStatus(e.opensAt, e.closesAt);
       const isDeleted = !!e.deletedAt;
+      const isUpcoming = Date.now() < new Date(e.opensAt).getTime();
 
       const tallyResults = isClosed
         ? buildTallyResults(e.choices, e.ballotCount, e.winningConditions)
@@ -203,9 +204,12 @@ export function toClientElections(
       if (isAdmin && adminRecord && adminGraph) {
         let canDelete: boolean;
         let canRestore: boolean;
+        let canEdit: boolean;
+
         if (e.type === 'PETITION') {
           canDelete = !isDeleted && adminRecord.manage_petitions;
           canRestore = isDeleted && adminRecord.manage_petitions;
+          canEdit = false;
         } else {
           canDelete =
             !isDeleted &&
@@ -221,15 +225,29 @@ export function toClientElections(
               { restrictions: e.restrictions, deletedByUserId: e.deletedByUserId },
               adminGraph,
             );
+          canEdit =
+            !isDeleted &&
+            isUpcoming &&
+            adminCanDeleteElection(
+              adminRecord,
+              { restrictions: e.restrictions, created_by: e.createdBy },
+              adminGraph,
+            );
         }
+
         return {
           ...base,
           deletedAt: e.deletedAt,
           deletedBy: e.deletedByUserId
             ? { userId: e.deletedByUserId, fullName: e.deletedByName ?? '' }
             : null,
+          editedAt: e.editedAt,
+          editedBy: e.editedByUserId
+            ? { userId: e.editedByUserId, fullName: e.editedByName ?? '' }
+            : null,
           canDelete,
           canRestore,
+          canEdit,
         };
       }
 

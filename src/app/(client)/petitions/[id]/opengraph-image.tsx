@@ -23,11 +23,14 @@ interface Props {
 export default async function PetitionOgImage({ params }: Props) {
   const { id } = await params;
   const { onest, bitter } = await loadOgFonts();
-  const { data, status } = await serverApi.petitions.og(id);
+  const { data, status } = await serverApi.elections.og(id);
 
   let metaTitle = 'Петиція';
-  if (status === 404) metaTitle = 'Петицію не знайдено';
-  else if (data?.title) metaTitle = data.title;
+  if (status === 404 || status === 400 || data?.type !== 'PETITION') {
+    metaTitle = 'Петицію не знайдено';
+  } else if (data?.title) {
+    metaTitle = data.title;
+  }
 
   return new ImageResponse(
     buildOgImageElement({
