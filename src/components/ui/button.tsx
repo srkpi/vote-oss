@@ -62,16 +62,7 @@ export type ButtonVariant =
   | 'link';
 
 export type ButtonSize =
-  | 'xs'
-  | 'sm'
-  | 'md'
-  | 'default'
-  | 'lg'
-  | 'xl'
-  | 'icon'
-  | 'icon-xs'
-  | 'icon-sm'
-  | 'icon-lg';
+  'xs' | 'sm' | 'md' | 'default' | 'lg' | 'xl' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg';
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {

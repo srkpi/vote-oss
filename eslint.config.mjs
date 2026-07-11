@@ -17,7 +17,7 @@ const eslintConfig = defineConfig([
       'simple-import-sort': simpleImportSort,
     },
     rules: {
-      'prettier/prettier': ['error', { singleQuote: true, semi: true }],
+      'prettier/prettier': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'tailwind-canonical-classes/tailwind-canonical-classes': [

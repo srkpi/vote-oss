@@ -120,13 +120,7 @@ export interface RejectCandidateRegistrationRequest {
  * link, except in `awaiting_candidate` where a decision must be taken first.
  */
 export type TeamSlotState =
-  | 'empty'
-  | 'pending'
-  | 'rejected'
-  | 'expired'
-  | 'awaiting_candidate'
-  | 'declined'
-  | 'accepted';
+  'empty' | 'pending' | 'rejected' | 'expired' | 'awaiting_candidate' | 'declined' | 'accepted';
 
 export interface TeamSlot {
   slot: number;
