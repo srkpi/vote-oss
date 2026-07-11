@@ -10,15 +10,15 @@ export const loggerProvider = POSTHOG_TOKEN
   ? new LoggerProvider({
       resource: resourceFromAttributes({ 'service.name': 'vote-oss' }),
       processors: [
-        new BatchLogRecordProcessor(
-          new OTLPLogExporter({
+        new BatchLogRecordProcessor({
+          exporter: new OTLPLogExporter({
             url: `${POSTHOG_HOST}/i/v1/logs`,
             headers: {
               Authorization: `Bearer ${POSTHOG_TOKEN}`,
               'Content-Type': 'application/json',
             },
           }),
-        ),
+        }),
       ],
     })
   : null;
