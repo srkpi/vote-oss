@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: ElectionPageProps): Promise<M
   const { data, status } = await serverApi.elections.og(id);
 
   let metaTitle = 'Голосування';
-  if (status === 404 || status === 400 || data?.type !== 'PETITION') {
+  if (status === 404 || status === 400 || data?.type !== 'ELECTION') {
     metaTitle = '404 | Голосування не знайдено';
   } else if (data?.title) {
     metaTitle = data.title;

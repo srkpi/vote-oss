@@ -327,7 +327,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         {registration && form.teamSize > 0 && status !== null && status !== 'DRAFT' && (
           <TeamSlotsPanel
             registrationId={registration.id}
-            readOnly={status !== 'AWAITING_TEAM'}
+            readOnly={status !== 'AWAITING_TEAM' || closed}
             onRegistrationStatusChange={(next) =>
               setRegistration((prev) =>
                 prev ? { ...prev, status: next, submittedAt: prev.submittedAt ?? null } : prev,

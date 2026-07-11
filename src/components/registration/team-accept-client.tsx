@@ -44,7 +44,7 @@ export function TeamAcceptClient({
 
   const isCandidate = preview.candidate.userId === currentUserId;
   const expired = new Date(preview.expiresAt).getTime() <= now;
-  const exhausted = preview.used || preview.revoked || expired;
+  const exhausted = preview.used || preview.revoked || expired || preview.formClosed;
 
   const handleAccept = async () => {
     setBusy('accept');
@@ -129,6 +129,11 @@ export function TeamAcceptClient({
               {preview.response === 'REJECTED' && 'Запрошення вже було відхилено.'}
               {preview.revoked && 'Запрошення відкликане кандидатом.'}
               {expired && !preview.used && !preview.revoked && 'Термін дії запрошення минув.'}
+              {preview.formClosed &&
+                !preview.used &&
+                !preview.revoked &&
+                !expired &&
+                'Форму реєстрації закрито — запрошення більше не дійсне.'}
             </Alert>
           )}
 

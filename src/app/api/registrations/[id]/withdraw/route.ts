@@ -46,7 +46,7 @@ const NON_FINAL_STATUSES = new Set(['DRAFT', 'AWAITING_TEAM', 'PENDING_REVIEW'])
  *       403:
  *         description: Caller is not the registration author
  *       404:
- *         description: Registration not found
+ *         description: Registration not found or its form is soft-deleted
  *       409:
  *         description: Registration is already in a final state (APPROVED, REJECTED, or WITHDRAWN)
  */
@@ -57,8 +57,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   if (!isValidUuid(id)) return Errors.badRequest('Invalid registration id');
 
-  const reg = await prisma.candidateRegistration.findUnique({ where: { id } });
-  if (!reg) return Errors.notFound('Registration not found');
+  const reg = await prisma.candidateRegistration.findUnique({
+    where: { id },
+    include: { form: { select: { deleted_at: true } } },
+  });
+  if (!reg || reg.form.deleted_at) return Errors.notFound('Registration not found');
   if (reg.user_id !== auth.user.sub) {
     return Errors.forbidden('Тільки автор може відкликати свою заявку');
   }

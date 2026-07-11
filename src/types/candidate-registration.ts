@@ -153,12 +153,11 @@ export interface TeamInvitePreview {
   formTitle: string;
   groupName: string;
   expiresAt: string;
-  /** Already used? */
   used: boolean;
   response: 'ACCEPTED' | 'REJECTED' | null;
-  /** Candidate's verdict on the invitee.  Only meaningful once response='ACCEPTED'. */
   candidateDecision: 'CONFIRMED' | 'DECLINED' | null;
   revoked: boolean;
+  formClosed: boolean;
 }
 
 export interface RegenerateTeamInviteResponse {

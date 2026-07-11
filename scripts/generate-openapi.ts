@@ -1570,6 +1570,7 @@ const spec = createSwaggerSpec({
             'response',
             'candidateDecision',
             'revoked',
+            'formClosed',
           ],
           properties: {
             token: { type: 'string' },
@@ -1604,6 +1605,11 @@ const spec = createSwaggerSpec({
             revoked: {
               type: 'boolean',
               description: 'True when the token was revoked before use.',
+            },
+            formClosed: {
+              type: 'boolean',
+              description:
+                'True when the form has been soft-deleted or its submission window has closed.',
             },
           },
         },

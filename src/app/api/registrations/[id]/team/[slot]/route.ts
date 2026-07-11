@@ -6,6 +6,11 @@ import { TEAM_INVITE_TOKEN_LENGTH, TEAM_INVITE_TOKEN_TTL_DAYS } from '@/lib/cons
 import { generateBase64Token, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import {
+  assertFormAcceptingTeamActivity,
+  RegistrationFormNotFoundError,
+  RegistrationWindowClosedError,
+} from '@/lib/registration-forms';
 import { isValidUuid } from '@/lib/utils/common';
 
 /**
@@ -22,6 +27,9 @@ import { isValidUuid } from '@/lib/utils/common';
  *         - The slot is in `accepted` state (invitee accepted and candidate
  *           confirmed — the slot is locked).
  *         - The registration is not in AWAITING_TEAM state.
+ *         - The form has been soft-deleted, or its submission window
+ *           ([opensAt, closesAt]) has ended — team assembly stops once the
+ *           form closes, same as new applications.
  *
  *       Only the registration's author (candidate) may call this endpoint.
  *     tags:
@@ -64,13 +72,13 @@ import { isValidUuid } from '@/lib/utils/common';
  *                   type: string
  *                   format: date-time
  *       400:
- *         description: Invalid UUID or slot out of range
+ *         description: Invalid UUID, slot out of range, or the form's submission window is closed
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Caller is not the registration author
  *       404:
- *         description: Registration not found
+ *         description: Registration not found, or its form is soft-deleted
  *       409:
  *         description: Registration is not in AWAITING_TEAM state, or the slot is already accepted (locked)
  */
@@ -89,7 +97,7 @@ export async function POST(
   const reg = await prisma.candidateRegistration.findUnique({
     where: { id },
     include: {
-      form: { select: { team_size: true } },
+      form: { select: { team_size: true, deleted_at: true, opens_at: true, closes_at: true } },
       team_invite_tokens: { where: { slot } },
     },
   });
@@ -97,6 +105,15 @@ export async function POST(
   if (reg.user_id !== auth.user.sub) {
     return Errors.forbidden('Доступно лише автору заявки');
   }
+
+  try {
+    assertFormAcceptingTeamActivity(reg.form);
+  } catch (err) {
+    if (err instanceof RegistrationFormNotFoundError) return Errors.notFound(err.message);
+    if (err instanceof RegistrationWindowClosedError) return Errors.badRequest(err.message);
+    throw err;
+  }
+
   if (slot > reg.form.team_size) return Errors.badRequest('Slot out of range');
   if (reg.status !== 'AWAITING_TEAM') {
     return Errors.conflict('Запрошення можна створювати лише в стані очікування команди');

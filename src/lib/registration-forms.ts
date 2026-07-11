@@ -205,3 +205,32 @@ export function validateFormBody(
     },
   };
 }
+
+export class RegistrationFormNotFoundError extends Error {
+  constructor(message = 'Form not found') {
+    super(message);
+    this.name = 'RegistrationFormNotFoundError';
+  }
+}
+
+export class RegistrationWindowClosedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RegistrationWindowClosedError';
+  }
+}
+
+/**
+ * Throws unless the form still exists (not soft-deleted) and `now` falls
+ * within [opens_at, closes_at]. Guards the team-invite lifecycle: generating
+ * a slot's invite link, the invitee accepting/rejecting it, and the
+ * candidate confirming/declining the result.
+ */
+export function assertFormAcceptingTeamActivity(
+  form: { deleted_at: Date | null; opens_at: Date; closes_at: Date } | null | undefined,
+  now: Date = new Date(),
+): void {
+  if (!form || form.deleted_at) throw new RegistrationFormNotFoundError();
+  if (now < form.opens_at) throw new RegistrationWindowClosedError('Реєстрація ще не відкрита');
+  if (now > form.closes_at) throw new RegistrationWindowClosedError('Прийом заявок закрито');
+}

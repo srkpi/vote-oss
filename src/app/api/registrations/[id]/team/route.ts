@@ -67,7 +67,7 @@ import { isValidUuid } from '@/lib/utils/common';
  *       403:
  *         description: Caller is neither the registration author nor an active ВКСУ group member
  *       404:
- *         description: Registration not found
+ *         description: Registration not found, or its form is soft-deleted
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
@@ -79,11 +79,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const reg = await prisma.candidateRegistration.findUnique({
     where: { id },
     include: {
-      form: { select: { team_size: true, group_id: true } },
+      form: { select: { team_size: true, group_id: true, deleted_at: true } },
       team_invite_tokens: true,
     },
   });
-  if (!reg) return Errors.notFound('Registration not found');
+  if (!reg || reg.form.deleted_at) return Errors.notFound('Registration not found');
 
   if (reg.user_id !== auth.user.sub) {
     try {

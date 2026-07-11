@@ -5,6 +5,11 @@ import { requireAuth } from '@/lib/auth';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import {
+  assertFormAcceptingTeamActivity,
+  RegistrationFormNotFoundError,
+  RegistrationWindowClosedError,
+} from '@/lib/registration-forms';
 
 /**
  * @swagger
@@ -21,7 +26,10 @@ import { prisma } from '@/lib/prisma';
  *       every slot.
  *
  *       The caller must be authenticated and may not be the registration's
- *       candidate (you cannot accept your own invite).
+ *       candidate (you cannot accept your own invite). The invite's form
+ *       must still exist (not soft-deleted) and its submission window must
+ *       still be open — team assembly stops once the form closes, same as
+ *       new applications.
  *     tags:
  *       - TeamInvites
  *     security:
@@ -52,13 +60,13 @@ import { prisma } from '@/lib/prisma';
  *                   enum: [AWAITING_TEAM]
  *                   description: Always AWAITING_TEAM at this point; promotion to PENDING_REVIEW happens on candidate confirmation.
  *       400:
- *         description: Token expired, already used, revoked, registration not accepting team members, or any other terminal-state conflict
+ *         description: Token expired, form's submission window closed, registration not accepting team members, or any other terminal-state conflict
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Caller is the registration's candidate (cannot accept own invite)
  *       404:
- *         description: Invite token not found
+ *         description: Invite token not found, or its form is soft-deleted
  *       409:
  *         description: Token already used or revoked
  */
@@ -73,7 +81,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   const result = await prisma.$transaction(async (tx) => {
     const row = await tx.teamMemberInviteToken.findUnique({
       where: { token_hash: hash },
-      include: { registration: { select: { user_id: true, status: true } } },
+      include: {
+        registration: {
+          select: {
+            user_id: true,
+            status: true,
+            form: { select: { deleted_at: true, opens_at: true, closes_at: true } },
+          },
+        },
+      },
     });
 
     if (!row) return { ok: false as const, status: 404, error: 'Invite not found' };
@@ -97,6 +113,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       return { ok: false as const, status: 409, error: 'Заявка вже не приймає членів команди' };
     }
 
+    try {
+      assertFormAcceptingTeamActivity(row.registration.form);
+    } catch (err) {
+      if (err instanceof RegistrationFormNotFoundError) {
+        return { ok: false as const, status: 404, error: err.message };
+      }
+      if (err instanceof RegistrationWindowClosedError) {
+        return { ok: false as const, status: 400, error: err.message };
+      }
+      throw err;
+    }
+
     await tx.teamMemberInviteToken.update({
       where: { token_hash: hash },
       data: {
@@ -112,7 +140,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     return { ok: true as const };
   });
 
-  if (!result.ok) return Errors.badRequest(result.error);
+  if (!result.ok) {
+    if (result.status === 404) return Errors.notFound(result.error);
+    if (result.status === 403) return Errors.forbidden(result.error);
+    if (result.status === 409) return Errors.conflict(result.error);
+    return Errors.badRequest(result.error);
+  }
   // Always AWAITING_TEAM at this point: promotion happens on candidate confirm.
   return NextResponse.json({ accepted: true, registrationStatus: 'AWAITING_TEAM' as const });
 }

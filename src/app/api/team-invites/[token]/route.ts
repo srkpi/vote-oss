@@ -18,6 +18,11 @@ import { prisma } from '@/lib/prisma';
  *       so the prospective team member knows what they are agreeing to before
  *       accepting or rejecting. Authentication is required; the prospective
  *       member must be logged in to respond.
+ *
+ *       `formClosed` is true when the form has been soft-deleted or its
+ *       submission window ([opensAt, closesAt]) has ended. The preview still
+ *       renders in that case (200) — accept/reject will fail with 400/404 —
+ *       so the UI can explain why rather than showing a bare error.
  *     tags:
  *       - TeamInvites
  *     security:
@@ -60,13 +65,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
           user_id: true,
           full_name: true,
           status: true,
-          form: { select: { id: true, title: true, group: { select: { name: true } } } },
+          form: {
+            select: {
+              id: true,
+              title: true,
+              deleted_at: true,
+              opens_at: true,
+              closes_at: true,
+              group: { select: { name: true } },
+            },
+          },
         },
       },
     },
   });
 
   if (!row) return Errors.notFound('Invite not found');
+
+  const form = row.registration.form;
+  const now = new Date();
+  const formClosed = form.deleted_at !== null || now < form.opens_at || now > form.closes_at;
 
   return NextResponse.json({
     token,
@@ -76,13 +94,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
       userId: row.registration.user_id,
       fullName: safeDecrypt(row.registration.full_name),
     },
-    formId: row.registration.form.id,
-    formTitle: row.registration.form.title,
-    groupName: row.registration.form.group.name,
+    formId: form.id,
+    formTitle: form.title,
+    groupName: form.group.name,
     expiresAt: row.expires_at.toISOString(),
     used: row.used_at !== null,
     response: row.response,
     candidateDecision: row.candidate_decision,
     revoked: row.revoked_at !== null,
+    formClosed,
   });
 }

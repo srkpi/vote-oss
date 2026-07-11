@@ -4,6 +4,11 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import {
+  assertFormAcceptingTeamActivity,
+  RegistrationFormNotFoundError,
+  RegistrationWindowClosedError,
+} from '@/lib/registration-forms';
 import { allSlotsAccepted, buildSlots } from '@/lib/team-invites';
 import { isValidUuid } from '@/lib/utils/common';
 
@@ -22,6 +27,10 @@ import { isValidUuid } from '@/lib/utils/common';
  *         AWAITING_TEAM to PENDING_REVIEW within the same database transaction.
  *       - **DECLINED**: the slot is freed. The candidate can then regenerate
  *         a fresh invite token for the same slot.
+ *
+ *       The form must still exist (not soft-deleted) and its submission
+ *       window must still be open — team assembly stops once the form
+ *       closes, same as new applications.
  *
  *       Only the registration's author (candidate) may call this endpoint.
  *     tags:
@@ -77,13 +86,13 @@ import { isValidUuid } from '@/lib/utils/common';
  *                   enum: [AWAITING_TEAM, PENDING_REVIEW]
  *                   description: The registration's status after this decision. PENDING_REVIEW only when CONFIRMED and all other slots are also accepted.
  *       400:
- *         description: Invalid UUID, invalid slot, invalid decision value, or slot out of range
+ *         description: Invalid UUID, invalid slot, invalid decision value, slot out of range, or the form's submission window is closed
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Caller is not the registration author
  *       404:
- *         description: Registration not found
+ *         description: Registration not found, or its form is soft-deleted
  *       409:
  *         description: Registration is not in AWAITING_TEAM state, or slot is not in awaiting_candidate state
  */
@@ -114,7 +123,7 @@ export async function PATCH(
     const reg = await tx.candidateRegistration.findUnique({
       where: { id },
       include: {
-        form: { select: { team_size: true } },
+        form: { select: { team_size: true, deleted_at: true, opens_at: true, closes_at: true } },
         team_invite_tokens: { where: { slot } },
       },
     });
@@ -122,6 +131,19 @@ export async function PATCH(
     if (reg.user_id !== auth.user.sub) {
       return { ok: false as const, status: 403, error: 'Доступно лише автору заявки' };
     }
+
+    try {
+      assertFormAcceptingTeamActivity(reg.form);
+    } catch (err) {
+      if (err instanceof RegistrationFormNotFoundError) {
+        return { ok: false as const, status: 404, error: err.message };
+      }
+      if (err instanceof RegistrationWindowClosedError) {
+        return { ok: false as const, status: 400, error: err.message };
+      }
+      throw err;
+    }
+
     if (reg.status !== 'AWAITING_TEAM') {
       return {
         ok: false as const,
