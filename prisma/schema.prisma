@@ -33,16 +33,16 @@ model Admin {
   deleted_at            DateTime?
   deleted_by            String?
 
-  deleted_elections              Election[]             @relation("ElectionDeleter")
-  edited_elections               Election[]             @relation("ElectionEditor")
+  deleted_elections              Election[]            @relation("ElectionDeleter")
+  edited_elections               Election[]            @relation("ElectionEditor")
   created_invite_tokens          AdminInviteToken[]
   created_global_bypass_tokens   GlobalBypassToken[]
-  deleted_global_bypass_tokens   GlobalBypassToken[]    @relation("GlobalBypassTokenDeleter")
+  deleted_global_bypass_tokens   GlobalBypassToken[]   @relation("GlobalBypassTokenDeleter")
   created_election_bypass_tokens ElectionBypassToken[]
-  deleted_election_bypass_tokens ElectionBypassToken[]  @relation("ElectionBypassTokenDeleter")
+  deleted_election_bypass_tokens ElectionBypassToken[] @relation("ElectionBypassTokenDeleter")
 
-  revoked_global_bypass_tokens_usages   GlobalBypassTokenUsage[]    @relation("GlobalBypassTokenUsageRevoker")
-  revoked_election_bypass_tokens_usages ElectionBypassTokenUsage[]  @relation("ElectionBypassTokenUsageRevoker")
+  revoked_global_bypass_tokens_usages   GlobalBypassTokenUsage[]   @relation("GlobalBypassTokenUsageRevoker")
+  revoked_election_bypass_tokens_usages ElectionBypassTokenUsage[] @relation("ElectionBypassTokenUsageRevoker")
 
   created_faq_categories FaqCategory[] @relation("FaqCategoryCreator")
   updated_faq_categories FaqCategory[] @relation("FaqCategoryUpdater")
@@ -87,10 +87,10 @@ model Election {
   opens_at             DateTime
   closes_at            DateTime
 
-  approved             Boolean   @default(false)
-  approved_by_id       String?
-  approved_by_full_name String?  @db.Text
-  approved_at          DateTime?
+  approved              Boolean   @default(false)
+  approved_by_id        String?
+  approved_by_full_name String?   @db.Text
+  approved_at           DateTime?
 
   min_choices     Int     @default(1)
   max_choices     Int     @default(1)
@@ -98,24 +98,24 @@ model Election {
   public_viewing  Boolean @default(false)
   anonymous       Boolean @default(true)
 
-  restrictions  ElectionRestriction[]
-  winning_conditions Json @default("{}")
+  restrictions       ElectionRestriction[]
+  winning_conditions Json                  @default("{}")
 
-  public_key    String @db.Text
-  private_key   String @db.Text
+  public_key  String @db.Text
+  private_key String @db.Text
 
-  deleted_at    DateTime?
-  deleted_by    String?
+  deleted_at DateTime?
+  deleted_by String?
 
-  edited_at    DateTime?
-  edited_by    String?
+  edited_at DateTime?
+  edited_by String?
 
   choices                ElectionChoice[]
   issued_tokens          IssuedToken[]
   ballots                Ballot[]
   nullifiers             UsedTokenNullifier[]
-  deleter                Admin?              @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
-  editor                 Admin?              @relation("ElectionEditor", fields: [edited_by], references: [user_id], onDelete: SetNull)
+  deleter                Admin?                @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
+  editor                 Admin?                @relation("ElectionEditor", fields: [edited_by], references: [user_id], onDelete: SetNull)
   election_bypass_tokens ElectionBypassToken[]
   protocol_agenda_items  ProtocolAgendaItem[]
 
@@ -123,9 +123,9 @@ model Election {
   // Both fields are null for admin-created elections.  `candidate_registration_id`
   // is also null for the campaign's final election (Stage 4) — only signature
   // elections are 1:1 with a candidate.
-  campaign_id               String?           @db.Uuid
-  campaign                  ElectionCampaign? @relation("CampaignElections", fields: [campaign_id], references: [id], onDelete: SetNull)
-  candidate_registration_id String?           @unique @db.Uuid
+  campaign_id               String?                @db.Uuid
+  campaign                  ElectionCampaign?      @relation("CampaignElections", fields: [campaign_id], references: [id], onDelete: SetNull)
+  candidate_registration_id String?                @unique @db.Uuid
   candidate_registration    CandidateRegistration? @relation("CandidateSignatureElection", fields: [candidate_registration_id], references: [id], onDelete: SetNull)
 
   @@index([type])
@@ -219,8 +219,8 @@ model GlobalBypassToken {
   deleted_at          DateTime?
   deleted_by          String?
 
-  deleter             Admin?    @relation("GlobalBypassTokenDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
-  usages              GlobalBypassTokenUsage[]
+  deleter Admin?                   @relation("GlobalBypassTokenDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
+  usages  GlobalBypassTokenUsage[]
 
   @@index([created_by])
   @@map("global_bypass_tokens")
@@ -254,8 +254,8 @@ model ElectionBypassToken {
   deleted_at          DateTime?
   deleted_by          String?
 
-  deleter             Admin?    @relation("ElectionBypassTokenDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
-  usages              ElectionBypassTokenUsage[]
+  deleter Admin?                     @relation("ElectionBypassTokenDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
+  usages  ElectionBypassTokenUsage[]
 
   @@index([election_id])
   @@index([created_by])
@@ -350,19 +350,20 @@ model Group {
 }
 
 model File {
-  id            String   @id @default(uuid()) @db.Uuid
+  id            String    @id @default(uuid()) @db.Uuid
   bucket        String
-  object_key    String   @unique
+  object_key    String    @unique
   mime_type     String
   byte_size     Int
   sha256        String
   original_name String?
   uploaded_by   String
-  created_at    DateTime @default(now())
+  created_at    DateTime  @default(now())
   deleted_at    DateTime?
   deleted_by    String?
 
-  group_logos Group[] @relation("GroupLogo")
+  group_logos  Group[]       @relation("GroupLogo")
+  user_avatars UserProfile[] @relation("UserAvatar")
 
   @@index([uploaded_by])
   @@index([deleted_at])
@@ -370,22 +371,22 @@ model File {
 }
 
 model CandidateRegistrationForm {
-  id          String  @id @default(uuid()) @db.Uuid
-  group_id    String  @db.Uuid
-  group       Group   @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  title       String
-  description String? @db.Text
-  requires_campaign_program Boolean @default(false)
-  team_size                 Int     @default(0)
-  opens_at             DateTime
-  closes_at            DateTime
-  created_by           String
-  created_by_full_name String    @db.Text
-  created_at           DateTime  @default(now())
-  updated_at           DateTime  @updatedAt
-  updated_by           String?
-  deleted_at           DateTime?
-  deleted_by           String?
+  id                        String    @id @default(uuid()) @db.Uuid
+  group_id                  String    @db.Uuid
+  group                     Group     @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  title                     String
+  description               String?   @db.Text
+  requires_campaign_program Boolean   @default(false)
+  team_size                 Int       @default(0)
+  opens_at                  DateTime
+  closes_at                 DateTime
+  created_by                String
+  created_by_full_name      String    @db.Text
+  created_at                DateTime  @default(now())
+  updated_at                DateTime  @updatedAt
+  updated_by                String?
+  deleted_at                DateTime?
+  deleted_by                String?
 
   restrictions  CandidateRegistrationFormRestriction[]
   registrations CandidateRegistration[]
@@ -432,8 +433,8 @@ model CandidateRegistration {
   updated_at DateTime @updatedAt
 
   team_invite_tokens     TeamMemberInviteToken[]
-  signature_election     Election?              @relation("CandidateSignatureElection")
-  final_election_choices ElectionChoice[]       @relation("FinalElectionChoice")
+  signature_election     Election?               @relation("CandidateSignatureElection")
+  final_election_choices ElectionChoice[]        @relation("FinalElectionChoice")
 
   @@unique([form_id, user_id])
   @@index([user_id])
@@ -585,10 +586,10 @@ enum CampaignState {
 /// Class of election as defined by ВКСУ rules.  Captured for record-keeping;
 /// does not change behaviour of the campaign state machine.
 enum ElectionKind {
-  REGULAR     // Чергові
+  REGULAR // Чергові
   BY_ELECTION // Позачергові на дообрання
   REPLACEMENT // Позачергові на заміщення
-  REPEAT      // Повторні
+  REPEAT // Повторні
 }
 
 model ElectionCampaign {
@@ -668,4 +669,15 @@ model ProtocolAgendaItem {
   @@index([protocol_id, position])
   @@index([election_id])
   @@map("protocol_agenda_items")
+}
+
+model UserProfile {
+  id             String   @id
+  avatar_file_id String?  @db.Uuid
+  avatar_file    File?    @relation("UserAvatar", fields: [avatar_file_id], references: [id], onDelete: SetNull)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([avatar_file_id])
+  @@map("user_profiles")
 }

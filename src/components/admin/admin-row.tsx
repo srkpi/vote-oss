@@ -3,6 +3,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDate } from '@/components/ui/local-time';
+import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { cn } from '@/lib/utils/common';
 import type { Admin } from '@/types/admin';
 
@@ -32,9 +33,13 @@ export function AdminRow({
     >
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-3">
-          <div className="navy-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white">
-            {admin.fullName.charAt(0)}
-          </div>
+          <UserAvatarMenu
+            userId={admin.userId}
+            fullName={admin.fullName}
+            avatarUrl={admin.avatarUrl}
+            size={36}
+            canDelete={canManageAdmins}
+          />
           <div>
             <p className="font-body text-foreground text-sm font-medium">{admin.fullName}</p>
             <p className="font-body text-muted-foreground text-xs">{admin.userId}</p>

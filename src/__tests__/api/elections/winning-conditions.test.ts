@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
@@ -37,6 +38,7 @@ jest.mock('@/lib/encryption', () => ({
 jest.mock('@/lib/bypass', () => ({
   getElectionBypassForUser: jest.fn().mockResolvedValue(null),
 }));
+jest.mock('@/lib/avatars', () => avatarsMock);
 
 import { GET } from '@/app/api/elections/[id]/route';
 import { POST } from '@/app/api/elections/route';
@@ -90,6 +92,7 @@ describe('POST /api/elections — winning conditions validation', () => {
     resetTokenStoreMock();
     resetCacheMock();
     resetCampusMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Create Election – Winning Conditions Validation');
   });
@@ -413,6 +416,7 @@ describe('GET /api/elections/[id] — winning conditions in response', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Winning Conditions');
   });
@@ -454,6 +458,7 @@ describe('GET /api/elections/[id] — hasMostVotes tally condition', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: hasMostVotes');
   });
@@ -537,6 +542,7 @@ describe('GET /api/elections/[id] — reachesPercentage tally condition', () => 
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: reachesPercentage');
   });
@@ -627,6 +633,7 @@ describe('GET /api/elections/[id] — reachesVotes tally condition', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: reachesVotes');
   });
@@ -714,6 +721,7 @@ describe('GET /api/elections/[id] — quorum tally condition', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: quorum');
   });
@@ -826,6 +834,7 @@ describe('GET /api/elections/[id] — combined winning conditions (AND logic)', 
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: Combined Conditions');
   });
@@ -891,6 +900,7 @@ describe('GET /api/elections/[id] — lazy tally with winning conditions', () =>
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Lazy Tally with Conditions');
   });

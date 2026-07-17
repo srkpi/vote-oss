@@ -3,6 +3,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LocalDate } from '@/components/ui/local-time';
+import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { cn } from '@/lib/utils/common';
 import type { Admin } from '@/types/admin';
 
@@ -33,9 +34,13 @@ export function AdminMobileCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="navy-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold text-white">
-            {admin.fullName.charAt(0)}
-          </div>
+          <UserAvatarMenu
+            userId={admin.userId}
+            fullName={admin.fullName}
+            avatarUrl={admin.avatarUrl}
+            size={36}
+            canDelete={canManageAdmins}
+          />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-body text-foreground text-sm font-semibold">{admin.fullName}</p>

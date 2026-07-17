@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { getAvatarUrlMap } from '@/lib/avatars';
 import { getCachedInviteTokens, invalidateInviteTokens, setCachedInviteTokens } from '@/lib/cache';
 import {
   INVITE_TOKEN_LENGTH,
@@ -119,7 +120,14 @@ export async function GET(req: NextRequest) {
       deletable: true,
     }));
 
-  return NextResponse.json(visible);
+  const avatarMap = await getAvatarUrlMap(visible.map((t) => t.creator.userId));
+
+  return NextResponse.json(
+    visible.map((t) => ({
+      ...t,
+      creator: { ...t.creator, avatarUrl: avatarMap.get(t.creator.userId) ?? null },
+    })),
+  );
 }
 
 /**

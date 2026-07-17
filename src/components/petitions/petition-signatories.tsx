@@ -3,7 +3,9 @@
 import { Loader2, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { Avatar } from '@/components/ui/avatar';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { api } from '@/lib/api/browser';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { pluralize } from '@/lib/utils/common';
 import type { PetitionSignatoriesResponse } from '@/types/ballot';
@@ -28,6 +30,7 @@ export function PetitionSignatories({
   fetchError,
 }: PetitionSignatoriesProps) {
   const [signatories, setSignatories] = useState<Signatory[] | null>(null);
+  const [avatarMap, setAvatarMap] = useState<Map<string, string>>(new Map());
   const [malformedCount, setMalformedCount] = useState(0);
   const [invalidHashCount, setInvalidHashCount] = useState(0);
   const [decryptError, setDecryptError] = useState<string | null>(null);
@@ -102,6 +105,14 @@ export function PetitionSignatories({
         setMalformedCount(malformed);
         setInvalidHashCount(invalidHash);
         setDecryptError(null);
+
+        const ids = [...new Set(result.map((s) => s.userId))];
+        if (ids.length > 0) {
+          const avatarResult = await api.users.avatars(ids);
+          if (!cancelled && avatarResult.success) {
+            setAvatarMap(new Map(Object.entries(avatarResult.data.avatars)));
+          }
+        }
       }
     })();
 
@@ -184,9 +195,7 @@ export function PetitionSignatories({
             <ul className="divide-border-subtle divide-y">
               {signatories.map((s) => (
                 <li key={s.ballotId} className="flex items-center gap-3 px-5 py-3">
-                  <div className="navy-gradient flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white">
-                    {s.fullName.charAt(0)}
-                  </div>
+                  <Avatar src={avatarMap.get(s.userId)} name={s.fullName} size={32} />
                   <div className="min-w-0 flex-1">
                     <p className="font-body text-foreground truncate text-sm font-medium">
                       {s.fullName}

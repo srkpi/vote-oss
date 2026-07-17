@@ -6,13 +6,13 @@ interface StatCardProps {
 }
 
 const accentStyles = {
-  navy: 'navy-gradient', // Total Elections
-  orange: 'bg-kpi-orange', // Ballots
-  success: 'bg-success', // Active
-  info: 'bg-kpi-blue-light', // Petitions
-  purple: 'bg-purple-600', // Admins (Authority)
-  teal: 'bg-teal-500', // Groups (Community)
-  amber: 'bg-amber-500', // Alternative for Ballots/Alerts
+  navy: 'bg-kpi-navy',
+  orange: 'bg-kpi-orange',
+  success: 'bg-success',
+  info: 'bg-kpi-blue-light',
+  purple: 'bg-purple-600',
+  teal: 'bg-teal-500',
+  amber: 'bg-amber-500',
 };
 
 export function StatCard({ label, value, accent, icon }: StatCardProps) {

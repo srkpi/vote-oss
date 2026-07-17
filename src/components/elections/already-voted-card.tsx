@@ -78,7 +78,7 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
                 'border-kpi-navy/20 bg-kpi-navy/5 border-2',
               )}
             >
-              <span className="navy-gradient font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white">
+              <span className="bg-kpi-navy font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white">
                 ✓
               </span>
               <span className="font-body text-kpi-navy min-w-0 font-semibold wrap-break-word">

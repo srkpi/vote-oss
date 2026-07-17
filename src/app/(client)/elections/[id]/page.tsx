@@ -1,4 +1,4 @@
-import { Calendar, ChevronRight, Clock, Eye, EyeOff, FileText, User } from 'lucide-react';
+import { Calendar, ChevronRight, Clock, Eye, EyeOff, FileText } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -13,6 +13,7 @@ import { RestrictedVoteBanner } from '@/components/elections/restricted-vote-ban
 import { ResultsSection } from '@/components/elections/results-section';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { WinningConditionsDisplay } from '@/components/elections/winning-conditions-display';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -139,7 +140,12 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </h1>
               <div className="font-body text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
                 <span className="flex items-center gap-1.5">
-                  <User className="h-4 w-4" />
+                  <Avatar
+                    icon
+                    src={election.createdBy.avatarUrl}
+                    name={election.createdBy.fullName}
+                    size={election.createdBy.avatarUrl ? 32 : 16}
+                  />
                   {election.createdBy.fullName}
                 </span>
 

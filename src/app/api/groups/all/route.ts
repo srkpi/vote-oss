@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
 import { Errors } from '@/lib/errors';
+import { shapeFileSummary } from '@/lib/files';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -44,6 +45,11 @@ export async function GET(req: NextRequest) {
       owner_id: true,
       created_at: true,
       deleted_at: true,
+      full_name: true,
+      address: true,
+      email: true,
+      contact: true,
+      logo_file: true,
       _count: { select: { members: { where: { deleted_at: null } } } },
       // We can't directly join to a user table since users are external;
       // instead we fetch the owner's display_name from group_members
@@ -65,6 +71,13 @@ export async function GET(req: NextRequest) {
         ownerId: g.owner_id,
         ownerName: ownerMember?.display_name ?? null,
         memberCount: g._count.members,
+        requisites: {
+          fullName: g.full_name,
+          address: g.address,
+          email: g.email,
+          contact: g.contact,
+          logo: g.logo_file && !g.logo_file.deleted_at ? shapeFileSummary(g.logo_file) : null,
+        },
         createdAt: g.created_at.toISOString(),
         deletedAt: g.deleted_at?.toISOString() ?? null,
       };

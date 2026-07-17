@@ -1,6 +1,7 @@
-import { Calendar, Crown, FileText, User } from 'lucide-react';
+import { Calendar, Crown, FileText } from 'lucide-react';
 import Link from 'next/link';
 
+import { Avatar } from '@/components/ui/avatar';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils/common';
@@ -73,7 +74,12 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
         {/* Author + date */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
-            <User className="h-3.5 w-3.5 shrink-0" />
+            <Avatar
+              icon
+              src={election.createdBy.avatarUrl}
+              name={election.createdBy.fullName}
+              size={14}
+            />
             {election.createdBy.fullName}
           </span>
           <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">

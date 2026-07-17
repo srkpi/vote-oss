@@ -1,6 +1,7 @@
-import { Clock, User } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import Link from 'next/link';
 
+import { Avatar } from '@/components/ui/avatar';
 import { LocalDate } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { PETITION_QUORUM } from '@/lib/constants';
@@ -67,7 +68,12 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
 
         <div className="text-muted-foreground font-body min-w-0 space-y-1 text-xs">
           <div className="flex min-w-0 items-center gap-1.5">
-            <User className="h-3.5 w-3.5 shrink-0" />
+            <Avatar
+              icon
+              src={petition.createdBy.avatarUrl}
+              name={petition.createdBy.fullName}
+              size={14}
+            />
             <span className="truncate">{petition.createdBy.fullName}</span>
           </div>
           {petition.approved && (

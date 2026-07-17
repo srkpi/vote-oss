@@ -13,6 +13,8 @@
 
 import { TRUSTED_PROXY_COUNT } from '@/lib/config/server';
 import {
+  RATE_LIMIT_AVATAR_MAX,
+  RATE_LIMIT_AVATAR_WINDOW_MS,
   RATE_LIMIT_INVITE_MAX,
   RATE_LIMIT_INVITE_WINDOW_MS,
   RATE_LIMIT_LOGIN_MAX,
@@ -96,6 +98,11 @@ export async function rateLimitRefresh(ip: string): Promise<RateLimitResult> {
 /** Admin invite-token creation */
 export async function rateLimitInvite(userId: string): Promise<RateLimitResult> {
   return rateLimit('invite', userId, RATE_LIMIT_INVITE_MAX, RATE_LIMIT_INVITE_WINDOW_MS);
+}
+
+/** Avatar upload(self - serve, keyed by user id rather than IP). */
+export async function rateLimitAvatarUpload(userId: string): Promise<RateLimitResult> {
+  return rateLimit('avatar', userId, RATE_LIMIT_AVATAR_MAX, RATE_LIMIT_AVATAR_WINDOW_MS);
 }
 
 /**

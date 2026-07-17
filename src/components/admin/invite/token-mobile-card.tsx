@@ -1,5 +1,6 @@
 import { Clock, Trash2, Users } from 'lucide-react';
 
+import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, tokenExpiresLabel, tokenUsageColor, tokenUsageFraction } from '@/lib/utils/common';
@@ -25,9 +26,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="navy-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-semibold text-white">
-            {token.creator.fullName.charAt(0)}
-          </div>
+          <Avatar src={token.creator.avatarUrl} name={token.creator.fullName} size={40} />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-body text-foreground text-sm font-semibold">

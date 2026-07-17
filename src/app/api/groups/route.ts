@@ -1,3 +1,4 @@
+import type { File as DbFile } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -5,6 +6,7 @@ import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getCachedElections } from '@/lib/cache';
 import { GROUP_MAX_OWNED, GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
+import { shapeFileSummary } from '@/lib/files';
 import { invalidateUserOwnedGroups } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
 
@@ -57,6 +59,11 @@ export async function GET(req: NextRequest) {
     created_at: true,
     updated_at: true,
     deleted_at: true,
+    full_name: true,
+    address: true,
+    email: true,
+    contact: true,
+    logo_file: true,
     _count: {
       select: { members: { where: { deleted_at: null } } },
     },
@@ -126,6 +133,11 @@ export async function GET(req: NextRequest) {
     updated_at: Date;
     deleted_at: Date | null;
     _count: { members: number };
+    full_name: string | null;
+    address: string | null;
+    email: string | null;
+    contact: string | null;
+    logo_file: DbFile | null;
   }) => ({
     id: group.id,
     name: group.name,
@@ -138,6 +150,14 @@ export async function GET(req: NextRequest) {
     isOwner: group.owner_id === user.sub,
     isMember: memberGroupIds.has(group.id),
     deletedAt: group.deleted_at?.toISOString() ?? null,
+    requisites: {
+      fullName: group.full_name,
+      address: group.address,
+      email: group.email,
+      contact: group.contact,
+      logo:
+        group.logo_file && !group.logo_file.deleted_at ? shapeFileSummary(group.logo_file) : null,
+    },
   });
 
   return NextResponse.json([

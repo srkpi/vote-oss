@@ -1,7 +1,9 @@
 'use server';
 
 import { headers } from 'next/headers';
+import { cache } from 'react';
 
+import { getAvatarUrlMap } from '@/lib/avatars';
 import type { User } from '@/types/auth';
 
 function decodeHeader(headerValue: string | null): string {
@@ -13,13 +15,14 @@ function decodeHeader(headerValue: string | null): string {
   }
 }
 
-export async function getServerSession(): Promise<User | null> {
+export const getServerSession = cache(async (): Promise<User | null> => {
   const h = await headers();
   const userId = h.get('x-user-id');
   if (!userId) return null;
 
   const isAdmin = h.get('x-user-is-admin') === 'true';
   const studyYearRaw = h.get('x-user-study-year');
+  const avatarMap = await getAvatarUrlMap([userId]);
 
   return {
     userId,
@@ -35,5 +38,6 @@ export async function getServerSession(): Promise<User | null> {
     manageGroups: isAdmin && h.get('x-user-manage-groups') === 'true',
     managePetitions: isAdmin && h.get('x-user-manage-petitions') === 'true',
     manageFaq: isAdmin && h.get('x-user-manage-faq') === 'true',
+    avatarUrl: avatarMap.get(userId) ?? null,
   };
-}
+});

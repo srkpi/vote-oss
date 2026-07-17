@@ -384,6 +384,24 @@ export function createApiClient(fetcher: Fetcher) {
       },
     },
 
+    users: {
+      avatar: {
+        set: (userId: string, file: File) => {
+          const form = new FormData();
+          form.append('file', file);
+          return fetcher<FileSummary>(`/users/${userId}/avatar`, {
+            method: 'PUT',
+            body: form,
+          });
+        },
+        remove: (userId: string) => fetcher<void>(`/users/${userId}/avatar`, { method: 'DELETE' }),
+      },
+      avatars: (ids: string[]) =>
+        fetcher<{ avatars: Record<string, string> }>(
+          `/users/avatars?ids=${ids.map(encodeURIComponent).join(',')}`,
+        ),
+    },
+
     campaigns: {
       get: (id: string) => fetcher<ElectionCampaign>(`/campaigns/${id}`),
       delete: (id: string) => fetcher<void>(`/campaigns/${id}`, { method: 'DELETE' }),

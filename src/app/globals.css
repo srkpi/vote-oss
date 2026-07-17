@@ -583,15 +583,6 @@ html {
   background-size: 32px 32px;
 }
 
-.navy-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--kpi-navy) 0%,
-    var(--kpi-blue-mid) 60%,
-    var(--kpi-blue-light) 100%
-  );
-}
-
 .navy-gradient-subtle {
   background: linear-gradient(135deg, var(--kpi-navy) 0%, #1d4480 100%);
 }

@@ -1,11 +1,13 @@
 export interface AdminPromoter {
   userId: string;
   fullName: string;
+  avatarUrl: string | null;
 }
 
 export interface Admin {
   userId: string;
   fullName: string;
+  avatarUrl: string | null;
   group: string;
   faculty: string;
   promoter: AdminPromoter | null;
@@ -39,6 +41,12 @@ export interface InviteTokenResponse {
   validDue: string;
 }
 
+export interface InviteTokenCreator {
+  userId: string;
+  fullName: string;
+  avatarUrl: string | null;
+}
+
 export interface InviteToken {
   tokenHash: string;
   maxUsage: number;
@@ -50,7 +58,7 @@ export interface InviteToken {
   restrictedToFaculty: boolean;
   validDue: string;
   createdAt: string;
-  creator: { userId: string; fullName: string };
+  creator: InviteTokenCreator;
   isOwn: boolean;
   deletable: boolean;
 }
@@ -60,4 +68,6 @@ export interface InviteToken {
  * caller-specific computed flags (isOwn / deletable).
  * Those are added at serve time after hierarchy resolution.
  */
-export type CachedInviteToken = Omit<InviteToken, 'isOwn' | 'deletable'>;
+export type CachedInviteToken = Omit<InviteToken, 'isOwn' | 'deletable' | 'creator'> & {
+  creator: Omit<InviteTokenCreator, 'avatarUrl'>;
+};

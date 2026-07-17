@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/auth';
+import { getAvatarUrlMap } from '@/lib/avatars';
 import { getCachedAdmins, setCachedAdmins } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { isAncestorInGraph } from '@/lib/graph';
@@ -66,57 +67,66 @@ export async function GET(req: NextRequest) {
 
   const { user } = auth;
 
+  let admins: Admin[];
   const cached = await getCachedAdmins();
   if (cached) {
-    const graph = new Map(cached.map((a) => [a.userId, a.promoter?.userId ?? null]));
-    const activeIds = cached.map((a) => a.userId);
-    const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
-    return NextResponse.json(
-      cached.map((admin) => ({ ...admin, deletable: deletableIds.has(admin.userId) })),
-    );
+    admins = cached;
+  } else {
+    const dbAdmins = await prisma.admin.findMany({
+      where: { deleted_at: null },
+      select: {
+        user_id: true,
+        full_name: true,
+        group: true,
+        faculty: true,
+        promoter: { select: { user_id: true, full_name: true } },
+        promoted_at: true,
+        manage_admins: true,
+        manage_groups: true,
+        manage_petitions: true,
+        manage_faq: true,
+        restricted_to_faculty: true,
+      },
+      orderBy: { promoted_at: 'asc' },
+    });
+
+    admins = dbAdmins.map((a) => ({
+      userId: a.user_id,
+      fullName: a.full_name,
+      group: a.group,
+      faculty: a.faculty,
+      promoter: a.promoter
+        ? { userId: a.promoter.user_id, fullName: a.promoter.full_name, avatarUrl: null }
+        : null,
+      promotedAt: a.promoted_at.toISOString(),
+      manageAdmins: a.manage_admins,
+      restrictedToFaculty: a.restricted_to_faculty,
+      manageGroups: a.manage_groups,
+      managePetitions: a.manage_petitions,
+      manageFaq: a.manage_faq,
+      avatarUrl: null,
+    }));
+    await setCachedAdmins(admins);
   }
 
-  const admins = await prisma.admin.findMany({
-    where: { deleted_at: null },
-    select: {
-      user_id: true,
-      full_name: true,
-      group: true,
-      faculty: true,
-      promoter: { select: { user_id: true, full_name: true } },
-      promoted_at: true,
-      manage_admins: true,
-      manage_groups: true,
-      manage_petitions: true,
-      manage_faq: true,
-      restricted_to_faculty: true,
-    },
-    orderBy: { promoted_at: 'asc' },
-  });
-
-  const camelAdmins: Admin[] = admins.map((a) => ({
-    userId: a.user_id,
-    fullName: a.full_name,
-    group: a.group,
-    faculty: a.faculty,
-    promoter: a.promoter ? { userId: a.promoter.user_id, fullName: a.promoter.full_name } : null,
-    promotedAt: a.promoted_at.toISOString(),
-    manageAdmins: a.manage_admins,
-    restrictedToFaculty: a.restricted_to_faculty,
-    manageGroups: a.manage_groups,
-    managePetitions: a.manage_petitions,
-    manageFaq: a.manage_faq,
-  }));
-
-  await setCachedAdmins(camelAdmins);
-
-  const graph = new Map(camelAdmins.map((a) => [a.userId, a.promoter?.userId ?? null]));
-  const activeIds = camelAdmins.map((a) => a.userId);
+  const graph = new Map(admins.map((a) => [a.userId, a.promoter?.userId ?? null]));
+  const activeIds = admins.map((a) => a.userId);
   const deletableIds = computeDeletableIds(graph, activeIds, user.sub);
 
+  const avatarIds = new Set<string>();
+  for (const a of admins) {
+    avatarIds.add(a.userId);
+    if (a.promoter) avatarIds.add(a.promoter.userId);
+  }
+  const avatarMap = await getAvatarUrlMap([...avatarIds]);
+
   return NextResponse.json(
-    camelAdmins.map((admin) => ({
+    admins.map((admin) => ({
       ...admin,
+      avatarUrl: avatarMap.get(admin.userId) ?? null,
+      promoter: admin.promoter
+        ? { ...admin.promoter, avatarUrl: avatarMap.get(admin.promoter.userId) ?? null }
+        : null,
       deletable: deletableIds.has(admin.userId),
     })),
   );

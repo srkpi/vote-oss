@@ -13,6 +13,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import type { Tab } from '@/components/ui/tabs';
 import { Tabs } from '@/components/ui/tabs';
+import { api } from '@/lib/api/browser';
 import { BALLOTS_PAGE_SIZE } from '@/lib/constants';
 import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { cn, pluralize } from '@/lib/utils/common';
@@ -39,6 +40,7 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [voterAvatarMap, setVoterAvatarMap] = useState<Map<string, string>>(new Map());
 
   const [decryptedMap, setDecryptedMap] = useState<DecryptedMap>(new Map());
   const [isDecrypting, setIsDecrypting] = useState(false);
@@ -109,6 +111,16 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
       }
       setDecryptedMap(map);
       setDecryptionDone(true);
+
+      const voterIds = [
+        ...new Set(
+          [...map.values()].map((d) => d.voter?.userId).filter((id): id is string => !!id),
+        ),
+      ];
+      if (voterIds.length > 0) {
+        const result = await api.users.avatars(voterIds);
+        if (result.success) setVoterAvatarMap(new Map(Object.entries(result.data.avatars)));
+      }
     } catch (err) {
       console.error('[crypto] Decryption failed', err);
     } finally {
@@ -361,6 +373,10 @@ export function BallotsClient({ initialData }: BallotsClientProps) {
                         onToggle={() => toggleExpand(ballot.id)}
                         decryption={
                           decryptionDone && showDecrypted ? decryptedMap.get(ballot.id) : undefined
+                        }
+                        voterAvatarUrl={
+                          voterAvatarMap.get(decryptedMap.get(ballot.id)?.voter?.userId ?? '') ??
+                          null
                         }
                         choices={choices}
                         isMyBallot={isMyBallot}

@@ -119,7 +119,6 @@ export const CAMPAIGN_TOTAL_MAX_DURATION_DAYS = 365;
 export const CAMPAIGNS_PAGE_SIZE = 24;
 
 // Files / image uploads
-export const FILE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 export const FILE_ALLOWED_IMAGE_MIME_TYPES = [
   'image/png',
   'image/jpeg',
@@ -128,6 +127,19 @@ export const FILE_ALLOWED_IMAGE_MIME_TYPES = [
 ] as const;
 export type AllowedImageMimeType = (typeof FILE_ALLOWED_IMAGE_MIME_TYPES)[number];
 export const FILE_ORIGINAL_NAME_MAX_LENGTH = 255;
+
+export const AVATAR_MAX_SIZE_BYTES = 256 * 1024;
+export const AVATAR_ALLOWED_IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const;
+export type AllowedAvatarMimeType = (typeof AVATAR_ALLOWED_IMAGE_MIME_TYPES)[number];
+
+/** Square dimension every avatar is resized to before storage. */
+export const AVATAR_OUTPUT_SIZE_PX = 512;
+/** Decode-time pixel ceiling — decompression-bomb guard, independent of file size. */
+export const AVATAR_MAX_INPUT_PIXELS = 40_000_000;
+/** Progressive re-encode quality ladder tried until output fits the size budget. */
+export const AVATAR_OUTPUT_QUALITY_STEPS = [82, 65, 50, 35] as const;
+
+export const MAX_RESOLVE_AVATAR_URLS_PER_REQUEST = 200;
 
 // Protocol logo dimensions (passed to the docs generator as image props).
 export const PROTOCOL_LOGO_WIDTH_MM = 25;
@@ -148,6 +160,7 @@ export const CACHE_TTL_BYPASS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_MEMBERSHIPS_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_OWNED_SECS = 5 * 60;
 export const CACHE_TTL_GROUP_VKSU_IDS_SECS = 5 * 60;
+export const CACHE_TTL_AVATAR_SECS = 5 * 60;
 
 // Candidate registration forms
 export const REGISTRATION_FORM_TITLE_MAX_LENGTH = 255;
@@ -191,6 +204,7 @@ export const CACHE_KEY_ADMINS = 'cache:admins';
 export const CACHE_KEY_INVITE_TOKENS = 'cache:invite-tokens';
 export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
 export const CACHE_KEY_FAQ = 'cache:faq';
+export const CACHE_KEY_AVATAR_PREFIX = 'cache:avatar:';
 export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
 export const LOCAL_STORAGE_ELECTIONS_VIEW_KEY = 'elections_view';
 export const LOCAL_STORAGE_REGISTRATION_VIEW_KEY = 'registration_view';
@@ -222,6 +236,8 @@ export const RATE_LIMIT_REFRESH_WINDOW_MS = 60_000;
 export const RATE_LIMIT_REFRESH_MAX = 20;
 export const RATE_LIMIT_INVITE_WINDOW_MS = 60_000;
 export const RATE_LIMIT_INVITE_MAX = 20;
+export const RATE_LIMIT_AVATAR_WINDOW_MS = 60_000;
+export const RATE_LIMIT_AVATAR_MAX = 6;
 
 // DIIA auth
 export const DIIA_POLL_INTERVAL_MS = 5_000;

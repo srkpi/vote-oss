@@ -50,11 +50,12 @@ import { LocalDateTime } from '@/components/ui/local-time';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { StyledSelect } from '@/components/ui/styled-select';
+import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
+  AVATAR_MAX_SIZE_BYTES,
   FILE_ALLOWED_IMAGE_MIME_TYPES,
-  FILE_MAX_SIZE_BYTES,
   GROUP_INVITE_LINK_MAX_DAYS,
   GROUP_INVITE_LINK_MAX_USAGE,
   GROUP_INVITE_LINK_MIN_HOURS,
@@ -624,15 +625,15 @@ export function GroupDetailClient({
     ) {
       toast({
         title: 'Непідтримуваний формат',
-        description: 'Дозволені PNG, JPEG, WebP, GIF (без SVG)',
+        description: 'Дозволені PNG, JPEG, WebP',
         variant: 'error',
       });
       return;
     }
-    if (file.size > FILE_MAX_SIZE_BYTES) {
+    if (file.size > AVATAR_MAX_SIZE_BYTES) {
       toast({
         title: 'Файл завеликий',
-        description: `Максимум ${Math.floor(FILE_MAX_SIZE_BYTES / (1024 * 1024))} МБ`,
+        description: `Максимум ${Math.floor(AVATAR_MAX_SIZE_BYTES / (1024 * 1024))} МБ`,
         variant: 'error',
       });
       return;
@@ -845,14 +846,16 @@ export function GroupDetailClient({
 
                   return (
                     <div key={member.userId} className="flex items-center gap-3 px-5 py-3.5">
-                      <div
-                        className={cn(
-                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white',
-                          member.isOwner ? 'bg-kpi-orange' : 'navy-gradient',
-                        )}
-                      >
-                        {member.displayName.charAt(0)}
-                      </div>
+                      <UserAvatarMenu
+                        userId={member.userId}
+                        fullName={member.displayName ?? member.userId}
+                        avatarUrl={member.avatarUrl}
+                        size={36}
+                        canDelete={session.isAdmin}
+                        onDeleted={() => {
+                          /* optimistically clear locally, or just refetch the group */
+                        }}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-body text-foreground truncate text-sm font-medium">
@@ -983,8 +986,7 @@ export function GroupDetailClient({
                             Завантажити
                           </Button>
                           <p className="font-body text-muted-foreground mt-1.5 text-xs">
-                            PNG, JPEG, WebP, GIF — до{' '}
-                            {Math.floor(FILE_MAX_SIZE_BYTES / (1024 * 1024))} МБ
+                            PNG, JPEG, WebP — до {Math.floor(AVATAR_MAX_SIZE_BYTES / 1024)} КБ
                           </p>
                         </div>
                       )}

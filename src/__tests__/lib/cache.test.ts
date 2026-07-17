@@ -83,6 +83,7 @@ const SAMPLE_ADMIN: Admin = {
   faculty: 'FICE',
   promoter: null,
   promotedAt: new Date('2024-01-01').toISOString(),
+  avatarUrl: null,
   manageAdmins: true,
   restrictedToFaculty: false,
   manageGroups: false,

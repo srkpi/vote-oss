@@ -1,4 +1,4 @@
-import { Calendar, Clock, User } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { PetitionAdminActions } from '@/components/petitions/petition-admin-actions';
 import { PetitionSignatories } from '@/components/petitions/petition-signatories';
 import { SignPetitionPanel } from '@/components/petitions/sign-petition-panel';
+import { Avatar } from '@/components/ui/avatar';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { serverApi } from '@/lib/api/server';
@@ -123,7 +124,12 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
               <div className="font-body text-muted-foreground mt-4 space-y-1 text-sm">
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <User className="h-4 w-4 shrink-0" />
+                  <Avatar
+                    icon
+                    src={petition.createdBy.avatarUrl}
+                    name={petition.createdBy.fullName}
+                    size={16}
+                  />
                   <span className="truncate">{petition.createdBy.fullName}</span>
                 </span>
                 <span className="flex items-center gap-1.5">

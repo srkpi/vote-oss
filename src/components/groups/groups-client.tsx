@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { EmptyState } from '@/components/common/empty-state';
 import { PageHeader } from '@/components/common/page-header';
 import { Alert } from '@/components/ui/alert';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -54,14 +55,16 @@ function GroupCard({ group }: { group: Group }) {
 
       <div className="flex h-full flex-col p-5">
         <div className="mb-4 flex items-center gap-3">
-          <div
+          <Avatar
+            src={group.requisites.logo?.url}
+            name={group.name}
+            size={48}
+            shape="rounded"
             className={cn(
-              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white',
-              group.isOwner ? 'bg-kpi-orange' : group.isMember ? 'navy-gradient' : 'bg-gray-400',
+              !group.requisites.logo &&
+                (group.isOwner ? 'bg-kpi-orange' : group.isMember ? 'bg-kpi-navy' : 'bg-gray-400'),
             )}
-          >
-            {group.name.charAt(0).toUpperCase()}
-          </div>
+          />
           <h3 className="font-display text-foreground group-hover:text-kpi-navy line-clamp-2 text-base leading-tight font-semibold transition-colors">
             {group.name}
           </h3>

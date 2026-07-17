@@ -2,6 +2,7 @@
     handle_path /files/* {
         rewrite * /vote-oss-public{uri}
         reverse_proxy host.docker.internal:9000
+        header X-Content-Type-Options "nosniff"
     }
 
     handle {

@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   encryptBallot,
@@ -25,6 +26,7 @@ jest.mock('@/lib/encryption', () => ({
 jest.mock('@/lib/bypass', () => ({
   getElectionBypassForUser: jest.fn().mockResolvedValue(null),
 }));
+jest.mock('@/lib/avatars', () => avatarsMock);
 
 import { GET } from '@/app/api/elections/[id]/route';
 
@@ -41,6 +43,7 @@ describe('GET /api/elections/[id]', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
 
     allure.feature('Elections');
     allure.story('Election Detail');

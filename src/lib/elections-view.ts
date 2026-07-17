@@ -108,6 +108,7 @@ export function toClientElections(
   votedSet: Set<string>,
   groupMemberships: string[],
   typeFilter: ElectionType | 'ALL' | null,
+  avatarMap: Map<string, string>,
   adminRecord?: AdminContext,
   adminGraph?: Map<string, string | null>,
 ): Election[] {
@@ -189,11 +190,19 @@ export function toClientElections(
         anonymous: e.anonymous ?? true,
         minChoices: e.minChoices,
         maxChoices: e.maxChoices,
-        createdBy: { userId: e.createdBy, fullName: e.createdByFullName },
+        createdBy: {
+          userId: e.createdBy,
+          fullName: e.createdByFullName,
+          avatarUrl: avatarMap.get(e.createdBy) ?? null,
+        },
         approved: e.approved,
         approvedBy:
           e.approvedById && e.approvedByFullName
-            ? { userId: e.approvedById, fullName: e.approvedByFullName }
+            ? {
+                userId: e.approvedById,
+                fullName: e.approvedByFullName,
+                avatarUrl: avatarMap.get(e.createdBy) ?? null,
+              }
             : null,
         approvedAt: e.approvedAt,
         choices,

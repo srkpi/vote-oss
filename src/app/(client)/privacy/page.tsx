@@ -144,7 +144,7 @@ export default function PrivacyPage() {
                 <section key={section.id} id={section.id}>
                   {section.title && (
                     <div className="mb-4 flex items-center gap-3">
-                      <span className="navy-gradient font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white">
+                      <span className="bg-kpi-navy font-body flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white">
                         {index}
                       </span>
                       <h2 className="font-display text-foreground text-xl font-semibold">

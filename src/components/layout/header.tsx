@@ -1,16 +1,18 @@
 'use client';
 
-import { ChevronDown, LogOut, Menu, X } from 'lucide-react';
+import { ChevronDown, LogOut, Trash2, Upload, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { APP_NAME } from '@/lib/config/client';
 import type { StudyFormValue } from '@/lib/constants';
+import { AVATAR_ALLOWED_IMAGE_MIME_TYPES, AVATAR_MAX_SIZE_BYTES } from '@/lib/constants';
 import { STUDY_FORM_LABELS } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
@@ -26,6 +28,10 @@ export function Header({ session }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(session?.avatarUrl ?? null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const navLinks = [
     { label: 'Голосування', href: '/elections' },
@@ -48,6 +54,55 @@ export function Header({ session }: HeaderProps) {
     }
     setLoggingOut(false);
     setUserMenuOpen(false);
+  };
+
+  const handleAvatarFile = async (file: File) => {
+    if (!(AVATAR_ALLOWED_IMAGE_MIME_TYPES as readonly string[]).includes(file.type)) {
+      toast({
+        title: 'Непідтримуваний формат',
+        description: 'Дозволені формати: PNG, JPEG, WebP',
+        variant: 'error',
+      });
+      return;
+    }
+    if (file.size > AVATAR_MAX_SIZE_BYTES) {
+      toast({
+        title: 'Файл завеликий',
+        description: `Максимальний розмір — ${Math.floor(AVATAR_MAX_SIZE_BYTES / 1024)} КБ`,
+        variant: 'error',
+      });
+      return;
+    }
+
+    if (!session) return;
+    setAvatarBusy(true);
+    const result = await api.users.avatar.set(session.userId, file);
+    setAvatarBusy(false);
+    if (result.success) {
+      setAvatarUrl(result.data.url);
+      toast({ title: 'Аватар оновлено', variant: 'success' });
+      router.refresh();
+    } else {
+      toast({
+        title: 'Не вдалося завантажити аватар',
+        description: result.error,
+        variant: 'error',
+      });
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    if (!session) return;
+    setAvatarBusy(true);
+    const result = await api.users.avatar.remove(session.userId);
+    setAvatarBusy(false);
+    if (result.success) {
+      setAvatarUrl(null);
+      toast({ title: 'Аватар видалено', variant: 'success' });
+      router.refresh();
+    } else {
+      toast({ title: 'Не вдалося видалити аватар', description: result.error, variant: 'error' });
+    }
   };
 
   return (
@@ -100,15 +155,7 @@ export function Header({ session }: HeaderProps) {
                   'font-body text-sm font-medium',
                 )}
               >
-                <div
-                  className={cn(
-                    'navy-gradient h-7 w-7 rounded-full',
-                    'flex items-center justify-center',
-                    'text-xs font-semibold text-white',
-                  )}
-                >
-                  {session.fullName.charAt(0).toUpperCase()}
-                </div>
+                <Avatar src={avatarUrl} name={session.fullName} size={28} />
                 <div className="hidden text-left sm:block">
                   <p className="text-foreground text-xs leading-tight font-semibold">
                     {session.fullName.split(' ')[0]}
@@ -130,7 +177,7 @@ export function Header({ session }: HeaderProps) {
                   <div className="fixed inset-0" onClick={() => setUserMenuOpen(false)} />
                   <div
                     className={cn(
-                      'absolute top-full right-0 mt-2 w-64',
+                      'absolute top-full right-0 mt-2 w-72',
                       'shadow-shadow-xl rounded-xl bg-white',
                       'border-border-color border',
                       'overflow-hidden',
@@ -138,13 +185,51 @@ export function Header({ session }: HeaderProps) {
                     )}
                   >
                     <div className="space-y-3 px-4 py-4">
-                      <div>
-                        <p className="text-foreground text-sm font-semibold wrap-break-word">
-                          {session.fullName}
-                        </p>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          {session.faculty} · {session.group}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <Avatar src={avatarUrl} name={session.fullName} size={48} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-foreground text-sm font-semibold wrap-break-word">
+                            {session.fullName}
+                          </p>
+                          <p className="text-muted-foreground mt-1 text-sm">
+                            {session.faculty} · {session.group}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = '';
+                            if (file) void handleAvatarFile(file);
+                          }}
+                        />
+                        <Button
+                          size="xs"
+                          variant="secondary"
+                          disabled={avatarBusy}
+                          onClick={() => fileInputRef.current?.click()}
+                          icon={<Upload className="h-3.5 w-3.5" />}
+                        >
+                          {avatarUrl ? 'Змінити фото' : 'Завантажити фото'}
+                        </Button>
+                        {avatarUrl && (
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            disabled={avatarBusy}
+                            onClick={handleAvatarRemove}
+                            className="text-error hover:bg-error-bg"
+                            icon={<Trash2 className="h-3.5 w-3.5" />}
+                          >
+                            Видалити
+                          </Button>
+                        )}
                       </div>
 
                       {session.studyForm && (
@@ -207,7 +292,12 @@ export function Header({ session }: HeaderProps) {
             )}
             aria-label="Меню"
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? <UserIcon className="hidden" /> : null}
+            {mobileOpen ? (
+              <span className="sr-only">Закрити</span>
+            ) : (
+              <span className="sr-only">Меню</span>
+            )}
           </button>
         </div>
       </div>

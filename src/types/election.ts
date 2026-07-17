@@ -57,6 +57,7 @@ export interface CachedElectionChoice extends ElectionChoice {
 export interface ElectionAuthor {
   userId: string;
   fullName: string;
+  avatarUrl: string | null;
 }
 
 export interface ElectionDeleter {

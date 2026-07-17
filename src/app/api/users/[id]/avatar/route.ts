@@ -2,42 +2,33 @@ import { createHash, randomUUID } from 'crypto';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { requireAuth } from '@/lib/auth';
+import { requireAdmin, requireAuth } from '@/lib/auth';
 import {
   AvatarValidationError,
   processAvatarImage,
   statusForAvatarError,
 } from '@/lib/avatar-image';
-import { FILE_ORIGINAL_NAME_MAX_LENGTH } from '@/lib/constants';
+import { clearCachedAvatarUrl, setCachedAvatarUrl } from '@/lib/avatars';
+import { AVATAR_MAX_SIZE_BYTES } from '@/lib/constants';
 import { apiError, Errors } from '@/lib/errors';
 import { shapeFileSummary } from '@/lib/files';
 import { prisma } from '@/lib/prisma';
 import { rateLimitAvatarUpload } from '@/lib/rate-limit';
 import { PUBLIC_BUCKET, putObject, removeObject } from '@/lib/storage/minio';
-import { isValidUuid } from '@/lib/utils/common';
-
-export const runtime = 'nodejs';
 
 /**
  * @swagger
- * /api/groups/{id}/avatar:
+ * /api/users/{id}/avatar:
  *   put:
- *     summary: Upload or replace the group logo
+ *     summary: Upload or replace the caller's own avatar
  *     description: >
- *       Accepts a `multipart/form-data` request with a single `file` field.
- *       Atomically uploads the new logo to the object storage bucket, links
- *       it to the group in the database, and soft-deletes the previous logo
- *       file row (if any) followed by best-effort removal of the old object
- *       from storage. Only the group owner may call this endpoint.
- *
- *       Allowed MIME types: `image/png`, `image/jpeg`, `image/webp`,
- *       `image/gif`. SVG is intentionally rejected. The MIME type is detected
- *       from the file magic bytes regardless of the declared content-type.
- *
- *       Maximum file size is enforced by the server; the exact limit is
- *       configured via `AVATAR_MAX_SIZE_BYTES`.
+ *       Self-serve only — the path id must match the authenticated user.
+ *       Accepts `multipart/form-data` with a single `file` field (PNG, JPEG,
+ *       or WebP, max 256 KiB). The image is decoded and re-encoded from
+ *       scratch to a 512×512 WebP; EXIF/ICC metadata is always stripped.
+ *       Rate-limited per user.
  *     tags:
- *       - Groups
+ *       - Users
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -46,8 +37,6 @@ export const runtime = 'nodejs';
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
- *         description: Group UUID
  *     requestBody:
  *       required: true
  *       content:
@@ -60,26 +49,21 @@ export const runtime = 'nodejs';
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: Image file (PNG, JPEG, WebP, or GIF). Maximum size enforced server-side.
  *     responses:
  *       200:
- *         description: Logo uploaded and linked
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FileSummary'
+ *         description: Avatar uploaded
  *       400:
- *         description: Missing or empty file field, or non-multipart request body
+ *         description: Missing/empty file field
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Caller is not the group owner
- *       404:
- *         description: Group not found or soft-deleted
+ *         description: Caller may only upload their own avatar
  *       413:
- *         description: File exceeds the maximum allowed size
+ *         description: File too large, or too large even after compression
  *       415:
- *         description: Unsupported file type or declared content-type does not match detected MIME type
+ *         description: Unsupported or invalid image
+ *       429:
+ *         description: Too many uploads — try again later
  *       502:
  *         description: Object storage upload failed
  */
@@ -87,16 +71,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
-
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    select: { id: true, owner_id: true, deleted_at: true, logo_file_id: true },
-  });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
-  if (group.owner_id !== auth.user.sub) {
-    return Errors.forbidden('Only the group owner can change the logo');
+  const { id: targetUserId } = await params;
+  if (targetUserId !== auth.user.sub) {
+    return Errors.forbidden('You can only upload your own avatar');
   }
 
   const limit = await rateLimitAvatarUpload(auth.user.sub);
@@ -104,7 +81,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json(
       {
         error: 'TooManyRequests',
-        message: 'Too many logo uploads, try again shortly',
+        message: 'Too many avatar uploads, try again shortly',
         statusCode: 429,
       },
       { status: 429, headers: { 'Retry-After': String(Math.ceil(limit.resetInMs / 1000)) } },
@@ -122,12 +99,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!(entry instanceof File)) {
     return Errors.badRequest('Field "file" is required and must be a file');
   }
-
-  if (entry.size === 0) {
-    return Errors.badRequest('File is empty');
+  if (entry.size === 0) return Errors.badRequest('File is empty');
+  if (entry.size > AVATAR_MAX_SIZE_BYTES) {
+    return apiError(
+      `File exceeds the ${Math.floor(AVATAR_MAX_SIZE_BYTES / 1024)} KiB limit`,
+      413,
+      'PayloadTooLarge',
+    );
   }
 
   const rawBuf = Buffer.from(await entry.arrayBuffer());
+
   let processed;
   try {
     processed = await processAvatarImage(rawBuf);
@@ -143,12 +125,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const now = new Date();
   const yyyy = now.getUTCFullYear();
   const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
-  const objectKey = `uploads/${yyyy}/${mm}/${fileId}.webp`;
-
-  const originalName =
-    typeof entry.name === 'string' && entry.name.length > 0
-      ? entry.name.slice(0, FILE_ORIGINAL_NAME_MAX_LENGTH)
-      : null;
+  const objectKey = `avatars/${yyyy}/${mm}/${fileId}.webp`;
 
   try {
     await putObject({
@@ -165,7 +142,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     );
   }
 
-  const previousLogoId = group.logo_file_id;
+  const existingProfile = await prisma.userProfile.findUnique({
+    where: { id: targetUserId },
+    select: { avatar_file_id: true },
+  });
+  const previousAvatarId = existingProfile?.avatar_file_id ?? null;
 
   try {
     const txResult = await prisma.$transaction(async (tx) => {
@@ -177,25 +158,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           mime_type: processed.mimeType,
           byte_size: processed.buffer.length,
           sha256,
-          original_name: originalName,
+          original_name: null, // avatars are re-encoded; the original filename carries no useful info
           uploaded_by: auth.user.sub,
         },
       });
 
-      await tx.group.update({
-        where: { id: groupId },
-        data: { logo_file_id: file.id, updated_by: auth.user.sub },
+      await tx.userProfile.upsert({
+        where: { id: targetUserId },
+        create: { id: targetUserId, avatar_file_id: file.id },
+        update: { avatar_file_id: file.id },
       });
 
       let previous: { bucket: string; object_key: string } | null = null;
-      if (previousLogoId) {
+      if (previousAvatarId) {
         const prev = await tx.file.findUnique({
-          where: { id: previousLogoId },
+          where: { id: previousAvatarId },
           select: { bucket: true, object_key: true, deleted_at: true },
         });
         if (prev && !prev.deleted_at) {
           await tx.file.update({
-            where: { id: previousLogoId },
+            where: { id: previousAvatarId },
             data: { deleted_at: new Date(), deleted_by: auth.user.sub },
           });
           previous = { bucket: prev.bucket, object_key: prev.object_key };
@@ -205,38 +187,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return { file, previous };
     });
 
-    // Best-effort cleanup of the old MinIO object after the DB transaction
-    // commits.  A failure here only leaves an orphan blob which a sweep can
-    // reconcile via the soft-deleted File row.
     if (txResult.previous) {
-      removeObject(txResult.previous.bucket, txResult.previous.object_key).catch(() => {
-        /* non-fatal */
-      });
+      removeObject(txResult.previous.bucket, txResult.previous.object_key).catch(() => {});
     }
 
-    return NextResponse.json(shapeFileSummary(txResult.file), { status: 200 });
+    const summary = shapeFileSummary(txResult.file);
+    await setCachedAvatarUrl(targetUserId, summary.url);
+
+    return NextResponse.json(summary, { status: 200 });
   } catch (err) {
-    // DB transaction failed — roll back the just-uploaded MinIO object so we
-    // don't leave an orphan blob.
-    removeObject(PUBLIC_BUCKET, objectKey).catch(() => {
-      /* non-fatal */
-    });
+    removeObject(PUBLIC_BUCKET, objectKey).catch(() => {});
     throw err;
   }
 }
 
 /**
  * @swagger
- * /api/groups/{id}/avatar:
+ * /api/users/{id}/avatar:
  *   delete:
- *     summary: Remove the group logo
+ *     summary: Remove a user's avatar
  *     description: >
- *       Unlinks the group logo by setting `logo_file_id` to null and
- *       soft-deletes the associated File row, followed by best-effort removal
- *       of the object from storage. A no-op (204) is returned if no logo is
- *       currently set. Only the group owner may call this endpoint.
+ *       Removable by the user themselves, or by any admin. A no-op (204) if
+ *       no avatar is currently set.
  *     tags:
- *       - Groups
+ *       - Users
  *     security:
  *       - cookieAuth: []
  *     parameters:
@@ -245,63 +219,62 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
- *         description: Group UUID
  *     responses:
  *       204:
- *         description: Logo removed (or no logo was set)
+ *         description: Avatar removed (or none was set)
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Caller is not the group owner
- *       404:
- *         description: Group not found or soft-deleted
+ *         description: Caller is neither the user nor an admin
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);
 
-  const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  const { id: targetUserId } = await params;
 
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    select: { id: true, owner_id: true, deleted_at: true, logo_file_id: true },
-  });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
-  if (group.owner_id !== auth.user.sub) {
-    return Errors.forbidden('Only the group owner can remove the logo');
+  const isSelf = targetUserId === auth.user.sub;
+  if (!isSelf) {
+    const adminAuth = await requireAdmin(req);
+    if (!adminAuth.ok) {
+      return adminAuth.status === 401
+        ? Errors.unauthorized(adminAuth.error)
+        : Errors.forbidden('Only the user themselves or an admin can remove this avatar');
+    }
   }
 
-  const previousLogoId = group.logo_file_id;
-  if (!previousLogoId) {
+  const profile = await prisma.userProfile.findUnique({
+    where: { id: targetUserId },
+    select: { avatar_file_id: true },
+  });
+  const previousAvatarId = profile?.avatar_file_id ?? null;
+  if (!previousAvatarId) {
     return new NextResponse(null, { status: 204 });
   }
 
   const removed = await prisma.$transaction(async (tx) => {
-    await tx.group.update({
-      where: { id: groupId },
-      data: { logo_file_id: null, updated_by: auth.user.sub },
+    await tx.userProfile.update({
+      where: { id: targetUserId },
+      data: { avatar_file_id: null },
     });
 
     const prev = await tx.file.findUnique({
-      where: { id: previousLogoId },
+      where: { id: previousAvatarId },
       select: { bucket: true, object_key: true, deleted_at: true },
     });
     if (!prev || prev.deleted_at) return null;
 
     await tx.file.update({
-      where: { id: previousLogoId },
+      where: { id: previousAvatarId },
       data: { deleted_at: new Date(), deleted_by: auth.user.sub },
     });
     return { bucket: prev.bucket, object_key: prev.object_key };
   });
 
   if (removed) {
-    removeObject(removed.bucket, removed.object_key).catch(() => {
-      /* non-fatal */
-    });
+    removeObject(removed.bucket, removed.object_key).catch(() => {});
   }
+  await clearCachedAvatarUrl(targetUserId);
 
   return new NextResponse(null, { status: 204 });
 }

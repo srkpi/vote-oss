@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
+import { getAvatarUrlMap } from '@/lib/avatars';
 import {
   getCachedElections,
   getCachedUserVotedElections,
@@ -335,6 +336,13 @@ export async function GET(req: NextRequest) {
   const petitionsSort = type === 'PETITION' ? parsePetitionsSort(req) : null;
   const sortedPetitionIds = petitionsSort ? await getSortedPetitionIds(petitionsSort) : null;
 
+  const authorIds = new Set<string>();
+  for (const e of cachedWithLiveCounts) {
+    authorIds.add(e.createdBy);
+    if (e.approvedById) authorIds.add(e.approvedById);
+  }
+  const avatarMap = await getAvatarUrlMap([...authorIds]);
+
   const elections = toClientElections(
     cachedWithLiveCounts,
     {
@@ -351,6 +359,7 @@ export async function GET(req: NextRequest) {
     votedSet,
     groupMemberships,
     type,
+    avatarMap,
     adminRecord,
     adminGraph,
   );

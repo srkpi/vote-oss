@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { Alert } from '@/components/ui/alert';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,7 +21,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { StyledSelect } from '@/components/ui/styled-select';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { pluralize } from '@/lib/utils/common';
+import { cn, pluralize } from '@/lib/utils/common';
 import type { AdminGroupSummary, GroupType } from '@/types/group';
 import { GROUP_TYPE_LABELS } from '@/types/group';
 
@@ -92,7 +93,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
     <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
       <div className="border-border-subtle flex flex-col gap-4 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="navy-gradient flex h-8 w-8 items-center justify-center rounded-lg">
+          <div className="bg-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">
             <Users className="h-4 w-4 text-white" />
           </div>
           <div>
@@ -147,9 +148,20 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                   <tr key={group.id} className="hover:bg-surface group transition-colors">
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="navy-gradient flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white">
-                          {group.name.charAt(0)}
-                        </div>
+                        <Avatar
+                          src={group.requisites.logo?.url}
+                          name={group.name}
+                          size={32}
+                          shape="rounded"
+                          className={cn(
+                            !group.requisites.logo &&
+                              (group.isOwner
+                                ? 'bg-kpi-orange'
+                                : group.isMember
+                                  ? 'bg-kpi-navy'
+                                  : 'bg-gray-400'),
+                          )}
+                        />
                         <p className="font-body text-foreground max-w-xs truncate text-sm font-medium">
                           {group.name}
                         </p>
@@ -207,9 +219,20 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="navy-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold text-white">
-                      {group.name.charAt(0)}
-                    </div>
+                    <Avatar
+                      src={group.requisites.logo?.url}
+                      name={group.name}
+                      size={36}
+                      shape="rounded"
+                      className={cn(
+                        !group.requisites.logo &&
+                          (group.isOwner
+                            ? 'bg-kpi-orange'
+                            : group.isMember
+                              ? 'bg-kpi-navy'
+                              : 'bg-gray-400'),
+                      )}
+                    />
                     <div>
                       <p className="font-body text-foreground text-sm font-semibold">
                         {group.name}

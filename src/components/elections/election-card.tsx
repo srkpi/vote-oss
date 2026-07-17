@@ -1,6 +1,7 @@
-import { Calendar, Crown, FileText, User } from 'lucide-react';
+import { Calendar, Crown, FileText } from 'lucide-react';
 import Link from 'next/link';
 
+import { Avatar } from '@/components/ui/avatar';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { cn, pluralize } from '@/lib/utils/common';
@@ -118,7 +119,12 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           </div>
 
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <User className="text-kpi-gray-mid h-4 w-4 shrink-0" />
+            <Avatar
+              icon
+              src={election.createdBy.avatarUrl}
+              name={election.createdBy.fullName}
+              size={16}
+            />
             <span>{election.createdBy.fullName}</span>
           </div>
         </div>

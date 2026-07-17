@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
@@ -22,6 +23,7 @@ jest.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
+jest.mock('@/lib/avatars', () => avatarsMock);
 
 import { GET, POST } from '@/app/api/elections/route';
 
@@ -77,6 +79,7 @@ describe('GET /api/elections', () => {
     resetTokenStoreMock();
     resetCacheMock();
     resetCampusMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('List Elections');
   });

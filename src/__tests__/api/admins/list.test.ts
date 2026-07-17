@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   ADMIN_API,
@@ -18,6 +19,7 @@ import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-s
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
 jest.mock('@/lib/cache', () => cacheMock);
+jest.mock('@/lib/avatars', () => avatarsMock);
 
 import { GET } from '@/app/api/admins/route';
 
@@ -26,6 +28,7 @@ describe('GET /api/admins', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Admins');
     allure.story('List Admins');
   });

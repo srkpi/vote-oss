@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin, requireAuth } from '@/lib/auth';
+import { getAvatarUrlMap } from '@/lib/avatars';
 import { getElectionBypassForUser } from '@/lib/bypass';
 import { getCachedElections, invalidateElections, overlayLiveBallotCounts } from '@/lib/cache';
 import { fetchFacultyGroups } from '@/lib/campus-api';
@@ -493,6 +494,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     choices = shuffleChoicesForUser(choices, user.sub, electionId);
   }
 
+  const avatarMap = await getAvatarUrlMap(
+    [electionData.createdBy, electionData.approvedById].filter((id): id is string => !!id),
+  );
+
   return NextResponse.json({
     id: electionData.id,
     type: electionData.type,
@@ -513,11 +518,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     createdBy: {
       userId: electionData.createdBy,
       fullName: electionData.createdByFullName,
+      avatarUrl: avatarMap.get(electionData.createdBy) ?? null,
     },
     approved: electionData.approved,
     approvedBy:
       electionData.approvedById && electionData.approvedByFullName
-        ? { userId: electionData.approvedById, fullName: electionData.approvedByFullName }
+        ? {
+            userId: electionData.approvedById,
+            fullName: electionData.approvedByFullName,
+            avatarUrl: avatarMap.get(electionData.approvedById) ?? null,
+          }
         : null,
     approvedAt: electionData.approvedAt?.toISOString?.() ?? electionData.approvedAt ?? null,
     choices,

@@ -14,6 +14,7 @@ export interface GroupMemberSummary {
   role: string | null;
   joinedAt: string;
   isOwner: boolean;
+  avatarUrl: string | null;
 }
 
 export interface GroupInviteLinkUsageSummary {
@@ -114,6 +115,9 @@ export interface AdminGroupSummary {
   ownerId: string;
   ownerName: string | null;
   memberCount: number;
+  requisites: GroupRequisites;
   createdAt: string;
   deletedAt: string | null;
+  isOwner: boolean;
+  isMember: boolean;
 }

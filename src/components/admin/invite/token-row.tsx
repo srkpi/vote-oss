@@ -1,5 +1,6 @@
 import { Clock, Trash2 } from 'lucide-react';
 
+import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, tokenExpiresLabel, tokenUsageColor, tokenUsageFraction } from '@/lib/utils/common';
@@ -24,9 +25,7 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
     >
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <div className="navy-gradient flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white">
-            {token.creator.fullName.charAt(0)}
-          </div>
+          <Avatar src={token.creator.avatarUrl} name={token.creator.fullName} size={28} />
           <div>
             <p className="font-body text-foreground text-sm">{token.creator.fullName}</p>
             <p className="font-body text-muted-foreground text-xs">{token.creator.userId}</p>

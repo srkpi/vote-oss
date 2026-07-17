@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
@@ -28,6 +29,7 @@ jest.mock('@/lib/encryption', () => ({
 jest.mock('@/lib/bypass', () => ({
   getElectionBypassForUser: jest.fn().mockResolvedValue(null),
 }));
+jest.mock('@/lib/avatars', () => avatarsMock);
 
 import { GET as getBallots } from '@/app/api/elections/[id]/ballots/route';
 import { GET as getDetail } from '@/app/api/elections/[id]/route';
@@ -169,6 +171,7 @@ describe('POST /api/elections — shuffleChoices', () => {
     resetTokenStoreMock();
     resetCacheMock();
     resetCampusMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Create Election – Shuffle Choices');
   });
@@ -270,6 +273,7 @@ describe('GET /api/elections — shuffleChoices', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('List Elections – Shuffle Choices');
   });
@@ -335,6 +339,7 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Shuffle Choices');
   });
@@ -450,6 +455,7 @@ describe('GET /api/elections/[id]/ballots — shuffleChoices', () => {
     resetPrismaMock();
     resetTokenStoreMock();
     resetCacheMock();
+    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Ballot Transparency – Shuffle Choices');
   });
