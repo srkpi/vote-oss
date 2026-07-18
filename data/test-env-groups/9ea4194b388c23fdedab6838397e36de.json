@@ -1,1 +1,1 @@
-{"id":"9ea4194b388c23fdedab6838397e36de","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache setCachedAdmins stores the admin array with TTL","name":"stores the admin array with TTL","status":"passed","testResultsByEnv":{"default":"dd6603ae8dd3e9780ddfb7fa13b5700b"}}
+{"id":"9ea4194b388c23fdedab6838397e36de","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache setCachedAdmins stores the admin array with TTL","name":"stores the admin array with TTL","status":"passed","testResultsByEnv":{"default":"6d96f5e94f821e37d7034b6da42fc7f2"}}

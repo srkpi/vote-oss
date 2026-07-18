@@ -1,1 +1,1 @@
-{"id":"5607a41bc55ff8f12e1653b1d97e06e3","fullName":"vote-oss:src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups returns 500 when campus API throws","name":"returns 500 when campus API throws","status":"passed","testResultsByEnv":{"default":"817206b11861c3ea8e694a5c06adea80"}}
+{"id":"5607a41bc55ff8f12e1653b1d97e06e3","fullName":"vote-oss:src/__tests__/api/campus/groups.test.ts#GET /api/campus/groups returns 500 when campus API throws","name":"returns 500 when campus API throws","status":"passed","testResultsByEnv":{"default":"9423ffbd659508b441ccafd5032507b7"}}
