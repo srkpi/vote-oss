@@ -50,7 +50,7 @@ export function Avatar({
     <div
       className={cn(
         'relative inline-flex shrink-0 items-center justify-center overflow-hidden select-none',
-        !icon && 'bg-kpi-navy text-white',
+        !icon && !src && 'bg-kpi-navy text-white',
         SHAPE_CLASSES[shape],
         className,
       )}
