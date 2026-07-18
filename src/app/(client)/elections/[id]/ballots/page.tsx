@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { BallotsClient } from '@/components/elections/ballots-client';
 import { Alert } from '@/components/ui/alert';
 import { serverApi } from '@/lib/api/server';
+import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
 
 interface BallotsPageProps {
@@ -34,7 +35,10 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
 
   if (await isBotRequest()) return null;
 
-  const { data, error, status } = await serverApi.elections.getBallots(id);
+  const [session, { data, error, status }] = await Promise.all([
+    getServerSession(),
+    serverApi.elections.getBallots(id),
+  ]);
 
   if (status === 404) notFound();
 
@@ -82,7 +86,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
             {error}
           </Alert>
         ) : (
-          <BallotsClient initialData={data} />
+          <BallotsClient initialData={data} isAdmin={session?.isAdmin ?? false} />
         )}
       </div>
     </div>

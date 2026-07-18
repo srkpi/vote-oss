@@ -64,6 +64,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(
     groups.map((g) => {
       const ownerMember = g.members.find((m) => m.user_id === g.owner_id);
+      const isOwner = g.owner_id === auth.admin.user_id;
+      const isMember = isOwner || g.members.some((m) => m.user_id === auth.admin.user_id);
+
       return {
         id: g.id,
         name: g.name,
@@ -80,6 +83,8 @@ export async function GET(req: NextRequest) {
         },
         createdAt: g.created_at.toISOString(),
         deletedAt: g.deleted_at?.toISOString() ?? null,
+        isOwner,
+        isMember,
       };
     }),
   );

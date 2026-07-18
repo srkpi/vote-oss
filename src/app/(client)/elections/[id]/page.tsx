@@ -13,10 +13,10 @@ import { RestrictedVoteBanner } from '@/components/elections/restricted-vote-ban
 import { ResultsSection } from '@/components/elections/results-section';
 import { VoteStatusWrapper } from '@/components/elections/vote-status-wrapper';
 import { WinningConditionsDisplay } from '@/components/elections/winning-conditions-display';
-import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { serverApi } from '@/lib/api/server';
 import { APP_URL } from '@/lib/config/client';
 import { checkRestrictionsWithBypass } from '@/lib/restrictions';
@@ -140,10 +140,12 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
               </h1>
               <div className="font-body text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
                 <span className="flex items-center gap-1.5">
-                  <Avatar
+                  <UserAvatarMenu
                     icon
-                    src={election.createdBy.avatarUrl}
-                    name={election.createdBy.fullName}
+                    userId={election.createdBy.userId}
+                    fullName={election.createdBy.fullName}
+                    avatarUrl={election.createdBy.avatarUrl}
+                    canDelete={session.isAdmin}
                     size={election.createdBy.avatarUrl ? 32 : 16}
                   />
                   {election.createdBy.fullName}

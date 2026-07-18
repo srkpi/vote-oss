@@ -6,6 +6,7 @@ import { Bitter, Onest } from 'next/font/google';
 import { APP_NAME, APP_URL } from '@/lib/config/client';
 import { cn } from '@/lib/utils/common';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
+import { AvatarDeleteDialogProvider } from '@/providers/avatar-delete-dialog-provider';
 import { ToastProvider } from '@/providers/toast-provider';
 
 const onest = Onest({
@@ -62,7 +63,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
       </head>
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <AvatarDeleteDialogProvider>{children}</AvatarDeleteDialogProvider>
+        </ToastProvider>
       </body>
     </html>
   );

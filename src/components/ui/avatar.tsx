@@ -69,7 +69,14 @@ export function Avatar({
       ) : icon ? (
         <User style={{ width: size, height: size }} />
       ) : (
-        <span className="leading-none font-semibold">{initialFrom(name)}</span>
+        <span
+          className={cn(
+            'relative leading-none font-semibold',
+            size > 32 ? 'top-px' : size <= 16 ? '' : 'top-[-0.5px]',
+          )}
+        >
+          {initialFrom(name)}
+        </span>
       )}
     </div>
   );

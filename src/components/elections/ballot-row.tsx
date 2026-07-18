@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 
 import { Avatar } from '@/components/ui/avatar';
+import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
+import { useAvatar } from '@/hooks/use-avatar';
 import { cn } from '@/lib/utils/common';
 import type { Ballot, DecryptionResult } from '@/types/ballot';
 import type { ElectionChoice } from '@/types/election';
@@ -24,7 +26,7 @@ interface BallotRowProps {
   choices: ElectionChoice[];
   isMyBallot?: boolean;
   myStoredChoiceLabels?: string[];
-  voterAvatarUrl?: string | null;
+  isAdmin?: boolean;
 }
 
 export function BallotRow({
@@ -36,11 +38,12 @@ export function BallotRow({
   choices,
   isMyBallot = false,
   myStoredChoiceLabels,
-  voterAvatarUrl = null,
+  isAdmin = false,
 }: BallotRowProps) {
   const isMalformed = decryption !== undefined && !decryption.valid;
   const isBadHash = decryption !== undefined && !decryption.hashValid;
   const isAnomalous = isMalformed || isBadHash;
+  const voterAvatarUrl = useAvatar(decryption?.voter?.userId);
 
   // Compare locally-stored choice with the decrypted one
   const myChoiceVerified =
@@ -205,7 +208,14 @@ export function BallotRow({
                   Голосуючий
                 </p>
                 <div className="border-kpi-blue-light/30 bg-info-bg flex items-center gap-2 rounded-(--radius) border p-3">
-                  <Avatar icon src={voterAvatarUrl} name={decryption.voter.fullName} size={20} />
+                  <UserAvatarMenu
+                    icon
+                    userId={decryption.voter.userId}
+                    fullName={decryption.voter.fullName}
+                    avatarUrl={voterAvatarUrl}
+                    canDelete={isAdmin}
+                    size={20}
+                  />
                   <div className="min-w-0">
                     <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
                       {decryption.voter.fullName}

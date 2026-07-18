@@ -90,7 +90,6 @@ export interface User {
   manageGroups: boolean;
   managePetitions: boolean;
   manageFaq: boolean;
-  avatarUrl: string | null;
 }
 
 export type AuthFailure = {

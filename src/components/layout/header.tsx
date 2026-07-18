@@ -8,8 +8,10 @@ import { useRef, useState } from 'react';
 
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { useAvatar, useSelfAvatarSync } from '@/hooks/use-avatar';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
+import { setSelfAvatar } from '@/lib/avatar-store';
 import { APP_NAME } from '@/lib/config/client';
 import type { StudyFormValue } from '@/lib/constants';
 import { AVATAR_ALLOWED_IMAGE_MIME_TYPES, AVATAR_MAX_SIZE_BYTES } from '@/lib/constants';
@@ -29,9 +31,11 @@ export function Header({ session }: HeaderProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(session?.avatarUrl ?? null);
+  const avatarUrl = useAvatar(session?.userId);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useSelfAvatarSync(session?.userId);
 
   const navLinks = [
     { label: 'Голосування', href: '/elections' },
@@ -79,9 +83,8 @@ export function Header({ session }: HeaderProps) {
     const result = await api.users.avatar.set(session.userId, file);
     setAvatarBusy(false);
     if (result.success) {
-      setAvatarUrl(result.data.url);
+      setSelfAvatar(session.userId, result.data.url);
       toast({ title: 'Аватар оновлено', variant: 'success' });
-      router.refresh();
     } else {
       toast({
         title: 'Не вдалося завантажити аватар',
@@ -97,9 +100,8 @@ export function Header({ session }: HeaderProps) {
     const result = await api.users.avatar.remove(session.userId);
     setAvatarBusy(false);
     if (result.success) {
-      setAvatarUrl(null);
+      setSelfAvatar(session.userId, null);
       toast({ title: 'Аватар видалено', variant: 'success' });
-      router.refresh();
     } else {
       toast({ title: 'Не вдалося видалити аватар', description: result.error, variant: 'error' });
     }

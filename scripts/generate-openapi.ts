@@ -65,10 +65,11 @@ const spec = createSwaggerSpec({
         UserRef: {
           type: 'object',
           description: 'Minimal user reference embedded in other resources.',
-          required: ['userId', 'fullName'],
+          required: ['userId', 'fullName', 'avatarUrl'],
           properties: {
             userId: { type: 'string' },
             fullName: { type: 'string' },
+            avatarUrl: { type: 'string', nullable: true },
           },
         },
 
@@ -116,6 +117,7 @@ const spec = createSwaggerSpec({
           required: [
             'userId',
             'fullName',
+            'avatarUrl',
             'group',
             'faculty',
             'promotedAt',
@@ -131,6 +133,7 @@ const spec = createSwaggerSpec({
               description: 'Unique identifier matching the KPI-ID subject claim.',
             },
             fullName: { type: 'string' },
+            avatarUrl: { type: 'string', nullable: true },
             group: { type: 'string' },
             faculty: { type: 'string' },
             promoter: {
@@ -322,15 +325,6 @@ const spec = createSwaggerSpec({
           ],
         },
 
-        ElectionAuthor: {
-          type: 'object',
-          required: ['userId', 'fullName'],
-          properties: {
-            userId: { type: 'string' },
-            fullName: { type: 'string' },
-          },
-        },
-
         ElectionType: {
           type: 'string',
           enum: ['ELECTION', 'PETITION'],
@@ -483,10 +477,10 @@ const spec = createSwaggerSpec({
                 type: { $ref: '#/components/schemas/ElectionType' },
                 createdAt: { type: 'string', format: 'date-time' },
                 status: { $ref: '#/components/schemas/ElectionStatus' },
-                createdBy: { $ref: '#/components/schemas/ElectionAuthor' },
+                createdBy: { $ref: '#/components/schemas/UserRef' },
                 approved: { type: 'boolean' },
                 approvedBy: {
-                  allOf: [{ $ref: '#/components/schemas/ElectionAuthor' }],
+                  allOf: [{ $ref: '#/components/schemas/UserRef' }],
                   nullable: true,
                 },
                 approvedAt: { type: 'string', format: 'date-time', nullable: true },
@@ -514,6 +508,17 @@ const spec = createSwaggerSpec({
                     'Resolved group names for GROUP_MEMBERSHIP restrictions. Only present on the election detail endpoint.',
                 },
                 // Admin-only fields (absent for regular users)
+                editedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  nullable: true,
+                  description: 'Only present for admin-authenticated responses.',
+                },
+                editedBy: {
+                  nullable: true,
+                  allOf: [{ $ref: '#/components/schemas/UserRef' }],
+                  description: 'Only present for admin-authenticated responses.',
+                },
                 deletedAt: {
                   type: 'string',
                   format: 'date-time',
@@ -523,6 +528,10 @@ const spec = createSwaggerSpec({
                 deletedBy: {
                   nullable: true,
                   allOf: [{ $ref: '#/components/schemas/UserRef' }],
+                  description: 'Only present for admin-authenticated responses.',
+                },
+                canEdit: {
+                  type: 'boolean',
                   description: 'Only present for admin-authenticated responses.',
                 },
                 canDelete: {
@@ -583,7 +592,7 @@ const spec = createSwaggerSpec({
           properties: {
             id: { type: 'string', format: 'uuid' },
             approved: { type: 'boolean', example: true },
-            approvedBy: { $ref: '#/components/schemas/ElectionAuthor' },
+            approvedBy: { $ref: '#/components/schemas/UserRef' },
             approvedAt: { type: 'string', format: 'date-time' },
             opensAt: {
               type: 'string',
@@ -595,7 +604,7 @@ const spec = createSwaggerSpec({
               format: 'date-time',
               description: 'Set to approvedAt + 1 calendar month.',
             },
-            createdBy: { $ref: '#/components/schemas/ElectionAuthor' },
+            createdBy: { $ref: '#/components/schemas/UserRef' },
           },
         },
 
@@ -988,7 +997,7 @@ const spec = createSwaggerSpec({
 
         GroupMember: {
           type: 'object',
-          required: ['userId', 'displayName', 'joinedAt', 'isOwner'],
+          required: ['userId', 'displayName', 'joinedAt', 'isOwner', 'avatarUrl'],
           properties: {
             userId: { type: 'string' },
             displayName: { type: 'string' },
@@ -999,6 +1008,7 @@ const spec = createSwaggerSpec({
             },
             joinedAt: { type: 'string', format: 'date-time' },
             isOwner: { type: 'boolean' },
+            avatarUrl: { type: 'string', nullable: true },
           },
         },
 
@@ -1111,7 +1121,17 @@ const spec = createSwaggerSpec({
         AdminGroupSummary: {
           type: 'object',
           description: 'Compact group summary returned by GET /api/groups/all (admin only).',
-          required: ['id', 'name', 'type', 'ownerId', 'memberCount', 'createdAt'],
+          required: [
+            'id',
+            'name',
+            'type',
+            'ownerId',
+            'memberCount',
+            'requisites',
+            'createdAt',
+            'isOwner',
+            'isMember',
+          ],
           properties: {
             id: { type: 'string', format: 'uuid' },
             name: { type: 'string' },
@@ -1119,8 +1139,11 @@ const spec = createSwaggerSpec({
             ownerId: { type: 'string' },
             ownerName: { type: 'string', nullable: true },
             memberCount: { type: 'integer', minimum: 0 },
+            requisites: { $ref: '#/components/schemas/GroupRequisites' },
             createdAt: { type: 'string', format: 'date-time' },
             deletedAt: { type: 'string', format: 'date-time', nullable: true },
+            isOwner: { type: 'boolean' },
+            isMember: { type: 'boolean' },
           },
         },
 

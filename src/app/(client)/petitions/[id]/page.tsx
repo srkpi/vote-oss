@@ -7,9 +7,9 @@ import { PageHeader } from '@/components/common/page-header';
 import { PetitionAdminActions } from '@/components/petitions/petition-admin-actions';
 import { PetitionSignatories } from '@/components/petitions/petition-signatories';
 import { SignPetitionPanel } from '@/components/petitions/sign-petition-panel';
-import { Avatar } from '@/components/ui/avatar';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { serverApi } from '@/lib/api/server';
 import { APP_URL } from '@/lib/config/client';
 import { PETITION_QUORUM } from '@/lib/constants';
@@ -124,10 +124,12 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
               <div className="font-body text-muted-foreground mt-4 space-y-1 text-sm">
                 <span className="flex min-w-0 items-center gap-1.5">
-                  <Avatar
+                  <UserAvatarMenu
                     icon
-                    src={petition.createdBy.avatarUrl}
-                    name={petition.createdBy.fullName}
+                    userId={petition.createdBy.userId}
+                    avatarUrl={petition.createdBy.avatarUrl}
+                    fullName={petition.createdBy.fullName}
+                    canDelete={session.isAdmin}
                     size={16}
                   />
                   <span className="truncate">{petition.createdBy.fullName}</span>
@@ -162,6 +164,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                 ballotCount={petition.ballotCount}
                 initialData={signatoriesResult?.data ?? null}
                 fetchError={signatoriesResult?.error ?? null}
+                isAdmin={session.isAdmin}
               />
             )}
           </div>

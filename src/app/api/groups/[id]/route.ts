@@ -315,7 +315,7 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
   if (!group) throw new GroupNotFoundError();
 
   const isOwner = group.owner_id === user.sub;
-  const isMember = group.members.some((m) => m.user_id === user.sub);
+  const isMember = isOwner || group.members.some((m) => m.user_id === user.sub);
   const canManage = isOwner || isAdminWithManageGroups;
   const hasAnyProtocol = group._count.protocols > 0;
 

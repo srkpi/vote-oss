@@ -47,6 +47,7 @@ export const REGISTRATION_FORMS_PAGE_SIZE = 24;
 export const REGISTRATION_FORMS_ADMIN_PAGE_SIZE = 10;
 export const REGISTRATION_SUBMISSIONS_PAGE_SIZE = 10;
 export const BALLOTS_PAGE_SIZE = 20;
+export const SIGNATORIES_PAGE_SIZE = 20;
 
 // Admin invite token limits
 export const INVITE_TOKEN_LENGTH = 16;
@@ -208,6 +209,7 @@ export const CACHE_KEY_AVATAR_PREFIX = 'cache:avatar:';
 export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
 export const LOCAL_STORAGE_ELECTIONS_VIEW_KEY = 'elections_view';
 export const LOCAL_STORAGE_REGISTRATION_VIEW_KEY = 'registration_view';
+export const LOCAL_STORAGE_AVATAR_KEY_PREFIX = 'avatar_';
 export const SESSION_USER_KEY = 'session_user_id';
 export const CONFETTI_KEY_PREFIX = 'election_confetti_shown_';
 

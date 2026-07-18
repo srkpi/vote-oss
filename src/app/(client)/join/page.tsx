@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
 import { JoinAdminForm } from '@/components/admin/join-admin-form';
-import { Avatar } from '@/components/ui/avatar';
+import { SelfAvatar } from '@/components/ui/self-avatar';
 import { getServerSession } from '@/lib/server-auth';
+import type { User } from '@/types/auth';
 
 export const metadata: Metadata = {
   title: 'Приєднатися як адміністратор',
@@ -31,7 +32,7 @@ export function JoinPageContent({
   session,
   initialToken,
 }: {
-  session: { fullName: string; faculty: string; group: string; avatarUrl: string | null };
+  session: User;
   initialToken?: string;
 }) {
   return (
@@ -56,7 +57,7 @@ export function JoinPageContent({
 
             {/* User info banner */}
             <div className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3.5">
-              <Avatar src={session.avatarUrl} name={session.fullName} size={36} />
+              <SelfAvatar userId={session.userId} fullName={session.fullName} size={36} />
               <div className="min-w-0 flex-1">
                 <p className="font-body text-foreground text-sm font-semibold wrap-break-word">
                   {session.fullName}

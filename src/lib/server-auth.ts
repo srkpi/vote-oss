@@ -3,7 +3,6 @@
 import { headers } from 'next/headers';
 import { cache } from 'react';
 
-import { getAvatarUrlMap } from '@/lib/avatars';
 import type { User } from '@/types/auth';
 
 function decodeHeader(headerValue: string | null): string {
@@ -22,7 +21,6 @@ export const getServerSession = cache(async (): Promise<User | null> => {
 
   const isAdmin = h.get('x-user-is-admin') === 'true';
   const studyYearRaw = h.get('x-user-study-year');
-  const avatarMap = await getAvatarUrlMap([userId]);
 
   return {
     userId,
@@ -38,6 +36,5 @@ export const getServerSession = cache(async (): Promise<User | null> => {
     manageGroups: isAdmin && h.get('x-user-manage-groups') === 'true',
     managePetitions: isAdmin && h.get('x-user-manage-petitions') === 'true',
     manageFaq: isAdmin && h.get('x-user-manage-faq') === 'true',
-    avatarUrl: avatarMap.get(userId) ?? null,
   };
 });

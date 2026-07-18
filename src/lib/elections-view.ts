@@ -201,7 +201,7 @@ export function toClientElections(
             ? {
                 userId: e.approvedById,
                 fullName: e.approvedByFullName,
-                avatarUrl: avatarMap.get(e.createdBy) ?? null,
+                avatarUrl: avatarMap.get(e.approvedById) ?? null,
               }
             : null,
         approvedAt: e.approvedAt,
@@ -248,11 +248,19 @@ export function toClientElections(
           ...base,
           deletedAt: e.deletedAt,
           deletedBy: e.deletedByUserId
-            ? { userId: e.deletedByUserId, fullName: e.deletedByName ?? '' }
+            ? {
+                userId: e.deletedByUserId,
+                fullName: e.deletedByName ?? '',
+                avatarUrl: avatarMap.get(e.deletedByUserId) ?? null,
+              }
             : null,
           editedAt: e.editedAt,
           editedBy: e.editedByUserId
-            ? { userId: e.editedByUserId, fullName: e.editedByName ?? '' }
+            ? {
+                userId: e.editedByUserId,
+                fullName: e.editedByName ?? '',
+                avatarUrl: avatarMap.get(e.editedByUserId) ?? null,
+              }
             : null,
           canDelete,
           canRestore,

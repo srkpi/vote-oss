@@ -314,7 +314,7 @@ export function GroupDetailClient({
   const canCreateElection = session.isAdmin && canManage;
   // ВКСУ-tab visibility: only active members of a VKSU-typed group can manage
   // candidate registration forms.
-  const isActiveMember = group.members.some((m) => m.userId === session.userId);
+  const isActiveMember = isOwner || group.members.some((m) => m.userId === session.userId);
   const canManageRegistrationForms = group.type === 'VKSU' && isActiveMember;
 
   // ── Elections filter / pagination ─────────────────────────────────────────
@@ -852,9 +852,6 @@ export function GroupDetailClient({
                         avatarUrl={member.avatarUrl}
                         size={36}
                         canDelete={session.isAdmin}
-                        onDeleted={() => {
-                          /* optimistically clear locally, or just refetch the group */
-                        }}
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
