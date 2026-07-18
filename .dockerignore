@@ -42,6 +42,8 @@ coverage
 *.tsbuildinfo
 .prettierignore
 .prettierrc
+Caddyfile
+images
 
 # IDE / OS
 .vscode
