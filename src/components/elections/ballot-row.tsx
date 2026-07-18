@@ -94,7 +94,7 @@ export function BallotRow({
             >
               {decryption.valid && decryption.choiceLabels ? (
                 <>
-                  <Vote className="mr-1 inline h-3 w-3" />
+                  <Vote className="mr-1 inline h-4 w-4" />
                   {decryption.choiceLabels.join(', ')}
                 </>
               ) : (
@@ -110,7 +110,7 @@ export function BallotRow({
                 icon
                 src={voterAvatarUrl}
                 name={decryption.voter.fullName}
-                size={12}
+                size={16}
                 className="mr-1 inline-flex align-text-bottom"
               />
               <p className="truncate text-xs">{decryption.voter.fullName}</p>
@@ -214,7 +214,7 @@ export function BallotRow({
                     fullName={decryption.voter.fullName}
                     avatarUrl={voterAvatarUrl}
                     canDelete={isAdmin}
-                    size={20}
+                    size={28}
                   />
                   <div className="min-w-0">
                     <p className="font-body text-foreground text-sm font-semibold wrap-break-word">

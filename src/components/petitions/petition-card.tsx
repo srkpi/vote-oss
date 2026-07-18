@@ -66,19 +66,19 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           </div>
         </div>
 
-        <div className="text-muted-foreground font-body min-w-0 space-y-1 text-xs">
+        <div className="text-muted-foreground font-body min-w-0 space-y-1.5 text-xs">
           <div className="flex min-w-0 items-center gap-1.5">
             <Avatar
               icon
               src={petition.createdBy.avatarUrl}
               name={petition.createdBy.fullName}
-              size={14}
+              size={16}
             />
             <span className="truncate">{petition.createdBy.fullName}</span>
           </div>
           {petition.approved && (
             <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 shrink-0" />
+              <Clock className="h-4 w-4 shrink-0" />
               <span>
                 до <LocalDate date={petition.closesAt} />
               </span>

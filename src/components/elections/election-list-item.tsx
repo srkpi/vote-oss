@@ -78,12 +78,12 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
               icon
               src={election.createdBy.avatarUrl}
               name={election.createdBy.fullName}
-              size={14}
+              size={16}
             />
             {election.createdBy.fullName}
           </span>
           <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
-            <Calendar className="h-3.5 w-3.5 shrink-0" />
+            <Calendar className="h-4 w-4 shrink-0" />
             {isOpen && (
               <>
                 До <LocalDateTime date={election.closesAt} />

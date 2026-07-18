@@ -72,6 +72,7 @@ export function UserAvatarMenu({
         onClick={() => setMenuOpen((v) => !v)}
         className={cn('rounded-full transition-opacity hover:opacity-80', className)}
         title={fullName}
+        style={{ width: size, height: size }}
       >
         <Avatar src={displayAvatarUrl} name={fullName} icon={icon} size={size} shape={shape} />
       </button>

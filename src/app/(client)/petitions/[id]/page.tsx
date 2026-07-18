@@ -130,17 +130,17 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
                     avatarUrl={petition.createdBy.avatarUrl}
                     fullName={petition.createdBy.fullName}
                     canDelete={session.isAdmin}
-                    size={16}
+                    size={20}
                   />
                   <span className="truncate">{petition.createdBy.fullName}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4 shrink-0" />
+                  <Calendar className="h-5 w-5 shrink-0" />
                   <LocalDateTime date={petition.createdAt} />
                 </span>
                 {petition.approved && petition.status === 'open' && (
                   <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 shrink-0" />
+                    <Clock className="h-5 w-5 shrink-0" />
                     діє до <LocalDate date={petition.closesAt} />
                   </span>
                 )}

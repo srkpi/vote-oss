@@ -146,7 +146,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                     fullName={election.createdBy.fullName}
                     avatarUrl={election.createdBy.avatarUrl}
                     canDelete={session.isAdmin}
-                    size={election.createdBy.avatarUrl ? 32 : 16}
+                    size={election.createdBy.avatarUrl ? 36 : 16}
                   />
                   {election.createdBy.fullName}
                 </span>
