@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, LogOut, Trash2, Upload, User as UserIcon } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Trash2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -294,12 +294,7 @@ export function Header({ session }: HeaderProps) {
             )}
             aria-label="Меню"
           >
-            {mobileOpen ? <UserIcon className="hidden" /> : null}
-            {mobileOpen ? (
-              <span className="sr-only">Закрити</span>
-            ) : (
-              <span className="sr-only">Меню</span>
-            )}
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
