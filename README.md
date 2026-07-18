@@ -2,7 +2,7 @@
 
 ![Vote OSS Readme Header](images/readme-header.png)
 
-[![License: MIT](https://img.shields.io/github/license/srkpi/vote-oss?label=License)](https://opensource.org/licenses/MIT) [![Docker](https://img.shields.io/docker/v/sckpi/vote-oss?label=Docker)](https://hub.docker.com/r/srkpi/vote-oss) [![Tests](https://img.shields.io/github/actions/workflow/status/srkpi/vote-oss/tests.yml?label=Tests)](https://github.com/srkpi/vote-oss/actions) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fvoteoss.kpi.ua%2Fapi%2Fhealth&label=Website)](https://voteoss.kpi.ua)
+[![License: MIT](https://img.shields.io/github/license/srkpi/vote-oss?label=License)](https://opensource.org/licenses/MIT) [![Docker](https://img.shields.io/docker/v/sckpi/vote-oss?label=Docker)](https://hub.docker.com/r/sckpi/vote-oss) [![Tests](https://img.shields.io/github/actions/workflow/status/srkpi/vote-oss/tests.yml?label=Tests)](https://github.com/srkpi/vote-oss/actions) [![Website](https://img.shields.io/website?url=https%3A%2F%2Fvoteoss.kpi.ua%2Fapi%2Fhealth&label=Website)](https://voteoss.kpi.ua)
 
 **Vote OSS** is an open-source, secure voting platform built for the students of the National Technical University of Ukraine "Igor Sikorsky Kyiv Polytechnic Institute". It provides anonymous, verifiable, and tamper-resistant elections using RSA encryption, a chained ballot ledger, and identity verification via the Ukrainian government's Diia app.
 
