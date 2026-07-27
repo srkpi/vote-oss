@@ -3,12 +3,11 @@
 import { Crown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import type { ChoiceSortOrder } from '@/components/elections/sort-choices-button';
 import { Alert } from '@/components/ui/alert';
 import { calculateVotePercentage, cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
 import type { ElectionChoice } from '@/types/election';
-
-import type { ChoiceSortOrder } from './sort-choices-button';
 
 const colors = [
   { bar: 'from-kpi-navy to-kpi-blue-mid', crown: 'text-kpi-navy' },

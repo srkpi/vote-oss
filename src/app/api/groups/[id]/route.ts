@@ -235,12 +235,14 @@ async function fetchGroupElections(
     votedSet = new Set();
   }
 
-  const authorIds = new Set<string>();
+  const avatarIds = new Set<string>();
   for (const e of groupElections) {
-    authorIds.add(e.createdBy);
-    if (e.approvedById) authorIds.add(e.approvedById);
+    avatarIds.add(e.createdBy);
+    if (e.approvedById) avatarIds.add(e.approvedById);
+    if (e.editedByUserId) avatarIds.add(e.editedByUserId);
+    if (e.deletedByUserId) avatarIds.add(e.deletedByUserId);
   }
-  const avatarMap = await getAvatarUrlMap([...authorIds]);
+  const avatarMap = await getAvatarUrlMap([...avatarIds]);
 
   let elections = toClientElections(
     groupElections,

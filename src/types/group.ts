@@ -1,5 +1,5 @@
-import type { Election } from './election';
-import type { FileSummary } from './file';
+import type { Election } from '@/types/election';
+import type { FileSummary } from '@/types/file';
 
 export type GroupType = 'VKSU' | 'OTHER';
 

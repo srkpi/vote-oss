@@ -1,106 +1,56 @@
-import { Calendar, Clock } from 'lucide-react';
-import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
-import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { PetitionAdminActions } from '@/components/petitions/petition-admin-actions';
-import { PetitionSignatories } from '@/components/petitions/petition-signatories';
+import { PetitionOfficialAnswer } from '@/components/petitions/petition-official-answer';
+import { PetitionStatusNotice } from '@/components/petitions/petition-status-notice';
+import { PetitionSupportBanner } from '@/components/petitions/petition-support-banner';
+import { PetitionTabs } from '@/components/petitions/petition-tabs';
 import { SignPetitionPanel } from '@/components/petitions/sign-petition-panel';
-import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
+import { LocalDate } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { serverApi } from '@/lib/api/server';
-import { APP_URL } from '@/lib/config/client';
 import { PETITION_QUORUM } from '@/lib/constants';
 import { getServerSession } from '@/lib/server-auth';
-import { isBotRequest } from '@/lib/utils/bot';
 import { linkifyText } from '@/lib/utils/linkify';
 
 interface PetitionPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: PetitionPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const { data, status } = await serverApi.elections.og(id);
-
-  let metaTitle = 'Петиція';
-  if (status === 404 || status === 400 || data?.type !== 'PETITION') {
-    metaTitle = 'Петицію не знайдено';
-  } else if (data?.title) {
-    metaTitle = data.title;
-  }
-
-  return {
-    title: metaTitle,
-    description: metaTitle,
-    openGraph: {
-      title: metaTitle,
-      description: metaTitle,
-      url: new URL(`/petitions/${id}`, APP_URL),
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: metaTitle,
-      description: metaTitle,
-    },
-  };
-}
-
 export default async function PetitionPage({ params }: PetitionPageProps) {
   const { id } = await params;
-
-  if (await isBotRequest()) return null;
-
   const session = await getServerSession();
   if (!session) redirect('/login');
 
   const { data: petition, error, status } = await serverApi.elections.get(id);
-
-  const signatoriesResult =
-    petition && petition.type === 'PETITION' && petition.approved && !petition.deletedAt
-      ? await serverApi.elections.getSignatories(id)
-      : null;
-
-  if (status === 404) notFound();
   if (!petition) {
+    if (status === 404) notFound();
     return (
-      <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-        <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
-          <ErrorState
-            title={status === 403 ? 'Доступ обмежено' : 'Помилка завантаження'}
-            description={error ?? 'Не вдалося завантажити дані петиції'}
-          />
-        </div>
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <p className="text-error text-sm">{error ?? 'Не вдалося завантажити петицію'}</p>
       </div>
     );
   }
 
-  // If a non-petition ID was used, redirect to election page
-  if (petition.type !== 'PETITION') {
-    redirect(`/elections/${petition.id}`);
-  }
-
-  if (petition.deletedAt) {
-    return (
-      <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-        <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
-          <ErrorState title="Петицію було видалено" />
-        </div>
-      </div>
-    );
-  }
-
-  const isCreator = petition.createdBy.userId === session.userId;
-  const isPetitionManager = session.isAdmin && session.managePetitions;
+  const isPetitionManager = Boolean(session.isAdmin && session.managePetitions);
+  const isOwner = petition.createdBy.userId === session.userId;
   const canApprove = isPetitionManager && !petition.approved;
   const canDelete = isPetitionManager;
+  const canSeeTabs = petition.approved || isPetitionManager || isOwner;
 
-  const quorum = petition.winningConditions.quorum ?? PETITION_QUORUM;
-  const pct = Math.min(100, Math.round((petition.ballotCount / quorum) * 100));
-  const reached = petition.ballotCount >= quorum;
-  const canSign = petition.approved && petition.status === 'open';
+  const [ballotsResult, commentsResult] = canSeeTabs
+    ? await Promise.all([
+        serverApi.elections.getSignatories(id),
+        serverApi.elections.comments.list(id),
+      ])
+    : [
+        { data: null, error: null },
+        { data: null, error: null },
+      ];
+
+  const quorum = petition.winningConditions?.quorum ?? PETITION_QUORUM;
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
@@ -109,134 +59,81 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
         title={petition.title}
         isContainer
       />
-      <div className="container py-8">
-        <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="min-w-0 space-y-6">
-            <div className="border-border-color shadow-shadow-sm min-w-0 rounded-xl border bg-white p-6 sm:p-8">
-              <div className="flex flex-wrap items-center gap-2">
-                {petition.approved ? (
-                  petition.status !== 'closed' && <StatusBadge status={petition.status} />
-                ) : (
-                  <StatusBadge status="pending" />
-                )}
-                {reached && <StatusBadge status="quorum" />}
-              </div>
 
-              <div className="font-body text-muted-foreground mt-4 space-y-1 text-sm">
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <UserAvatarMenu
-                    icon
-                    userId={petition.createdBy.userId}
-                    avatarUrl={petition.createdBy.avatarUrl}
-                    fullName={petition.createdBy.fullName}
-                    canDelete={session.isAdmin}
-                    size={20}
-                  />
-                  <span className="truncate">{petition.createdBy.fullName}</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="h-5 w-5 shrink-0" />
-                  <LocalDateTime date={petition.createdAt} />
-                </span>
-                {petition.approved && petition.status === 'open' && (
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-5 w-5 shrink-0" />
-                    діє до <LocalDate date={petition.closesAt} />
-                  </span>
-                )}
-              </div>
-
-              {petition.description && (
-                <div className="font-body text-foreground mt-6 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
-                  {linkifyText(petition.description)}
-                </div>
-              )}
+      <div className="container grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-6">
+          <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <StatusBadge status={petition.approved ? 'open' : 'pending'} />
             </div>
-
-            {canSign && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5 lg:hidden">
-                <SignPetitionPanel petition={petition} />
-              </div>
-            )}
-
-            {petition.approved && (
-              <PetitionSignatories
-                ballotCount={petition.ballotCount}
-                initialData={signatoriesResult?.data ?? null}
-                fetchError={signatoriesResult?.error ?? null}
-                isAdmin={session.isAdmin}
+            <h1 className="font-display mb-3 text-2xl font-bold">{petition.title}</h1>
+            <div className="text-muted-foreground mb-4 flex items-center gap-3 text-sm">
+              <UserAvatarMenu
+                icon
+                userId={petition.createdBy.userId}
+                avatarUrl={petition.createdBy.avatarUrl}
+                fullName={petition.createdBy.fullName}
+                canDelete={session.isAdmin}
+                size={petition.createdBy.avatarUrl ? 36 : 16}
               />
-            )}
+              <span className="truncate">{petition.createdBy.fullName}</span>
+              <span>·</span>
+              <LocalDate date={petition.createdAt} />
+            </div>
+            <div className="font-body text-sm whitespace-pre-wrap">
+              {linkifyText(petition.description ?? '')}
+            </div>
           </div>
 
-          <aside className="space-y-4">
-            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
-              <p className="font-display text-foreground mb-2 text-base font-semibold">
-                Підтримка петиції
-              </p>
-              <div className="mb-1.5 flex items-baseline justify-between gap-2">
-                <span className="font-body text-muted-foreground text-sm">
-                  <strong className="text-foreground text-lg">{petition.ballotCount}</strong> /{' '}
-                  {quorum}
-                </span>
-                <span className="font-body text-foreground text-sm font-semibold">{pct}%</span>
-              </div>
-              <div className="bg-surface h-2 w-full overflow-hidden rounded-full">
-                <div
-                  className={
-                    reached
-                      ? 'bg-kpi-navy h-full rounded-full transition-all duration-500'
-                      : 'bg-kpi-navy h-full rounded-full transition-all duration-500'
-                  }
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-            </div>
+          <PetitionOfficialAnswer
+            electionId={petition.id}
+            answer={petition.officialAnswer}
+            canManage={isPetitionManager}
+          />
 
-            {canSign && (
-              <div className="border-border-color shadow-shadow-sm hidden rounded-xl border bg-white p-5 lg:block">
-                <SignPetitionPanel petition={petition} />
-              </div>
-            )}
+          <div className="space-y-6 lg:hidden">
+            <PetitionSupportBanner ballotCount={petition.ballotCount} quorum={quorum} />
+            <SignPetitionPanel petition={petition} />
+            <PetitionStatusNotice approved={petition.approved} deleted={!!petition.deletedAt} />
+            <PetitionAdminActions
+              petitionId={petition.id}
+              canApprove={canApprove}
+              canDelete={canDelete}
+              canManageDiscussion={isPetitionManager}
+              discussionClosed={petition.commentsClosed}
+            />
+          </div>
 
-            {!petition.approved && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
-                <p className="font-display text-foreground mb-2 text-base font-semibold">
-                  Петиція очікує апруву
-                </p>
-                <p className="font-body text-muted-foreground text-sm">
-                  {isCreator
-                    ? 'Адміністратор перевірить вашу петицію і затвердить її або видалить.'
-                    : 'Адміністратор ще не затвердив цю петицію.'}
-                </p>
-              </div>
-            )}
-
-            {petition.approved && petition.status === 'closed' && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
-                <p className="font-display text-foreground mb-2 text-base font-semibold">
-                  {reached ? 'Петиція зібрала кворум' : 'Петиція завершена'}
-                </p>
-                <p className="font-body text-muted-foreground mt-1 text-sm">
-                  {reached
-                    ? 'Дякуємо всім, хто підписав. Її направлено на розгляд.'
-                    : 'Кворум у ' + quorum + ' підписів не досягнуто.'}
-                </p>
-              </div>
-            )}
-
-            {(canApprove || canDelete) && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
-                <PetitionAdminActions
-                  petitionId={petition.id}
-                  approved={petition.approved}
-                  canApprove={canApprove}
-                  canDelete={canDelete}
-                />
-              </div>
-            )}
-          </aside>
+          {canSeeTabs ? (
+            <PetitionTabs
+              electionId={petition.id}
+              ballotsData={ballotsResult.data}
+              ballotsError={ballotsResult.error}
+              commentsData={commentsResult.data}
+              commentsError={commentsResult.error}
+              discussionClosed={petition.commentsClosed}
+              commentCount={petition.commentCount}
+              supporterCount={petition.ballotCount}
+            />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Коментарі та список прихильників стануть доступні після підтвердження петиції.
+            </p>
+          )}
         </div>
+
+        <aside className="hidden space-y-6 lg:block">
+          <PetitionSupportBanner ballotCount={petition.ballotCount} quorum={quorum} />
+          <SignPetitionPanel petition={petition} />
+          <PetitionStatusNotice approved={petition.approved} deleted={!!petition.deletedAt} />
+          <PetitionAdminActions
+            petitionId={petition.id}
+            canApprove={canApprove}
+            canDelete={canDelete}
+            canManageDiscussion={isPetitionManager}
+            discussionClosed={petition.commentsClosed}
+          />
+        </aside>
       </div>
     </div>
   );

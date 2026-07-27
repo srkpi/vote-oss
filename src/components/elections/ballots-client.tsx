@@ -1,7 +1,7 @@
 'use client';
 
 import { BarChart2, CircleSlash2, FileText, ShieldAlert, ShieldCheck } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel';
@@ -13,12 +13,12 @@ import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import type { Tab } from '@/components/ui/tabs';
 import { Tabs } from '@/components/ui/tabs';
+import { useBallotDecryption } from '@/hooks/use-ballot-decryption';
 import { ensureAvatars } from '@/lib/avatar-store';
 import { BALLOTS_PAGE_SIZE } from '@/lib/constants';
-import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
 import { cn, pluralize } from '@/lib/utils/common';
 import { getVote } from '@/lib/vote-storage';
-import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
+import type { BallotsResponse } from '@/types/ballot';
 import type { ElectionChoice } from '@/types/election';
 import type { VoteRecord } from '@/types/vote';
 
@@ -42,11 +42,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  const [decryptedMap, setDecryptedMap] = useState<DecryptedMap>(new Map());
-  const [isDecrypting, setIsDecrypting] = useState(false);
-  const [decryptionDone, setDecryptionDone] = useState(false);
   const [showDecrypted, setShowDecrypted] = useState(true);
-  const cryptoKeyRef = useRef<CryptoKey | null>(null);
 
   const [myVoteRecord, setMyVoteRecord] = useState<VoteRecord | null>(null);
   const myBallotRef = useRef<HTMLDivElement | null>(null);
@@ -54,69 +50,29 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
 
   const isClosed = election.status === 'closed';
   const isOpen = election.status === 'open';
+
   // Decryption is allowed either after the election closes (anonymous contract)
-  // or live during voting for non-anonymous elections.  The backend already
-  // gates `privateKey` on this rule — this second check is defense in depth so
-  // a backend regression can't surface the key in the UI unexpectedly.
+  // or live during voting for non-anonymous elections.
   const canDecryptByStatus = isClosed || (isOpen && !election.anonymous);
   const privateKey = election.privateKey;
   const canDecrypt = canDecryptByStatus && !!privateKey && election.ballotCount > 0;
   const choices: ElectionChoice[] = election.choices;
   const electionId = election.id;
 
+  // Decryption no longer starts automatically on mount — it's triggered by
+  // the "Decrypt" button below, or by opening the Analytics tab. `decrypt()`
+  // is idempotent, so it's safe to wire into both places.
+  const { decryptedMap, isDecrypting, decryptionDone, decrypt } = useBallotDecryption({
+    ballots,
+    privateKey: canDecrypt ? privateKey : undefined,
+    choices,
+  });
+
   useEffect(() => {
     const record = getVote(electionId);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMyVoteRecord(record);
   }, [electionId]);
-
-  const handleDecryptAll = async () => {
-    if (!privateKey) return;
-    setIsDecrypting(true);
-    try {
-      if (!cryptoKeyRef.current) {
-        cryptoKeyRef.current = await importPrivateKey(privateKey);
-      }
-      const key = cryptoKeyRef.current;
-      const map: DecryptedMap = new Map();
-
-      const BATCH = 8;
-      for (let i = 0; i < ballots.length; i += BATCH) {
-        await Promise.all(
-          ballots.slice(i, i + BATCH).map(async (ballot) => {
-            const [decrypted, hashValid] = await Promise.all([
-              decryptBallotData(key, ballot.encryptedBallot),
-              verifyBallotHash(ballot, electionId),
-            ]);
-            let choiceIds: string[] | null = null;
-            let choiceLabels: string[] | null = null;
-            let valid = false;
-            let voter: { userId: string; fullName: string } | null = null;
-            if (decrypted !== null) {
-              const decryptedIds = decrypted.choiceIds;
-              const validIds = decryptedIds.filter((id) => choices.some((c) => c.id === id));
-              if (validIds.length === decryptedIds.length && validIds.length > 0) {
-                choiceIds = validIds;
-                choiceLabels = validIds.map((id) => choices.find((c) => c.id === id)?.choice ?? id);
-                valid = true;
-              }
-              if (decrypted.voter) {
-                voter = decrypted.voter;
-              }
-            }
-            map.set(ballot.id, { choiceIds, choiceLabels, valid, hashValid, voter });
-          }),
-        );
-        await new Promise((r) => setTimeout(r, 0));
-      }
-      setDecryptedMap(map);
-      setDecryptionDone(true);
-    } catch (err) {
-      console.error('[crypto] Decryption failed', err);
-    } finally {
-      setIsDecrypting(false);
-    }
-  };
 
   // After decryption completes, scroll to user's ballot if it's on screen
   useEffect(() => {
@@ -126,7 +82,11 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
   }, [decryptionDone]);
 
   const trimmedQuery = searchQuery.trim();
-  const filteredBallots = (() => {
+
+  // Memoized so this keeps a stable reference across renders that don't
+  // actually change the result — the my-ballot pagination effect and the
+  // intersection observer below both depend on it.
+  const filteredBallots = useMemo(() => {
     if (!trimmedQuery) return ballots;
     const q = trimmedQuery.toLowerCase();
 
@@ -139,7 +99,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
 
       return isHashMatch || isLabelMatch;
     });
-  })();
+  }, [ballots, trimmedQuery, decryptedMap, decryptionDone]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
@@ -148,9 +108,9 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
 
   const totalPages = Math.max(1, Math.ceil(filteredBallots.length / BALLOTS_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pagedBallots = filteredBallots.slice(
-    (safePage - 1) * BALLOTS_PAGE_SIZE,
-    safePage * BALLOTS_PAGE_SIZE,
+  const pagedBallots = useMemo(
+    () => filteredBallots.slice((safePage - 1) * BALLOTS_PAGE_SIZE, safePage * BALLOTS_PAGE_SIZE),
+    [filteredBallots, safePage],
   );
 
   const pageBallotIds = pagedBallots.map((b) => b.id).join(',');
@@ -261,7 +221,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
       <Tabs
         tabs={tabs}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => setActiveTab(tab)}
         tabBadge={(key) => {
           if (key === 'analytics' && decryptionDone) {
             return 'Повна';
@@ -276,8 +236,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
           decryptedMap={decryptedMap}
           decryptionDone={decryptionDone}
           isDecrypting={isDecrypting}
-          onDecrypt={handleDecryptAll}
-          choices={choices}
+          onDecrypt={decrypt}
           election={election}
         />
       )}
@@ -291,7 +250,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
               showDecrypted={showDecrypted}
               malformedCount={malformedCount}
               invalidHashCount={invalidHashCount}
-              onDecrypt={handleDecryptAll}
+              onDecrypt={decrypt}
               onToggleShow={() => setShowDecrypted((v) => !v)}
             />
           )}

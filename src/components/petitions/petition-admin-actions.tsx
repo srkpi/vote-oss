@@ -1,10 +1,9 @@
 'use client';
 
-import { CheckCircle2, Trash2 } from 'lucide-react';
+import { CheckCircle2, Lock, LockOpen, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,96 +19,135 @@ import { api } from '@/lib/api/browser';
 
 interface PetitionAdminActionsProps {
   petitionId: string;
-  approved: boolean;
   canApprove: boolean;
   canDelete: boolean;
+  canManageDiscussion: boolean;
+  discussionClosed: boolean;
 }
 
 export function PetitionAdminActions({
   petitionId,
-  approved,
   canApprove,
   canDelete,
+  canManageDiscussion,
+  discussionClosed,
 }: PetitionAdminActionsProps) {
-  const router = useRouter();
-  const { toast } = useToast();
   const [approving, setApproving] = useState(false);
+  const [togglingDiscussion, setTogglingDiscussion] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  if (!canApprove && !canDelete && !canManageDiscussion) return null;
 
   const handleApprove = async () => {
     setApproving(true);
-    const res = await api.elections.approve(petitionId);
-    if (res.success) {
-      toast({
-        title: 'Петицію затверджено',
-        description: 'Петиція активна на 1 місяць.',
-        variant: 'success',
-      });
+    try {
+      const { error } = await api.elections.approve(petitionId);
+      if (error) throw new Error(error);
+      toast({ title: 'Петицію підтверджено' });
       router.refresh();
-    } else {
-      toast({ title: 'Помилка', description: res.error, variant: 'error' });
+    } catch (err) {
+      toast({
+        title: 'Помилка',
+        description: err instanceof Error ? err.message : 'Спробуйте ще раз',
+        variant: 'error',
+      });
+    } finally {
+      setApproving(false);
     }
-    setApproving(false);
+  };
+
+  const handleToggleDiscussion = async () => {
+    setTogglingDiscussion(true);
+    try {
+      const { error } = discussionClosed
+        ? await api.elections.comments.reopen(petitionId)
+        : await api.elections.comments.close(petitionId);
+      if (error) throw new Error(error);
+      toast({ title: discussionClosed ? 'Обговорення відкрито' : 'Обговорення закрито' });
+      router.refresh();
+    } catch (err) {
+      toast({
+        title: 'Помилка',
+        description: err instanceof Error ? err.message : 'Спробуйте ще раз',
+        variant: 'error',
+      });
+    } finally {
+      setTogglingDiscussion(false);
+    }
   };
 
   const handleDelete = async () => {
     setDeleting(true);
-    const res = await api.elections.delete(petitionId);
-    if (res.success) {
+    try {
+      const { error } = await api.elections.delete(petitionId);
+      if (error) throw new Error(error);
+      toast({ title: 'Петицію видалено' });
+      setConfirmingDelete(false);
+      router.push('/petitions');
+    } catch (err) {
       toast({
-        title: 'Петицію видалено',
-        variant: 'success',
+        title: 'Помилка',
+        description: err instanceof Error ? err.message : 'Спробуйте ще раз',
+        variant: 'error',
       });
-      router.push('/admin/petitions');
-      router.refresh();
-    } else {
-      toast({ title: 'Помилка', description: res.error, variant: 'error' });
+    } finally {
       setDeleting(false);
     }
   };
 
   return (
-    <div className="space-y-3">
-      <p className="font-display text-foreground mb-2 text-base font-semibold">Адмін-дії</p>
-      <div className="flex flex-wrap gap-2">
-        {canApprove && !approved && (
-          <Button
-            variant="accent"
-            size="sm"
-            loading={approving}
-            onClick={handleApprove}
-            icon={<CheckCircle2 className="h-4 w-4" />}
-          >
-            Затвердити
-          </Button>
-        )}
-        {canDelete && (
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => setDeleteOpen(true)}
-            icon={<Trash2 className="h-4 w-4" />}
-          >
-            Видалити
-          </Button>
-        )}
-      </div>
+    <div className="border-border-color shadow-shadow-sm space-y-3 rounded-xl border bg-white p-6">
+      <h2 className="font-body text-sm font-semibold">Дії адміністратора</h2>
 
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-        <DialogPanel maxWidth="sm">
+      {canApprove && (
+        <Button onClick={handleApprove} loading={approving} className="w-full">
+          <CheckCircle2 className="mr-2 h-4 w-4" />
+          Підтвердити петицію
+        </Button>
+      )}
+
+      {canManageDiscussion && (
+        <Button
+          onClick={handleToggleDiscussion}
+          loading={togglingDiscussion}
+          variant="secondary"
+          className="w-full"
+        >
+          {discussionClosed ? (
+            <LockOpen className="mr-2 h-4 w-4" />
+          ) : (
+            <Lock className="mr-2 h-4 w-4" />
+          )}
+          {discussionClosed ? 'Відкрити обговорення' : 'Закрити обговорення'}
+        </Button>
+      )}
+
+      {canDelete && (
+        <Button onClick={() => setConfirmingDelete(true)} variant="destructive" className="w-full">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Видалити петицію
+        </Button>
+      )}
+
+      <Dialog open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
+        <DialogPanel>
           <DialogHeader>
             <DialogTitle>Видалити петицію?</DialogTitle>
-            <DialogCloseButton onClose={() => setDeleteOpen(false)} />
+            <DialogCloseButton onClose={() => setConfirmingDelete(false)} />
           </DialogHeader>
           <DialogBody>
-            <Alert variant="warning">Петицію можна буде відновити з панелі адміністраторів.</Alert>
+            <p className="text-muted-foreground text-sm">
+              Петицію можна буде відновити пізніше зі списку видалених.
+            </p>
           </DialogBody>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+            <Button variant="ghost" onClick={() => setConfirmingDelete(false)} disabled={deleting}>
               Скасувати
             </Button>
-            <Button variant="danger" onClick={handleDelete} loading={deleting}>
+            <Button variant="destructive" onClick={handleDelete} loading={deleting}>
               Видалити
             </Button>
           </DialogFooter>

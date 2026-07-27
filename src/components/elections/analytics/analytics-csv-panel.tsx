@@ -8,7 +8,13 @@ import { APP_NAME } from '@/lib/config/client';
 import { cn } from '@/lib/utils/common';
 import type { Ballot, DecryptedMap } from '@/types/ballot';
 
-const CSV_FIELDS: { key: string; label: string; encrypted?: boolean }[] = [
+interface CsvField {
+  key: string;
+  label: string;
+  encrypted?: boolean;
+}
+
+const BASE_CSV_FIELDS: CsvField[] = [
   { key: 'index', label: '№' },
   { key: 'currentHash', label: 'Поточний хеш' },
   { key: 'previousHash', label: 'Попередній хеш' },
@@ -21,8 +27,14 @@ const CSV_FIELDS: { key: string; label: string; encrypted?: boolean }[] = [
   { key: 'ballotValid', label: 'Дійсність бюлетеня', encrypted: true },
 ];
 
+const VOTER_CSV_FIELDS: CsvField[] = [
+  ...BASE_CSV_FIELDS,
+  { key: 'voterId', label: 'ID користувача', encrypted: true },
+  { key: 'voterFullName', label: 'ПІБ', encrypted: true },
+];
+
 function buildCsv(ballots: Ballot[], decryptedMap: DecryptedMap, fields: Set<string>): string {
-  const active = CSV_FIELDS.filter((f) => fields.has(f.key));
+  const active = VOTER_CSV_FIELDS.filter((f) => fields.has(f.key));
   const rows = ballots.map((ballot, i) => {
     const dec = decryptedMap.get(ballot.id);
     return active.map(({ key }) => {
@@ -47,6 +59,10 @@ function buildCsv(ballots: Ballot[], decryptedMap: DecryptedMap, fields: Set<str
           return dec !== undefined ? (dec.hashValid ? 'TRUE' : 'FALSE') : '';
         case 'ballotValid':
           return dec !== undefined ? (dec.valid ? 'TRUE' : 'FALSE') : '';
+        case 'voterId':
+          return dec?.voter?.userId ?? '';
+        case 'voterFullName':
+          return dec?.voter?.fullName ?? '';
         default:
           return '';
       }
@@ -54,7 +70,7 @@ function buildCsv(ballots: Ballot[], decryptedMap: DecryptedMap, fields: Set<str
   });
   const header = active.map((f) => f.label);
   return [header, ...rows]
-    .map((row) => row.map((v) => `"${v.replace(/"/g, '""')}"`).join(','))
+    .map((row) => row.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
     .join('\n');
 }
 
@@ -79,6 +95,7 @@ interface CsvPanelProps {
   decryptedMap: DecryptedMap;
   decryptionDone: boolean;
   electionId: string;
+  anonymous: boolean;
 }
 
 export function AnalyticsCsvPanel({
@@ -86,7 +103,9 @@ export function AnalyticsCsvPanel({
   decryptedMap,
   decryptionDone,
   electionId,
+  anonymous,
 }: CsvPanelProps) {
+  const fields = anonymous ? BASE_CSV_FIELDS : VOTER_CSV_FIELDS;
   const defaultSelected = new Set(['index', 'currentHash', 'createdAt']);
   const [selected, setSelected] = useState<Set<string>>(defaultSelected);
 
@@ -126,7 +145,7 @@ export function AnalyticsCsvPanel({
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {CSV_FIELDS.map((field) => {
+        {fields.map((field) => {
           const locked = !!field.encrypted && !decryptionDone;
           const isSelected = selected.has(field.key);
           return (

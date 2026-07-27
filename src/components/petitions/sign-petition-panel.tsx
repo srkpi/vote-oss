@@ -110,6 +110,7 @@ export function SignPetitionPanel({ petition }: SignPetitionPanelProps) {
     });
 
     setAlreadySigned(true);
+    setSubmitting(false);
     toast({
       title: 'Петицію підписано',
       description: 'Дякуємо за вашу підтримку!',

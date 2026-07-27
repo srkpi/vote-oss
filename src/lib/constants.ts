@@ -14,6 +14,13 @@ export const ELECTION_MAX_CLOSES_AT_DAYS = 30;
 export const ELECTION_MIN_CHOICES_MIN = 1;
 export const ELECTION_MAX_CHOICES_MAX = 100;
 
+/**
+ * Ballots are decrypted in small batches so we yield back to the main
+ * thread between batches — elections can have several hundred ballots and
+ * decrypting them all synchronously would visibly freeze the UI.
+ */
+export const DECRYPTION_BATCH_SIZE = 8;
+
 // Petitions
 /**
  * Number of "support" votes at which a petition is considered to have
@@ -48,6 +55,18 @@ export const REGISTRATION_FORMS_ADMIN_PAGE_SIZE = 10;
 export const REGISTRATION_SUBMISSIONS_PAGE_SIZE = 10;
 export const BALLOTS_PAGE_SIZE = 20;
 export const SIGNATORIES_PAGE_SIZE = 20;
+
+// ─── Petition comments ────────────────────────────────────────────────
+export const COMMENT_MAX_LENGTH = 2000;
+export const PETITION_OFFICIAL_ANSWER_MAX_LENGTH = 5000;
+export const COMMENTS_INITIAL_PAGE_SIZE = 5;
+export const COMMENTS_LOAD_MORE_PAGE_SIZE = 20;
+export const COMMENT_VOTERS_PAGE_SIZE = 100;
+
+export const RATE_LIMIT_COMMENT_MAX = 5;
+export const RATE_LIMIT_COMMENT_WINDOW_MS = 60_000;
+export const RATE_LIMIT_COMMENT_VOTE_MAX = 30;
+export const RATE_LIMIT_COMMENT_VOTE_WINDOW_MS = 60_000;
 
 // Admin invite token limits
 export const INVITE_TOKEN_LENGTH = 16;

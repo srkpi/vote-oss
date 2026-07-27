@@ -15,7 +15,7 @@ interface PetitionCardProps {
 
 export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
   const quorum = petition.winningConditions.quorum ?? PETITION_QUORUM;
-  const pct = Math.min(100, Math.round((petition.ballotCount / quorum) * 100));
+  const pct = quorum > 0 ? Math.min(100, Math.round((petition.ballotCount / quorum) * 100)) : 100;
   const reached = petition.ballotCount >= quorum;
   const isPending = !petition.approved;
   const isClosed = petition.status === 'closed';

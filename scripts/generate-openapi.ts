@@ -567,6 +567,12 @@ const spec = createSwaggerSpec({
                   description:
                     'Restriction types that the authenticated user bypasses via an active bypass token.',
                 },
+                commentsClosed: { type: 'boolean' },
+                commentCount: { type: 'integer' },
+                officialAnswer: {
+                  allOf: [{ $ref: '#/components/schemas/PetitionOfficialAnswer' }],
+                  nullable: true,
+                },
                 hasVoted: {
                   type: 'boolean',
                   description:
@@ -575,6 +581,128 @@ const spec = createSwaggerSpec({
               },
             },
           ],
+        },
+
+        // ─── Petition comments ─────────────────────────────────────
+        Comment: {
+          type: 'object',
+          required: [
+            'id',
+            'body',
+            'createdAt',
+            'editedAt',
+            'deletedAt',
+            'deletedBy',
+            'author',
+            'isPetitionAuthor',
+            'isAdmin',
+            'canEdit',
+            'canDelete',
+            'upCount',
+            'downCount',
+            'myVote',
+          ],
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            body: {
+              type: 'string',
+              description:
+                'Empty string once deletedAt is set — the UI renders a placeholder from deletedAt, not from body.',
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            editedAt: { type: 'string', format: 'date-time', nullable: true },
+            deletedAt: { type: 'string', format: 'date-time', nullable: true },
+            deletedBy: { allOf: [{ $ref: '#/components/schemas/UserRef' }], nullable: true },
+            author: { $ref: '#/components/schemas/UserRef' },
+            isPetitionAuthor: { type: 'boolean' },
+            isAdmin: {
+              type: 'boolean',
+              description: 'Reflects current admin status, not a permanent snapshot.',
+            },
+            canEdit: { type: 'boolean' },
+            canDelete: { type: 'boolean' },
+            upCount: { type: 'integer' },
+            downCount: { type: 'integer' },
+            myVote: { type: 'string', enum: ['UP', 'DOWN'], nullable: true },
+          },
+        },
+        CommentsListResponse: {
+          type: 'object',
+          required: ['comments', 'nextCursor', 'hasMore'],
+          properties: {
+            comments: { type: 'array', items: { $ref: '#/components/schemas/Comment' } },
+            nextCursor: { type: 'string', format: 'uuid', nullable: true },
+            hasMore: { type: 'boolean' },
+          },
+        },
+        CommentCreateBody: {
+          type: 'object',
+          required: ['body'],
+          properties: {
+            body: {
+              type: 'string',
+              minLength: 1,
+              description: 'Plain text; linkified client-side.',
+            },
+          },
+        },
+        CommentVoteBody: {
+          type: 'object',
+          required: ['value'],
+          properties: {
+            value: { type: 'string', enum: ['UP', 'DOWN'] },
+          },
+        },
+        CommentVoteSummary: {
+          type: 'object',
+          required: ['upCount', 'downCount', 'myVote'],
+          properties: {
+            upCount: { type: 'integer' },
+            downCount: { type: 'integer' },
+            myVote: { type: 'string', enum: ['UP', 'DOWN'], nullable: true },
+          },
+        },
+        CommentVoter: {
+          type: 'object',
+          required: ['userId', 'fullName', 'avatarUrl', 'value', 'votedAt'],
+          properties: {
+            userId: { type: 'string' },
+            fullName: { type: 'string' },
+            avatarUrl: { type: 'string', nullable: true },
+            value: { type: 'string', enum: ['UP', 'DOWN'] },
+            votedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        CommentVotersResponse: {
+          type: 'object',
+          required: ['voters', 'nextCursor', 'hasMore', 'upCount', 'downCount'],
+          properties: {
+            voters: { type: 'array', items: { $ref: '#/components/schemas/CommentVoter' } },
+            nextCursor: { type: 'string', format: 'uuid', nullable: true },
+            hasMore: { type: 'boolean' },
+            upCount: { type: 'integer' },
+            downCount: { type: 'integer' },
+          },
+        },
+        DiscussionStatus: {
+          type: 'object',
+          required: ['commentsClosed', 'commentsClosedAt'],
+          properties: {
+            commentsClosed: { type: 'boolean' },
+            commentsClosedAt: { type: 'string', format: 'date-time', nullable: true },
+          },
+        },
+        PetitionOfficialAnswer: {
+          type: 'object',
+          required: ['body', 'createdAt', 'author', 'editedAt', 'editedBy', 'canManage'],
+          properties: {
+            body: { type: 'string' },
+            createdAt: { type: 'string', format: 'date-time' },
+            author: { $ref: '#/components/schemas/UserRef' },
+            editedAt: { type: 'string', format: 'date-time', nullable: true },
+            editedBy: { allOf: [{ $ref: '#/components/schemas/UserRef' }], nullable: true },
+            canManage: { type: 'boolean' },
+          },
         },
 
         ApprovedPetitionResponse: {

@@ -98,8 +98,7 @@ model Election {
   public_viewing  Boolean @default(false)
   anonymous       Boolean @default(true)
 
-  restrictions       ElectionRestriction[]
-  winning_conditions Json                  @default("{}")
+  winning_conditions Json @default("{}")
 
   public_key  String @db.Text
   private_key String @db.Text
@@ -112,6 +111,7 @@ model Election {
 
   choices                ElectionChoice[]
   issued_tokens          IssuedToken[]
+  restrictions           ElectionRestriction[]
   ballots                Ballot[]
   nullifiers             UsedTokenNullifier[]
   deleter                Admin?                @relation("ElectionDeleter", fields: [deleted_by], references: [user_id], onDelete: SetNull)
@@ -127,6 +127,14 @@ model Election {
   campaign                  ElectionCampaign?      @relation("CampaignElections", fields: [campaign_id], references: [id], onDelete: SetNull)
   candidate_registration_id String?                @unique @db.Uuid
   candidate_registration    CandidateRegistration? @relation("CandidateSignatureElection", fields: [candidate_registration_id], references: [id], onDelete: SetNull)
+
+  comments_closed              Boolean   @default(false)
+  comments_closed_at           DateTime?
+  comments_closed_by           String?
+  comments_closed_by_full_name String?   @db.Text
+
+  comments        Comment[]
+  official_answer PetitionOfficialAnswer?
 
   @@index([type])
   @@index([campaign_id])
@@ -204,6 +212,71 @@ model UsedTokenNullifier {
 
   @@index([election_id])
   @@map("used_token_nullifiers")
+}
+
+enum CommentVoteValue {
+  UP
+  DOWN
+}
+
+model Comment {
+  id          String   @id @default(uuid()) @db.Uuid
+  election_id String   @db.Uuid
+  election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
+
+  user_id   String
+  full_name String @db.Text
+
+  body String @db.Text
+
+  created_at DateTime  @default(now())
+  edited_at  DateTime?
+
+  deleted_at           DateTime?
+  deleted_by           String?
+  deleted_by_full_name String?   @db.Text
+
+  up_count   Int @default(0)
+  down_count Int @default(0)
+
+  votes CommentVote[]
+
+  @@index([election_id, created_at])
+  @@index([user_id])
+  @@map("comments")
+}
+
+model CommentVote {
+  id         String           @id @default(uuid()) @db.Uuid
+  comment_id String           @db.Uuid
+  comment    Comment          @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+
+  user_id    String
+  full_name  String           @db.Text
+  value      CommentVoteValue
+  created_at DateTime         @default(now())
+
+  @@unique([comment_id, user_id])
+  @@index([comment_id, value])
+  @@map("comment_votes")
+}
+
+model PetitionOfficialAnswer {
+  election_id String   @id @db.Uuid
+  election    Election @relation(fields: [election_id], references: [id], onDelete: Cascade)
+
+  body String @db.Text
+
+  author_user_id   String
+  author_full_name String @db.Text
+
+  created_at DateTime @default(now())
+
+  edited_at           DateTime?
+  edited_by_user_id   String?
+  edited_by_full_name String?   @db.Text
+
+  @@map("petition_official_answers")
 }
 
 model GlobalBypassToken {

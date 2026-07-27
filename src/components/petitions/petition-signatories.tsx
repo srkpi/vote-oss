@@ -1,17 +1,16 @@
 'use client';
 
-import { Loader2, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
+import { Alert } from '@/components/ui/alert';
+import { Avatar } from '@/components/ui/avatar';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { Pagination } from '@/components/ui/pagination';
-import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { useAvatar } from '@/hooks/use-avatar';
 import { ensureAvatars } from '@/lib/avatar-store';
 import { SIGNATORIES_PAGE_SIZE } from '@/lib/constants';
-import { decryptBallotData, importPrivateKey, verifyBallotHash } from '@/lib/crypto';
-import { pluralize } from '@/lib/utils/common';
-import type { PetitionSignatoriesResponse } from '@/types/ballot';
+import type { BallotsResponse, DecryptedMap } from '@/types/ballot';
 
 interface Signatory {
   ballotId: string;
@@ -22,227 +21,94 @@ interface Signatory {
 }
 
 interface PetitionSignatoriesProps {
-  ballotCount: number;
-  initialData: PetitionSignatoriesResponse | null;
+  electionId: string;
+  initialData: BallotsResponse | null;
   fetchError: string | null;
-  isAdmin?: boolean;
-}
-
-function SignatoryRow({ signatory, isAdmin }: { signatory: Signatory; isAdmin: boolean }) {
-  const avatarUrl = useAvatar(signatory.userId);
-  return (
-    <li className="flex items-center gap-3 px-5 py-3">
-      <UserAvatarMenu
-        userId={signatory.userId}
-        fullName={signatory.fullName}
-        avatarUrl={avatarUrl}
-        canDelete={isAdmin}
-        size={32}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="font-body text-foreground truncate text-sm font-medium">
-          {signatory.fullName}
-        </p>
-        <p className="font-body text-muted-foreground mt-0.5 text-xs">
-          <LocalDateTime date={signatory.signedAt} /> • {signatory.userId}
-        </p>
-      </div>
-    </li>
-  );
+  decryptedMap: DecryptedMap;
+  decryptionDone: boolean;
 }
 
 export function PetitionSignatories({
-  ballotCount,
   initialData,
   fetchError,
-  isAdmin = false,
+  decryptedMap,
+  decryptionDone,
 }: PetitionSignatoriesProps) {
-  const [signatories, setSignatories] = useState<Signatory[] | null>(null);
-  const [malformedCount, setMalformedCount] = useState(0);
-  const [invalidHashCount, setInvalidHashCount] = useState(0);
-  const [decryptError, setDecryptError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    if (!initialData) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSignatories(null);
-      return;
+  const signatories: Signatory[] = useMemo(() => {
+    if (!initialData || !decryptionDone) return [];
+    const results: Signatory[] = [];
+    for (const ballot of initialData.ballots) {
+      const dec = decryptedMap.get(ballot.id);
+      if (dec?.valid && dec.voter) {
+        results.push({
+          ballotId: ballot.id,
+          userId: dec.voter.userId,
+          fullName: dec.voter.fullName,
+          signedAt: ballot.createdAt,
+          hashValid: dec.hashValid,
+        });
+      }
     }
+    return results;
+  }, [initialData, decryptedMap, decryptionDone]);
 
-    const { petition, ballots } = initialData;
-    let cancelled = false;
-
-    (async () => {
-      if (ballots.length === 0) {
-        if (!cancelled) {
-          setSignatories([]);
-          setMalformedCount(0);
-          setInvalidHashCount(0);
-          setDecryptError(null);
-        }
-        return;
-      }
-
-      let key: CryptoKey;
-      try {
-        key = await importPrivateKey(petition.privateKey);
-      } catch (err) {
-        console.error('[petition] Failed to import private key', err);
-        if (!cancelled) {
-          setSignatories([]);
-          setDecryptError('Не вдалося завантажити ключ для розшифрування підписів.');
-        }
-        return;
-      }
-
-      const result: Signatory[] = [];
-      let malformed = 0;
-      let invalidHash = 0;
-
-      const BATCH = 8;
-      for (let i = 0; i < ballots.length; i += BATCH) {
-        const slice = await Promise.all(
-          ballots.slice(i, i + BATCH).map(async (b) => {
-            const [decrypted, hashValid] = await Promise.all([
-              decryptBallotData(key, b.encryptedBallot),
-              verifyBallotHash(b, petition.id),
-            ]);
-            return { ballot: b, decrypted, hashValid };
-          }),
-        );
-        if (cancelled) return;
-        for (const { ballot, decrypted, hashValid } of slice) {
-          if (!hashValid) invalidHash += 1;
-          if (decrypted?.voter) {
-            result.push({
-              ballotId: ballot.id,
-              userId: decrypted.voter.userId,
-              fullName: decrypted.voter.fullName,
-              signedAt: ballot.createdAt,
-              hashValid,
-            });
-          } else {
-            malformed += 1;
-          }
-        }
-      }
-
-      if (!cancelled) {
-        setSignatories(result);
-        setMalformedCount(malformed);
-        setInvalidHashCount(invalidHash);
-        setDecryptError(null);
-        setPage(1);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [initialData]);
-
-  const total = signatories?.length ?? ballotCount;
-  const totalPages = Math.max(1, Math.ceil((signatories?.length ?? 0) / SIGNATORIES_PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pagedSignatories = (signatories ?? []).slice(
-    (safePage - 1) * SIGNATORIES_PAGE_SIZE,
-    safePage * SIGNATORIES_PAGE_SIZE,
-  );
-  const pageIdsKey = pagedSignatories.map((s) => s.userId).join(',');
-
-  // Only resolve avatars for whoever is on screen right now — not all
-  // signatories at once (which used to 400 past ~200 signatories).
   useEffect(() => {
-    const ids = pagedSignatories.map((s) => s.userId);
-    if (ids.length > 0) void ensureAvatars(ids);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIdsKey]);
+    if (signatories.length > 0) {
+      ensureAvatars(signatories.map((s) => s.userId));
+    }
+  }, [signatories]);
+
+  if (fetchError) {
+    return (
+      <Alert variant="error" title="Не вдалося завантажити підписантів">
+        {fetchError}
+      </Alert>
+    );
+  }
+
+  if (!decryptionDone) {
+    return (
+      <div className="flex h-24 items-center justify-center">
+        <Loader2 className="text-kpi-navy h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const totalPages = Math.max(1, Math.ceil(signatories.length / SIGNATORIES_PAGE_SIZE));
+  const pageItems = signatories.slice(
+    (page - 1) * SIGNATORIES_PAGE_SIZE,
+    page * SIGNATORIES_PAGE_SIZE,
+  );
+
+  if (signatories.length === 0) {
+    return <p className="text-muted-foreground text-sm">Ще немає підписантів.</p>;
+  }
 
   return (
-    <div className="border-border-color shadow-shadow-sm min-w-0 rounded-xl border bg-white">
-      <div className="border-border-subtle flex items-center gap-3 border-b px-5 py-4">
-        <div className="bg-surface text-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">
-          <Users className="h-4 w-4" />
-        </div>
-        <div>
-          <p className="font-display text-foreground text-base font-semibold">Підписанти</p>
-          <p className="font-body text-muted-foreground text-xs">
-            {total} {pluralize(total, ['підписант', 'підписанти', 'підписантів'], false)}
-          </p>
-        </div>
+    <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+      <div className="divide-border-color divide-y">
+        {pageItems.map((signatory) => (
+          <SignatoryRow key={signatory.ballotId} signatory={signatory} />
+        ))}
       </div>
+      {totalPages > 1 && <Pagination page={page} totalPages={totalPages} setPage={setPage} />}
+    </div>
+  );
+}
 
-      {fetchError ? (
-        <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 px-5 py-4 text-sm">
-          <ShieldAlert className="h-4 w-4 shrink-0" />
-          <span>Не вдалося завантажити підписантів: {fetchError}</span>
-        </div>
-      ) : !initialData || signatories === null ? (
-        <div className="flex h-24 items-center justify-center">
-          <Loader2 className="text-kpi-navy h-5 w-5 animate-spin" />
-        </div>
-      ) : decryptError ? (
-        <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 px-5 py-4 text-sm">
-          <ShieldAlert className="h-4 w-4 shrink-0" />
-          <span>{decryptError}</span>
-        </div>
-      ) : signatories.length === 0 && initialData.ballots.length === 0 ? (
-        <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
-          Петицію ще ніхто не підписав.
-        </p>
-      ) : (
-        <>
-          {invalidHashCount === 0 && malformedCount === 0 ? (
-            <div className="font-body border-success/20 bg-success-bg text-success flex items-center gap-2 border-b px-5 py-3 text-sm">
-              <ShieldCheck className="h-4 w-4 shrink-0" />
-              <span>Ланцюжок підписів цілісний — усі хеші вірні</span>
-            </div>
-          ) : (
-            <div className="font-body border-error/20 bg-error-bg text-error flex flex-col gap-1 border-b px-5 py-3 text-sm">
-              {invalidHashCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-4 w-4 shrink-0" />
-                  <span>
-                    <strong>{invalidHashCount}</strong>{' '}
-                    {pluralize(invalidHashCount, ['підпис', 'підписи', 'підписів'], false)} мають
-                    некоректний хеш
-                  </span>
-                </div>
-              )}
-              {malformedCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <ShieldAlert className="h-4 w-4 shrink-0" />
-                  <span>
-                    <strong>{malformedCount}</strong>{' '}
-                    {pluralize(malformedCount, ['підпис', 'підписи', 'підписів'], false)} не вдалося
-                    розшифрувати
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+function SignatoryRow({ signatory }: { signatory: Signatory }) {
+  const avatarUrl = useAvatar(signatory.userId);
 
-          {signatories.length === 0 ? (
-            <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
-              Жодного підпису не вдалося розшифрувати.
-            </p>
-          ) : (
-            <>
-              <ul className="divide-border-subtle divide-y">
-                {pagedSignatories.map((s) => (
-                  <SignatoryRow key={s.ballotId} signatory={s} isAdmin={isAdmin} />
-                ))}
-              </ul>
-              {totalPages > 1 && (
-                <div className="border-border-subtle border-t px-5 py-3">
-                  <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
-                </div>
-              )}
-            </>
-          )}
-        </>
-      )}
+  return (
+    <div
+      className="flex items-center gap-3 py-2.5"
+      title={signatory.hashValid ? undefined : 'Порушено цілісність ланцюга бюлетенів'}
+    >
+      <Avatar src={avatarUrl} name={signatory.fullName} size={24} />
+      <span className="min-w-0 flex-1 truncate text-sm">{signatory.fullName}</span>
+      <LocalDateTime date={signatory.signedAt} className="text-muted-foreground shrink-0 text-xs" />
     </div>
   );
 }

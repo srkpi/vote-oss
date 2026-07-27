@@ -1,5 +1,7 @@
 import type { Prisma } from '@prisma/client';
 
+import type { PetitionOfficialAnswer } from '@/types/comment';
+
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';
 /**
  * Discriminates regular elections from petitions.  Most fields on the
@@ -49,25 +51,10 @@ export interface CachedElectionChoice extends ElectionChoice {
   voteCount: number | null;
 }
 
-/**
- * Reference to a user who authored an election or petition.  For petitions
- * this user may be a regular (non-admin) student, so `userId` is intentionally
- * not constrained to the Admin table.
- */
-export interface ElectionAuthor {
+export interface ElectionUser {
   userId: string;
   fullName: string;
   avatarUrl: string | null;
-}
-
-export interface ElectionDeleter {
-  userId: string;
-  fullName: string;
-}
-
-export interface ElectionEditor {
-  userId: string;
-  fullName: string;
 }
 
 export interface TallyResult {
@@ -141,10 +128,10 @@ export interface Election {
   minChoices: number;
   maxChoices: number;
   /** Decoupled from the Admin table so that regular users can create petitions. */
-  createdBy: ElectionAuthor;
+  createdBy: ElectionUser;
   /** Petition approval metadata.  `approved=true` for all non-petition elections. */
   approved: boolean;
-  approvedBy: ElectionAuthor | null;
+  approvedBy: ElectionUser | null;
   approvedAt: string | null;
   choices: ElectionChoice[];
   publicViewing: boolean;
@@ -160,11 +147,11 @@ export interface Election {
 
   /** Admin-only fields */
   deletedAt?: string | null;
-  deletedBy?: ElectionDeleter | null;
+  deletedBy?: ElectionUser | null;
   canDelete?: boolean;
   canRestore?: boolean;
   editedAt?: string | null;
-  editedBy?: ElectionEditor | null;
+  editedBy?: ElectionUser | null;
   canEdit?: boolean;
 }
 
@@ -173,6 +160,9 @@ export interface ElectionDetail extends Election {
   privateKey?: string;
   hasVoted?: boolean;
   bypassedTypes?: string[];
+  commentsClosed: boolean;
+  commentCount: number;
+  officialAnswer: PetitionOfficialAnswer | null;
 }
 
 export interface CachedElection {

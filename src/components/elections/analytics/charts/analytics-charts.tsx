@@ -17,7 +17,6 @@ import type {
   SharePoint,
 } from '@/types/analytics-charts';
 import type { BallotsElection } from '@/types/ballot';
-import type { ElectionChoice } from '@/types/election';
 import type { AnalyticsMetrics } from '@/types/metrics';
 
 type ChartTab = 'dynamics' | 'activity' | 'share';
@@ -28,7 +27,6 @@ interface ChartsProps {
   shareEvolution: SharePoint[];
   granularity: ChartGranularity;
   metrics: AnalyticsMetrics;
-  choices: ElectionChoice[];
   election: BallotsElection;
   decryptionDone: boolean;
 }
@@ -39,7 +37,6 @@ export function AnalyticsCharts({
   shareEvolution,
   granularity,
   metrics,
-  choices,
   election,
   decryptionDone,
 }: ChartsProps) {
@@ -48,7 +45,9 @@ export function AnalyticsCharts({
   const tabs = [
     { key: 'dynamics' as const, label: 'Динаміка' },
     { key: 'activity' as const, label: 'Активність' },
-    ...(decryptionDone && choices.length > 1 ? [{ key: 'share' as const, label: 'Частка' }] : []),
+    ...(decryptionDone && election.choices.length > 1
+      ? [{ key: 'share' as const, label: 'Частка' }]
+      : []),
   ];
 
   const granLabel = GRANULARITY_LABEL[granularity];
@@ -57,9 +56,9 @@ export function AnalyticsCharts({
     if (
       (activeTab === 'dynamics' || activeTab === 'share') &&
       decryptionDone &&
-      choices.length > 1
+      election.choices.length > 1
     ) {
-      return choices.map((c, i) => ({
+      return election.choices.map((c, i) => ({
         color: CHART_COLORS[i % CHART_COLORS.length]!,
         label: c.choice,
       }));
@@ -76,7 +75,7 @@ export function AnalyticsCharts({
       (w, h) => (
         <DynamicsChart
           data={timeSeries}
-          choices={choices}
+          choices={election.choices}
           decryptionDone={decryptionDone}
           exportSize={{ width: w, height: h }}
           opensAt={election.opensAt}
@@ -105,7 +104,7 @@ export function AnalyticsCharts({
       (w, h) => (
         <ShareChart
           data={shareEvolution}
-          choices={choices}
+          choices={election.choices}
           exportSize={{ width: w, height: h }}
           isMultiChoice={election.maxChoices > 1}
         />
@@ -134,7 +133,7 @@ export function AnalyticsCharts({
         >
           <DynamicsChart
             data={timeSeries}
-            choices={choices}
+            choices={election.choices}
             decryptionDone={decryptionDone}
             opensAt={election.opensAt}
             closesAt={election.closesAt}
@@ -156,7 +155,7 @@ export function AnalyticsCharts({
         >
           <ShareChart
             data={shareEvolution}
-            choices={choices}
+            choices={election.choices}
             isMultiChoice={election.maxChoices > 1}
           />
         </ChartWrapper>

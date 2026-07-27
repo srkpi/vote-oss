@@ -336,12 +336,14 @@ export async function GET(req: NextRequest) {
   const petitionsSort = type === 'PETITION' ? parsePetitionsSort(req) : null;
   const sortedPetitionIds = petitionsSort ? await getSortedPetitionIds(petitionsSort) : null;
 
-  const authorIds = new Set<string>();
+  const avatarIds = new Set<string>();
   for (const e of cachedWithLiveCounts) {
-    authorIds.add(e.createdBy);
-    if (e.approvedById) authorIds.add(e.approvedById);
+    avatarIds.add(e.createdBy);
+    if (e.approvedById) avatarIds.add(e.approvedById);
+    if (e.editedByUserId) avatarIds.add(e.editedByUserId);
+    if (e.deletedByUserId) avatarIds.add(e.deletedByUserId);
   }
-  const avatarMap = await getAvatarUrlMap([...authorIds]);
+  const avatarMap = await getAvatarUrlMap([...avatarIds]);
 
   const elections = toClientElections(
     cachedWithLiveCounts,

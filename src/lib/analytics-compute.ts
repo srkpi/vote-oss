@@ -5,7 +5,6 @@ import type {
   SharePoint,
 } from '@/types/analytics-charts';
 import type { Ballot, BallotsElection, DecryptedMap } from '@/types/ballot';
-import type { ElectionChoice } from '@/types/election';
 import type { AnalyticsMetrics } from '@/types/metrics';
 
 export interface AnalyticsResult {
@@ -139,7 +138,6 @@ export function computeAnalytics(
   election: BallotsElection,
   ballots: Ballot[],
   decryptedMap: DecryptedMap,
-  choices: ElectionChoice[],
   decryptionDone: boolean,
 ): AnalyticsResult {
   const emptyMetrics: AnalyticsMetrics = {
@@ -195,7 +193,7 @@ export function computeAnalytics(
 
   // Vote counts per choice
   const voteCounts: Record<string, number> = {};
-  choices.forEach((c) => {
+  election.choices.forEach((c) => {
     voteCounts[c.id] = 0;
   });
 
@@ -212,7 +210,7 @@ export function computeAnalytics(
 
   // Cumulative time series
   const cumulative: Record<string, number> = {};
-  choices.forEach((c) => {
+  election.choices.forEach((c) => {
     cumulative[c.id] = 0;
   });
   let cumulativeTotal = 0;
@@ -231,7 +229,7 @@ export function computeAnalytics(
       label: formatXTick(ms, granularity, spanH),
       total: cumulativeTotal,
     };
-    choices.forEach((c) => {
+    election.choices.forEach((c) => {
       point[c.id] = cumulative[c.id]!;
     });
     return point;
@@ -290,7 +288,7 @@ export function computeAnalytics(
   const shareEvolution: SharePoint[] = timeSeries.map((point) => {
     const total = point.total as number;
     const sp: SharePoint = { ms: point.ms as number, label: point.label as string };
-    choices.forEach((c) => {
+    election.choices.forEach((c) => {
       sp[c.id] = total > 0 ? Math.round(((point[c.id] as number) / total) * 1000) / 10 : 0;
     });
     return sp;
@@ -473,24 +471,24 @@ export function computeAnalytics(
   let leadingMargin: number | null = null;
   let frontrunnerChanges: number | null = null;
 
-  if (decryptionDone && choices.length >= 2) {
+  if (decryptionDone && election.choices.length >= 2) {
     const total = Object.values(voteCounts).reduce((a, b) => a + b, 0);
     if (total > 0) {
       // Shannon normalised entropy
       let H = 0;
-      choices.forEach((c) => {
+      election.choices.forEach((c) => {
         const p = voteCounts[c.id]! / total;
         if (p > 0) H -= p * Math.log2(p);
       });
-      normalizedEntropy = H / Math.log2(choices.length);
+      normalizedEntropy = H / Math.log2(election.choices.length);
 
       // ENC (Laakso-Taagepera)
       let hhi = 0;
-      choices.forEach((c) => {
+      election.choices.forEach((c) => {
         const s = voteCounts[c.id]! / total;
         hhi += s * s;
       });
-      enc = hhi > 0 ? 1 / hhi : choices.length;
+      enc = hhi > 0 ? 1 / hhi : election.choices.length;
 
       // Gini
       const sv = [...Object.values(voteCounts)].sort((a, b) => a - b);
@@ -505,7 +503,7 @@ export function computeAnalytics(
       }
 
       // Leading margin
-      const byVotes = [...choices].sort((a, b) => voteCounts[b.id]! - voteCounts[a.id]!);
+      const byVotes = [...election.choices].sort((a, b) => voteCounts[b.id]! - voteCounts[a.id]!);
       leadingMargin =
         ((voteCounts[byVotes[0]!.id]! - (voteCounts[byVotes[1]?.id ?? ''] ?? 0)) / total) * 100;
 
@@ -513,7 +511,7 @@ export function computeAnalytics(
       let changes = 0;
       let currentLeaderId: string | null = null;
       const cur: Record<string, number> = {};
-      choices.forEach((c) => {
+      election.choices.forEach((c) => {
         cur[c.id] = 0;
       });
 
@@ -526,7 +524,7 @@ export function computeAnalytics(
         }
 
         // 1. Find the highest vote count at this exact moment
-        const maxVotes = Math.max(...choices.map((c) => cur[c.id]!));
+        const maxVotes = Math.max(...election.choices.map((c) => cur[c.id]!));
 
         // 2. Check if the incumbent leader survived (incumbency advantage during a tie)
         if (currentLeaderId !== null && cur[currentLeaderId] === maxVotes) {
@@ -536,7 +534,7 @@ export function computeAnalytics(
 
         // 3. The incumbent was strictly beaten. Find the new leader.
         // (If multiple choices tied for the new lead, simply pick the first one)
-        const newLeader = choices.find((c) => cur[c.id] === maxVotes)!;
+        const newLeader = election.choices.find((c) => cur[c.id] === maxVotes)!;
 
         // 4. Register the change (ignoring the very first ballot which just sets the baseline)
         if (currentLeaderId !== null && newLeader.id !== currentLeaderId) {

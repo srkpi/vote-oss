@@ -112,7 +112,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
             ? {
                 ...e,
                 deletedAt: new Date().toISOString(),
-                deletedBy: { userId: session.userId, fullName: session.fullName },
+                deletedBy: { userId: session.userId, fullName: session.fullName, avatarUrl: null },
                 canDelete: false,
                 canRestore: true,
               }

@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 
+import { ResultsChart } from '@/components/elections/result-chart';
+import type { ChoiceSortOrder } from '@/components/elections/sort-choices-button';
+import { SortChoicesButton } from '@/components/elections/sort-choices-button';
 import { Badge } from '@/components/ui/badge';
 import { pluralize } from '@/lib/utils/common';
 import type { ElectionChoice } from '@/types/election';
-
-import { ResultsChart } from './result-chart';
-import { type ChoiceSortOrder, SortChoicesButton } from './sort-choices-button';
 
 interface ResultsSectionProps {
   title: string;

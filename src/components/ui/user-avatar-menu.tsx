@@ -16,12 +16,8 @@ interface UserAvatarMenuProps {
   icon?: boolean;
   size?: number;
   shape?: AvatarShape;
-  /** Whether the current viewer may delete this person's avatar (e.g. `session.isAdmin`). */
   canDelete: boolean;
   className?: string;
-  /** Optional extra bookkeeping after a successful delete; the avatar itself
-   *  updates everywhere automatically via the shared cache. */
-  onDeleted?: () => void;
 }
 
 /**
@@ -39,7 +35,6 @@ export function UserAvatarMenu({
   shape = 'circle',
   canDelete,
   className,
-  onDeleted,
 }: UserAvatarMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { requestDelete } = useAvatarDeleteDialog();
@@ -91,7 +86,6 @@ export function UserAvatarMenu({
               onClick={() => {
                 setMenuOpen(false);
                 requestDelete({ userId, fullName });
-                onDeleted?.();
               }}
               className="font-body text-error hover:bg-error-bg flex w-full items-center gap-2 px-3 py-2 text-left text-sm"
             >

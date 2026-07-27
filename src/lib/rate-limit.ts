@@ -15,6 +15,10 @@ import { TRUSTED_PROXY_COUNT } from '@/lib/config/server';
 import {
   RATE_LIMIT_AVATAR_MAX,
   RATE_LIMIT_AVATAR_WINDOW_MS,
+  RATE_LIMIT_COMMENT_MAX,
+  RATE_LIMIT_COMMENT_VOTE_MAX,
+  RATE_LIMIT_COMMENT_VOTE_WINDOW_MS,
+  RATE_LIMIT_COMMENT_WINDOW_MS,
   RATE_LIMIT_INVITE_MAX,
   RATE_LIMIT_INVITE_WINDOW_MS,
   RATE_LIMIT_LOGIN_MAX,
@@ -103,6 +107,19 @@ export async function rateLimitInvite(userId: string): Promise<RateLimitResult> 
 /** Avatar upload(self - serve, keyed by user id rather than IP). */
 export async function rateLimitAvatarUpload(userId: string): Promise<RateLimitResult> {
   return rateLimit('avatar', userId, RATE_LIMIT_AVATAR_MAX, RATE_LIMIT_AVATAR_WINDOW_MS);
+}
+
+export async function rateLimitComment(userId: string) {
+  return rateLimit('comment', userId, RATE_LIMIT_COMMENT_MAX, RATE_LIMIT_COMMENT_WINDOW_MS);
+}
+
+export async function rateLimitCommentVote(userId: string) {
+  return rateLimit(
+    'comment-vote',
+    userId,
+    RATE_LIMIT_COMMENT_VOTE_MAX,
+    RATE_LIMIT_COMMENT_VOTE_WINDOW_MS,
+  );
 }
 
 /**

@@ -73,6 +73,7 @@ export interface ButtonProps
   fullWidth?: boolean;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 function Button({
@@ -96,7 +97,13 @@ function Button({
     return (
       <Comp
         data-slot="button"
-        className={cn(buttonVariants({ variant, size }), fullWidth && 'w-full', className)}
+        aria-disabled={isDisabled || undefined}
+        className={cn(
+          buttonVariants({ variant, size }),
+          fullWidth && 'w-full',
+          isDisabled && 'pointer-events-none opacity-50',
+          className,
+        )}
         {...props}
       >
         {children}

@@ -35,21 +35,6 @@ const badgeVariants = cva(
   },
 );
 
-const dotColors: Record<string, string> = {
-  default: 'bg-kpi-gray-mid',
-  secondary: 'bg-kpi-gray-mid',
-  outline: 'bg-kpi-gray-mid',
-  navy: 'bg-white',
-  primary: 'bg-white',
-  success: 'bg-success',
-  warning: 'bg-kpi-orange',
-  error: 'bg-error',
-  destructive: 'bg-error',
-  info: 'bg-kpi-blue-light',
-  accent: 'bg-white',
-  ghost: 'bg-kpi-gray-mid',
-};
-
 export type BadgeVariant =
   | 'default'
   | 'secondary'
@@ -63,6 +48,21 @@ export type BadgeVariant =
   | 'info'
   | 'accent'
   | 'ghost';
+
+const dotColors: Record<BadgeVariant, string> = {
+  default: 'bg-kpi-gray-mid',
+  secondary: 'bg-kpi-gray-mid',
+  outline: 'bg-kpi-gray-mid',
+  navy: 'bg-white',
+  primary: 'bg-white',
+  success: 'bg-success',
+  warning: 'bg-kpi-orange',
+  error: 'bg-error',
+  destructive: 'bg-error',
+  info: 'bg-kpi-blue-light',
+  accent: 'bg-white',
+  ghost: 'bg-kpi-gray-mid',
+};
 
 export type BadgeSize = 'sm' | 'md' | 'lg';
 

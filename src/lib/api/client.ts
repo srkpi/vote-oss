@@ -1,7 +1,7 @@
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
 import type { DiiaInitResponse } from '@/types/auth';
-import type { BallotsResponse, PetitionSignatoriesResponse } from '@/types/ballot';
+import type { BallotsResponse } from '@/types/ballot';
 import type {
   CreateElectionBypassTokenRequest,
   CreateGlobalBypassTokenRequest,
@@ -27,6 +27,14 @@ import type {
   UpdateCandidateRegistrationFormRequest,
   UpsertCandidateRegistrationDraftRequest,
 } from '@/types/candidate-registration';
+import type {
+  Comment,
+  CommentsListResponse,
+  CommentVotersResponse,
+  CommentVoteSummary,
+  DiscussionStatus,
+  PetitionOfficialAnswer,
+} from '@/types/comment';
 import type {
   CreateElectionRequest,
   CreateElectionResponse,
@@ -148,11 +156,77 @@ export function createApiClient(fetcher: Fetcher) {
       getBallots: (electionId: string) =>
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
       getSignatories: (electionId: string) =>
-        fetcher<PetitionSignatoriesResponse>(`/elections/${electionId}/signatories`),
+        fetcher<BallotsResponse>(`/elections/${electionId}/signatories`),
       getVoters: (electionId: string) =>
         fetcher<{ voters: { userId: string; fullName: string }[] }>(
           `/elections/${electionId}/voters`,
         ),
+
+      comments: {
+        list: (electionId: string, opts?: { cursor?: string; limit?: number }) => {
+          const qs = new URLSearchParams();
+          if (opts?.cursor) qs.set('cursor', opts.cursor);
+          if (opts?.limit) qs.set('limit', String(opts.limit));
+          const query = qs.toString();
+          return fetcher<CommentsListResponse>(
+            `/elections/${electionId}/comments${query ? `?${query}` : ''}`,
+          );
+        },
+        create: (electionId: string, body: string) =>
+          fetcher<Comment>(`/elections/${electionId}/comments`, {
+            method: 'POST',
+            body: JSON.stringify({ body }),
+          }),
+        update: (electionId: string, commentId: string, body: string) =>
+          fetcher<Comment>(`/elections/${electionId}/comments/${commentId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ body }),
+          }),
+        remove: (electionId: string, commentId: string) =>
+          fetcher<Comment>(`/elections/${electionId}/comments/${commentId}`, {
+            method: 'DELETE',
+          }),
+        vote: (electionId: string, commentId: string, value: 'UP' | 'DOWN') =>
+          fetcher<CommentVoteSummary>(`/elections/${electionId}/comments/${commentId}/vote`, {
+            method: 'PUT',
+            body: JSON.stringify({ value }),
+          }),
+        revokeVote: (electionId: string, commentId: string) =>
+          fetcher<CommentVoteSummary>(`/elections/${electionId}/comments/${commentId}/vote`, {
+            method: 'DELETE',
+          }),
+        voters: (
+          electionId: string,
+          commentId: string,
+          opts?: { cursor?: string; limit?: number },
+        ) => {
+          const qs = new URLSearchParams();
+          if (opts?.cursor) qs.set('cursor', opts.cursor);
+          if (opts?.limit) qs.set('limit', String(opts.limit));
+          const query = qs.toString();
+          return fetcher<CommentVotersResponse>(
+            `/elections/${electionId}/comments/${commentId}/votes${query ? `?${query}` : ''}`,
+          );
+        },
+        close: (electionId: string) =>
+          fetcher<DiscussionStatus>(`/elections/${electionId}/comments/close`, {
+            method: 'POST',
+          }),
+        reopen: (electionId: string) =>
+          fetcher<DiscussionStatus>(`/elections/${electionId}/comments/reopen`, {
+            method: 'POST',
+          }),
+      },
+
+      officialAnswer: {
+        upsert: (electionId: string, body: string) =>
+          fetcher<PetitionOfficialAnswer>(`/elections/${electionId}/official-answer`, {
+            method: 'PUT',
+            body: JSON.stringify({ body }),
+          }),
+        remove: (electionId: string) =>
+          fetcher<void>(`/elections/${electionId}/official-answer`, { method: 'DELETE' }),
+      },
 
       bypass: {
         list: (electionId: string) =>

@@ -17,7 +17,6 @@ import { buildVelocityMetric } from '@/components/elections/analytics/metrics/ve
 import { Button } from '@/components/ui/button';
 import { computeAnalytics } from '@/lib/analytics-compute';
 import type { Ballot, BallotsElection, DecryptedMap } from '@/types/ballot';
-import type { ElectionChoice } from '@/types/election';
 import type { MetricCardConfig, MetricContext } from '@/types/metrics';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -28,8 +27,8 @@ interface AnalyticsPanelProps {
   decryptionDone: boolean;
   isDecrypting: boolean;
   onDecrypt: () => void;
-  choices: ElectionChoice[];
   election: BallotsElection;
+  showKpiIndicators?: boolean;
 }
 
 // ── Metric pipeline ───────────────────────────────────────────────────────────
@@ -42,19 +41,18 @@ function buildMetrics(
   election: BallotsElection,
   ballots: Ballot[],
   decryptedMap: DecryptedMap,
-  choices: ElectionChoice[],
   decryptionDone: boolean,
 ): MetricCardConfig[] {
-  const { metrics } = computeAnalytics(election, ballots, decryptedMap, choices, decryptionDone);
+  const { metrics } = computeAnalytics(election, ballots, decryptedMap, decryptionDone);
 
   const ctx: MetricContext = {
     ballots,
     decryptedMap,
     decryptionDone,
-    choices,
+    choices: election.choices,
     metrics,
     totalBallots: metrics.totalBallots,
-    choiceCount: choices.length,
+    choiceCount: election.choices.length,
   };
 
   const builders = [
@@ -124,19 +122,9 @@ export function AnalyticsPanel({
   decryptionDone,
   isDecrypting,
   onDecrypt,
-  choices,
   election,
+  showKpiIndicators = true,
 }: AnalyticsPanelProps) {
-  const analyticsResult = computeAnalytics(
-    election,
-    ballots,
-    decryptedMap,
-    choices,
-    decryptionDone,
-  );
-
-  const visibleMetrics = buildMetrics(election, ballots, decryptedMap, choices, decryptionDone);
-
   if (ballots.length === 0) {
     return (
       <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
@@ -149,7 +137,16 @@ export function AnalyticsPanel({
     );
   }
 
-  const { timeSeries, activityData, shareEvolution, granularity, metrics } = analyticsResult;
+  const { timeSeries, activityData, shareEvolution, granularity, metrics } = computeAnalytics(
+    election,
+    ballots,
+    decryptedMap,
+    decryptionDone,
+  );
+
+  const visibleMetrics = showKpiIndicators
+    ? buildMetrics(election, ballots, decryptedMap, decryptionDone)
+    : [];
 
   return (
     <div className="space-y-8">
@@ -175,7 +172,6 @@ export function AnalyticsPanel({
         shareEvolution={shareEvolution}
         granularity={granularity}
         metrics={metrics}
-        choices={choices}
         election={election}
         decryptionDone={decryptionDone}
       />
@@ -185,6 +181,7 @@ export function AnalyticsPanel({
         decryptedMap={decryptedMap}
         decryptionDone={decryptionDone}
         electionId={election.id}
+        anonymous={election.anonymous}
       />
     </div>
   );
