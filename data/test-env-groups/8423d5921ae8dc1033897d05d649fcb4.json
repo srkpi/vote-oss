@@ -1,1 +1,1 @@
-{"id":"8423d5921ae8dc1033897d05d649fcb4","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache getCachedAdmins returns null on a cache miss","name":"returns null on a cache miss","status":"passed","testResultsByEnv":{"default":"4d77af69c97a6bd5cb4a1ed34b9a53fe"}}
+{"id":"8423d5921ae8dc1033897d05d649fcb4","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache getCachedAdmins returns null on a cache miss","name":"returns null on a cache miss","status":"passed","testResultsByEnv":{"default":"c45c7bcf748319387945ae73e64d0b41"}}

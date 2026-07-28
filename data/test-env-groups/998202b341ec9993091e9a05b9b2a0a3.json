@@ -1,1 +1,1 @@
-{"id":"998202b341ec9993091e9a05b9b2a0a3","fullName":"vote-oss:src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"31ebdec509226fd801cd7f0f787f530e"}}
+{"id":"998202b341ec9993091e9a05b9b2a0a3","fullName":"vote-oss:src/__tests__/api/admins/join.test.ts#POST /api/admins/join returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"02c14f6e56635b50daf4e8686eb41a6e"}}
