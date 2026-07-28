@@ -72,11 +72,11 @@ export default async function AdminPetitionsPage() {
         </div>
 
         {error ? (
-          <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
             <ErrorState title="Не вдалося завантажити петиції" description={error} />
           </div>
         ) : petitions.length === 0 ? (
-          <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
             <EmptyState
               icon={<Megaphone className="h-10 w-10" />}
               title="Петицій поки немає"

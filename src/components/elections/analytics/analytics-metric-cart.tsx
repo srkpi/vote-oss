@@ -115,7 +115,7 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
         tabIndex={-1}
         className={cn(
           'relative z-10 w-full outline-none sm:max-w-lg',
-          'shadow-shadow-xl animate-scale-in overflow-hidden rounded-t-2xl bg-white sm:rounded-2xl',
+          'animate-scale-in overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl',
         )}
         style={{ animationDuration: '200ms' }}
       >
@@ -208,7 +208,7 @@ export function AnalyticsMetricCard({
       className={cn(
         'group w-full rounded-xl border bg-white p-5 text-left',
         'cursor-pointer transition-all duration-200',
-        'shadow-shadow-sm hover:shadow-shadow-md hover:-translate-y-0.5',
+        'shadow-sm hover:-translate-y-0.5 hover:shadow-md',
         styles.border,
         'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
       )}

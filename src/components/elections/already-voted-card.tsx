@@ -99,7 +99,7 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
           className={cn(
             'group w-full cursor-pointer rounded-(--radius) border p-3 text-left transition-all duration-150',
             copied
-              ? 'border-success/40 bg-success-bg shadow-shadow-xs'
+              ? 'border-success/40 bg-success-bg shadow-xs'
               : 'border-border-subtle bg-surface hover:border-kpi-blue-light hover:bg-kpi-navy/3',
           )}
         >

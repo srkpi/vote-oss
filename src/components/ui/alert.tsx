@@ -148,7 +148,7 @@ export function ToastItem({
         'w-80 overflow-hidden',
         'rounded-xl bg-white',
         'border-border-color border',
-        'shadow-shadow-xl',
+        'shadow-xl',
         'p-4',
         'animate-slide-right',
       )}

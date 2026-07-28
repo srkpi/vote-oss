@@ -73,7 +73,7 @@ export function CommentVotersPopover({
         )}
         {voters?.map((voter) => (
           <div key={voter.userId} className="hover:bg-hover-bg flex items-start gap-2 px-3 py-2">
-            <Avatar src={voter.avatarUrl} name={voter.fullName} size={16} />
+            <Avatar src={voter.avatarUrl} name={voter.fullName} size={32} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="font-body truncate text-sm">{voter.fullName}</span>

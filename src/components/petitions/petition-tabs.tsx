@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { CommentSection } from '@/components/comments/comment-section';
 import { AnalyticsPanel } from '@/components/elections/analytics/analytics-panel';
 import { PetitionSignatories } from '@/components/petitions/petition-signatories';
+import { Alert } from '@/components/ui/alert';
 import { Tabs } from '@/components/ui/tabs';
 import { useBallotDecryption } from '@/hooks/use-ballot-decryption';
 import type { Ballot, BallotsResponse } from '@/types/ballot';
@@ -118,9 +119,9 @@ export function PetitionTabs({
             onDecrypt={decrypt}
           />
         ) : (
-          <p className="text-muted-foreground text-sm">
+          <Alert variant="error" title="Не вдалося завантажити підписантів">
             {ballotsError ?? 'Аналітика поки недоступна.'}
-          </p>
+          </Alert>
         ))}
     </div>
   );

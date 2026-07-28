@@ -48,6 +48,10 @@ export function SignPetitionPanel({ petition }: SignPetitionPanelProps) {
     );
   }
 
+  if (petition.status === 'closed') {
+    return null;
+  }
+
   const handleSign = async () => {
     const choice = petition.choices[0];
     if (!choice) {

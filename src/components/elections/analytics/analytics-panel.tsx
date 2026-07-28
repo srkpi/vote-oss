@@ -127,7 +127,7 @@ export function AnalyticsPanel({
 }: AnalyticsPanelProps) {
   if (ballots.length === 0) {
     return (
-      <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+      <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
         <EmptyState
           title="Немає даних для аналізу"
           description="Жодного бюлетеня не подано"

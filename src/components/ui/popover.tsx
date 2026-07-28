@@ -6,9 +6,11 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils/common';
 
 interface PopoverPosition {
-  top: number;
+  top?: number;
+  bottom?: number;
   left: number;
   upward: boolean;
+  maxHeight: number;
 }
 
 function computePosition(anchor: HTMLElement, width: number, height: number): PopoverPosition {
@@ -18,14 +20,29 @@ function computePosition(anchor: HTMLElement, width: number, height: number): Po
   const margin = 8;
 
   const spaceBelow = viewportHeight - rect.bottom;
-  const upward = spaceBelow < height + margin && rect.top > height + margin;
+  const spaceAbove = rect.top;
+
+  let upward = false;
+  // If it doesn't fit below AND there is more space above than below, flip it upward
+  if (spaceBelow < height + margin && spaceAbove > spaceBelow) {
+    upward = true;
+  }
 
   let left = rect.left;
   if (left + width > viewportWidth - margin) {
     left = Math.max(margin, viewportWidth - width - margin);
   }
 
-  return { top: upward ? rect.top : rect.bottom, left, upward };
+  // Calculate the maximum height so it never runs off-screen
+  const maxHeight = (upward ? spaceAbove : spaceBelow) - margin;
+
+  if (upward) {
+    // Use bottom positioning instead of transform. This prevents CSS animations
+    // (like animate-scale-in) from overriding the upward positioning.
+    return { bottom: viewportHeight - rect.top, left, upward, maxHeight };
+  }
+
+  return { top: rect.bottom, left, upward, maxHeight };
 }
 
 export interface PopoverProps {
@@ -40,9 +57,7 @@ export interface PopoverProps {
 /**
  * Generic anchored popover: portal-rendered, viewport-aware (flips upward
  * near the bottom edge, clamps horizontally so it never runs off-screen),
- * closes on outside pointerdown or Escape. Generalized from the
- * positioning logic already used by KyivDateTimePicker so other anchored
- * popups (e.g. the comment "who voted" list) don't reimplement it.
+ * closes on outside pointerdown or Escape.
  */
 export function Popover({
   open,
@@ -57,7 +72,24 @@ export function Popover({
 
   const recompute = React.useCallback(() => {
     if (!anchorRef.current) return;
-    setPosition(computePosition(anchorRef.current, width, popoverRef.current?.offsetHeight || 260));
+
+    // Use scrollHeight to get the true unconstrained content height
+    const height = popoverRef.current?.scrollHeight || 260;
+
+    setPosition((prev) => {
+      const next = computePosition(anchorRef.current!, width, height);
+      // Bail out if state hasn't changed to prevent ResizeObserver loops
+      if (
+        prev?.top === next.top &&
+        prev?.bottom === next.bottom &&
+        prev?.left === next.left &&
+        prev?.upward === next.upward &&
+        prev?.maxHeight === next.maxHeight
+      ) {
+        return prev;
+      }
+      return next;
+    });
   }, [anchorRef, width]);
 
   React.useLayoutEffect(() => {
@@ -81,30 +113,50 @@ export function Popover({
     window.addEventListener('resize', recompute);
     window.addEventListener('scroll', recompute, true);
 
+    // Watch for internal dynamic content changes (like async fetched lists expanding)
+    const observer = new ResizeObserver(() => recompute());
+    if (popoverRef.current) {
+      observer.observe(popoverRef.current);
+    }
+
     return () => {
       document.removeEventListener('pointerdown', handleOutside);
       document.removeEventListener('keydown', handleKey);
       window.removeEventListener('resize', recompute);
       window.removeEventListener('scroll', recompute, true);
+      observer.disconnect();
     };
   }, [open, onOpenChange, recompute, anchorRef]);
 
   if (!open || typeof document === 'undefined') return null;
 
+  // Dynamically apply top vs bottom so they never conflict
+  const style: React.CSSProperties = {
+    position: 'fixed',
+    left: position?.left ?? -9999,
+    width,
+    maxHeight: position?.maxHeight,
+  };
+
+  if (position) {
+    if (position.upward) {
+      style.bottom = position.bottom;
+    } else {
+      style.top = position.top;
+    }
+  } else {
+    style.top = -9999;
+  }
+
   return createPortal(
     <div
       ref={popoverRef}
-      style={{
-        position: 'fixed',
-        top: position?.top ?? -9999,
-        left: position?.left ?? -9999,
-        width,
-        transform: position?.upward ? 'translateY(-100%)' : undefined,
-      }}
+      style={style}
       className={cn(
-        'z-50 overflow-hidden rounded-lg',
+        'z-50 rounded-lg',
+        'overflow-x-hidden overflow-y-auto', // Ensure scrolling happens
         'border-border-color border bg-white',
-        'shadow-shadow-lg',
+        'shadow-lg',
         'animate-scale-in',
         className,
       )}

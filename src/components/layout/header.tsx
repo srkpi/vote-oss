@@ -180,7 +180,7 @@ export function Header({ session }: HeaderProps) {
                   <div
                     className={cn(
                       'absolute top-full right-0 mt-2 w-72',
-                      'shadow-shadow-xl rounded-xl bg-white',
+                      'rounded-xl bg-white shadow-xl',
                       'border-border-color border',
                       'overflow-hidden',
                       'origin-top-right',
@@ -309,7 +309,7 @@ export function Header({ session }: HeaderProps) {
             className={cn(
               'absolute top-full right-0 left-0 lg:hidden',
               'border-border-color border-b bg-white',
-              'shadow-shadow-lg',
+              'shadow-lg',
               'animate-fade-down',
             )}
           >

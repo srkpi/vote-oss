@@ -29,8 +29,8 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
       className={cn(
         'group block h-full overflow-hidden rounded-xl bg-white',
         'border-border-color border',
-        'shadow-shadow-card',
-        'hover:shadow-shadow-card-hover transition-all duration-300 hover:-translate-y-1',
+        'shadow-card',
+        'hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1',
         !actionable && 'opacity-90 hover:opacity-100',
         'animate-fade-up',
       )}

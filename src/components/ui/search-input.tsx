@@ -31,7 +31,7 @@ export function SearchInput({
           'border-border-color rounded-lg border bg-white',
           'placeholder:text-subtle',
           'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
-          'shadow-shadow-xs transition-colors duration-150',
+          'shadow-xs transition-colors duration-150',
         )}
       />
 

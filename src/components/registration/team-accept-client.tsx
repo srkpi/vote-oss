@@ -80,7 +80,7 @@ export function TeamAcceptClient({
     <>
       <PageHeader title="Запрошення в команду" isContainer />
       <div className="container max-w-xl py-8">
-        <div className="border-border-color shadow-shadow-card space-y-3 rounded-xl border bg-white p-5">
+        <div className="border-border-color shadow-card space-y-3 rounded-xl border bg-white p-5">
           <p className="text-foreground text-sm">
             <span className="font-semibold">{preview.candidate.fullName}</span> запрошує вас до
             команди для участі в реєстрації:

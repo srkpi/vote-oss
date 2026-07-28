@@ -1,7 +1,14 @@
+import { getAvatarUrlMap } from '@/lib/avatars';
+import { COMMENTS_INITIAL_PAGE_SIZE } from '@/lib/constants';
 import { safeDecrypt } from '@/lib/elections-view';
 import { prisma } from '@/lib/prisma';
 import type { VerifiedPayload } from '@/types/auth';
-import type { Comment, CommentAuthor } from '@/types/comment';
+import type {
+  Comment,
+  CommentAuthor,
+  CommentsListResponse,
+  PetitionOfficialAnswer,
+} from '@/types/comment';
 
 export interface PetitionGate {
   id: string;
@@ -121,7 +128,7 @@ export function shapeComment(
         ? {
             userId: row.deleted_by,
             fullName: safeDecrypt(row.deleted_by_full_name ?? ''),
-            avatarUrl: avatarMap.get(row.user_id) ?? null,
+            avatarUrl: avatarMap.get(row.deleted_by) ?? null,
           }
         : null,
     author,
@@ -144,4 +151,109 @@ export async function getAdminUserIdSet(userIds: string[]): Promise<Set<string>>
     select: { user_id: true },
   });
   return new Set(admins.map((a) => a.user_id));
+}
+
+/**
+ * Fetches the first page of top-level comments for a petition, oldest
+ * first — shared by GET /elections/[id] (embedded initial page) and
+ * GET /elections/[id]/comments (used for every subsequent "load more").
+ * Keeping this in one place guarantees both entry points agree on
+ * ordering, page size, and shaping.
+ */
+export async function getInitialComments(
+  electionId: string,
+  gate: { petition: PetitionGate; isPetitionManager: boolean },
+  requesterUserId: string,
+): Promise<CommentsListResponse> {
+  const limit = COMMENTS_INITIAL_PAGE_SIZE;
+
+  const rows = await prisma.comment.findMany({
+    where: { election_id: electionId },
+    orderBy: [{ created_at: 'asc' }, { id: 'asc' }],
+    take: limit + 1,
+  });
+
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+
+  const avatarIds = new Set<string>();
+  for (const row of page) {
+    avatarIds.add(row.user_id);
+    if (row.deleted_by) avatarIds.add(row.deleted_by);
+  }
+
+  const [adminUserIds, avatarMap, myVoteRows] = await Promise.all([
+    getAdminUserIdSet([...new Set(page.map((c) => c.user_id))]),
+    getAvatarUrlMap([...avatarIds]),
+    prisma.commentVote.findMany({
+      where: { comment_id: { in: page.map((c) => c.id) }, user_id: requesterUserId },
+      select: { comment_id: true, value: true },
+    }),
+  ]);
+
+  const myVotes = new Map(myVoteRows.map((v) => [v.comment_id, v.value]));
+
+  const comments = page.map((row) =>
+    shapeComment(
+      row,
+      {
+        petitionCreatedBy: gate.petition.createdBy,
+        adminUserIds,
+        requesterUserId,
+        requesterIsPetitionManager: gate.isPetitionManager,
+        myVotes,
+      },
+      avatarMap,
+    ),
+  );
+
+  return {
+    comments,
+    // Cursor semantics stay "id of the last loaded row" — with ascending
+    // order that's now the most-recently-loaded (chronologically latest)
+    // comment in the page, and /comments continues forward from there.
+    nextCursor: hasMore ? page[page.length - 1].id : null,
+    hasMore,
+  };
+}
+
+type OfficialAnswerRow = {
+  body: string;
+  created_at: Date;
+  author_user_id: string;
+  author_full_name: string;
+  edited_at: Date | null;
+  edited_by_user_id: string | null;
+  edited_by_full_name: string | null;
+};
+
+/**
+ * Shapes a raw petition_official_answers row for the API. Shared by the
+ * PUT handler (which returns the answer it just saved) and GET
+ * /elections/[id] (which embeds the current answer, if any) so both stay
+ * structurally identical.
+ */
+export function shapeOfficialAnswer(
+  row: OfficialAnswerRow,
+  avatarMap: Map<string, string>,
+  canManage: boolean,
+): PetitionOfficialAnswer {
+  return {
+    body: row.body,
+    createdAt: row.created_at.toISOString(),
+    author: {
+      userId: row.author_user_id,
+      fullName: safeDecrypt(row.author_full_name),
+      avatarUrl: avatarMap.get(row.author_user_id) ?? null,
+    },
+    editedAt: row.edited_at ? row.edited_at.toISOString() : null,
+    editedBy: row.edited_by_user_id
+      ? {
+          userId: row.edited_by_user_id,
+          fullName: safeDecrypt(row.edited_by_full_name ?? ''),
+          avatarUrl: avatarMap.get(row.edited_by_user_id) ?? null,
+        }
+      : null,
+    canManage,
+  };
 }

@@ -709,7 +709,7 @@ export function GroupDetailClient({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="space-y-6 lg:col-span-3">
             {/* Elections panel */}
-            <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
+            <div className="border-border-color shadow-card rounded-xl border bg-white">
               <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
                 <div className="flex items-center gap-2">
                   <Vote className="text-kpi-gray-mid h-4 w-4" />
@@ -816,7 +816,7 @@ export function GroupDetailClient({
           <div className="space-y-4 lg:col-span-2">
             {/* Public logo (visible to everyone when set) */}
             {!isOwner && group.requisites.logo && (
-              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white p-4">
+              <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white p-4">
                 <div className="flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -829,7 +829,7 @@ export function GroupDetailClient({
             )}
 
             {/* Members panel — moved into sidebar above management */}
-            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+            <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
               <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
                 <div className="flex items-center gap-2">
                   <Users className="text-kpi-gray-mid h-4 w-4" />
@@ -915,7 +915,7 @@ export function GroupDetailClient({
 
             {/* Requisites */}
             {isOwner && (
-              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+              <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
                   <div className="flex items-center gap-2">
                     <IdCard className="text-kpi-gray-mid h-4 w-4" />
@@ -1039,7 +1039,7 @@ export function GroupDetailClient({
 
             {/* Owner actions */}
             {isOwner && (
-              <div className="border-border-color shadow-shadow-card space-y-3 overflow-hidden rounded-xl border bg-white p-5">
+              <div className="border-border-color shadow-card space-y-3 overflow-hidden rounded-xl border bg-white p-5">
                 <h3 className="font-display text-foreground text-base font-semibold">Керування</h3>
 
                 <Button
@@ -1091,7 +1091,7 @@ export function GroupDetailClient({
 
             {/* Admin takeover */}
             {isAdminWithManageGroups && !isOwner && (
-              <div className="border-border-color shadow-shadow-card space-y-3 overflow-hidden rounded-xl border bg-white p-5">
+              <div className="border-border-color shadow-card space-y-3 overflow-hidden rounded-xl border bg-white p-5">
                 <h3 className="font-display text-foreground text-base font-semibold">
                   Адмін-керування
                 </h3>

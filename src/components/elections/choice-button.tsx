@@ -41,7 +41,7 @@ export function ChoiceButton({
         'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
         'animate-fade-up ph-no-capture',
         selected
-          ? 'border-kpi-navy bg-kpi-navy/5 shadow-shadow-card'
+          ? 'border-kpi-navy bg-kpi-navy/5 shadow-card'
           : 'border-border-color hover:border-kpi-blue-light/50 hover:bg-surface bg-white',
         disabled && !selected && 'cursor-not-allowed opacity-50',
       )}

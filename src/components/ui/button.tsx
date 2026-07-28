@@ -17,9 +17,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-shadow-button',
-        primary: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-shadow-button',
-        accent: 'bg-kpi-orange text-white hover:bg-kpi-orange-dark shadow-shadow-button-accent',
+        default: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-button',
+        primary: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-button',
+        accent: 'bg-kpi-orange text-white hover:bg-kpi-orange-dark shadow-button-accent',
         secondary:
           'bg-surface text-foreground border-border-color hover:bg-surface-hover hover:border-kpi-blue-light/40',
         ghost: 'bg-transparent text-foreground hover:bg-surface border-transparent',
@@ -27,7 +27,7 @@ const buttonVariants = cva(
           'bg-transparent text-foreground border-border-color hover:bg-surface hover:border-kpi-blue-light/50',
         danger:
           'bg-error-bg text-error border-error/20 hover:bg-error hover:text-white hover:border-error',
-        destructive: 'bg-error text-white hover:bg-error/90 shadow-shadow-sm',
+        destructive: 'bg-error text-white hover:bg-error/90 shadow-sm',
         link: 'bg-transparent text-kpi-navy underline-offset-4 hover:underline border-transparent p-0 h-auto',
       },
       size: {

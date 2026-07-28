@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { Tooltip } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { linkifyText } from '@/lib/utils/linkify';
@@ -44,14 +45,12 @@ export function CommentItem({
   const { toast } = useToast();
 
   if (comment.deletedAt) {
-    const tooltip = comment.deletedBy
-      ? `Видалено: ${comment.deletedBy.fullName} • ${new Date(comment.deletedAt).toLocaleString('uk-UA')}`
-      : undefined;
-
     return (
-      <div className="text-muted-foreground flex items-center gap-2 py-3 pl-11" title={tooltip}>
-        <Trash2 className="h-4 w-4 shrink-0" />
-        <span className="font-body text-sm italic">Коментар видалено</span>
+      <div className="border-border-color bg-surface flex items-center gap-3 rounded-xl border border-dashed px-4 py-3.5 sm:px-5">
+        <Trash2 className="text-muted-foreground h-4 w-4 shrink-0" />
+        <span className="font-body text-muted-foreground flex-1 text-sm italic">
+          Коментар видалено
+        </span>
       </div>
     );
   }
@@ -82,76 +81,97 @@ export function CommentItem({
   };
 
   return (
-    <div className="flex gap-3 py-3">
-      <Avatar src={comment.author.avatarUrl} name={comment.author.fullName} size={16} />
-      <div className="min-w-0 flex-1 space-y-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-body text-sm font-semibold">{comment.author.fullName}</span>
-          {comment.isPetitionAuthor && (
-            <Badge variant="accent" className="text-xs">
-              Автор петиції
-            </Badge>
-          )}
-          {comment.isAdmin && (
-            <Badge variant="navy" className="text-xs">
-              <ShieldCheck className="mr-1 h-3 w-3" />
-              Адміністратор
-            </Badge>
-          )}
-          <LocalDateTime date={comment.createdAt} className="text-muted-foreground text-xs" />
-          {comment.editedAt && (
-            <span
-              className="text-muted-foreground flex items-center gap-0.5 text-xs"
-              title={`Відредаговано ${new Date(comment.editedAt).toLocaleString('uk-UA')}`}
-            >
-              <Pencil className="h-3 w-3" />
-              змінено
-            </span>
-          )}
-        </div>
+    <div className="group border-border-color shadow-card hover:shadow-card-hover rounded-xl border bg-white p-4 transition-shadow sm:p-5">
+      <div className="flex gap-3">
+        <Avatar
+          src={comment.author.avatarUrl}
+          name={comment.author.fullName}
+          size={36}
+          className="mt-0.5"
+        />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <span className="font-body truncate text-sm font-semibold">
+                {comment.author.fullName}
+              </span>
+              {comment.isPetitionAuthor && (
+                <Badge variant="accent" className="text-xs">
+                  Автор петиції
+                </Badge>
+              )}
+              {comment.isAdmin && (
+                <Badge variant="navy" className="text-xs">
+                  <ShieldCheck className="mr-1 h-3 w-3" />
+                  Адміністратор
+                </Badge>
+              )}
+            </div>
 
-        {editing ? (
-          <CommentComposer
-            initialValue={comment.body}
-            submitLabel="Зберегти"
-            autoFocus
-            onCancel={() => setEditing(false)}
-            onSubmit={handleEditSubmit}
-          />
-        ) : (
-          <div className="font-body text-sm whitespace-pre-wrap">{linkifyText(comment.body)}</div>
-        )}
+            <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
+              <LocalDateTime date={comment.createdAt} />
+              {comment.editedAt && (
+                <Tooltip content={<LocalDateTime date={comment.editedAt} />}>
+                  <span className="hover:text-foreground flex items-center transition-colors">
+                    <Pencil className="h-3 w-3" />
+                  </span>
+                </Tooltip>
+              )}
+            </div>
+          </div>
 
-        <div className="flex items-center gap-4 pt-0.5">
-          <CommentVoteButtons
-            electionId={electionId}
-            commentId={comment.id}
-            upCount={comment.upCount}
-            downCount={comment.downCount}
-            myVote={comment.myVote}
-            isOwnComment={comment.canEdit}
-            onVoteChange={(next) => onUpdated({ ...comment, ...next })}
-          />
-          {!editing && comment.canEdit && !discussionClosed && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs"
-            >
-              <Pencil className="h-3 w-3" />
-              Редагувати
-            </button>
+          {editing ? (
+            <CommentComposer
+              initialValue={comment.body}
+              submitLabel="Зберегти"
+              autoFocus
+              onCancel={() => setEditing(false)}
+              onSubmit={handleEditSubmit}
+            />
+          ) : (
+            <div className="font-body text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
+              {linkifyText(comment.body)}
+            </div>
           )}
-          {comment.canDelete && (
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              className="hover:text-error text-muted-foreground flex items-center gap-1 text-xs"
-            >
-              <Trash2 className="h-3 w-3" />
-              Видалити
-            </button>
-          )}
+
+          <div className="flex items-center gap-1 pt-1 sm:gap-2">
+            <CommentVoteButtons
+              electionId={electionId}
+              commentId={comment.id}
+              upCount={comment.upCount}
+              downCount={comment.downCount}
+              myVote={comment.myVote}
+              isOwnComment={comment.canEdit}
+              onVoteChange={(next) => onUpdated({ ...comment, ...next })}
+            />
+
+            <div className="ml-auto flex items-center gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
+              {!editing && comment.canEdit && !discussionClosed && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditing(true)}
+                  className="text-muted-foreground hover:text-foreground gap-1 px-2 text-xs"
+                >
+                  <Pencil className="h-3 w-3" />
+                  <span className="hidden sm:inline">Редагувати</span>
+                </Button>
+              )}
+              {comment.canDelete && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setConfirmingDelete(true)}
+                  className="hover:text-error text-muted-foreground gap-1 px-2 text-xs"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span className="hidden sm:inline">Видалити</span>
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

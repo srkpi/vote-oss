@@ -99,7 +99,7 @@ export function CategoryCard({
 
       <div
         className={[
-          'border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white transition-all duration-150',
+          'border-border-color shadow-card overflow-hidden rounded-xl border bg-white transition-all duration-150',
           isDragging ? 'scale-[0.995] opacity-40' : '',
           isDragOver ? 'ring-kpi-blue-light ring-1' : '',
         ]

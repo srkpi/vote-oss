@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 
-import type { PetitionOfficialAnswer } from '@/types/comment';
+import type { CommentsListResponse, PetitionOfficialAnswer } from '@/types/comment';
 
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';
 /**
@@ -163,6 +163,7 @@ export interface ElectionDetail extends Election {
   commentsClosed: boolean;
   commentCount: number;
   officialAnswer: PetitionOfficialAnswer | null;
+  initialComments: CommentsListResponse | null;
 }
 
 export interface CachedElection {

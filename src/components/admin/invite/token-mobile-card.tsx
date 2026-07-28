@@ -19,8 +19,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
   return (
     <div
       className={cn(
-        'border-border-color rounded-lg border p-4',
-        'shadow-shadow-sm bg-white',
+        'border-border-color rounded-lg border bg-white p-4 shadow-sm',
         token.isOwn && 'border-kpi-navy',
       )}
     >

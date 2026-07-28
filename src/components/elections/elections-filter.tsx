@@ -341,7 +341,7 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
 
       {/* ── Elections grid / list ───────────────────────────────────────────── */}
       {paged.length === 0 ? (
-        <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white">
+        <div className="border-border-color rounded-xl border bg-white shadow-sm">
           <EmptyState
             icon={<FileText className="h-8 w-8" />}
             title={hasDifferentFromDefault ? 'Голосувань не знайдено' : 'Голосувань поки що немає'}
@@ -365,7 +365,7 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
           ))}
         </div>
       ) : (
-        <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
           {paged.map((election, i) => (
             <ElectionListItem
               key={election.id}

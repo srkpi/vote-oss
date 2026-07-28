@@ -13,6 +13,8 @@ import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { serverApi } from '@/lib/api/server';
 import { PETITION_QUORUM } from '@/lib/constants';
 import { getServerSession } from '@/lib/server-auth';
+import { isBotRequest } from '@/lib/utils/bot';
+import { cn } from '@/lib/utils/common';
 import { linkifyText } from '@/lib/utils/linkify';
 
 interface PetitionPageProps {
@@ -21,6 +23,9 @@ interface PetitionPageProps {
 
 export default async function PetitionPage({ params }: PetitionPageProps) {
   const { id } = await params;
+
+  if (await isBotRequest()) return null;
+
   const session = await getServerSession();
   if (!session) redirect('/login');
 
@@ -39,18 +44,14 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
   const canApprove = isPetitionManager && !petition.approved;
   const canDelete = isPetitionManager;
   const canSeeTabs = petition.approved || isPetitionManager || isOwner;
-
-  const [ballotsResult, commentsResult] = canSeeTabs
-    ? await Promise.all([
-        serverApi.elections.getSignatories(id),
-        serverApi.elections.comments.list(id),
-      ])
-    : [
-        { data: null, error: null },
-        { data: null, error: null },
-      ];
+  const ballotsResult = canSeeTabs
+    ? await serverApi.elections.getSignatories(id)
+    : { data: null, error: null };
 
   const quorum = petition.winningConditions?.quorum ?? PETITION_QUORUM;
+  const reached = petition.ballotCount >= quorum;
+  const isOpen = petition.status === 'open' && !petition.deletedBy;
+  const isPending = !petition.approved;
 
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
@@ -62,25 +63,50 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
       <div className="container grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-6">
-          <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+          <div className="border-border-color shadow-card relative overflow-hidden rounded-xl border bg-white p-6 sm:p-8">
+            <div
+              className={cn(
+                'absolute inset-x-0 top-0 h-1',
+                isOpen && !reached && 'from-success bg-linear-to-r to-emerald-400',
+                reached && 'from-kpi-blue-light bg-linear-to-r to-blue-400',
+                isPending && !petition.deletedBy && 'from-kpi-orange bg-linear-to-r to-amber-400',
+                petition.deletedBy && 'bg-linear-to-r from-rose-400 to-rose-300',
+                !isPending &&
+                  !isOpen &&
+                  !petition.deletedBy &&
+                  !reached &&
+                  'from-kpi-gray-light bg-linear-to-r to-gray-300',
+              )}
+            />
+
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <StatusBadge status={petition.approved ? 'open' : 'pending'} />
+              {isPending && <StatusBadge status="pending" />}
+              {!isPending && !isOpen && reached && <StatusBadge status="quorum" />}
+              {!isPending && !isOpen && !reached && <StatusBadge status="closed" />}
+              {!isPending && isOpen && <StatusBadge status="open" />}
             </div>
-            <h1 className="font-display mb-3 text-2xl font-bold">{petition.title}</h1>
-            <div className="text-muted-foreground mb-4 flex items-center gap-3 text-sm">
-              <UserAvatarMenu
-                icon
-                userId={petition.createdBy.userId}
-                avatarUrl={petition.createdBy.avatarUrl}
-                fullName={petition.createdBy.fullName}
-                canDelete={session.isAdmin}
-                size={petition.createdBy.avatarUrl ? 36 : 16}
-              />
-              <span className="truncate">{petition.createdBy.fullName}</span>
-              <span>·</span>
+
+            <h1 className="font-display mb-4 text-2xl leading-tight font-bold wrap-break-word sm:text-3xl">
+              {petition.title}
+            </h1>
+
+            <div className="text-muted-foreground mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+              <span className="flex items-center gap-2">
+                <UserAvatarMenu
+                  icon
+                  userId={petition.createdBy.userId}
+                  avatarUrl={petition.createdBy.avatarUrl}
+                  fullName={petition.createdBy.fullName}
+                  canDelete={session.isAdmin}
+                  size={petition.createdBy.avatarUrl ? 36 : 16}
+                />
+                <span className="truncate font-medium">{petition.createdBy.fullName}</span>
+              </span>
+              <span className="text-border-color">·</span>
               <LocalDate date={petition.createdAt} />
             </div>
-            <div className="font-body text-sm whitespace-pre-wrap">
+
+            <div className="font-body max-w-[68ch] text-[15px] leading-relaxed wrap-break-word whitespace-pre-wrap">
               {linkifyText(petition.description ?? '')}
             </div>
           </div>
@@ -109,8 +135,8 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
               electionId={petition.id}
               ballotsData={ballotsResult.data}
               ballotsError={ballotsResult.error}
-              commentsData={commentsResult.data}
-              commentsError={commentsResult.error}
+              commentsData={petition.initialComments}
+              commentsError={null}
               discussionClosed={petition.commentsClosed}
               commentCount={petition.commentCount}
               supporterCount={petition.ballotCount}

@@ -17,9 +17,9 @@ const accentStyles = {
 
 export function StatCard({ label, value, accent, icon }: StatCardProps) {
   return (
-    <div className="group border-border-color shadow-shadow-card flex items-center gap-3 rounded-xl border bg-white p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:gap-4 sm:p-5">
+    <div className="group border-border-color shadow-card flex items-center gap-3 rounded-xl border bg-white p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg sm:gap-4 sm:p-5">
       <div
-        className={`h-8 w-8 rounded-xl sm:h-10 sm:w-10 ${accentStyles[accent]} shadow-shadow-sm flex shrink-0 items-center justify-center text-white`}
+        className={`h-8 w-8 rounded-xl sm:h-10 sm:w-10 ${accentStyles[accent]} flex shrink-0 items-center justify-center text-white shadow-sm`}
       >
         {icon}
       </div>

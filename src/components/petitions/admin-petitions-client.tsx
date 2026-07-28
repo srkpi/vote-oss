@@ -235,7 +235,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
 
   return (
     <div className="space-y-4">
-      <div className="border-border-color shadow-shadow-sm space-y-4 rounded-xl">
+      <div className="border-border-color space-y-4 rounded-xl shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="shrink-0 overflow-x-auto sm:max-w-full">
             <Tabs
@@ -256,7 +256,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
       </div>
 
       {visible.length === 0 ? (
-        <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white p-4 sm:p-6">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-white p-4 shadow-sm sm:p-6">
           <EmptyState
             icon={<Megaphone className="h-10 w-10" />}
             title="Петицій не знайдено"
@@ -264,7 +264,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
           />
         </div>
       ) : (
-        <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
           <div className="hidden overflow-x-auto lg:block">
             <table className="w-full">
               <thead>

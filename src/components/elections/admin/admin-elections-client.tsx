@@ -161,7 +161,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
 
   if (error) {
     return (
-      <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
+      <div className="border-border-color shadow-card rounded-xl border bg-white">
         <ErrorState title="Помилка завантаження" description={error} />
       </div>
     );
@@ -187,7 +187,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
         </div>
 
         {filtered.length === 0 ? (
-          <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
+          <div className="border-border-color shadow-card rounded-xl border bg-white">
             <EmptyState
               icon={<FileText className="h-8 w-8" />}
               title={search ? 'Голосувань не знайдено' : 'Голосувань немає'}
@@ -195,7 +195,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
             />
           </div>
         ) : (
-          <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full">
                 <thead>

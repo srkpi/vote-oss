@@ -87,7 +87,7 @@ export function PetitionSignatories({
   }
 
   return (
-    <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+    <div className="border-border-color shadow-card rounded-xl border bg-white p-6">
       <div className="divide-border-color divide-y">
         {pageItems.map((signatory) => (
           <SignatoryRow key={signatory.ballotId} signatory={signatory} />

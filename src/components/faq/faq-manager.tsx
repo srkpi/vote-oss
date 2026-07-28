@@ -317,7 +317,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       ))}
 
       {addingCat ? (
-        <div className="border-border-color shadow-shadow-card rounded-xl border bg-white p-4 sm:p-5">
+        <div className="border-border-color shadow-card rounded-xl border bg-white p-4 sm:p-5">
           <p className="font-body text-foreground mb-3 text-sm font-semibold">Нова категорія</p>
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-1">

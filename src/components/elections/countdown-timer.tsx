@@ -82,7 +82,7 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
               className={cn(
                 'flex h-14 min-w-13 items-center justify-center',
                 'bg-kpi-navy rounded-lg',
-                'shadow-shadow-md',
+                'shadow-md',
               )}
             >
               <span className="font-display text-2xl leading-none font-bold text-white tabular-nums">

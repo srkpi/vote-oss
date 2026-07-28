@@ -37,8 +37,8 @@ function GroupCard({ group }: { group: Group }) {
     <Link
       href={`/groups/${group.id}`}
       className={cn(
-        'group border-border-color shadow-shadow-card block rounded-xl border bg-white',
-        'hover:shadow-shadow-card-hover transition-all duration-200 hover:-translate-y-0.5',
+        'group border-border-color shadow-card block rounded-xl border bg-white',
+        'hover:shadow-card-hover transition-all duration-200 hover:-translate-y-0.5',
         'flex flex-col overflow-hidden',
       )}
     >
@@ -159,7 +159,7 @@ export function GroupsClient({ initialGroups, canCreateGroups, error }: GroupsCl
         )}
 
         {!error && groups.length === 0 ? (
-          <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white">
+          <div className="border-border-color rounded-xl border bg-white shadow-sm">
             <EmptyState
               icon={<Users className="h-8 w-8" />}
               title="Ви не належите до жодної з груп"

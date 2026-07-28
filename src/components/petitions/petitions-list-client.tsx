@@ -50,7 +50,7 @@ export function PetitionsListClient({ petitions, sort }: PetitionsListClientProp
 
   if (visible.length === 0) {
     return (
-      <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+      <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
         <EmptyState
           icon={<Megaphone className="h-10 w-10" />}
           title="Немає жодної петиції"
@@ -78,7 +78,7 @@ export function PetitionsListClient({ petitions, sort }: PetitionsListClientProp
       </div>
 
       {filtered.length === 0 ? (
-        <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
           <EmptyState
             icon={<Megaphone className="h-10 w-10" />}
             title="Нічого не знайдено"

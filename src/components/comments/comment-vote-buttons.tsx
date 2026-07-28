@@ -59,7 +59,7 @@ export function CommentVoteButtons({
   const hasVoters = upCount > 0 || downCount > 0;
 
   return (
-    <div className="flex items-center gap-3 text-sm">
+    <div className="flex items-center gap-1 text-sm">
       <Button
         type="button"
         variant="ghost"
@@ -87,7 +87,7 @@ export function CommentVoteButtons({
         className="text-muted-foreground hover:text-foreground px-2 tabular-nums"
       >
         {upCount}
-        <span className="text-border-color mx-1">·</span>
+        <span className="text-border-color">·</span>
         {downCount}
       </Button>
 

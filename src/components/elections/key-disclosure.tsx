@@ -21,7 +21,7 @@ export function KeyDisclosure({ children }: KeyDisclosureProps) {
       variant="outline"
       size="sm"
       onClick={() => setShow(true)}
-      className="text-muted-foreground shadow-shadow-card border-border-color shadow-shadow-sm w-full gap-2 rounded-xl border"
+      className="text-muted-foreground shadow-card border-border-color w-full gap-2 rounded-xl border"
     >
       <Key className="h-4 w-4" />
       Показати ключі шифрування

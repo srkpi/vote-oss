@@ -78,7 +78,7 @@ export function UserAvatarMenu({
           <div
             className={cn(
               'border-border-color absolute top-full left-0 z-50 mt-2 w-48',
-              'shadow-shadow-xl origin-top-left overflow-hidden rounded-xl border bg-white',
+              'origin-top-left overflow-hidden rounded-xl border bg-white shadow-xl',
             )}
           >
             <button

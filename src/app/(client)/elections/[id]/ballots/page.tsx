@@ -46,7 +46,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
     if (status === 403) {
       return (
         <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-          <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-sm">
             <ErrorState
               title="Доступ обмежено"
               description="У вас немає доступу до бюлетенів цього голосування"
@@ -61,7 +61,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
   if (data.election.deletedAt) {
     return (
       <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-        <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
+        <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-sm">
           <ErrorState title="Голосування було видалено" />
         </div>
       </div>

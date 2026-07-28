@@ -8,7 +8,7 @@ export function LineTooltip({ active, payload, label, choices }: Record<string, 
   const entries = payload as { dataKey: string; value: number; color: string }[];
 
   return (
-    <div className="border-border-color shadow-shadow-lg min-w-36 rounded-xl border bg-white p-3.5">
+    <div className="border-border-color min-w-36 rounded-xl border bg-white p-3.5 shadow-lg">
       <p className="font-body text-muted-foreground mb-2.5 text-xs font-semibold">
         {formatDateTime(label as number)}
       </p>
@@ -41,7 +41,7 @@ export function BarTooltip({ active, payload, label }: Record<string, unknown>) 
   const count = (payload as { value: number }[])[0]?.value ?? 0;
 
   return (
-    <div className="border-border-color shadow-shadow-lg rounded-xl border bg-white p-3.5">
+    <div className="border-border-color rounded-xl border bg-white p-3.5 shadow-lg">
       <p className="font-body text-muted-foreground mb-1 text-xs font-semibold">
         {formatDateTime(label as number)}
       </p>
@@ -60,7 +60,7 @@ export function ShareTooltip({ active, payload, label, choices }: Record<string,
     .reverse();
 
   return (
-    <div className="border-border-color shadow-shadow-lg min-w-40 rounded-xl border bg-white p-3.5">
+    <div className="border-border-color min-w-40 rounded-xl border bg-white p-3.5 shadow-lg">
       <p className="font-body text-muted-foreground mb-2.5 text-xs font-semibold">
         {formatDateTime(label as number)}
       </p>

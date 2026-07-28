@@ -152,7 +152,7 @@ export function TeamSlotsPanel({
   return (
     <div
       className={
-        compact ? '' : 'border-border-color shadow-shadow-card mb-6 rounded-xl border bg-white p-5'
+        compact ? '' : 'border-border-color shadow-card mb-6 rounded-xl border bg-white p-5'
       }
     >
       <div className={cn('flex items-center gap-2', compact ? 'mb-1.5' : 'mb-3')}>

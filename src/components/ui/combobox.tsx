@@ -204,7 +204,7 @@ export function Combobox({
             'absolute z-50 w-full min-w-50',
             'overflow-hidden rounded-lg',
             'border-border-color border bg-white',
-            'shadow-shadow-lg',
+            'shadow-lg',
             'animate-scale-in',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}

@@ -120,7 +120,7 @@ export function AdminSidebar({
       <aside className="border-border-subtle sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-white lg:flex">
         <div className="border-border-subtle border-b p-5">
           <div className="flex items-center gap-3">
-            <div className="bg-kpi-orange shadow-shadow-sm flex h-9 w-9 items-center justify-center rounded-lg">
+            <div className="bg-kpi-orange flex h-9 w-9 items-center justify-center rounded-lg shadow-sm">
               <Settings className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -146,7 +146,7 @@ export function AdminSidebar({
                 'font-body flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium',
                 'transition-all duration-150',
                 isActive(item.href, item.exact)
-                  ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                  ? 'bg-kpi-navy text-white shadow-sm'
                   : 'text-muted-foreground hover:bg-surface hover:text-foreground',
               )}
             >

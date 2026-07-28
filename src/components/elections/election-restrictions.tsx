@@ -43,7 +43,7 @@ export const AccessRestrictions = ({
   const hasBypassRequired = !!groupedRestrictions['BYPASS_REQUIRED'];
 
   return (
-    <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white p-5">
+    <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white p-5">
       <h3 className="font-display text-foreground mb-4 text-base font-semibold">
         Обмеження доступу
       </h3>

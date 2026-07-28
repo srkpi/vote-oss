@@ -6,6 +6,7 @@ import { getAvatarUrlMap } from '@/lib/avatars';
 import { getElectionBypassForUser } from '@/lib/bypass';
 import { getCachedElections, invalidateElections, overlayLiveBallotCounts } from '@/lib/cache';
 import { fetchFacultyGroups } from '@/lib/campus-api';
+import { getInitialComments, shapeOfficialAnswer } from '@/lib/comments';
 import type { StudyFormValue, StudyYearValue } from '@/lib/constants';
 import {
   ELECTION_CHOICE_MAX_LENGTH,
@@ -39,6 +40,7 @@ import {
   parseWinningConditions,
   validateWinningConditions,
 } from '@/lib/winning-conditions';
+import type { CommentsListResponse, PetitionOfficialAnswer } from '@/types/comment';
 import type {
   CreateElectionRestriction,
   ElectionRestrictedGroups,
@@ -348,6 +350,68 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
   }
 
+  // ── Petition-only extras: discussion status, comment count, official answer ──
+  // Not part of the ballot/results cache (that cache is keyed on tally-relevant
+  // data only), so this is always a fresh, cheap lookup keyed on the PK.
+  let commentsClosed = false;
+  let commentsClosedAt: string | null = null;
+  let commentCount = 0;
+  let officialAnswer: PetitionOfficialAnswer | null = null;
+
+  if (electionData.type === 'PETITION') {
+    const [petitionMeta, answerRow] = await Promise.all([
+      prisma.election.findUnique({
+        where: { id: electionId },
+        select: {
+          comments_closed: true,
+          comments_closed_at: true,
+          _count: { select: { comments: true } },
+        },
+      }),
+      prisma.petitionOfficialAnswer.findUnique({ where: { election_id: electionId } }),
+    ]);
+
+    if (petitionMeta) {
+      commentsClosed = petitionMeta.comments_closed;
+      commentsClosedAt = petitionMeta.comments_closed_at?.toISOString() ?? null;
+      commentCount = petitionMeta._count.comments;
+    }
+
+    if (answerRow) {
+      const authorIds = [answerRow.author_user_id];
+      if (answerRow.edited_by_user_id) authorIds.push(answerRow.edited_by_user_id);
+      const answerAvatarMap = await getAvatarUrlMap(authorIds);
+      officialAnswer = shapeOfficialAnswer(
+        answerRow,
+        answerAvatarMap,
+        isAdmin && user.managePetitions === true,
+      );
+    }
+  }
+
+  let initialComments: CommentsListResponse | null = null;
+  if (electionData.type === 'PETITION') {
+    const isPetitionManagerForComments = isAdmin && user.managePetitions === true;
+    const isOwner = electionData.createdBy === user.sub;
+    const canSeeComments = electionData.approved || isPetitionManagerForComments || isOwner;
+
+    if (canSeeComments) {
+      initialComments = await getInitialComments(
+        electionId,
+        {
+          petition: {
+            id: electionData.id,
+            approved: electionData.approved,
+            createdBy: electionData.createdBy,
+            commentsClosed,
+          },
+          isPetitionManager: isPetitionManagerForComments,
+        },
+        user.sub,
+      );
+    }
+  }
+
   // ── Tally ─────────────────────────────────────────────────────────────────
   const now = new Date();
   const isClosed = now > electionData.closesAt;
@@ -537,6 +601,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     hasVoted,
     bypassedTypes,
     restrictedGroups,
+    commentsClosed,
+    commentsClosedAt,
+    commentCount,
+    officialAnswer,
+    initialComments,
     ...(isAdmin && {
       deletedAt: electionData.deletedAt?.toISOString() ?? null,
       deletedBy: deletedByField,

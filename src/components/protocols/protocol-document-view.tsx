@@ -137,7 +137,7 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
             </Button>
           </div>
 
-          <article className="border-border-color shadow-shadow-card rounded-xl border bg-white px-6 py-10 sm:px-12 sm:py-14">
+          <article className="border-border-color shadow-card rounded-xl border bg-white px-6 py-10 sm:px-12 sm:py-14">
             {/* Letterhead */}
             <header className="border-border-subtle mb-10 flex flex-col items-center gap-3 border-b pb-6 text-center">
               {logo && (

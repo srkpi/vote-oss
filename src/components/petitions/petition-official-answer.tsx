@@ -1,6 +1,7 @@
 'use client';
 
 import { MessageSquareText, Pencil, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { CommentComposer } from '@/components/comments/comment-composer';
@@ -16,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { Tooltip } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { PETITION_OFFICIAL_ANSWER_MAX_LENGTH } from '@/lib/constants';
@@ -37,6 +39,7 @@ export function PetitionOfficialAnswer({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   if (!answer && !canManage) return null;
 
@@ -44,6 +47,7 @@ export function PetitionOfficialAnswer({
     const { data, error } = await api.elections.officialAnswer.upsert(electionId, body);
     if (error || !data) throw new Error(error ?? 'Не вдалося зберегти відповідь');
     setEditing(false);
+    router.refresh();
   };
 
   const handleDelete = async () => {
@@ -52,6 +56,7 @@ export function PetitionOfficialAnswer({
       const { error } = await api.elections.officialAnswer.remove(electionId);
       if (error) throw new Error(error);
       setConfirmingDelete(false);
+      router.refresh();
     } catch (err) {
       toast({
         title: 'Не вдалося видалити відповідь',
@@ -68,7 +73,7 @@ export function PetitionOfficialAnswer({
       <div className="border-border-color rounded-xl border border-dashed p-4">
         {editing ? (
           <CommentComposer
-            placeholder="Офіційна відповідь адміністрації…"
+            placeholder="Офіційна відповідь…"
             submitLabel="Опублікувати"
             maxLength={PETITION_OFFICIAL_ANSWER_MAX_LENGTH}
             autoFocus
@@ -82,7 +87,7 @@ export function PetitionOfficialAnswer({
             className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
           >
             <MessageSquareText className="h-4 w-4" />
-            Дати офіційну відповідь від імені адміністрації
+            Дати офіційну відповідь
           </button>
         )}
       </div>
@@ -90,10 +95,12 @@ export function PetitionOfficialAnswer({
   }
 
   return (
-    <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-4">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-sm font-semibold">
-          <MessageSquareText className="h-4 w-4" />
+    <div className="border-kpi-navy/20 shadow-card from-kpi-navy/3 rounded-xl border bg-linear-to-br to-transparent p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="text-kpi-navy flex items-center gap-2 text-sm font-semibold">
+          <span className="bg-kpi-navy/10 flex h-7 w-7 items-center justify-center rounded-full">
+            <MessageSquareText className="h-4 w-4" />
+          </span>
           Офіційна відповідь
         </div>
         {canManage && !editing && (
@@ -101,7 +108,7 @@ export function PetitionOfficialAnswer({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="hover:bg-hover-bg text-muted-foreground hover:text-foreground rounded p-1"
+              className="hover:bg-hover-bg text-muted-foreground hover:text-foreground rounded p-1.5"
               title="Редагувати відповідь"
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -109,7 +116,7 @@ export function PetitionOfficialAnswer({
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="hover:bg-hover-bg hover:text-error text-muted-foreground rounded p-1"
+              className="hover:bg-hover-bg hover:text-error text-muted-foreground rounded p-1.5"
               title="Видалити відповідь"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -129,16 +136,21 @@ export function PetitionOfficialAnswer({
         />
       ) : (
         <>
-          <div className="font-body text-sm whitespace-pre-wrap">{linkifyText(answer.body)}</div>
-          <div className="text-muted-foreground mt-3 flex items-center gap-2 text-xs">
-            <Avatar src={answer.author.avatarUrl} name={answer.author.fullName} size={16} />
+          <div className="font-body text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
+            {linkifyText(answer.body)}
+          </div>
+          <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-2 text-xs">
+            <Avatar src={answer.author.avatarUrl} name={answer.author.fullName} size={20} />
             <span>
               {answer.author.fullName} · <LocalDateTime date={answer.createdAt} />
             </span>
             {answer.editedBy && answer.editedAt && (
-              <span title={`Востаннє редагував: ${answer.editedBy.fullName}`}>
-                (відредаговано <LocalDateTime date={answer.editedAt} />)
-              </span>
+              <Tooltip content={<span>Востаннє редагував(ла): {answer.editedBy.fullName}</span>}>
+                <span className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                  <Pencil className="h-3 w-3" />
+                  <LocalDateTime date={answer.editedAt} />
+                </span>
+              </Tooltip>
             )}
           </div>
         </>

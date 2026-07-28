@@ -212,8 +212,8 @@ export function createApiClient(fetcher: Fetcher) {
           fetcher<DiscussionStatus>(`/elections/${electionId}/comments/close`, {
             method: 'POST',
           }),
-        reopen: (electionId: string) =>
-          fetcher<DiscussionStatus>(`/elections/${electionId}/comments/reopen`, {
+        open: (electionId: string) =>
+          fetcher<DiscussionStatus>(`/elections/${electionId}/comments/open`, {
             method: 'POST',
           }),
       },

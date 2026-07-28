@@ -180,7 +180,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 hideOwnVote
               />
             ) : (
-              <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+              <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
                 <div className="border-border-subtle border-b px-4 py-4 sm:px-6">
                   <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
                     Варіанти відповідей
@@ -212,7 +212,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           </div>
 
           <div className="space-y-5">
-            <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+            <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
               <div className="space-y-4 p-4 sm:p-5">
                 <TimelineItem
                   label="Створено"

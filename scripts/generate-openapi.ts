@@ -568,9 +568,14 @@ const spec = createSwaggerSpec({
                     'Restriction types that the authenticated user bypasses via an active bypass token.',
                 },
                 commentsClosed: { type: 'boolean' },
+                commentsClosedAt: { type: 'string', format: 'date-time', nullable: true },
                 commentCount: { type: 'integer' },
                 officialAnswer: {
                   allOf: [{ $ref: '#/components/schemas/PetitionOfficialAnswer' }],
+                  nullable: true,
+                },
+                initialComments: {
+                  allOf: [{ $ref: '#/components/schemas/CommentsListResponse' }],
                   nullable: true,
                 },
                 hasVoted: {

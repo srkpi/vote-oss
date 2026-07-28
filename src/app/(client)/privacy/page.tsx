@@ -115,7 +115,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="mx-auto max-w-3xl">
-          <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
             <div className="border-border-subtle border-b px-6 pt-8 pb-6 sm:px-12">
               <p className="font-body text-muted-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
                 Зміст

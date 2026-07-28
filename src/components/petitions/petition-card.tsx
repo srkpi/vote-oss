@@ -26,7 +26,7 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
       className={cn(
         'group block rounded-xl bg-white',
         'border-border-color border',
-        'shadow-shadow-card hover:shadow-shadow-card-hover',
+        'shadow-card hover:shadow-card-hover',
         'transition-all duration-300 hover:-translate-y-1',
         'animate-fade-up overflow-hidden',
       )}

@@ -78,7 +78,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
     if (status === 403) {
       return (
         <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-          <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-sm">
             <ErrorState
               title={status === 403 ? 'Доступ обмежено' : 'Помилка завантаження'}
               description={
@@ -97,7 +97,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
   if (election.deletedAt) {
     return (
       <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-        <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
+        <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-sm">
           <ErrorState title="Голосування було видалено" />
         </div>
       </div>
@@ -167,7 +167,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             {election.description && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+              <div className="border-border-color rounded-xl border bg-white p-6 shadow-sm">
                 <h2 className="font-display text-foreground mb-3 text-xl font-semibold">Опис</h2>
                 <p className="font-body text-foreground text-sm leading-relaxed whitespace-pre-wrap">
                   {election.description}
@@ -176,7 +176,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
 
             {(isOpen || isUpcoming) && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+              <div className="border-border-color rounded-xl border bg-white p-6 shadow-sm">
                 <p className="font-body text-muted-foreground mb-4 text-xs font-semibold tracking-wider uppercase">
                   {isOpen ? 'Залишилось часу' : 'Починається через'}
                 </p>
@@ -185,7 +185,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
 
             {isOpen && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+              <div className="border-border-color rounded-xl border bg-white p-6 shadow-sm">
                 {canParticipate ? (
                   <>
                     <h2 className="font-display text-foreground mb-5 text-xl font-semibold">
@@ -215,7 +215,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
             )}
 
             {isUpcoming && (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+              <div className="border-border-color rounded-xl border bg-white p-6 shadow-sm">
                 <h2 className="font-display text-foreground mb-4 text-xl font-semibold">
                   Варіанти відповідей
                 </h2>
@@ -236,7 +236,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
           </div>
 
           <div className="space-y-5">
-            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-5">
+            <div className="border-border-color rounded-xl border bg-white p-5 shadow-sm">
               <h3 className="font-display text-foreground mb-4 text-base font-semibold">
                 Деталі голосування
               </h3>

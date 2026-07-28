@@ -113,7 +113,7 @@ export function RegistrationFormsPanel({
   };
 
   return (
-    <div className="border-border-color shadow-shadow-card rounded-xl border bg-white">
+    <div className="border-border-color shadow-card rounded-xl border bg-white">
       <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
         <div className="flex items-center gap-2">
           <ClipboardList className="text-kpi-gray-mid h-4 w-4" />

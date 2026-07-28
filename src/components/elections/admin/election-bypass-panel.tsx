@@ -314,7 +314,7 @@ export function ElectionBypassPanel({
   const deletedTokenCount = tokens.filter((t) => !!t.deletedAt).length;
 
   return (
-    <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+    <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
       <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-5">
         <div className="flex items-center gap-2">
           <Key className="text-kpi-gray-mid h-4 w-4" />

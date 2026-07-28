@@ -35,7 +35,7 @@ export default async function NewElectionPage({ searchParams }: NewElectionPageP
 
       <div className="p-4 sm:p-8">
         <div className="mx-auto max-w-2xl space-y-6">
-          <div className="border-border-color shadow-shadow-card rounded-xl border bg-white p-5 sm:p-8">
+          <div className="border-border-color shadow-card rounded-xl border bg-white p-5 sm:p-8">
             <CreateElectionForm
               restrictedToFaculty={session.restrictedToFaculty ? session.faculty : null}
               manageGroups={session.manageGroups}

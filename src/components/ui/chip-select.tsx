@@ -44,7 +44,7 @@ export function ChipSelect({
               'font-body h-8 rounded-lg border px-3 text-sm font-medium transition-all duration-150',
               'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
               selected
-                ? 'border-kpi-navy bg-kpi-navy shadow-shadow-sm text-white'
+                ? 'border-kpi-navy bg-kpi-navy text-white shadow-sm'
                 : 'border-border-color text-foreground hover:border-kpi-blue-light bg-white',
               disabled && 'cursor-not-allowed opacity-50',
               error && !selected && 'border-error',

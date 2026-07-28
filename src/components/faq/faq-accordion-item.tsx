@@ -16,7 +16,7 @@ export function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemPro
       className={cn(
         'border-border-color overflow-hidden rounded-lg border',
         'transition-shadow duration-200',
-        isOpen && 'shadow-shadow-card',
+        isOpen && 'shadow-card',
       )}
     >
       <button

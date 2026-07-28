@@ -122,7 +122,7 @@ export function AnalyticsCsvPanel({
   };
 
   return (
-    <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-6">
+    <div className="border-border-color rounded-xl border bg-white p-6 shadow-sm">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h3 className="font-display text-foreground flex items-center gap-2 text-base font-semibold">

@@ -24,7 +24,7 @@ export function Tabs<T extends string>({
   return (
     <div
       className={cn(
-        'no-scrollbar border-border-subtle shadow-shadow-xs overflow-x-auto rounded-lg border bg-white p-1',
+        'no-scrollbar border-border-subtle overflow-x-auto rounded-lg border bg-white p-1 shadow-xs',
         className,
       )}
       style={{ WebkitOverflowScrolling: 'touch' }}
@@ -43,7 +43,7 @@ export function Tabs<T extends string>({
                 // Stretch evenly if container has extra space, shrink only if needed
                 'flex-1 shrink-0 justify-center',
                 isActive
-                  ? 'bg-kpi-navy shadow-shadow-sm text-white'
+                  ? 'bg-kpi-navy text-white shadow-sm'
                   : 'text-muted-foreground hover:bg-surface hover:text-foreground',
               )}
             >

@@ -119,7 +119,7 @@ export default async function AdminDashboardPage() {
         )}
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
             <h2 className="font-display border-border-subtle text-foreground border-b px-4 py-4 text-base font-semibold sm:px-6 sm:text-lg">
               Нещодавні голосування
             </h2>
@@ -170,7 +170,7 @@ export default async function AdminDashboardPage() {
             )}
           </div>
 
-          <div className="border-border-color shadow-shadow-card overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
             <h2 className="font-display border-border-subtle text-foreground border-b px-4 py-4 text-base font-semibold sm:px-6 sm:text-lg">
               Нещодавні петиції
             </h2>

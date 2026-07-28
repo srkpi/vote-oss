@@ -45,7 +45,7 @@ export function JoinPageContent({
       </div>
 
       <div className="relative w-full max-w-lg">
-        <div className="border-border-color shadow-shadow-xl overflow-hidden rounded-2xl border bg-white">
+        <div className="border-border-color overflow-hidden rounded-2xl border bg-white shadow-xl">
           {/* Top accent bar */}
           <div className="bg-kpi-navy h-1.5 w-full" />
 

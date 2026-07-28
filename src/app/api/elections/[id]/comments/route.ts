@@ -19,16 +19,22 @@ import { isValidUuid } from '@/lib/utils/common';
  * @swagger
  * /api/elections/{id}/comments:
  *   get:
- *     summary: List comments on a petition (cursor-paginated, newest first)
+ *     summary: List comments on a petition (cursor-paginated, oldest first)
  *     description: >
- *       Returns a page of top-level comments, newest first. Pass `cursor`
- *       (the `id` of the last comment already loaded) to fetch the next
- *       page. Defaults to 5 for the first page; pass a larger `limit`
- *       (capped at 20) for "load more" requests.
+ *       Returns a page of top-level comments, oldest first, so reading
+ *       top-to-bottom follows the natural flow of the discussion. Pass
+ *       `cursor` (the `id` of the last comment already loaded) to fetch
+ *       the next page, continuing forward in time. Defaults to 5 for the
+ *       first page; pass a larger `limit` (capped at 20) for "load more"
+ *       requests.
  *
  *       Each comment reports whether the requester may edit/delete it,
  *       whether its author is the petition's creator or a current admin,
  *       and the requester's own vote on it, if any.
+ *
+ *       The petition detail endpoint (GET /elections/{id}) already embeds
+ *       this same first page as `initialComments` — call this endpoint
+ *       only for "load more", not for the initial render.
  *     tags:
  *       - Petition comments
  *     security:
@@ -89,7 +95,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const rows = await prisma.comment.findMany({
     where: { election_id: electionId },
-    orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
+    orderBy: [{ created_at: 'asc' }, { id: 'asc' }],
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });

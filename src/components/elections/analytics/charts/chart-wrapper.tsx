@@ -119,7 +119,7 @@ export function ChartWrapper({
   };
 
   return (
-    <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+    <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
       <div className="border-border-subtle flex items-center justify-between border-b px-6 py-4">
         <h3 className="font-display text-foreground text-sm font-semibold">{title}</h3>
         <Button

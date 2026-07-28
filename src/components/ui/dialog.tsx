@@ -69,7 +69,7 @@ export function DialogPanel({ className, maxWidth = 'md', children, ...props }: 
         maxWidths[maxWidth],
         'max-h-[calc(100dvh-2rem)]',
         'rounded-xl bg-white',
-        'shadow-shadow-xl',
+        'shadow-xl',
         'overflow-hidden',
         className,
       )}

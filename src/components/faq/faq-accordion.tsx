@@ -29,7 +29,7 @@ export function FaqAccordion({ categories }: FaqAccordionProps) {
   if (categories.length === 0) {
     return (
       <div className="bg-surface flex items-center justify-center p-4">
-        <div className="border-border-color shadow-shadow-sm w-full max-w-md overflow-hidden rounded-xl border bg-white">
+        <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-sm">
           <EmptyState icon={<CircleSlash2 className="h-8 w-8" />} title="FAQ поки порожній" />
         </div>
       </div>

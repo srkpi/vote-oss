@@ -63,7 +63,7 @@ export function PetitionAdminActions({
     setTogglingDiscussion(true);
     try {
       const { error } = discussionClosed
-        ? await api.elections.comments.reopen(petitionId)
+        ? await api.elections.comments.open(petitionId)
         : await api.elections.comments.close(petitionId);
       if (error) throw new Error(error);
       toast({ title: discussionClosed ? 'Обговорення відкрито' : 'Обговорення закрито' });
@@ -99,7 +99,7 @@ export function PetitionAdminActions({
   };
 
   return (
-    <div className="border-border-color shadow-shadow-sm space-y-3 rounded-xl border bg-white p-6">
+    <div className="border-border-color shadow-card space-y-3 rounded-xl border bg-white p-6">
       <h2 className="font-body text-sm font-semibold">Дії адміністратора</h2>
 
       {canApprove && (

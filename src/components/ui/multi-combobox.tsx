@@ -150,7 +150,7 @@ export function MultiCombobox({
           ref={dropdownCallbackRef}
           className={cn(
             'absolute z-50 w-full min-w-50 overflow-hidden rounded-lg',
-            'border-border-color shadow-shadow-lg animate-scale-in border bg-white',
+            'border-border-color animate-scale-in border bg-white shadow-lg',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >

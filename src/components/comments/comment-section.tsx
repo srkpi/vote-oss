@@ -35,7 +35,8 @@ export function CommentSection({
   const handleCreate = async (body: string) => {
     const { data, error } = await api.elections.comments.create(electionId, body);
     if (error || !data) throw new Error(error ?? 'Не вдалося опублікувати коментар');
-    setComments((prev) => [data, ...prev]);
+    // New comment is the newest — with oldest-first ordering it belongs at the end.
+    setComments((prev) => [...prev, data]);
   };
 
   const handleUpdated = (updated: Comment) => {
@@ -50,6 +51,7 @@ export function CommentSection({
         limit: COMMENTS_LOAD_MORE_PAGE_SIZE,
       });
       if (error || !data) throw new Error(error ?? 'Не вдалося завантажити коментарі');
+      // Continuing forward in time — new page's comments are newer, so append.
       setComments((prev) => [...prev, ...data.comments]);
       setNextCursor(data.nextCursor);
       setHasMore(data.hasMore);
@@ -83,13 +85,23 @@ export function CommentSection({
         <CommentComposer onSubmit={handleCreate} />
       )}
 
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button variant="ghost" onClick={handleLoadMore} loading={loadingMore} size="sm">
+            Завантажити попередні коментарі
+          </Button>
+        </div>
+      )}
+
       {comments.length === 0 ? (
-        <EmptyState
-          title="Ще немає коментарів"
-          description="Будьте першим, хто залишить коментар."
-        />
+        !discussionClosed && (
+          <EmptyState
+            title="Ще немає коментарів"
+            description="Будьте першим, хто залишить коментар."
+          />
+        )
       ) : (
-        <div className="divide-border-color divide-y">
+        <div className="space-y-3">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}
@@ -100,14 +112,6 @@ export function CommentSection({
               onDeleted={handleUpdated}
             />
           ))}
-        </div>
-      )}
-
-      {hasMore && (
-        <div className="flex justify-center pt-2">
-          <Button variant="ghost" onClick={handleLoadMore} loading={loadingMore}>
-            Завантажити ще
-          </Button>
         </div>
       )}
     </div>

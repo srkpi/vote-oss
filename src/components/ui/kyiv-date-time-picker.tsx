@@ -378,7 +378,7 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
         className={cn(
           'z-50 overflow-hidden rounded-lg',
           'border-border-color border bg-white',
-          'shadow-shadow-lg',
+          'shadow-lg',
           'animate-scale-in',
         )}
         role="dialog"

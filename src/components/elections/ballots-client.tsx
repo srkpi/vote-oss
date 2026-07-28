@@ -279,7 +279,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
           )}
 
           {ballots.length === 0 ? (
-            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+            <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
               <EmptyState
                 title={isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
                 description={isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
@@ -287,7 +287,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
               />
             </div>
           ) : pagedBallots.length === 0 ? (
-            <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white p-12 text-center">
+            <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
               <EmptyState
                 title="Нічого не знайдено"
                 description="Спробуйте змінити пошуковий запит"
@@ -295,7 +295,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
               />
             </div>
           ) : (
-            <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+            <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
               {decryptionDone && invalidHashCount > 0 && (
                 <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 border-b px-5 py-3 text-sm">
                   <ShieldAlert className="h-4 w-4 shrink-0" />

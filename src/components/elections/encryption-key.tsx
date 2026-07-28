@@ -22,7 +22,7 @@ export function EncryptionKey({
 
   return (
     <div
-      className={`rounded-xl bg-white ${containerBorder} shadow-shadow-card border-border-color shadow-shadow-sm overflow-hidden border`}
+      className={`rounded-xl bg-white ${containerBorder} shadow-card border-border-color overflow-hidden border`}
     >
       <div
         className={`border-b px-4 py-4 sm:px-5 ${headerBorder} flex items-center justify-between ${headerBg}`}

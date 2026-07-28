@@ -177,7 +177,7 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
         )}
 
         {!error && forms.length === 0 ? (
-          <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white">
+          <div className="border-border-color rounded-xl border bg-white shadow-sm">
             <EmptyState
               icon={<ClipboardList className="h-8 w-8" />}
               title="Зараз немає відкритих форм"
@@ -235,7 +235,7 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
             </div>
 
             {paged.length === 0 ? (
-              <div className="border-border-color shadow-shadow-sm rounded-xl border bg-white">
+              <div className="border-border-color rounded-xl border bg-white shadow-sm">
                 <EmptyState
                   icon={<ClipboardList className="h-8 w-8" />}
                   title={hasDifferentFromDefault ? 'Форм не знайдено' : 'Форм поки що немає'}
@@ -260,7 +260,7 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
                 ))}
               </div>
             ) : (
-              <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+              <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
                 {paged.map(({ form, status }, i) => (
                   <RegistrationListItem
                     key={form.id}

@@ -64,7 +64,7 @@ export default async function ElectionsPage() {
 
       <div className="container py-8">
         {error ? (
-          <div className="border-border-color shadow-shadow-sm overflow-hidden rounded-xl border bg-white">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
             <ErrorState title="Не вдалося завантажити голосування" description={error} />
           </div>
         ) : (

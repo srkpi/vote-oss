@@ -69,7 +69,7 @@ export function FilterDropdown<T extends string>({
       </button>
 
       {open && (
-        <div className="border-border-color shadow-shadow-lg absolute top-full left-0 z-200 mt-1 min-w-52.5 overflow-hidden rounded-lg border bg-white">
+        <div className="border-border-color absolute top-full left-0 z-200 mt-1 min-w-52.5 overflow-hidden rounded-lg border bg-white shadow-lg">
           {options.map((opt) => {
             const isSelected = opt.value === value;
             const isDisabled = opt.count === 0 && opt.value !== options[0]?.value;
@@ -193,7 +193,7 @@ export function FilterMultiDropdown({
       </button>
 
       {open && (
-        <div className="border-border-color shadow-shadow-lg absolute top-full left-0 z-200 mt-1 w-72 overflow-hidden rounded-lg border bg-white">
+        <div className="border-border-color absolute top-full left-0 z-200 mt-1 w-72 overflow-hidden rounded-lg border bg-white shadow-lg">
           {showSearch && (
             <div className="border-border-subtle border-b p-2">
               <div className="relative">
@@ -377,7 +377,7 @@ function DesktopFiltersPopover({
   return (
     <div
       ref={ref}
-      className="border-border-color shadow-shadow-xl animate-scale-in absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border bg-white p-5"
+      className="border-border-color animate-scale-in absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border bg-white p-5 shadow-xl"
     >
       {children}
     </div>
