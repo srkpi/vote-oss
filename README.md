@@ -267,14 +267,14 @@ The same ticket always returns the same student — results are hash-seeded and 
 
 ### Predefined edge-case tickets
 
-| Ticket       | Error triggered          | What's special                                       |
-| ------------ | ------------------------ | ---------------------------------------------------- |
-| `employee`   | `NotStudentError`        | `EMPLOYEE_ID` set, `STUDENT_ID` empty                |
-| `both`       | _(valid student)_        | Both `EMPLOYEE_ID` and `STUDENT_ID` set              |
-| `no-diia`    | `NotDiiaAuthError`       | `AUTH_METHOD = BANK_ID` instead of `DIIA`            |
-| `invalid`    | `InvalidUserDataError`   | `STUDENT_ID` and `NAME` are empty                    |
-| `academic`   | `NotStudyingError`       | Campus returns `OnAcademicLeave`                     |
-| `dismissed`  | `NotStudyingError`       | Campus returns `Dismissed`                           |
+| Ticket       | Error triggered             | What's special                          |
+| ------------ | --------------------------- | --------------------------------------- |
+| `employee`   | `NotStudentError`           | `EMPLOYEE_ID` set, `STUDENT_ID` empty   |
+| `both`       | _(valid student)_           | Both `EMPLOYEE_ID` and `STUDENT_ID` set |
+| `wrong-auth` | `NotAllowedAuthMethodError` | `AUTH_METHOD = WRONG`                   |
+| `invalid`    | `InvalidUserDataError`      | `STUDENT_ID` and `NAME` are empty       |
+| `academic`   | `NotStudyingError`          | Campus returns `OnAcademicLeave`        |
+| `dismissed`  | `NotStudyingError`          | Campus returns `Dismissed`              |
 
 ### Cheat sheet endpoint
 

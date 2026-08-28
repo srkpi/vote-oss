@@ -4,6 +4,7 @@ import { getUserBypassInfo } from '@/lib/bypass';
 import { fetchFacultyGroups } from '@/lib/campus-api';
 import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
 import { CAMPUS_API_URL, CAMPUS_INTEGRATION_API_KEY, KPI_APP_SECRET } from '@/lib/config/server';
+import { ALLOWED_AUTH_METHODS } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
 import type { ApiError } from '@/types/api';
@@ -34,8 +35,8 @@ export class NotStudentError extends ResolveUserDataError {
   }
 }
 
-export class NotDiiaAuthError extends ResolveUserDataError {
-  constructor(message = 'Authentication must be performed through Diia') {
+export class NotAllowedAuthMethodError extends ResolveUserDataError {
+  constructor(message = 'Not allowed auth method') {
     super(message);
   }
 }
@@ -147,7 +148,9 @@ export async function resolveTicket(ticketId: string): Promise<KpiIdUserInfo> {
 
   if (!data) throw new InvalidTicketError();
   if (!data.STUDENT_ID && !data.EMPLOYEE_ID) throw new InvalidUserDataError();
-  if (data.AUTH_METHOD !== 'DIIA') throw new NotDiiaAuthError();
+  if (!ALLOWED_AUTH_METHODS.includes(data.AUTH_METHOD)) {
+    throw new NotAllowedAuthMethodError();
+  }
   if (!data.STUDENT_ID && data.EMPLOYEE_ID) throw new NotStudentError();
   if (!data.STUDENT_ID || !data.NAME) throw new InvalidUserDataError();
 

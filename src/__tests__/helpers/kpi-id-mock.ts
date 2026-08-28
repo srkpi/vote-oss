@@ -1,5 +1,6 @@
 import type { NextResponse } from 'next/server';
 
+import { ALLOWED_AUTH_METHODS } from '@/lib/constants';
 import type { KpiIdUserInfo, UserInfo } from '@/types/auth';
 
 export class ResolveUserDataError extends Error {
@@ -27,8 +28,8 @@ export class NotStudentError extends ResolveUserDataError {
   }
 }
 
-export class NotDiiaAuthError extends ResolveUserDataError {
-  constructor(message = 'Authentication must be performed through Diia') {
+export class NotAllowedAuthMethodError extends ResolveUserDataError {
+  constructor(message = 'Not allowed auth method') {
     super(message);
   }
 }
@@ -49,7 +50,7 @@ export const TICKET_MAP: Record<string, KpiIdUserInfo> = {
   'ticket-user-1': {
     STUDENT_ID: 'user-001',
     NAME: 'Ivan Petrenko',
-    AUTH_METHOD: 'DIIA',
+    AUTH_METHOD: ALLOWED_AUTH_METHODS[0],
     EMPLOYEE_ID: '',
     TAX_ID: '1234',
     TRACE_ID: 'some-trace',
@@ -58,7 +59,7 @@ export const TICKET_MAP: Record<string, KpiIdUserInfo> = {
   'ticket-grad-1': {
     STUDENT_ID: 'grad-001',
     NAME: 'Petro Aspirant',
-    AUTH_METHOD: 'DIIA',
+    AUTH_METHOD: ALLOWED_AUTH_METHODS[0],
     EMPLOYEE_ID: '',
     TAX_ID: '4321',
     TRACE_ID: 'some-trace-2',
@@ -85,7 +86,7 @@ export const kpiIdMock = {
   InvalidTicketError,
   InvalidUserDataError,
   NotStudentError,
-  NotDiiaAuthError,
+  NotAllowedAuthMethodError,
   GraduateUserError,
   NotStudyingError,
 };

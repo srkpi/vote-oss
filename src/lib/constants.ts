@@ -1,3 +1,5 @@
+export const ALLOWED_AUTH_METHODS = ['DIIA', 'BANK_ID'];
+
 // Ballot versions
 export const BALLOT_VERSION_ANONYMOUS = 1;
 export const BALLOT_VERSION_IDENTIFIED = 2;

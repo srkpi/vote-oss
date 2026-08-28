@@ -54,8 +54,8 @@ export default function CallbackPage() {
           router.refresh();
         }, 1200);
       } else {
-        if (result.error === 'Authentication must be performed through Diia') {
-          setErrorMessage('Авторизуйтесь через застосунок Дія в KPI ID');
+        if (result.error === 'Not allowed auth method') {
+          setErrorMessage('Авторизуйтесь через Bank ID чи застосунок Дія');
         } else if (result.error === 'Platform is only available for students') {
           setErrorMessage('Платформа доступна лише студентам');
         } else if (result.error === 'Invalid or expired ticketId') {

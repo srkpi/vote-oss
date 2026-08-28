@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 
 import { getUserBypassInfo } from '@/lib/bypass';
 import { fetchFacultyGroups } from '@/lib/campus-api';
+import { ALLOWED_AUTH_METHODS } from '@/lib/constants';
 import {
   getCampusUserData,
   GraduateUserError,
   InvalidTicketError,
-  NotDiiaAuthError,
+  NotAllowedAuthMethodError,
   NotStudentError,
   NotStudyingError,
   resolveFacultyShortName,
@@ -54,12 +55,16 @@ describe('kpi-id module', () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          data: { AUTH_METHOD: 'DIIA', STUDENT_ID: 'user-123', NAME: 'Ivan' },
+          data: { AUTH_METHOD: ALLOWED_AUTH_METHODS[0], STUDENT_ID: 'user-123', NAME: 'Ivan' },
         }),
       });
 
       const user = await resolveTicket('valid-ticket');
-      expect(user).toMatchObject({ STUDENT_ID: 'user-123', NAME: 'Ivan', AUTH_METHOD: 'DIIA' });
+      expect(user).toMatchObject({
+        STUDENT_ID: 'user-123',
+        NAME: 'Ivan',
+        AUTH_METHOD: ALLOWED_AUTH_METHODS[0],
+      });
     });
 
     it('throws InvalidTicketError if response is not ok', async () => {
@@ -67,21 +72,21 @@ describe('kpi-id module', () => {
       await expect(resolveTicket('bad-ticket')).rejects.toThrow(InvalidTicketError);
     });
 
-    it('throws NotDiiaAuthError if AUTH_METHOD is not DIIA', async () => {
+    it('throws NotAllowedAuthMethodError if AUTH_METHOD is not allowed', async () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          data: { AUTH_METHOD: 'APP', STUDENT_ID: 'student-123', NAME: 'Petro' },
+          data: { AUTH_METHOD: 'WRONG', STUDENT_ID: 'student-123', NAME: 'Petro' },
         }),
       });
-      await expect(resolveTicket('ticket')).rejects.toThrow(NotDiiaAuthError);
+      await expect(resolveTicket('ticket')).rejects.toThrow(NotAllowedAuthMethodError);
     });
 
     it('throws NotStudentError if only EMPLOYEE_ID is present', async () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          data: { AUTH_METHOD: 'DIIA', EMPLOYEE_ID: 'emp-123', NAME: 'Petro' },
+          data: { AUTH_METHOD: ALLOWED_AUTH_METHODS[0], EMPLOYEE_ID: 'emp-123', NAME: 'Petro' },
         }),
       });
       await expect(resolveTicket('ticket')).rejects.toThrow(NotStudentError);
@@ -90,7 +95,7 @@ describe('kpi-id module', () => {
 
   describe('resolveUserData', () => {
     const mockKpiData: KpiIdUserInfo = {
-      AUTH_METHOD: 'DIIA',
+      AUTH_METHOD: ALLOWED_AUTH_METHODS[0],
       STUDENT_ID: 'user-123',
       NAME: 'Ivan',
       EMPLOYEE_ID: '',
@@ -149,7 +154,7 @@ describe('kpi-id module', () => {
 
   describe('getCampusUserData & Bypasses', () => {
     const mockKpiData: KpiIdUserInfo = {
-      AUTH_METHOD: 'DIIA',
+      AUTH_METHOD: ALLOWED_AUTH_METHODS[0],
       STUDENT_ID: 'user-123',
       NAME: 'Ivan',
       EMPLOYEE_ID: '',

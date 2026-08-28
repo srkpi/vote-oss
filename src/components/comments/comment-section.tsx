@@ -120,7 +120,7 @@ export function CommentSection({
           more = data.hasMore;
         }
 
-        if (pages === 0) {
+        if (!merged.some((c) => c.id === created.id)) {
           merged = [...merged, created];
         }
 
