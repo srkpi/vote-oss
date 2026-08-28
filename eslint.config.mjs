@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
   prettierConfig,
   ...tailwindCanonicalClasses.configs['flat/recommended'],
   {
+    settings: {
+      react: {
+        version: '19',
+      },
+    },
     plugins: {
       prettier: prettierPlugin,
       'simple-import-sort': simpleImportSort,

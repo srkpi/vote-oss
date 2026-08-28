@@ -113,6 +113,7 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<Api
   }
 
   if (typeof window !== 'undefined') {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = '/login';
   }
 

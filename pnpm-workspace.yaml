@@ -5,6 +5,7 @@ allowBuilds:
   core-js: true
   core-js-pure: true
   esbuild: true
+  msgpackr-extract: true
   msw: true
   prisma: true
   protobufjs: true
@@ -12,6 +13,7 @@ allowBuilds:
   tree-sitter: true
   tree-sitter-json: true
   unrs-resolver: true
+  workerd: true
 overrides:
   '@hono/node-server@<1.19.13': '>=1.19.13'
   axios@<1.15.0: '>=1.15.0'
