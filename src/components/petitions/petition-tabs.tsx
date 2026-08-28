@@ -46,10 +46,11 @@ export function PetitionTabs({
   commentsData,
   commentsError,
   discussionClosed,
-  commentCount,
+  commentCount: initialCommentCount,
   supporterCount,
 }: PetitionTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('comments');
+  const [commentCount, setCommentCount] = useState(initialCommentCount);
 
   const election = ballotsData?.election ?? EMPTY_ELECTION;
 
@@ -88,14 +89,22 @@ export function PetitionTabs({
         tabBadge={(key) => counts[key]}
       />
 
-      {activeTab === 'comments' && (
+      {/*
+        Kept mounted (just hidden) rather than unmounted on tab switch —
+        comments is the default tab so this costs nothing on first load,
+        and it's what stops loaded comments, an in-progress sort, and any
+        unsent draft in the composer from being wiped out and re-fetched
+        from scratch every time the reader switches away and back.
+      */}
+      <div className={activeTab === 'comments' ? undefined : 'hidden'}>
         <CommentSection
           electionId={electionId}
           discussionClosed={discussionClosed}
           initialData={commentsData}
           fetchError={commentsError}
+          onCommentCreated={() => setCommentCount((count) => count + 1)}
         />
-      )}
+      </div>
 
       {activeTab === 'supporters' && (
         <PetitionSignatories

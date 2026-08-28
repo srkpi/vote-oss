@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { adminCanAccessElection, checkRestrictionsWithBypass } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
-import type { ElectionRestriction } from '@/types/election';
+import type { ElectionRestriction, ElectionType } from '@/types/election';
 
 /**
  * @swagger
@@ -82,6 +82,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   let electionData: {
     id: string;
     title: string;
+    type: ElectionType;
+    approved: boolean;
     opens_at: Date;
     closes_at: Date;
     private_key: string;
@@ -93,6 +95,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     shuffle_choices: boolean;
     public_viewing: boolean;
     anonymous: boolean;
+    created_by: string;
   };
 
   const cached = await getCachedElections();
@@ -103,6 +106,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     electionData = {
       id: found.id,
       title: found.title,
+      type: found.type,
+      approved: found.approved,
       opens_at: new Date(found.opensAt),
       closes_at: new Date(found.closesAt),
       private_key: found.privateKey,
@@ -114,6 +119,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       shuffle_choices: found.shuffleChoices ?? false,
       public_viewing: found.publicViewing ?? false,
       anonymous: found.anonymous ?? true,
+      created_by: found.createdBy,
     };
   } else {
     const dbElection = await prisma.election.findUnique({
@@ -121,6 +127,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       select: {
         id: true,
         title: true,
+        type: true,
+        approved: true,
         opens_at: true,
         closes_at: true,
         private_key: true,
@@ -135,6 +143,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         min_choices: true,
         max_choices: true,
+        created_by: true,
       },
     });
 
@@ -150,6 +159,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   // Deleted elections: non-admins see 404
   if (!user.isAdmin && electionData.deleted_at) return Errors.notFound('Election not found');
+  if (electionData.type === 'PETITION' && !electionData.approved) {
+    const isPetitionManager = !user.isAdmin && user.managePetitions === true;
+    if (!isPetitionManager && electionData.created_by !== user.sub)
+      return Errors.notFound('Election not found');
+  }
 
   const restrictions = electionData.restrictions;
   const { public_viewing: publicViewing } = electionData;
@@ -225,15 +239,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     election: {
       id: electionData.id,
       title: electionData.title,
+      type: electionData.type,
       opensAt: electionData.opens_at,
       closesAt: electionData.closes_at,
       status,
       ballotCount: ballots.length,
+      choices,
       deletedAt: electionData.deleted_at,
       shuffleChoices: electionData.shuffle_choices,
       publicViewing,
       anonymous: electionData.anonymous,
-      choices,
       minChoices: electionData.min_choices,
       maxChoices: electionData.max_choices,
       ...(exposePrivateKey && { privateKey: decryptField(electionData.private_key) }),

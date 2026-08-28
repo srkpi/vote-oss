@@ -45,7 +45,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
   const canDelete = isPetitionManager;
   const canSeeTabs = petition.approved || isPetitionManager || isOwner;
   const ballotsResult = canSeeTabs
-    ? await serverApi.elections.getSignatories(id)
+    ? await serverApi.elections.getBallots(id)
     : { data: null, error: null };
 
   const quorum = petition.winningConditions?.quorum ?? PETITION_QUORUM;

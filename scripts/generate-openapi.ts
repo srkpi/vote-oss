@@ -748,6 +748,7 @@ const spec = createSwaggerSpec({
           required: [
             'id',
             'title',
+            'type',
             'status',
             'ballotCount',
             'deletedAt',
@@ -761,10 +762,22 @@ const spec = createSwaggerSpec({
           properties: {
             id: { type: 'string', format: 'uuid' },
             title: { type: 'string', minLength: 1, maxLength: ELECTION_TITLE_MAX_LENGTH },
+            type: { $ref: '#/components/schemas/ElectionType' },
             opensAt: { type: 'string', format: 'date-time' },
             closesAt: { type: 'string', format: 'date-time' },
             status: { $ref: '#/components/schemas/ElectionStatus' },
             ballotCount: { type: 'integer', minimum: 0 },
+            choices: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/ElectionChoiceCreateBody' },
+              minItems: ELECTION_CHOICES_MIN,
+              maxItems: ELECTION_CHOICES_MAX,
+            },
+            privateKey: {
+              type: 'string',
+              description:
+                'PEM-encoded RSA private key. Present once the election is closed, or for non-anonymous elections while voting is live.',
+            },
             deletedAt: { type: 'string', nullable: true, format: 'date-time' },
             shuffleChoices: { type: 'boolean' },
             publicViewing: { type: 'boolean' },
@@ -772,12 +785,6 @@ const spec = createSwaggerSpec({
               type: 'boolean',
               description:
                 "When false, decrypting ballots on the client will reveal each voter's userId and fullName.",
-            },
-            choices: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/ElectionChoiceCreateBody' },
-              minItems: ELECTION_CHOICES_MIN,
-              maxItems: ELECTION_CHOICES_MAX,
             },
             minChoices: {
               type: 'integer',
@@ -788,11 +795,6 @@ const spec = createSwaggerSpec({
               type: 'integer',
               minimum: ELECTION_MIN_CHOICES_MIN,
               maximum: ELECTION_MAX_CHOICES_MAX,
-            },
-            privateKey: {
-              type: 'string',
-              description:
-                'PEM-encoded RSA private key. Present once the election is closed, or for non-anonymous elections while voting is live.',
             },
           },
         },

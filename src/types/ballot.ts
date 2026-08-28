@@ -1,4 +1,4 @@
-import type { ElectionChoice, ElectionStatus } from '@/types/election';
+import type { ElectionChoice, ElectionStatus, ElectionType } from '@/types/election';
 
 export interface Ballot {
   id: string;
@@ -12,6 +12,7 @@ export interface Ballot {
 export interface BallotsElection {
   id: string;
   title: string;
+  type: ElectionType;
   opensAt: string;
   closesAt: string;
   status: ElectionStatus;
@@ -29,7 +30,6 @@ export interface BallotsElection {
 export interface BallotsResponse {
   election: BallotsElection;
   ballots: Ballot[];
-  total: number;
 }
 
 export interface DecryptionResult {

@@ -57,16 +57,14 @@ export function DecryptionPanel({
 
           <div className="min-w-0">
             {isDecrypting && (
-              <p className="font-body text-foreground text-sm font-medium">
-                Розшифрування бюлетенів…
-              </p>
+              <p className="text-foreground text-sm font-semibold">Розшифрування бюлетенів…</p>
             )}
             {!isDecrypting && !decryptionDone && (
               <>
-                <p className="font-body text-foreground text-sm font-medium">
+                <p className="text-foreground text-sm font-semibold">
                   Розшифрувати бюлетені локально
                 </p>
-                <p className="font-body text-muted-foreground mt-0.5 text-xs">
+                <p className="font-body text-muted-foreground mt-0.5 text-xs leading-snug">
                   Голосування закрито — приватний ключ відкрито. Розшифрування відбувається у вашому
                   браузері.
                 </p>
@@ -84,7 +82,7 @@ export function DecryptionPanel({
                     ? `Усі бюлетені успішно розшифровано та верифіковано`
                     : `${pluralize(malformedCount, ['зіпсований', 'зіпсовані', 'зіпсованих'])} · ${invalidHashCount} з некоректним хешем`}
                 </p>
-                <p className="font-body text-muted-foreground mt-0.5 text-xs">
+                <p className="font-body text-muted-foreground mt-0.5 text-xs leading-snug">
                   Розшифровано локально у вашому браузері
                 </p>
               </>

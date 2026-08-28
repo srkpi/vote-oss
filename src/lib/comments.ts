@@ -7,6 +7,8 @@ import type {
   Comment,
   CommentAuthor,
   CommentsListResponse,
+  CommentSort,
+  CommentSortDirection,
   PetitionOfficialAnswer,
 } from '@/types/comment';
 
@@ -21,19 +23,6 @@ export type PetitionAccessResult =
   | { ok: true; petition: PetitionGate; isPetitionManager: boolean }
   | { ok: false; status: 404 | 400; message: string };
 
-/**
- * Loads a petition and applies the same visibility rules already
- * established by GET /api/elections/[id]/signatories:
- *   - must be type PETITION (400 — wrong resource type, not "not found")
- *   - approved petitions are visible to any authenticated user
- *   - unapproved petitions are visible only to their creator or an
- *     admin with manage_petitions
- *   - soft-deleted petitions are visible only to admins
- *
- * Always reads fresh from the database (not the elections list cache),
- * since callers need up-to-date comments_closed state and this is a
- * single indexed PK lookup — not worth threading through the cache.
- */
 export async function getPetitionGate(
   electionId: string,
   user: VerifiedPayload,
@@ -153,24 +142,43 @@ export async function getAdminUserIdSet(userIds: string[]): Promise<Set<string>>
   return new Set(admins.map((a) => a.user_id));
 }
 
+export interface ListCommentsOptions {
+  cursor?: string | null;
+  limit: number;
+  sort?: CommentSort;
+  direction?: CommentSortDirection;
+}
+
 /**
- * Fetches the first page of top-level comments for a petition, oldest
- * first — shared by GET /elections/[id] (embedded initial page) and
- * GET /elections/[id]/comments (used for every subsequent "load more").
+ * Fetches a page of top-level comments for a petition — shared by
+ * GET /elections/[id] (embedded initial page, via getInitialComments
+ * below) and GET /elections/[id]/comments (used for every subsequent
+ * "load more" and for re-fetching page one when the sort changes).
  * Keeping this in one place guarantees both entry points agree on
  * ordering, page size, and shaping.
  */
-export async function getInitialComments(
+export async function listComments(
   electionId: string,
   gate: { petition: PetitionGate; isPetitionManager: boolean },
   requesterUserId: string,
+  options: ListCommentsOptions,
 ): Promise<CommentsListResponse> {
-  const limit = COMMENTS_INITIAL_PAGE_SIZE;
+  const { limit, cursor = null } = options;
+  const sort = options.sort ?? 'date';
+  const direction = options.direction ?? 'asc';
 
   const rows = await prisma.comment.findMany({
     where: { election_id: electionId },
-    orderBy: [{ created_at: 'asc' }, { id: 'asc' }],
+    // `rating` (up_count - down_count) is a DB-generated column — see
+    // schema.prisma — so it can be ordered by directly, the same way
+    // created_at already is. `id` is always the last tie-break so pages
+    // stay stable even when several comments share a rating or timestamp.
+    orderBy:
+      sort === 'rating'
+        ? [{ rating: direction }, { created_at: direction }, { id: direction }]
+        : [{ created_at: direction }, { id: direction }],
     take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
 
   const hasMore = rows.length > limit;
@@ -209,12 +217,28 @@ export async function getInitialComments(
 
   return {
     comments,
-    // Cursor semantics stay "id of the last loaded row" — with ascending
-    // order that's now the most-recently-loaded (chronologically latest)
-    // comment in the page, and /comments continues forward from there.
+    // Cursor semantics stay "id of the last loaded row" — the caller
+    // continues from there in whatever order was requested.
     nextCursor: hasMore ? page[page.length - 1].id : null,
     hasMore,
   };
+}
+
+/**
+ * The first page, oldest first — the default view embedded directly in
+ * GET /elections/[id]. Sorting/pagination past this point goes through
+ * GET /elections/[id]/comments (see listComments above).
+ */
+export async function getInitialComments(
+  electionId: string,
+  gate: { petition: PetitionGate; isPetitionManager: boolean },
+  requesterUserId: string,
+): Promise<CommentsListResponse> {
+  return listComments(electionId, gate, requesterUserId, {
+    limit: COMMENTS_INITIAL_PAGE_SIZE,
+    sort: 'date',
+    direction: 'asc',
+  });
 }
 
 type OfficialAnswerRow = {

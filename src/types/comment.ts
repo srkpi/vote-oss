@@ -4,6 +4,9 @@ export interface CommentAuthor {
   avatarUrl: string | null;
 }
 
+export type CommentSort = 'date' | 'rating';
+export type CommentSortDirection = 'asc' | 'desc';
+
 export interface Comment {
   id: string;
   body: string;

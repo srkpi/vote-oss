@@ -282,7 +282,6 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
             <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
               <EmptyState
                 title={isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
-                description={isClosed ? 'Ніхто не проголосував' : 'Ще ніхто не проголосував'}
                 icon={<FileText className="text-kpi-gray-mid h-7 w-7" />}
               />
             </div>
@@ -290,7 +289,6 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
             <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
               <EmptyState
                 title="Нічого не знайдено"
-                description="Спробуйте змінити пошуковий запит"
                 icon={<CircleSlash2 className="text-kpi-gray-mid h-7 w-7" />}
               />
             </div>

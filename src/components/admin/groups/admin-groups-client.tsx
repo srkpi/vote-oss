@@ -100,16 +100,19 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
             <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
               Групи
             </h2>
-            <p className="font-body text-muted-foreground text-xs">
-              {pluralize(groups.length, ['група', 'групи', 'груп'])} у системі
-            </p>
+            {groups.length > 0 && (
+              <p className="font-body text-muted-foreground text-xs">
+                {pluralize(groups.length, ['група в', 'групи в', 'груп у'])} системі
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Added w-full for mobile so the search bar feels natural on its own row */}
-        <div className="w-full sm:w-64">
-          <SearchInput value={search} onChange={setSearch} placeholder="Пошук груп…" />
-        </div>
+        {groups.length > 0 && (
+          <div className="w-full sm:w-64">
+            <SearchInput value={search} onChange={setSearch} placeholder="Пошук груп…" />
+          </div>
+        )}
       </div>
 
       {error && (

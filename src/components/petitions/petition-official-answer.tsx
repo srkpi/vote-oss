@@ -144,11 +144,10 @@ export function PetitionOfficialAnswer({
             <span>
               {answer.author.fullName} · <LocalDateTime date={answer.createdAt} />
             </span>
-            {answer.editedBy && answer.editedAt && (
-              <Tooltip content={<span>Востаннє редагував(ла): {answer.editedBy.fullName}</span>}>
+            {answer.editedAt && (
+              <Tooltip content={<LocalDateTime date={answer.editedAt} />}>
                 <span className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
                   <Pencil className="h-3 w-3" />
-                  <LocalDateTime date={answer.editedAt} />
                 </span>
               </Tooltip>
             )}

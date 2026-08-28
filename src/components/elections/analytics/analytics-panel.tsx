@@ -130,7 +130,6 @@ export function AnalyticsPanel({
       <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
         <EmptyState
           title="Немає даних для аналізу"
-          description="Жодного бюлетеня не подано"
           icon={<BarChart2 className="text-kpi-gray-mid h-7 w-7" />}
         />
       </div>

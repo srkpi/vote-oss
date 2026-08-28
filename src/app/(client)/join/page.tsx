@@ -1,4 +1,3 @@
-import { CheckCircle2 } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
@@ -65,10 +64,6 @@ export function JoinPageContent({
                 <p className="font-body text-muted-foreground text-xs">
                   {session.faculty} · {session.group}
                 </p>
-              </div>
-              <div className="font-body border-success/20 bg-success-bg text-success hidden shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-xs md:flex">
-                <CheckCircle2 className="h-3 w-3" />
-                Авторизовано
               </div>
             </div>
           </div>

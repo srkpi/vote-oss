@@ -30,6 +30,8 @@ import type {
 import type {
   Comment,
   CommentsListResponse,
+  CommentSort,
+  CommentSortDirection,
   CommentVotersResponse,
   CommentVoteSummary,
   DiscussionStatus,
@@ -155,18 +157,26 @@ export function createApiClient(fetcher: Fetcher) {
         }),
       getBallots: (electionId: string) =>
         fetcher<BallotsResponse>(`/elections/${electionId}/ballots`),
-      getSignatories: (electionId: string) =>
-        fetcher<BallotsResponse>(`/elections/${electionId}/signatories`),
       getVoters: (electionId: string) =>
         fetcher<{ voters: { userId: string; fullName: string }[] }>(
           `/elections/${electionId}/voters`,
         ),
 
       comments: {
-        list: (electionId: string, opts?: { cursor?: string; limit?: number }) => {
+        list: (
+          electionId: string,
+          opts?: {
+            cursor?: string;
+            limit?: number;
+            sort?: CommentSort;
+            direction?: CommentSortDirection;
+          },
+        ) => {
           const qs = new URLSearchParams();
           if (opts?.cursor) qs.set('cursor', opts.cursor);
           if (opts?.limit) qs.set('limit', String(opts.limit));
+          if (opts?.sort) qs.set('sort', opts.sort);
+          if (opts?.direction) qs.set('direction', opts.direction);
           const query = qs.toString();
           return fetcher<CommentsListResponse>(
             `/elections/${electionId}/comments${query ? `?${query}` : ''}`,

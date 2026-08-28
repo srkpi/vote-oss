@@ -238,10 +238,14 @@ model Comment {
 
   up_count   Int @default(0)
   down_count Int @default(0)
+  // Net score, maintained by Postgres itself as a STORED generated column
+  // (see migration) — always up_count - down_count
+  rating Int @default(dbgenerated())
 
   votes CommentVote[]
 
   @@index([election_id, created_at])
+  @@index([election_id, rating])
   @@index([user_id])
   @@map("comments")
 }

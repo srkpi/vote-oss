@@ -1,8 +1,9 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { EmptyState } from '@/components/common/empty-state';
 import { Alert } from '@/components/ui/alert';
 import { Avatar } from '@/components/ui/avatar';
 import { LocalDateTime } from '@/components/ui/local-time';
@@ -83,7 +84,14 @@ export function PetitionSignatories({
   );
 
   if (signatories.length === 0) {
-    return <p className="text-muted-foreground text-sm">Ще немає підписантів.</p>;
+    return (
+      <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
+        <EmptyState
+          title="Ще немає підписантів"
+          icon={<Users className="text-kpi-gray-mid h-7 w-7" />}
+        />
+      </div>
+    );
   }
 
   return (

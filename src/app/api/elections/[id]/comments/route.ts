@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { getAvatarUrlMap } from '@/lib/avatars';
-import { getAdminUserIdSet, getPetitionGate, shapeComment } from '@/lib/comments';
+import { getAdminUserIdSet, getPetitionGate, listComments, shapeComment } from '@/lib/comments';
 import {
   COMMENT_MAX_LENGTH,
   COMMENTS_INITIAL_PAGE_SIZE,
@@ -14,27 +14,36 @@ import { apiError, Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { rateLimitComment } from '@/lib/rate-limit';
 import { isValidUuid } from '@/lib/utils/common';
+import type { CommentSort, CommentSortDirection } from '@/types/comment';
 
 /**
  * @swagger
  * /api/elections/{id}/comments:
  *   get:
- *     summary: List comments on a petition (cursor-paginated, oldest first)
+ *     summary: List comments on a petition (cursor-paginated, sortable)
  *     description: >
- *       Returns a page of top-level comments, oldest first, so reading
- *       top-to-bottom follows the natural flow of the discussion. Pass
- *       `cursor` (the `id` of the last comment already loaded) to fetch
- *       the next page, continuing forward in time. Defaults to 5 for the
- *       first page; pass a larger `limit` (capped at 20) for "load more"
+ *       Returns a page of top-level comments. Defaults to `sort=date`,
+ *       `direction=asc` (oldest first), so reading top-to-bottom follows
+ *       the natural flow of the discussion. Pass `cursor` (the `id` of
+ *       the last comment already loaded) to fetch the next page,
+ *       continuing in the same sort order. Defaults to 5 for the first
+ *       page; pass a larger `limit` (capped at 20) for "load more"
  *       requests.
+ *
+ *       `sort=rating` orders by net score (upvotes minus downvotes)
+ *       instead of by date. `direction` reverses whichever sort is
+ *       active; changing either one starts a new sequence, so the client
+ *       should re-fetch with `cursor` omitted rather than reuse an old
+ *       cursor from a different sort.
  *
  *       Each comment reports whether the requester may edit/delete it,
  *       whether its author is the petition's creator or a current admin,
  *       and the requester's own vote on it, if any.
  *
  *       The petition detail endpoint (GET /elections/{id}) already embeds
- *       this same first page as `initialComments` — call this endpoint
- *       only for "load more", not for the initial render.
+ *       the default first page (oldest first) as `initialComments` — call
+ *       this endpoint for "load more" and whenever the requested sort
+ *       differs from that default.
  *     tags:
  *       - Petition comments
  *     security:
@@ -59,6 +68,18 @@ import { isValidUuid } from '@/lib/utils/common';
  *           type: integer
  *           minimum: 1
  *         description: Page size (default 5 for the first page)
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [date, rating]
+ *         description: Sort field. Defaults to `date`.
+ *       - in: query
+ *         name: direction
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort direction. Defaults to `asc` (oldest/lowest-rated first).
  *     responses:
  *       200:
  *         description: A page of comments
@@ -67,7 +88,9 @@ import { isValidUuid } from '@/lib/utils/common';
  *             schema:
  *               $ref: '#/components/schemas/CommentsListResponse'
  *       400:
- *         description: Invalid UUID, invalid cursor, or not a petition
+ *         description: >
+ *           Invalid UUID, invalid cursor, not a petition, or an
+ *           unrecognized `sort`/`direction` value
  *       401:
  *         description: Unauthorized
  *       404:
@@ -93,52 +116,26 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (limit > COMMENTS_LOAD_MORE_PAGE_SIZE)
     return Errors.badRequest(`Limit should not be larger than ${COMMENTS_LOAD_MORE_PAGE_SIZE}`);
 
-  const rows = await prisma.comment.findMany({
-    where: { election_id: electionId },
-    orderBy: [{ created_at: 'asc' }, { id: 'asc' }],
-    take: limit + 1,
-    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-  });
-
-  const hasMore = rows.length > limit;
-  const page = hasMore ? rows.slice(0, limit) : rows;
-
-  const avatarIds = new Set<string>();
-  for (const row of page) {
-    avatarIds.add(row.user_id);
-    if (row.deleted_by) avatarIds.add(row.deleted_by);
+  const sortParam = searchParams.get('sort');
+  if (sortParam && sortParam !== 'date' && sortParam !== 'rating') {
+    return Errors.badRequest("sort must be 'date' or 'rating'");
   }
+  const sort: CommentSort = sortParam === 'rating' ? 'rating' : 'date';
 
-  const [adminUserIds, avatarMap, myVoteRows] = await Promise.all([
-    getAdminUserIdSet([...new Set(page.map((c) => c.user_id))]),
-    getAvatarUrlMap([...avatarIds]),
-    prisma.commentVote.findMany({
-      where: { comment_id: { in: page.map((c) => c.id) }, user_id: auth.user.sub },
-      select: { comment_id: true, value: true },
-    }),
-  ]);
+  const directionParam = searchParams.get('direction');
+  if (directionParam && directionParam !== 'asc' && directionParam !== 'desc') {
+    return Errors.badRequest("direction must be 'asc' or 'desc'");
+  }
+  const direction: CommentSortDirection = directionParam === 'desc' ? 'desc' : 'asc';
 
-  const myVotes = new Map(myVoteRows.map((v) => [v.comment_id, v.value]));
-
-  const comments = page.map((row) =>
-    shapeComment(
-      row,
-      {
-        petitionCreatedBy: gate.petition.createdBy,
-        adminUserIds,
-        requesterUserId: auth.user.sub,
-        requesterIsPetitionManager: gate.isPetitionManager,
-        myVotes,
-      },
-      avatarMap,
-    ),
-  );
-
-  return NextResponse.json({
-    comments,
-    nextCursor: hasMore ? page[page.length - 1].id : null,
-    hasMore,
+  const result = await listComments(electionId, gate, auth.user.sub, {
+    cursor,
+    limit,
+    sort,
+    direction,
   });
+
+  return NextResponse.json(result);
 }
 
 /**

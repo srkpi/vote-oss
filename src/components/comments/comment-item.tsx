@@ -8,18 +8,8 @@ import { CommentVoteButtons } from '@/components/comments/comment-vote-buttons';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogBody,
-  DialogCloseButton,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { Tooltip } from '@/components/ui/tooltip';
-import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import { linkifyText } from '@/lib/utils/linkify';
 import type { Comment } from '@/types/comment';
@@ -29,7 +19,8 @@ interface CommentItemProps {
   comment: Comment;
   discussionClosed: boolean;
   onUpdated: (comment: Comment) => void;
-  onDeleted: (comment: Comment) => void;
+  /** Opens the single shared delete-confirmation dialog in CommentSection. */
+  onRequestDelete: (comment: Comment) => void;
 }
 
 export function CommentItem({
@@ -37,20 +28,54 @@ export function CommentItem({
   comment,
   discussionClosed,
   onUpdated,
-  onDeleted,
+  onRequestDelete,
 }: CommentItemProps) {
   const [editing, setEditing] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const { toast } = useToast();
 
   if (comment.deletedAt) {
     return (
-      <div className="border-border-color bg-surface flex items-center gap-3 rounded-xl border border-dashed px-4 py-3.5 sm:px-5">
-        <Trash2 className="text-muted-foreground h-4 w-4 shrink-0" />
-        <span className="font-body text-muted-foreground flex-1 text-sm italic">
-          Коментар видалено
-        </span>
+      <div className="border-border-color shadow-card rounded-xl border bg-white p-4 sm:p-5">
+        <div className="flex gap-3">
+          <Avatar
+            src={comment.author.avatarUrl}
+            name={comment.author.fullName}
+            size={36}
+            className="mt-0.5 opacity-60"
+          />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                <span className="font-body text-muted-foreground truncate text-sm font-semibold">
+                  {comment.author.fullName}
+                </span>
+                {comment.isPetitionAuthor && (
+                  <Badge variant="accent" className="text-xs">
+                    Автор петиції
+                  </Badge>
+                )}
+                {comment.isAdmin && (
+                  <Badge variant="navy" className="text-xs">
+                    <ShieldCheck className="mr-1 h-3 w-3" />
+                    Адміністратор
+                  </Badge>
+                )}
+              </div>
+
+              <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
+                <LocalDateTime date={comment.createdAt} />
+                {comment.deletedAt && (
+                  <Tooltip content={<LocalDateTime date={comment.deletedAt} />}>
+                    <span className="hover:text-foreground flex items-center gap-1 transition-colors">
+                      <Trash2 className="h-3 w-3" />
+                    </span>
+                  </Tooltip>
+                )}
+              </div>
+            </div>
+
+            <div className="font-body text-muted-foreground text-sm italic">Коментар видалено</div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -60,24 +85,6 @@ export function CommentItem({
     if (error || !data) throw new Error(error ?? 'Не вдалося зберегти зміни');
     onUpdated(data);
     setEditing(false);
-  };
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      const { data, error } = await api.elections.comments.remove(electionId, comment.id);
-      if (error || !data) throw new Error(error ?? 'Не вдалося видалити коментар');
-      onDeleted(data);
-      setConfirmingDelete(false);
-    } catch (err) {
-      toast({
-        title: 'Не вдалося видалити',
-        description: err instanceof Error ? err.message : 'Спробуйте ще раз',
-        variant: 'error',
-      });
-    } finally {
-      setDeleting(false);
-    }
   };
 
   return (
@@ -163,7 +170,7 @@ export function CommentItem({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setConfirmingDelete(true)}
+                  onClick={() => onRequestDelete(comment)}
                   className="hover:text-error text-muted-foreground gap-1 px-2 text-xs"
                 >
                   <Trash2 className="h-3 w-3" />
@@ -174,28 +181,6 @@ export function CommentItem({
           </div>
         </div>
       </div>
-
-      <Dialog open={confirmingDelete} onClose={() => setConfirmingDelete(false)}>
-        <DialogPanel>
-          <DialogHeader>
-            <DialogTitle>Видалити коментар?</DialogTitle>
-            <DialogCloseButton onClose={() => setConfirmingDelete(false)} />
-          </DialogHeader>
-          <DialogBody>
-            <p className="font-body text-muted-foreground text-sm">
-              Текст коментаря буде прибрано, але запис про його видалення залишиться видимим.
-            </p>
-          </DialogBody>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setConfirmingDelete(false)} disabled={deleting}>
-              Скасувати
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} loading={deleting}>
-              Видалити
-            </Button>
-          </DialogFooter>
-        </DialogPanel>
-      </Dialog>
     </div>
   );
 }
