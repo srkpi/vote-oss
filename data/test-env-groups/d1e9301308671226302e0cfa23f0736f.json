@@ -1,1 +1,1 @@
-{"id":"d1e9301308671226302e0cfa23f0736f","fullName":"vote-oss:src/__tests__/api/health/check.test.ts#GET /api/health returns 503 when Redis check fails","name":"returns 503 when Redis check fails","status":"passed","testResultsByEnv":{"default":"1987c089439e632643d339c050f30a8f"}}
+{"id":"d1e9301308671226302e0cfa23f0736f","fullName":"vote-oss:src/__tests__/api/health/check.test.ts#GET /api/health returns 503 when Redis check fails","name":"returns 503 when Redis check fails","status":"passed","testResultsByEnv":{"default":"4379f34dc7cecd5ac37afe915580af36"}}
