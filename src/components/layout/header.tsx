@@ -110,9 +110,8 @@ export function Header({ session }: HeaderProps) {
   return (
     <header
       className={cn(
-        'fixed top-0 right-0 left-0 z-40',
-        mobileOpen ? 'border-border-color border-b bg-white' : 'glass border-b border-white/60',
-        'h-(--header-height)',
+        'fixed top-0 right-0 left-0 z-40 h-(--header-height)',
+        mobileOpen ? 'bg-white' : 'glass',
       )}
     >
       <div className="container flex h-full items-center justify-between">
@@ -150,7 +149,10 @@ export function Header({ session }: HeaderProps) {
           {session ? (
             <div className="relative">
               <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                onClick={() => {
+                  setUserMenuOpen(!userMenuOpen);
+                  setMobileOpen(false);
+                }}
                 className={cn(
                   'flex items-center gap-2 rounded-lg px-3 py-1.5',
                   'hover:bg-surface transition-colors duration-150',
