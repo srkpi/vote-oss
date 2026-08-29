@@ -1,1 +1,1 @@
-{"id":"db5384a893b17fbffe578e9e92b1e9da","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups normalises malformed НН faculty names","name":"normalises malformed НН faculty names","status":"passed","testResultsByEnv":{"default":"ad65b80d8a28db05b65080c987ead9f5"}}
+{"id":"db5384a893b17fbffe578e9e92b1e9da","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups normalises malformed НН faculty names","name":"normalises malformed НН faculty names","status":"passed","testResultsByEnv":{"default":"45d4b02788482d7ab3e629ecce8a5226"}}
