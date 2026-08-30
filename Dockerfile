@@ -54,6 +54,9 @@ ENV NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME} \
 RUN --mount=type=cache,id=nextjs-cache,target=/app/.next/cache \
     pnpm build
 
+FROM scratch AS static-export
+COPY --from=builder /app/.next/static /_next/static
+
 FROM base AS runner
 WORKDIR /app
 
@@ -71,6 +74,3 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
 CMD ["node", "server.js"]
-
-FROM scratch AS static-export
-COPY --from=builder /app/.next/static /_next/static
