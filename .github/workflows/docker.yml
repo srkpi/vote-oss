@@ -109,4 +109,5 @@ jobs:
         with:
           subject-path: |
             ci-static-export/_next/static/chunks/**/*.js
+            ci-static-export/_next/static/chunks/**/*.css
             ci-static-export/_next/static/css/**/*.css

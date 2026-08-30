@@ -4,7 +4,7 @@
  *
  * Independently checks that a *live* vote-oss deployment is (a) built from
  * a genuinely CI-produced, attested Docker image, and (b) actually serving
- * the JS that image contains right now — i.e. that this domain is running
+ * the JS that image contains right now - i.e. that this domain is running
  * that build, not just that the build exists somewhere on Docker Hub.
  *
  * Deliberately zero-dependency (Node built-ins only) so it can be fetched
@@ -18,18 +18,18 @@
  *   node verify-deployment.cjs https://your-domain
  *
  * Requires: Node.js, and the GitHub CLI (`gh`, https://cli.github.com/).
- * Does NOT require Docker — neither check below touches a local Docker
+ * Does NOT require Docker - neither check below touches a local Docker
  * daemon; `gh attestation verify` resolves the OCI registry itself.
  *
  * What this proves: the specific JS files this domain served just now, and
  * the Docker image tag it claims to run, both carry a Sigstore-signed
  * attestation tying them to a specific commit built by this repo's own
- * GitHub Actions — verified against GitHub's attestation API + the public
+ * GitHub Actions - verified against GitHub's attestation API + the public
  * Rekor transparency log, not against anything this site says about itself.
  *
  * What this does NOT prove: that server-side-only logic (API routes, DB
  * access, business logic with no client-visible output) is identical to
- * that commit — only client-shipped JS/CSS is independently checked here.
+ * that commit - only client-shipped JS/CSS is independently checked here.
  * A deployment could in principle serve the right frontend while running
  * different backend code; closing that gap needs something like remote
  * attestation hardware, which is out of scope for this project.
@@ -47,9 +47,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const CHECK = '\u2713';
-const CROSS = '\u2717';
-const MAX_ASSETS_TO_CHECK = 3;
+const CHECK = '[OK]';
+const CROSS = '[FAIL]';
+const MAX_ASSETS_TO_CHECK = 4;
 
 function fetch(url, { binary = false, redirects = 5 } = {}) {
   return new Promise((resolve, reject) => {
@@ -146,20 +146,20 @@ async function main() {
 
   if (!info.build || !info.build.docker || !info.build.repo || !info.build.commit) {
     console.error(
-      'This deployment reports no CI build metadata (a local/non-CI build) — nothing to verify.',
+      'This deployment reports no CI build metadata (a local/non-CI build) - nothing to verify.',
     );
     process.exit(2);
   }
 
   console.log(`Site claims commit  ${info.build.commit}`);
-  console.log(`             image   ${info.build.docker.reference}\n`);
+  console.log(`             image  ${info.build.docker.reference}\n`);
 
   let failures = 0;
 
   // --- Check 1: is the image itself genuine? ---------------------------
   // This only proves the image with this digest was really built by this
   // repo's CI. It says nothing about what any given server is running.
-  console.log('[1/2] Image provenance — is the image itself genuine?');
+  console.log('[1/2] Image provenance - is the image itself genuine?');
   const imageCheck = verifyWithGh(
     `oci://docker.io/${info.build.docker.reference}`,
     info.build.repo,
@@ -168,17 +168,17 @@ async function main() {
     console.log(`  ${CHECK} verified\n`);
   } else {
     failures += 1;
-    console.log(`  ${CROSS} FAILED`);
+    console.log(`  ${CROSS} verification failed`);
     console.log(indent(imageCheck.output) + '\n');
   }
 
   // --- Check 2: is *this domain* actually serving that build? ----------
   // Fetches a real static asset the way a browser would, then checks
-  // whether that exact downloaded file — identified only by its own
-  // content hash — carries a matching attestation. Nothing here trusts
+  // whether that exact downloaded file - identified only by its own
+  // content hash - carries a matching attestation. Nothing here trusts
   // any claim the server makes about itself; only bytes pulled over the
   // wire and GitHub's public attestation record.
-  console.log('[2/2] Live content — is this domain serving that build, right now?');
+  console.log('[2/2] Live content - is this domain serving that build, right now?');
 
   let html = '';
   try {
@@ -188,13 +188,21 @@ async function main() {
     console.log(`  ${CROSS} could not fetch ${base}/: ${err.message}\n`);
   }
 
-  const assetPaths = Array.from(
+  const uniqueAssets = Array.from(
     new Set(
       Array.from(html.matchAll(/\/_next\/static\/(?:chunks|css)\/[^"'\s)]+?\.(?:js|css)/g)).map(
         (m) => m[0],
       ),
     ),
-  ).slice(0, MAX_ASSETS_TO_CHECK);
+  );
+
+  // Fisher-Yates shuffle
+  for (let i = uniqueAssets.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [uniqueAssets[i], uniqueAssets[j]] = [uniqueAssets[j], uniqueAssets[i]];
+  }
+
+  const assetPaths = uniqueAssets.slice(0, MAX_ASSETS_TO_CHECK);
 
   if (assetPaths.length === 0) {
     failures += 1;
@@ -219,7 +227,7 @@ async function main() {
         console.log(`  ${CHECK} ${assetPath}`);
       } else {
         failures += 1;
-        console.log(`  ${CROSS} ${assetPath} — FAILED`);
+        console.log(`  ${CROSS} ${assetPath}`);
         console.log(indent(assetCheck.output));
       }
     }
@@ -229,11 +237,11 @@ async function main() {
 
   if (failures === 0) {
     console.log(
-      `All checks passed — ${base} is serving code this repository's official CI produced from commit ${info.build.commit}.`,
+      `All checks passed - ${base} is serving code this repository's official CI produced from commit ${info.build.commit}.`,
     );
     process.exit(0);
   } else {
-    console.log(`${failures} check(s) failed — see above.`);
+    console.log(`${failures} check(s) failed - see above.`);
     process.exit(1);
   }
 }
