@@ -92,7 +92,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
             <details className="group/main border-border-subtle mt-4 border-t pt-3 [&::-webkit-details-marker]:hidden">
               <summary className="text-kpi-navy flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium">
                 <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-open/main:rotate-90" />
-                Як перевірити, що саме цей сайт запускає саме цей код?
+                Як перевірити, що сайт запускає саме цей код?
               </summary>
 
               <div className="text-muted-foreground mt-3 space-y-3 text-xs leading-relaxed">
@@ -105,8 +105,8 @@ export function BuildInfo({ className }: BuildInfoProps) {
                   </TextLink>
                   , із записом у публічний незмінний журнал Rekor. Це працює у два шари: перший
                   підтверджує, що Docker-образ справжній; другий — що{' '}
-                  <span className="text-foreground">саме цей сайт зараз віддає файли з нього</span>,
-                  бо перевіряється хеш JavaScript файлів завантаженого з цього сайту.
+                  <span className="text-foreground">цей сайт зараз віддає файли з нього</span>, бо
+                  перевіряється хеш завантажених JavaScript та CSS файлів.
                 </p>
 
                 <div>
@@ -147,7 +147,8 @@ export function BuildInfo({ className }: BuildInfoProps) {
                   <div className="mt-2 space-y-3">
                     <div>
                       <p className="text-foreground mb-1 font-medium">
-                        1. Переглянути, що саме запаковано в образ (потрібен лише Docker):
+                        1. Переглянути, що саме запаковано в образ (потрібен{' '}
+                        <TextLink href="https://www.docker.com/">Docker</TextLink>):
                       </p>
                       <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                         <code className="overflow-x-auto font-mono whitespace-nowrap">
@@ -159,7 +160,8 @@ export function BuildInfo({ className }: BuildInfoProps) {
 
                     <div>
                       <p className="text-foreground mb-1 font-medium">
-                        2. Перевірити походження образу (потрібен GitHub CLI):
+                        2. Перевірити походження образу (потрібен{' '}
+                        <TextLink href="https://cli.github.com/">GitHub CLI</TextLink>):
                       </p>
                       <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                         <code className="overflow-x-auto font-mono whitespace-nowrap">
@@ -175,7 +177,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
                         <span className="font-mono">/_next/static/…</span>) і перевірити саме його:
                       </p>
                       <div className="bg-surface border-border-subtle rounded-md border px-2.5 py-1.5">
-                        <code className="font-mono">
+                        <code className="overflow-x-auto font-mono whitespace-nowrap">
                           gh attestation verify ./завантажений-файл.js --repo {build.repo}
                         </code>
                       </div>
@@ -185,8 +187,8 @@ export function BuildInfo({ className }: BuildInfoProps) {
 
                 <p>
                   Проходження перевірок означає, що і образ, і файли, які зараз завантажуються з
-                  цього сайту, походять з вказаного workflow. Доказ дають GitHub і публічний журнал
-                  Rekor.
+                  цього сайту, походять з вказаного вище workflow. Верифікацію забезпечують GitHub
+                  та публічний журнал Rekor.
                 </p>
               </div>
             </details>
