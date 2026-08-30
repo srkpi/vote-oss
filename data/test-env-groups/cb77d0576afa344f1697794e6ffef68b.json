@@ -1,1 +1,1 @@
-{"id":"cb77d0576afa344f1697794e6ffef68b","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 403 for non-admin user","name":"returns 403 for non-admin user","status":"passed","testResultsByEnv":{"default":"38de870777e01f66e00815eea41831f8"}}
+{"id":"cb77d0576afa344f1697794e6ffef68b","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 403 for non-admin user","name":"returns 403 for non-admin user","status":"passed","testResultsByEnv":{"default":"de4c3eeaea7b7ee0069563c26497352b"}}
