@@ -1,0 +1,1 @@
+{"id":"efe275557626224068f9474dccabb448","fullName":"vote-oss:src/__tests__/api/info/info.test.ts#GET /api/info is null for a local build with no CI provenance metadata","name":"is null for a local build with no CI provenance metadata","status":"passed","testResultsByEnv":{"default":"ebbed9b39c229a2ab0deedf23ec80993"}}

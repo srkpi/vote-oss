@@ -1,1 +1,1 @@
-{"id":"dc11f7cb98718c4ab3c1e3ff91061c95","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fixFacultyName inserts a space after НН when missing","name":"inserts a space after НН when missing","status":"passed","testResultsByEnv":{"default":"9101e10aa37835c75492f6f545a2daa7"}}
+{"id":"dc11f7cb98718c4ab3c1e3ff91061c95","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fixFacultyName inserts a space after НН when missing","name":"inserts a space after НН when missing","status":"passed","testResultsByEnv":{"default":"24ebd31cc629205a3255e52ab82b6c37"}}
