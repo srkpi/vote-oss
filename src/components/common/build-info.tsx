@@ -110,7 +110,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
                 </p>
 
                 <div>
-                  <p className="text-foreground mb-1 font-medium">
+                  <p className="text-foreground font-medium">
                     Одна команда, яка перевіряє все одразу (потрібні{' '}
                     <TextLink href="https://nodejs.org/">Node.js</TextLink> і{' '}
                     <TextLink href="https://cli.github.com/">GitHub CLI</TextLink>
@@ -123,7 +123,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
                     </code>
                     <CopyButton text={build.verify.scriptCommand} label="Копіювати" />
                   </div>
-                  <p className="text-foreground mb-1 font-medium">Windows (PowerShell):</p>
+                  <p className="text-foreground my-1 font-medium">Windows (PowerShell):</p>
                   <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <code className="overflow-x-auto font-mono whitespace-nowrap">
                       {build.verify.scriptCommandWindows}
@@ -139,7 +139,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
                   </TextLink>
                 </div>
 
-                <details className="group/nested border-border-subtle border-t pt-2 [&::-webkit-details-marker]:hidden">
+                <details className="group/nested border-border-subtle border-t pt-4 [&::-webkit-details-marker]:hidden">
                   <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium">
                     <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-[[open]]/nested:rotate-90" />
                     Або вручну, крок за кроком

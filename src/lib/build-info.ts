@@ -61,7 +61,7 @@ export function getBuildInfo(): BuildInfo {
           attest: `gh attestation verify oci://docker.io/${docker.reference} --repo ${repo}`,
           scriptUrl: `https://raw.githubusercontent.com/${repo}/${commit}/scripts/verify-deployment.cjs`,
           scriptCommand: `curl -fsSL https://raw.githubusercontent.com/${repo}/${commit}/scripts/verify-deployment.cjs | node - ${APP_URL}`,
-          scriptCommandWindows: `(Invoke-RestMethod -Uri https://raw.githubusercontent.com/${repo}/${commit}/scripts/verify-deployment.cjs | node - ${APP_URL}`,
+          scriptCommandWindows: `(Invoke-RestMethod -Uri https://raw.githubusercontent.com/${repo}/${commit}/scripts/verify-deployment.cjs | node - ${APP_URL})`,
         }
       : null;
 
