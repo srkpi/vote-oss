@@ -51,6 +51,9 @@ import { NODE_ENV } from '@/lib/config/server';
  *                     commit:
  *                       type: string
  *                       example: a1b2c3d4e5f60718293a4b5c6d7e8f9012345678
+ *                     repo:
+ *                       type: string
+ *                       example: srkpi/vote-oss
  *                     commitUrl:
  *                       type: string
  *                       example: https://github.com/srkpi/vote-oss/commit/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678
@@ -81,6 +84,14 @@ import { NODE_ENV } from '@/lib/config/server';
  *                           type: string
  *                           description: Raw URL of the verification script, pinned to this exact commit.
  *                           example: https://raw.githubusercontent.com/srkpi/vote-oss/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/scripts/verify-deployment.cjs
+ *                         scriptCommand:
+ *                           type: string
+ *                           description: One-liner shell command for Unix-like environments to verify deployment.
+ *                           example: curl -fsSL https://raw.githubusercontent.com/srkpi/vote-oss/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/scripts/verify-deployment.cjs | node - https://voteoss.kpi.ua
+ *                         scriptCommandWindows:
+ *                           type: string
+ *                           description: One-liner command for Windows PowerShell environments to verify deployment.
+ *                           example: (Invoke-RestMethod -Uri https://raw.githubusercontent.com/srkpi/vote-oss/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678/scripts/verify-deployment.cjs | node - https://voteoss.kpi.ua
  */
 export async function GET() {
   const build = getBuildInfo();
@@ -94,6 +105,7 @@ export async function GET() {
       ? null
       : {
           commit: build.commit,
+          repo: build.repo,
           commitUrl: build.commitUrl,
           builtAt: build.builtAt,
           actionsRunUrl: build.actionsRunUrl,

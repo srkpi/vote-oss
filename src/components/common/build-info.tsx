@@ -2,10 +2,11 @@ import { ChevronRight, Container, ExternalLink, GitCommit, ShieldCheck } from 'l
 
 import { Badge } from '@/components/ui/badge';
 import { CopyButton } from '@/components/ui/copy-button';
+import { LocalDateTime } from '@/components/ui/local-time';
 import { TextLink } from '@/components/ui/text-link';
 import { getBuildInfo } from '@/lib/build-info';
 import { NODE_ENV } from '@/lib/config/server';
-import { cn, formatDateTime } from '@/lib/utils/common';
+import { capitalizeFirst, cn } from '@/lib/utils/common';
 
 interface BuildInfoProps {
   className?: string;
@@ -22,9 +23,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
           <ShieldCheck className="text-kpi-navy h-4 w-4 shrink-0" />
           <span className="text-foreground text-sm font-medium">Прозорість збірки</span>
         </div>
-        <Badge variant={isProd ? 'navy' : 'warning'}>
-          {isProd ? 'Продакшн' : 'Дев-середовище'}
-        </Badge>
+        <Badge variant={isProd ? 'navy' : 'warning'}>{capitalizeFirst(NODE_ENV)}</Badge>
       </div>
 
       {build.isLocalBuild ? (
@@ -55,7 +54,9 @@ export function BuildInfo({ className }: BuildInfoProps) {
             {build.builtAt && (
               <div className="flex items-center gap-2">
                 <dt className="text-muted-foreground shrink-0">Зібрано</dt>
-                <dd className="text-foreground">{formatDateTime(build.builtAt)}</dd>
+                <dd className="text-foreground">
+                  <LocalDateTime date={build.builtAt} />
+                </dd>
               </div>
             )}
 
@@ -115,11 +116,19 @@ export function BuildInfo({ className }: BuildInfoProps) {
                     <TextLink href="https://cli.github.com/">GitHub CLI</TextLink>
                     ).
                   </p>
+                  <p className="text-foreground mb-1 font-medium">Linux / macOS:</p>
                   <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <code className="overflow-x-auto font-mono whitespace-nowrap">
                       {build.verify.scriptCommand}
                     </code>
                     <CopyButton text={build.verify.scriptCommand} label="Копіювати" />
+                  </div>
+                  <p className="text-foreground mb-1 font-medium">Windows (PowerShell):</p>
+                  <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+                    <code className="overflow-x-auto font-mono whitespace-nowrap">
+                      {build.verify.scriptCommandWindows}
+                    </code>
+                    <CopyButton text={build.verify.scriptCommandWindows} label="Копіювати" />
                   </div>
                   <TextLink
                     href={build.verify.scriptUrl}

@@ -19,6 +19,7 @@ describe('GET /api/info', () => {
         ? null
         : {
             commit: build.commit,
+            repo: build.repo,
             commitUrl: build.commitUrl,
             builtAt: build.builtAt,
             actionsRunUrl: build.actionsRunUrl,
