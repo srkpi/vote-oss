@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { TextLink } from '@/components/ui/text-link';
 import { cn, parseQuillDelta } from '@/lib/utils/common';
 import type { QuillDeltaOp } from '@/types/quill';
 
@@ -92,16 +93,7 @@ function renderSegment(seg: InlineSegment, idx: number): React.ReactNode {
   const a = seg.attrs;
 
   if (a.link) {
-    node = (
-      <a
-        href={a.link as string}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-kpi-blue-light hover:text-kpi-blue-dark underline transition-colors"
-      >
-        {node}
-      </a>
-    );
+    node = <TextLink href={a.link as string}>{node}</TextLink>;
   }
   if (a.code) {
     node = (

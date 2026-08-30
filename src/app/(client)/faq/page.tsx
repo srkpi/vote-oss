@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { BuildInfo } from '@/components/common/build-info';
 import { ErrorState } from '@/components/common/error-state';
 import { FaqAccordion } from '@/components/faq/faq-accordion';
 import { serverApi } from '@/lib/api/server';
@@ -39,7 +40,7 @@ export default async function FaqPage() {
   return (
     <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
       <div className="container mx-auto max-w-3xl py-10 sm:py-16">
-        <div className="mb-10 text-center sm:mb-14">
+        <div className="text-center">
           <h1 className="font-display text-kpi-navy mb-2 text-3xl font-bold sm:mb-3 sm:text-5xl">
             Часті запитання
           </h1>
@@ -48,7 +49,8 @@ export default async function FaqPage() {
           </p>
         </div>
 
-        <FaqAccordion categories={data} />
+        <FaqAccordion categories={data} className="mt-10 sm:mt-14" />
+        <BuildInfo className="mt-10 sm:mt-14" />
       </div>
     </div>
   );

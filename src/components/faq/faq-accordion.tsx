@@ -1,17 +1,17 @@
 'use client';
 
-import { CircleSlash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { EmptyState } from '@/components/common/empty-state';
 import { FaqAccordionItem } from '@/components/faq/faq-accordion-item';
+import { cn } from '@/lib/utils/common';
 import type { FaqCategoryData } from '@/types/faq';
 
 interface FaqAccordionProps {
   categories: FaqCategoryData[];
+  className?: string;
 }
 
-export function FaqAccordion({ categories }: FaqAccordionProps) {
+export function FaqAccordion({ categories, className }: FaqAccordionProps) {
   const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
   const toggle = (id: string) => {
@@ -26,18 +26,8 @@ export function FaqAccordion({ categories }: FaqAccordionProps) {
     });
   };
 
-  if (categories.length === 0) {
-    return (
-      <div className="bg-surface flex items-center justify-center p-4">
-        <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-sm">
-          <EmptyState icon={<CircleSlash2 className="h-8 w-8" />} title="FAQ поки порожній" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-10">
+    <div className={cn('space-y-10', className)}>
       {categories.map((category) => (
         <section key={category.id}>
           <h2 className="font-display text-foreground mb-4 text-xl font-semibold wrap-break-word sm:text-2xl">

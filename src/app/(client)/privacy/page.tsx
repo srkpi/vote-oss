@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { TextLink } from '@/components/ui/text-link';
 import { APP_NAME, APP_URL } from '@/lib/config/client';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 
@@ -86,15 +87,9 @@ function renderText(text: string): React.ReactNode[] {
   return parts.map((part, i) => {
     if (/^https?:\/\//.test(part)) {
       return (
-        <a
-          key={i}
-          href={part}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-kpi-blue-light hover:text-kpi-blue-dark wrap-break-word underline underline-offset-2 transition-colors"
-        >
+        <TextLink key={i} href={part} className="wrap-break-word">
           {part}
-        </a>
+        </TextLink>
       );
     }
     return part;
@@ -166,7 +161,6 @@ export default function PrivacyPage() {
               ))}
             </div>
 
-            {/* Footer */}
             <div className="border-border-subtle bg-surface border-t px-6 py-5 sm:px-8">
               <p className="font-body text-muted-foreground text-center text-xs">
                 © {new Date().getFullYear()} {APP_NAME} · КПІ ім. Ігоря Сікорського

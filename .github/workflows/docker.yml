@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'Production' || 'Development' }}
 
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+
     steps:
       - uses: actions/checkout@v7
 
@@ -25,6 +30,12 @@ jobs:
 
       - uses: docker/setup-buildx-action@v4
 
+      - name: Set build metadata
+        id: build_meta
+        run: |
+          echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "build_time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -35,7 +46,9 @@ jobs:
             type=ref,event=branch
             type=sha
 
-      - uses: docker/build-push-action@v7
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event_name == 'push' }}
@@ -51,3 +64,48 @@ jobs:
             NEXT_PUBLIC_POSTHOG_TOKEN=${{ vars.NEXT_PUBLIC_POSTHOG_TOKEN }}
             NEXT_PUBLIC_POSTHOG_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
             NEXT_PUBLIC_POSTHOG_ASSETS_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_ASSETS_HOST }}
+            NEXT_PUBLIC_GIT_SHA=${{ github.sha }}
+            NEXT_PUBLIC_GIT_REPO=${{ github.repository }}
+            NEXT_PUBLIC_GITHUB_RUN_ID=${{ github.run_id }}
+            NEXT_PUBLIC_BUILD_TIME=${{ steps.build_meta.outputs.build_time }}
+            NEXT_PUBLIC_DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss
+            NEXT_PUBLIC_DOCKER_TAG=sha-${{ steps.build_meta.outputs.short_sha }}
+
+      - name: Attest image provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: index.docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Export static assets for content attestation
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: static-export
+          outputs: type=local,dest=./ci-static-export
+          cache-from: type=gha
+          build-args: |
+            NEXT_PUBLIC_APP_NAME=${{ vars.NEXT_PUBLIC_APP_NAME }}
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_KPI_AUTH_URL=${{ vars.NEXT_PUBLIC_KPI_AUTH_URL }}
+            NEXT_PUBLIC_KPI_APP_ID=${{ vars.NEXT_PUBLIC_KPI_APP_ID }}
+            NEXT_PUBLIC_POSTHOG_TOKEN=${{ vars.NEXT_PUBLIC_POSTHOG_TOKEN }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
+            NEXT_PUBLIC_POSTHOG_ASSETS_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_ASSETS_HOST }}
+            NEXT_PUBLIC_GIT_SHA=${{ github.sha }}
+            NEXT_PUBLIC_GIT_REPO=${{ github.repository }}
+            NEXT_PUBLIC_GITHUB_RUN_ID=${{ github.run_id }}
+            NEXT_PUBLIC_BUILD_TIME=${{ steps.build_meta.outputs.build_time }}
+            NEXT_PUBLIC_DOCKER_IMAGE=${{ secrets.DOCKER_HUB_USERNAME }}/vote-oss
+            NEXT_PUBLIC_DOCKER_TAG=sha-${{ steps.build_meta.outputs.short_sha }}
+
+      - name: Attest static asset provenance
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            ci-static-export/_next/static/chunks/**/*.js
+            ci-static-export/_next/static/css/**/*.css

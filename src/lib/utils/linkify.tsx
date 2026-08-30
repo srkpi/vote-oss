@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { TextLink } from '@/components/ui/text-link';
+
 const URL_REGEX = /\b(?:https?:\/\/|www\.)[^\s<>"']+/gi;
 const TRAILING_PUNCTUATION = /[.,;:!?)\]}'"»]+$/;
 
@@ -30,15 +32,9 @@ export function linkifyText(text: string): ReactNode[] {
     const { url, trailing } = splitUrlAndTrailing(match[0]);
     const href = url.startsWith('www.') ? `https://${url}` : url;
     nodes.push(
-      <a
-        key={key++}
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-kpi-navy underline hover:no-underline"
-      >
+      <TextLink key={key++} href={href}>
         {url}
-      </a>,
+      </TextLink>,
     );
     if (trailing) nodes.push(trailing);
     lastIndex = start + match[0].length;

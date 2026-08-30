@@ -30,6 +30,7 @@ import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { Pagination } from '@/components/ui/pagination';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { TextLink } from '@/components/ui/text-link';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
@@ -632,15 +633,7 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                     {reg.telegramTag && <p>Telegram: {reg.telegramTag}</p>}
                     {reg.campaignProgramUrl && (
                       <p>
-                        Програма:{' '}
-                        <a
-                          href={reg.campaignProgramUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-kpi-navy underline"
-                        >
-                          посилання
-                        </a>
+                        Програма: <TextLink href={reg.campaignProgramUrl}>посилання</TextLink>
                       </p>
                     )}
                   </div>

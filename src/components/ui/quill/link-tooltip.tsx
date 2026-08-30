@@ -4,6 +4,7 @@ import { Check, ExternalLink, Pencil, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { TextLink } from '@/components/ui/text-link';
 import { cn } from '@/lib/utils/common';
 
 interface LinkTooltipProps {
@@ -134,16 +135,10 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
         </>
       ) : (
         <>
-          <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
-            title={href}
-            className="text-kpi-blue-light,#3b82f6 max-w-60 truncate hover:underline"
-          >
+          <TextLink href={href} title={href} className="max-w-60 truncate">
             <ExternalLink size={13} className="-mt-0.5 mr-1 inline" />
             {href}
-          </a>
+          </TextLink>
           <span className="text-border-subtle mx-0.5 select-none">|</span>
           <IconButton
             onClick={() => {

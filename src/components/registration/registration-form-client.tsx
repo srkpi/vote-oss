@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { FormField, Input } from '@/components/ui/form';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { TextLink } from '@/components/ui/text-link';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
 import {
@@ -309,14 +310,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
                 <>
                   <dt className="text-muted-foreground text-xs uppercase">Програма</dt>
                   <dd className="wrap-break-word">
-                    <a
-                      href={registration.campaignProgramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-kpi-navy hover:underline"
-                    >
+                    <TextLink href={registration.campaignProgramUrl}>
                       {registration.campaignProgramUrl}
-                    </a>
+                    </TextLink>
                   </dd>
                 </>
               )}
