@@ -1,1 +1,1 @@
-{"id":"e60b3df3bb28107573b5643a71df2e07","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupYearEnteredDigit extracts the year digit correctly","name":"extracts the year digit correctly","status":"passed","testResultsByEnv":{"default":"1e663add1223a49734261cdb7d62fd98"}}
+{"id":"e60b3df3bb28107573b5643a71df2e07","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupYearEnteredDigit extracts the year digit correctly","name":"extracts the year digit correctly","status":"passed","testResultsByEnv":{"default":"541f5b3be8e5f43bf976fe9b0a94f90f"}}
