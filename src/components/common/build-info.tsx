@@ -15,6 +15,9 @@ interface BuildInfoProps {
 export function BuildInfo({ className }: BuildInfoProps) {
   const build = getBuildInfo();
   const isProd = NODE_ENV === 'production';
+  const manualVerifyExample = build.repo
+    ? `gh attestation verify ./завантажений-файл.js --repo ${build.repo}`
+    : null;
 
   return (
     <div className={cn('border-border-color font-body rounded-xl border bg-white p-5', className)}>
@@ -88,7 +91,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
             )}
           </dl>
 
-          {build.verify && (
+          {build.verify && manualVerifyExample && (
             <details className="group/main border-border-subtle mt-4 border-t pt-3 [&::-webkit-details-marker]:hidden">
               <summary className="text-kpi-navy flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium">
                 <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-open/main:rotate-90" />
@@ -176,10 +179,11 @@ export function BuildInfo({ className }: BuildInfoProps) {
                         3. Завантажити будь-який файл із вкладки браузера «Network» (шлях виду{' '}
                         <span className="font-mono">/_next/static/…</span>) і перевірити саме його:
                       </p>
-                      <div className="bg-surface border-border-subtle rounded-md border px-2.5 py-1.5">
-                        <code className="overflow-x-auto font-mono whitespace-nowrap">
-                          gh attestation verify ./завантажений-файл.js --repo {build.repo}
+                      <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+                        <code className="flex flex-col overflow-x-auto font-mono whitespace-nowrap">
+                          {manualVerifyExample}
                         </code>
+                        <CopyButton text={manualVerifyExample} label="Копіювати" />
                       </div>
                     </div>
                   </div>
