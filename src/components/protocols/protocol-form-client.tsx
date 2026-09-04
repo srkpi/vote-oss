@@ -3,6 +3,7 @@
 import {
   ArrowDown,
   ArrowUp,
+  ArrowUpDown,
   BuildingIcon,
   Download,
   Eye,
@@ -124,6 +125,26 @@ function emptyAgenda(): AgendaDraft {
     result: '',
     electionId: null,
     choiceMapping: {},
+  };
+}
+
+type QuickSortKey = 'fullname' | 'posada' | 'posada-fullname';
+
+const QUICK_SORT_KEYS: QuickSortKey[] = ['fullname', 'posada', 'posada-fullname'];
+
+const QUICK_SORT_LABELS: Record<QuickSortKey, string> = {
+  fullname: 'ПІБ',
+  posada: 'Посада',
+  'posada-fullname': 'Посада → ПІБ',
+};
+
+function compareByQuickSortKey<T extends { fullname: string; posada: string }>(
+  key: QuickSortKey,
+): (a: T, b: T) => number {
+  return (a, b) => {
+    if (key === 'fullname') return a.fullname.localeCompare(b.fullname, 'uk');
+    if (key === 'posada') return a.posada.localeCompare(b.posada, 'uk');
+    return a.posada.localeCompare(b.posada, 'uk') || a.fullname.localeCompare(b.fullname, 'uk');
   };
 }
 
@@ -506,6 +527,20 @@ export function ProtocolFormClient({
     setResponsibles((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const moveResponsible = (idx: number, dir: -1 | 1) => {
+    setResponsibles((prev) => {
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const copy = [...prev];
+      [copy[idx], copy[target]] = [copy[target], copy[idx]];
+      return copy;
+    });
+  };
+
+  const sortResponsibles = (key: QuickSortKey) => {
+    setResponsibles((prev) => [...prev].sort(compareByQuickSortKey(key)));
+  };
+
   // ── Mutations on attendees ────────────────────────────────────────────────
 
   /**
@@ -564,6 +599,20 @@ export function ProtocolFormClient({
 
   const removeAttendee = (idx: number) => {
     setAttendees((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const moveAttendee = (idx: number, dir: -1 | 1) => {
+    setAttendees((prev) => {
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const copy = [...prev];
+      [copy[idx], copy[target]] = [copy[target], copy[idx]];
+      return copy;
+    });
+  };
+
+  const sortAttendees = (key: QuickSortKey) => {
+    setAttendees((prev) => [...prev].sort(compareByQuickSortKey(key)));
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -918,9 +967,13 @@ export function ProtocolFormClient({
               ) : null
             }
           >
+            {canEdit && responsibles.length > 1 && <QuickSortBar onSort={sortResponsibles} />}
             <div className="space-y-3">
               {responsibles.map((r, idx) => (
-                <div key={r.uid} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                <div
+                  key={r.uid}
+                  className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
+                >
                   <Input
                     value={r.posada}
                     onChange={(e) => updateResponsible(idx, { posada: e.target.value })}
@@ -935,15 +988,23 @@ export function ProtocolFormClient({
                     maxLength={PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH}
                     disabled={!canEdit}
                   />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeResponsible(idx)}
-                    disabled={!canEdit || responsibles.length <= 1}
-                    className="text-error hover:bg-error-bg"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center justify-end gap-1">
+                    <ReorderButtons
+                      onMoveUp={() => moveResponsible(idx, -1)}
+                      onMoveDown={() => moveResponsible(idx, 1)}
+                      disabledUp={!canEdit || idx === 0}
+                      disabledDown={!canEdit || idx === responsibles.length - 1}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeResponsible(idx)}
+                      disabled={!canEdit || responsibles.length <= 1}
+                      className="text-error hover:bg-error-bg"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -967,6 +1028,7 @@ export function ProtocolFormClient({
               ) : null
             }
           >
+            {canEdit && attendees.length > 1 && <QuickSortBar onSort={sortAttendees} />}
             {attendees.length === 0 ? (
               <p className="font-body text-muted-foreground py-4 text-center text-sm">
                 Учасників ще немає
@@ -1017,18 +1079,26 @@ export function ProtocolFormClient({
                             },
                           ]}
                         />
-                        {canDelete ? (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeAttendee(idx)}
-                            className="text-error hover:bg-error-bg"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        ) : (
-                          <span className="hidden sm:block sm:w-10" aria-hidden="true" />
-                        )}
+                        <div className="flex items-center justify-end gap-1">
+                          <ReorderButtons
+                            onMoveUp={() => moveAttendee(idx, -1)}
+                            onMoveDown={() => moveAttendee(idx, 1)}
+                            disabledUp={!canEdit || idx === 0}
+                            disabledDown={!canEdit || idx === attendees.length - 1}
+                          />
+                          {canDelete ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeAttendee(idx)}
+                              className="text-error hover:bg-error-bg"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          ) : (
+                            <span className="w-9" aria-hidden="true" />
+                          )}
+                        </div>
                       </div>
                       {isLockedByVote && (
                         <p className="text-success mt-1.5 flex items-center gap-1 text-xs">
@@ -1121,6 +1191,59 @@ function SectionCard({
         {action && <div className="shrink-0">{action}</div>}
       </div>
       <div className="px-5 py-4">{children}</div>
+    </div>
+  );
+}
+
+function ReorderButtons({
+  onMoveUp,
+  onMoveDown,
+  disabledUp,
+  disabledDown,
+}: {
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  disabledUp: boolean;
+  disabledDown: boolean;
+}) {
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        onClick={onMoveUp}
+        disabled={disabledUp}
+        title="Вгору"
+        className="text-muted-foreground"
+      >
+        <ArrowUp className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        onClick={onMoveDown}
+        disabled={disabledDown}
+        title="Вниз"
+        className="text-muted-foreground"
+      >
+        <ArrowDown className="h-3.5 w-3.5" />
+      </Button>
+    </>
+  );
+}
+
+function QuickSortBar({ onSort }: { onSort: (key: QuickSortKey) => void }) {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2">
+      <span className="text-muted-foreground flex items-center gap-1 text-xs">
+        <ArrowUpDown className="h-3 w-3" />
+        Сортувати:
+      </span>
+      {QUICK_SORT_KEYS.map((key) => (
+        <Button key={key} variant="secondary" size="xs" onClick={() => onSort(key)}>
+          {QUICK_SORT_LABELS[key]}
+        </Button>
+      ))}
     </div>
   );
 }
