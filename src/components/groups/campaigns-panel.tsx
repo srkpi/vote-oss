@@ -71,7 +71,7 @@ export function CampaignsPanel({
         </div>
         <Button variant="accent" size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-3.5 w-3.5" />
-          <span className="font-body text-sm">Нова</span>
+          <span className="font-body text-sm">Нові</span>
         </Button>
       </div>
 
@@ -290,6 +290,7 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
     if (signatureCollection && (!signaturesOpensAt || !signaturesClosesAt)) return;
 
     const futureChecks: Array<[Date, string]> = [
+      [announcedAt, 'Початок реєстрації'],
       [registrationClosesAt, 'Кінець реєстрації'],
       [votingOpensAt, 'Початок голосування'],
       [votingClosesAt, 'Кінець голосування'],
@@ -389,6 +390,7 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                 id="announced-at"
                 value={announcedAt}
                 onChange={(d) => setAnnouncedAt(d)}
+                min={minFutureDate}
                 minuteStep={30}
               />
             </FormField>

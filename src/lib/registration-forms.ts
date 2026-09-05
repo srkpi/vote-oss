@@ -206,6 +206,82 @@ export function validateFormBody(
   };
 }
 
+/**
+ * Validates a POST /registration-forms create body. Same shape rules as
+ * `validateFormBody`, plus: a form can't be opened in the past — a
+ * backdated `opensAt` is silently clamped to `now` rather than honoured
+ * (mirrors how election creation clamps opens_at). `closesAt > opensAt` is
+ * re-checked against the clamped value so a form submitted entirely in the
+ * past is still rejected rather than silently created open-then-immediately-closed.
+ */
+export function validateCreateFormBody(
+  body: unknown,
+  now: Date = new Date(),
+): { ok: true; data: ValidatedFormBody } | { ok: false; error: string } {
+  const base = validateFormBody(body);
+  if (!base.ok) return base;
+
+  const opensAt = base.data.opensAt < now ? now : base.data.opensAt;
+  if (base.data.closesAt <= opensAt) {
+    return { ok: false, error: 'closesAt must be after opensAt' };
+  }
+
+  return { ok: true, data: { ...base.data, opensAt } };
+}
+
+export type RegistrationFormDatePhase = 'not_started' | 'started';
+
+/** Whether the form's registration window has opened yet, as of `now`. */
+export function formDatePhase(
+  form: { opens_at: Date },
+  now: Date = new Date(),
+): RegistrationFormDatePhase {
+  return now < form.opens_at ? 'not_started' : 'started';
+}
+
+/**
+ * Validates a PATCH /registration-forms/{id} body. Same shape rules as
+ * `validateFormBody`, plus date-editability:
+ *  - not yet open (`now < opens_at`): both dates are free to move — same
+ *    past-clamp on opensAt as creation.
+ *  - already open (`now >= opens_at`): opensAt must stay exactly as it was
+ *    (registration has already started, so it can't retroactively start
+ *    earlier or later); closesAt may only move later, never earlier —
+ *    "extend, don't shorten". This also covers a form whose closesAt has
+ *    already passed: pushing closesAt back into the future re-opens it,
+ *    which is an intentional escape hatch for "we closed this too early".
+ */
+export function validateUpdateFormBody(
+  body: unknown,
+  existing: { opens_at: Date; closes_at: Date },
+  now: Date = new Date(),
+): { ok: true; data: ValidatedFormBody } | { ok: false; error: string } {
+  const base = validateFormBody(body);
+  if (!base.ok) return base;
+
+  if (formDatePhase(existing, now) === 'started') {
+    if (base.data.opensAt.getTime() !== existing.opens_at.getTime()) {
+      return {
+        ok: false,
+        error: 'opensAt has already passed and can no longer be changed',
+      };
+    }
+    if (base.data.closesAt.getTime() < existing.closes_at.getTime()) {
+      return {
+        ok: false,
+        error: 'Registration has already started — closesAt can only be extended, not shortened',
+      };
+    }
+    return { ok: true, data: base.data };
+  }
+
+  const opensAt = base.data.opensAt < now ? now : base.data.opensAt;
+  if (base.data.closesAt <= opensAt) {
+    return { ok: false, error: 'closesAt must be after opensAt' };
+  }
+  return { ok: true, data: { ...base.data, opensAt } };
+}
+
 export class RegistrationFormNotFoundError extends Error {
   constructor(message = 'Form not found') {
     super(message);

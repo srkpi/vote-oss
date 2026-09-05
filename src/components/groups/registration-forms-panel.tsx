@@ -5,6 +5,8 @@ import {
   ClipboardList,
   FileText,
   Inbox,
+  Lock,
+  Pencil,
   Plus,
   ShieldCheck,
   Trash2,
@@ -74,7 +76,9 @@ export function RegistrationFormsPanel({
   const [forms, setForms] = useState<CandidateRegistrationFormAdminSummary[]>(initialForms);
   const [page, setPage] = useState(1);
 
-  const [createOpen, setCreateOpen] = useState(false);
+  const [formDialog, setFormDialog] = useState<
+    { mode: 'create' } | { mode: 'edit'; form: CandidateRegistrationFormAdminSummary } | null
+  >(null);
   const [deleteTarget, setDeleteTarget] = useState<CandidateRegistrationFormAdminSummary | null>(
     null,
   );
@@ -122,7 +126,7 @@ export function RegistrationFormsPanel({
             Реєстрація кандидатів
           </h2>
         </div>
-        <Button variant="accent" size="sm" onClick={() => setCreateOpen(true)}>
+        <Button variant="accent" size="sm" onClick={() => setFormDialog({ mode: 'create' })}>
           <Plus className="h-3.5 w-3.5" />
           <span className="font-body text-sm">Нова</span>
         </Button>
@@ -191,6 +195,14 @@ export function RegistrationFormsPanel({
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => setFormDialog({ mode: 'edit', form })}
+                      title="Редагувати"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setDeleteTarget(form)}
                       className="text-error hover:bg-error-bg"
                     >
@@ -212,11 +224,12 @@ export function RegistrationFormsPanel({
 
       <RegistrationFormDialog
         groupId={groupId}
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        open={!!formDialog}
+        editTarget={formDialog?.mode === 'edit' ? formDialog.form : null}
+        onClose={() => setFormDialog(null)}
         onSaved={(form) => {
           upsertForm(form);
-          setCreateOpen(false);
+          setFormDialog(null);
         }}
       />
 
@@ -255,6 +268,7 @@ export function RegistrationFormsPanel({
 interface RegistrationFormDialogProps {
   groupId: string;
   open: boolean;
+  editTarget?: CandidateRegistrationFormAdminSummary | null;
   onClose: () => void;
   onSaved: (form: CandidateRegistrationFormAdminSummary) => void;
 }
@@ -272,7 +286,14 @@ function defaultEndDate(): Date {
   return d;
 }
 
-function RegistrationFormDialog({ groupId, open, onClose, onSaved }: RegistrationFormDialogProps) {
+function RegistrationFormDialog({
+  groupId,
+  open,
+  editTarget = null,
+  onClose,
+  onSaved,
+}: RegistrationFormDialogProps) {
+  const isEdit = !!editTarget;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [requiresCampaignProgram, setRequiresCampaignProgram] = useState(false);
@@ -284,19 +305,50 @@ function RegistrationFormDialog({ groupId, open, onClose, onSaved }: Registratio
   const [facultiesLoading, setFacultiesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set only when editing a form whose registration window has already
+  // opened: opensAt is then frozen at this value, and closesAt can only move
+  // to a later time than this snapshot ("extend, don't shorten").
+  const [startedAt, setStartedAt] = useState<{ opensAt: Date; closesAt: Date } | null>(null);
+
+  // Re-renders every minute so date-pickers and validation stay in sync with "now".
+  const [renderNowMs, setRenderNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!open) return;
+    const id = setInterval(() => setRenderNowMs(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, [open]);
+  const minFutureDate = new Date(renderNowMs + 60 * 1000);
 
   useEffect(() => {
     if (!open) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTitle('');
-    setDescription('');
-    setRequiresCampaignProgram(false);
-    setTeamSize(0);
-    setOpensAt(defaultStartDate());
-    setClosesAt(defaultEndDate());
-    setFaculties([]);
+    if (editTarget) {
+      const originalOpensAt = new Date(editTarget.opensAt);
+      const originalClosesAt = new Date(editTarget.closesAt);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTitle(editTarget.title);
+      setDescription(editTarget.description ?? '');
+      setRequiresCampaignProgram(editTarget.requiresCampaignProgram);
+      setTeamSize(editTarget.teamSize);
+      setOpensAt(originalOpensAt);
+      setClosesAt(originalClosesAt);
+      setFaculties(editTarget.restrictions.filter((r) => r.type === 'FACULTY').map((r) => r.value));
+      setStartedAt(
+        Date.now() >= originalOpensAt.getTime()
+          ? { opensAt: originalOpensAt, closesAt: originalClosesAt }
+          : null,
+      );
+    } else {
+      setTitle('');
+      setDescription('');
+      setRequiresCampaignProgram(false);
+      setTeamSize(0);
+      setOpensAt(defaultStartDate());
+      setClosesAt(defaultEndDate());
+      setFaculties([]);
+      setStartedAt(null);
+    }
     setError(null);
-  }, [open]);
+  }, [open, editTarget]);
 
   // Load faculty list once
   useEffect(() => {
@@ -321,6 +373,25 @@ function RegistrationFormDialog({ groupId, open, onClose, onSaved }: Registratio
   }, [open, facultyOptions.length]);
 
   const handleSubmit = async () => {
+    if (!startedAt) {
+      // Not-yet-open form (or a brand-new one): both dates are free, but
+      // still have to be in the future — this check was previously entirely
+      // missing here, unlike the equivalent campaign dialog.
+      const nowMs = Date.now();
+      const futureChecks: Array<[Date, string]> = [
+        [opensAt, 'Початок прийому'],
+        [closesAt, 'Кінець прийому'],
+      ];
+      const pastField = futureChecks.find(([d]) => d.getTime() <= nowMs);
+      if (pastField) {
+        setError(`«${pastField[1]}» має бути після поточного часу`);
+        return;
+      }
+    } else if (closesAt.getTime() < startedAt.closesAt.getTime()) {
+      setError('Прийом заявок уже розпочато — «Кінець прийому» можна лише продовжити');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     const restrictions: CandidateRegistrationFormRestriction[] = faculties.map((value) => ({
@@ -332,17 +403,34 @@ function RegistrationFormDialog({ groupId, open, onClose, onSaved }: Registratio
       description: description.trim() || null,
       requiresCampaignProgram,
       teamSize,
-      opensAt: opensAt.toISOString(),
+      // opensAt is never touched by the picker once startedAt is set, but
+      // send the frozen snapshot explicitly rather than the (equal) state
+      // value, so a stray re-render can't ever submit a different opensAt.
+      opensAt: (startedAt?.opensAt ?? opensAt).toISOString(),
       closesAt: closesAt.toISOString(),
       restrictions,
     };
 
-    const result = await api.groups.registrationForms.create(groupId, payload);
-
-    if (result.success) {
-      onSaved(result.data);
+    if (editTarget) {
+      const result = await api.registrationForms.update(editTarget.id, payload);
+      if (result.success) {
+        // The update endpoint returns the base form only — editing dates,
+        // title, etc. doesn't change submission counts, so carry them over.
+        onSaved({
+          ...result.data,
+          submittedCount: editTarget.submittedCount,
+          pendingReviewCount: editTarget.pendingReviewCount,
+        });
+      } else {
+        setError(result.error);
+      }
     } else {
-      setError(result.error);
+      const result = await api.groups.registrationForms.create(groupId, payload);
+      if (result.success) {
+        onSaved(result.data);
+      } else {
+        setError(result.error);
+      }
     }
     setSubmitting(false);
   };
@@ -359,7 +447,9 @@ function RegistrationFormDialog({ groupId, open, onClose, onSaved }: Registratio
     <Dialog open={open} onClose={() => !submitting && onClose()}>
       <DialogPanel maxWidth="lg">
         <DialogHeader>
-          <DialogTitle>Нова форма реєстрації</DialogTitle>
+          <DialogTitle>
+            {isEdit ? 'Редагувати форму реєстрації' : 'Нова форма реєстрації'}
+          </DialogTitle>
           <DialogCloseButton onClose={onClose} />
         </DialogHeader>
         <DialogBody className="space-y-4">
@@ -390,15 +480,39 @@ function RegistrationFormDialog({ groupId, open, onClose, onSaved }: Registratio
             />
           </FormField>
 
+          {startedAt && (
+            <Alert variant="info">
+              Прийом заявок вже розпочався: дату початку більше не можна змінити, а дату закінчення
+              можна лише перенести на пізніше.
+            </Alert>
+          )}
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FormField label="Початок прийому" required htmlFor="opens-at">
-              <KyivDateTimePicker id="opens-at" value={opensAt} onChange={(d) => setOpensAt(d)} />
+              {startedAt ? (
+                <div className="border-border-color bg-surface text-muted-foreground flex h-10 items-center gap-2 rounded-md border px-3 text-sm">
+                  <Lock className="h-3.5 w-3.5 shrink-0" />
+                  <LocalDateTime date={opensAt.toISOString()} />
+                </div>
+              ) : (
+                <KyivDateTimePicker
+                  id="opens-at"
+                  value={opensAt}
+                  onChange={(d) => setOpensAt(d)}
+                  min={minFutureDate}
+                />
+              )}
             </FormField>
             <FormField label="Кінець прийому" required htmlFor="closes-at">
               <KyivDateTimePicker
                 id="closes-at"
                 value={closesAt}
                 onChange={(d) => setClosesAt(d)}
+                min={
+                  startedAt && startedAt.closesAt > minFutureDate
+                    ? startedAt.closesAt
+                    : minFutureDate
+                }
               />
             </FormField>
           </div>
@@ -434,7 +548,7 @@ function RegistrationFormDialog({ groupId, open, onClose, onSaved }: Registratio
                   />
                 </label>
                 <p className="text-muted-foreground text-xs">
-                  Кількість співбалотників, яких має запросити кандидат (0–
+                  Кількість людей, яких має запросити кандидат (0–
                   {REGISTRATION_FORM_MAX_TEAM_SIZE}). Кожен отримує окреме посилання-запрошення.
                 </p>
               </div>
@@ -482,7 +596,7 @@ function RegistrationFormDialog({ groupId, open, onClose, onSaved }: Registratio
             loading={submitting}
             disabled={!canSubmit}
           >
-            Створити
+            {isEdit ? 'Зберегти' : 'Створити'}
           </Button>
         </DialogFooter>
       </DialogPanel>

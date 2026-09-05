@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/auth';
 import { Errors } from '@/lib/errors';
 import { GroupForbiddenError, GroupNotFoundError, requireVKSUGroupMember } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
-import { FORM_INCLUDE, shapeForm, validateFormBody } from '@/lib/registration-forms';
+import { FORM_INCLUDE, shapeForm, validateUpdateFormBody } from '@/lib/registration-forms';
 import { shapeRegistration } from '@/lib/registrations';
 import { checkRestrictions } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
@@ -105,8 +105,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *     description: >
  *       Replaces all mutable fields on the form. Existing restrictions are
  *       hard-deleted and recreated atomically. Caller must be an active ВКСУ
- *       member of the form's group. The same validation rules as form creation
- *       apply.
+ *       member of the form's group. The same validation rules as form
+ *       creation apply, plus date-editability based on the form's current
+ *       window: before `opensAt`, both dates may move freely (a backdated
+ *       `opensAt` is clamped to now, same as creation); once `opensAt` has
+ *       passed, `opensAt` itself is frozen and `closesAt` may only be moved
+ *       later, never earlier. Forms owned by an election campaign
+ *       (`registration_form_id` on the campaign) reject any date change
+ *       outright — edit those from the campaign's PATCH endpoint instead, so
+ *       the two can't drift apart.
  *     tags:
  *       - CandidateRegistrationForms
  *     security:
@@ -133,7 +140,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *             schema:
  *               $ref: '#/components/schemas/CandidateRegistrationForm'
  *       400:
- *         description: Invalid UUID or body validation error
+ *         description: >
+ *           Invalid UUID, body validation error, an attempted date change
+ *           that the form's current state doesn't allow, or an attempted
+ *           date change on a campaign-owned form
  *       401:
  *         description: Unauthorized
  *       403:
@@ -150,7 +160,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const existing = await prisma.candidateRegistrationForm.findUnique({
     where: { id },
-    select: { id: true, group_id: true, deleted_at: true },
+    select: { id: true, group_id: true, deleted_at: true, opens_at: true, closes_at: true },
   });
   if (!existing || existing.deleted_at) return Errors.notFound('Form not found');
 
@@ -169,10 +179,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const validation = validateFormBody(body);
+  const validation = validateUpdateFormBody(body, existing);
   if (!validation.ok) return Errors.badRequest(validation.error);
   const { title, description, requiresCampaignProgram, teamSize, opensAt, closesAt, restrictions } =
     validation.data;
+
+  // A campaign-spawned form mirrors its campaign's own registration window;
+  // dates must be edited from the campaign so the two never disagree.
+  if (
+    opensAt.getTime() !== existing.opens_at.getTime() ||
+    closesAt.getTime() !== existing.closes_at.getTime()
+  ) {
+    const owningCampaign = await prisma.electionCampaign.findFirst({
+      where: { registration_form_id: id, deleted_at: null },
+      select: { id: true },
+    });
+    if (owningCampaign) {
+      return Errors.badRequest(
+        `This form's dates are managed by its election campaign (${owningCampaign.id}) — edit them from the campaign page instead`,
+      );
+    }
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     await tx.candidateRegistrationFormRestriction.deleteMany({ where: { form_id: id } });

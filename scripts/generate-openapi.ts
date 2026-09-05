@@ -1285,6 +1285,43 @@ const spec = createSwaggerSpec({
         // ──────────────────────────────────────────────────────────────────
         // Election campaigns
         // ──────────────────────────────────────────────────────────────────
+        CampaignBoundaryEditability: {
+          type: 'string',
+          enum: ['locked', 'extend_only', 'editable'],
+          description:
+            "'locked': this boundary has already passed, immutable. 'extend_only': the stage ending at this boundary is currently under way — it may only be moved later, never earlier. 'editable': that stage hasn't started yet — free to move either way (still subject to ordering/duration limits).",
+        },
+
+        CampaignStageEditability: {
+          type: 'object',
+          description:
+            "Per-field editability of the campaign's six phase-boundary timestamps as of right now. Recomputed on every read, so it can flip from 'editable' to 'extend_only' to 'locked' over time without any write happening.",
+          required: [
+            'announcedAt',
+            'registrationClosesAt',
+            'signaturesOpensAt',
+            'signaturesClosesAt',
+            'votingOpensAt',
+            'votingClosesAt',
+          ],
+          properties: {
+            announcedAt: { $ref: '#/components/schemas/CampaignBoundaryEditability' },
+            registrationClosesAt: { $ref: '#/components/schemas/CampaignBoundaryEditability' },
+            signaturesOpensAt: {
+              nullable: true,
+              allOf: [{ $ref: '#/components/schemas/CampaignBoundaryEditability' }],
+              description: 'Null when the campaign has no signature phase.',
+            },
+            signaturesClosesAt: {
+              nullable: true,
+              allOf: [{ $ref: '#/components/schemas/CampaignBoundaryEditability' }],
+              description: 'Null when the campaign has no signature phase.',
+            },
+            votingOpensAt: { $ref: '#/components/schemas/CampaignBoundaryEditability' },
+            votingClosesAt: { $ref: '#/components/schemas/CampaignBoundaryEditability' },
+          },
+        },
+
         ElectionCampaignRestriction: {
           type: 'object',
           required: ['type', 'value'],
@@ -1315,6 +1352,7 @@ const spec = createSwaggerSpec({
             'createdBy',
             'createdByFullName',
             'createdAt',
+            'stageEditability',
           ],
           properties: {
             id: { type: 'string', format: 'uuid' },
@@ -1414,6 +1452,11 @@ const spec = createSwaggerSpec({
             createdByFullName: { type: 'string' },
             createdAt: { type: 'string', format: 'date-time' },
             deletedAt: { type: 'string', format: 'date-time', nullable: true },
+            stageEditability: {
+              allOf: [{ $ref: '#/components/schemas/CampaignStageEditability' }],
+              description:
+                'Which of the timestamps above PATCH /api/campaigns/{id} will currently accept a new value for.',
+            },
           },
         },
 
@@ -1464,6 +1507,33 @@ const spec = createSwaggerSpec({
               items: { $ref: '#/components/schemas/ElectionCampaignRestriction' },
               description: 'Defaults to empty array (no restrictions).',
             },
+          },
+        },
+
+        UpdateElectionCampaignDatesBody: {
+          type: 'object',
+          description:
+            "Replace-all body for PATCH /api/campaigns/{id} — send every boundary, including ones you aren't changing (echo back the current value). Which fields actually accept a new value depends on the campaign's current stageEditability.",
+          required: ['announcedAt', 'registrationClosesAt', 'votingOpensAt', 'votingClosesAt'],
+          properties: {
+            announcedAt: { type: 'string', format: 'date-time' },
+            registrationClosesAt: { type: 'string', format: 'date-time' },
+            signaturesOpensAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description:
+                'Required (non-null) iff the campaign has a signature phase; must be omitted/null otherwise.',
+            },
+            signaturesClosesAt: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description:
+                'Required (non-null) iff the campaign has a signature phase; must be omitted/null otherwise.',
+            },
+            votingOpensAt: { type: 'string', format: 'date-time' },
+            votingClosesAt: { type: 'string', format: 'date-time' },
           },
         },
 

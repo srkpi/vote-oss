@@ -13,6 +13,7 @@ import type {
   CampaignSignatureElectionSummary,
   CreateElectionCampaignRequest,
   ElectionCampaign,
+  UpdateElectionCampaignDatesRequest,
 } from '@/types/campaign';
 import type {
   CandidateRegistration,
@@ -488,6 +489,11 @@ export function createApiClient(fetcher: Fetcher) {
 
     campaigns: {
       get: (id: string) => fetcher<ElectionCampaign>(`/campaigns/${id}`),
+      update: (id: string, data: UpdateElectionCampaignDatesRequest) =>
+        fetcher<ElectionCampaign>(`/campaigns/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(data),
+        }),
       delete: (id: string) => fetcher<void>(`/campaigns/${id}`, { method: 'DELETE' }),
       signatureElections: (id: string) =>
         fetcher<CampaignSignatureElectionSummary[]>(`/campaigns/${id}/signature-elections`),

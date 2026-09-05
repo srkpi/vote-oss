@@ -24,21 +24,10 @@ function isPresent(attendee: ProtocolAttendee): boolean {
   return isAttendeePresentByText(attendee.present_text);
 }
 
-function attendeeOrderKey(attendee: ProtocolAttendee): number {
-  return isPresent(attendee) ? 0 : 1;
-}
-
 export function ProtocolDocumentView({ group, protocol, onBackToEdit }: ProtocolDocumentViewProps) {
   const { toast } = useToast();
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const sortedAttendees = [...protocol.attendance].sort((a, b) => {
-    const ka = attendeeOrderKey(a);
-    const kb = attendeeOrderKey(b);
-    if (ka !== kb) return ka - kb;
-    return a.fullname.localeCompare(b.fullname, 'uk');
-  });
 
   const showError = (message: string) => {
     setError(message);
@@ -115,7 +104,7 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
 
           <div className="flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" asChild disabled={generating}>
-              <Link href={`/groups/${group.id}`}>Назад до групи</Link>
+              <Link href={`/groups/${group.id}`}>Назад</Link>
             </Button>
             {onBackToEdit && (
               <Button
@@ -283,11 +272,11 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
             )}
 
             {/* Attendance list */}
-            {sortedAttendees.length > 0 && (
+            {protocol.attendance.length > 0 && (
               <section className="mb-10 pt-8">
                 <SectionHeading>Лист присутності</SectionHeading>
                 <ol className="text-foreground space-y-1.5 text-sm leading-relaxed">
-                  {sortedAttendees.map((a, idx) => (
+                  {protocol.attendance.map((a, idx) => (
                     <li key={`${a.userId ?? 'manual'}-${idx}`} className="flex gap-2">
                       <span className="text-muted-foreground w-6 shrink-0 text-right">
                         {idx + 1}.

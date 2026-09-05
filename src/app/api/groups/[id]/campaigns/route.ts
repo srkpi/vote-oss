@@ -63,7 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     orderBy: { created_at: 'desc' },
   });
 
-  return NextResponse.json(campaigns.map(shapeCampaign));
+  return NextResponse.json(campaigns.map((c) => shapeCampaign(c)));
 }
 
 /**
@@ -76,8 +76,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *       caller must be an active member of the group and the group must be
  *       of type VKSU. The campaign starts in the ANNOUNCED state; a cron
  *       job advances it through subsequent states based on the configured
- *       timestamps. All timestamp fields (except signatures phase timestamps
- *       when signatureCollection is false) are immutable after creation.
+ *       timestamps. `positionTitle`, `electionKind`, `teamSize`,
+ *       `requiresCampaignProgram` and `restrictions` are immutable after
+ *       creation; the phase-boundary timestamps can later be changed via
+ *       `PATCH /api/campaigns/{id}`, within the limits described there. If
+ *       `announcedAt` is in the past it is silently clamped to the current
+ *       time rather than honoured verbatim.
  *
  *       When signatureCollection is true, signaturesOpensAt,
  *       signaturesClosesAt, and signatureQuorum are all required.

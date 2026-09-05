@@ -4,13 +4,13 @@ import {
   ClipboardList,
   FileText,
   Inbox,
-  ScrollText,
   ShieldCheck,
   Users,
   Vote,
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { CampaignStageEditor } from '@/components/campaigns/campaign-stage-editor';
 import { PageHeader } from '@/components/common/page-header';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge, type StatusKind } from '@/components/ui/status-badge';
@@ -19,7 +19,6 @@ import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
 import type {
   CampaignFinalElectionSummary,
   CampaignSignatureElectionSummary,
-  CampaignState,
   ElectionCampaign,
 } from '@/types/campaign';
 import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
@@ -33,71 +32,12 @@ interface CampaignDashboardProps {
   finalElection: CampaignFinalElectionSummary | null;
 }
 
-interface TimelineEntry {
-  state: CampaignState;
-  startsAt: Date;
-  endsAt: Date;
-}
-
-function buildTimeline(c: ElectionCampaign): TimelineEntry[] {
-  const announced = new Date(c.announcedAt);
-  const registrationCloses = new Date(c.registrationClosesAt);
-  const votingOpens = new Date(c.votingOpensAt);
-  const votingCloses = new Date(c.votingClosesAt);
-
-  const hasSignaturePhase =
-    c.signatureCollection && c.signaturesOpensAt !== null && c.signaturesClosesAt !== null;
-  const signaturesOpens = hasSignaturePhase ? new Date(c.signaturesOpensAt!) : null;
-  const signaturesCloses = hasSignaturePhase ? new Date(c.signaturesClosesAt!) : null;
-
-  const out: TimelineEntry[] = [
-    {
-      state: 'REGISTRATION_OPEN',
-      startsAt: announced,
-      endsAt: registrationCloses,
-    },
-    {
-      state: 'REGISTRATION_REVIEW',
-      startsAt: registrationCloses,
-      endsAt: hasSignaturePhase ? signaturesOpens! : votingOpens,
-    },
-  ];
-
-  if (hasSignaturePhase) {
-    out.push(
-      { state: 'SIGNATURES_OPEN', startsAt: signaturesOpens!, endsAt: signaturesCloses! },
-      { state: 'SIGNATURES_REVIEW', startsAt: signaturesCloses!, endsAt: votingOpens },
-    );
-  }
-
-  out.push({
-    state: 'VOTING_OPEN',
-    startsAt: votingOpens,
-    endsAt: votingCloses,
-  });
-
-  // Hide zero-duration phases (e.g. review windows the user collapsed to 0).
-  return out.filter((e) => e.endsAt.getTime() > e.startsAt.getTime());
-}
-
 function formStatusKind(form: CandidateRegistrationFormAdminSummary): StatusKind {
   const now = Date.now();
   if (now < new Date(form.opensAt).getTime()) return 'upcoming';
   if (now > new Date(form.closesAt).getTime()) return 'closed';
   return 'open';
 }
-
-// Linear ordering of timeline-relevant states.  CANCELLED/FAILED/COMPLETED are
-// terminal and treated as "everything past" below.
-const STATE_ORDER: CampaignState[] = [
-  'ANNOUNCED',
-  'REGISTRATION_OPEN',
-  'REGISTRATION_REVIEW',
-  'SIGNATURES_OPEN',
-  'SIGNATURES_REVIEW',
-  'VOTING_OPEN',
-  'VOTING_CLOSED',
-];
 
 interface FinalElectionBodyProps {
   election: CampaignFinalElectionSummary;
@@ -160,21 +100,6 @@ function FinalElectionBody({ election, isCompleted }: FinalElectionBodyProps) {
   );
 }
 
-function timelineEntryBadge(
-  entry: CampaignState,
-  current: CampaignState,
-): { kind: StatusKind; label: string } {
-  const fullLabel = CAMPAIGN_STATE_BADGE[entry].label;
-  if (entry === current) return CAMPAIGN_STATE_BADGE[entry];
-  if (current === 'COMPLETED' || current === 'FAILED' || current === 'CANCELLED') {
-    return { kind: 'closed', label: fullLabel };
-  }
-  const entryIdx = STATE_ORDER.indexOf(entry);
-  const currentIdx = STATE_ORDER.indexOf(current);
-  if (entryIdx < currentIdx) return { kind: 'closed', label: fullLabel };
-  return { kind: 'upcoming', label: fullLabel };
-}
-
 export function CampaignDashboard({
   group,
   campaign,
@@ -183,7 +108,6 @@ export function CampaignDashboard({
   finalElection,
 }: CampaignDashboardProps) {
   const badge = CAMPAIGN_STATE_BADGE[campaign.state];
-  const timeline = buildTimeline(campaign);
   const groupedRestrictions = campaign.restrictions.reduce<Record<string, string[]>>((acc, r) => {
     (acc[r.type] ??= []).push(r.value);
     return acc;
@@ -233,39 +157,7 @@ export function CampaignDashboard({
             </section>
 
             {/* Timeline */}
-            <section className="border-border-color shadow-card rounded-xl border bg-white">
-              <header className="border-border-subtle flex items-center gap-2 border-b px-5 py-4">
-                <ScrollText className="text-kpi-gray-mid h-4 w-4" />
-                <h2 className="font-display text-foreground text-base font-semibold">
-                  Етапи кампанії
-                </h2>
-              </header>
-              <ol className="divide-border-subtle divide-y">
-                {timeline.map((entry) => {
-                  const stageBadge = timelineEntryBadge(entry.state, campaign.state);
-                  const isCurrent = entry.state === campaign.state;
-                  return (
-                    <li
-                      key={entry.state}
-                      className="flex flex-wrap items-center justify-between gap-3 px-5 py-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={stageBadge.kind} label={stageBadge.label} size="sm" />
-                        {isCurrent && (
-                          <span className="font-body text-muted-foreground text-xs italic">
-                            зараз
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-muted-foreground text-xs">
-                        <LocalDateTime date={entry.startsAt.toISOString()} /> —{' '}
-                        <LocalDateTime date={entry.endsAt.toISOString()} />
-                      </span>
-                    </li>
-                  );
-                })}
-              </ol>
-            </section>
+            <CampaignStageEditor campaign={campaign} />
 
             {/* Registration form (Stage 2) */}
             <section className="border-border-color shadow-card rounded-xl border bg-white">

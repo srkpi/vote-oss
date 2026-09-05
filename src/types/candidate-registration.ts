@@ -34,15 +34,13 @@ export interface CreateCandidateRegistrationFormRequest {
   restrictions?: CandidateRegistrationFormRestriction[];
 }
 
-export interface UpdateCandidateRegistrationFormRequest {
-  title?: string;
-  description?: string | null;
-  requiresCampaignProgram?: boolean;
-  teamSize?: number;
-  opensAt?: string;
-  closesAt?: string;
-  restrictions?: CandidateRegistrationFormRestriction[];
-}
+/**
+ * PATCH /api/registration-forms/{id} body. Replace-all semantics, same
+ * shape as creation — send every field, including unchanged ones. Whether
+ * `opensAt`/`closesAt` may actually change from their current values
+ * depends on the form's state; see `formDatePhase` in `@/lib/registration-forms`.
+ */
+export type UpdateCandidateRegistrationFormRequest = CreateCandidateRegistrationFormRequest;
 
 // ── Candidate registration submissions ─────────────────────────────────────
 
