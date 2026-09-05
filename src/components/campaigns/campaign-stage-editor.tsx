@@ -238,7 +238,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
         {anyEditable && !editing && (
           <Button variant="ghost" size="sm" onClick={startEditing}>
             <Pencil className="h-3.5 w-3.5" />
-            <span>Редагувати</span>
+            <span className="hidden sm:inline">Редагувати</span>
           </Button>
         )}
       </header>

@@ -5,7 +5,6 @@ import {
   ClipboardList,
   FileText,
   Inbox,
-  Lock,
   Pencil,
   Plus,
   ShieldCheck,
@@ -197,14 +196,16 @@ export function RegistrationFormsPanel({
                         <span className="hidden sm:inline">Заявки</span>
                       </Button>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setFormDialog({ mode: 'edit', form })}
-                      title="Редагувати"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
+                    {status !== 'closed' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFormDialog({ mode: 'edit', form })}
+                        title="Редагувати"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -291,6 +292,8 @@ function defaultEndDate(): Date {
   return d;
 }
 
+type FormDialogPhase = 'not_started' | 'open' | 'closed';
+
 function RegistrationFormDialog({
   groupId,
   open,
@@ -310,12 +313,9 @@ function RegistrationFormDialog({
   const [facultiesLoading, setFacultiesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Set only when editing a form whose registration window has already
-  // opened: opensAt is then frozen at this value, and closesAt can only move
-  // to a later time than this snapshot ("extend, don't shorten").
-  const [startedAt, setStartedAt] = useState<{ opensAt: Date; closesAt: Date } | null>(null);
 
-  // Re-renders every minute so date-pickers and validation stay in sync with "now".
+  // Re-renders every minute so date-pickers, phase, and validation all stay
+  // in sync with "now" while the dialog is left open.
   const [renderNowMs, setRenderNowMs] = useState(() => Date.now());
   useEffect(() => {
     if (!open) return;
@@ -324,24 +324,32 @@ function RegistrationFormDialog({
   }, [open]);
   const minFutureDate = new Date(renderNowMs + 60 * 1000);
 
+  // A brand-new form is always "not started". An existing one's phase is
+  // derived live from its fixed opens/closes timestamps versus "now" rather
+  // than snapshotted once, so the dialog re-locks itself in place if a
+  // boundary passes while it's sitting open.
+  const originalOpensAt = editTarget ? new Date(editTarget.opensAt) : null;
+  const originalClosesAt = editTarget ? new Date(editTarget.closesAt) : null;
+  const phase: FormDialogPhase =
+    !originalOpensAt || !originalClosesAt
+      ? 'not_started'
+      : renderNowMs >= originalClosesAt.getTime()
+        ? 'closed'
+        : renderNowMs >= originalOpensAt.getTime()
+          ? 'open'
+          : 'not_started';
+
   useEffect(() => {
     if (!open) return;
     if (editTarget) {
-      const originalOpensAt = new Date(editTarget.opensAt);
-      const originalClosesAt = new Date(editTarget.closesAt);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(editTarget.title);
       setDescription(editTarget.description ?? '');
       setRequiresCampaignProgram(editTarget.requiresCampaignProgram);
       setTeamSize(editTarget.teamSize);
-      setOpensAt(originalOpensAt);
-      setClosesAt(originalClosesAt);
+      setOpensAt(new Date(editTarget.opensAt));
+      setClosesAt(new Date(editTarget.closesAt));
       setFaculties(editTarget.restrictions.filter((r) => r.type === 'FACULTY').map((r) => r.value));
-      setStartedAt(
-        Date.now() >= originalOpensAt.getTime()
-          ? { opensAt: originalOpensAt, closesAt: originalClosesAt }
-          : null,
-      );
     } else {
       setTitle('');
       setDescription('');
@@ -350,14 +358,13 @@ function RegistrationFormDialog({
       setOpensAt(defaultStartDate());
       setClosesAt(defaultEndDate());
       setFaculties([]);
-      setStartedAt(null);
     }
     setError(null);
   }, [open, editTarget]);
 
-  // Load faculty list once
+  // Load faculty list once — skip entirely once restrictions are no longer editable.
   useEffect(() => {
-    if (!open) return;
+    if (!open || phase !== 'not_started') return;
     if (facultyOptions.length > 0) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFacultiesLoading(false);
@@ -375,13 +382,13 @@ function RegistrationFormDialog({
       }
       setFacultiesLoading(false);
     });
-  }, [open, facultyOptions.length]);
+  }, [open, phase, facultyOptions.length]);
 
   const handleSubmit = async () => {
-    if (!startedAt) {
-      // Not-yet-open form (or a brand-new one): both dates are free, but
-      // still have to be in the future — this check was previously entirely
-      // missing here, unlike the equivalent campaign dialog.
+    if (phase === 'closed') return;
+
+    if (phase === 'not_started') {
+      // Both dates are free, but still have to be in the future.
       const nowMs = Date.now();
       const futureChecks: Array<[Date, string]> = [
         [opensAt, 'Початок прийому'],
@@ -392,13 +399,16 @@ function RegistrationFormDialog({
         setError(`«${pastField[1]}» має бути після поточного часу`);
         return;
       }
-    } else if (closesAt.getTime() < startedAt.closesAt.getTime()) {
+    } else if (originalClosesAt && closesAt.getTime() < originalClosesAt.getTime()) {
       setError('Прийом заявок уже розпочато — «Кінець прийому» можна лише продовжити');
       return;
     }
 
     setSubmitting(true);
     setError(null);
+    // While open, every field except closesAt is locked — their inputs
+    // aren't even rendered in that phase, so the state below already holds
+    // the unchanged originals regardless.
     const restrictions: CandidateRegistrationFormRestriction[] = faculties.map((value) => ({
       type: 'FACULTY',
       value,
@@ -408,10 +418,7 @@ function RegistrationFormDialog({
       description: description.trim() || null,
       requiresCampaignProgram,
       teamSize,
-      // opensAt is never touched by the picker once startedAt is set, but
-      // send the frozen snapshot explicitly rather than the (equal) state
-      // value, so a stray re-render can't ever submit a different opensAt.
-      opensAt: (startedAt?.opensAt ?? opensAt).toISOString(),
+      opensAt: (originalOpensAt ?? opensAt).toISOString(),
       closesAt: closesAt.toISOString(),
       restrictions,
     };
@@ -446,7 +453,32 @@ function RegistrationFormDialog({
     );
   };
 
-  const canSubmit = title.trim().length > 0 && !submitting;
+  const canSubmit = phase !== 'closed' && title.trim().length > 0 && !submitting;
+
+  // Once closed there is truly nothing left to edit — a dedicated, fields-free view.
+  if (phase === 'closed') {
+    return (
+      <Dialog open={open} onClose={onClose}>
+        <DialogPanel maxWidth="sm">
+          <DialogHeader>
+            <DialogTitle>Форму закрито</DialogTitle>
+            <DialogCloseButton onClose={onClose} />
+          </DialogHeader>
+          <DialogBody>
+            <Alert variant="warning">
+              Прийом заявок за формою «{editTarget?.title}» вже завершився. Редагування більше
+              недоступне.
+            </Alert>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={onClose}>
+              Закрити
+            </Button>
+          </DialogFooter>
+        </DialogPanel>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onClose={() => !submitting && onClose()}>
@@ -464,132 +496,135 @@ function RegistrationFormDialog({
             </Alert>
           )}
 
-          <FormField label="Заголовок" required htmlFor="form-title">
-            <Input
-              id="form-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={REGISTRATION_FORM_TITLE_MAX_LENGTH}
-              placeholder="Наприклад: Реєстрація на голову студради ФІОТ"
-            />
-          </FormField>
-
-          <FormField label="Опис (необов’язково)" htmlFor="form-description">
-            <Textarea
-              id="form-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              maxLength={REGISTRATION_FORM_DESCRIPTION_MAX_LENGTH}
-              placeholder="Деталі для кандидатів: як подати заявку, дедлайни, контакти ВКСУ"
-            />
-          </FormField>
-
-          {startedAt && (
+          {phase === 'open' && (
             <Alert variant="info">
-              Прийом заявок вже розпочався: дату початку більше не можна змінити, а дату закінчення
-              можна лише перенести на пізніше.
+              Прийом заявок вже розпочався: усі інші поля заблоковано, можна лише перенести дату
+              закінчення на пізніше.
             </Alert>
           )}
 
+          {phase === 'not_started' && (
+            <>
+              <FormField label="Заголовок" required htmlFor="form-title">
+                <Input
+                  id="form-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={REGISTRATION_FORM_TITLE_MAX_LENGTH}
+                  placeholder="Наприклад: Реєстрація на голову студради ФІОТ"
+                />
+              </FormField>
+
+              <FormField label="Опис (необов’язково)" htmlFor="form-description">
+                <Textarea
+                  id="form-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  maxLength={REGISTRATION_FORM_DESCRIPTION_MAX_LENGTH}
+                  placeholder="Деталі для кандидатів: як подати заявку, дедлайни, контакти ВКСУ"
+                />
+              </FormField>
+            </>
+          )}
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField label="Початок прийому" required htmlFor="opens-at">
-              {startedAt ? (
-                <div className="border-border-color bg-surface text-muted-foreground flex h-10 items-center gap-2 rounded-md border px-3 text-sm">
-                  <Lock className="h-3.5 w-3.5 shrink-0" />
-                  <LocalDateTime date={opensAt.toISOString()} />
-                </div>
-              ) : (
+            {phase === 'not_started' && (
+              <FormField label="Початок прийому" required htmlFor="opens-at">
                 <KyivDateTimePicker
                   id="opens-at"
                   value={opensAt}
                   onChange={(d) => setOpensAt(d)}
                   min={minFutureDate}
                 />
-              )}
-            </FormField>
+              </FormField>
+            )}
             <FormField label="Кінець прийому" required htmlFor="closes-at">
               <KyivDateTimePicker
                 id="closes-at"
                 value={closesAt}
                 onChange={(d) => setClosesAt(d)}
                 min={
-                  startedAt && startedAt.closesAt > minFutureDate
-                    ? startedAt.closesAt
+                  originalClosesAt && originalClosesAt > minFutureDate
+                    ? originalClosesAt
                     : minFutureDate
                 }
               />
             </FormField>
           </div>
 
-          <FormField label="Вимоги до заявки">
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={requiresCampaignProgram}
-                  onChange={(e) => setRequiresCampaignProgram(e.target.checked)}
-                />
-                <span>Кандидат має додати посилання на передвиборчу програму</span>
-              </label>
-              <div>
-                <label className="text-foreground mb-1 flex items-center gap-2 text-sm">
-                  <span>Розмір команди</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={REGISTRATION_FORM_MAX_TEAM_SIZE}
-                    value={teamSize}
-                    onChange={(e) => {
-                      const n = parseInt(e.target.value, 10);
-                      if (Number.isNaN(n)) {
-                        setTeamSize(0);
-                        return;
-                      }
-                      const clamped = Math.max(0, Math.min(REGISTRATION_FORM_MAX_TEAM_SIZE, n));
-                      setTeamSize(clamped);
-                    }}
-                    className="w-20"
-                  />
-                </label>
-                <p className="text-muted-foreground text-xs">
-                  Кількість людей, яких має запросити кандидат (0–
-                  {REGISTRATION_FORM_MAX_TEAM_SIZE}). Кожен отримує окреме посилання-запрошення.
-                </p>
-              </div>
-            </div>
-          </FormField>
-
-          <FormField label="Підрозділи (необов’язково)">
-            {facultiesLoading ? (
-              <p className="text-muted-foreground text-xs">Завантажуємо список підрозділів…</p>
-            ) : (
-              <div className="border-border-color max-h-48 overflow-y-auto rounded-md border p-2">
-                {facultyOptions.length === 0 ? (
-                  <p className="text-muted-foreground p-2 text-xs">
-                    Не вдалося завантажити підрозділи
-                  </p>
-                ) : (
-                  facultyOptions.map((f) => (
-                    <label
-                      key={f}
-                      className="hover:bg-surface flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={faculties.includes(f)}
-                        onChange={() => toggleFaculty(f)}
+          {phase === 'not_started' && (
+            <>
+              <FormField label="Вимоги до заявки">
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={requiresCampaignProgram}
+                      onChange={(e) => setRequiresCampaignProgram(e.target.checked)}
+                    />
+                    <span>Кандидат має додати посилання на передвиборчу програму</span>
+                  </label>
+                  <div>
+                    <label className="text-foreground mb-1 flex items-center gap-2 text-sm">
+                      <span>Розмір команди</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={REGISTRATION_FORM_MAX_TEAM_SIZE}
+                        value={teamSize}
+                        onChange={(e) => {
+                          const n = parseInt(e.target.value, 10);
+                          if (Number.isNaN(n)) {
+                            setTeamSize(0);
+                            return;
+                          }
+                          const clamped = Math.max(0, Math.min(REGISTRATION_FORM_MAX_TEAM_SIZE, n));
+                          setTeamSize(clamped);
+                        }}
+                        className="w-20"
                       />
-                      <span>{f}</span>
                     </label>
-                  ))
+                    <p className="text-muted-foreground text-xs">
+                      Кількість співбалотників, яких має запросити кандидат (0–
+                      {REGISTRATION_FORM_MAX_TEAM_SIZE}). Кожен отримує окреме посилання-запрошення.
+                    </p>
+                  </div>
+                </div>
+              </FormField>
+
+              <FormField label="Підрозділи (необов’язково)">
+                {facultiesLoading ? (
+                  <p className="text-muted-foreground text-xs">Завантажуємо список підрозділів…</p>
+                ) : (
+                  <div className="border-border-color max-h-48 overflow-y-auto rounded-md border p-2">
+                    {facultyOptions.length === 0 ? (
+                      <p className="text-muted-foreground p-2 text-xs">
+                        Не вдалося завантажити підрозділи
+                      </p>
+                    ) : (
+                      facultyOptions.map((f) => (
+                        <label
+                          key={f}
+                          className="hover:bg-surface flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={faculties.includes(f)}
+                            onChange={() => toggleFaculty(f)}
+                          />
+                          <span>{f}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-            <p className="text-muted-foreground mt-1 text-xs">
-              Якщо обрано хоча б один підрозділ — заявку зможуть подавати лише його студенти.
-            </p>
-          </FormField>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Якщо обрано хоча б один підрозділ — заявку зможуть подавати лише його студенти.
+                </p>
+              </FormField>
+            </>
+          )}
         </DialogBody>
         <DialogFooter>
           <Button variant="secondary" onClick={onClose} disabled={submitting}>

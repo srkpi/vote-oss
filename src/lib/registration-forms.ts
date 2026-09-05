@@ -229,42 +229,94 @@ export function validateCreateFormBody(
   return { ok: true, data: { ...base.data, opensAt } };
 }
 
-export type RegistrationFormDatePhase = 'not_started' | 'started';
+export type RegistrationFormPhase = 'not_started' | 'open' | 'closed';
 
-/** Whether the form's registration window has opened yet, as of `now`. */
-export function formDatePhase(
-  form: { opens_at: Date },
+/** Which lifecycle phase the form is in, as of `now`. Drives field-level editability on PATCH. */
+export function formPhase(
+  form: { opens_at: Date; closes_at: Date },
   now: Date = new Date(),
-): RegistrationFormDatePhase {
-  return now < form.opens_at ? 'not_started' : 'started';
+): RegistrationFormPhase {
+  if (now >= form.closes_at) return 'closed';
+  if (now >= form.opens_at) return 'open';
+  return 'not_started';
+}
+
+function sameRestrictions(
+  a: CandidateRegistrationFormRestriction[],
+  b: CandidateRegistrationFormRestriction[],
+): boolean {
+  if (a.length !== b.length) return false;
+  const normalize = (list: CandidateRegistrationFormRestriction[]) =>
+    list
+      .map((r) => `${r.type}:${r.value}`)
+      .sort()
+      .join('|');
+  return normalize(a) === normalize(b);
+}
+
+export interface ExistingFormForUpdate {
+  title: string;
+  description: string | null;
+  requires_campaign_program: boolean;
+  team_size: number;
+  opens_at: Date;
+  closes_at: Date;
+  restrictions: CandidateRegistrationFormRestriction[];
 }
 
 /**
  * Validates a PATCH /registration-forms/{id} body. Same shape rules as
- * `validateFormBody`, plus date-editability:
- *  - not yet open (`now < opens_at`): both dates are free to move — same
+ * `validateFormBody`, plus phase-based field locking:
+ *  - not yet open (`now < opens_at`): every field is free to move — same
  *    past-clamp on opensAt as creation.
- *  - already open (`now >= opens_at`): opensAt must stay exactly as it was
- *    (registration has already started, so it can't retroactively start
- *    earlier or later); closesAt may only move later, never earlier —
- *    "extend, don't shorten". This also covers a form whose closesAt has
- *    already passed: pushing closesAt back into the future re-opens it,
- *    which is an intentional escape hatch for "we closed this too early".
+ *  - open (`opens_at <= now < closes_at`): registration is under way, so
+ *    every field EXCEPT closesAt is frozen at its current value — title,
+ *    description, requiresCampaignProgram, teamSize, restrictions, and
+ *    opensAt must all be echoed back unchanged. closesAt may only move
+ *    later, never earlier — "extend, don't shorten".
+ *  - closed (`now >= closes_at`): the form is finished; nothing may change,
+ *    full stop. Callers should generally reject the whole request before
+ *    even reaching this validator (see the PATCH route), but it's
+ *    enforced here too as a defence in depth.
  */
 export function validateUpdateFormBody(
   body: unknown,
-  existing: { opens_at: Date; closes_at: Date },
+  existing: ExistingFormForUpdate,
   now: Date = new Date(),
 ): { ok: true; data: ValidatedFormBody } | { ok: false; error: string } {
   const base = validateFormBody(body);
   if (!base.ok) return base;
 
-  if (formDatePhase(existing, now) === 'started') {
-    if (base.data.opensAt.getTime() !== existing.opens_at.getTime()) {
+  const phase = formPhase(existing, now);
+
+  if (phase === 'closed') {
+    return {
+      ok: false,
+      error: 'Registration has already closed — this form can no longer be edited',
+    };
+  }
+
+  if (phase === 'open') {
+    if (base.data.title !== existing.title) {
+      return { ok: false, error: 'title cannot be changed once registration has opened' };
+    }
+    if ((base.data.description ?? null) !== (existing.description ?? null)) {
+      return { ok: false, error: 'description cannot be changed once registration has opened' };
+    }
+    if (base.data.requiresCampaignProgram !== existing.requires_campaign_program) {
       return {
         ok: false,
-        error: 'opensAt has already passed and can no longer be changed',
+        error: 'requiresCampaignProgram cannot be changed once registration has opened',
       };
+    }
+    if (base.data.teamSize !== existing.team_size) {
+      return { ok: false, error: 'teamSize cannot be changed once registration has opened' };
+    }
+    if (!sameRestrictions(base.data.restrictions, existing.restrictions)) {
+      return { ok: false, error: 'restrictions cannot be changed once registration has opened' };
+    }
+    if (base.data.opensAt.getTime() !== existing.opens_at.getTime()) {
+      return { ok: false, error: 'opensAt has already passed and can no longer be changed' };
     }
     if (base.data.closesAt.getTime() < existing.closes_at.getTime()) {
       return {
@@ -272,9 +324,11 @@ export function validateUpdateFormBody(
         error: 'Registration has already started — closesAt can only be extended, not shortened',
       };
     }
-    return { ok: true, data: base.data };
+    return { ok: true, data: { ...base.data, opensAt: existing.opens_at } };
   }
 
+  // not_started: everything is still free to move, but opensAt can never be
+  // pushed into the past.
   const opensAt = base.data.opensAt < now ? now : base.data.opensAt;
   if (base.data.closesAt <= opensAt) {
     return { ok: false, error: 'closesAt must be after opensAt' };

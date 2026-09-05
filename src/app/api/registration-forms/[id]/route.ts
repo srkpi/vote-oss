@@ -106,14 +106,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *       Replaces all mutable fields on the form. Existing restrictions are
  *       hard-deleted and recreated atomically. Caller must be an active ВКСУ
  *       member of the form's group. The same validation rules as form
- *       creation apply, plus date-editability based on the form's current
- *       window: before `opensAt`, both dates may move freely (a backdated
- *       `opensAt` is clamped to now, same as creation); once `opensAt` has
- *       passed, `opensAt` itself is frozen and `closesAt` may only be moved
- *       later, never earlier. Forms owned by an election campaign
- *       (`registration_form_id` on the campaign) reject any date change
- *       outright — edit those from the campaign's PATCH endpoint instead, so
- *       the two can't drift apart.
+ *       creation apply, plus phase-based field locking: before `opensAt`,
+ *       every field is free to move (a backdated `opensAt` is clamped to
+ *       now, same as creation); once registration has opened, every field
+ *       EXCEPT `closesAt` is frozen at its current value, and `closesAt` may
+ *       only be moved later, never earlier; once `closesAt` has passed, the
+ *       form is closed and nothing may change at all. Forms owned by an
+ *       election campaign (`registration_form_id` on the campaign) reject
+ *       any date change outright — edit those from the campaign's PATCH
+ *       endpoint instead, so the two can't drift apart.
  *     tags:
  *       - CandidateRegistrationForms
  *     security:
@@ -141,9 +142,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *               $ref: '#/components/schemas/CandidateRegistrationForm'
  *       400:
  *         description: >
- *           Invalid UUID, body validation error, an attempted date change
- *           that the form's current state doesn't allow, or an attempted
- *           date change on a campaign-owned form
+ *           Invalid UUID, body validation error, an attempted change to a
+ *           field that's locked in the form's current phase, the form is
+ *           already closed, or an attempted date change on a campaign-owned
+ *           form
  *       401:
  *         description: Unauthorized
  *       403:
@@ -160,7 +162,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const existing = await prisma.candidateRegistrationForm.findUnique({
     where: { id },
-    select: { id: true, group_id: true, deleted_at: true, opens_at: true, closes_at: true },
+    select: {
+      id: true,
+      group_id: true,
+      deleted_at: true,
+      title: true,
+      description: true,
+      requires_campaign_program: true,
+      team_size: true,
+      opens_at: true,
+      closes_at: true,
+      restrictions: { select: { type: true, value: true } },
+    },
   });
   if (!existing || existing.deleted_at) return Errors.notFound('Form not found');
 
