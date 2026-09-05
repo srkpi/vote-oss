@@ -27,6 +27,7 @@ import {
 import { FormField, Input } from '@/components/ui/form';
 import { KyivDateTimePicker } from '@/components/ui/kyiv-date-time-picker';
 import { LocalDateTime } from '@/components/ui/local-time';
+import { Pagination } from '@/components/ui/pagination';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
@@ -37,6 +38,7 @@ import {
   CAMPAIGN_SIGNATURE_QUORUM_MIN,
   CAMPAIGN_TEAM_SIZE_MAX,
   CAMPAIGN_TEAM_SIZE_MIN,
+  CAMPAIGNS_PAGE_SIZE,
 } from '@/lib/constants';
 import type { ElectionCampaign, ElectionCampaignRestriction, ElectionKind } from '@/types/campaign';
 
@@ -53,9 +55,17 @@ export function CampaignsPanel({
 }: CampaignsPanelProps) {
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<ElectionCampaign[]>(initialCampaigns);
+  const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ElectionCampaign | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const totalPages = Math.max(1, Math.ceil(campaigns.length / CAMPAIGNS_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paged = campaigns.slice(
+    (safePage - 1) * CAMPAIGNS_PAGE_SIZE,
+    safePage * CAMPAIGNS_PAGE_SIZE,
+  );
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -94,7 +104,7 @@ export function CampaignsPanel({
         </p>
       ) : (
         <ul className="divide-border-subtle divide-y">
-          {campaigns.map((c) => {
+          {paged.map((c) => {
             const badge = CAMPAIGN_STATE_BADGE[c.state];
             return (
               <li key={c.id} className="px-5 py-4">
@@ -154,6 +164,12 @@ export function CampaignsPanel({
             );
           })}
         </ul>
+      )}
+
+      {totalPages > 1 && (
+        <div className="border-border-subtle border-t px-5 py-3">
+          <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
+        </div>
       )}
 
       <CampaignCreateDialog
