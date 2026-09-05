@@ -43,7 +43,7 @@ import {
   REGISTRATION_REJECTION_REASON_MAX_LENGTH,
   REGISTRATION_SUBMISSIONS_PAGE_SIZE,
 } from '@/lib/constants';
-import { cn } from '@/lib/utils/common';
+import { cn, pluralize } from '@/lib/utils/common';
 import type {
   CandidateRegistration,
   CandidateRegistrationForm,
@@ -178,20 +178,25 @@ export function RegistrationFormsPanel({
                       <LocalDateTime date={form.opensAt} /> — <LocalDateTime date={form.closesAt} />
                     </p>
                     <p className="text-muted-foreground mt-1 text-xs">
-                      Заявок —{' '}
                       <span className="text-foreground font-semibold">{form.submittedCount}</span>{' '}
-                      (з них на розгляді —{' '}
-                      <span className="text-foreground font-semibold">
-                        {form.pendingReviewCount}
-                      </span>
-                      )
+                      {pluralize(form.submittedCount, ['заявка', 'заявки', 'заявок'], false)}
+                      {form.pendingReviewCount > 0 && (
+                        <>
+                          , на розгляді —{' '}
+                          <span className="text-foreground font-semibold">
+                            {form.pendingReviewCount}
+                          </span>
+                        </>
+                      )}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setSubmissionsTarget(form)}>
-                      <Inbox className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">Заявки</span>
-                    </Button>
+                    {form.submittedCount > 0 && (
+                      <Button variant="ghost" size="sm" onClick={() => setSubmissionsTarget(form)}>
+                        <Inbox className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Заявки</span>
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"

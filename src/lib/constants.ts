@@ -16,6 +16,8 @@ export const ELECTION_MAX_CLOSES_AT_DAYS = 30;
 export const ELECTION_MIN_CHOICES_MIN = 1;
 export const ELECTION_MAX_CHOICES_MAX = 100;
 
+export const GROUP_ELECTIONS_PAGE_SIZE = 5;
+
 /**
  * Ballots are decrypted in small batches so we yield back to the main
  * thread between batches — elections can have several hundred ballots and
@@ -123,7 +125,7 @@ export const PRESENT_TEXT_FEMALE = 'присутня';
 export const ABSENT_TEXT_MALE = 'відсутній';
 export const ABSENT_TEXT_FEMALE = 'відсутня';
 
-export const PROTOCOLS_PAGE_SIZE = 10;
+export const PROTOCOLS_PAGE_SIZE = 5;
 export const PROTOCOL_REQUIRED_ELECTION_CHOICES = 3;
 
 // Election campaigns (meta-system orchestrating registration → signatures → final vote)
