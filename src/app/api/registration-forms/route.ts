@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       group: { type: 'VKSU', deleted_at: null },
     },
     include: FORM_INCLUDE,
-    orderBy: { closes_at: 'asc' },
+    orderBy: { created_at: 'desc' },
   });
 
   const myRegistrations = await prisma.candidateRegistration.findMany({

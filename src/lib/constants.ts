@@ -55,7 +55,7 @@ export const PETITION_TEXT_MAX_LENGTH = 5000;
  */
 export const ELECTIONS_PAGE_SIZE = 24;
 export const REGISTRATION_FORMS_PAGE_SIZE = 24;
-export const REGISTRATION_FORMS_ADMIN_PAGE_SIZE = 10;
+export const REGISTRATION_FORMS_ADMIN_PAGE_SIZE = 5;
 export const REGISTRATION_SUBMISSIONS_PAGE_SIZE = 10;
 export const BALLOTS_PAGE_SIZE = 20;
 export const SIGNATORIES_PAGE_SIZE = 20;
@@ -140,7 +140,7 @@ export const CAMPAIGN_RESTRICTION_VALUE_MAX_LENGTH = 100;
 export const CAMPAIGN_VOTING_MAX_DURATION_DAYS = 30;
 /** Maximum days the chain announced_at → voting_closes_at may span. */
 export const CAMPAIGN_TOTAL_MAX_DURATION_DAYS = 365;
-export const CAMPAIGNS_PAGE_SIZE = 24;
+export const CAMPAIGNS_PAGE_SIZE = 5;
 
 // Files / image uploads
 export const FILE_ALLOWED_IMAGE_MIME_TYPES = [
