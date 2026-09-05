@@ -5,6 +5,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   BuildingIcon,
+  Check,
   Download,
   Eye,
   Lock,
@@ -44,19 +45,19 @@ import {
   PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH,
 } from '@/lib/constants';
 import { capitalizeFirst, cn } from '@/lib/utils/common';
+import { type AttendeeDraft, deriveAttendees } from '@/lib/utils/protocol-attendees';
 import {
   getGenderedAbsentText,
   getGenderedPresentText,
-  isAttendeePresentByText,
   rederivePresenceText,
 } from '@/lib/utils/protocol-gender';
+import { compareByRoleImportance } from '@/lib/utils/protocol-role-priority';
 import type { Election } from '@/types/election';
 import type { GroupDetail } from '@/types/group';
 import type {
   AgendaChoiceVote,
   CreateProtocolRequest,
   Protocol,
-  ProtocolAttendee,
   ProtocolChoiceMapping,
   ProtocolListener,
 } from '@/types/protocol';
@@ -74,15 +75,6 @@ interface ResponsibleDraft {
   uid: string;
   posada: string;
   fullname: string;
-}
-
-interface AttendeeDraft {
-  uid: string;
-  userId: string | null;
-  fullname: string;
-  posada: string;
-  present_text: string;
-  isPresent: boolean;
 }
 
 interface ProtocolFormClientProps {
@@ -128,11 +120,12 @@ function emptyAgenda(): AgendaDraft {
   };
 }
 
-type QuickSortKey = 'fullname' | 'posada' | 'posada-fullname';
+type QuickSortKey = 'smart' | 'fullname' | 'posada' | 'posada-fullname';
 
-const QUICK_SORT_KEYS: QuickSortKey[] = ['fullname', 'posada', 'posada-fullname'];
+const QUICK_SORT_KEYS: QuickSortKey[] = ['smart', 'fullname', 'posada', 'posada-fullname'];
 
 const QUICK_SORT_LABELS: Record<QuickSortKey, string> = {
+  smart: 'За важливістю',
   fullname: 'ПІБ',
   posada: 'Посада',
   'posada-fullname': 'Посада → ПІБ',
@@ -141,77 +134,12 @@ const QUICK_SORT_LABELS: Record<QuickSortKey, string> = {
 function compareByQuickSortKey<T extends { fullname: string; posada: string }>(
   key: QuickSortKey,
 ): (a: T, b: T) => number {
+  if (key === 'smart') return compareByRoleImportance;
   return (a, b) => {
     if (key === 'fullname') return a.fullname.localeCompare(b.fullname, 'uk');
     if (key === 'posada') return a.posada.localeCompare(b.posada, 'uk');
     return a.posada.localeCompare(b.posada, 'uk') || a.fullname.localeCompare(b.fullname, 'uk');
   };
-}
-
-function deriveAttendees(
-  members: GroupDetail['members'],
-  saved: ProtocolAttendee[] | null,
-): AttendeeDraft[] {
-  // For an existing protocol, prefer the saved snapshot (so historical edits
-  // remain stable even if member list changed), but include any *new* members
-  // who joined since as absent rows for convenience.
-  const savedByUserId = new Map<string, ProtocolAttendee>();
-  const orphaned: ProtocolAttendee[] = [];
-  for (const a of saved ?? []) {
-    if (a.userId) savedByUserId.set(a.userId, a);
-    else orphaned.push(a);
-  }
-
-  const result: AttendeeDraft[] = [];
-  for (const m of members) {
-    const s = savedByUserId.get(m.userId);
-    if (s) {
-      result.push({
-        uid: uid(),
-        userId: m.userId,
-        fullname: s.fullname,
-        posada: s.posada,
-        present_text: s.present_text,
-        // Use the shared helper so both "присутній" and "присутня" are detected
-        isPresent: isAttendeePresentByText(s.present_text),
-      });
-      savedByUserId.delete(m.userId);
-    } else {
-      // New member not yet in saved snapshot — derive gender-aware absent text
-      result.push({
-        uid: uid(),
-        userId: m.userId,
-        fullname: m.displayName,
-        posada: m.role ?? '',
-        present_text: getGenderedAbsentText(m.displayName),
-        isPresent: false,
-      });
-    }
-  }
-
-  // Saved entries whose member is no longer in the group
-  for (const s of savedByUserId.values()) {
-    result.push({
-      uid: uid(),
-      userId: s.userId,
-      fullname: s.fullname,
-      posada: s.posada,
-      present_text: s.present_text,
-      isPresent: isAttendeePresentByText(s.present_text),
-    });
-  }
-  // Manually-added rows (no userId)
-  for (const s of orphaned) {
-    result.push({
-      uid: uid(),
-      userId: null,
-      fullname: s.fullname,
-      posada: s.posada,
-      present_text: s.present_text,
-      isPresent: isAttendeePresentByText(s.present_text),
-    });
-  }
-  return result;
 }
 
 export function ProtocolFormClient({
@@ -262,8 +190,24 @@ export function ProtocolFormClient({
     ];
   });
 
-  const [attendees, setAttendees] = useState<AttendeeDraft[]>(() =>
-    deriveAttendees(group.members, initialProtocol?.attendance ?? null),
+  const [attendees, setAttendees] = useState<AttendeeDraft[]>(() => {
+    const derived = deriveAttendees(group.members, initialProtocol?.attendance ?? null);
+    // A brand-new protocol has no saved order yet, so start from the "smart"
+    // role-importance order instead of the raw (join-date) member order —
+    // see responsiblesSortKey/attendeesSortKey below.
+    return isEdit ? derived : [...derived].sort(compareByRoleImportance);
+  });
+
+  // Tracks which quick-sort chip (if any) the current order matches, so it
+  // can be highlighted. `null` means the order is custom (manually
+  // rearranged, or loaded as-is from a saved protocol) and no chip should be
+  // highlighted. New, not-yet-created protocols default to "smart" so the
+  // owner sees an already-sensibly-ordered list instead of raw join order.
+  const [responsiblesSortKey, setResponsiblesSortKey] = useState<QuickSortKey | null>(
+    isEdit ? null : 'smart',
+  );
+  const [attendeesSortKey, setAttendeesSortKey] = useState<QuickSortKey | null>(
+    isEdit ? null : 'smart',
   );
 
   // Decrypted voter cache per non-anonymous closed election.  Used to lock
@@ -382,6 +326,7 @@ export function ProtocolFormClient({
   // present text is derived from the voter's full name.
   useEffect(() => {
     const syncedLockedUserIds = new Set(voterInfoByUserId.keys());
+    let addedNewAttendee = false;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAttendees((prev) => {
       const existingUserIds = new Set(prev.filter((a) => a.userId !== null).map((a) => a.userId!));
@@ -412,8 +357,13 @@ export function ProtocolFormClient({
         }
       }
       if (toAdd.length === 0 && !changed) return prev;
+      addedNewAttendee = toAdd.length > 0;
       return [...updated, ...toAdd];
     });
+
+    if (addedNewAttendee) {
+      setAttendeesSortKey(null);
+    }
   }, [voterInfoByUserId]);
 
   // ── Live computed counts ──────────────────────────────────────────────────
@@ -516,10 +466,12 @@ export function ProtocolFormClient({
   const addResponsible = () => {
     if (responsibles.length >= PROTOCOL_MAX_RESPONSIBLES) return;
     setResponsibles((prev) => [...prev, { uid: uid(), posada: '', fullname: '' }]);
+    setResponsiblesSortKey(null);
   };
 
   const updateResponsible = (idx: number, patch: Partial<ResponsibleDraft>) => {
     setResponsibles((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+    if ('posada' in patch || 'fullname' in patch) setResponsiblesSortKey(null);
   };
 
   const removeResponsible = (idx: number) => {
@@ -535,10 +487,12 @@ export function ProtocolFormClient({
       [copy[idx], copy[target]] = [copy[target], copy[idx]];
       return copy;
     });
+    setResponsiblesSortKey(null);
   };
 
   const sortResponsibles = (key: QuickSortKey) => {
     setResponsibles((prev) => [...prev].sort(compareByQuickSortKey(key)));
+    setResponsiblesSortKey(key);
   };
 
   // ── Mutations on attendees ────────────────────────────────────────────────
@@ -560,6 +514,7 @@ export function ProtocolFormClient({
         return merged;
       }),
     );
+    if ('posada' in patch || 'fullname' in patch) setAttendeesSortKey(null);
   };
 
   const togglePresence = (idx: number, present: boolean) => {
@@ -595,6 +550,7 @@ export function ProtocolFormClient({
         isPresent: true,
       },
     ]);
+    setAttendeesSortKey(null);
   };
 
   const removeAttendee = (idx: number) => {
@@ -609,10 +565,12 @@ export function ProtocolFormClient({
       [copy[idx], copy[target]] = [copy[target], copy[idx]];
       return copy;
     });
+    setAttendeesSortKey(null);
   };
 
   const sortAttendees = (key: QuickSortKey) => {
     setAttendees((prev) => [...prev].sort(compareByQuickSortKey(key)));
+    setAttendeesSortKey(key);
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -967,7 +925,9 @@ export function ProtocolFormClient({
               ) : null
             }
           >
-            {canEdit && responsibles.length > 1 && <QuickSortBar onSort={sortResponsibles} />}
+            {canEdit && responsibles.length > 1 && (
+              <QuickSortBar activeKey={responsiblesSortKey} onSort={sortResponsibles} />
+            )}
             <div className="space-y-3">
               {responsibles.map((r, idx) => (
                 <div
@@ -1028,7 +988,9 @@ export function ProtocolFormClient({
               ) : null
             }
           >
-            {canEdit && attendees.length > 1 && <QuickSortBar onSort={sortAttendees} />}
+            {canEdit && attendees.length > 1 && (
+              <QuickSortBar activeKey={attendeesSortKey} onSort={sortAttendees} />
+            )}
             {attendees.length === 0 ? (
               <p className="font-body text-muted-foreground py-4 text-center text-sm">
                 Учасників ще немає
@@ -1232,18 +1194,34 @@ function ReorderButtons({
   );
 }
 
-function QuickSortBar({ onSort }: { onSort: (key: QuickSortKey) => void }) {
+function QuickSortBar({
+  activeKey,
+  onSort,
+}: {
+  activeKey: QuickSortKey | null;
+  onSort: (key: QuickSortKey) => void;
+}) {
   return (
     <div className="mb-3 flex flex-wrap items-center gap-2">
       <span className="text-muted-foreground flex items-center gap-1 text-xs">
         <ArrowUpDown className="h-3 w-3" />
         Сортувати:
       </span>
-      {QUICK_SORT_KEYS.map((key) => (
-        <Button key={key} variant="secondary" size="xs" onClick={() => onSort(key)}>
-          {QUICK_SORT_LABELS[key]}
-        </Button>
-      ))}
+      {QUICK_SORT_KEYS.map((key) => {
+        const isActive = key === activeKey;
+        return (
+          <Button
+            key={key}
+            variant={isActive ? 'primary' : 'secondary'}
+            size="xs"
+            onClick={() => onSort(key)}
+            aria-pressed={isActive}
+          >
+            {isActive && <Check className="h-3 w-3" />}
+            {QUICK_SORT_LABELS[key]}
+          </Button>
+        );
+      })}
     </div>
   );
 }
