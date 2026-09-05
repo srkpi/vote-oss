@@ -36,9 +36,11 @@ export interface CreateCandidateRegistrationFormRequest {
 
 /**
  * PATCH /api/registration-forms/{id} body. Replace-all semantics, same
- * shape as creation — send every field, including unchanged ones. Whether
- * `opensAt`/`closesAt` may actually change from their current values
- * depends on the form's state; see `formDatePhase` in `@/lib/registration-forms`.
+ * shape as creation — send every field, including unchanged ones. Which
+ * fields may actually change from their current values depends on the
+ * form's phase; see `formPhase` in `@/lib/registration-forms`. Once open,
+ * only `closesAt` may change (and only to a later value); once closed,
+ * nothing may change.
  */
 export type UpdateCandidateRegistrationFormRequest = CreateCandidateRegistrationFormRequest;
 
