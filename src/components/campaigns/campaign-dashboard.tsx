@@ -1,20 +1,11 @@
-import {
-  CalendarClock,
-  CalendarDays,
-  ClipboardList,
-  FileText,
-  Inbox,
-  ShieldCheck,
-  Users,
-  Vote,
-} from 'lucide-react';
+import { ClipboardList, FileText, Inbox, ShieldCheck, Users, Vote } from 'lucide-react';
 import Link from 'next/link';
 
 import { CampaignStageEditor } from '@/components/campaigns/campaign-stage-editor';
 import { PageHeader } from '@/components/common/page-header';
 import { LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge, type StatusKind } from '@/components/ui/status-badge';
-import { CAMPAIGN_STATE_BADGE, ELECTION_KIND_LABEL } from '@/lib/campaigns-display';
+import { ELECTION_KIND_LABEL } from '@/lib/campaigns-display';
 import { RESTRICTION_TYPE_LABELS } from '@/lib/constants';
 import type {
   CampaignFinalElectionSummary,
@@ -91,9 +82,9 @@ function FinalElectionBody({ election, isCompleted }: FinalElectionBodyProps) {
       <div className="border-border-subtle border-t px-5 py-3">
         <Link
           href={`/elections/${election.electionId}`}
-          className="text-kpi-navy text-sm hover:underline"
+          className="text-kpi-navy text-sm underline hover:no-underline"
         >
-          Відкрити голосування →
+          Відкрити голосування
         </Link>
       </div>
     </div>
@@ -107,7 +98,6 @@ export function CampaignDashboard({
   signatureElections,
   finalElection,
 }: CampaignDashboardProps) {
-  const badge = CAMPAIGN_STATE_BADGE[campaign.state];
   const groupedRestrictions = campaign.restrictions.reduce<Record<string, string[]>>((acc, r) => {
     (acc[r.type] ??= []).push(r.value);
     return acc;
@@ -130,32 +120,6 @@ export function CampaignDashboard({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Main column */}
           <div className="space-y-6 lg:col-span-2">
-            {/* State summary */}
-            <section className="border-border-color shadow-card rounded-xl border bg-white">
-              <header className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <CalendarClock className="text-kpi-gray-mid h-4 w-4" />
-                  <h2 className="font-display text-foreground text-base font-semibold">
-                    Поточний стан
-                  </h2>
-                </div>
-                <StatusBadge status={badge.kind} label={badge.label} />
-              </header>
-              <div className="space-y-3 px-5 py-4">
-                <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    Оголошено: <LocalDateTime date={campaign.announcedAt} />
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <Vote className="h-3.5 w-3.5" />
-                    Голосування: <LocalDateTime date={campaign.votingOpensAt} /> —{' '}
-                    <LocalDateTime date={campaign.votingClosesAt} />
-                  </span>
-                </div>
-              </div>
-            </section>
-
             {/* Timeline */}
             <CampaignStageEditor campaign={campaign} />
 
@@ -201,10 +165,13 @@ export function CampaignDashboard({
                   </div>
                   <p className="text-muted-foreground pt-2 text-xs">
                     Заявки опрацьовуються на сторінці{' '}
-                    <Link href={`/groups/${group.id}`} className="text-kpi-navy hover:underline">
-                      Реєстраційні форми
-                    </Link>{' '}
-                    групи.
+                    <Link
+                      href={`/groups/${group.id}`}
+                      className="text-kpi-navy underline hover:no-underline"
+                    >
+                      вашої групи
+                    </Link>
+                    .
                   </p>
                 </div>
               ) : campaign.state === 'ANNOUNCED' ? (
@@ -318,13 +285,12 @@ export function CampaignDashboard({
                 </p>
               ) : campaign.state === 'FAILED' ? (
                 <p className="font-body text-muted-foreground px-5 py-6 text-sm">
-                  Кампанія не відбулася — фінальне голосування не створено.
+                  Кампанія не відбулася — голосування не створено.
                 </p>
               ) : (
                 <p className="font-body text-muted-foreground px-5 py-6 text-sm">
                   Голосування з усіма пройшовшими кандидатами створиться автоматично перед його
-                  початком. Заплановано: <LocalDateTime date={campaign.votingOpensAt} /> —{' '}
-                  <LocalDateTime date={campaign.votingClosesAt} />.
+                  початком.
                 </p>
               )}
             </section>
@@ -344,33 +310,6 @@ export function CampaignDashboard({
                   </dd>
                 </div>
                 <div className="px-5 py-3">
-                  <dt className="text-muted-foreground text-xs">Реєстрація</dt>
-                  <dd className="text-foreground text-sm">
-                    <LocalDateTime date={campaign.announcedAt} /> —{' '}
-                    <LocalDateTime date={campaign.registrationClosesAt} />
-                  </dd>
-                </div>
-                {campaign.signatureCollection &&
-                campaign.signaturesOpensAt &&
-                campaign.signaturesClosesAt ? (
-                  <div className="px-5 py-3">
-                    <dt className="text-muted-foreground text-xs">Збір підписів</dt>
-                    <dd className="text-foreground text-sm">
-                      <LocalDateTime date={campaign.signaturesOpensAt} /> —{' '}
-                      <LocalDateTime date={campaign.signaturesClosesAt} />
-                      <br />
-                      <span className="text-muted-foreground text-xs">
-                        Кворум: {campaign.signatureQuorum}
-                      </span>
-                    </dd>
-                  </div>
-                ) : (
-                  <div className="px-5 py-3">
-                    <dt className="text-muted-foreground text-xs">Збір підписів</dt>
-                    <dd className="text-foreground text-sm">Не застосовується</dd>
-                  </div>
-                )}
-                <div className="px-5 py-3">
                   <dt className="text-muted-foreground text-xs">Розмір команди</dt>
                   <dd className="text-foreground text-sm">
                     {campaign.teamSize === 0 ? 'Без команди' : campaign.teamSize}
@@ -386,10 +325,6 @@ export function CampaignDashboard({
                   <dt className="text-muted-foreground text-xs">Створено</dt>
                   <dd className="text-foreground text-sm">
                     <LocalDateTime date={campaign.createdAt} />
-                    <br />
-                    <span className="text-muted-foreground text-xs">
-                      {campaign.createdByFullName}
-                    </span>
                   </dd>
                 </div>
               </dl>

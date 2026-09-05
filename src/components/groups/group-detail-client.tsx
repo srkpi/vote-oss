@@ -56,6 +56,7 @@ import { api } from '@/lib/api/browser';
 import {
   AVATAR_MAX_SIZE_BYTES,
   FILE_ALLOWED_IMAGE_MIME_TYPES,
+  GROUP_ELECTIONS_PAGE_SIZE,
   GROUP_INVITE_LINK_MAX_DAYS,
   GROUP_INVITE_LINK_MAX_USAGE,
   GROUP_INVITE_LINK_MIN_HOURS,
@@ -79,8 +80,6 @@ import type {
   GroupRequisites,
 } from '@/types/group';
 import type { ProtocolSummary } from '@/types/protocol';
-
-const GROUP_ELECTIONS_PAGE_SIZE = 5;
 
 const ELECTION_STATUS_LABELS: Record<ElectionStatus, string> = {
   open: 'Активні',

@@ -28,7 +28,7 @@ const buttonVariants = cva(
         danger:
           'bg-error-bg text-error border-error/20 hover:bg-error hover:text-white hover:border-error',
         destructive: 'bg-error text-white hover:bg-error/90 shadow-sm',
-        link: 'bg-transparent text-kpi-navy underline-offset-4 hover:underline border-transparent p-0 h-auto',
+        link: 'bg-transparent text-kpi-navy underline-offset-4 underline hover:no-underline border-transparent p-0 h-auto',
       },
       size: {
         xs: 'h-6 px-2 text-xs rounded-md gap-1 [&_svg]:w-3 [&_svg]:h-3',
