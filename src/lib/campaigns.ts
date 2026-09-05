@@ -11,6 +11,10 @@
 import type { CampaignState, ElectionKind, Prisma, RestrictionType } from '@prisma/client';
 
 import { invalidateElections } from '@/lib/cache';
+import {
+  type CampaignBoundaryRow,
+  computeCampaignStageEditability,
+} from '@/lib/campaign-stage-editability';
 import { ALLOWED_REGISTRATION_FORM_RESTRICTION_TYPES } from '@/lib/candidate-registration';
 import {
   CAMPAIGN_MAX_RESTRICTIONS,
@@ -28,6 +32,7 @@ import { safeDecrypt } from '@/lib/elections-view';
 import { encryptField } from '@/lib/encryption';
 import { prisma } from '@/lib/prisma';
 import type {
+  CampaignBoundaryEditability,
   CreateElectionCampaignRequest,
   ElectionCampaign,
   ElectionCampaignRestriction,
@@ -46,7 +51,10 @@ export type CampaignWithRelations = Prisma.ElectionCampaignGetPayload<{
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-export function shapeCampaign(campaign: CampaignWithRelations): ElectionCampaign {
+export function shapeCampaign(
+  campaign: CampaignWithRelations,
+  now: Date = new Date(),
+): ElectionCampaign {
   return {
     id: campaign.id,
     groupId: campaign.group_id,
@@ -71,6 +79,7 @@ export function shapeCampaign(campaign: CampaignWithRelations): ElectionCampaign
     createdByFullName: campaign.created_by_full_name,
     createdAt: campaign.created_at.toISOString(),
     deletedAt: campaign.deleted_at?.toISOString() ?? null,
+    stageEditability: computeCampaignStageEditability(campaign, now),
   };
 }
 
@@ -163,6 +172,7 @@ function parseTimestamp(
 
 export function validateCreateCampaignBody(
   body: unknown,
+  now: Date = new Date(),
 ): { ok: true; data: ValidatedCreateCampaignBody } | { ok: false; error: string } {
   if (!body || typeof body !== 'object') return { ok: false, error: 'Invalid body' };
   const raw = body as Partial<CreateElectionCampaignRequest> & Record<string, unknown>;
@@ -186,7 +196,11 @@ export function validateCreateCampaignBody(
 
   const announcedRes = parseTimestamp(raw.announcedAt, 'announcedAt');
   if (!announcedRes.ok) return announcedRes;
-  const announcedAt = announcedRes.date;
+  // A campaign can't be announced in the past — silently start it "now"
+  // instead of honouring a stale/backdated timestamp (mirrors how election
+  // creation clamps opens_at). Every later boundary is validated against
+  // this clamped value below, so the whole chain ends up consistent.
+  const announcedAt = announcedRes.date < now ? now : announcedRes.date;
 
   const regClosesRes = parseTimestamp(raw.registrationClosesAt, 'registrationClosesAt');
   if (!regClosesRes.ok) return regClosesRes;
@@ -260,6 +274,76 @@ export function validateCreateCampaignBody(
   const votingOpensAt = votingOpensRes.date;
   const votingClosesAt = votingClosesRes.date;
 
+  const chainRes = validateCampaignDateChain({
+    announcedAt,
+    registrationClosesAt,
+    signaturesOpensAt,
+    signaturesClosesAt,
+    votingOpensAt,
+    votingClosesAt,
+  });
+  if (!chainRes.ok) return chainRes;
+
+  const restrictionsRes = validateRestrictions(raw.restrictions);
+  if (!restrictionsRes.ok) return { ok: false, error: restrictionsRes.error };
+
+  return {
+    ok: true,
+    data: {
+      positionTitle,
+      electionKind: electionKind as ElectionKind,
+      announcedAt,
+      registrationClosesAt,
+      signatureCollection: raw.signatureCollection,
+      signaturesOpensAt,
+      signaturesClosesAt,
+      signatureQuorum,
+      teamSize,
+      requiresCampaignProgram,
+      votingOpensAt,
+      votingClosesAt,
+      restrictions: restrictionsRes.restrictions,
+    },
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Editing dates after creation
+//
+// A campaign's six phase-boundary timestamps form a chain:
+//   announcedAt → registrationClosesAt → [signaturesOpensAt → signaturesClosesAt →]
+//   votingOpensAt → votingClosesAt
+// Each boundary is shared between the stage ending there and the stage
+// starting there, so editability is computed per-boundary rather than
+// per-stage: once a boundary is in the past it's locked forever (the stage
+// after it has already begun and can't be un-started); while the stage
+// ending at a boundary is currently under way, that boundary may only move
+// later; while that stage hasn't started yet, the boundary is free to move
+// either way. See `computeCampaignStageEditability` for the exact rule.
+// ────────────────────────────────────────────────────────────────────────────
+
+interface CampaignDates {
+  announcedAt: Date;
+  registrationClosesAt: Date;
+  signaturesOpensAt: Date | null;
+  signaturesClosesAt: Date | null;
+  votingOpensAt: Date;
+  votingClosesAt: Date;
+}
+
+/** Same chain-ordering and duration rules used at creation, factored out so PATCH can reuse them. */
+function validateCampaignDateChain(
+  dates: CampaignDates,
+): { ok: true } | { ok: false; error: string } {
+  const {
+    announcedAt,
+    registrationClosesAt,
+    signaturesOpensAt,
+    signaturesClosesAt,
+    votingOpensAt,
+    votingClosesAt,
+  } = dates;
+
   if (votingClosesAt <= votingOpensAt) {
     return { ok: false, error: 'votingClosesAt must be after votingOpensAt' };
   }
@@ -299,27 +383,228 @@ export function validateCreateCampaignBody(
     };
   }
 
-  const restrictionsRes = validateRestrictions(raw.restrictions);
-  if (!restrictionsRes.ok) return { ok: false, error: restrictionsRes.error };
+  return { ok: true };
+}
+
+const EDITABILITY_ERROR: Record<'locked' | 'extend_only', string> = {
+  locked: 'has already passed and can no longer be changed',
+  extend_only: 'is already under way — it can only be extended (moved later), not shortened',
+};
+
+function checkBoundaryEdit(
+  label: string,
+  state: CampaignBoundaryEditability,
+  oldValue: Date,
+  newValue: Date,
+): string | null {
+  if (state === 'locked' && newValue.getTime() !== oldValue.getTime()) {
+    return `${label} ${EDITABILITY_ERROR.locked}`;
+  }
+  if (state === 'extend_only' && newValue.getTime() < oldValue.getTime()) {
+    return `${label} ${EDITABILITY_ERROR.extend_only}`;
+  }
+  return null;
+}
+
+export interface ValidatedCampaignDatesUpdate {
+  announcedAt: Date;
+  registrationClosesAt: Date;
+  signaturesOpensAt: Date | null;
+  signaturesClosesAt: Date | null;
+  votingOpensAt: Date;
+  votingClosesAt: Date;
+}
+
+/**
+ * Validates a PATCH /campaigns/{id} body against the campaign's current
+ * stage editability (see `computeCampaignStageEditability`), then re-runs
+ * the same chain-ordering/duration rules used at creation against the
+ * resulting full set of timestamps. Replace-all semantics — `body` must
+ * contain every boundary field (echo back unchanged ones); signature fields
+ * are required if and only if the campaign already has a signature phase.
+ */
+export function validateCampaignDatesUpdate(
+  body: unknown,
+  existing: CampaignBoundaryRow,
+  now: Date = new Date(),
+): { ok: true; data: ValidatedCampaignDatesUpdate } | { ok: false; error: string } {
+  if (!body || typeof body !== 'object') return { ok: false, error: 'Invalid body' };
+  const raw = body as Record<string, unknown>;
+
+  const announcedRes = parseTimestamp(raw.announcedAt, 'announcedAt');
+  if (!announcedRes.ok) return announcedRes;
+  const regClosesRes = parseTimestamp(raw.registrationClosesAt, 'registrationClosesAt');
+  if (!regClosesRes.ok) return regClosesRes;
+  const votingOpensRes = parseTimestamp(raw.votingOpensAt, 'votingOpensAt');
+  if (!votingOpensRes.ok) return votingOpensRes;
+  const votingClosesRes = parseTimestamp(raw.votingClosesAt, 'votingClosesAt');
+  if (!votingClosesRes.ok) return votingClosesRes;
+
+  const hasSignaturePhase =
+    existing.signatures_opens_at !== null && existing.signatures_closes_at !== null;
+  let signaturesOpensAt: Date | null = null;
+  let signaturesClosesAt: Date | null = null;
+  if (hasSignaturePhase) {
+    const sigOpensRes = parseTimestamp(raw.signaturesOpensAt, 'signaturesOpensAt');
+    if (!sigOpensRes.ok) return sigOpensRes;
+    const sigClosesRes = parseTimestamp(raw.signaturesClosesAt, 'signaturesClosesAt');
+    if (!sigClosesRes.ok) return sigClosesRes;
+    signaturesOpensAt = sigOpensRes.date;
+    signaturesClosesAt = sigClosesRes.date;
+  } else if (raw.signaturesOpensAt != null || raw.signaturesClosesAt != null) {
+    return {
+      ok: false,
+      error:
+        'signaturesOpensAt/signaturesClosesAt must be omitted — this campaign has no signature phase',
+    };
+  }
+
+  const editability = computeCampaignStageEditability(existing, now);
+
+  let err = checkBoundaryEdit(
+    'announcedAt',
+    editability.announcedAt,
+    existing.announced_at,
+    announcedRes.date,
+  );
+  if (!err) {
+    err = checkBoundaryEdit(
+      'registrationClosesAt',
+      editability.registrationClosesAt,
+      existing.registration_closes_at,
+      regClosesRes.date,
+    );
+  }
+  if (!err) {
+    err = checkBoundaryEdit(
+      'votingOpensAt',
+      editability.votingOpensAt,
+      existing.voting_opens_at,
+      votingOpensRes.date,
+    );
+  }
+  if (!err) {
+    err = checkBoundaryEdit(
+      'votingClosesAt',
+      editability.votingClosesAt,
+      existing.voting_closes_at,
+      votingClosesRes.date,
+    );
+  }
+  if (!err && hasSignaturePhase) {
+    err = checkBoundaryEdit(
+      'signaturesOpensAt',
+      editability.signaturesOpensAt!,
+      existing.signatures_opens_at!,
+      signaturesOpensAt!,
+    );
+    if (!err) {
+      err = checkBoundaryEdit(
+        'signaturesClosesAt',
+        editability.signaturesClosesAt!,
+        existing.signatures_closes_at!,
+        signaturesClosesAt!,
+      );
+    }
+  }
+  if (err) return { ok: false, error: err };
+
+  // announcedAt is the only boundary that can still move to an arbitrary new
+  // value (when 'editable') — clamp it exactly like creation does, so it's
+  // impossible to edit a not-yet-started campaign's start into the past.
+  const announcedAt =
+    editability.announcedAt === 'editable' && announcedRes.date < now ? now : announcedRes.date;
+
+  const chainRes = validateCampaignDateChain({
+    announcedAt,
+    registrationClosesAt: regClosesRes.date,
+    signaturesOpensAt,
+    signaturesClosesAt,
+    votingOpensAt: votingOpensRes.date,
+    votingClosesAt: votingClosesRes.date,
+  });
+  if (!chainRes.ok) return chainRes;
 
   return {
     ok: true,
     data: {
-      positionTitle,
-      electionKind: electionKind as ElectionKind,
       announcedAt,
-      registrationClosesAt,
-      signatureCollection: raw.signatureCollection,
+      registrationClosesAt: regClosesRes.date,
       signaturesOpensAt,
       signaturesClosesAt,
-      signatureQuorum,
-      teamSize,
-      requiresCampaignProgram,
-      votingOpensAt,
-      votingClosesAt,
-      restrictions: restrictionsRes.restrictions,
+      votingOpensAt: votingOpensRes.date,
+      votingClosesAt: votingClosesRes.date,
     },
   };
+}
+
+/**
+ * Writes a validated date update and keeps already-spawned child entities in
+ * sync so an extension actually takes effect, not just cosmetically on the
+ * campaign row:
+ *  - the registration form's opens_at/closes_at mirror announcedAt/registrationClosesAt
+ *  - every signature election's opens_at/closes_at mirror signaturesOpensAt/signaturesClosesAt
+ *  - the final election's opens_at/closes_at mirror votingOpensAt/votingClosesAt
+ * All in one transaction so the campaign and its children can't drift apart
+ * if something fails partway through.
+ *
+ * NB: a registration form's dates can also, independently, be edited via
+ * PATCH /registration-forms/{id}; that endpoint refuses date changes on
+ * campaign-owned forms specifically so the two can never disagree.
+ */
+export async function applyCampaignDatesUpdate(
+  campaignId: string,
+  data: ValidatedCampaignDatesUpdate,
+  updatedBy: string,
+): Promise<CampaignWithRelations> {
+  let electionsTouched = false;
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const campaign = await tx.electionCampaign.update({
+      where: { id: campaignId },
+      data: {
+        announced_at: data.announcedAt,
+        registration_closes_at: data.registrationClosesAt,
+        signatures_opens_at: data.signaturesOpensAt,
+        signatures_closes_at: data.signaturesClosesAt,
+        voting_opens_at: data.votingOpensAt,
+        voting_closes_at: data.votingClosesAt,
+      },
+      include: CAMPAIGN_INCLUDE,
+    });
+
+    if (campaign.registration_form_id) {
+      await tx.candidateRegistrationForm.update({
+        where: { id: campaign.registration_form_id },
+        data: {
+          opens_at: data.announcedAt,
+          closes_at: data.registrationClosesAt,
+          updated_by: updatedBy,
+        },
+      });
+    }
+
+    if (data.signaturesOpensAt && data.signaturesClosesAt) {
+      const res = await tx.election.updateMany({
+        where: { campaign_id: campaignId, candidate_registration_id: { not: null } },
+        data: { opens_at: data.signaturesOpensAt, closes_at: data.signaturesClosesAt },
+      });
+      if (res.count > 0) electionsTouched = true;
+    }
+
+    if (campaign.final_election_id) {
+      await tx.election.update({
+        where: { id: campaign.final_election_id },
+        data: { opens_at: data.votingOpensAt, closes_at: data.votingClosesAt },
+      });
+      electionsTouched = true;
+    }
+
+    return campaign;
+  });
+
+  if (electionsTouched) await invalidateElections();
+  return updated;
 }
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -366,19 +366,6 @@ export function ProtocolFormClient({
     }
   }, [voterInfoByUserId]);
 
-  // ── Live computed counts ──────────────────────────────────────────────────
-  const counts = (() => {
-    const total = group.memberCount;
-    const quorum = Math.ceil((total * 2) / 3);
-    let present = 0;
-    for (const item of agenda) {
-      if (!item.electionId) continue;
-      const e = electionsById.get(item.electionId);
-      if (e && e.ballotCount > present) present = e.ballotCount;
-    }
-    return { total, quorum, present };
-  })();
-
   const presentCount = attendees.filter((a) => a.isPresent).length;
 
   // ── Mutations on agenda ──────────────────────────────────────────────────
@@ -850,18 +837,17 @@ export function ProtocolFormClient({
               <CountTile
                 icon={<Users className="h-4 w-4" />}
                 label="Усього членів"
-                value={counts.total}
+                value={group.memberCount}
               />
               <CountTile
                 icon={<Users className="h-4 w-4" />}
                 label="Кворум (2/3)"
-                value={counts.quorum}
+                value={Math.ceil((group.memberCount * 2) / 3)}
               />
               <CountTile
                 icon={<Vote className="h-4 w-4" />}
                 label="Присутні"
-                value={counts.present}
-                hint="Максимум бюлетенів серед привʼязаних голосувань"
+                value={presentCount}
               />
             </div>
           </SectionCard>
@@ -1070,9 +1056,7 @@ export function ProtocolFormClient({
                         </p>
                       )}
                       {!isLockedByVote && a.userId === null && (
-                        <p className="text-muted-foreground mt-1.5 text-xs">
-                          Ручний рядок (не зі списку учасників групи)
-                        </p>
+                        <p className="text-muted-foreground mt-1.5 text-xs">Ручний рядок</p>
                       )}
                       {!isLockedByVote && a.userId !== null && !isMember && (
                         <p className="text-muted-foreground mt-1.5 text-xs">
@@ -1088,7 +1072,7 @@ export function ProtocolFormClient({
 
           <div className="flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" asChild disabled={submitting || generating}>
-              <Link href={`/groups/${group.id}`}>{canEdit ? 'Скасувати' : 'Назад до групи'}</Link>
+              <Link href={`/groups/${group.id}`}>Назад</Link>
             </Button>
             {onPreview && isEdit && (
               <Button

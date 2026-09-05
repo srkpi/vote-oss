@@ -6,7 +6,7 @@ import { encryptField } from '@/lib/encryption';
 import { Errors } from '@/lib/errors';
 import { GroupForbiddenError, GroupNotFoundError, requireVKSUGroupMember } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
-import { FORM_INCLUDE, shapeForm, validateFormBody } from '@/lib/registration-forms';
+import { FORM_INCLUDE, shapeForm, validateCreateFormBody } from '@/lib/registration-forms';
 import { isValidUuid } from '@/lib/utils/common';
 
 /**
@@ -119,7 +119,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  *     description: >
  *       Creates a new candidate registration form within the specified ВКСУ
  *       group. Caller must be an active member of the group. The form's
- *       restrictions determine which students may submit registrations.
+ *       restrictions determine which students may submit registrations. If
+ *       `opensAt` is in the past it is silently clamped to the current time
+ *       rather than honoured verbatim.
  *     tags:
  *       - CandidateRegistrationForms
  *     security:
@@ -188,7 +190,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.badRequest('Invalid JSON body');
   }
 
-  const validation = validateFormBody(body);
+  const validation = validateCreateFormBody(body);
   if (!validation.ok) return Errors.badRequest(validation.error);
   const { title, description, requiresCampaignProgram, teamSize, opensAt, closesAt, restrictions } =
     validation.data;
