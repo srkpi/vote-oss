@@ -1,0 +1,1 @@
+{"id":"93b2685c67bebc22fdb60a381f54dafd","fullName":"vote-oss:src/__tests__/lib/protocol-role-priority.test.ts#getRolePriority recognises \"в.о.\" in any punctuation/spacing variant","name":"recognises \"в.о.\" in any punctuation/spacing variant","status":"passed","testResultsByEnv":{"default":"33363205947346e0166d064380df2a3c"}}

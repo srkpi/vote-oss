@@ -1,0 +1,1 @@
+{"id":"9da771f77c5c0d2f5c09333a655b538b","fullName":"vote-oss:src/__tests__/lib/protocol-attendees.test.ts#deriveAttendees derives isPresent from present_text for both saved and newly-added rows","name":"derives isPresent from present_text for both saved and newly-added rows","status":"passed","testResultsByEnv":{"default":"206cfa9a373df66f97c55f2edb2c7cc7"}}
