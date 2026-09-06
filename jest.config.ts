@@ -1,8 +1,10 @@
 import type { Config } from 'jest';
+import nextJest from 'next/jest.js';
+
+const createJestConfig = nextJest({ dir: './' });
 
 const config: Config = {
   testEnvironment: 'allure-jest/node',
-  preset: 'ts-jest',
   rootDir: '.',
   testMatch: ['<rootDir>/src/__tests__/**/*.test.ts'],
   moduleNameMapper: {
@@ -12,20 +14,6 @@ const config: Config = {
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
-  transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        tsconfig: {
-          module: 'commonjs',
-          esModuleInterop: true,
-          moduleResolution: 'node',
-        },
-      },
-    ],
-    '^.+\\.js$': 'babel-jest',
-  },
-  transformIgnorePatterns: ['/node_modules/.pnpm/(?!(jose))', '/node_modules/(?!(.pnpm|jose)/)'],
   collectCoverageFrom: ['src/lib/**/*.ts', 'src/app/api/**/*.ts', '!src/**/*.d.ts'],
   coverageDirectory: 'coverage',
   testPathIgnorePatterns: ['/node_modules/', '/.next/'],
@@ -33,4 +21,4 @@ const config: Config = {
   watchPathIgnorePatterns: ['<rootDir>/.next/'],
 };
 
-export default config;
+export default createJestConfig(config);

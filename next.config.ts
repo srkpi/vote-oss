@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   poweredByHeader: false,
   skipTrailingSlashRedirect: true,
+  transpilePackages: ['jose'],
   async headers() {
     return [
       {

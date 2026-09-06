@@ -1,11 +1,10 @@
 import * as allure from 'allure-js-commons';
 
+import { qrCodeMock } from '@/__tests__/helpers/qrcode-mock';
 import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import { makeRequest, parseJson } from '@/__tests__/helpers/request';
 
 jest.mock('@/lib/rate-limit', () => rateLimitMock);
-
-const qrCodeMock = { toDataURL: jest.fn() };
 jest.mock('qrcode', () => qrCodeMock);
 
 const fetchMock = jest.fn();

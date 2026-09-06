@@ -1,18 +1,8 @@
 import * as allure from 'allure-js-commons';
 
+import { bloomMock, resetBloomMock } from '@/__tests__/helpers/bloom-mock';
 import { JWT_TOKEN_RECORD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
-
-// ---------------------------------------------------------------------------
-// Module mocks
-// ---------------------------------------------------------------------------
-
-const bloomMock = {
-  bloomAdd: jest.fn<Promise<void>, [string, number]>().mockResolvedValue(undefined),
-  getBloomResetAt: jest.fn<Promise<number>, []>().mockResolvedValue(0),
-  isTokenClean: jest.fn<Promise<boolean | null>, [string]>().mockResolvedValue(true),
-  revokedKey: jest.fn((jti: string) => `revoked:${jti}`),
-};
 
 jest.mock('@/lib/bloom', () => bloomMock);
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
@@ -34,9 +24,7 @@ const RECENT_IAT = NOW_SECS - 5;
 describe('token-store', () => {
   beforeEach(() => {
     resetPrismaMock();
-    bloomMock.bloomAdd.mockReset().mockResolvedValue(undefined);
-    bloomMock.getBloomResetAt.mockReset().mockResolvedValue(0); // 0 = no reset gate
-    bloomMock.isTokenClean.mockReset().mockResolvedValue(true); // default: clean
+    resetBloomMock();
     allure.feature('Token Store');
   });
 
