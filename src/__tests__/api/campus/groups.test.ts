@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 
+import { fetchFacultyGroupsMock } from '@/__tests__/helpers/campus-api-mock';
 import { JWT_TOKEN_RECORD, makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
@@ -7,8 +8,6 @@ import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-s
 
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 jest.mock('@/lib/token-store', () => tokenStoreMock);
-
-const fetchFacultyGroupsMock = jest.fn<Promise<Record<string, string[]>>, []>();
 jest.mock('@/lib/campus-api', () => ({
   fetchFacultyGroups: fetchFacultyGroupsMock,
 }));
