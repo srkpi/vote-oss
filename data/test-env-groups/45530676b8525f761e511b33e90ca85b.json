@@ -1,1 +1,1 @@
-{"id":"45530676b8525f761e511b33e90ca85b","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto generateVoteToken includes a 64-char hex random secret","name":"includes a 64-char hex random secret","status":"passed","testResultsByEnv":{"default":"7ad46be47dfcc5ec60b533aabf6300e2"}}
+{"id":"45530676b8525f761e511b33e90ca85b","fullName":"vote-oss:src/__tests__/lib/crypto.test.ts#crypto generateVoteToken includes a 64-char hex random secret","name":"includes a 64-char hex random secret","status":"passed","testResultsByEnv":{"default":"a6497f674d3ef2bb4c3ca4df704dbbe2"}}
