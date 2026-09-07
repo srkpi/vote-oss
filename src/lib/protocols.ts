@@ -20,6 +20,7 @@ import {
 import { fileProxyUrl } from '@/lib/files';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
+import { isAttendeePresentByText } from '@/lib/utils/protocol-gender';
 import type {
   AgendaChoiceVote,
   Protocol,
@@ -476,25 +477,15 @@ export async function buildOssSnapshot(
 
 export async function computeProtocolCounts(
   groupId: string,
-  linkedElectionIds: string[],
+  attendees: ProtocolAttendee[],
 ): Promise<ProtocolComputedCounts> {
   const memberCount = await prisma.groupMember.count({
     where: { group_id: groupId, deleted_at: null },
   });
 
   let present = 0;
-  if (linkedElectionIds.length > 0) {
-    // For anonymous ballots we can't link a ballot back to a user, so we
-    // approximate "present" with the maximum number of ballots cast across the
-    // linked elections — assumes anyone present voted in at least one item.
-    const counts = await prisma.ballot.groupBy({
-      by: ['election_id'],
-      where: { election_id: { in: linkedElectionIds } },
-      _count: { _all: true },
-    });
-    for (const row of counts) {
-      if (row._count._all > present) present = row._count._all;
-    }
+  for (const a of attendees) {
+    if (isAttendeePresentByText(a.present_text)) present++;
   }
 
   const quorum = Math.ceil((memberCount * 2) / 3);
@@ -610,10 +601,7 @@ export async function buildGeneratorPayload(protocolId: string): Promise<Generat
   if (!row) throw new Error('Protocol not found');
 
   const protocol = shapeProtocol(row);
-  const linkedElectionIds = protocol.agendaItems
-    .map((a) => a.electionId)
-    .filter((x): x is string => !!x);
-  const counts = await computeProtocolCounts(protocol.groupId, linkedElectionIds);
+  const counts = await computeProtocolCounts(protocol.groupId, protocol.attendance);
 
   const events: GeneratorEvent[] = row.agenda_items.map((rawAgenda, idx) => {
     const agenda = protocol.agendaItems[idx];

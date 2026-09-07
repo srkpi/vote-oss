@@ -366,7 +366,10 @@ export function ProtocolFormClient({
     }
   }, [voterInfoByUserId]);
 
-  const presentCount = attendees.filter((a) => a.isPresent).length;
+  let presentCount = 0;
+  for (const a of attendees) {
+    if (a.isPresent) presentCount++;
+  }
 
   // ── Mutations on agenda ──────────────────────────────────────────────────
   const updateAgenda = (idx: number, patch: Partial<AgendaDraft>) => {
