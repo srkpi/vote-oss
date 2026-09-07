@@ -150,7 +150,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const linkedElectionIds = protocol.agendaItems
     .map((a) => a.electionId)
     .filter((x): x is string => !!x);
-  const counts = await computeProtocolCounts(protocol.groupId, linkedElectionIds);
+  const counts = await computeProtocolCounts(protocol.groupId, protocol.attendance);
 
   // Compute per-item vote totals server-side so the document view can show
   // them even to viewers who don't have access to the linked election.
@@ -361,8 +361,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 
   const protocol = shapeProtocol(updated);
-  const linkedIds = protocol.agendaItems.map((a) => a.electionId).filter((x): x is string => !!x);
-  const counts = await computeProtocolCounts(protocol.groupId, linkedIds);
+  const counts = await computeProtocolCounts(protocol.groupId, protocol.attendance);
 
   return NextResponse.json({ ...protocol, counts, isOwner: access.isOwner });
 }
