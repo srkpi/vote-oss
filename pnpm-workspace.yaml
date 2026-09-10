@@ -5,6 +5,7 @@ allowBuilds:
   core-js: true
   core-js-pure: true
   esbuild: true
+  gl: true
   msgpackr-extract: true
   msw: true
   prisma: true

@@ -504,6 +504,9 @@ html {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
+.animate-scene-in {
+  animation: fade-in 1.2s ease-out forwards;
+}
 
 /* ===================== GLASS EFFECT ===================== */
 

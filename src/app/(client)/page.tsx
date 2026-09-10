@@ -1,12 +1,12 @@
 import { Eye, LayoutDashboard, Link2, Lock, ShieldCheck, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
-import { AnimatedGrid } from '@/components/common/animated-grid';
 import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
 import { PlatformStatsSection } from '@/components/landing/platform-stats-section';
 import { StatItem } from '@/components/landing/stat-item';
 import { VisitorCounter } from '@/components/landing/visitor-counter';
+import { VoteScene } from '@/components/three/vote-scene';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
 import { APP_NAME } from '@/lib/config/client';
@@ -78,91 +78,20 @@ export default async function HomePage() {
   return (
     <>
       <section className="relative overflow-hidden">
-        <div className="navy-gradient-subtle absolute inset-0" />
-        <AnimatedGrid variant="dark" cellSize={48} />
+        <VoteScene variant="hero" eager />
 
+        {/* Legibility scrim: keeps the text column readable no matter what
+            the animated backdrop is doing behind it at any given moment. */}
         <div
-          className="animate-glow-breathe absolute -top-32 -right-32 h-112 w-md rounded-full"
+          className="pointer-events-none absolute inset-0 z-1"
           style={{
-            background: 'radial-gradient(circle, rgba(0,138,207,0.25) 0%, transparent 70%)',
-            willChange: 'opacity, filter',
+            background:
+              'linear-gradient(105deg, rgba(8,18,38,0.6) 0%, rgba(8,18,38,0.32) 34%, rgba(8,18,38,0) 62%)',
           }}
         />
-        <div
-          className="animate-glow-breathe-orange absolute -bottom-24 -left-24 h-80 w-80 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(240,125,0,0.18) 0%, transparent 70%)',
-            animationDelay: '2s',
-            animationFillMode: 'backwards',
-            willChange: 'opacity, filter',
-          }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(0,138,207,0.08) 0%, transparent 60%)',
-            animation: 'glow-breathe 9s ease-in-out infinite',
-            animationDelay: '4s',
-            animationFillMode: 'backwards',
-            willChange: 'opacity, filter',
-          }}
-        />
-
-        <div
-          className="animate-float-slow pointer-events-none absolute top-20 right-24 hidden h-16 w-16 lg:block"
-          style={{ animationDuration: '9s', animationDelay: '1s', willChange: 'transform' }}
-        >
-          <svg viewBox="0 0 64 64" fill="none" className="h-full w-full opacity-15">
-            <polygon
-              points="32,2 62,17 62,47 32,62 2,47 2,17"
-              stroke="rgba(0,138,207,1)"
-              strokeWidth="1"
-              fill="none"
-            />
-            <polygon
-              points="32,14 50,23.5 50,40.5 32,50 14,40.5 14,23.5"
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth="0.5"
-              fill="none"
-            />
-          </svg>
-        </div>
-
-        <div
-          className="animate-rotate-slow pointer-events-none absolute right-16 bottom-20 hidden h-10 w-10 lg:block"
-          style={{ opacity: 0.12, willChange: 'transform' }}
-        >
-          <svg viewBox="0 0 40 40" fill="none" className="h-full w-full">
-            <rect
-              x="2"
-              y="2"
-              width="36"
-              height="36"
-              stroke="rgba(240,125,0,1)"
-              strokeWidth="1"
-              fill="none"
-              transform="rotate(45 20 20)"
-            />
-            <rect
-              x="8"
-              y="8"
-              width="24"
-              height="24"
-              stroke="rgba(255,255,255,0.5)"
-              strokeWidth="0.5"
-              fill="none"
-              transform="rotate(45 20 20)"
-            />
-          </svg>
-        </div>
 
         <div className="relative z-10 container py-16 md:py-32">
           <div className="max-w-3xl">
-            <div className="font-body mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs tracking-widest text-white/90 uppercase">
-              <span className="bg-kpi-orange h-1.5 w-1.5 animate-pulse rounded-full" />
-              КПІ ім. Ігоря Сікорського
-            </div>
-
             <h1 className="font-display mb-6 text-5xl leading-[1.05] font-bold text-white md:text-6xl lg:text-7xl">
               Голос кожного{' '}
               <span className="relative">
@@ -287,24 +216,7 @@ export default async function HomePage() {
 
       {/* Stats */}
       <section className="bg-kpi-navy relative overflow-hidden py-20 md:pb-25 2xl:pb-30">
-        <AnimatedGrid variant="dark" cellSize={56} />
-
-        <div
-          className="animate-glow-breathe pointer-events-none absolute -top-16 right-0 h-64 w-64 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(0,138,207,0.15) 0%, transparent 60%)',
-            willChange: 'opacity, filter',
-          }}
-        />
-        <div
-          className="animate-glow-breathe-orange pointer-events-none absolute bottom-0 left-0 h-48 w-48 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(240,125,0,0.10) 0%, transparent 60%)',
-            animationDelay: '4s',
-            animationFillMode: 'backwards',
-            willChange: 'opacity, filter',
-          }}
-        />
+        <VoteScene variant="ambient" />
 
         <div className="relative z-10 container">
           <div className="stagger-children grid grid-cols-2 gap-8 md:grid-cols-4">
