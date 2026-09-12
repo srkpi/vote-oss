@@ -1,1 +1,1 @@
-{"id":"f7351ab5e5c228faeb9e9146ee46a8ee","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupStudyFormLetter returns \"в\" for Evening groups","name":"returns \"в\" for Evening groups","status":"passed","testResultsByEnv":{"default":"73edc7c9d50ed50e84bad06a93415303"}}
+{"id":"f7351ab5e5c228faeb9e9146ee46a8ee","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupStudyFormLetter returns \"в\" for Evening groups","name":"returns \"в\" for Evening groups","status":"passed","testResultsByEnv":{"default":"e0bb00c3d4201ed9b7893a69377eae31"}}

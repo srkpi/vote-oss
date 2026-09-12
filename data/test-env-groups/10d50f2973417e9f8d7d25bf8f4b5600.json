@@ -1,1 +1,1 @@
-{"id":"10d50f2973417e9f8d7d25bf8f4b5600","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache invalidateElections deletes the cache key","name":"deletes the cache key","status":"passed","testResultsByEnv":{"default":"2ab507352f0c5e1b64a2644e12b270e2"}}
+{"id":"10d50f2973417e9f8d7d25bf8f4b5600","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache invalidateElections deletes the cache key","name":"deletes the cache key","status":"passed","testResultsByEnv":{"default":"490b6b8b5409f9277ec97d6e070d79c5"}}
