@@ -1,6 +1,10 @@
+'use client';
+
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { pluralize } from '@/lib/utils/common';
 import type { PlatformStats } from '@/types/stats';
+
+import { useHeroReady } from './hero-ready-context';
 
 interface StatMetric {
   key: keyof Pick<PlatformStats, 'ballots' | 'elections' | 'petitions'>;
@@ -18,6 +22,8 @@ interface PlatformStatsSectionProps {
 }
 
 export function PlatformStatsSection({ stats }: PlatformStatsSectionProps) {
+  const { heroReady } = useHeroReady();
+
   return (
     <section className="my-20 grid grid-cols-3 gap-0">
       {METRICS.map(({ key, label }, index) => (
@@ -30,7 +36,7 @@ export function PlatformStatsSection({ stats }: PlatformStatsSectionProps) {
           )}
 
           <p className="font-display text-kpi-navy text-4xl font-bold tracking-tight tabular-nums sm:text-5xl lg:text-6xl">
-            <AnimatedCounter target={stats[key]} delay={index * 120} />
+            <AnimatedCounter target={stats[key]} delay={index * 120} enabled={heroReady} />
           </p>
 
           <p className="font-body text-muted-foreground max-w-36 text-xs font-semibold tracking-widest uppercase">

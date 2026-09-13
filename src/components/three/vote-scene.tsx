@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLazyInView } from '@/hooks/use-lazy-in-view';
 import { usePrefersReducedMotion } from '@/hooks/use-reduced-motion';
@@ -22,9 +22,15 @@ export interface VoteSceneProps {
   variant: VoteSceneVariant;
   className?: string;
   eager?: boolean;
+  onSceneFullyLoaded?: () => void;
 }
 
-export function VoteScene({ variant, className, eager = false }: VoteSceneProps) {
+export function VoteScene({
+  variant,
+  className,
+  eager = false,
+  onSceneFullyLoaded,
+}: VoteSceneProps) {
   const [containerRef, inView] = useLazyInView<HTMLDivElement>({ eager });
   const pointerRef = usePointerParallax(containerRef);
   const reducedMotion = usePrefersReducedMotion();
@@ -34,27 +40,29 @@ export function VoteScene({ variant, className, eager = false }: VoteSceneProps)
     tier: 'high' | 'low';
   } | null>(null);
   const [sceneReady, setSceneReady] = useState(false);
-  const [canMountCanvas, setCanMountCanvas] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCapability({ webgl: detectWebglSupport(), tier: detectDeviceTier() });
   }, []);
 
+  const onSceneFullyLoadedRef = useRef(onSceneFullyLoaded);
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (typeof window.requestIdleCallback !== 'function') {
-      const timeoutId = window.setTimeout(() => setCanMountCanvas(true), 0);
-      return () => window.clearTimeout(timeoutId);
-    }
-
-    const idleId = window.requestIdleCallback(() => setCanMountCanvas(true), { timeout: 300 });
-    return () => window.cancelIdleCallback(idleId);
+    onSceneFullyLoadedRef.current = onSceneFullyLoaded;
+  });
+  const hasFiredFullyLoaded = useRef(false);
+  const fireFullyLoadedOnce = useCallback(() => {
+    if (hasFiredFullyLoaded.current) return;
+    hasFiredFullyLoaded.current = true;
+    onSceneFullyLoadedRef.current?.();
   }, []);
 
-  const showRealScene =
-    inView && canMountCanvas && capability !== null && capability.webgl && !reducedMotion;
+  useEffect(() => {
+    if (capability === null) return;
+    if (!capability.webgl || reducedMotion) fireFullyLoadedOnce();
+  }, [capability, reducedMotion, fireFullyLoadedOnce]);
+
+  const showRealScene = inView && capability !== null && capability.webgl && !reducedMotion;
   const revealed = sceneReady;
 
   return (
@@ -81,6 +89,7 @@ export function VoteScene({ variant, className, eager = false }: VoteSceneProps)
               initialQuality={capability.tier}
               reducedMotion={reducedMotion}
               onReady={() => setSceneReady(true)}
+              onFullyReady={fireFullyLoadedOnce}
             />
           </div>
         </SceneErrorBoundary>

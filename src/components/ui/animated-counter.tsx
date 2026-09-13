@@ -6,13 +6,19 @@ interface AnimatedCounterProps {
   target: number;
   delay?: number;
   duration?: number;
+  enabled?: boolean;
 }
 
 function easeOutExpo(t: number): number {
   return t === 1 ? 1 : 1 - 2 ** (-10 * t);
 }
 
-export function AnimatedCounter({ target, delay = 0, duration = 2000 }: AnimatedCounterProps) {
+export function AnimatedCounter({
+  target,
+  delay = 0,
+  duration = 2000,
+  enabled = true,
+}: AnimatedCounterProps) {
   const [value, setValue] = useState(0);
   const containerRef = useRef<HTMLSpanElement>(null);
   const hasAnimated = useRef(false);
@@ -31,31 +37,36 @@ export function AnimatedCounter({ target, delay = 0, duration = 2000 }: Animated
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    const start = () => {
+      if (hasAnimated.current) return;
+      hasAnimated.current = true;
+
+      if (prefersReducedMotion) {
+        setValue(target);
+        return;
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        const startTime = performance.now();
+
+        const tick = (now: number) => {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          setValue(Math.round(easeOutExpo(progress) * target));
+
+          if (progress < 1) {
+            rafRef.current = requestAnimationFrame(tick);
+          }
+        };
+
+        rafRef.current = requestAnimationFrame(tick);
+      }, delay);
+    };
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting || hasAnimated.current) return;
-        hasAnimated.current = true;
-
-        if (prefersReducedMotion) {
-          setValue(target);
-          return;
-        }
-
-        timeoutRef.current = setTimeout(() => {
-          const startTime = performance.now();
-
-          const tick = (now: number) => {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            setValue(Math.round(easeOutExpo(progress) * target));
-
-            if (progress < 1) {
-              rafRef.current = requestAnimationFrame(tick);
-            }
-          };
-
-          rafRef.current = requestAnimationFrame(tick);
-        }, delay);
+        if (!entry.isIntersecting || !enabled) return;
+        start();
       },
       { threshold: 0.25 },
     );
@@ -67,7 +78,7 @@ export function AnimatedCounter({ target, delay = 0, duration = 2000 }: Animated
       if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [target, delay, duration]);
+  }, [target, delay, duration, enabled]);
 
   return (
     <span ref={containerRef} aria-label={target.toLocaleString('uk-UA')}>

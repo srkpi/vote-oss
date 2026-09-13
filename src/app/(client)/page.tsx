@@ -3,6 +3,8 @@ import Link from 'next/link';
 
 import { ElectionCard } from '@/components/elections/election-card';
 import { FeatureCard } from '@/components/landing/feature-card';
+import { HeroReadyProvider } from '@/components/landing/hero-ready-context';
+import { HeroVoteScene } from '@/components/landing/hero-vote-scene';
 import { PlatformStatsSection } from '@/components/landing/platform-stats-section';
 import { StatItem } from '@/components/landing/stat-item';
 import { VisitorCounter } from '@/components/landing/visitor-counter';
@@ -77,91 +79,94 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="relative overflow-hidden">
-        <VoteScene variant="hero" eager />
+      <HeroReadyProvider>
+        <section className="relative overflow-hidden">
+          <HeroVoteScene variant="hero" eager />
 
-        {/* Legibility scrim: keeps the text column readable no matter what
-            the animated backdrop is doing behind it at any given moment. */}
-        <div
-          className="pointer-events-none absolute inset-0 z-1"
-          style={{
-            background:
-              'linear-gradient(105deg, rgba(8,18,38,0.6) 0%, rgba(8,18,38,0.32) 34%, rgba(8,18,38,0) 62%)',
-          }}
-        />
+          <div
+            className="pointer-events-none absolute inset-0 z-1"
+            style={{
+              background:
+                'linear-gradient(105deg, rgba(8,18,38,0.6) 0%, rgba(8,18,38,0.32) 34%, rgba(8,18,38,0) 62%)',
+            }}
+          />
 
-        <div className="relative z-10 container py-16 md:py-32">
-          <div className="max-w-3xl">
-            <h1 className="font-display mb-6 text-5xl leading-[1.05] font-bold text-white md:text-6xl lg:text-7xl">
-              Голос кожного{' '}
-              <span className="relative">
-                <span
-                  className="relative z-10 bg-clip-text text-transparent"
-                  style={{ backgroundImage: 'linear-gradient(90deg, #f07d00, #fbbf24)' }}
-                >
-                  важливий
-                </span>
-                <span className="from-kpi-orange absolute right-0 -bottom-1 left-0 h-0.5 rounded-full bg-linear-to-r to-amber-400 opacity-60" />
-              </span>
-            </h1>
-
-            <p className="font-body mb-10 max-w-xl text-lg leading-relaxed text-white/75 md:text-xl">
-              Безпечна, прозора та анонімна система електронного голосування для органів
-              студентського самоврядування
-            </p>
-
-            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              {session ? (
-                <Button variant="accent" size="xl" asChild>
-                  <Link href="/elections">Переглянути голосування</Link>
-                </Button>
-              ) : (
-                <Button variant="accent" size="xl" asChild>
-                  <Link href="/login">Увійти через KPI ID</Link>
-                </Button>
-              )}
-            </div>
-
-            <div
-              className="animate-fade-up mt-8 flex flex-wrap gap-3"
-              style={{ animationDelay: '320ms', willChange: 'transform, opacity' }}
-            >
-              {['RSA-2048', 'Анонімно', 'Верифіковано'].map((chip, i) => (
-                <div
-                  key={chip}
-                  className="animate-badge-pop flex items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3 py-1"
-                  style={{ animationDelay: `${400 + i * 80}ms`, willChange: 'transform, opacity' }}
-                >
-                  <svg
-                    className="text-kpi-blue-light h-3 w-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+          <div className="relative z-10 container py-16 md:py-32">
+            <div className="max-w-3xl">
+              <h1 className="font-display mb-6 text-5xl leading-[1.05] font-bold text-white md:text-6xl lg:text-7xl">
+                Голос кожного{' '}
+                <span className="relative">
+                  <span
+                    className="relative z-10 bg-clip-text text-transparent"
+                    style={{ backgroundImage: 'linear-gradient(90deg, #f07d00, #fbbf24)' }}
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="font-body text-xs text-white/70">{chip}</span>
-                </div>
-              ))}
+                    важливий
+                  </span>
+                  <span className="from-kpi-orange absolute right-0 -bottom-1 left-0 h-0.5 rounded-full bg-linear-to-r to-amber-400 opacity-60" />
+                </span>
+              </h1>
+
+              <p className="font-body mb-10 max-w-xl text-lg leading-relaxed text-white/75 md:text-xl">
+                Безпечна, прозора та анонімна система електронного голосування для органів
+                студентського самоврядування
+              </p>
+
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                {session ? (
+                  <Button variant="accent" size="xl" asChild>
+                    <Link href="/elections">Переглянути голосування</Link>
+                  </Button>
+                ) : (
+                  <Button variant="accent" size="xl" asChild>
+                    <Link href="/login">Увійти через KPI ID</Link>
+                  </Button>
+                )}
+              </div>
+
+              <div
+                className="animate-fade-up mt-8 flex flex-wrap gap-3"
+                style={{ animationDelay: '320ms', willChange: 'transform, opacity' }}
+              >
+                {['RSA-2048', 'Анонімно', 'Верифіковано'].map((chip, i) => (
+                  <div
+                    key={chip}
+                    className="animate-badge-pop flex items-center gap-1.5 rounded-full border border-white/10 bg-white/6 px-3 py-1"
+                    style={{
+                      animationDelay: `${400 + i * 80}ms`,
+                      willChange: 'transform, opacity',
+                    }}
+                  >
+                    <svg
+                      className="text-kpi-blue-light h-3 w-3"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="font-body text-xs text-white/70">{chip}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Bottom wave */}
-        <div className="absolute right-0 bottom-0 left-0 z-10 pb-[-1px]">
-          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M0 48L1440 48L1440 0C1440 0 1152 36 720 36C288 36 0 0 0 0L0 48Z"
-              fill="white"
-            />
-          </svg>
-        </div>
-      </section>
+          {/* Bottom wave */}
+          <div className="absolute right-0 bottom-0 left-0 z-10 pb-[-1px]">
+            <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M0 48L1440 48L1440 0C1440 0 1152 36 720 36C288 36 0 0 0 0L0 48Z"
+                fill="white"
+              />
+            </svg>
+          </div>
+        </section>
 
-      {stats && <PlatformStatsSection stats={stats} />}
+        {stats && <PlatformStatsSection stats={stats} />}
+      </HeroReadyProvider>
 
       {/* Features */}
       <section className="relative z-20 my-20 -mt-px bg-white">

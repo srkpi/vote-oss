@@ -1,10 +1,10 @@
 'use client';
 
-import { PerformanceMonitor, Preload } from '@react-three/drei';
+import { PerformanceMonitor } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
-import { type ComponentProps, useMemo, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AuroraBackdrop } from './backdrop-aurora';
 import { ChainNetwork } from './chain-network';
@@ -24,6 +24,7 @@ interface VoteSceneCanvasProps {
   reducedMotion: boolean;
   /** Fires once the renderer exists and has painted at least one real frame — see the comment at the call site in `vote-scene.tsx` for why this matters. */
   onReady?: () => void;
+  onFullyReady?: () => void;
 }
 
 type LogoVisibility = 'always' | 'never' | 'desktop-only';
@@ -124,11 +125,35 @@ export function VoteSceneCanvas({
   initialQuality,
   reducedMotion,
   onReady,
+  onFullyReady,
 }: VoteSceneCanvasProps) {
   const [quality, setQuality] = useState(initialQuality);
   const config = VARIANT_CONFIG[variant];
 
   const dpr = useMemo((): [number, number] => (quality === 'high' ? [1, 2] : [1, 1.4]), [quality]);
+  const [showEnhancements, setShowEnhancements] = useState(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setShowEnhancements(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const onFullyReadyRef = useRef(onFullyReady);
+  useEffect(() => {
+    onFullyReadyRef.current = onFullyReady;
+  });
+
+  useEffect(() => {
+    if (!showEnhancements) return;
+    let innerRaf = 0;
+    const outerRaf = requestAnimationFrame(() => {
+      innerRaf = requestAnimationFrame(() => onFullyReadyRef.current?.());
+    });
+    return () => {
+      cancelAnimationFrame(outerRaf);
+      cancelAnimationFrame(innerRaf);
+    };
+  }, [showEnhancements]);
 
   return (
     <Canvas
@@ -167,16 +192,18 @@ export function VoteSceneCanvas({
         />
       )}
 
-      <ResponsiveLogoMark
-        visibility={config.logoVisibility}
-        pointerRef={pointerRef}
-        quality={quality}
-        scale={config.logoScale}
-        position={config.logoPosition}
-        pointerFocus={config.logoPointerFocus}
-      />
+      {showEnhancements && (
+        <ResponsiveLogoMark
+          visibility={config.logoVisibility}
+          pointerRef={pointerRef}
+          quality={quality}
+          scale={config.logoScale}
+          position={config.logoPosition}
+          pointerFocus={config.logoPointerFocus}
+        />
+      )}
 
-      {!reducedMotion && (
+      {showEnhancements && !reducedMotion && (
         <EffectComposer multisampling={0}>
           <Bloom
             luminanceThreshold={0.18}
@@ -193,8 +220,6 @@ export function VoteSceneCanvas({
           />
         </EffectComposer>
       )}
-
-      <Preload all />
     </Canvas>
   );
 }
