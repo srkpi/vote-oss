@@ -89,13 +89,15 @@ export function RestrictedVoteBanner({
       {hasBypassRequired && (
         <div
           className={`flex items-center gap-3 rounded-lg border p-3 ${
-            bypassRequiredMet ? 'border-success/20 bg-success-bg' : 'border-amber-200 bg-amber-50'
+            bypassRequiredMet
+              ? 'border-success/20 bg-success-bg'
+              : 'border-warning/30 bg-warning-bg'
           }`}
         >
           {bypassRequiredMet ? (
             <CheckCircle2 className="text-success h-4 w-4 shrink-0" />
           ) : (
-            <KeyRound className="h-4 w-4 shrink-0 text-amber-600" />
+            <KeyRound className="text-warning h-4 w-4 shrink-0" />
           )}
           <div className="min-w-0 flex-1">
             <p className="font-body text-foreground text-sm font-medium">

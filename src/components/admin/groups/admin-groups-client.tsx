@@ -90,7 +90,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
   };
 
   return (
-    <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
+    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
       <div className="border-border-subtle flex flex-col gap-4 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-3">
           <div className="bg-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">
@@ -162,7 +162,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                                 ? 'bg-kpi-orange'
                                 : group.isMember
                                   ? 'bg-kpi-navy'
-                                  : 'bg-gray-400'),
+                                  : 'bg-kpi-gray-mid'),
                           )}
                         />
                         <p className="font-body text-foreground max-w-xs truncate text-sm font-medium">
@@ -218,7 +218,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
             {filtered.map((group) => (
               <div
                 key={group.id}
-                className="border-border-color rounded-lg border bg-white p-4 shadow-sm"
+                className="border-border-color bg-card rounded-lg border p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -233,7 +233,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                             ? 'bg-kpi-orange'
                             : group.isMember
                               ? 'bg-kpi-navy'
-                              : 'bg-gray-400'),
+                              : 'bg-kpi-gray-mid'),
                       )}
                     />
                     <div>

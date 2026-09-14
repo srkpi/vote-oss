@@ -50,7 +50,7 @@ export function FilterDropdown<T extends string>({
           'font-body flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150',
           isFiltered
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-white',
+            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
           open && !isFiltered && 'border-kpi-blue-light',
         )}
       >
@@ -69,7 +69,7 @@ export function FilterDropdown<T extends string>({
       </button>
 
       {open && (
-        <div className="border-border-color absolute top-full left-0 z-200 mt-1 min-w-52.5 overflow-hidden rounded-lg border bg-white shadow-lg">
+        <div className="border-border-color bg-card absolute top-full left-0 z-200 mt-1 min-w-52.5 overflow-hidden rounded-lg border shadow-lg">
           {options.map((opt) => {
             const isSelected = opt.value === value;
             const isDisabled = opt.count === 0 && opt.value !== options[0]?.value;
@@ -174,7 +174,7 @@ export function FilterMultiDropdown({
           'font-body flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150',
           isFiltered
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-white',
+            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
           open && !isFiltered && 'border-kpi-blue-light',
         )}
       >
@@ -193,7 +193,7 @@ export function FilterMultiDropdown({
       </button>
 
       {open && (
-        <div className="border-border-color absolute top-full left-0 z-200 mt-1 w-72 overflow-hidden rounded-lg border bg-white shadow-lg">
+        <div className="border-border-color bg-card absolute top-full left-0 z-200 mt-1 w-72 overflow-hidden rounded-lg border shadow-lg">
           {showSearch && (
             <div className="border-border-subtle border-b p-2">
               <div className="relative">
@@ -290,7 +290,7 @@ export function FilterMultiDropdown({
 
 export function FilterSectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-body mb-2 text-[10px] font-semibold tracking-widest text-slate-400 uppercase">
+    <p className="font-body text-subtle mb-2 text-[10px] font-semibold tracking-widest uppercase">
       {children}
     </p>
   );
@@ -324,11 +324,11 @@ function MobileFiltersSheet({
         aria-hidden="true"
       />
       <div
-        className="relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl"
+        className="bg-card relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between px-5 pt-4 pb-3">
-          <div className="absolute top-2.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-slate-200" />
+          <div className="bg-border absolute top-2.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full" />
           <h2 className="font-display text-foreground text-base font-semibold">Фільтри</h2>
           <button
             type="button"
@@ -377,7 +377,7 @@ function DesktopFiltersPopover({
   return (
     <div
       ref={ref}
-      className="border-border-color animate-scale-in absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border bg-white p-5 shadow-xl"
+      className="border-border-color animate-scale-in bg-card absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border p-5 shadow-xl"
     >
       {children}
     </div>
@@ -414,7 +414,7 @@ export function FiltersButton({ activeCount, className, children }: FiltersButto
           'font-body inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-all duration-150',
           activeCount > 0
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy shadow-sm'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-white',
+            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
         )}
       >
         <Filter className="h-3.5 w-3.5" />
@@ -459,7 +459,7 @@ export function FiltersResetButton({
     <button
       type="button"
       onClick={onReset}
-      className="font-body text-error flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-100 bg-red-50 py-2 text-xs font-medium transition-colors hover:bg-red-100"
+      className="font-body text-error border-error/20 bg-error-bg hover:bg-error/15 flex w-full items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-colors"
     >
       <RotateCcw className="h-3.5 w-3.5" />
       Скинути фільтри ({activeCount})

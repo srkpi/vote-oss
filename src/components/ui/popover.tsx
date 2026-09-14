@@ -155,7 +155,7 @@ export function Popover({
       className={cn(
         'z-50 rounded-lg',
         'overflow-x-hidden overflow-y-auto', // Ensure scrolling happens
-        'border-border-color border bg-white',
+        'border-border-color bg-card border',
         'shadow-lg',
         'animate-scale-in',
         className,

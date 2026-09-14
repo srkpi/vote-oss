@@ -98,7 +98,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
             }}
             placeholder="Вставте токен запрошення"
             className={cn(
-              'flex h-10 w-full rounded-(--radius) bg-white',
+              'bg-card flex h-10 w-full rounded-(--radius)',
               'border-border-color border',
               'text-foreground py-2 pr-3 pl-10 font-mono text-sm',
               'placeholder:font-body placeholder:text-subtle',

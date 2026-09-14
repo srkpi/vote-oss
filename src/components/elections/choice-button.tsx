@@ -42,7 +42,7 @@ export function ChoiceButton({
         'animate-fade-up ph-no-capture',
         selected
           ? 'border-kpi-navy bg-kpi-navy/5 shadow-card'
-          : 'border-border-color hover:border-kpi-blue-light/50 hover:bg-surface bg-white',
+          : 'border-border-color hover:border-kpi-blue-light/50 hover:bg-surface bg-card',
         disabled && !selected && 'cursor-not-allowed opacity-50',
       )}
       style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
@@ -51,7 +51,7 @@ export function ChoiceButton({
         <div
           className={cn(
             'flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all duration-200',
-            selected ? 'border-kpi-navy bg-kpi-navy' : 'border-border-color bg-white',
+            selected ? 'border-kpi-navy bg-kpi-navy' : 'border-border-color bg-card',
           )}
         >
           {selected && <CheckIcon color="white" className="h-4 w-4" />}
@@ -60,7 +60,7 @@ export function ChoiceButton({
         <div
           className={cn(
             'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200',
-            selected ? 'border-kpi-navy bg-kpi-navy' : 'border-border-color bg-white',
+            selected ? 'border-kpi-navy bg-kpi-navy' : 'border-border-color bg-card',
           )}
         >
           {selected && <div className="h-2 w-2 rounded-full bg-white" />}

@@ -9,18 +9,18 @@
   --font-sans: var(--font-sans);
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  --color-kpi-navy: #1c396e;
-  --color-kpi-navy-hover: #162c57;
-  --color-kpi-blue-light: #008acf;
-  --color-kpi-blue-mid: #1062a3;
-  --color-kpi-blue-dark: #0d5690;
-  --color-kpi-blue-deep: #004f7f;
-  --color-kpi-orange: #f07d00;
-  --color-kpi-orange-dark: #ec6605;
-  --color-kpi-wine: #7f0d38;
-  --color-kpi-wine-deep: #620c33;
-  --color-kpi-gray-light: #bbbbbb;
-  --color-kpi-gray-mid: #958f93;
+  --color-kpi-navy: var(--kpi-navy);
+  --color-kpi-navy-hover: var(--kpi-navy-hover);
+  --color-kpi-blue-light: var(--kpi-blue-light);
+  --color-kpi-blue-mid: var(--kpi-blue-mid);
+  --color-kpi-blue-dark: var(--kpi-blue-dark);
+  --color-kpi-blue-deep: var(--kpi-blue-deep);
+  --color-kpi-orange: var(--kpi-orange);
+  --color-kpi-orange-dark: var(--kpi-orange-dark);
+  --color-kpi-wine: var(--kpi-wine);
+  --color-kpi-wine-deep: var(--kpi-wine-deep);
+  --color-kpi-gray-light: var(--kpi-gray-light);
+  --color-kpi-gray-mid: var(--kpi-gray-mid);
 
   --color-primary: var(--kpi-navy);
   --color-primary-hover: var(--kpi-navy-hover);
@@ -94,6 +94,8 @@
 }
 
 :root {
+  color-scheme: light;
+
   /* KPI Brand Colors */
   --kpi-navy: #1c396e;
   --kpi-navy-hover: #162c57;
@@ -511,7 +513,7 @@ html {
 /* ===================== GLASS EFFECT ===================== */
 
 .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in oklch, var(--card) 75%, transparent);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -579,7 +581,7 @@ html {
 }
 
 .navy-gradient-subtle {
-  background: linear-gradient(135deg, var(--kpi-navy) 0%, #1d4480 100%);
+  background: linear-gradient(135deg, #1c396e 0%, #1d4480 100%);
 }
 
 .orange-gradient {
@@ -650,6 +652,8 @@ html {
 }
 
 .dark {
+  color-scheme: dark;
+
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -681,6 +685,46 @@ html {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --kpi-navy: oklch(0.68 0.115 261.3);
+  --kpi-navy-hover: oklch(0.74 0.105 261.3);
+  --kpi-blue-mid: oklch(0.72 0.135 249.1);
+  --kpi-blue-dark: oklch(0.65 0.125 249.1);
+  --kpi-blue-deep: oklch(0.6 0.115 245);
+  --kpi-wine: oklch(0.62 0.16 10);
+  --kpi-wine-deep: oklch(0.55 0.15 5);
+
+  --surface: oklch(0.16 0.012 261);
+  --surface-hover: oklch(0.21 0.014 261);
+  --border-color: oklch(1 0 0 / 12%);
+  --border-subtle: oklch(1 0 0 / 6%);
+  --card-hover: oklch(0.25 0 0);
+
+  --error: oklch(0.66 0.2 27.3);
+  --success-bg: oklch(0.627 0.17 149.2 / 16%);
+  --warning-bg: oklch(0.707 0.175 55.2 / 16%);
+  --error-bg: oklch(0.66 0.2 27.3 / 16%);
+  --info-bg: oklch(0.606 0.143 241.6 / 16%);
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-sm:
+    0 1px 4px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md:
+    0 4px 12px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.3);
+  --shadow-lg:
+    0 10px 30px rgb(0 0 0 / 0.6), 0 4px 8px rgb(0 0 0 / 0.4);
+  --shadow-xl:
+    0 20px 50px rgb(0 0 0 / 0.7), 0 8px 16px rgb(0 0 0 / 0.4);
+  --shadow-card:
+    0 2px 8px rgb(0 0 0 / 0.4), 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-card-hover:
+    0 8px 24px rgb(0 0 0 / 0.5), 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-button: 0 2px 8px rgb(0 0 0 / 0.5);
+  --shadow-button-accent: 0 2px 8px rgb(240 125 0 / 0.45);
+}
+
+.dark .bg-kpi-navy {
+  background-color: #1c396e;
 }
 
 @layer base {

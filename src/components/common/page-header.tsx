@@ -32,7 +32,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'border-border-subtle border-b bg-white py-4 sm:py-6',
+        'border-border-subtle bg-card border-b py-4 sm:py-6',
         !isContainer && 'px-4 sm:px-8',
       )}
     >

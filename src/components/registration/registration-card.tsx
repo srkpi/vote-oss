@@ -27,7 +27,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
     <Link
       href={`/registration/${form.id}`}
       className={cn(
-        'group block h-full overflow-hidden rounded-xl bg-white',
+        'group bg-card block h-full overflow-hidden rounded-xl',
         'border-border-color border',
         'shadow-card',
         'hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1',
@@ -127,7 +127,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
 export function RegistrationCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
-      className="animate-fade-up border-border-color overflow-hidden rounded-xl border bg-white"
+      className="animate-fade-up border-border-color bg-card overflow-hidden rounded-xl border"
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
       <div className="skeleton h-1" />

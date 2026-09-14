@@ -82,7 +82,7 @@ export function CampaignsPanel({
   };
 
   return (
-    <div className="border-border-color shadow-card rounded-xl border bg-white">
+    <div className="border-border-color shadow-card bg-card rounded-xl border">
       <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
         <div className="flex items-center gap-2">
           <Megaphone className="text-kpi-gray-mid h-4 w-4" />
@@ -398,7 +398,7 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
 
           <FormField label="Тип виборів" required>
             <select
-              className="border-border-color w-full rounded-md border bg-white px-3 py-2 text-sm"
+              className="border-border-color bg-card w-full rounded-md border px-3 py-2 text-sm"
               value={electionKind}
               onChange={(e) => setElectionKind(e.target.value as ElectionKind)}
             >

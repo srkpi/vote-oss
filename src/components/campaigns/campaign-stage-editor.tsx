@@ -229,7 +229,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
   const timeline = buildTimeline(campaign);
 
   return (
-    <section className="border-border-color shadow-card rounded-xl border bg-white">
+    <section className="border-border-color shadow-card bg-card rounded-xl border">
       <header className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
         <div className="flex items-center gap-2">
           <ScrollText className="text-kpi-gray-mid h-4 w-4" />

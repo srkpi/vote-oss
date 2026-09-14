@@ -31,7 +31,7 @@ export function DecryptionPanel({
         'rounded-xl border p-5',
         isClean && 'border-success/30 bg-success-bg',
         hasProblem && 'border-error/30 bg-error-bg',
-        !decryptionDone && 'border-kpi-orange/30 bg-white',
+        !decryptionDone && 'border-kpi-orange/30 bg-card',
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">

@@ -63,7 +63,7 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
 
       <div className="container grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-6">
-          <div className="border-border-color shadow-card relative overflow-hidden rounded-xl border bg-white p-6 sm:p-8">
+          <div className="border-border-color shadow-card bg-card relative overflow-hidden rounded-xl border p-6 sm:p-8">
             <div
               className={cn(
                 'absolute inset-x-0 top-0 h-1',

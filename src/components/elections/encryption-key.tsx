@@ -22,7 +22,7 @@ export function EncryptionKey({
 
   return (
     <div
-      className={`rounded-xl bg-white ${containerBorder} shadow-card border-border-color overflow-hidden border`}
+      className={`bg-card rounded-xl ${containerBorder} shadow-card border-border-color overflow-hidden border`}
     >
       <div
         className={`border-b px-4 py-4 sm:px-5 ${headerBorder} flex items-center justify-between ${headerBg}`}
@@ -37,7 +37,7 @@ export function EncryptionKey({
         <div className="border-border-subtle bg-surface overflow-hidden rounded-(--radius) border p-3">
           <textarea
             readOnly
-            className="text-muted-foreground h-20 w-full resize-none rounded border border-gray-300 p-2 font-mono text-[12px] leading-relaxed break-all xl:text-[9px]"
+            className="text-muted-foreground border-border h-20 w-full resize-none rounded border p-2 font-mono text-[12px] leading-relaxed break-all xl:text-[9px]"
             value={keyValue.replace(/\s+$/, '')}
           />
         </div>

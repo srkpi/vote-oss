@@ -122,7 +122,7 @@ export function AnalyticsCsvPanel({
   };
 
   return (
-    <div className="border-border-color rounded-xl border bg-white p-6 shadow-sm">
+    <div className="border-border-color bg-card rounded-xl border p-6 shadow-sm">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h3 className="font-display text-foreground flex items-center gap-2 text-base font-semibold">
@@ -157,7 +157,7 @@ export function AnalyticsCsvPanel({
                   ? 'border-border-subtle bg-surface cursor-not-allowed opacity-40'
                   : isSelected
                     ? 'border-kpi-navy/30 bg-kpi-navy/5'
-                    : 'border-border-subtle hover:border-kpi-navy/20 hover:bg-surface bg-white',
+                    : 'border-border-subtle hover:border-kpi-navy/20 hover:bg-surface bg-card',
               )}
             >
               <input

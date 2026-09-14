@@ -27,7 +27,7 @@ export function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemPro
           'flex w-full items-center justify-between gap-3',
           'px-4 py-3.5 sm:px-5 sm:py-4',
           'font-body text-foreground text-left text-sm font-medium sm:text-base',
-          'hover:bg-surface bg-white transition-colors duration-150',
+          'hover:bg-surface bg-card transition-colors duration-150',
           'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
         )}
       >
@@ -41,7 +41,7 @@ export function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemPro
       </button>
 
       {isOpen && (
-        <div className="border-border-subtle border-t bg-white px-4 py-3 sm:px-5 sm:py-4">
+        <div className="border-border-subtle bg-card border-t px-4 py-3 sm:px-5 sm:py-4">
           <QuillRenderer content={item.content} />
         </div>
       )}

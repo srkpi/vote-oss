@@ -99,7 +99,7 @@ export default function LoginPage() {
       <div className="relative flex flex-1 items-center justify-center p-8">
         <div className="absolute inset-0 overflow-hidden lg:hidden">
           <VoteScene variant="ambient" eager />
-          <div className="absolute inset-0 bg-white/85" />
+          <div className="bg-background/85 absolute inset-0" />
         </div>
 
         <div className="relative z-10 w-full max-w-sm">

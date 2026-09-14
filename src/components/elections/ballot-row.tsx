@@ -299,7 +299,7 @@ export function BallotRow({
               <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                 Зашифрований бюлетень
               </p>
-              <div className="border-border-subtle overflow-x-auto rounded-(--radius) border bg-white p-3">
+              <div className="border-border-subtle bg-card overflow-x-auto rounded-(--radius) border p-3">
                 <p className="text-foreground font-mono text-[10px] leading-relaxed break-all">
                   {ballot.encryptedBallot}
                 </p>
@@ -310,7 +310,7 @@ export function BallotRow({
               <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                 Підпис
               </p>
-              <div className="border-border-subtle overflow-x-auto rounded-(--radius) border bg-white p-3">
+              <div className="border-border-subtle bg-card overflow-x-auto rounded-(--radius) border p-3">
                 <p className="text-foreground font-mono text-[10px] leading-relaxed break-all">
                   {ballot.signature}
                 </p>
@@ -322,7 +322,7 @@ export function BallotRow({
                 <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
                   Попередній хеш
                 </p>
-                <div className="border-border-subtle rounded-(--radius) border bg-white p-3">
+                <div className="border-border-subtle bg-card rounded-(--radius) border p-3">
                   <p className="text-foreground font-mono text-[10px] break-all">
                     {ballot.previousHash}
                   </p>

@@ -1,3 +1,7 @@
+'use client';
+
+import { useTheme } from '@/hooks/use-theme';
+
 interface VisitorCounterProps {
   name: string;
   theme?: string;
@@ -21,6 +25,9 @@ export function VisitorCounter({
   darkmode,
   className,
 }: VisitorCounterProps) {
+  const { theme: siteTheme } = useTheme();
+  const resolvedDarkmode = darkmode ?? siteTheme === 'dark';
+
   const safeId = name.toLowerCase().trim().replace(/\s+/g, '-');
   const paramsMap: Record<string, unknown> = {
     name: safeId,
@@ -29,7 +36,7 @@ export function VisitorCounter({
     offset,
     scale,
     align,
-    darkmode: typeof darkmode === 'boolean' ? +darkmode : darkmode,
+    darkmode: typeof resolvedDarkmode === 'boolean' ? +resolvedDarkmode : resolvedDarkmode,
     pixelated: typeof pixelate === 'boolean' ? +pixelate : pixelate,
   };
 

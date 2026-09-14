@@ -45,7 +45,7 @@ export function ChipSelect({
               'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
               selected
                 ? 'border-kpi-navy bg-kpi-navy text-white shadow-sm'
-                : 'border-border-color text-foreground hover:border-kpi-blue-light bg-white',
+                : 'border-border-color text-foreground hover:border-kpi-blue-light bg-card',
               disabled && 'cursor-not-allowed opacity-50',
               error && !selected && 'border-error',
             )}

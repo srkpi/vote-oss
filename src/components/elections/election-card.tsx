@@ -55,7 +55,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       href={`/elections/${election.id}`}
       className={cn(
         'group block',
-        'rounded-xl bg-white',
+        'bg-card rounded-xl',
         'border-border-color border',
         'shadow-card',
         'hover:shadow-card-hover',
@@ -174,7 +174,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 export function ElectionCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
-      className="animate-fade-up border-border-color overflow-hidden rounded-xl border bg-white"
+      className="animate-fade-up border-border-color bg-card overflow-hidden rounded-xl border"
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
       <div className="skeleton h-1" />

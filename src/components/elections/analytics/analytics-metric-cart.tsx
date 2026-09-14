@@ -5,17 +5,14 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils/common';
 import type { MetricCardConfig, MetricScaleConfig } from '@/types/metrics';
 
-const COLOR_GRADIENT: Record<
-  MetricCardConfig['color'],
-  { from: string; to: string; text: string }
-> = {
-  navy: { from: '#1c396e', to: '#1062a3', text: '#1c396e' },
-  orange: { from: '#f07d00', to: '#ec6605', text: '#f07d00' },
-  blue: { from: '#008acf', to: '#0d5690', text: '#008acf' },
-  success: { from: '#16a34a', to: '#15803d', text: '#16a34a' },
-  warning: { from: '#f07d00', to: '#d97706', text: '#d97706' },
-  error: { from: '#dc2626', to: '#b91c1c', text: '#dc2626' },
-  purple: { from: '#8b5cf6', to: '#7c3aed', text: '#8b5cf6' },
+const COLOR_GRADIENT: Record<MetricCardConfig['color'], { from: string; to: string }> = {
+  navy: { from: '#1c396e', to: '#1062a3' },
+  orange: { from: '#f07d00', to: '#ec6605' },
+  blue: { from: '#008acf', to: '#0d5690' },
+  success: { from: '#16a34a', to: '#15803d' },
+  warning: { from: '#f07d00', to: '#d97706' },
+  error: { from: '#dc2626', to: '#b91c1c' },
+  purple: { from: '#8b5cf6', to: '#7c3aed' },
 };
 
 const COLOR_STYLES: Record<
@@ -36,7 +33,11 @@ const COLOR_STYLES: Record<
   success: { border: 'border-success/15', iconBg: 'bg-success/8', iconText: 'text-success' },
   warning: { border: 'border-warning/15', iconBg: 'bg-warning/8', iconText: 'text-warning' },
   error: { border: 'border-error/15', iconBg: 'bg-error/8', iconText: 'text-error' },
-  purple: { border: 'border-violet-400/20', iconBg: 'bg-violet-50', iconText: 'text-violet-600' },
+  purple: {
+    border: 'border-violet-400/20',
+    iconBg: 'bg-violet-400/10',
+    iconText: 'text-violet-400',
+  },
 };
 
 function MetricScale({ scale }: { scale: MetricScaleConfig }) {
@@ -79,6 +80,7 @@ function MetricScale({ scale }: { scale: MetricScaleConfig }) {
 
 function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onClose: () => void }) {
   const grad = COLOR_GRADIENT[metric.color];
+  const styles = COLOR_STYLES[metric.color];
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -115,7 +117,7 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
         tabIndex={-1}
         className={cn(
           'relative z-10 w-full outline-none sm:max-w-lg',
-          'animate-scale-in overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl',
+          'animate-scale-in bg-card overflow-hidden rounded-t-2xl shadow-xl sm:rounded-2xl',
         )}
         style={{ animationDuration: '200ms' }}
       >
@@ -173,13 +175,12 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
           </div>
 
           {metric.insight && (
-            <div
-              className="rounded-xl p-4"
-              style={{ background: `${grad.text}10`, border: `1px solid ${grad.text}25` }}
-            >
+            <div className={cn('rounded-xl border p-4', styles.border, styles.iconBg)}>
               <p
-                className="mb-1.5 text-[10px] font-semibold tracking-wider uppercase"
-                style={{ color: grad.text }}
+                className={cn(
+                  'mb-1.5 text-[10px] font-semibold tracking-wider uppercase',
+                  styles.iconText,
+                )}
               >
                 В цьому голосуванні
               </p>
@@ -200,13 +201,12 @@ export function AnalyticsMetricCard({
   onOpen: (m: MetricCardConfig) => void;
 }) {
   const styles = COLOR_STYLES[metric.color];
-  const grad = COLOR_GRADIENT[metric.color];
 
   return (
     <button
       onClick={() => onOpen(metric)}
       className={cn(
-        'group w-full rounded-xl border bg-white p-5 text-left',
+        'group bg-card w-full rounded-xl border p-5 text-left',
         'cursor-pointer transition-all duration-200',
         'shadow-sm hover:-translate-y-0.5 hover:shadow-md',
         styles.border,
@@ -233,8 +233,10 @@ export function AnalyticsMetricCard({
       </div>
 
       <div
-        className="font-display mb-1.5 text-2xl leading-none font-bold tabular-nums"
-        style={{ color: grad.text }}
+        className={cn(
+          'font-display mb-1.5 text-2xl leading-none font-bold tabular-nums',
+          styles.iconText,
+        )}
       >
         {metric.value}
       </div>

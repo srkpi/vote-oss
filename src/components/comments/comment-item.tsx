@@ -34,7 +34,7 @@ export function CommentItem({
 
   if (comment.deletedAt) {
     return (
-      <div className="border-border-color shadow-card rounded-xl border bg-white p-4 sm:p-5">
+      <div className="border-border-color shadow-card bg-card rounded-xl border p-4 sm:p-5">
         <div className="flex gap-3">
           <Avatar
             src={comment.author.avatarUrl}
@@ -88,7 +88,7 @@ export function CommentItem({
   };
 
   return (
-    <div className="group border-border-color shadow-card hover:shadow-card-hover rounded-xl border bg-white p-4 transition-shadow sm:p-5">
+    <div className="group border-border-color shadow-card hover:shadow-card-hover bg-card rounded-xl border p-4 transition-shadow sm:p-5">
       <div className="flex gap-3">
         <Avatar
           src={comment.author.avatarUrl}

@@ -377,7 +377,7 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
         }}
         className={cn(
           'z-50 overflow-hidden rounded-lg',
-          'border-border-color border bg-white',
+          'border-border-color bg-card border',
           'shadow-lg',
           'animate-scale-in',
         )}
@@ -490,7 +490,7 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
           aria-haspopup="dialog"
           aria-expanded={open}
           className={cn(
-            'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-white',
+            'bg-card flex h-10 w-full items-center gap-2 rounded-(--radius)',
             'border-border-color border',
             'font-body px-3 text-left text-sm',
             'transition-colors duration-150',
@@ -547,7 +547,7 @@ function TimeSpinner({
   }, [value, focused]);
 
   return (
-    <div className="border-border-color flex items-center rounded border bg-white">
+    <div className="border-border-color bg-card flex items-center rounded border">
       <button
         type="button"
         onClick={onDecrement}

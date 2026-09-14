@@ -23,7 +23,7 @@ export default async function NewPetitionPage() {
         isContainer
       />
       <div className="container py-8">
-        <div className="border-border-color mx-auto max-w-2xl rounded-xl border bg-white p-6 shadow-sm sm:p-8">
+        <div className="border-border-color bg-card mx-auto max-w-2xl rounded-xl border p-6 shadow-sm sm:p-8">
           <CreatePetitionForm />
         </div>
       </div>

@@ -128,7 +128,7 @@ export function ElectionsFiltersButton({
           'font-body inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-all duration-150',
           activeCount > 0
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy shadow-sm'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-white',
+            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
         )}
       >
         <Filter className="h-3.5 w-3.5" />
@@ -147,7 +147,7 @@ export function ElectionsFiltersButton({
       </button>
 
       {!isMobile && open && (
-        <div className="border-border-color animate-scale-in absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border bg-white p-5 shadow-xl">
+        <div className="border-border-color animate-scale-in bg-card absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border p-5 shadow-xl">
           <ElectionsFiltersContent {...sectionsInput} activeCount={activeCount} onReset={onReset} />
         </div>
       )}

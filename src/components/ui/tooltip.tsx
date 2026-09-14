@@ -51,7 +51,7 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
         <span
           id={id}
           role="tooltip"
-          className={`border-border-color text-foreground pointer-events-none absolute z-20 w-max max-w-60 rounded-md border bg-white px-2.5 py-1.5 text-xs whitespace-normal shadow-lg ${
+          className={`border-border-color text-foreground bg-card pointer-events-none absolute z-20 w-max max-w-60 rounded-md border px-2.5 py-1.5 text-xs whitespace-normal shadow-lg ${
             side === 'top'
               ? 'bottom-full left-1/2 mb-1.5 -translate-x-1/2'
               : 'top-full left-1/2 mt-1.5 -translate-x-1/2'

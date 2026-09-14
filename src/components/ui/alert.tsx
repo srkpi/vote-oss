@@ -11,7 +11,7 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-white border-border-color text-foreground',
+        default: 'bg-card border-border-color text-foreground',
         success: 'bg-success-bg border-success/30 text-foreground [&_.alert-icon]:text-success',
         warning:
           'bg-warning-bg border-kpi-orange/30 text-foreground [&_.alert-icon]:text-kpi-orange',
@@ -70,7 +70,7 @@ export function Alert({
           className={cn(
             'shrink-0 self-start rounded-md p-0.5',
             'text-muted-foreground hover:text-foreground',
-            'transition-colors duration-150 hover:bg-black/5',
+            'hover:bg-foreground/5 transition-colors duration-150',
             'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
           )}
           aria-label="Закрити"
@@ -146,7 +146,7 @@ export function ToastItem({
       className={cn(
         'relative flex items-start gap-3',
         'w-80 overflow-hidden',
-        'rounded-xl bg-white',
+        'bg-card rounded-xl',
         'border-border-color border',
         'shadow-xl',
         'p-4',

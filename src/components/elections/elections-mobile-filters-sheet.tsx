@@ -103,7 +103,7 @@ export function ElectionsMobileFiltersSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 34, stiffness: 340 }}
-            className="relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl"
+            className="bg-card relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl shadow-2xl"
           >
             {/* Handle + header. Only the handle itself starts the drag gesture,
                 so the back/close buttons below always receive their taps. */}
@@ -113,7 +113,7 @@ export function ElectionsMobileFiltersSheet({
                 className="flex touch-none justify-center py-2.5 active:cursor-grabbing"
                 aria-hidden="true"
               >
-                <div className="h-1.5 w-10 rounded-full bg-slate-300" />
+                <div className="bg-border h-1.5 w-10 rounded-full" />
               </div>
 
               <div className="px-4 pb-3">

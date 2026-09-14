@@ -216,7 +216,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
           className,
         )}
       >
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+        <div className="border-foreground h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
         <span className="text-muted-foreground text-sm">Завантаження…</span>
       </div>
     );
@@ -235,7 +235,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
           rel="noopener noreferrer"
           className={cn(
             'mx-auto block w-fit overflow-hidden rounded transition-colors',
-            'border-2 border-black/10 hover:border-black/30',
+            'border-border hover:border-kpi-blue-light/50 border-2',
             'lg:pointer-events-none lg:border-none lg:hover:border-none',
           )}
         >
@@ -267,7 +267,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
       </div>
       <button
         onClick={startFlow}
-        className="h-10 w-full rounded border text-sm font-medium hover:bg-neutral-50"
+        className="hover:bg-surface h-10 w-full rounded border text-sm font-medium"
       >
         Спробувати знову
       </button>

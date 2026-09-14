@@ -229,6 +229,7 @@ export const CACHE_KEY_INVITE_TOKENS = 'cache:invite-tokens';
 export const CACHE_KEY_CAMPUS_GROUPS = 'cache:campus:groups';
 export const CACHE_KEY_FAQ = 'cache:faq';
 export const CACHE_KEY_AVATAR_PREFIX = 'cache:avatar:';
+export const LOCAL_STORAGE_THEME_KEY = 'theme';
 export const LOCAL_STORAGE_VOTE_KEY_PREFIX = 'vote_';
 export const LOCAL_STORAGE_ELECTIONS_VIEW_KEY = 'elections_view';
 export const LOCAL_STORAGE_REGISTRATION_VIEW_KEY = 'registration_view';

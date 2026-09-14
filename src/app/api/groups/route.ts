@@ -277,6 +277,13 @@ export async function POST(req: NextRequest) {
       isOwner: true,
       isMember: true,
       deletedAt: null,
+      requisites: {
+        fullName: null,
+        address: null,
+        email: null,
+        contact: null,
+        logo: null,
+      },
     },
     { status: 201 },
   );

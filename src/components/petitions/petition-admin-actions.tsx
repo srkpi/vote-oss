@@ -99,7 +99,7 @@ export function PetitionAdminActions({
   };
 
   return (
-    <div className="border-border-color shadow-card space-y-3 rounded-xl border bg-white p-6">
+    <div className="border-border-color shadow-card bg-card space-y-3 rounded-xl border p-6">
       <h2 className="font-body text-sm font-semibold">Дії адміністратора</h2>
 
       {canApprove && (

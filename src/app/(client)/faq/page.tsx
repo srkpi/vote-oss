@@ -30,7 +30,7 @@ export default async function FaqPage() {
   if (data === null) {
     return (
       <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-        <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-sm">
+        <div className="border-border-color bg-card w-full max-w-md overflow-hidden rounded-xl border shadow-sm">
           <ErrorState title="Помилка завантаження" />
         </div>
       </div>

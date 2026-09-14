@@ -124,7 +124,7 @@ export function CampaignDashboard({
             <CampaignStageEditor campaign={campaign} />
 
             {/* Registration form (Stage 2) */}
-            <section className="border-border-color shadow-card rounded-xl border bg-white">
+            <section className="border-border-color shadow-card bg-card rounded-xl border">
               <header className="border-border-subtle flex items-center gap-2 border-b px-5 py-4">
                 <ClipboardList className="text-kpi-gray-mid h-4 w-4" />
                 <h2 className="font-display text-foreground text-base font-semibold">
@@ -192,7 +192,7 @@ export function CampaignDashboard({
 
             {/* Stage 3: signature collection */}
             {campaign.signatureCollection && (
-              <section className="border-border-color shadow-card rounded-xl border bg-white">
+              <section className="border-border-color shadow-card bg-card rounded-xl border">
                 <header className="border-border-subtle flex items-center justify-between gap-2 border-b px-5 py-4">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="text-kpi-gray-mid h-4 w-4" />
@@ -264,7 +264,7 @@ export function CampaignDashboard({
             )}
 
             {/* Stage 4: final election */}
-            <section className="border-border-color shadow-card rounded-xl border bg-white">
+            <section className="border-border-color shadow-card bg-card rounded-xl border">
               <header className="border-border-subtle flex items-center justify-between gap-2 border-b px-5 py-4">
                 <div className="flex items-center gap-2">
                   <Vote className="text-kpi-gray-mid h-4 w-4" />
@@ -298,7 +298,7 @@ export function CampaignDashboard({
 
           {/* Sidebar */}
           <div className="space-y-4">
-            <section className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
+            <section className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
               <header className="border-border-subtle border-b px-5 py-4">
                 <h3 className="font-display text-foreground text-base font-semibold">Параметри</h3>
               </header>
@@ -331,7 +331,7 @@ export function CampaignDashboard({
             </section>
 
             {/* Restrictions */}
-            <section className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
+            <section className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
               <header className="border-border-subtle border-b px-5 py-4">
                 <h3 className="font-display text-foreground text-base font-semibold">Обмеження</h3>
               </header>

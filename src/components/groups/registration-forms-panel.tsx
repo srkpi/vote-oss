@@ -117,7 +117,7 @@ export function RegistrationFormsPanel({
   };
 
   return (
-    <div className="border-border-color shadow-card rounded-xl border bg-white">
+    <div className="border-border-color shadow-card bg-card rounded-xl border">
       <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
         <div className="flex items-center gap-2">
           <ClipboardList className="text-kpi-gray-mid h-4 w-4" />
@@ -663,7 +663,7 @@ const REG_STATUS_BADGE: Record<CandidateRegistrationStatus, string> = {
   PENDING_REVIEW: 'text-kpi-navy bg-kpi-navy/10',
   APPROVED: 'text-success bg-success-bg',
   REJECTED: 'text-error bg-error-bg',
-  WITHDRAWN: 'text-muted-foreground bg-gray-100',
+  WITHDRAWN: 'text-muted-foreground bg-muted',
 };
 
 interface SubmissionsDialogProps {

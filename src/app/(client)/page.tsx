@@ -159,7 +159,7 @@ export default async function HomePage() {
             <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
                 d="M0 48L1440 48L1440 0C1440 0 1152 36 720 36C288 36 0 0 0 0L0 48Z"
-                fill="white"
+                style={{ fill: 'var(--background)' }}
               />
             </svg>
           </div>
@@ -169,7 +169,7 @@ export default async function HomePage() {
       </HeroReadyProvider>
 
       {/* Features */}
-      <section className="relative z-20 my-20 -mt-px bg-white">
+      <section className="bg-background relative z-20 my-20 -mt-px">
         <div className="container">
           <h2 className="font-display text-foreground mb-8 text-center text-4xl font-bold">
             Чому {APP_NAME}?
@@ -234,17 +234,19 @@ export default async function HomePage() {
         {/* Bottom wave */}
         <div className="absolute right-0 bottom-0 left-0 z-10">
           <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 48C0 48 288 12 720 12C1152 12 1440 48 1440 48L0 48Z" fill="white" />
+            <path
+              d="M0 48C0 48 288 12 720 12C1152 12 1440 48 1440 48L0 48Z"
+              style={{ fill: 'var(--background)' }}
+            />
           </svg>
         </div>
       </section>
 
-      <footer className="relative z-20 -mt-px bg-white">
+      <footer className="bg-background relative z-20 -mt-px">
         <div className="flex flex-col items-center px-2">
           <VisitorCounter
             name={APP_NAME}
             scale={1.2}
-            darkmode={false}
             className="mt-4 mb-4 md:mt-0 lg:-mt-2 xl:-mt-4 2xl:-mt-6"
           />
         </div>

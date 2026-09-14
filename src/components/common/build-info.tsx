@@ -20,7 +20,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
     : null;
 
   return (
-    <div className={cn('border-border-color font-body rounded-xl border bg-white p-5', className)}>
+    <div className={cn('border-border-color font-body bg-card rounded-xl border p-5', className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="text-kpi-navy h-4 w-4 shrink-0" />

@@ -24,7 +24,7 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
     <Link
       href={`/petitions/${petition.id}`}
       className={cn(
-        'group block rounded-xl bg-white',
+        'group bg-card block rounded-xl',
         'border-border-color border',
         'shadow-card hover:shadow-card-hover',
         'transition-all duration-300 hover:-translate-y-1',

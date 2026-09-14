@@ -68,7 +68,7 @@ export function DialogPanel({ className, maxWidth = 'md', children, ...props }: 
         'mx-auto flex w-full flex-col',
         maxWidths[maxWidth],
         'max-h-[calc(100dvh-2rem)]',
-        'rounded-xl bg-white',
+        'bg-card rounded-xl',
         'shadow-xl',
         'overflow-hidden',
         className,

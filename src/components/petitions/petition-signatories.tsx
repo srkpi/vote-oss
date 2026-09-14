@@ -85,7 +85,7 @@ export function PetitionSignatories({
 
   if (signatories.length === 0) {
     return (
-      <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
+      <div className="border-border-color bg-card rounded-xl border p-12 text-center shadow-sm">
         <EmptyState
           title="Ще немає підписантів"
           icon={<Users className="text-kpi-gray-mid h-7 w-7" />}
@@ -95,7 +95,7 @@ export function PetitionSignatories({
   }
 
   return (
-    <div className="border-border-color shadow-card rounded-xl border bg-white p-6">
+    <div className="border-border-color shadow-card bg-card rounded-xl border p-6">
       <div className="divide-border-color divide-y">
         {pageItems.map((signatory) => (
           <SignatoryRow key={signatory.ballotId} signatory={signatory} />

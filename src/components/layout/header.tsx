@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, LogOut, Menu, Trash2, Upload, X } from 'lucide-react';
+import { LogOut, Menu, Trash2, Upload, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -18,6 +18,8 @@ import { AVATAR_ALLOWED_IMAGE_MIME_TYPES, AVATAR_MAX_SIZE_BYTES } from '@/lib/co
 import { STUDY_FORM_LABELS } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
+
+import { ThemeToggle } from './theme-toggle';
 
 interface HeaderProps {
   session: User | null;
@@ -111,7 +113,7 @@ export function Header({ session }: HeaderProps) {
     <header
       className={cn(
         'fixed top-0 right-0 left-0 z-40 h-(--header-height)',
-        mobileOpen ? 'bg-white' : 'glass',
+        mobileOpen ? 'bg-card' : 'glass',
       )}
     >
       <div className="container flex h-full items-center justify-between">
@@ -145,7 +147,7 @@ export function Header({ session }: HeaderProps) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 lg:gap-3">
           {session ? (
             <div className="relative">
               <button
@@ -154,7 +156,7 @@ export function Header({ session }: HeaderProps) {
                   setMobileOpen(false);
                 }}
                 className={cn(
-                  'flex items-center gap-2 rounded-lg px-3 py-1.5',
+                  'flex items-center gap-2 rounded-lg px-2 py-1.5 lg:px-3',
                   'hover:bg-surface transition-colors duration-150',
                   'font-body text-sm font-medium',
                 )}
@@ -168,12 +170,6 @@ export function Header({ session }: HeaderProps) {
                     {session.faculty} · {session.group}
                   </p>
                 </div>
-                <ChevronDown
-                  className={cn(
-                    'text-muted-foreground h-4 w-4 transition-transform duration-200',
-                    userMenuOpen && 'rotate-180',
-                  )}
-                />
               </button>
 
               {userMenuOpen && (
@@ -181,8 +177,8 @@ export function Header({ session }: HeaderProps) {
                   <div className="fixed inset-0" onClick={() => setUserMenuOpen(false)} />
                   <div
                     className={cn(
-                      'absolute top-full right-0 mt-2 w-72',
-                      'rounded-xl bg-white shadow-xl',
+                      'absolute top-full right-0 mt-2 w-68',
+                      'bg-card rounded-xl shadow-xl',
                       'border-border-color border',
                       'overflow-hidden',
                       'origin-top-right',
@@ -272,7 +268,7 @@ export function Header({ session }: HeaderProps) {
                       size="lg"
                       onClick={handleLogout}
                       disabled={loggingOut}
-                      className="text-error hover:bg-error-bg flex w-full items-center gap-2.5 rounded-none bg-white text-sm transition-colors disabled:opacity-50"
+                      className="text-error hover:bg-error-bg bg-card flex w-full items-center gap-2.5 rounded-none text-sm transition-colors disabled:opacity-50"
                     >
                       <LogOut className="h-4 w-4" />
                       {loggingOut ? 'Виходимо…' : 'Вийти'}
@@ -286,6 +282,8 @@ export function Header({ session }: HeaderProps) {
               <Link href="/login">Увійти</Link>
             </Button>
           )}
+
+          <ThemeToggle />
 
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -310,7 +308,7 @@ export function Header({ session }: HeaderProps) {
           <div
             className={cn(
               'absolute top-full right-0 left-0 lg:hidden',
-              'border-border-color border-b bg-white',
+              'border-border-color bg-card border-b',
               'shadow-lg',
               'animate-fade-down',
             )}

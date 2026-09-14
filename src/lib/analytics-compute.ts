@@ -35,6 +35,72 @@ export const CHART_COLORS = [
   '#0ea5e9',
 ] as const;
 
+// Same palette as `CHART_COLORS`, but the three brand hues that are too dark
+// to read against a dark chart background (navy, wine, and blue-dark — the
+// same three that get lightened for `.dark` in globals.css) are swapped for
+// their lightened counterparts. Everything else already has enough contrast
+// on a dark background and is left as-is so series colors stay recognizable.
+const CHART_COLORS_DARK = [
+  '#7098df',
+  '#f07d00',
+  '#008acf',
+  '#d35570',
+  '#10b981',
+  '#8b5cf6',
+  '#f43f5e',
+  '#f59e0b',
+  '#14b8a6',
+  '#6366f1',
+  '#06b6d4',
+  '#ec4899',
+  '#4c94d8',
+  '#84cc16',
+  '#a855f7',
+  '#0ea5e9',
+] as const;
+
+export interface ChartThemeColors {
+  /** Per-series line/bar/area colors, cycled with `i % seriesColors.length`. */
+  seriesColors: readonly string[];
+  /** `CartesianGrid` / axis line stroke. */
+  grid: string;
+  /** `Tooltip`'s `cursor` stroke, for line/area charts. */
+  cursorLine: string;
+  /** `Tooltip`'s `cursor` fill, for bar charts. */
+  cursorFill: string;
+  /** Single-series color used before per-choice colors apply (e.g. the
+   *  aggregate "total" line shown while ballots are still encrypted). */
+  fallbackLine: string;
+}
+
+const CHART_THEME_LIGHT: ChartThemeColors = {
+  seriesColors: CHART_COLORS,
+  grid: '#ecf0f7',
+  cursorLine: '#dde5f0',
+  cursorFill: '#f6f8fc',
+  fallbackLine: '#1c396e',
+};
+
+const CHART_THEME_DARK: ChartThemeColors = {
+  seriesColors: CHART_COLORS_DARK,
+  grid: 'rgba(255,255,255,0.08)',
+  cursorLine: 'rgba(255,255,255,0.15)',
+  cursorFill: 'rgba(255,255,255,0.06)',
+  fallbackLine: '#7098df',
+};
+
+/**
+ * Recharts reads colors from plain JS props, not CSS, so its charts can't
+ * pick up `.dark` on their own the way Tailwind classes do — call this with
+ * the current theme to get colors that match. Chart PNG exports always
+ * render with `isDark: false` regardless of the active site theme, since
+ * `chart-export.tsx` composites the SVG onto its own fixed, always-light
+ * branded canvas.
+ */
+export function getChartTheme(isDark: boolean): ChartThemeColors {
+  return isDark ? CHART_THEME_DARK : CHART_THEME_LIGHT;
+}
+
 /**
  * Determines the best time bucket size based solely on the election's
  * *effective* duration (open → min(close, now)).

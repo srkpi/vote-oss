@@ -41,7 +41,7 @@ const STATE_BADGE: Record<TeamSlot['state'], string> = {
   empty: 'text-muted-foreground bg-surface',
   pending: 'text-kpi-navy bg-kpi-navy/10',
   rejected: 'text-error bg-error-bg',
-  expired: 'text-muted-foreground bg-gray-100',
+  expired: 'text-muted-foreground bg-muted',
   awaiting_candidate: 'text-kpi-orange bg-warning-bg',
   declined: 'text-error bg-error-bg',
   accepted: 'text-success bg-success-bg',
@@ -152,7 +152,7 @@ export function TeamSlotsPanel({
   return (
     <div
       className={
-        compact ? '' : 'border-border-color shadow-card mb-6 rounded-xl border bg-white p-5'
+        compact ? '' : 'border-border-color shadow-card bg-card mb-6 rounded-xl border p-5'
       }
     >
       <div className={cn('flex items-center gap-2', compact ? 'mb-1.5' : 'mb-3')}>

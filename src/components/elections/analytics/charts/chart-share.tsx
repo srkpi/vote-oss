@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 
 import { ShareTooltip } from '@/components/elections/analytics/charts/chart-tooltips';
-import { CHART_COLORS } from '@/lib/analytics-compute';
+import { getChartTheme } from '@/lib/analytics-compute';
 import { AXIS_STYLE } from '@/lib/constants';
 import type { ChartExportSize, SharePoint } from '@/types/analytics-charts';
 import type { ElectionChoice } from '@/types/election';
@@ -22,6 +22,7 @@ interface ShareChartProps {
   choices: ElectionChoice[];
   exportSize?: ChartExportSize;
   isMultiChoice?: boolean;
+  darkMode?: boolean;
 }
 
 function ShareChartInner({
@@ -30,7 +31,12 @@ function ShareChartInner({
   isMultiChoice = false,
   width,
   height,
-}: Omit<ShareChartProps, 'exportSize'> & { width?: number; height?: number }) {
+  darkMode = false,
+}: Omit<ShareChartProps, 'exportSize'> & {
+  width?: number;
+  height?: number;
+}) {
+  const chartTheme = getChartTheme(darkMode);
   const sizeProps = width != null && height != null ? { width, height } : {};
   const tickMap = Object.fromEntries(data.map((d) => [d.ms, d.label]));
   const ticks = data.map((d) => d.ms);
@@ -38,23 +44,18 @@ function ShareChartInner({
   return (
     <AreaChart {...sizeProps} data={data} margin={{ top: 8, right: 20, left: -8, bottom: 0 }}>
       <defs>
-        {choices.map((c, i) => (
-          <linearGradient key={c.id} id={`aGrad-${c.id}`} x1="0" y1="0" x2="0" y2="1">
-            <stop
-              offset="5%"
-              stopColor={CHART_COLORS[i % CHART_COLORS.length]}
-              stopOpacity={0.15}
-            />
-            <stop
-              offset="95%"
-              stopColor={CHART_COLORS[i % CHART_COLORS.length]}
-              stopOpacity={0.02}
-            />
-          </linearGradient>
-        ))}
+        {choices.map((c, i) => {
+          const color = chartTheme.seriesColors[i % chartTheme.seriesColors.length]!;
+          return (
+            <linearGradient key={c.id} id={`aGrad-${c.id}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.15} />
+              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
+            </linearGradient>
+          );
+        })}
       </defs>
 
-      <CartesianGrid strokeDasharray="3 3" stroke="#ecf0f7" vertical={false} />
+      <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
       <XAxis
         dataKey="ms"
         type="number"
@@ -64,7 +65,7 @@ function ShareChartInner({
         tickFormatter={(ms: number) => tickMap[ms] ?? ''}
         tick={AXIS_STYLE}
         tickLine={false}
-        axisLine={{ stroke: '#ecf0f7' }}
+        axisLine={{ stroke: chartTheme.grid }}
         interval="preserveStartEnd"
       />
       <YAxis
@@ -89,14 +90,17 @@ function ShareChartInner({
         />
       )}
 
-      <Tooltip content={<ShareTooltip choices={choices} />} cursor={{ stroke: '#dde5f0' }} />
+      <Tooltip
+        content={<ShareTooltip choices={choices} />}
+        cursor={{ stroke: chartTheme.cursorLine }}
+      />
 
       {choices.map((c, i) => (
         <Area
           key={c.id}
           type="monotone"
           dataKey={c.id}
-          stroke={CHART_COLORS[i % CHART_COLORS.length]}
+          stroke={chartTheme.seriesColors[i % chartTheme.seriesColors.length]}
           strokeWidth={1.5}
           isAnimationActive={width == null}
           fill={`url(#aGrad-${c.id})`}
@@ -106,7 +110,13 @@ function ShareChartInner({
   );
 }
 
-export function ShareChart({ data, choices, exportSize, isMultiChoice }: ShareChartProps) {
+export function ShareChart({
+  data,
+  choices,
+  exportSize,
+  isMultiChoice,
+  darkMode,
+}: ShareChartProps) {
   if (exportSize) {
     return (
       <ShareChartInner
@@ -115,13 +125,19 @@ export function ShareChart({ data, choices, exportSize, isMultiChoice }: ShareCh
         isMultiChoice={isMultiChoice}
         width={exportSize.width}
         height={exportSize.height}
+        darkMode={darkMode}
       />
     );
   }
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-      <ShareChartInner data={data} choices={choices} isMultiChoice={isMultiChoice} />
+      <ShareChartInner
+        data={data}
+        choices={choices}
+        isMultiChoice={isMultiChoice}
+        darkMode={darkMode}
+      />
     </ResponsiveContainer>
   );
 }

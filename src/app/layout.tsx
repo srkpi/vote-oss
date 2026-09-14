@@ -3,7 +3,9 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Bitter, Onest } from 'next/font/google';
 
+import { ThemeProvider } from '@/hooks/use-theme';
 import { APP_NAME, APP_URL } from '@/lib/config/client';
+import { LOCAL_STORAGE_THEME_KEY } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 import { AvatarDeleteDialogProvider } from '@/providers/avatar-delete-dialog-provider';
@@ -56,16 +58,39 @@ export const viewport: Viewport = {
   themeColor: '#1c396e',
 };
 
+const THEME_INIT_SCRIPT = `
+  (function() {
+    try {
+      var isDark = localStorage.getItem('${LOCAL_STORAGE_THEME_KEY}') === 'dark' ||
+        (!localStorage.getItem('${LOCAL_STORAGE_THEME_KEY}') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m) m.setAttribute('content', '#0d111a');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (e) {}
+  })();
+`;
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="uk" className={cn('font-sans', onest.variable, bitter.variable)}>
+    <html
+      lang="uk"
+      className={cn('font-sans', onest.variable, bitter.variable)}
+      suppressHydrationWarning
+    >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
       </head>
       <body>
-        <ToastProvider>
-          <AvatarDeleteDialogProvider>{children}</AvatarDeleteDialogProvider>
-        </ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <AvatarDeleteDialogProvider>{children}</AvatarDeleteDialogProvider>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

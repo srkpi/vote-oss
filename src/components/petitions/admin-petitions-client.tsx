@@ -235,28 +235,21 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
 
   return (
     <div className="space-y-4">
-      <div className="border-border-color space-y-4 rounded-xl shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="shrink-0 overflow-x-auto sm:max-w-full">
-            <Tabs
-              tabs={TABS}
-              activeTab={tab}
-              onTabChange={setTab}
-              tabBadge={(key) => counts[key]}
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              placeholder="Пошук за назвою або автором…"
-            />
-          </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="shrink-0 overflow-x-auto sm:max-w-full">
+          <Tabs tabs={TABS} activeTab={tab} onTabChange={setTab} tabBadge={(key) => counts[key]} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Пошук за назвою або автором…"
+          />
         </div>
       </div>
 
       {visible.length === 0 ? (
-        <div className="border-border-color overflow-hidden rounded-xl border bg-white p-4 shadow-sm sm:p-6">
+        <div className="border-border-color bg-card overflow-hidden rounded-xl border p-4 shadow-sm sm:p-6">
           <EmptyState
             icon={<Megaphone className="h-10 w-10" />}
             title="Петицій не знайдено"
@@ -264,7 +257,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
           />
         </div>
       ) : (
-        <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
+        <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
           <div className="hidden overflow-x-auto lg:block">
             <table className="w-full">
               <thead>

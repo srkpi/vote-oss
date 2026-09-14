@@ -69,7 +69,7 @@ export default async function PetitionsPage({ searchParams }: PetitionsPageProps
 
       <div className="container py-8">
         {error ? (
-          <div className="border-border-color overflow-hidden rounded-xl border bg-white shadow-sm">
+          <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
             <ErrorState title="Не вдалося завантажити петиції" description={error} />
           </div>
         ) : (

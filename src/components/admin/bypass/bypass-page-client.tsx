@@ -111,7 +111,7 @@ function BypassTokenCard({
 
   return (
     <div
-      className={`border-border-color overflow-hidden rounded-xl border bg-white ${isDeleted ? 'opacity-60' : ''}`}
+      className={`border-border-color bg-card overflow-hidden rounded-xl border ${isDeleted ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
         <div className="min-w-0 flex-1 space-y-1">
@@ -342,7 +342,7 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
   };
 
   return (
-    <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
+    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
       <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
           <div className="bg-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">

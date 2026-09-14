@@ -7,14 +7,18 @@ import {
   LayoutGrid,
   LogOut,
   Megaphone,
+  Moon,
   Settings,
   ShieldCheck,
+  Sun,
   Unlock,
   UsersRound,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { useTheme } from '@/hooks/use-theme';
 import { APP_NAME } from '@/lib/config/client';
 import { cn } from '@/lib/utils/common';
 
@@ -90,6 +94,7 @@ export function AdminSidebar({
   restrictedToFaculty = true,
 }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
   const navItems = [...BASE_NAV_ITEMS];
 
   if (manageAdmins) {
@@ -117,20 +122,23 @@ export function AdminSidebar({
 
   return (
     <>
-      <aside className="border-border-subtle sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-white lg:flex">
+      <aside className="border-border-subtle bg-card sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r lg:flex">
         <div className="border-border-subtle border-b p-5">
-          <div className="flex items-center gap-3">
-            <div className="bg-kpi-orange flex h-9 w-9 items-center justify-center rounded-lg shadow-sm">
-              <Settings className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="bg-kpi-orange flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm">
+                <Settings className="h-5 w-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display text-foreground truncate text-sm leading-tight font-semibold">
+                  Адмін-панель
+                </p>
+                <p className="font-body text-muted-foreground truncate text-[10px] tracking-wider uppercase">
+                  {APP_NAME}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-display text-foreground text-sm leading-tight font-semibold">
-                Адмін-панель
-              </p>
-              <p className="font-body text-muted-foreground text-[10px] tracking-wider uppercase">
-                {APP_NAME}
-              </p>
-            </div>
+            <ThemeToggle className="shrink-0" />
           </div>
         </div>
 
@@ -160,7 +168,7 @@ export function AdminSidebar({
           <hr className="border-border-subtle mb-3" />
           <Link
             href="/"
-            className="font-body text-muted-foreground flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium transition-all duration-150 hover:bg-red-50 hover:text-red-600"
+            className="font-body text-muted-foreground hover:bg-error-bg hover:text-error flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium transition-all duration-150"
           >
             <LogOut className="h-4 w-4" />
             На головну
@@ -168,7 +176,7 @@ export function AdminSidebar({
         </div>
       </aside>
 
-      <div className="safe-area-pb border-border-subtle fixed right-0 bottom-0 left-0 z-40 border-t bg-white shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden">
+      <div className="safe-area-pb border-border-subtle bg-card fixed right-0 bottom-0 left-0 z-40 border-t shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden dark:shadow-[0_-4px_12px_rgb(0_0_0/0.4)]">
         <div className="flex scrollbar-none items-stretch overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
@@ -196,6 +204,20 @@ export function AdminSidebar({
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className={cn(
+              'flex flex-1 flex-col items-center justify-center gap-1 px-1 py-2.5 text-center',
+              'min-h-14 min-w-20 shrink-0 transition-all duration-150',
+              'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <span className="flex h-6 w-8 items-center justify-center rounded-lg transition-all duration-150">
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </span>
+            <span className="font-body text-[10px] leading-tight font-medium">Тема</span>
+          </button>
         </div>
       </div>
     </>

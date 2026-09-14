@@ -27,7 +27,7 @@ export function AdminMobileCard({
   return (
     <div
       className={cn(
-        'border-border-color rounded-lg border bg-white p-4 shadow-sm',
+        'border-border-color bg-card rounded-lg border p-4 shadow-sm',
         isCurrentUser && 'border-kpi-navy',
       )}
     >

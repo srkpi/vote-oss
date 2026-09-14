@@ -82,7 +82,7 @@ function DecryptBanner({
   onDecrypt: () => void;
 }) {
   return (
-    <div className="border-kpi-orange/30 rounded-xl border bg-white p-5">
+    <div className="border-kpi-orange/30 bg-card rounded-xl border p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <div className="bg-kpi-orange/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
@@ -127,7 +127,7 @@ export function AnalyticsPanel({
 }: AnalyticsPanelProps) {
   if (ballots.length === 0) {
     return (
-      <div className="border-border-color rounded-xl border bg-white p-12 text-center shadow-sm">
+      <div className="border-border-color bg-card rounded-xl border p-12 text-center shadow-sm">
         <EmptyState
           title="Немає даних для аналізу"
           icon={<BarChart2 className="text-kpi-gray-mid h-7 w-7" />}

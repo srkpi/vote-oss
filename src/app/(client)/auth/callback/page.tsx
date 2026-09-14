@@ -81,7 +81,7 @@ export default function CallbackPage() {
       </div>
 
       <div className="relative w-full max-w-md">
-        <div className="border-border-color overflow-hidden rounded-2xl border bg-white shadow-xl">
+        <div className="border-border-color bg-card overflow-hidden rounded-2xl border shadow-xl">
           <div
             className={`h-1.5 w-full transition-all duration-700 ${
               status === 'loading'

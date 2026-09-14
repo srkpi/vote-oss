@@ -8,7 +8,8 @@ import { downloadChartAsPng } from '@/components/elections/analytics/charts/char
 import { ShareChart } from '@/components/elections/analytics/charts/chart-share';
 import { ChartWrapper } from '@/components/elections/analytics/charts/chart-wrapper';
 import { Tabs } from '@/components/ui/tabs';
-import { CHART_COLORS, GRANULARITY_LABEL } from '@/lib/analytics-compute';
+import { useTheme } from '@/hooks/use-theme';
+import { getChartTheme, GRANULARITY_LABEL } from '@/lib/analytics-compute';
 import type {
   ActivityPoint,
   AnalyticsTimePoint,
@@ -41,6 +42,8 @@ export function AnalyticsCharts({
   decryptionDone,
 }: ChartsProps) {
   const [activeTab, setActiveTab] = useState<ChartTab>('dynamics');
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const tabs = [
     { key: 'dynamics' as const, label: 'Динаміка' },
@@ -52,19 +55,26 @@ export function AnalyticsCharts({
 
   const granLabel = GRANULARITY_LABEL[granularity];
 
-  const legendEntries: LegendEntry[] = (() => {
+  const buildLegendEntries = (forDark: boolean): LegendEntry[] => {
     if (
       (activeTab === 'dynamics' || activeTab === 'share') &&
       decryptionDone &&
       election.choices.length > 1
     ) {
+      const colors = getChartTheme(forDark).seriesColors;
       return election.choices.map((c, i) => ({
-        color: CHART_COLORS[i % CHART_COLORS.length]!,
+        color: colors[i % colors.length]!,
         label: c.choice,
       }));
     }
     return [];
-  })();
+  };
+
+  // On-screen legend follows the active site theme; PNG exports always use
+  // the light palette, since `chart-export.tsx` draws its legend onto a
+  // fixed, always-light branded canvas.
+  const legendEntries = buildLegendEntries(isDark);
+  const exportLegendEntries = buildLegendEntries(false);
 
   // Each tab's downloader closes over its own data and passes a `renderChart`
   // factory to `downloadChartAsPng`. The factory receives the exact export
@@ -83,8 +93,10 @@ export function AnalyticsCharts({
         />
       ),
       election,
-      `Динаміка голосування · ${granLabel}`,
-      legendEntries,
+      election.type === 'ELECTION'
+        ? `Динаміка голосування · ${granLabel}`
+        : `Динаміка підписів · ${granLabel}`,
+      exportLegendEntries,
       'dynamics',
     );
 
@@ -94,7 +106,9 @@ export function AnalyticsCharts({
         <ActivityChart data={activityData} metrics={metrics} exportSize={{ width: w, height: h }} />
       ),
       election,
-      `Активність голосування · ${granLabel}`,
+      election.type === 'ELECTION'
+        ? `Активність голосування · ${granLabel}`
+        : `Активність збору підписів · ${granLabel}`,
       [],
       'activity',
     );
@@ -127,7 +141,11 @@ export function AnalyticsCharts({
 
       {activeTab === 'dynamics' && (
         <ChartWrapper
-          title="Динаміка надходження голосів"
+          title={
+            election.type === 'ELECTION'
+              ? 'Динаміка надходження голосів'
+              : 'Динаміка збору підписів'
+          }
           onDownload={dynamicsDownloader}
           legend={legendEntries}
         >
@@ -137,13 +155,19 @@ export function AnalyticsCharts({
             decryptionDone={decryptionDone}
             opensAt={election.opensAt}
             closesAt={election.closesAt}
+            darkMode={theme === 'dark'}
           />
         </ChartWrapper>
       )}
 
       {activeTab === 'activity' && (
-        <ChartWrapper title="Активність голосування" onDownload={activityDownloader}>
-          <ActivityChart data={activityData} metrics={metrics} />
+        <ChartWrapper
+          title={
+            election.type === 'ELECTION' ? 'Активність голосування' : 'Активність збору підписів'
+          }
+          onDownload={activityDownloader}
+        >
+          <ActivityChart data={activityData} metrics={metrics} darkMode={theme === 'dark'} />
         </ChartWrapper>
       )}
 
@@ -157,6 +181,7 @@ export function AnalyticsCharts({
             data={shareEvolution}
             choices={election.choices}
             isMultiChoice={election.maxChoices > 1}
+            darkMode={theme === 'dark'}
           />
         </ChartWrapper>
       )}

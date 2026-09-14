@@ -10,7 +10,7 @@ export function PetitionSupportBanner({ ballotCount, quorum }: PetitionSupportBa
   const reached = progress >= 100;
 
   return (
-    <div className="border-border-color shadow-card rounded-xl border bg-white p-6">
+    <div className="border-border-color shadow-card bg-card rounded-xl border p-6">
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="font-body flex items-center gap-2 text-sm font-semibold">
           <Users className="text-muted-foreground h-4 w-4" />

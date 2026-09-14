@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 
 import { BarTooltip } from '@/components/elections/analytics/charts/chart-tooltips';
+import { getChartTheme } from '@/lib/analytics-compute';
 import { AXIS_STYLE } from '@/lib/constants';
 import type { ActivityPoint, ChartExportSize } from '@/types/analytics-charts';
 import type { AnalyticsMetrics } from '@/types/metrics';
@@ -23,9 +24,10 @@ interface BarShapeProps {
   height: number;
   payload: { count: number; [key: string]: unknown };
   maxCount: number;
+  normalFill: string;
 }
 
-function BarShape({ x, y, width, height, payload, maxCount }: BarShapeProps) {
+function BarShape({ x, y, width, height, payload, maxCount, normalFill }: BarShapeProps) {
   if (!height || height <= 0) return null;
   const isMax = payload.count === maxCount;
   return (
@@ -34,7 +36,7 @@ function BarShape({ x, y, width, height, payload, maxCount }: BarShapeProps) {
       y={y}
       width={width}
       height={height}
-      fill={isMax ? '#f07d00' : '#1c396e'}
+      fill={isMax ? '#f07d00' : normalFill}
       fillOpacity={isMax ? 1 : 0.7}
       rx={4}
       ry={4}
@@ -46,6 +48,7 @@ interface ActivityChartProps {
   data: ActivityPoint[];
   metrics: AnalyticsMetrics;
   exportSize?: ChartExportSize;
+  darkMode?: boolean;
 }
 
 function ActivityChartInner({
@@ -53,7 +56,12 @@ function ActivityChartInner({
   metrics,
   width,
   height,
-}: Omit<ActivityChartProps, 'exportSize'> & { width?: number; height?: number }) {
+  darkMode = false,
+}: Omit<ActivityChartProps, 'exportSize'> & {
+  width?: number;
+  height?: number;
+}) {
+  const chartTheme = getChartTheme(darkMode);
   const sizeProps = width != null && height != null ? { width, height } : {};
 
   // Build ms→label map so the numeric axis can display formatted ticks
@@ -67,7 +75,7 @@ function ActivityChartInner({
 
   return (
     <BarChart {...sizeProps} data={data} margin={{ top: 24, right: 20, left: -8, bottom: 0 }}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#ecf0f7" vertical={false} />
+      <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} vertical={false} />
       <XAxis
         dataKey="ms"
         type="number"
@@ -77,11 +85,11 @@ function ActivityChartInner({
         tickFormatter={(ms: number) => tickMap[ms] ?? ''}
         tick={AXIS_STYLE}
         tickLine={false}
-        axisLine={{ stroke: '#ecf0f7' }}
+        axisLine={{ stroke: chartTheme.grid }}
         interval="preserveStartEnd"
       />
       <YAxis tick={AXIS_STYLE} tickLine={false} axisLine={false} allowDecimals={false} />
-      <Tooltip content={<BarTooltip />} cursor={{ fill: '#f6f8fc' }} />
+      <Tooltip content={<BarTooltip />} cursor={{ fill: chartTheme.cursorFill }} />
 
       {hasSinglePeak && peakMs != null && (
         <ReferenceLine
@@ -103,13 +111,15 @@ function ActivityChartInner({
         maxBarSize={56}
         isAnimationActive={width == null}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        shape={(props: any) => <BarShape {...props} maxCount={metrics.maxCount} />}
+        shape={(props: any) => (
+          <BarShape {...props} maxCount={metrics.maxCount} normalFill={chartTheme.fallbackLine} />
+        )}
       />
     </BarChart>
   );
 }
 
-export function ActivityChart({ data, metrics, exportSize }: ActivityChartProps) {
+export function ActivityChart({ data, metrics, exportSize, darkMode }: ActivityChartProps) {
   if (exportSize) {
     return (
       <ActivityChartInner
@@ -117,13 +127,14 @@ export function ActivityChart({ data, metrics, exportSize }: ActivityChartProps)
         metrics={metrics}
         width={exportSize.width}
         height={exportSize.height}
+        darkMode={darkMode}
       />
     );
   }
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-      <ActivityChartInner data={data} metrics={metrics} />
+      <ActivityChartInner data={data} metrics={metrics} darkMode={darkMode} />
     </ResponsiveContainer>
   );
 }

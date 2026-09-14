@@ -7,9 +7,9 @@ export default async function ClientLayout({ children }: { children: React.React
 
   return (
     <PostHogProvider session={session}>
-      <div className="flex min-h-dvh flex-col">
+      <div className="bg-card flex min-h-dvh flex-col">
         <Header session={session} />
-        <main className="flex-1 pt-(--header-height)">{children}</main>
+        <main className="bg-background mt-(--header-height) flex-1">{children}</main>
       </div>
     </PostHogProvider>
   );

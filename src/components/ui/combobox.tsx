@@ -156,7 +156,7 @@ export function Combobox({
         onClick={() => (open ? closeDropdown() : openDropdown())}
         onKeyDown={handleTriggerKeyDown}
         className={cn(
-          'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-white',
+          'bg-card flex h-10 w-full items-center gap-2 rounded-(--radius)',
           'border-border-color border',
           'font-body px-3 text-left text-sm',
           'transition-colors duration-150',
@@ -203,7 +203,7 @@ export function Combobox({
           className={cn(
             'absolute z-50 w-full min-w-50',
             'overflow-hidden rounded-lg',
-            'border-border-color border bg-white',
+            'border-border-color bg-card border',
             'shadow-lg',
             'animate-scale-in',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',

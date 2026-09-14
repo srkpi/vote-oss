@@ -1131,7 +1131,7 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-border-color shadow-card rounded-xl border bg-white">
+    <div className="border-border-color shadow-card bg-card rounded-xl border">
       <div className="border-border-subtle flex items-center justify-between gap-4 border-b px-5 py-4">
         <div className="min-w-0">
           <h2 className="font-display text-foreground text-base font-semibold">{title}</h2>
@@ -1464,7 +1464,7 @@ function AgendaItemEditor({
                           'rounded-md border px-3 py-1 text-xs transition-colors',
                           item.choiceMapping[c.id] === v
                             ? 'bg-kpi-navy border-kpi-navy text-white'
-                            : 'border-border-color hover:border-kpi-blue-light text-foreground bg-white',
+                            : 'border-border-color hover:border-kpi-blue-light text-foreground bg-card',
                           !canEdit && 'cursor-not-allowed opacity-60',
                         )}
                       >

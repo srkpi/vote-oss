@@ -114,15 +114,15 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
       <div className="p-4 sm:p-8">
         {/* Soft-deleted banner */}
         {isDeleted && election.deletedBy && (
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 sm:gap-4 sm:p-5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div className="border-error/30 bg-error-bg mb-6 flex items-start gap-3 rounded-xl border p-4 sm:gap-4 sm:p-5">
+            <div className="bg-error/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+              <AlertTriangle className="text-error h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-display text-sm font-semibold text-red-700 sm:text-base">
+              <p className="text-error font-display text-sm font-semibold sm:text-base">
                 Голосування видалено
               </p>
-              <p className="font-body mt-0.5 text-xs text-red-600/80 sm:text-sm">
+              <p className="font-body text-error/80 mt-0.5 text-xs sm:text-sm">
                 <span className="font-semibold">{election.deletedBy.fullName}</span>
                 {election.deletedAt && (
                   <>
@@ -180,7 +180,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 hideOwnVote
               />
             ) : (
-              <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
+              <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
                 <div className="border-border-subtle border-b px-4 py-4 sm:px-6">
                   <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
                     Варіанти відповідей
@@ -212,7 +212,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           </div>
 
           <div className="space-y-5">
-            <div className="border-border-color shadow-card overflow-hidden rounded-xl border bg-white">
+            <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
               <div className="space-y-4 p-4 sm:p-5">
                 <TimelineItem
                   label="Створено"

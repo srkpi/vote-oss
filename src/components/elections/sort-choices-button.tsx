@@ -47,7 +47,7 @@ export function SortChoicesButton({ value, onChange }: SortChoicesButtonProps) {
       </Button>
 
       {open && (
-        <div className="border-border-color absolute top-full right-0 z-10 mt-1.5 min-w-36 overflow-hidden rounded-lg border bg-white py-1 shadow-sm">
+        <div className="border-border-color bg-card absolute top-full right-0 z-10 mt-1.5 min-w-36 overflow-hidden rounded-lg border py-1 shadow-sm">
           {OPTIONS.map(({ value: v, label, Icon }) => {
             const selected = value === v;
             return (

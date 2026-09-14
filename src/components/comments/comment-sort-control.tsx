@@ -68,7 +68,7 @@ export function CommentSortControl({
         </Button>
 
         {open && (
-          <div className="border-border-color absolute top-full right-0 z-10 mt-1.5 min-w-44 overflow-hidden rounded-lg border bg-white py-1 shadow-sm">
+          <div className="border-border-color bg-card absolute top-full right-0 z-10 mt-1.5 min-w-44 overflow-hidden rounded-lg border py-1 shadow-sm">
             {FIELD_OPTIONS.map(({ value, label: optionLabel, Icon }) => {
               const selected = sort === value;
               return (

@@ -58,7 +58,7 @@ const STATUS_BADGE: Record<CandidateRegistrationStatus, string> = {
   PENDING_REVIEW: 'text-kpi-navy bg-kpi-navy/10',
   APPROVED: 'text-success bg-success-bg',
   REJECTED: 'text-error bg-error-bg',
-  WITHDRAWN: 'text-muted-foreground bg-gray-100',
+  WITHDRAWN: 'text-muted-foreground bg-muted',
 };
 
 const NON_FINAL = new Set<CandidateRegistrationStatus>([
@@ -176,7 +176,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         isContainer
       />
       <div className="container max-w-2xl py-8">
-        <div className="border-border-color shadow-card mb-6 space-y-3 rounded-xl border bg-white p-5">
+        <div className="border-border-color shadow-card bg-card mb-6 space-y-3 rounded-xl border p-5">
           {form.description && (
             <p className="text-foreground text-sm whitespace-pre-line">{form.description}</p>
           )}
@@ -228,7 +228,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {status && (
-          <div className="border-border-color shadow-card mb-6 rounded-xl border bg-white p-5">
+          <div className="border-border-color shadow-card bg-card mb-6 rounded-xl border p-5">
             <div className="flex items-center gap-2">
               {status === 'APPROVED' ? (
                 <CheckCircle2 className="text-success h-4 w-4" />
@@ -283,7 +283,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {registration && status !== null && status !== 'DRAFT' && (
-          <div className="border-border-color shadow-card mb-6 space-y-3 rounded-xl border bg-white p-5">
+          <div className="border-border-color shadow-card bg-card mb-6 space-y-3 rounded-xl border p-5">
             <p className="font-display text-foreground text-sm font-semibold">Ваша заявка</p>
             <dl className="grid items-baseline gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
               {registration.faculty && (
@@ -333,7 +333,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {editable && form.eligible && !closed && !notYetOpen && (
-          <div className="border-border-color shadow-card space-y-4 rounded-xl border bg-white p-5">
+          <div className="border-border-color shadow-card bg-card space-y-4 rounded-xl border p-5">
             {error && (
               <Alert variant="error" onDismiss={() => setError(null)}>
                 {error}

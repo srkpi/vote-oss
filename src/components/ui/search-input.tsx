@@ -28,7 +28,7 @@ export function SearchInput({
         placeholder={placeholder}
         className={cn(
           'font-body h-9 w-full pr-3 pl-9 text-sm',
-          'border-border-color rounded-lg border bg-white',
+          'border-border-color bg-card rounded-lg border',
           'placeholder:text-subtle',
           'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
           'shadow-xs transition-colors duration-150',

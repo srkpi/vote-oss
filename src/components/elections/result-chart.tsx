@@ -112,7 +112,7 @@ export function ResultsChart({
             key={choice.id}
             className={cn(
               'ph-no-capture rounded-lg border p-4 transition-all duration-300',
-              isWinner ? 'border-kpi-navy/30 bg-kpi-navy/3' : 'border-border-subtle bg-white',
+              isWinner ? 'border-kpi-navy/30 bg-kpi-navy/3' : 'border-border-subtle bg-card',
             )}
           >
             <div className="mb-3 flex items-center justify-between">

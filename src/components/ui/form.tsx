@@ -44,7 +44,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             type={type}
             className={cn(
-              'flex h-10 w-full rounded-(--radius) bg-white',
+              'bg-card flex h-10 w-full rounded-(--radius)',
               'border-border-color border',
               'font-body text-foreground px-3 py-2 text-sm',
               'placeholder:text-subtle',
@@ -73,7 +73,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          'flex h-10 w-full rounded-(--radius) bg-white',
+          'bg-card flex h-10 w-full rounded-(--radius)',
           'border-border-color border',
           'font-body text-foreground px-3 py-2 text-sm',
           'placeholder:text-subtle',
@@ -100,7 +100,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, error, ...props }, ref) => (
     <textarea
       className={cn(
-        'flex min-h-20 w-full rounded-(--radius) bg-white',
+        'bg-card flex min-h-20 w-full rounded-(--radius)',
         'border-border-color border',
         'font-body text-foreground px-3 py-2 text-sm',
         'placeholder:text-subtle',

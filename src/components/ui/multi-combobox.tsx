@@ -103,7 +103,7 @@ export function MultiCombobox({
           }
         }}
         className={cn(
-          'flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-(--radius) bg-white',
+          'bg-card flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-(--radius)',
           'border-border-color border',
           'font-body px-2.5 py-1.5 text-left text-sm',
           'transition-colors duration-150',
@@ -150,7 +150,7 @@ export function MultiCombobox({
           ref={dropdownCallbackRef}
           className={cn(
             'absolute z-50 w-full min-w-50 overflow-hidden rounded-lg',
-            'border-border-color animate-scale-in border bg-white shadow-lg',
+            'border-border-color animate-scale-in bg-card border shadow-lg',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >

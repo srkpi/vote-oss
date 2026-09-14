@@ -37,7 +37,7 @@ function GroupCard({ group }: { group: Group }) {
     <Link
       href={`/groups/${group.id}`}
       className={cn(
-        'group border-border-color shadow-card block rounded-xl border bg-white',
+        'group border-border-color shadow-card bg-card block rounded-xl border',
         'hover:shadow-card-hover transition-all duration-200 hover:-translate-y-0.5',
         'flex flex-col overflow-hidden',
       )}
@@ -62,7 +62,11 @@ function GroupCard({ group }: { group: Group }) {
             shape="rounded"
             className={cn(
               !group.requisites.logo &&
-                (group.isOwner ? 'bg-kpi-orange' : group.isMember ? 'bg-kpi-navy' : 'bg-gray-400'),
+                (group.isOwner
+                  ? 'bg-kpi-orange'
+                  : group.isMember
+                    ? 'bg-kpi-navy'
+                    : 'bg-kpi-gray-mid'),
             )}
           />
           <h3 className="font-display text-foreground group-hover:text-kpi-navy line-clamp-2 text-base leading-tight font-semibold transition-colors">
@@ -87,7 +91,7 @@ function GroupCard({ group }: { group: Group }) {
             </span>
           )}
           {!group.isOwner && !group.isMember && (
-            <span className="font-body rounded-full border border-gray-300 bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-gray-500 uppercase">
+            <span className="font-body border-border bg-muted text-muted-foreground rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
               Публічна
             </span>
           )}
@@ -159,7 +163,7 @@ export function GroupsClient({ initialGroups, canCreateGroups, error }: GroupsCl
         )}
 
         {!error && groups.length === 0 ? (
-          <div className="border-border-color rounded-xl border bg-white shadow-sm">
+          <div className="border-border-color bg-card rounded-xl border shadow-sm">
             <EmptyState
               icon={<Users className="h-8 w-8" />}
               title="Ви не належите до жодної з груп"
