@@ -48,7 +48,7 @@ export function KpiIdButton({
       fullWidth={fullWidth}
       className={cn(
         SIZE_PADDING[size],
-        'bg-kpi-blue-mid active:bg-kpi-blue-mid hover:bg-[#0061a0]',
+        'bg-[#1062a3] hover:bg-[#0061a0] active:bg-[#1062a3]',
         logoAlignment === 'right' ? 'flex-row-reverse' : 'flex-row',
         className,
       )}
