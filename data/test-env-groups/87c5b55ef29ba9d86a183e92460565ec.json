@@ -1,1 +1,1 @@
-{"id":"87c5b55ef29ba9d86a183e92460565ec","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass accepts bypassNotStudying: true only","name":"accepts bypassNotStudying: true only","status":"passed","testResultsByEnv":{"default":"fc05b4baaa7ffa8103e0768a66e4d6ed"}}
+{"id":"87c5b55ef29ba9d86a183e92460565ec","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass accepts bypassNotStudying: true only","name":"accepts bypassNotStudying: true only","status":"passed","testResultsByEnv":{"default":"2278d3af79998e3e3666befe293498ee"}}
