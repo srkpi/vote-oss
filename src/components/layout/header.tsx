@@ -167,7 +167,10 @@ export function Header({ session }: HeaderProps) {
                     {session.fullName.split(' ')[0]}
                   </p>
                   <p className="text-muted-foreground text-[10px] leading-tight">
-                    {session.faculty} · {session.group}
+                    {session.faculty}
+                    {Boolean(session.group) && (
+                      <span className="inline-block">&nbsp;·&nbsp;{session.group}</span>
+                    )}
                   </p>
                 </div>
               </button>
@@ -192,7 +195,10 @@ export function Header({ session }: HeaderProps) {
                             {session.fullName}
                           </p>
                           <p className="text-muted-foreground mt-1 text-sm">
-                            {session.faculty} · {session.group}
+                            {session.faculty}
+                            {Boolean(session.group) && (
+                              <span className="inline-block">&nbsp;·&nbsp;{session.group}</span>
+                            )}
                           </p>
                         </div>
                       </div>

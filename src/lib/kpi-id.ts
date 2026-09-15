@@ -120,12 +120,14 @@ export function resolveFacultyShortName(
     facultyGroups[short].includes(group),
   );
 
-  if (matches.length === 0) throw new InvalidUserDataError();
   if (matches.length === 1) return matches[0];
+
+  const candidates = matches.length > 0 ? matches : Object.keys(facultyGroups);
+  if (candidates.length === 0) throw new InvalidUserDataError();
 
   const targetAbbr = normaliseAbbreviation(abbreviateFaculty(fullFaculty));
 
-  return matches.reduce((best, candidate) => {
+  return candidates.reduce((best, candidate) => {
     const bestDist = levenshtein(targetAbbr, normaliseAbbreviation(best));
     const candidateDist = levenshtein(targetAbbr, normaliseAbbreviation(candidate));
     return candidateDist < bestDist ? candidate : best;
