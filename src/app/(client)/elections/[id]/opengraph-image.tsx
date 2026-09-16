@@ -26,8 +26,10 @@ export default async function ElectionOgImage({ params }: Props) {
   const { data, status } = await serverApi.elections.og(id);
 
   let metaTitle = 'Голосування';
-  if (status === 404 || status === 400 || data?.type !== 'ELECTION') {
+  if (status === 404) {
     metaTitle = 'Голосування не знайдено';
+  } else if (status === 400) {
+    metaTitle = 'Некоректний ID голосування';
   } else if (data?.title) {
     metaTitle = data.title;
   }

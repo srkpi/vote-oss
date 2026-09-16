@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
 import { PageHeader } from '@/components/common/page-header';
@@ -11,6 +12,7 @@ import { LocalDate } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { UserAvatarMenu } from '@/components/ui/user-avatar-menu';
 import { serverApi } from '@/lib/api/server';
+import { APP_URL } from '@/lib/config/client';
 import { PETITION_QUORUM } from '@/lib/constants';
 import { getServerSession } from '@/lib/server-auth';
 import { isBotRequest } from '@/lib/utils/bot';
@@ -19,6 +21,35 @@ import { linkifyText } from '@/lib/utils/linkify';
 
 interface PetitionPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PetitionPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const { data, status } = await serverApi.elections.og(id);
+
+  let metaTitle = 'Петиція';
+  if (status === 404) {
+    metaTitle = '404 | Петицію не знайдено';
+  } else if (status === 400) {
+    metaTitle = '400 | Некоректний ID петиції';
+  } else if (data?.title) {
+    metaTitle = data.title;
+  }
+
+  return {
+    title: metaTitle,
+    description: metaTitle,
+    openGraph: {
+      title: metaTitle,
+      description: metaTitle,
+      url: new URL(`/petitions/${id}`, APP_URL),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: metaTitle,
+      description: metaTitle,
+    },
+  };
 }
 
 export default async function PetitionPage({ params }: PetitionPageProps) {
@@ -37,6 +68,10 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
         <p className="text-error text-sm">{error ?? 'Не вдалося завантажити петицію'}</p>
       </div>
     );
+  }
+
+  if (petition.type === 'ELECTION') {
+    redirect(`/elections/${petition.id}`);
   }
 
   const isPetitionManager = Boolean(session.isAdmin && session.managePetitions);

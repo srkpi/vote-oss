@@ -33,8 +33,10 @@ export async function generateMetadata({ params }: ElectionPageProps): Promise<M
   const { data, status } = await serverApi.elections.og(id);
 
   let metaTitle = 'Голосування';
-  if (status === 404 || status === 400 || data?.type !== 'ELECTION') {
+  if (status === 404) {
     metaTitle = '404 | Голосування не знайдено';
+  } else if (status === 400) {
+    metaTitle = '400 | Некоректний ID голосування';
   } else if (data?.title) {
     metaTitle = data.title;
   }
@@ -92,6 +94,10 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
       );
     }
     notFound();
+  }
+
+  if (election.type === 'PETITION') {
+    redirect(`/petitions/${election.id}`);
   }
 
   if (election.deletedAt) {

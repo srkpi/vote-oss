@@ -26,8 +26,10 @@ export default async function PetitionOgImage({ params }: Props) {
   const { data, status } = await serverApi.elections.og(id);
 
   let metaTitle = 'Петиція';
-  if (status === 404 || status === 400 || data?.type !== 'PETITION') {
+  if (status === 404) {
     metaTitle = 'Петицію не знайдено';
+  } else if (status === 400) {
+    metaTitle = 'Некоректний ID петиції';
   } else if (data?.title) {
     metaTitle = data.title;
   }
