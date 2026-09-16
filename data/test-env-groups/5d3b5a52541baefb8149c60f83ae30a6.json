@@ -1,1 +1,1 @@
-{"id":"5d3b5a52541baefb8149c60f83ae30a6","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache getCachedAdmins uses the correct cache key","name":"uses the correct cache key","status":"passed","testResultsByEnv":{"default":"94f0eae6a862a16c720edb6bfb8c9536"}}
+{"id":"5d3b5a52541baefb8149c60f83ae30a6","fullName":"vote-oss:src/__tests__/lib/cache.test.ts#cache getCachedAdmins uses the correct cache key","name":"uses the correct cache key","status":"passed","testResultsByEnv":{"default":"dcb3534e9d6bed1c59a9c7414b2addfd"}}
