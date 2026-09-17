@@ -1,6 +1,7 @@
 import { Calendar, ClipboardList, FileText, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 
+import { CatgirlInlineImage } from '@/components/catgirl/catgirl-inline-image';
 import { MyRegistrationStatusBadge } from '@/components/registration/my-registration-status-badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -71,7 +72,9 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
           </p>
         )}
 
-        <div className="mb-5 space-y-2">
+        <CatgirlInlineImage size="sm" linkAttribution={false} />
+
+        <div className="space-y-2">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <ClipboardList className="text-kpi-gray-mid h-4 w-4 shrink-0" />
             <span className="truncate">{form.groupName}</span>
@@ -99,7 +102,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
           </div>
         </div>
 
-        <div className="mt-auto flex flex-wrap gap-1.5">
+        <div className="mt-auto flex flex-wrap gap-1.5 pt-2">
           {form.requiresCampaignProgram && (
             <span className="font-body bg-surface text-muted-foreground border-border-subtle inline-flex items-center gap-1 truncate rounded-full border px-2.5 py-1 text-xs">
               <FileText className="h-3 w-3 shrink-0" />

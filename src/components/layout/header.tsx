@@ -118,7 +118,21 @@ export function Header({ session }: HeaderProps) {
     >
       <div className="container flex h-full items-center justify-between">
         <Link href="/" className="group flex shrink-0 items-center gap-3">
-          <Image src="/logo.svg" alt="Logo" height={32} width={32} preload />
+          <Image
+            src="/logo.svg"
+            alt="Logo"
+            height={32}
+            width={32}
+            preload
+            className="catgirl:hidden"
+          />
+          <Image
+            src="/logo-catgirl.svg"
+            alt="Logo"
+            height={32}
+            width={32}
+            className="catgirl:block hidden"
+          />
           <div className="flex flex-col justify-center">
             <span className="font-display text-kpi-navy text-lg leading-tight font-semibold">
               {APP_NAME}

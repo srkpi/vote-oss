@@ -3,6 +3,7 @@
 @import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant catgirl (&:is(.catgirl *));
 
 @theme inline {
   --font-display: var(--font-display);
@@ -138,6 +139,16 @@
   --error-bg: #fef2f2;
   --info: var(--kpi-blue-light);
   --info-bg: #eff8ff;
+
+  /* Hero scene (SceneFallback poster + navy-gradient-subtle). RGB triplets
+     (not hex) so they can feed `rgba(var(--x-rgb), alpha)` at each glow's
+     own opacity. Values match the hardcoded colors SceneFallback used
+     before this was pulled into variables — see catgirl-mode overrides
+     below for the pink equivalents. */
+  --scene-gradient-from: #1c396e;
+  --scene-gradient-to: #1d4480;
+  --scene-glow-accent-rgb: 0, 138, 207;
+  --scene-glow-mid-rgb: 16, 98, 163;
 
   /* Typography */
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -581,7 +592,7 @@ html {
 }
 
 .navy-gradient-subtle {
-  background: linear-gradient(135deg, #1c396e 0%, #1d4480 100%);
+  background: linear-gradient(135deg, var(--scene-gradient-from) 0%, var(--scene-gradient-to) 100%);
 }
 
 .orange-gradient {
@@ -707,24 +718,96 @@ html {
   --info-bg: oklch(0.606 0.143 241.6 / 16%);
 
   --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow-sm:
-    0 1px 4px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
-  --shadow-md:
-    0 4px 12px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.3);
-  --shadow-lg:
-    0 10px 30px rgb(0 0 0 / 0.6), 0 4px 8px rgb(0 0 0 / 0.4);
-  --shadow-xl:
-    0 20px 50px rgb(0 0 0 / 0.7), 0 8px 16px rgb(0 0 0 / 0.4);
-  --shadow-card:
-    0 2px 8px rgb(0 0 0 / 0.4), 0 0 1px rgb(255 255 255 / 0.06);
-  --shadow-card-hover:
-    0 8px 24px rgb(0 0 0 / 0.5), 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-sm: 0 1px 4px rgb(0 0 0 / 0.4), 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 30px rgb(0 0 0 / 0.6), 0 4px 8px rgb(0 0 0 / 0.4);
+  --shadow-xl: 0 20px 50px rgb(0 0 0 / 0.7), 0 8px 16px rgb(0 0 0 / 0.4);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.4), 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-card-hover: 0 8px 24px rgb(0 0 0 / 0.5), 0 0 1px rgb(255 255 255 / 0.08);
   --shadow-button: 0 2px 8px rgb(0 0 0 / 0.5);
   --shadow-button-accent: 0 2px 8px rgb(240 125 0 / 0.45);
 }
 
 .dark .bg-kpi-navy {
   background-color: #1c396e;
+}
+
+/* ===================== CATGIRL MODE ===================== */
+/* Secret opt-in reskin toggled at /catgirl (see hooks/use-catgirl-mode.tsx).
+   Overrides the same brand-color variables `.dark` above already owns, so
+   every component reading --kpi-navy / --kpi-blue-* / --surface / etc.
+   follows automatically — no component-level color changes needed beyond
+   the header logo, the hero 3D scene, and the Nekosia image slots, which
+   need real markup/geometry changes of their own and are handled in their
+   respective files. Placed after `.dark` so light+catgirl wins over light
+   on source order alone; `.dark.catgirl` below is a compound selector so it
+   reliably wins over both `.dark` and `.catgirl` regardless of order. */
+
+.catgirl {
+  --kpi-navy: #9d174d;
+  --kpi-navy-hover: #831843;
+  --kpi-blue-light: #ec4899;
+  --kpi-blue-mid: #e11d48;
+  --kpi-blue-dark: #be123c;
+  --kpi-blue-deep: #881337;
+
+  --surface: #fdf2f8;
+  --surface-hover: #fce7f3;
+  --border-color: #fbcfe8;
+  --border-subtle: #fce7f3;
+
+  --info: var(--kpi-blue-light);
+  --info-bg: #fdf2f8;
+
+  /* Same narrow hue cluster the default blue chart palette uses (it leans on
+     lightness/chroma rather than hue to tell series apart), just rotated
+     from ~251–265° (blue) to ~330–350° (pink) — legibility is unchanged. */
+  --chart-1: oklch(0.809 0.105 350);
+  --chart-2: oklch(0.623 0.214 350);
+  --chart-3: oklch(0.546 0.245 345);
+  --chart-4: oklch(0.488 0.243 340);
+  --chart-5: oklch(0.424 0.199 335);
+
+  --shadow-xs: 0 1px 2px rgb(157 23 77 / 0.04);
+  --shadow-sm: 0 1px 4px rgb(157 23 77 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 12px rgb(157 23 77 / 0.08), 0 2px 4px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 10px 30px rgb(157 23 77 / 0.1), 0 4px 8px rgb(0 0 0 / 0.06);
+  --shadow-xl: 0 20px 50px rgb(157 23 77 / 0.14), 0 8px 16px rgb(0 0 0 / 0.06);
+  --shadow-card: 0 2px 8px rgb(157 23 77 / 0.06), 0 0 1px rgb(157 23 77 / 0.08);
+  --shadow-card-hover: 0 8px 24px rgb(157 23 77 / 0.12), 0 0 1px rgb(157 23 77 / 0.1);
+  --shadow-button: 0 2px 8px rgb(157 23 77 / 0.25);
+
+  --scene-gradient-from: #3d0c2b;
+  --scene-gradient-to: #7a1f56;
+  --scene-glow-accent-rgb: 219, 39, 119;
+  --scene-glow-mid-rgb: 190, 24, 93;
+}
+
+/* --kpi-navy above is also used as a solid background (buttons, badges,
+   selected states — see button.tsx, badge.tsx, etc.), so it can't just
+   track dark mode's lightened text-legibility value the way `.dark
+   .bg-kpi-navy` below pins it back to the light hex. Same fix here: keep
+   solid navy-slot backgrounds on the rich, dark catgirl pink in dark mode
+   too, even though --kpi-navy itself goes light for text contrast. */
+.dark.catgirl,
+.dark .catgirl {
+  --kpi-navy: oklch(0.72 0.16 350);
+  --kpi-navy-hover: oklch(0.78 0.15 350);
+  --kpi-blue-mid: oklch(0.66 0.19 340);
+  --kpi-blue-dark: oklch(0.6 0.19 335);
+  --kpi-blue-deep: oklch(0.55 0.18 330);
+
+  --surface: oklch(0.17 0.02 340);
+  --surface-hover: oklch(0.22 0.03 340);
+  --border-color: oklch(1 0 0 / 14%);
+  --border-subtle: oklch(1 0 0 / 7%);
+
+  --info-bg: oklch(0.5 0.15 340 / 16%);
+}
+
+.dark.catgirl .bg-kpi-navy,
+.dark .catgirl .bg-kpi-navy {
+  background-color: #9d174d;
 }
 
 @layer base {

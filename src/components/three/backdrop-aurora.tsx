@@ -9,37 +9,40 @@ import {
   auroraFragmentShaderLow,
   auroraVertexShader,
 } from '@/lib/three/aurora-shader';
+import { CATGIRL_SCENE_COLORS } from '@/lib/three/catgirl-scene-theme';
 
 const BACKDROP_DEPTH = -9;
+
+const DEFAULT_AURORA_COLORS = {
+  deep: '#0a1f42',
+  base: '#1c396e',
+  accent: '#008acf',
+  highlight: '#5fc4f5',
+};
 
 interface AuroraBackdropProps {
   quality: 'high' | 'low';
   intensity?: number;
+  catgirl?: boolean;
 }
 
-/**
- * Full-frame background plane rendered with the aurora shader (see
- * `aurora-shader.ts` — compiled and pixel-checked against a real WebGL2
- * pipeline before being wired in here; see the Puppeteer-driven check
- * described alongside it). Sized every frame via
- * `viewport.getCurrentViewport`, so it always exactly fills the camera's
- * frustum at `BACKDROP_DEPTH` regardless of aspect ratio or FOV changes
- * between the hero/aside/ambient placements.
- *
- * Just a thin `key`-remounting wrapper around the real mesh: switching
- * `quality` needs a different compiled fragment shader, and remounting a
- * lightweight plane is simpler and safer than mutating `fragmentShader` +
- * `needsUpdate` on a live material.
- */
-export function AuroraBackdrop({ quality, intensity = 1 }: AuroraBackdropProps) {
-  return <AuroraBackdropMesh key={quality} quality={quality} intensity={intensity} />;
+export function AuroraBackdrop({ quality, intensity = 1, catgirl = false }: AuroraBackdropProps) {
+  return (
+    <AuroraBackdropMesh
+      key={`${quality}-${catgirl}`}
+      quality={quality}
+      intensity={intensity}
+      catgirl={catgirl}
+    />
+  );
 }
 
-function AuroraBackdropMesh({ quality, intensity = 1 }: AuroraBackdropProps) {
+function AuroraBackdropMesh({ quality, intensity = 1, catgirl = false }: AuroraBackdropProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   const fragmentShader = quality === 'high' ? auroraFragmentShaderHigh : auroraFragmentShaderLow;
+  const colors = catgirl ? CATGIRL_SCENE_COLORS.aurora : DEFAULT_AURORA_COLORS;
 
   // Uniforms are only ever mutated in place (below, inside useFrame) via the
   // ref to the live material — this object itself never needs to change
@@ -47,10 +50,10 @@ function AuroraBackdropMesh({ quality, intensity = 1 }: AuroraBackdropProps) {
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uColorDeep: { value: new THREE.Color('#0a1f42') },
-      uColorBase: { value: new THREE.Color('#1c396e') },
-      uColorAccent: { value: new THREE.Color('#008acf') },
-      uColorHighlight: { value: new THREE.Color('#5fc4f5') },
+      uColorDeep: { value: new THREE.Color(colors.deep) },
+      uColorBase: { value: new THREE.Color(colors.base) },
+      uColorAccent: { value: new THREE.Color(colors.accent) },
+      uColorHighlight: { value: new THREE.Color(colors.highlight) },
       uIntensity: { value: intensity },
       uAspect: { value: 1 },
     }),

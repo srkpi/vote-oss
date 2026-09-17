@@ -359,3 +359,14 @@ export const WINNING_CONDITION_QUORUM_MAX = 10_000;
 export const AXIS_STYLE = { fontSize: 11, fill: '#94a3b8' } as const;
 
 export const BOT_REQUEST_HEADER = 'x-bot-request';
+
+export const LOCAL_STORAGE_CATGIRL_MODE_KEY = 'catgirl_mode';
+export const LOCAL_STORAGE_CATGIRL_IMAGES_KEY = 'catgirl_image_pool';
+/** https://nekosia.cat/documentation?page=api-endpoints */
+export const NEKOSIA_API_BASE_URL = 'https://api.nekosia.cat/api/v1';
+export const NEKOSIA_IMAGE_CATEGORY = 'catgirl';
+export const NEKOSIA_IMAGE_TAG = 'cute';
+export const NEKOSIA_MAX_COUNT_PER_REQUEST = 20;
+export const CATGIRL_IMAGE_POOL_TARGET_SIZE = 100;
+export const CATGIRL_IMAGE_POOL_REFILL_THRESHOLD = 20;
+export const CATGIRL_IMAGE_POOL_MAX_FETCH_ATTEMPTS = 8;

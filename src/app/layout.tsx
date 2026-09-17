@@ -3,9 +3,10 @@ import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { Bitter, Onest } from 'next/font/google';
 
+import { CatgirlModeProvider } from '@/hooks/use-catgirl-mode';
 import { ThemeProvider } from '@/hooks/use-theme';
 import { APP_NAME, APP_URL } from '@/lib/config/client';
-import { LOCAL_STORAGE_THEME_KEY } from '@/lib/constants';
+import { LOCAL_STORAGE_CATGIRL_MODE_KEY, LOCAL_STORAGE_THEME_KEY } from '@/lib/constants';
 import { cn } from '@/lib/utils/common';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 import { AvatarDeleteDialogProvider } from '@/providers/avatar-delete-dialog-provider';
@@ -74,6 +75,20 @@ const THEME_INIT_SCRIPT = `
   })();
 `;
 
+// Sets the `.catgirl` class before first paint — same reasoning as
+// THEME_INIT_SCRIPT above: everything the class controls (colors, the
+// header logo, the hero scene fallback) must already be correct in the very
+// first frame, not flipped in afterward by React once it hydrates.
+const CATGIRL_INIT_SCRIPT = `
+  (function() {
+    try {
+      if (localStorage.getItem('${LOCAL_STORAGE_CATGIRL_MODE_KEY}') === '1') {
+        document.documentElement.classList.add('catgirl');
+      }
+    } catch (e) {}
+  })();
+`;
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -83,13 +98,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: CATGIRL_INIT_SCRIPT }} />
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
       </head>
       <body>
         <ThemeProvider>
-          <ToastProvider>
-            <AvatarDeleteDialogProvider>{children}</AvatarDeleteDialogProvider>
-          </ToastProvider>
+          <CatgirlModeProvider>
+            <ToastProvider>
+              <AvatarDeleteDialogProvider>{children}</AvatarDeleteDialogProvider>
+            </ToastProvider>
+          </CatgirlModeProvider>
         </ThemeProvider>
       </body>
     </html>

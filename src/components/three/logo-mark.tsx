@@ -2,10 +2,13 @@
 
 import { Float, MeshTransmissionMaterial } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
+import { createCatgirlFaceGeometry } from '@/lib/three/catgirl-face-geometry';
+import { CATGIRL_SCENE_COLORS } from '@/lib/three/catgirl-scene-theme';
 import { createLogoMarkGeometry } from '@/lib/three/logo-geometry';
+import type { CatgirlImage } from '@/types/catgirl';
 
 import type { PointerRef } from './pointer-parallax';
 
@@ -13,6 +16,54 @@ const NAVY = '#13294f';
 const BLUE = '#008acf';
 const BLUE_LIGHT = '#5fc4f5';
 const GLASS_WHITE = '#f4f8ff';
+
+const MAX_PHOTO_LONG_SIDE = 2.5;
+const PHOTO_MAT_MARGIN = 0.16;
+const PHOTO_GLOW_MARGIN = 0.62;
+
+function computePhotoPlaneSize(
+  width: number | undefined,
+  height: number | undefined,
+): [number, number] {
+  const aspect = width && height && height > 0 ? width / height : 1;
+  return aspect >= 1
+    ? [MAX_PHOTO_LONG_SIDE, MAX_PHOTO_LONG_SIDE / aspect]
+    : [MAX_PHOTO_LONG_SIDE * aspect, MAX_PHOTO_LONG_SIDE];
+}
+
+function useCatgirlTexture(url: string | null): THREE.Texture | null {
+  const [result, setResult] = useState<{ url: string; texture: THREE.Texture } | null>(null);
+
+  useEffect(() => {
+    if (!url) return;
+
+    let cancelled = false;
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+
+    loader.load(
+      url,
+      (loaded) => {
+        if (cancelled) {
+          loaded.dispose();
+          return;
+        }
+        loaded.colorSpace = THREE.SRGBColorSpace;
+        loaded.wrapS = THREE.ClampToEdgeWrapping;
+        loaded.wrapT = THREE.ClampToEdgeWrapping;
+        setResult({ url, texture: loaded });
+      },
+      undefined,
+      () => {},
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  return result?.url === url ? result.texture : null;
+}
 
 interface Satellite {
   phase: number;
@@ -47,11 +98,13 @@ interface LogoMarkProps {
    * to state directly where the mark ends up on screen.
    */
   pointerFocus?: { x: number; y: number };
+  catgirl?: boolean;
+  catgirlImage?: CatgirlImage | null;
 }
 
 /**
  * The Vote OSS mark, rebuilt as real 3D geometry (see `logo-geometry.ts`),
- * set inside a frosted white glass disc — the same "icon in a soft
+ * normally set inside a frosted white glass disc — the same "icon in a soft
  * translucent badge" language as `opengraph-image.tsx`. The glass and the
  * tick move together as a single rigid badge (an earlier version spun the
  * tick independently inside a still frame, which read as broken rather than
@@ -61,6 +114,24 @@ interface LogoMarkProps {
  *  - a "hover charge": emissive glow, glass opacity/clearcoat and scale all
  *    ease toward a lit-up state when the pointer is near, and back down
  *    when it isn't — the "effects on hover" the mark is designed around.
+ *
+ * In catgirl mode the mark becomes a floating photo card showing a real
+ * image claimed from the same pool `<CatgirlInlineImage>` draws from
+ * elsewhere on the page (see `useCatgirlImage`) — sized from the image's own
+ * true aspect ratio (`computePhotoPlaneSize`) rather than cropped to a fixed
+ * shape, so nothing about the artwork is ever cut off. The glass disc is
+ * skipped entirely for this state (a circular puck sized for the small line
+ * mark doesn't fit a full-size rectangular photo — see the `showPhoto` check
+ * below); a thin white mat plus a soft glow in the image's own dominant
+ * color (see `colors.main` in `nekosia-client.ts`) frames it instead, and
+ * the whole card tilts slightly toward the pointer independently of the
+ * badge's own tilt (see the `photoTilt` group below) for a little extra
+ * life. A detailed "anime style" face is an illustration, not something
+ * swept tube geometry can produce the way the checkmark mark itself is
+ * built, so this uses real art instead of approximating one. While that
+ * photo is loading (or if it fails — CORS/network), the mark shows
+ * `createCatgirlFaceGeometry`'s simple procedural mark instead (inside the
+ * glass disc again, like the checkmark), so there's never an empty badge.
  *
  * The canvas this renders into is `pointer-events: none` (see
  * `vote-scene-canvas.tsx`) so the mark never steals clicks meant for the
@@ -76,16 +147,48 @@ export function LogoMark({
   scale = 1,
   position = [0, 0, 0],
   pointerFocus = { x: 0, y: 0 },
+  catgirl = false,
+  catgirlImage = null,
 }: LogoMarkProps) {
+  const markColors = catgirl
+    ? CATGIRL_SCENE_COLORS.logoMark
+    : { navy: NAVY, blue: BLUE, blueLight: BLUE_LIGHT, glassWhite: GLASS_WHITE };
+
+  const photoTexture = useCatgirlTexture(catgirl ? (catgirlImage?.url ?? null) : null);
+  const showPhoto = catgirl && photoTexture !== null;
+
   const geometry = useMemo(
     () =>
-      createLogoMarkGeometry({
-        radius: 1,
-        tubeThickness: 0.145,
-        ringSegments: 220,
-        radialSegments: 22,
-      }),
-    [],
+      catgirl
+        ? createCatgirlFaceGeometry({
+            radius: 1,
+            tubeThickness: 0.145,
+            ringSegments: 220,
+            radialSegments: 22,
+          })
+        : createLogoMarkGeometry({
+            radius: 1,
+            tubeThickness: 0.145,
+            ringSegments: 220,
+            radialSegments: 22,
+          }),
+    [catgirl],
+  );
+  const [photoWidth, photoHeight] = useMemo(
+    () => computePhotoPlaneSize(catgirlImage?.width, catgirlImage?.height),
+    [catgirlImage?.width, catgirlImage?.height],
+  );
+  const photoGeometry = useMemo(
+    () => new THREE.PlaneGeometry(photoWidth, photoHeight),
+    [photoWidth, photoHeight],
+  );
+  const photoMatGeometry = useMemo(
+    () => new THREE.PlaneGeometry(photoWidth + PHOTO_MAT_MARGIN, photoHeight + PHOTO_MAT_MARGIN),
+    [photoWidth, photoHeight],
+  );
+  const photoGlowGeometry = useMemo(
+    () => new THREE.PlaneGeometry(photoWidth + PHOTO_GLOW_MARGIN, photoHeight + PHOTO_GLOW_MARGIN),
+    [photoWidth, photoHeight],
   );
   // A shallow puck rather than a flat disc, so it reads as real glass with
   // a visible edge/rim under lighting rather than a paper-thin card.
@@ -96,6 +199,7 @@ export function LogoMark({
   const satellites = useMemo(() => createSatellites(7), []);
 
   const tiltGroup = useRef<THREE.Group>(null);
+  const photoTilt = useRef<THREE.Group>(null);
   const glassRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
   const satelliteRefs = useRef<(THREE.Mesh | null)[]>([]);
@@ -144,6 +248,24 @@ export function LogoMark({
       glassMat.clearcoat = 0.45 + charge.current * 0.3;
     }
 
+    if (photoTilt.current) {
+      const liveliness = 0.35 + charge.current * 0.65;
+      const targetPhotoX = -pointer.y * 0.3 * liveliness;
+      const targetPhotoY = pointer.x * 0.4 * liveliness;
+      photoTilt.current.rotation.x = THREE.MathUtils.damp(
+        photoTilt.current.rotation.x,
+        targetPhotoX,
+        3,
+        clampedDelta,
+      );
+      photoTilt.current.rotation.y = THREE.MathUtils.damp(
+        photoTilt.current.rotation.y,
+        targetPhotoY,
+        3,
+        clampedDelta,
+      );
+    }
+
     // Orbiting satellite nodes: small verified-ballot markers circling the
     // mark on a tilted ellipse.
     const t = state.clock.elapsedTime;
@@ -172,62 +294,92 @@ export function LogoMark({
         floatingRange={[-0.12, 0.12]}
       >
         <group ref={tiltGroup} scale={scale}>
-          {/* Frosted glass frame and the tick move together as one rigid
-              badge under the pointer tilt below — no independent spin on
-              either part. */}
-          <mesh
-            ref={glassRef}
-            geometry={glassGeometry}
-            position={[0, 0, -0.25]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <meshPhysicalMaterial
-              color={GLASS_WHITE}
-              transparent
-              opacity={0.5}
-              roughness={0.5}
-              metalness={0}
-              clearcoat={0.45}
-              clearcoatRoughness={0.28}
-              envMapIntensity={1}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-
-          <mesh geometry={geometry} castShadow={false} receiveShadow={false}>
-            {quality === 'high' ? (
-              <MeshTransmissionMaterial
-                color={BLUE}
-                thickness={0.55}
-                roughness={0.12}
-                transmission={0.94}
-                ior={1.35}
-                chromaticAberration={0.035}
-                anisotropy={0.15}
-                distortion={0.08}
-                distortionScale={0.2}
-                temporalDistortion={0.03}
-                clearcoat={1}
-                clearcoatRoughness={0.1}
-                envMapIntensity={1.6}
-                resolution={256}
-                samples={6}
-              />
-            ) : (
+          {/* The glass disc is sized and shaped for the small line-art mark
+              (checkmark or the catgirl fallback face) it normally houses —
+              a circular puck behind a much larger rectangular photo (see
+              `showPhoto` below) reads as a mismatched leftover shape behind
+              it rather than a frame, so it's skipped for that case; the
+              photo's own mat + glow (below) provide the framing instead. */}
+          {!showPhoto && (
+            <mesh
+              ref={glassRef}
+              geometry={glassGeometry}
+              position={[0, 0, -0.25]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
               <meshPhysicalMaterial
-                ref={materialRef}
-                color={NAVY}
-                metalness={0.62}
-                roughness={0.22}
-                clearcoat={1}
-                clearcoatRoughness={0.14}
-                envMapIntensity={1.5}
-                emissive={BLUE}
-                emissiveIntensity={0.35}
-                reflectivity={0.9}
+                color={markColors.glassWhite}
+                transparent
+                opacity={0.5}
+                roughness={0.5}
+                metalness={0}
+                clearcoat={0.45}
+                clearcoatRoughness={0.28}
+                envMapIntensity={1}
+                side={THREE.DoubleSide}
               />
-            )}
-          </mesh>
+            </mesh>
+          )}
+
+          {showPhoto && photoTexture ? (
+            <group ref={photoTilt}>
+              {/* `toneMapped` left at its default `true` on all three of
+                  these (unlike the satellites/fallback mark, which are
+                  small emissive accents meant to glow) — an un-tonemapped
+                  material reads as much brighter to the scene's Bloom pass
+                  (see `vote-scene-canvas.tsx`, `luminanceThreshold={0.18}`),
+                  which washed out a full-frame photo to overexposed white
+                  well before it would visibly affect a small accent glint. */}
+              <mesh geometry={photoGlowGeometry} position={[0, 0, -0.1]}>
+                <meshBasicMaterial
+                  color={catgirlImage?.color ?? markColors.blue}
+                  transparent
+                  opacity={0.25}
+                />
+              </mesh>
+              <mesh geometry={photoMatGeometry} position={[0, 0, -0.02]}>
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.92} />
+              </mesh>
+              <mesh geometry={photoGeometry} position={[0, 0, 0.02]}>
+                <meshBasicMaterial map={photoTexture} />
+              </mesh>
+            </group>
+          ) : (
+            <mesh geometry={geometry} castShadow={false} receiveShadow={false}>
+              {quality === 'high' ? (
+                <MeshTransmissionMaterial
+                  color={markColors.blue}
+                  thickness={0.55}
+                  roughness={0.12}
+                  transmission={0.94}
+                  ior={1.35}
+                  chromaticAberration={0.035}
+                  anisotropy={0.15}
+                  distortion={0.08}
+                  distortionScale={0.2}
+                  temporalDistortion={0.03}
+                  clearcoat={1}
+                  clearcoatRoughness={0.1}
+                  envMapIntensity={1.6}
+                  resolution={256}
+                  samples={6}
+                />
+              ) : (
+                <meshPhysicalMaterial
+                  ref={materialRef}
+                  color={markColors.navy}
+                  metalness={0.62}
+                  roughness={0.22}
+                  clearcoat={1}
+                  clearcoatRoughness={0.14}
+                  envMapIntensity={1.5}
+                  emissive={markColors.blue}
+                  emissiveIntensity={0.35}
+                  reflectivity={0.9}
+                />
+              )}
+            </mesh>
+          )}
 
           {satellites.map((satellite, i) => (
             <mesh
@@ -239,8 +391,8 @@ export function LogoMark({
             >
               <icosahedronGeometry args={[1, 0]} />
               <meshStandardMaterial
-                color={BLUE_LIGHT}
-                emissive={BLUE_LIGHT}
+                color={markColors.blueLight}
+                emissive={markColors.blueLight}
                 emissiveIntensity={1.4}
                 toneMapped={false}
               />

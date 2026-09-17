@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
+import { CatgirlInlineImage } from '@/components/catgirl/catgirl-inline-image';
 import { ErrorState } from '@/components/common/error-state';
 import { CountdownTimer } from '@/components/elections/countdown-timer';
 import { AccessRestrictions } from '@/components/elections/election-restrictions';
@@ -178,6 +179,7 @@ export default async function ElectionPage({ params }: ElectionPageProps) {
                 <p className="font-body text-foreground text-sm leading-relaxed whitespace-pre-wrap">
                   {election.description}
                 </p>
+                <CatgirlInlineImage size="md" className="mt-4" />
               </div>
             )}
 
