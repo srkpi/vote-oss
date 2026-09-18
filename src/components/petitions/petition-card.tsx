@@ -1,7 +1,7 @@
 import { Clock } from 'lucide-react';
 import Link from 'next/link';
 
-import { CatgirlInlineImage } from '@/components/catgirl/catgirl-inline-image';
+import { CatgirlGallery } from '@/components/catgirl/catgirl-gallery';
 import { Avatar } from '@/components/ui/avatar';
 import { LocalDate } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -51,7 +51,7 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           </p>
         )}
 
-        <CatgirlInlineImage size="sm" linkAttribution={false} />
+        <CatgirlGallery size="sm" linkAttribution={false} />
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-baseline justify-between gap-2">

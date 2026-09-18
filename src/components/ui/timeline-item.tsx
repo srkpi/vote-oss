@@ -6,6 +6,8 @@ interface TimelineItemProps {
 }
 
 export function TimelineItem({ label, value, icon, status }: TimelineItemProps) {
+  const isString = typeof value === 'string';
+
   return (
     <div className="flex items-start gap-3">
       <div
@@ -17,7 +19,11 @@ export function TimelineItem({ label, value, icon, status }: TimelineItemProps) 
         <p className="font-body text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
           {label}
         </p>
-        <p className="font-body text-foreground mt-0.5 text-sm">{value}</p>
+        {isString ? (
+          <p className="font-body text-foreground mt-0.5 text-sm">{value}</p>
+        ) : (
+          <div className="font-body text-foreground mt-0.5 text-sm">{value}</div>
+        )}
       </div>
     </div>
   );

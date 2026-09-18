@@ -113,3 +113,22 @@ export function claimNextCatgirlImage(): CatgirlImage | null {
   }
   return next;
 }
+
+/**
+ * Claims up to `count` images at once — same pool as
+ * `claimNextCatgirlImage`, just batched: one `persistToStorage`/refill
+ * check instead of `count` of them, which matters once a caller
+ * (`useCatgirlGallery`) wants several images up front instead of one.
+ * Returns fewer than `count` (down to zero) if the pool didn't have that
+ * many on hand; a refill is kicked off either way, so a follow-up call —
+ * or the pool's own listeners — has more to work with soon after.
+ */
+export function claimCatgirlImages(count: number): CatgirlImage[] {
+  if (count <= 0) return [];
+  const claimed = pool.splice(0, count);
+  if (claimed.length > 0) persistToStorage();
+  if (pool.length <= CATGIRL_IMAGE_POOL_REFILL_THRESHOLD) {
+    void refillPool();
+  }
+  return claimed;
+}

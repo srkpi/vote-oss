@@ -370,3 +370,70 @@ export const NEKOSIA_MAX_COUNT_PER_REQUEST = 20;
 export const CATGIRL_IMAGE_POOL_TARGET_SIZE = 100;
 export const CATGIRL_IMAGE_POOL_REFILL_THRESHOLD = 20;
 export const CATGIRL_IMAGE_POOL_MAX_FETCH_ATTEMPTS = 8;
+
+/**
+ * How many images `useCatgirlGallery` keeps claimed and ready at once —
+ * comfortably more than any preset's `maxImages` below, so the packing
+ * algorithm (`computeJustifiedGalleryLayout`) always has enough candidates
+ * to fill even a wide container's last row well, and so a resize to a
+ * wider container rarely has to wait on a fresh claim to show more images.
+ */
+export const CATGIRL_GALLERY_BUFFER_SIZE = 8;
+
+/**
+ * Layout parameters per `<CatgirlGallery size="...">`, all in px except
+ * `maxImages`/`maxRows`/`maxPerRow`. See `gallery-layout.ts` for how
+ * `targetHeight`/`minHeight`/`maxHeight` interact — short version:
+ * `targetHeight` is what rows aim for, the min/max are how far justifying
+ * a row is allowed to stretch/shrink it away from that, and `maxHeight` in
+ * particular is deliberately generous (well past `targetHeight`) because
+ * it's also what lets a single vertical image on a narrow (mobile-width)
+ * container grow tall enough to fill that width edge-to-edge rather than
+ * being capped to a short, letterboxed strip.
+ */
+export const CATGIRL_GALLERY_SIZE_PRESETS = {
+  sm: {
+    maxWidthClassName: 'max-w-md',
+    targetHeight: 170,
+    minHeight: 130,
+    maxHeight: 380,
+    maxImages: 3,
+    maxRows: 1,
+    maxPerRow: 3,
+  },
+  md: {
+    maxWidthClassName: 'max-w-xl',
+    targetHeight: 220,
+    minHeight: 150,
+    maxHeight: 440,
+    maxImages: 4,
+    maxRows: 2,
+    maxPerRow: 3,
+  },
+  lg: {
+    maxWidthClassName: 'max-w-3xl',
+    targetHeight: 270,
+    minHeight: 170,
+    maxHeight: 500,
+    maxImages: 5,
+    maxRows: 2,
+    maxPerRow: 4,
+  },
+} as const satisfies Record<
+  string,
+  {
+    maxWidthClassName: string;
+    targetHeight: number;
+    minHeight: number;
+    maxHeight: number;
+    maxImages: number;
+    maxRows: number;
+    maxPerRow: number;
+  }
+>;
+/** Gap between images in the same row, and between rows, in px. One
+ *  constant rather than per-preset — the presets already vary row height
+ *  substantially; varying the gap too didn't read as intentional. */
+export const CATGIRL_GALLERY_GAP = 12;
+
+export type CatgirlGallerySize = keyof typeof CATGIRL_GALLERY_SIZE_PRESETS;

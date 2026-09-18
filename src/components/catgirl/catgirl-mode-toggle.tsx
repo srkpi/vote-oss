@@ -25,7 +25,7 @@ export function CatgirlModeToggle() {
       aria-checked={enabled}
       onClick={handleClick}
       className={cn(
-        'group flex max-w-sm items-center gap-4 rounded-full border-2 p-2 pr-6 transition-colors duration-300',
+        'group flex max-w-sm items-center gap-4 rounded-full border-2 p-2 transition-colors duration-300',
         'focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:outline-none',
         enabled
           ? 'border-pink-300 bg-linear-to-r from-pink-500 to-rose-500 shadow-[0_8px_24px_-6px_rgba(219,39,119,0.55)]'

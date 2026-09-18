@@ -1,6 +1,7 @@
 import { Calendar, Crown, FileText } from 'lucide-react';
 import Link from 'next/link';
 
+import { CatgirlGallery } from '@/components/catgirl/catgirl-gallery';
 import { Avatar } from '@/components/ui/avatar';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -79,8 +80,8 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         )}
       />
 
-      <div className="flex h-full flex-col p-6">
-        <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="flex h-full flex-col space-y-3 p-6">
+        <div className="flex items-start justify-between gap-3">
           <StatusBadge status={election.status} />
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
             {isNonAnonymous && <StatusBadge status="nonanonymous" />}
@@ -89,14 +90,16 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 
         <h3
           className={cn(
-            'font-display text-foreground mb-3 text-xl leading-snug font-semibold',
+            'font-display text-foreground text-xl leading-snug font-semibold',
             'group-hover:text-kpi-navy line-clamp-2 wrap-break-word transition-colors duration-200',
           )}
         >
           {election.title}
         </h3>
 
-        <div className="mb-5 space-y-2">
+        <CatgirlGallery size="sm" linkAttribution={false} />
+
+        <div className="space-y-2">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Calendar className="text-kpi-gray-mid h-4 w-4 shrink-0" />
             <span>
@@ -129,7 +132,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           </div>
         </div>
 
-        <div className="mb-5 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {shownChoices.map((choice) => {
             const isWinner = choice.winner === true;
             return (

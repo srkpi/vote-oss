@@ -1,6 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 
-import { CatgirlInlineImage } from '@/components/catgirl/catgirl-inline-image';
+import { CatgirlGallery } from '@/components/catgirl/catgirl-gallery';
 import { QuillRenderer } from '@/components/ui/quill/quill-renderer';
 import { cn } from '@/lib/utils/common';
 import type { FaqItemData } from '@/types/faq';
@@ -44,7 +44,7 @@ export function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemPro
       {isOpen && (
         <div className="border-border-subtle bg-card border-t px-4 py-3 sm:px-5 sm:py-4">
           <QuillRenderer content={item.content} />
-          <CatgirlInlineImage size="sm" className="mt-3" />
+          <CatgirlGallery size="lg" className="mt-3" />
         </div>
       )}
     </div>
