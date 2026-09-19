@@ -19,7 +19,7 @@ import {
 import type { CatgirlImage } from '@/types/catgirl';
 
 export interface UseCatgirlGalleryResult {
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefCallback<HTMLDivElement>;
   rows: GalleryLayoutRow<CatgirlImage>[];
   enabled: boolean;
 }

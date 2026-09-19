@@ -54,8 +54,18 @@ function persistToStorage(): void {
   } catch {}
 }
 
+function ensureStorageLoaded(): boolean {
+  // Never mark as loaded on the server, where there is no storage to read.
+  if (storageLoaded || typeof window === 'undefined') return false;
+  storageLoaded = true;
+  pool = loadFromStorage();
+  return true;
+}
+
 async function refillPool(): Promise<void> {
   if (refillInFlight) return refillInFlight;
+
+  ensureStorageLoaded();
 
   refillInFlight = (async () => {
     let attempts = 0;
@@ -92,21 +102,19 @@ async function refillPool(): Promise<void> {
 }
 
 export function ensureCatgirlImagePoolReady(): void {
-  if (!storageLoaded) {
-    storageLoaded = true;
-    pool = loadFromStorage();
-    if (pool.length > 0) notify();
-  }
+  if (ensureStorageLoaded() && pool.length > 0) notify();
   if (pool.length <= CATGIRL_IMAGE_POOL_REFILL_THRESHOLD) {
     void refillPool();
   }
 }
 
 export function getCatgirlImagePoolSize(): number {
+  ensureStorageLoaded();
   return pool.length;
 }
 
 export function claimNextCatgirlImage(): CatgirlImage | null {
+  ensureStorageLoaded();
   const next = pool.shift() ?? null;
   if (next) {
     persistToStorage();
@@ -121,6 +129,7 @@ export function claimNextCatgirlImage(): CatgirlImage | null {
 
 export function claimCatgirlImages(count: number): CatgirlImage[] {
   if (count <= 0) return [];
+  ensureStorageLoaded();
   const claimed = pool.splice(0, count);
   if (claimed.length > 0) persistToStorage();
   if (pool.length <= CATGIRL_IMAGE_POOL_REFILL_THRESHOLD) {
