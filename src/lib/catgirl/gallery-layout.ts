@@ -1,7 +1,8 @@
 /**
  * "Justified gallery" packing — the same family of algorithm behind photo
  * grids like Google Photos or Flickr's classic layout, adapted for a small
- * (1–5 image), self-contained widget rather than an infinite-scroll wall.
+ * (1–5 image), self-contained widget — and, with `trailingRow: 'hold'`, for
+ * the ever-growing feed on /catgirl (see `use-catgirl-feed.ts`).
  *
  * The problem this solves: Nekosia images come back in all sorts of aspect
  * ratios, but mostly tall/vertical ones (per the `catgirl` category). A
@@ -32,7 +33,9 @@
  * buffer claimed ahead of time (see `use-catgirl-gallery.ts`), "ragged
  * last row" isn't really a real state here the way it is for an
  * infinite-scroll wall, and always justifying means the widget never ends
- * on an awkward gap.
+ * on an awkward gap. A wall that keeps growing is the exception: there the
+ * last row genuinely is unfinished, so `trailingRow: 'hold'` leaves it out
+ * until later items complete it.
  */
 
 /** Anything with a known intrinsic size can be laid out — doesn't have to
@@ -85,6 +88,15 @@ export interface GalleryLayoutOptions {
    *  very narrow (tall) images, which can otherwise keep fitting well past
    *  what looks like a comfortable row — see the module doc comment. */
   maxPerRow: number;
+  /** What happens to the trailing row — the one that's still short of a
+   *  full row's worth of width when the items run out. `'justify'` (the
+   *  default) stretches it like any other row: right for a fixed-size
+   *  widget that never grows. `'hold'` leaves it out of the result until
+   *  more items complete it: right for a feed that keeps appending, where
+   *  justifying a half-built row would resize its images on every batch.
+   *  With `'hold'`, every row returned is final — appending items never
+   *  changes a row that was already returned. */
+  trailingRow?: 'justify' | 'hold';
 }
 
 /**
@@ -119,6 +131,7 @@ export function computeJustifiedGalleryLayout<T extends GalleryLayoutSource>(
   options: GalleryLayoutOptions,
 ): GalleryLayoutRow<T>[] {
   const { targetHeight, minHeight, maxHeight, gap, maxImages, maxRows, maxPerRow } = options;
+  const trailingRow = options.trailingRow ?? 'justify';
   if (containerWidth <= 0 || maxImages <= 0 || maxRows <= 0 || maxPerRow <= 0) return [];
 
   const rows: GalleryLayoutRow<T>[] = [];
@@ -187,7 +200,7 @@ export function computeJustifiedGalleryLayout<T extends GalleryLayoutSource>(
     }
   }
 
-  if (rows.length < maxRows) finalizeRow();
+  if (trailingRow === 'justify' && rows.length < maxRows) finalizeRow();
 
   return rows;
 }

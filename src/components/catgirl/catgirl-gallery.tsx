@@ -89,7 +89,7 @@ export function CatgirlGallery({ size = 'lg', className, loading = 'lazy' }: Cat
   );
 }
 
-function CatgirlGalleryImage({
+export function CatgirlGalleryImage({
   box,
   status,
   loading,

@@ -436,4 +436,8 @@ export const CATGIRL_GALLERY_SIZE_PRESETS = {
  *  substantially; varying the gap too didn't read as intentional. */
 export const CATGIRL_GALLERY_GAP = 12;
 
+export const CATGIRL_FEED_BATCH_SIZE = 12;
+export const CATGIRL_FEED_PREFETCH_MARGIN_PX = 800;
+export const CATGIRL_FEED_STALL_TIMEOUT_MS = 10_000;
+
 export type CatgirlGallerySize = keyof typeof CATGIRL_GALLERY_SIZE_PRESETS;
