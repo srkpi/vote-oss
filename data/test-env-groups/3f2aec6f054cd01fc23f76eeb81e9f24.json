@@ -1,1 +1,1 @@
-{"id":"3f2aec6f054cd01fc23f76eeb81e9f24","fullName":"vote-oss:src/__tests__/lib/jwt.test.ts#jwt verifyAccessToken rejects a malformed token","name":"rejects a malformed token","status":"passed","testResultsByEnv":{"default":"abaee2d3a2a278a22af050238464c999"}}
+{"id":"3f2aec6f054cd01fc23f76eeb81e9f24","fullName":"vote-oss:src/__tests__/lib/jwt.test.ts#jwt verifyAccessToken rejects a malformed token","name":"rejects a malformed token","status":"passed","testResultsByEnv":{"default":"34ed624e926f2fb70f622214f2588d58"}}
