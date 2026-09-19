@@ -1,6 +1,13 @@
 'use client';
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useSyncExternalStore,
+} from 'react';
 
 import { ensureCatgirlImagePoolReady } from '@/lib/catgirl/image-pool';
 import { LOCAL_STORAGE_CATGIRL_MODE_KEY } from '@/lib/constants';
@@ -13,32 +20,48 @@ interface CatgirlModeContextValue {
 
 const CatgirlModeContext = createContext<CatgirlModeContextValue | null>(null);
 
-function applyCatgirlClass(enabled: boolean) {
-  document.documentElement.classList.toggle('catgirl', enabled);
+const listeners = new Set<() => void>();
+
+function getSnapshot(): boolean {
+  return document.documentElement.classList.contains('catgirl');
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function emitChange(): void {
+  for (const listener of listeners) listener();
+}
+
+function applyCatgirlMode(next: boolean): void {
+  document.documentElement.classList.toggle('catgirl', next);
+  try {
+    window.localStorage.setItem(LOCAL_STORAGE_CATGIRL_MODE_KEY, next ? '1' : '0');
+  } catch {}
+  emitChange();
+  if (next) ensureCatgirlImagePoolReady();
 }
 
 export function CatgirlModeProvider({ children }: { children: ReactNode }) {
-  const [enabled, setEnabledState] = useState(false);
+  const enabled = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   useEffect(() => {
-    const isEnabled = document.documentElement.classList.contains('catgirl');
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setEnabledState(isEnabled);
-    if (isEnabled) ensureCatgirlImagePoolReady();
-  }, []);
+    if (enabled) ensureCatgirlImagePoolReady();
+  }, [enabled]);
 
   const setEnabled = useCallback((next: boolean) => {
-    setEnabledState(next);
-    applyCatgirlClass(next);
-    try {
-      window.localStorage.setItem(LOCAL_STORAGE_CATGIRL_MODE_KEY, next ? '1' : '0');
-    } catch {}
-    if (next) ensureCatgirlImagePoolReady();
+    applyCatgirlMode(next);
   }, []);
 
   const toggle = useCallback(() => {
-    setEnabled(!enabled);
-  }, [enabled, setEnabled]);
+    applyCatgirlMode(!enabled);
+  }, [enabled]);
 
   return (
     <CatgirlModeContext.Provider value={{ enabled, setEnabled, toggle }}>

@@ -26,7 +26,12 @@ export function subscribeCatgirlImagePool(listener: () => void): () => void {
 function isCatgirlImage(value: unknown): value is CatgirlImage {
   if (typeof value !== 'object' || value === null) return false;
   const v = value as Record<string, unknown>;
-  return typeof v.id === 'string' && typeof v.url === 'string' && typeof v.color === 'string';
+  return (
+    typeof v.id === 'string' &&
+    typeof v.url === 'string' &&
+    typeof v.originalUrl === 'string' &&
+    typeof v.color === 'string'
+  );
 }
 
 function loadFromStorage(): CatgirlImage[] {
@@ -114,15 +119,6 @@ export function claimNextCatgirlImage(): CatgirlImage | null {
   return next;
 }
 
-/**
- * Claims up to `count` images at once — same pool as
- * `claimNextCatgirlImage`, just batched: one `persistToStorage`/refill
- * check instead of `count` of them, which matters once a caller
- * (`useCatgirlGallery`) wants several images up front instead of one.
- * Returns fewer than `count` (down to zero) if the pool didn't have that
- * many on hand; a refill is kicked off either way, so a follow-up call —
- * or the pool's own listeners — has more to work with soon after.
- */
 export function claimCatgirlImages(count: number): CatgirlImage[] {
   if (count <= 0) return [];
   const claimed = pool.splice(0, count);

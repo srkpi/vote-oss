@@ -43,8 +43,8 @@ function extractApiImages(response: NekosiaApiResponse): NekosiaApiImage[] {
 }
 
 function toCatgirlImage(raw: NekosiaApiImage): CatgirlImage {
-  const compressed = raw.image.compressed;
-  const compressedMeta = raw.metadata.compressed;
+  const { compressed, original } = raw.image;
+  const { compressed: compressedMeta, original: originalMeta } = raw.metadata;
   const artist = raw.attribution?.artist ?? null;
 
   return {
@@ -52,6 +52,9 @@ function toCatgirlImage(raw: NekosiaApiImage): CatgirlImage {
     url: compressed.url,
     width: compressedMeta.width,
     height: compressedMeta.height,
+    originalUrl: original.url,
+    originalWidth: originalMeta.width,
+    originalHeight: originalMeta.height,
     color: raw.colors?.main ?? '#fce7f3',
     artistName: artist?.username ?? null,
     artistProfileUrl: artist?.profile ?? null,

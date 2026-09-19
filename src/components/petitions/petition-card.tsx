@@ -22,10 +22,9 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
   const isClosed = petition.status === 'closed';
 
   return (
-    <Link
-      href={`/petitions/${petition.id}`}
+    <div
       className={cn(
-        'group bg-card block rounded-xl',
+        'group bg-card relative rounded-xl',
         'border-border-color border',
         'shadow-card hover:shadow-card-hover',
         'transition-all duration-300 hover:-translate-y-1',
@@ -33,6 +32,15 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
+      <Link
+        href={`/petitions/${petition.id}`}
+        className={cn(
+          'absolute inset-0 z-0 rounded-xl',
+          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+        )}
+        aria-label={petition.title}
+      />
+
       <div className="flex h-full min-w-0 flex-col space-y-4 p-5">
         <div className="flex flex-wrap items-center gap-2">
           {isPending && <StatusBadge status="pending" />}
@@ -51,7 +59,7 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           </p>
         )}
 
-        <CatgirlGallery size="sm" linkAttribution={false} />
+        <CatgirlGallery size="sm" />
 
         <div className="mt-auto space-y-1.5">
           <div className="flex items-baseline justify-between gap-2">
@@ -89,6 +97,6 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

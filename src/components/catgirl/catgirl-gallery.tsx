@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { CatgirlAttribution } from '@/components/catgirl/catgirl-attribution';
+import { CatgirlLightbox } from '@/components/catgirl/catgirl-lightbox';
 import { useCatgirlGallery } from '@/hooks/use-catgirl-gallery';
 import type { GalleryLayoutBox } from '@/lib/catgirl/gallery-layout';
 import { CATGIRL_GALLERY_GAP, CATGIRL_GALLERY_SIZE_PRESETS } from '@/lib/constants';
@@ -12,11 +13,6 @@ import type { CatgirlImage } from '@/types/catgirl';
 interface CatgirlGalleryProps {
   size?: keyof typeof CATGIRL_GALLERY_SIZE_PRESETS;
   className?: string;
-  /** Link each image's attribution chip to the artist's profile/source.
-   *  Turn off wherever the gallery already sits inside its own `<a>`/
-   *  `<Link>` (a card, say) — nested anchors are invalid HTML and Next's
-   *  `Link` doesn't handle them gracefully. */
-  linkAttribution?: boolean;
   /** Passed straight to every `<img>`. Default `lazy` fits the common case
    *  of a gallery placed further down a page or repeated across a list of
    *  cards; pass `eager` for a gallery that *is* a page's primary content
@@ -35,12 +31,7 @@ interface CatgirlGalleryProps {
  * catgirl mode is off, so it drops into any of its call sites the same way
  * a single conditional image component would.
  */
-export function CatgirlGallery({
-  size = 'lg',
-  className,
-  linkAttribution = true,
-  loading = 'lazy',
-}: CatgirlGalleryProps) {
+export function CatgirlGallery({ size = 'lg', className, loading = 'lazy' }: CatgirlGalleryProps) {
   const { containerRef, rows, enabled } = useCatgirlGallery(size);
   const preset = CATGIRL_GALLERY_SIZE_PRESETS[size];
   // Keyed by image id rather than owned by each box's own component: a
@@ -80,7 +71,6 @@ export function CatgirlGallery({
                     key={box.item.id}
                     box={box}
                     status={imageStatus[box.item.id]}
-                    linkAttribution={linkAttribution}
                     loading={loading}
                     onLoad={() =>
                       setImageStatus((current) => ({ ...current, [box.item.id]: 'loaded' }))
@@ -102,44 +92,51 @@ export function CatgirlGallery({
 function CatgirlGalleryImage({
   box,
   status,
-  linkAttribution,
   loading,
   onLoad,
   onError,
 }: {
   box: GalleryLayoutBox<CatgirlImage>;
   status: 'loaded' | 'error' | undefined;
-  linkAttribution: boolean;
   loading: 'lazy' | 'eager';
   onLoad: () => void;
   onError: () => void;
 }) {
   const { item: image } = box;
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   return (
     <figure
-      className="relative shrink-0 overflow-hidden rounded-2xl shadow-[0_8px_24px_-12px_rgba(157,23,77,0.35)] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(157,23,77,0.45)]"
+      className="relative z-10 shrink-0 overflow-hidden rounded-2xl shadow-[0_8px_24px_-12px_rgba(157,23,77,0.35)] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(157,23,77,0.45)]"
       style={{ width: box.width, height: box.height }}
     >
-      {/* Filled with the image's own dominant color (from Nekosia) while
-          it loads, and left in place if it fails — a themed placeholder
-          instead of a blank box or a broken-image glyph either way. */}
       <div className="absolute inset-0" style={{ backgroundColor: image.color }} aria-hidden />
       {status !== 'error' && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={image.url}
-          alt="Catgirl"
-          loading={loading}
+        <button
+          type="button"
+          onClick={() => setLightboxOpen(true)}
           className={cn(
-            'absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-500',
-            status === 'loaded' ? 'opacity-100' : 'opacity-0',
+            'absolute inset-0 block h-full w-full cursor-zoom-in',
+            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
           )}
-          onLoad={onLoad}
-          onError={onError}
-        />
+          aria-label="Переглянути зображення на весь екран"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image.url}
+            alt="Catgirl"
+            loading={loading}
+            className={cn(
+              'h-full w-full object-contain object-center transition-opacity duration-500',
+              status === 'loaded' ? 'opacity-100' : 'opacity-0',
+            )}
+            onLoad={onLoad}
+            onError={onError}
+          />
+        </button>
       )}
-      <CatgirlAttribution image={image} linkAttribution={linkAttribution} />
+      <CatgirlAttribution image={image} />
+      {lightboxOpen && <CatgirlLightbox image={image} onClose={() => setLightboxOpen(false)} />}
     </figure>
   );
 }

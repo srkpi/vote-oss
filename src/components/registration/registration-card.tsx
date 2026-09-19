@@ -25,10 +25,9 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
   const actionable = form.eligible && isOpen;
 
   return (
-    <Link
-      href={`/registration/${form.id}`}
+    <div
       className={cn(
-        'group bg-card block h-full overflow-hidden rounded-xl',
+        'group bg-card relative h-full overflow-hidden rounded-xl',
         'border-border-color border',
         'shadow-card',
         'hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1',
@@ -37,6 +36,15 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
+      <Link
+        href={`/registration/${form.id}`}
+        className={cn(
+          'absolute inset-0 z-0 rounded-xl',
+          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+        )}
+        aria-label={form.title}
+      />
+
       <div
         className={cn(
           'h-1',
@@ -72,7 +80,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
           </p>
         )}
 
-        <CatgirlGallery size="sm" linkAttribution={false} />
+        <CatgirlGallery size="sm" />
 
         <div className="mt-auto">
           <div className="space-y-2">
@@ -125,7 +133,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

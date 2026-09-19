@@ -13,11 +13,6 @@ interface ElectionCardProps {
   index?: number;
 }
 
-/**
- * Sort choices for display in the card.
- * For closed elections with tally data: winner(s) first, then by votes desc, then by position.
- * For other elections: original position order.
- */
 function sortedChoicesForDisplay(election: Election) {
   const hasTally = election.choices.some((c) => c.winner !== undefined);
 
@@ -52,10 +47,9 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
   const voteStatus = election.voteStatus;
 
   return (
-    <Link
-      href={`/elections/${election.id}`}
+    <div
       className={cn(
-        'group block',
+        'group relative',
         'bg-card rounded-xl',
         'border-border-color border',
         'shadow-card',
@@ -67,7 +61,15 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       )}
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
-      {/* Status stripe */}
+      <Link
+        href={`/elections/${election.id}`}
+        className={cn(
+          'absolute inset-0 z-0 rounded-xl',
+          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+        )}
+        aria-label={election.title}
+      />
+
       <div
         className={cn(
           'h-1',
@@ -97,7 +99,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           {election.title}
         </h3>
 
-        <CatgirlGallery size="sm" linkAttribution={false} />
+        <CatgirlGallery size="sm" />
 
         <div className="space-y-2">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -168,34 +170,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
             {voteStatus === 'cannot_vote' && <StatusBadge status="unavailable" />}
             {voteStatus === 'voted' && <StatusBadge status="voted" />}
           </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-export function ElectionCardSkeleton({ index = 0 }: { index?: number }) {
-  return (
-    <div
-      className="animate-fade-up border-border-color bg-card overflow-hidden rounded-xl border"
-      style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
-    >
-      <div className="skeleton h-1" />
-      <div className="space-y-4 p-6">
-        <div className="skeleton h-5 w-24 rounded-full" />
-        <div className="space-y-2">
-          <div className="skeleton h-6 w-3/4 rounded" />
-          <div className="skeleton h-4 w-1/2 rounded" />
-        </div>
-        <div className="flex gap-2">
-          <div className="skeleton h-6 w-16 rounded-full" />
-          <div className="skeleton h-6 w-20 rounded-full" />
-          <div className="skeleton h-6 w-14 rounded-full" />
-        </div>
-        <div className="skeleton h-px w-full" />
-        <div className="flex justify-between">
-          <div className="skeleton h-4 w-20 rounded" />
-          <div className="skeleton h-4 w-24 rounded" />
         </div>
       </div>
     </div>

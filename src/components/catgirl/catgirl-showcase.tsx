@@ -15,8 +15,6 @@ export function CatgirlShowcase() {
         <p className="font-body text-md text-kpi-navy max-w-88">
           Увімкніть, щоб побачити чарівну картинку
         </p>
-        {/* A couple of faint paw prints trailing toward the toggle above,
-            purely decorative — no text, just a little "path" leading in. */}
         <PawPrint
           className="text-kpi-blue-light/25 absolute top-6 left-8 h-4 w-4 -rotate-12"
           aria-hidden="true"
@@ -31,8 +29,6 @@ export function CatgirlShowcase() {
 
   return (
     <div className="relative flex w-full justify-center">
-      {/* Soft glow behind the whole panel, echoing the 3D scene's aurora
-          background rather than a plain flat card. */}
       <div
         className="absolute inset-x-6 top-6 -z-10 h-[85%] rounded-[2.5rem] bg-linear-to-br from-pink-300/40 via-rose-300/25 to-transparent blur-2xl"
         aria-hidden="true"

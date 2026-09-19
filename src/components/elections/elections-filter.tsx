@@ -4,7 +4,8 @@ import { FileText, LayoutGrid, LayoutList } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
-import { ElectionCard, ElectionCardSkeleton } from '@/components/elections/election-card';
+import { ElectionCard } from '@/components/elections/election-card';
+import { ElectionCardSkeleton } from '@/components/elections/election-card-skeleton';
 import { ElectionListItem } from '@/components/elections/election-list-item';
 import { ElectionsFiltersButton } from '@/components/elections/elections-filter-panel';
 import { Pagination } from '@/components/ui/pagination';

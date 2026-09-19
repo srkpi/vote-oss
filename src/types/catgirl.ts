@@ -41,9 +41,16 @@ export interface NekosiaApiResponse extends Partial<NekosiaApiImage> {
 
 export interface CatgirlImage {
   id: string;
+  /** Compressed asset — what the gallery thumbnail itself renders. */
   url: string;
   width: number;
   height: number;
+  /** Uncompressed asset — what the fullscreen lightbox tries first,
+   *  falling back to `url` (already known to load) if this 404s or the
+   *  browser otherwise fails to fetch it. */
+  originalUrl: string;
+  originalWidth: number;
+  originalHeight: number;
   color: string;
   artistName: string | null;
   artistProfileUrl: string | null;
