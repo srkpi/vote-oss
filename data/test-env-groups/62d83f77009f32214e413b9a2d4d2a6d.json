@@ -1,1 +1,1 @@
-{"id":"62d83f77009f32214e413b9a2d4d2a6d","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 400 when maxUsage is negative","name":"returns 400 when maxUsage is negative","status":"passed","testResultsByEnv":{"default":"e582aa3709f0cc5a81eca37fd35285e0"}}
+{"id":"62d83f77009f32214e413b9a2d4d2a6d","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#POST /api/bypass returns 400 when maxUsage is negative","name":"returns 400 when maxUsage is negative","status":"passed","testResultsByEnv":{"default":"01c4d62b51dcd3e0194d17f517aeb976"}}

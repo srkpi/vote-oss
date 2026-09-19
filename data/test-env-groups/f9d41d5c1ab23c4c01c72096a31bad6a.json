@@ -1,1 +1,1 @@
-{"id":"f9d41d5c1ab23c4c01c72096a31bad6a","fullName":"vote-oss:src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout returns 200 on successful logout","name":"returns 200 on successful logout","status":"passed","testResultsByEnv":{"default":"4c13faa4ec76f9b9b00084bb2a1a3a48"}}
+{"id":"f9d41d5c1ab23c4c01c72096a31bad6a","fullName":"vote-oss:src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout returns 200 on successful logout","name":"returns 200 on successful logout","status":"passed","testResultsByEnv":{"default":"715b1eff27c5e0a8ea69b3585662207c"}}
