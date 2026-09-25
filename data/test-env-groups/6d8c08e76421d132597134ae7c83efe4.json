@@ -1,1 +1,1 @@
-{"id":"6d8c08e76421d132597134ae7c83efe4","fullName":"vote-oss:src/__tests__/lib/constants.test.ts#constants election limits ELECTION_CHOICES_MIN is at least 1","name":"ELECTION_CHOICES_MIN is at least 1","status":"passed","testResultsByEnv":{"default":"243508194a53552d6af34e2764e38633"}}
+{"id":"6d8c08e76421d132597134ae7c83efe4","fullName":"vote-oss:src/__tests__/lib/constants.test.ts#constants election limits ELECTION_CHOICES_MIN is at least 1","name":"ELECTION_CHOICES_MIN is at least 1","status":"passed","testResultsByEnv":{"default":"8d7b9746b37979c18e9fc887e5c8e324"}}
