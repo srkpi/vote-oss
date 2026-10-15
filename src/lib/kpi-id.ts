@@ -79,8 +79,11 @@ function levenshtein(a: string, b: string): number {
  * Converts a full faculty name to its abbreviation by taking the first
  * character of each word (words are separated by spaces or dashes).
  *
+ * Only used as a last-resort fallback when no candidate short name can be
+ * spelled out of the full name (see `resolveFacultyShortName`).
+ *
  * e.g. "Навчально-науковий інститут прикладної математики"
- *   → "ННіпм"  (first char of each dash/space-separated token)
+ *   → "ННІПМ"  (first char of each dash/space-separated token)
  */
 function abbreviateFaculty(fullName: string): string {
   return fullName
@@ -91,33 +94,116 @@ function abbreviateFaculty(fullName: string): string {
     .toUpperCase();
 }
 
+/** Latin letters that look like Cyrillic ones -> their Cyrillic counterparts. */
+const LATIN_TO_CYR: Record<string, string> = {
+  a: 'а',
+  b: 'в',
+  c: 'с',
+  e: 'е',
+  h: 'н',
+  i: 'і',
+  k: 'к',
+  m: 'м',
+  o: 'о',
+  p: 'р',
+  t: 'т',
+  x: 'х',
+  y: 'у',
+};
+
+/** Conjunctions / prepositions that never contribute a letter to a short name. */
+const STOP_WORDS = new Set(['та', 'і', 'й', 'з', 'для', 'у', 'в', 'на']);
+
+const INSIDE_WORD_COST = 1;
+const SKIPPED_WORD_COST = 2;
+
+/** Lowercases and replaces Latin lookalikes with Cyrillic letters. */
+const fold = (s: string): string =>
+  [...s.toLowerCase()].map((ch) => LATIN_TO_CYR[ch] ?? ch).join('');
+
+/** Keeps only (folded) Cyrillic letters and digits. */
+const letters = (s: string): string => fold(s).replace(/[^а-яіїєґ0-9]/g, '');
+
 /**
- * Normalises an abbreviation for comparison purposes:
- * replaces the prefix "НН " with "ННІ".
+ * Splits a full faculty/institute name into comparable words:
+ * drops the "ім. ..." suffix, splits on hyphens/apostrophes/spaces and
+ * removes stop words.
  */
-function normaliseAbbreviation(abbr: string): string {
-  return abbr.replace(/^НН\s/, 'ННІ');
+function nameWords(fullName: string): string[] {
+  return fold(fullName)
+    .replace(/\s+ім\..*$/, '')
+    .split(/[^а-яіїєґ]+/)
+    .filter((w) => w && !STOP_WORDS.has(w));
 }
 
 /**
- * Given a full faculty name and a list of `{ faculty, groups }` entries
- * returned by `fetchFacultyGroups`, resolves the short faculty identifier
- * for the student's group.
+ * Short-name keys may contain aliases in parentheses, e.g. "ФАПІЕ (ІХФ)".
+ * "НН ІАТ" -> ["нніат"], "ФАПІЕ (ІХФ)" -> ["фапіе", "іхф"].
+ */
+const aliases = (key: string): string[] => key.split(/[()]/).map(letters).filter(Boolean);
+
+/**
+ * Cost of spelling `alias` as an ordered subsequence of the letters of `words`.
+ *  - a letter at the start of a word is free;
+ *  - a letter inside a word costs INSIDE_WORD_COST;
+ *  - every word skipped between/after used letters costs SKIPPED_WORD_COST.
+ * Returns Infinity when the alias cannot be spelled out of the words at all.
+ */
+function matchCost(alias: string, words: string[]): number {
+  const memo = new Map<string, number>();
+
+  const go = (i: number, last: number, from: number): number => {
+    if (i === alias.length) return SKIPPED_WORD_COST * (words.length - 1 - last);
+
+    const memoKey = `${i}:${last}:${from}`;
+    const cached = memo.get(memoKey);
+    if (cached !== undefined) return cached;
+
+    let best = Infinity;
+    for (let w = Math.max(last, 0); w < words.length; w++) {
+      for (let c = w === last ? from : 0; c < words[w].length; c++) {
+        if (words[w][c] !== alias[i]) continue;
+        const skipped = w === last ? 0 : w - last - 1;
+        const cost =
+          (c === 0 ? 0 : INSIDE_WORD_COST) + SKIPPED_WORD_COST * skipped + go(i + 1, w, c + 1);
+        best = Math.min(best, cost);
+      }
+    }
+
+    memo.set(memoKey, best);
+    return best;
+  };
+
+  return go(0, -1, 0);
+}
+
+/**
+ * Given a full faculty name, the student's group and a map of
+ * `shortFaculty -> groups` returned by `fetchFacultyGroups`, resolves the
+ * short faculty identifier for the student's group.
  *
  * Algorithm:
- *  1. Collect all entries whose group list contains `group`.
- *  2. If exactly one match → return its `shortFaculty` directly.
- *  3. If multiple matches → build an abbreviation from `fullFaculty` and
- *     pick the candidate whose own abbreviation has the smallest Levenshtein
- *     distance to it (after the "НН → ННІ" normalisation).
+ *  1. Collect all entries whose group list contains `group`
+ *     (comparison ignores case, dashes and Latin/Cyrillic lookalikes).
+ *  2. If exactly one match → return it directly.
+ *  3. Otherwise score every candidate (the matches, or all entries if there
+ *     were none) by how cheaply its short name (and any alias in parentheses)
+ *     can be spelled out of the full name, in order. Lowest cost wins; ties
+ *     are broken alphabetically so the result does not depend on key order.
+ *  4. If no candidate can be spelled out of the full name, fall back to
+ *     Levenshtein distance against the first-letter abbreviation.
+ *
+ * No hardcoded list of faculties is needed: a new or renamed faculty works as
+ * long as its short name is derived from its full name.
  */
 export function resolveFacultyShortName(
   fullFaculty: string,
   group: string,
   facultyGroups: Record<string, string[]>,
 ): string {
+  const normGroup = letters(group);
   const matches = Object.keys(facultyGroups).filter((short) =>
-    facultyGroups[short].includes(group),
+    facultyGroups[short].some((g) => letters(g) === normGroup),
   );
 
   if (matches.length === 1) return matches[0];
@@ -125,13 +211,21 @@ export function resolveFacultyShortName(
   const candidates = matches.length > 0 ? matches : Object.keys(facultyGroups);
   if (candidates.length === 0) throw new InvalidUserDataError();
 
-  const targetAbbr = normaliseAbbreviation(abbreviateFaculty(fullFaculty));
+  const words = nameWords(fullFaculty);
+  const scored = candidates
+    .map((key) => ({
+      key,
+      cost: Math.min(...aliases(key).map((a) => matchCost(a, words))),
+    }))
+    .sort((a, b) => a.cost - b.cost || a.key.localeCompare(b.key));
 
-  return candidates.reduce((best, candidate) => {
-    const bestDist = levenshtein(targetAbbr, normaliseAbbreviation(best));
-    const candidateDist = levenshtein(targetAbbr, normaliseAbbreviation(candidate));
-    return candidateDist < bestDist ? candidate : best;
-  });
+  if (Number.isFinite(scored[0].cost)) return scored[0].key;
+
+  // Nothing can be spelled out of the full name: fall back to Levenshtein.
+  const target = letters(abbreviateFaculty(fullFaculty));
+  return candidates.reduce((best, candidate) =>
+    levenshtein(target, letters(candidate)) < levenshtein(target, letters(best)) ? candidate : best,
+  );
 }
 
 export async function resolveTicket(ticketId: string): Promise<KpiIdUserInfo> {
