@@ -1,0 +1,1 @@
+{"id":"bc475dee5e9578c34fbf7cbe581835fa.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] returns 403 when user group does not match restriction","name":"returns 403 when user group does not match restriction","status":"passed","testResultsByEnv":{"default":"b9e2acb8e70b87ad16424261f790d384"}}

@@ -1,0 +1,1 @@
+{"id":"a2be25fd1800cc8f548637f1c67b403c.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/categories/[id] does not invalidate the cache when validation fails","name":"does not invalidate the cache when validation fails","status":"passed","testResultsByEnv":{"default":"f4a80a804064838b33fc87120d8cd1cf"}}

@@ -1,0 +1,1 @@
+{"id":"63182194917ab167229cca55867864b5.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] returns 200 with full election data for eligible user","name":"returns 200 with full election data for eligible user","status":"passed","testResultsByEnv":{"default":"b2f894152995f2110cf39f21882e10e4"}}

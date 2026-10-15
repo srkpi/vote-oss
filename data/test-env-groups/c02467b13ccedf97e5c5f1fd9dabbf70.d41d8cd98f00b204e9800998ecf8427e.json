@@ -1,0 +1,1 @@
+{"id":"c02467b13ccedf97e5c5f1fd9dabbf70.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/bloom.test.ts#bloom filter isTokenClean returns true when bloomCheck returns \"clean\"","name":"returns true when bloomCheck returns \"clean\"","status":"passed","testResultsByEnv":{"default":"ae0f570abb417f767f6100e830d2c0ed"}}

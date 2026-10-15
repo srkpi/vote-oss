@@ -1,0 +1,1 @@
+{"id":"530c0de922d8ca78c072672921cf70e5.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#POST /api/elections — winning conditions validation accepts hasMostVotes: true explicitly","name":"accepts hasMostVotes: true explicitly","status":"passed","testResultsByEnv":{"default":"f3dcf7495ed211a43b2af3bf22cd91a1"}}

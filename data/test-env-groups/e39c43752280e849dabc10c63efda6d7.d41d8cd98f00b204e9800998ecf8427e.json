@@ -1,0 +1,1 @@
+{"id":"e39c43752280e849dabc10c63efda6d7.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#PUT /api/faq/items/[id] returns 400 when content is JSON but not a Quill Delta","name":"returns 400 when content is JSON but not a Quill Delta","status":"passed","testResultsByEnv":{"default":"5ee09a8ca26f6989a35372115c370f47"}}

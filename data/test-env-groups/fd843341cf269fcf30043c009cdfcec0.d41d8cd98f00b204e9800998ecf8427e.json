@@ -1,0 +1,1 @@
+{"id":"fd843341cf269fcf30043c009cdfcec0.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/delete.test.ts#DELETE /api/elections/[id] returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"ed4170a719967dcd2179b8c5d4abefe1"}}

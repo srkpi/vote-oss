@@ -1,0 +1,1 @@
+{"id":"1b5a79c35cf0e8f02c0c0982b3ab49d5.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/admins/invite/get.test.ts#GET /api/admins/invite returns 200 with empty array when no tokens exist","name":"returns 200 with empty array when no tokens exist","status":"passed","testResultsByEnv":{"default":"c05621dcfd10f54bb350a0164423fbaf"}}

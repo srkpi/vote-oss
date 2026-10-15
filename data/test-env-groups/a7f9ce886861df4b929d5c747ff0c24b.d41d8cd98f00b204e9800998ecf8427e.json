@@ -1,0 +1,1 @@
+{"id":"a7f9ce886861df4b929d5c747ff0c24b.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) accepts title exactly 32 characters long","name":"accepts title exactly 32 characters long","status":"passed","testResultsByEnv":{"default":"380baf266b41c6f4019393ef280d949d"}}

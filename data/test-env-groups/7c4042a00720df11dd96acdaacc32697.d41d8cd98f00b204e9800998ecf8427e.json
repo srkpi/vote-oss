@@ -1,0 +1,1 @@
+{"id":"7c4042a00720df11dd96acdaacc32697.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/auth.test.ts#auth requireRefreshAuth returns ok=false when refresh token cookie is absent","name":"returns ok=false when refresh token cookie is absent","status":"passed","testResultsByEnv":{"default":"cdd48e9bd661ad97c4f33d049817358c"}}

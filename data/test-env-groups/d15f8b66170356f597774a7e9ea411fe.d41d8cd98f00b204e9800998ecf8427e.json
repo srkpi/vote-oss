@@ -1,0 +1,1 @@
+{"id":"d15f8b66170356f597774a7e9ea411fe.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#filterGroupsByStudyForms returns all groups unchanged when studyForms is empty","name":"returns all groups unchanged when studyForms is empty","status":"passed","testResultsByEnv":{"default":"91ad73fd1870208e85ccc28ec38148d9"}}

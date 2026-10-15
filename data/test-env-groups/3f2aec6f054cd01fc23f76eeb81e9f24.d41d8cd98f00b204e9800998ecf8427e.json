@@ -1,0 +1,1 @@
+{"id":"3f2aec6f054cd01fc23f76eeb81e9f24.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/jwt.test.ts#jwt verifyAccessToken rejects a malformed token","name":"rejects a malformed token","status":"passed","testResultsByEnv":{"default":"a6f7561857125c6a90b4dad3bb0718b8"}}

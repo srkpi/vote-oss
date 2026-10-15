@@ -1,0 +1,1 @@
+{"id":"b06bb57648d461bfb1b044f5984d6ea0.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init returns 500 when provider response omits requestId entirely","name":"returns 500 when provider response omits requestId entirely","status":"passed","testResultsByEnv":{"default":"5b1fdef4602fa7bacb2ebba160189650"}}

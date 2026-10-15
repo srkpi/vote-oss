@@ -1,0 +1,1 @@
+{"id":"3b6c0de8ac3bfab45f71ead37940af13.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#POST /api/elections — winning conditions validation rejects reachesPercentage < 0","name":"rejects reachesPercentage < 0","status":"passed","testResultsByEnv":{"default":"5f271c5fb1fa8038c0268e8f235cd317"}}

@@ -1,0 +1,1 @@
+{"id":"8c72beef9a861d14b603dc30f6cb6fbe.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/ballot.test.ts#POST /api/elections/[id]/ballot returns 400 when number of choices exceeds max_choices","name":"returns 400 when number of choices exceeds max_choices","status":"passed","testResultsByEnv":{"default":"5c2a908da27d158092de5d6d56050799"}}

@@ -1,0 +1,1 @@
+{"id":"349eda3fe530f0ed449d9c619f76ff1b.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/ballots.test.ts#GET /api/elections/[id]/ballots returns ballots for the election","name":"returns ballots for the election","status":"passed","testResultsByEnv":{"default":"28522898dc98c2a73225554e23583e8e"}}

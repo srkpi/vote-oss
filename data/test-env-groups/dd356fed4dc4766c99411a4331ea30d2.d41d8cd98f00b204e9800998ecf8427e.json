@@ -1,0 +1,1 @@
+{"id":"dd356fed4dc4766c99411a4331ea30d2.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/jwt.test.ts#jwt verifyAccessToken decodes all payload fields correctly","name":"decodes all payload fields correctly","status":"passed","testResultsByEnv":{"default":"52f0d747837889da2662a87fd0818e43"}}

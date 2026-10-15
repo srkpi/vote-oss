@@ -1,0 +1,1 @@
+{"id":"ba48ac4462854a84f457a60431d71ef7.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/ballots.test.ts#GET /api/elections/[id]/ballots returns ballots ordered by id ascending","name":"returns ballots ordered by id ascending","status":"passed","testResultsByEnv":{"default":"8c42bc73e426f6bf52c0d6894995b746"}}

@@ -1,0 +1,1 @@
+{"id":"262719550d057d06032ebcf765116e54.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/faq/faq.test.ts#POST /api/faq (create category) returns 400 when title exceeds 32 characters","name":"returns 400 when title exceeds 32 characters","status":"passed","testResultsByEnv":{"default":"f756e44670a95d4ca8a2cc10b09ba46e"}}

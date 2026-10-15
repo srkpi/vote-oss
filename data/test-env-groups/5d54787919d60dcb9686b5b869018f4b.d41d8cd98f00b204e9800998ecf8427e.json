@@ -1,0 +1,1 @@
+{"id":"5d54787919d60dcb9686b5b869018f4b.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/diia-init.test.ts#POST /api/auth/diia/init returns 500 when provider response omits deepLink entirely","name":"returns 500 when provider response omits deepLink entirely","status":"passed","testResultsByEnv":{"default":"fecfcd9f25373aa8c2919a99a9c543f0"}}

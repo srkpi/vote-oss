@@ -1,0 +1,1 @@
+{"id":"bd5025e48a25640f7c0056f2f3973856.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/restore.test.ts#POST /api/elections/[id]/restore returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"11f6518d5832563db369980888267136"}}

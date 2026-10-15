@@ -1,0 +1,1 @@
+{"id":"5b1ade818716b9c8c7edc407e65d8f2c.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/faq/faq-crud.test.ts#POST /api/faq/categories/[id]/items returns 400 when title exceeds 128 characters","name":"returns 400 when title exceeds 128 characters","status":"passed","testResultsByEnv":{"default":"02ce20f413c139db9b4552b71c14e4e6"}}

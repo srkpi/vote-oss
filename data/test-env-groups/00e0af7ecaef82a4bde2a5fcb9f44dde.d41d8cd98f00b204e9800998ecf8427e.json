@@ -1,0 +1,1 @@
+{"id":"00e0af7ecaef82a4bde2a5fcb9f44dde.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/winning-conditions.test.ts#GET /api/elections/[id] — hasMostVotes tally condition marks tied options as co-winners","name":"marks tied options as co-winners","status":"passed","testResultsByEnv":{"default":"6c468b1b3e4386c027fa05a424dd85fd"}}

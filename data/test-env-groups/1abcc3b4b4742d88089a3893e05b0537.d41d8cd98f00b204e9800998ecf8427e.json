@@ -1,0 +1,1 @@
+{"id":"1abcc3b4b4742d88089a3893e05b0537.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/detail.test.ts#GET /api/elections/[id] queries issuedToken with the correct election_id and user_id","name":"queries issuedToken with the correct election_id and user_id","status":"passed","testResultsByEnv":{"default":"fa3d7cc5182e90f344ca800197a8f1f8"}}

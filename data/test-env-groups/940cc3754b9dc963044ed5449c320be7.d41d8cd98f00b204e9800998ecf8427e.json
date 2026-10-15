@@ -1,0 +1,1 @@
+{"id":"940cc3754b9dc963044ed5449c320be7.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/jwt.test.ts#jwt signAccessToken returns a token string and a jti UUID","name":"returns a token string and a jti UUID","status":"passed","testResultsByEnv":{"default":"354dd2ffd1f099f70a1d9270a0e27380"}}

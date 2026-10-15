@@ -1,0 +1,1 @@
+{"id":"a2ee35187abf50f4d862f1dc2c6f3d3e.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/campus-api.test.ts#fetchFacultyGroups falls through to upstream fetch when cached JSON is malformed","name":"falls through to upstream fetch when cached JSON is malformed","status":"passed","testResultsByEnv":{"default":"23bd09a36a997262dbb769630f01c301"}}

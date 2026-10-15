@@ -1,0 +1,1 @@
+{"id":"e1e5d302f5608662d1ecd0badacbd281.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/elections/ballots.test.ts#GET /api/elections/[id]/ballots returns empty ballots array when no votes exist","name":"returns empty ballots array when no votes exist","status":"passed","testResultsByEnv":{"default":"9a49220ae68b43f83bae30c2c8ad31ec"}}

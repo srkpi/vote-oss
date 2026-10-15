@@ -1,0 +1,1 @@
+{"id":"922ca64496db2c1ae3f446f517593ea2.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupLevel returns \"g\" for graduate groups with \"ф\"","name":"returns \"g\" for graduate groups with \"ф\"","status":"passed","testResultsByEnv":{"default":"93f9a42a833d286a7852f4db774f2966"}}

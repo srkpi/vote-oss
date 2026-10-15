@@ -1,0 +1,1 @@
+{"id":"885a63073e23826236d88394103579c7.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/logout.test.ts#POST /api/auth/logout clears the refresh_token cookie (maxAge=0)","name":"clears the refresh_token cookie (maxAge=0)","status":"passed","testResultsByEnv":{"default":"f2b82069849b828c76999e6466ffe1cd"}}

@@ -1,0 +1,1 @@
+{"id":"06da86447a535a6ccbdad586749ce68d.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id appends admin claims if user is in admin table","name":"appends admin claims if user is in admin table","status":"passed","testResultsByEnv":{"default":"037a66184bc2c45a9098ee9dff6aeb88"}}

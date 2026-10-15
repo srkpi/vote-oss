@@ -1,0 +1,1 @@
+{"id":"3e5212870f019208b2dc9f60885f6ddc.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/refresh.test.ts#POST /api/auth/refresh returns 200 for a valid refresh token","name":"returns 200 for a valid refresh token","status":"passed","testResultsByEnv":{"default":"d6da7a9ddccc10b4836571d5a2a5e11d"}}

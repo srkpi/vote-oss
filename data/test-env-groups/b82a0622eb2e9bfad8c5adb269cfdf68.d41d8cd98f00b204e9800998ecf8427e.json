@@ -1,0 +1,1 @@
+{"id":"b82a0622eb2e9bfad8c5adb269cfdf68.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 204 when only restrictedToFaculty provided","name":"returns 204 when only restrictedToFaculty provided","status":"passed","testResultsByEnv":{"default":"8dd24d5b5b46932415a9ef7c22c5be1c"}}

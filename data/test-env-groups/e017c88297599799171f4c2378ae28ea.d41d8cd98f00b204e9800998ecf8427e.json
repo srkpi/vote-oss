@@ -1,0 +1,1 @@
+{"id":"e017c88297599799171f4c2378ae28ea.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/group-utils.test.ts#parseGroupLevel returns \"b\" for bachelor groups (no level letters)","name":"returns \"b\" for bachelor groups (no level letters)","status":"passed","testResultsByEnv":{"default":"5e6e27379a690f6b91898b53ea61e5d7"}}

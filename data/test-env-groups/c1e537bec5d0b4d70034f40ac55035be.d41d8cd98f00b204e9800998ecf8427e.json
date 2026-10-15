@@ -1,0 +1,1 @@
+{"id":"c1e537bec5d0b4d70034f40ac55035be.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/admins/invite/get.test.ts#GET /api/admins/invite deletes multiple stale tokens in one deleteMany call","name":"deletes multiple stale tokens in one deleteMany call","status":"passed","testResultsByEnv":{"default":"10d4c59ee911b387c184c300fc65b056"}}

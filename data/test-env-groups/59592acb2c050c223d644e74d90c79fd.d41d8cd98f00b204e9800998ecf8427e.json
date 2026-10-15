@@ -1,0 +1,1 @@
+{"id":"59592acb2c050c223d644e74d90c79fd.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/admins/patch.test.ts#PATCH /api/admins/[userId] returns 404 when target admin does not exist","name":"returns 404 when target admin does not exist","status":"passed","testResultsByEnv":{"default":"2c6122f9f02f3cf0fee98a8084d55242"}}

@@ -1,0 +1,1 @@
+{"id":"d15c9cd6e48be78e385e74082cd1e792.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/token-store.test.ts#token-store revokeByRefreshJti deletes the DB record by refresh_jti","name":"deletes the DB record by refresh_jti","status":"passed","testResultsByEnv":{"default":"c6277084501bf4de44cb9bd3670b169d"}}

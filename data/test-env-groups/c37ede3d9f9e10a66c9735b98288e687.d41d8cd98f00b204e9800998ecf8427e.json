@@ -1,0 +1,1 @@
+{"id":"c37ede3d9f9e10a66c9735b98288e687.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/bypass/global.test.ts#GET /api/bypass returns 401 when unauthenticated","name":"returns 401 when unauthenticated","status":"passed","testResultsByEnv":{"default":"5f0933f1f5292abfc4360ab624ed8ac2"}}

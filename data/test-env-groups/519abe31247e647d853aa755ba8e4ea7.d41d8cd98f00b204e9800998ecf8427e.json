@@ -1,0 +1,1 @@
+{"id":"519abe31247e647d853aa755ba8e4ea7.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/auth.test.ts#auth requireRefreshAuth rejects an access token placed in the refresh cookie slot","name":"rejects an access token placed in the refresh cookie slot","status":"passed","testResultsByEnv":{"default":"22a890aa461f67fe894edc08fa143c31"}}

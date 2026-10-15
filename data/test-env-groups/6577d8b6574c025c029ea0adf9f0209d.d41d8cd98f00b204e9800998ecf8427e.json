@@ -1,0 +1,1 @@
+{"id":"6577d8b6574c025c029ea0adf9f0209d.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/bypass/election-delete.test.ts#DELETE /api/bypass/election/[tokenHash] returns 404 when token does not exist","name":"returns 404 when token does not exist","status":"passed","testResultsByEnv":{"default":"4d84850855cd3a145e369fa6223956ee"}}
