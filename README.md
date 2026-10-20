@@ -496,35 +496,3 @@ Global bypass tokens grant platform access to students who fail eligibility chec
 ## License
 
 This project is open source. See the [LICENSE](LICENSE) file for details.
-
-## KPI ID OpenID Connect
-
-The login button starts Authorization Code flow at `/api/auth/kpi-id/login`.
-Register the following with KBIS before deployment:
-
-- Initiate login URI: `https://voteoss.kpi.ua/api/auth/kpi-id/login`
-- Redirect URI: `https://voteoss.kpi.ua/api/auth/kpi-id/callback`
-- Scopes: `openid profile student_ids`; trusted identification only.
-
-Set `NEXT_PUBLIC_KPI_AUTH_URL=https://auth.kpi.ua` (test: `https://auth.cloud.kpi.ua`),
-`NEXT_PUBLIC_KPI_APP_ID` to the OIDC client ID and server-only `KPI_APP_SECRET` to the client secret.
-Existing appId/appSecret credentials remain valid after KBIS registers the new URIs.
-`NEXT_PUBLIC_APP_URL` determines the exact callback URL; use a separately registered
-`http://localhost:3000/api/auth/kpi-id/callback` for local development.
-The old ticket flow remains available for existing integrations.
-
-Apply database migrations before deploying. OIDC subjects are bound to existing
-Vote OSS user IDs in `kpi_identities`, preserving rights and voting history when
-the same student record is used. Subsequent student record changes retain this
-internal ID. For users who already have history under another student record,
-seed their subject-to-user-ID mapping before their first OIDC login. Multiple
-student records are checked for current Campus eligibility.
-
-PKCE S256, state, nonce and ID token validation are handled by openid-client.
-Login transactions expire after five minutes and are consumed atomically in Redis.
-Redis must be available for OIDC login. Only trusted Diia/BankID identities with
-student records are accepted; existing Campus and bypass rules still apply.
-Each login requests fresh authentication. Vote OSS retains its own rotating JWT
-session; no KPI ID refresh token is requested or stored.
-
-Provider integration documentation: https://auth.kpi.ua/uk/integration
