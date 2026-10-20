@@ -244,4 +244,17 @@ describe('POST /api/auth/kpi-id', () => {
     // kpiIdMock.getCampusUserData returns MOCK_USER_INFO by default → 200
     expect(res.status).toBe(200);
   });
+  it.each(['//evil.test', '/\\evil.test'])(
+    'rejects an external return_to (%s)',
+    async (returnTo) => {
+      const response = await POST(
+        makeRequest({
+          method: 'POST',
+          body: { ticketId: 'ticket-user-1' },
+          cookies: { [COOKIE_RETURN_TO]: returnTo },
+        }),
+      );
+      expect((await response.json()).redirectTo).toBe('/elections');
+    },
+  );
 });
