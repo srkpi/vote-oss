@@ -9,21 +9,19 @@ import {
   OIDC_CALLBACK,
   OIDC_COOKIE,
   oidcCookieOptions,
+  openOidcTransaction,
   parseStudentClaims,
 } from '@/lib/kpi-oidc';
 import { completeLogin } from '@/lib/login-session';
 import { prisma } from '@/lib/prisma';
-import { redis } from '@/lib/redis';
 
 export async function GET(req: NextRequest) {
   let response: NextResponse;
+  let clearTransaction = true;
   try {
-    const handle = req.cookies.get(OIDC_COOKIE)?.value;
-    if (!handle || !/^[a-f0-9]{64}$/.test(handle)) throw new Error('Missing login transaction');
-    // Atomically consume the transaction, including on provider cancellation.
-    const raw = await redis.getdel(`oidc:${handle}`);
-    if (!raw) throw new Error('Expired login transaction');
-    const pending = JSON.parse(raw) as { verifier: string; state: string; nonce: string };
+    const pending = await openOidcTransaction(req.cookies.get(OIDC_COOKIE)?.value);
+    // A forged callback must not cancel this browser's legitimate sign-in.
+    clearTransaction = false;
     const callbackUrl = new URL(OIDC_CALLBACK);
     callbackUrl.search = req.nextUrl.search;
     const tokens = await oidc.authorizationCodeGrant(await getOidcConfig(), callbackUrl, {
@@ -32,6 +30,8 @@ export async function GET(req: NextRequest) {
       expectedNonce: pending.nonce,
       idTokenExpected: true,
     });
+    // The provider enforces one-time code use; clear the browser transaction too.
+    clearTransaction = true;
     const claims = tokens.claims();
     if (!claims) throw new Error('Missing ID token');
     const { subject, students } = parseStudentClaims(claims);
@@ -57,15 +57,14 @@ export async function GET(req: NextRequest) {
       update: {},
       create: { subject, user_id: selected.STUDENT_ID },
     });
-    const login = await completeLogin(req, selected, identity.user_id);
-    if (!login.ok) throw new Error('Login rejected');
-    const { redirectTo } = (await login.json()) as { redirectTo: string };
-    response = NextResponse.redirect(new URL(redirectTo, APP_URL));
-    for (const cookie of login.cookies.getAll()) response.cookies.set(cookie);
-  } catch {
+    response = await completeLogin(req, selected, { userId: identity.user_id, redirect: true });
+    if (response.status >= 400) throw new Error('Login rejected');
+  } catch (error) {
+    // This error is returned only after the library validates issuer and state.
+    if (error instanceof oidc.AuthorizationResponseError) clearTransaction = true;
     response = NextResponse.redirect(new URL('/login?error=kpi-id', APP_URL));
   }
-  response.cookies.set(OIDC_COOKIE, '', { ...oidcCookieOptions, maxAge: 0 });
+  if (clearTransaction) response.cookies.set(OIDC_COOKIE, '', { ...oidcCookieOptions, maxAge: 0 });
   response.headers.set('Cache-Control', 'no-store');
   response.headers.set('Referrer-Policy', 'no-referrer');
   return response;

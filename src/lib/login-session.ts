@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuth } from '@/lib/auth';
 import { applyBypassToken } from '@/lib/bypass';
+import { APP_URL } from '@/lib/config/client';
 import {
   COOKIE_ACCESS,
   COOKIE_PENDING_BYPASS,
@@ -18,7 +19,7 @@ import type { KpiIdUserInfo, TokenPayload } from '@/types/auth';
 export async function completeLogin(
   req: NextRequest,
   kpiIdInfo: KpiIdUserInfo,
-  userId = kpiIdInfo.STUDENT_ID,
+  { userId = kpiIdInfo.STUDENT_ID, redirect = false }: { userId?: string; redirect?: boolean } = {},
 ) {
   // Pre-apply a pending bypass token stored by the proxy when the user was
   // redirected from /use/[token] to /login while unauthenticated.
@@ -85,7 +86,9 @@ export async function completeLogin(
       ? returnTo
       : '/elections';
 
-  const response = NextResponse.json({ redirectTo }, { status: 200 });
+  const response = redirect
+    ? NextResponse.redirect(new URL(redirectTo, APP_URL))
+    : NextResponse.json({ redirectTo }, { status: 200 });
 
   response.cookies.set(COOKIE_ACCESS, accessToken, tokenCookieOptions('access'));
   response.cookies.set(COOKIE_REFRESH, refreshToken, tokenCookieOptions('refresh'));

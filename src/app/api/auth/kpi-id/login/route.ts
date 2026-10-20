@@ -1,5 +1,3 @@
-import { randomBytes } from 'node:crypto';
-
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import * as oidc from 'openid-client';
@@ -9,11 +7,10 @@ import {
   getOidcConfig,
   OIDC_CALLBACK,
   OIDC_COOKIE,
-  OIDC_TTL,
   oidcCookieOptions,
+  sealOidcTransaction,
 } from '@/lib/kpi-oidc';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
-import { redis } from '@/lib/redis';
 
 export async function GET(req: NextRequest) {
   const limit = await rateLimitLogin(getClientIp(req.headers));
@@ -27,7 +24,6 @@ export async function GET(req: NextRequest) {
     const verifier = oidc.randomPKCECodeVerifier();
     const state = oidc.randomState();
     const nonce = oidc.randomNonce();
-    const handle = randomBytes(32).toString('hex');
     const url = oidc.buildAuthorizationUrl(config, {
       redirect_uri: OIDC_CALLBACK,
       scope: 'openid profile student_ids',
@@ -38,9 +34,12 @@ export async function GET(req: NextRequest) {
       // A new local session must represent fresh trusted identification.
       prompt: 'login',
     });
-    await redis.set(`oidc:${handle}`, JSON.stringify({ verifier, state, nonce }), 'EX', OIDC_TTL);
     const response = NextResponse.redirect(url);
-    response.cookies.set(OIDC_COOKIE, handle, oidcCookieOptions);
+    response.cookies.set(
+      OIDC_COOKIE,
+      await sealOidcTransaction({ verifier, state, nonce }),
+      oidcCookieOptions,
+    );
     response.headers.set('Cache-Control', 'no-store');
     return response;
   } catch {

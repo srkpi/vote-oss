@@ -11,21 +11,19 @@ jest.mock('@/lib/kpi-oidc', () => ({
   getOidcConfig: jest.fn(),
   OIDC_CALLBACK: 'https://example.com/api/auth/kpi-id/callback',
   OIDC_COOKIE: 'kpi_oidc',
-  OIDC_TTL: 300,
+  sealOidcTransaction: jest.fn(),
   oidcCookieOptions: {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
-    path: '/api/auth/kpi-id',
-    maxAge: 300,
+    path: '/api/auth/kpi-id/callback',
+    maxAge: 900,
   },
 }));
-jest.mock('@/lib/redis', () => ({ redis: { set: jest.fn() } }));
 jest.mock('@/lib/rate-limit', () => ({ getClientIp: jest.fn(), rateLimitLogin: jest.fn() }));
 import { GET } from '@/app/api/auth/kpi-id/login/route';
-import { getOidcConfig } from '@/lib/kpi-oidc';
+import { getOidcConfig, sealOidcTransaction } from '@/lib/kpi-oidc';
 import { rateLimitLogin } from '@/lib/rate-limit';
-import { redis } from '@/lib/redis';
 describe('OIDC initiation', () => {
   beforeEach(() => {
     (getOidcConfig as jest.Mock).mockResolvedValue({});
@@ -37,7 +35,7 @@ describe('OIDC initiation', () => {
     (oidc.buildAuthorizationUrl as jest.Mock).mockReturnValue(
       new URL('https://auth.kpi.ua/authorize'),
     );
-    (redis.set as jest.Mock).mockResolvedValue('OK');
+    (sealOidcTransaction as jest.Mock).mockResolvedValue('encrypted-transaction');
   });
   it('stores a short-lived browser-bound transaction and requests PKCE', async () => {
     const response = await GET(
@@ -58,18 +56,19 @@ describe('OIDC initiation', () => {
       }),
     );
     const cookie = response.cookies.get('kpi_oidc');
-    expect(cookie?.value).toMatch(/^[a-f0-9]{64}$/);
+    expect(cookie?.value).toBe('encrypted-transaction');
+    expect(cookie?.maxAge).toBe(900);
+    expect(cookie?.path).toBe('/api/auth/kpi-id/callback');
     expect(cookie?.httpOnly).toBe(true);
-    expect(redis.set).toHaveBeenCalledWith(
-      'oidc:' + cookie?.value,
-      JSON.stringify({ verifier: 'verifier', state: 'state', nonce: 'nonce' }),
-      'EX',
-      300,
-    );
+    expect(sealOidcTransaction).toHaveBeenCalledWith({
+      verifier: 'verifier',
+      state: 'state',
+      nonce: 'nonce',
+    });
     expect(response.headers.get('location')).toBe('https://auth.kpi.ua/authorize');
   });
-  it('fails closed if Redis is unavailable', async () => {
-    (redis.set as jest.Mock).mockRejectedValue(new Error('offline'));
+  it('does not redirect to KPI ID if the transaction cannot be sealed', async () => {
+    (sealOidcTransaction as jest.Mock).mockRejectedValue(new Error('encryption failed'));
     const response = await GET(new NextRequest('https://example.com/api/auth/kpi-id/login'));
     expect(response.headers.get('location')).toBe('https://example.com/login?error=kpi-id');
     expect(response.cookies.get('kpi_oidc')).toBeUndefined();
