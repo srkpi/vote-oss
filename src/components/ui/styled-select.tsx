@@ -21,7 +21,6 @@ export interface StyledSelectProps {
   error?: boolean;
   className?: string;
   id?: string;
-  'aria-label'?: string;
 }
 
 interface DropdownPosition {
