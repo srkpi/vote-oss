@@ -1,5 +1,6 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ArrowRightLeft,
   Building2,
@@ -26,6 +27,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { PageHeader } from '@/components/common/page-header';
 import { ElectionListItem } from '@/components/elections/election-list-item';
@@ -67,18 +69,18 @@ import {
   GROUP_REQUISITES_EMAIL_MAX_LENGTH,
   GROUP_REQUISITES_FULL_NAME_MAX_LENGTH,
 } from '@/lib/constants';
+import {
+  groupRequisitesFormSchema,
+  type GroupRequisitesInput,
+  type GroupRequisitesOutput,
+} from '@/lib/schemas/group-requisites-form';
 import { cn } from '@/lib/utils/common';
 import type { User } from '@/types/auth';
 import type { ElectionCampaign } from '@/types/campaign';
 import type { CandidateRegistrationFormAdminSummary } from '@/types/candidate-registration';
 import type { ElectionStatus } from '@/types/election';
 import type { FileSummary } from '@/types/file';
-import type {
-  GroupDetail,
-  GroupInviteLink,
-  GroupMemberSummary,
-  GroupRequisites,
-} from '@/types/group';
+import type { GroupDetail, GroupInviteLink, GroupMemberSummary } from '@/types/group';
 import type { ProtocolSummary } from '@/types/protocol';
 
 const ELECTION_STATUS_LABELS: Record<ElectionStatus, string> = {
@@ -585,41 +587,36 @@ export function GroupDetailClient({
 
   // ── Edit requisites ───────────────────────────────────────────────────────
   const [requisitesOpen, setRequisitesOpen] = useState(false);
-  const [requisitesDraft, setRequisitesDraft] = useState<GroupRequisites>(group.requisites);
-  const [requisitesSaving, setRequisitesSaving] = useState(false);
-  const [requisitesError, setRequisitesError] = useState<string | null>(null);
-
+  const requisitesForm = useForm<GroupRequisitesInput, unknown, GroupRequisitesOutput>({
+    resolver: zodResolver(groupRequisitesFormSchema),
+    defaultValues: { fullName: '', address: '', email: '', contact: '' },
+  });
+  const {
+    errors: requisitesErrors,
+    isSubmitting: requisitesSaving,
+    isDirty: requisitesDirty,
+  } = requisitesForm.formState;
+  const requisitesError = requisitesErrors.root?.message;
   const openRequisites = () => {
-    setRequisitesDraft(group.requisites);
-    setRequisitesError(null);
+    requisitesForm.reset({
+      fullName: group.requisites.fullName ?? '',
+      address: group.requisites.address ?? '',
+      email: group.requisites.email ?? '',
+      contact: group.requisites.contact ?? '',
+    });
     setRequisitesOpen(true);
   };
-
-  const handleRequisitesSave = async () => {
-    setRequisitesSaving(true);
-    setRequisitesError(null);
-    const fullName = requisitesDraft.fullName?.trim() || null;
-    const address = requisitesDraft.address?.trim() || null;
-    const email = requisitesDraft.email?.trim() || null;
-    const contact = requisitesDraft.contact?.trim() || null;
-    const result = await api.groups.updateRequisites(group.id, {
-      fullName,
-      address,
-      email,
-      contact,
-    });
+  const handleRequisitesSave = requisitesForm.handleSubmit(async (values) => {
+    const result = await api.groups.updateRequisites(group.id, values);
     if (result.success) {
-      setGroup((prev) => ({
-        ...prev,
-        requisites: { ...prev.requisites, fullName, address, email, contact },
-      }));
+      setGroup((prev) => ({ ...prev, requisites: { ...prev.requisites, ...values } }));
+      requisitesForm.reset(requisitesForm.getValues());
       toast({ title: 'Реквізити оновлено', variant: 'success' });
       setRequisitesOpen(false);
     } else {
-      setRequisitesError(result.error);
+      requisitesForm.setError('root', { message: result.error });
     }
-    setRequisitesSaving(false);
-  };
+  });
 
   // ── Logo upload / remove ─────────────────────────────────────────────────
   const logoInputRef = useRef<HTMLInputElement | null>(null);
@@ -1492,7 +1489,7 @@ export function GroupDetailClient({
               </DialogHeader>
               <DialogBody className="space-y-4">
                 {requisitesError && (
-                  <Alert variant="error" onDismiss={() => setRequisitesError(null)}>
+                  <Alert variant="error" onDismiss={() => requisitesForm.clearErrors('root')}>
                     {requisitesError}
                   </Alert>
                 )}
@@ -1500,41 +1497,55 @@ export function GroupDetailClient({
                   Використовуються для автоматичного формування протоколів. Якщо повна назва не
                   задана — у протокол потрапить назва групи.
                 </p>
-                <FormField label="Повна назва (необов'язково)" htmlFor="req-full-name">
+                <FormField
+                  label="Повна назва (необов'язково)"
+                  htmlFor="req-full-name"
+                  error={requisitesErrors.fullName?.message}
+                >
                   <Input
                     id="req-full-name"
-                    value={requisitesDraft.fullName ?? ''}
-                    onChange={(e) =>
-                      setRequisitesDraft((d) => ({ ...d, fullName: e.target.value }))
-                    }
+                    {...requisitesForm.register('fullName')}
+                    error={!!requisitesErrors.fullName}
                     maxLength={GROUP_REQUISITES_FULL_NAME_MAX_LENGTH}
                     placeholder={group.name}
                   />
                 </FormField>
-                <FormField label="Адреса" htmlFor="req-address">
+                <FormField
+                  label="Адреса"
+                  htmlFor="req-address"
+                  error={requisitesErrors.address?.message}
+                >
                   <Input
                     id="req-address"
-                    value={requisitesDraft.address ?? ''}
-                    onChange={(e) => setRequisitesDraft((d) => ({ ...d, address: e.target.value }))}
+                    {...requisitesForm.register('address')}
+                    error={!!requisitesErrors.address}
                     maxLength={GROUP_REQUISITES_ADDRESS_MAX_LENGTH}
                     placeholder="Корпус, кімната"
                   />
                 </FormField>
-                <FormField label="Електронна пошта" htmlFor="req-email">
+                <FormField
+                  label="Електронна пошта"
+                  htmlFor="req-email"
+                  error={requisitesErrors.email?.message}
+                >
                   <Input
                     id="req-email"
                     type="email"
-                    value={requisitesDraft.email ?? ''}
-                    onChange={(e) => setRequisitesDraft((d) => ({ ...d, email: e.target.value }))}
+                    {...requisitesForm.register('email')}
+                    error={!!requisitesErrors.email}
                     maxLength={GROUP_REQUISITES_EMAIL_MAX_LENGTH}
                     placeholder="oss@example.com"
                   />
                 </FormField>
-                <FormField label="Контакт" htmlFor="req-contact">
+                <FormField
+                  label="Контакт"
+                  htmlFor="req-contact"
+                  error={requisitesErrors.contact?.message}
+                >
                   <Input
                     id="req-contact"
-                    value={requisitesDraft.contact ?? ''}
-                    onChange={(e) => setRequisitesDraft((d) => ({ ...d, contact: e.target.value }))}
+                    {...requisitesForm.register('contact')}
+                    error={!!requisitesErrors.contact}
                     maxLength={GROUP_REQUISITES_CONTACT_MAX_LENGTH}
                     placeholder="Телефон або @telegram"
                   />
@@ -1548,7 +1559,12 @@ export function GroupDetailClient({
                 >
                   Скасувати
                 </Button>
-                <Button variant="primary" onClick={handleRequisitesSave} loading={requisitesSaving}>
+                <Button
+                  variant="primary"
+                  onClick={handleRequisitesSave}
+                  loading={requisitesSaving}
+                  disabled={!requisitesDirty}
+                >
                   Зберегти
                 </Button>
               </DialogFooter>
