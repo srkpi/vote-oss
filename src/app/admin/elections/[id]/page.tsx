@@ -34,10 +34,18 @@ interface AdminElectionPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: AdminElectionPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: AdminElectionPageProps): Promise<Metadata | null> {
   const { id } = await params;
-  const { data } = await serverApi.elections.og(id);
-  return { title: data?.title ? `${data.title} — Деталі` : 'Деталі голосування' };
+  const { data, success } = await serverApi.elections.get(id);
+  if (!success) {
+    return null;
+  }
+
+  return {
+    title: `${data.title} — Деталі`,
+  };
 }
 
 export default async function AdminElectionDetailPage({ params }: AdminElectionPageProps) {

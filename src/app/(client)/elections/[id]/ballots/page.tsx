@@ -13,20 +13,16 @@ interface BallotsPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: BallotsPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: BallotsPageProps): Promise<Metadata | null> {
   const { id } = await params;
-  const { data, status } = await serverApi.elections.og(id);
-
-  let metaTitle = 'Бюлетені голосування';
-  if (status === 404 || status === 400) {
-    metaTitle = '404 | Голосування не знайдено';
-  } else if (data?.title) {
-    metaTitle = `Бюлетені | ${data.title}`;
+  const { data, success } = await serverApi.elections.get(id);
+  if (!success) {
+    return null;
   }
 
   return {
-    title: metaTitle,
-    description: metaTitle,
+    title: `Бюлетені | ${data.title}`,
+    description: `Бюлетені | ${data.title}`,
   };
 }
 

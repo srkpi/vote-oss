@@ -22,21 +22,16 @@ interface Props {
 
 export default async function ElectionOgImage({ params }: Props) {
   const { id } = await params;
-  const { onest, bitter } = await loadOgFonts();
-  const { data, status } = await serverApi.elections.og(id);
-
-  let metaTitle = 'Голосування';
-  if (status === 404) {
-    metaTitle = 'Голосування не знайдено';
-  } else if (status === 400) {
-    metaTitle = 'Некоректний ID голосування';
-  } else if (data?.title) {
-    metaTitle = data.title;
+  const { data, success, status } = await serverApi.elections.get(id);
+  if (!success) {
+    return new Response(null, { status: status || 503 });
   }
+
+  const { onest, bitter } = await loadOgFonts();
 
   return new ImageResponse(
     buildOgImageElement({
-      title: clampTitle(metaTitle),
+      title: clampTitle(data.title),
       icon: ICON_ELECTION,
       iconBg: 'rgba(255,255,255,0.10)',
       iconBorder: '2px solid rgba(255,255,255,0.22)',
