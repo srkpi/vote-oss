@@ -18,11 +18,11 @@ import {
 } from '@/lib/constants';
 import { trimmedString, uuidSchema } from '@/lib/schemas/common';
 
-const responsibleSchema = z.object({
+export const protocolResponsibleSchema = z.object({
   fullname: trimmedString(PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH),
   posada: trimmedString(PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH),
 });
-const choiceMappingSchema = z
+export const protocolChoiceMappingSchema = z
   .record(uuidSchema, z.enum(['yes', 'no', 'abstain']))
   .refine(
     (mapping) => Object.keys(mapping).length === PROTOCOL_REQUIRED_ELECTION_CHOICES,
@@ -32,6 +32,11 @@ const choiceMappingSchema = z
     (mapping) => new Set(Object.values(mapping)).size === PROTOCOL_REQUIRED_ELECTION_CHOICES,
     'choiceMapping must use each of yes/no/abstain exactly once',
   );
+
+export const protocolListenerSchema = z.object({
+  fullname: trimmedString(PROTOCOL_LISTENER_FULLNAME_MAX_LENGTH),
+  speech: trimmedString(PROTOCOL_LISTENER_SPEECH_MAX_LENGTH),
+});
 
 export const protocolBodySchema = z
   .object({
@@ -47,10 +52,10 @@ export const protocolBodySchema = z
       .max(PROTOCOL_MAX_VISITORS)
       .nullish()
       .transform((value) => (value == null ? null : Math.floor(value))),
-    responsibles: z.array(responsibleSchema).min(1).max(PROTOCOL_MAX_RESPONSIBLES),
+    responsibles: z.array(protocolResponsibleSchema).min(1).max(PROTOCOL_MAX_RESPONSIBLES),
     attendance: z
       .array(
-        responsibleSchema.extend({
+        protocolResponsibleSchema.extend({
           userId: z
             .string()
             .min(1)
@@ -72,17 +77,9 @@ export const protocolBodySchema = z
             .max(PROTOCOL_AGENDA_ITEM_RESULT_MAX_LENGTH)
             .nullish()
             .transform((value) => value || null),
-          listeners: z
-            .array(
-              z.object({
-                fullname: trimmedString(PROTOCOL_LISTENER_FULLNAME_MAX_LENGTH),
-                speech: trimmedString(PROTOCOL_LISTENER_SPEECH_MAX_LENGTH),
-              }),
-            )
-            .min(1)
-            .max(PROTOCOL_MAX_LISTENERS_PER_ITEM),
+          listeners: z.array(protocolListenerSchema).min(1).max(PROTOCOL_MAX_LISTENERS_PER_ITEM),
           electionId: uuidSchema,
-          choiceMapping: choiceMappingSchema,
+          choiceMapping: protocolChoiceMappingSchema,
         }),
       )
       .min(1)
