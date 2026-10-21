@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PETITION_TITLE_MAX_LENGTH, PETITION_TEXT_MAX_LENGTH } from '@/lib/constants';
+import { PETITION_TEXT_MAX_LENGTH, PETITION_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { restrictionSchema } from '@/lib/schemas/common';
 
 // Inspect the operation before validating its fields: regular users always

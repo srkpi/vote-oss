@@ -87,37 +87,37 @@ A Caddy reverse proxy sits in front of the app, routing `/files/*` to MinIO and 
 
 The application uses **PostgreSQL** as its primary database and connects to it through **Prisma ORM** using the `@prisma/adapter-pg` native driver adapter. The Prisma schema is located at [`prisma/schema.prisma`](prisma/schema.prisma).
 
-| Model                                  | Description                                                                                   |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `JwtToken`                             | Stores access/refresh JTI pairs for revocation tracking                                       |
-| `Admin`                                | Admin users with a self-referential hierarchy tree (`promoter` → `subordinates`)              |
-| `AdminInviteToken`                     | Hashed, time-limited, multi-use tokens for onboarding new admins                              |
-| `Election`                             | An election or petition with RSA key pair, open/close timestamps, and choice constraints      |
-| `ElectionRestriction`                  | Scoping rules attached to an election (faculty, group, study year, etc.)                      |
-| `ElectionChoice`                       | An individual answer option within an election                                                |
-| `IssuedToken`                          | Records which users have been issued a vote token (prevents double-token issuance)            |
-| `Ballot`                               | An encrypted, signed, chained ballot entry                                                    |
-| `UsedTokenNullifier`                   | SHA-256 hash of spent vote tokens (prevents double-voting)                                    |
-| `GlobalBypassToken`                    | Platform-level bypass tokens for students with access issues                                  |
-| `GlobalBypassTokenUsage`               | Per-user usage records for global bypass tokens                                               |
-| `ElectionBypassToken`                  | Election-scoped bypass tokens that waive specific restrictions                                |
-| `ElectionBypassTokenUsage`             | Per-user usage records for election bypass tokens                                             |
-| `FaqCategory`                          | A top-level FAQ section with an ordered position                                              |
-| `FaqItem`                              | A single Q&A entry inside a category, storing content as a Quill Delta JSON string            |
-| `Group`                                | A student group with ownership, requisites, and optional logo                                 |
-| `File`                                 | Object storage file record (MinIO bucket + key) for group logos                               |
-| `GroupMember`                          | Membership record linking a user to a group                                                   |
-| `GroupInviteLink`                      | Hashed invite link with usage cap and expiry for joining a group                              |
-| `GroupInviteLinkUsage`                 | Per-user usage records for group invite links                                                 |
-| `Protocol`                             | A meeting protocol with agenda, attendance, and an OSS snapshot                               |
-| `ProtocolAgendaItem`                   | A single agenda item, optionally linked to a closed election with a yes/no/abstain mapping    |
-| `ElectionCampaign`                     | Orchestrates a full election process through multiple phases                                  |
-| `ElectionCampaignRestriction`          | Eligibility restrictions inherited by all child entities of a campaign                        |
-| `CandidateRegistrationForm`            | A candidate registration form owned by a group                                                |
-| `CandidateRegistrationFormRestriction` | Per-form eligibility restriction                                                              |
-| `CandidateRegistration`                | A candidate's registration submission with status lifecycle                                   |
-| `TeamMemberInviteToken`                | Per-slot invite tokens for registrations that require a team                                  |
-| `UserProfile`                          | Stores information about user avatar, more settings will be in the future                     |
+| Model                                  | Description                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `JwtToken`                             | Stores access/refresh JTI pairs for revocation tracking                                    |
+| `Admin`                                | Admin users with a self-referential hierarchy tree (`promoter` → `subordinates`)           |
+| `AdminInviteToken`                     | Hashed, time-limited, multi-use tokens for onboarding new admins                           |
+| `Election`                             | An election or petition with RSA key pair, open/close timestamps, and choice constraints   |
+| `ElectionRestriction`                  | Scoping rules attached to an election (faculty, group, study year, etc.)                   |
+| `ElectionChoice`                       | An individual answer option within an election                                             |
+| `IssuedToken`                          | Records which users have been issued a vote token (prevents double-token issuance)         |
+| `Ballot`                               | An encrypted, signed, chained ballot entry                                                 |
+| `UsedTokenNullifier`                   | SHA-256 hash of spent vote tokens (prevents double-voting)                                 |
+| `GlobalBypassToken`                    | Platform-level bypass tokens for students with access issues                               |
+| `GlobalBypassTokenUsage`               | Per-user usage records for global bypass tokens                                            |
+| `ElectionBypassToken`                  | Election-scoped bypass tokens that waive specific restrictions                             |
+| `ElectionBypassTokenUsage`             | Per-user usage records for election bypass tokens                                          |
+| `FaqCategory`                          | A top-level FAQ section with an ordered position                                           |
+| `FaqItem`                              | A single Q&A entry inside a category, storing content as a Quill Delta JSON string         |
+| `Group`                                | A student group with ownership, requisites, and optional logo                              |
+| `File`                                 | Object storage file record (MinIO bucket + key) for group logos                            |
+| `GroupMember`                          | Membership record linking a user to a group                                                |
+| `GroupInviteLink`                      | Hashed invite link with usage cap and expiry for joining a group                           |
+| `GroupInviteLinkUsage`                 | Per-user usage records for group invite links                                              |
+| `Protocol`                             | A meeting protocol with agenda, attendance, and an OSS snapshot                            |
+| `ProtocolAgendaItem`                   | A single agenda item, optionally linked to a closed election with a yes/no/abstain mapping |
+| `ElectionCampaign`                     | Orchestrates a full election process through multiple phases                               |
+| `ElectionCampaignRestriction`          | Eligibility restrictions inherited by all child entities of a campaign                     |
+| `CandidateRegistrationForm`            | A candidate registration form owned by a group                                             |
+| `CandidateRegistrationFormRestriction` | Per-form eligibility restriction                                                           |
+| `CandidateRegistration`                | A candidate's registration submission with status lifecycle                                |
+| `TeamMemberInviteToken`                | Per-slot invite tokens for registrations that require a team                               |
+| `UserProfile`                          | Stores information about user avatar, more settings will be in the future                  |
 
 ## Getting Started
 
@@ -248,22 +248,22 @@ For local development there is a lightweight mock server that replaces the real 
 
 ### What it mocks
 
-| Real service    | Mock endpoint                               | Description                                                 |
-| --------------- | ------------------------------------------- | ----------------------------------------------------------- |
-| KPI ID ticket   | `GET /api/ticket`                           | Returns synthetic user info for a given ticket ID           |
-| Campus student  | `GET /api/integration/voteoss/students/:id` | Returns synthetic academic data                             |
-| Campus groups   | `GET /group/all`                            | Returns real KPI faculty/group structure from `groups.json` |
+| Real service   | Mock endpoint                               | Description                                                 |
+| -------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| KPI ID ticket  | `GET /api/ticket`                           | Returns synthetic user info for a given ticket ID           |
+| Campus student | `GET /api/integration/voteoss/students/:id` | Returns synthetic academic data                             |
+| Campus groups  | `GET /group/all`                            | Returns real KPI faculty/group structure from `groups.json` |
 
 ### Dynamic ticket IDs
 
 The same ticket always returns the same student — results are hash-seeded and stateless.
 
-| Ticket          | Resolves to                                                |
-| --------------- | ---------------------------------------------------------- |
-| `s1` … `s100`   | A random student from any faculty                          |
-| `s1@ФІОТ`       | A student whose group belongs to the ФІОТ faculty          |
-| `s7@КА-31`      | A student in group КА-31 specifically                      |
-| `s3@ФЕЛ`        | A student whose group belongs to the ФЕЛ faculty           |
+| Ticket        | Resolves to                                       |
+| ------------- | ------------------------------------------------- |
+| `s1` … `s100` | A random student from any faculty                 |
+| `s1@ФІОТ`     | A student whose group belongs to the ФІОТ faculty |
+| `s7@КА-31`    | A student in group КА-31 specifically             |
+| `s3@ФЕЛ`      | A student whose group belongs to the ФЕЛ faculty  |
 
 ### Predefined edge-case tickets
 
@@ -411,11 +411,11 @@ Build-time environment variables (`NEXT_PUBLIC_*`) are sourced from GitHub Actio
 
 The following endpoints must be called on a schedule. Protect each with `Authorization: Bearer <CRON_SECRET>`.
 
-| Endpoint                        | Recommended schedule | Purpose                                                   |
-| ------------------------------- | -------------------- | --------------------------------------------------------- |
-| `POST /api/cron/cleanup-tokens` | Weekly               | Delete expired JWT token rows from the database           |
-| `POST /api/cron/cleanup-bypass` | Weekly               | Delete expired global bypass token records                |
-| `POST /api/cron/campaign-tick`  | Every 5–15 minutes   | Advance election campaigns through their state machine    |
+| Endpoint                        | Recommended schedule | Purpose                                                |
+| ------------------------------- | -------------------- | ------------------------------------------------------ |
+| `POST /api/cron/cleanup-tokens` | Weekly               | Delete expired JWT token rows from the database        |
+| `POST /api/cron/cleanup-bypass` | Weekly               | Delete expired global bypass token records             |
+| `POST /api/cron/campaign-tick`  | Every 5–15 minutes   | Advance election campaigns through their state machine |
 
 Example:
 

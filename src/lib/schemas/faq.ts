@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 import {
   FAQ_CATEGORY_TITLE_MAX_LENGTH,
-  FAQ_ITEM_TITLE_MAX_LENGTH,
   FAQ_ITEM_CONTENT_MAX_LENGTH,
+  FAQ_ITEM_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
 import { trimmedString } from '@/lib/schemas/common';
 import { deltaToPlainText, parseQuillDelta } from '@/lib/utils/common';
