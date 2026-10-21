@@ -54,7 +54,9 @@ function useCatgirlTexture(url: string | null): THREE.Texture | null {
   const [result, setResult] = useState<{ url: string; texture: THREE.Texture } | null>(null);
 
   useEffect(() => {
-    if (!url) return;
+    if (!url) {
+      return;
+    }
 
     let cancelled = false;
     const loader = new THREE.TextureLoader();
@@ -361,7 +363,9 @@ export function LogoMark({
     const t = state.clock.elapsedTime;
     satellites.forEach((satellite, i) => {
       const ref = satelliteRefs.current[i];
-      if (!ref) return;
+      if (!ref) {
+        return;
+      }
       const speed = 0.16 + i * 0.015;
       const angle = t * speed + satellite.phase;
       const wobble = 1 + charge.current * 0.15;

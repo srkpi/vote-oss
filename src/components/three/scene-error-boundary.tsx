@@ -40,7 +40,9 @@ export class SceneErrorBoundary extends Component<
   }
 
   render() {
-    if (this.state.hasError) return this.props.fallback;
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
     return this.props.children;
   }
 }

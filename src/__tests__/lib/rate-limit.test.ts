@@ -101,7 +101,9 @@ describe('rate-limit', () => {
 
     function makeHeaders(entries: Record<string, string>): Headers {
       const h = new Headers();
-      for (const [k, v] of Object.entries(entries)) h.set(k, v);
+      for (const [k, v] of Object.entries(entries)) {
+        h.set(k, v);
+      }
       return h;
     }
 

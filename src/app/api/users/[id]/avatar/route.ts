@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'crypto';
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -69,7 +70,9 @@ import { PUBLIC_BUCKET, putObject, removeObject } from '@/lib/storage/minio';
  */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: targetUserId } = await params;
   if (targetUserId !== auth.user.sub) {
@@ -99,7 +102,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!(entry instanceof File)) {
     return Errors.badRequest('Field "file" is required and must be a file');
   }
-  if (entry.size === 0) return Errors.badRequest('File is empty');
+  if (entry.size === 0) {
+    return Errors.badRequest('File is empty');
+  }
   if (entry.size > AVATAR_MAX_SIZE_BYTES) {
     return apiError(
       `File exceeds the ${Math.floor(AVATAR_MAX_SIZE_BYTES / 1024)} KiB limit`,
@@ -229,7 +234,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: targetUserId } = await params;
 
@@ -262,7 +269,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       where: { id: previousAvatarId },
       select: { bucket: true, object_key: true, deleted_at: true },
     });
-    if (!prev || prev.deleted_at) return null;
+    if (!prev || prev.deleted_at) {
+      return null;
+    }
 
     await tx.file.update({
       where: { id: previousAvatarId },

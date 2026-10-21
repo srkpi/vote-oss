@@ -6,10 +6,10 @@
     "dev": "pnpm generate:openapi && next dev",
     "build": "pnpm generate:openapi && next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "oxlint .",
     "type-check": "tsc --noEmit",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -23,7 +23,8 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "db:seed": "prisma db seed",
-    "generate:openapi": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/generate-openapi.ts"
+    "generate:openapi": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" scripts/generate-openapi.ts",
+    "lint:fix": "oxlint --fix ."
   },
   "dependencies": {
     "@hiseb/confetti": "^2.2.0",
@@ -79,21 +80,15 @@
     "allure-jest": "^3.12.2",
     "allure-js-commons": "^3.12.2",
     "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^10.11.0",
-    "eslint-config-next": "16.3.6",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.6",
-    "eslint-plugin-simple-import-sort": "^14.0.0",
-    "eslint-plugin-tailwind-canonical-classes": "^1.4.1",
     "jest": "^30.5.2",
     "jest-environment-node": "^30.5.2",
-    "prettier": "^3.9.9",
-    "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "^7.10.0",
     "tailwindcss": "^4.3.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "oxlint": "^1.89.0",
+    "oxfmt": "^0.74.0"
   },
   "overrides": {
     "@types/react": "19.2.14",

@@ -31,15 +31,15 @@ export function PlatformStatsSection({ stats }: PlatformStatsSectionProps) {
           {index > 0 && (
             <span
               aria-hidden
-              className="border-border absolute top-3 -left-px hidden h-16 border-l md:block"
+              className="absolute top-3 -left-px hidden h-16 border-l border-border md:block"
             />
           )}
 
-          <p className="font-display text-kpi-navy text-4xl font-bold tracking-tight tabular-nums sm:text-5xl lg:text-6xl">
+          <p className="font-display text-4xl font-bold tracking-tight text-kpi-navy tabular-nums sm:text-5xl lg:text-6xl">
             <AnimatedCounter target={stats[key]} delay={index * 120} enabled={heroReady} />
           </p>
 
-          <p className="font-body text-muted-foreground max-w-36 text-xs font-semibold tracking-widest uppercase">
+          <p className="font-body max-w-36 text-xs font-semibold tracking-widest text-muted-foreground uppercase">
             {pluralize(stats[key], label, false)}
           </p>
         </div>

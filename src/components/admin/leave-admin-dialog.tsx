@@ -32,7 +32,9 @@ function getDescendants(admins: Admin[], rootId: string): Admin[] {
   const childrenMap: Record<string, string[]> = {};
   for (const admin of admins) {
     if (admin.promoter) {
-      if (!childrenMap[admin.promoter.userId]) childrenMap[admin.promoter.userId] = [];
+      if (!childrenMap[admin.promoter.userId]) {
+        childrenMap[admin.promoter.userId] = [];
+      }
       childrenMap[admin.promoter.userId].push(admin.userId);
     }
   }
@@ -85,7 +87,9 @@ export function LeaveAdminDialog({ open, onClose, admins, currentUserId }: Leave
   };
 
   const handleClose = () => {
-    if (loading) return;
+    if (loading) {
+      return;
+    }
     setError(null);
     setReplacementId('');
     onClose();
@@ -116,7 +120,7 @@ export function LeaveAdminDialog({ open, onClose, admins, currentUserId }: Leave
               <div className="space-y-2">
                 <label
                   htmlFor="replacement"
-                  className="font-body text-foreground block text-sm font-medium"
+                  className="font-body block text-sm font-medium text-foreground"
                 >
                   Наступник{' '}
                   <span className="text-error" aria-hidden="true">
@@ -133,7 +137,7 @@ export function LeaveAdminDialog({ open, onClose, admins, currentUserId }: Leave
                     label: `${admin.fullName} · ${admin.faculty}, ${admin.group}`,
                   }))}
                 />
-                <p className="font-body text-muted-foreground text-xs">
+                <p className="font-body text-xs text-muted-foreground">
                   Наступник стане безпосереднім батьком усіх ваших підлеглих
                 </p>
               </div>

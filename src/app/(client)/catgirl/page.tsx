@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function CatgirlPage() {
   return (
-    <div className="catgirl bg-surface relative min-h-[calc(100vh-var(--header-height))] overflow-hidden">
+    <div className="catgirl relative min-h-[calc(100vh-var(--header-height))] overflow-hidden bg-surface">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
         <div className="absolute -top-32 -left-24 h-80 w-80 rounded-full bg-pink-300/30 blur-3xl" />
         <div className="absolute top-1/4 -right-28 h-96 w-96 rounded-full bg-rose-300/25 blur-3xl" />
@@ -32,7 +32,7 @@ export default function CatgirlPage() {
               aria-hidden="true"
             />
           </span>
-          <h1 className="font-display text-kpi-navy text-3xl font-bold sm:text-4xl">
+          <h1 className="font-display text-3xl font-bold text-kpi-navy sm:text-4xl">
             Catgirl-режим
           </h1>
         </div>

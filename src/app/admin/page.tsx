@@ -48,11 +48,11 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="border-border-subtle bg-card flex items-center gap-4 border-b px-4 py-4 sm:px-8 sm:py-6">
+      <div className="flex items-center gap-4 border-b border-border-subtle bg-card px-4 py-4 sm:px-8 sm:py-6">
         <Link
           href="/"
           className={cn(
-            'border-border-subtle hover:bg-surface text-muted-foreground hover:text-foreground',
+            'border-border-subtle text-muted-foreground hover:bg-surface hover:text-foreground',
             'mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
             'border transition-all duration-200 lg:hidden',
           )}
@@ -119,20 +119,20 @@ export default async function AdminDashboardPage() {
         )}
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-            <h2 className="font-display border-border-subtle text-foreground border-b px-4 py-4 text-base font-semibold sm:px-6 sm:text-lg">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+            <h2 className="border-b border-border-subtle px-4 py-4 font-display text-base font-semibold text-foreground sm:px-6 sm:text-lg">
               Нещодавні голосування
             </h2>
 
             {recentElections.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                <div className="border-border-subtle bg-surface mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
-                  <FileText className="text-kpi-gray-mid h-7 w-7" strokeWidth={1.5} />
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border-subtle bg-surface">
+                  <FileText className="h-7 w-7 text-kpi-gray-mid" strokeWidth={1.5} />
                 </div>
-                <p className="font-display text-foreground text-base font-semibold">
+                <p className="font-display text-base font-semibold text-foreground">
                   Голосувань поки немає
                 </p>
-                <p className="font-body text-muted-foreground mt-1 mb-4 text-sm">
+                <p className="font-body mt-1 mb-4 text-sm text-muted-foreground">
                   Створіть перше голосування для вашого підрозділу
                 </p>
                 <Button variant="accent" size="sm" asChild>
@@ -140,26 +140,26 @@ export default async function AdminDashboardPage() {
                 </Button>
               </div>
             ) : (
-              <div className="divide-border-subtle divide-y">
+              <div className="divide-y divide-border-subtle">
                 {recentElections.map((election) => {
                   return (
                     <Link
                       key={election.id}
                       href={`/admin/elections/${election.id}`}
-                      className="group hover:bg-surface flex items-center gap-3 px-4 py-3 transition-colors sm:gap-4 sm:px-6 sm:py-4"
+                      className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface sm:gap-4 sm:px-6 sm:py-4"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="font-body text-foreground group-hover:text-kpi-navy truncate text-sm font-medium transition-colors">
+                        <p className="font-body truncate text-sm font-medium text-foreground transition-colors group-hover:text-kpi-navy">
                           {election.title}
                         </p>
-                        <p className="font-body text-muted-foreground mt-0.5 hidden text-xs sm:block">
+                        <p className="font-body mt-0.5 hidden text-xs text-muted-foreground sm:block">
                           <LocalDateTime date={election.opensAt} /> —{' '}
                           <LocalDateTime date={election.closesAt} />
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                         <StatusBadge status={election.status} size="sm" />
-                        <span className="font-body text-muted-foreground hidden text-xs sm:inline">
+                        <span className="font-body hidden text-xs text-muted-foreground sm:inline">
                           {election.ballotCount} голосів
                         </span>
                       </div>
@@ -170,20 +170,20 @@ export default async function AdminDashboardPage() {
             )}
           </div>
 
-          <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-            <h2 className="font-display border-border-subtle text-foreground border-b px-4 py-4 text-base font-semibold sm:px-6 sm:text-lg">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+            <h2 className="border-b border-border-subtle px-4 py-4 font-display text-base font-semibold text-foreground sm:px-6 sm:text-lg">
               Нещодавні петиції
             </h2>
 
             {recentPetitions.length === 0 ? (
               <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                <div className="border-border-subtle bg-surface mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
-                  <Megaphone className="text-kpi-gray-mid h-7 w-7" strokeWidth={1.5} />
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-border-subtle bg-surface">
+                  <Megaphone className="h-7 w-7 text-kpi-gray-mid" strokeWidth={1.5} />
                 </div>
-                <p className="font-display text-foreground text-base font-semibold">
+                <p className="font-display text-base font-semibold text-foreground">
                   Петицій поки немає
                 </p>
-                <p className="font-body text-muted-foreground mt-1 mb-4 text-sm">
+                <p className="font-body mt-1 mb-4 text-sm text-muted-foreground">
                   Створіть першу петицію або дочекайтесь користувацьких ініціатив
                 </p>
                 <Button variant="accent" size="sm" asChild>
@@ -191,7 +191,7 @@ export default async function AdminDashboardPage() {
                 </Button>
               </div>
             ) : (
-              <div className="divide-border-subtle divide-y">
+              <div className="divide-y divide-border-subtle">
                 {recentPetitions.map((petition) => {
                   const quorum = petition.winningConditions.quorum ?? PETITION_QUORUM;
                   const pct = Math.min(100, Math.round((petition.ballotCount / quorum) * 100));
@@ -199,13 +199,13 @@ export default async function AdminDashboardPage() {
                     <Link
                       key={petition.id}
                       href={`/petitions/${petition.id}`}
-                      className="group hover:bg-surface flex items-center gap-3 px-4 py-3 transition-colors sm:gap-4 sm:px-6 sm:py-4"
+                      className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface sm:gap-4 sm:px-6 sm:py-4"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="font-body text-foreground group-hover:text-kpi-navy truncate text-sm font-medium transition-colors">
+                        <p className="font-body truncate text-sm font-medium text-foreground transition-colors group-hover:text-kpi-navy">
                           {petition.title}
                         </p>
-                        <p className="font-body text-muted-foreground mt-0.5 truncate text-xs">
+                        <p className="font-body mt-0.5 truncate text-xs text-muted-foreground">
                           {petition.createdBy.fullName}
                         </p>
                       </div>
@@ -215,7 +215,7 @@ export default async function AdminDashboardPage() {
                         ) : (
                           <StatusBadge status={petition.status} size="sm" />
                         )}
-                        <span className="font-body text-muted-foreground hidden text-xs sm:inline">
+                        <span className="font-body hidden text-xs text-muted-foreground sm:inline">
                           {petition.ballotCount}/{quorum} ({pct}%)
                         </span>
                       </div>

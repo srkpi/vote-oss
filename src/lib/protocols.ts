@@ -48,9 +48,13 @@ export type ProtocolWithAgenda = Prisma.ProtocolGetPayload<{ include: typeof PRO
 // ────────────────────────────────────────────────────────────────────────────
 
 function parseListeners(value: Prisma.JsonValue): ProtocolListener[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
   return value.flatMap((item) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      return [];
+    }
     const obj = item as Record<string, unknown>;
     const fullname = typeof obj.fullname === 'string' ? obj.fullname : '';
     const speech = typeof obj.speech === 'string' ? obj.speech : '';
@@ -59,9 +63,13 @@ function parseListeners(value: Prisma.JsonValue): ProtocolListener[] {
 }
 
 function parseResponsibles(value: Prisma.JsonValue): ProtocolResponsible[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
   return value.flatMap((item) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      return [];
+    }
     const obj = item as Record<string, unknown>;
     const posada = typeof obj.posada === 'string' ? obj.posada : '';
     const fullname = typeof obj.fullname === 'string' ? obj.fullname : '';
@@ -70,9 +78,13 @@ function parseResponsibles(value: Prisma.JsonValue): ProtocolResponsible[] {
 }
 
 function parseAttendance(value: Prisma.JsonValue): ProtocolAttendee[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
   return value.flatMap((item) => {
-    if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      return [];
+    }
     const obj = item as Record<string, unknown>;
     const fullname = typeof obj.fullname === 'string' ? obj.fullname : '';
     const posada = typeof obj.posada === 'string' ? obj.posada : '';
@@ -83,7 +95,9 @@ function parseAttendance(value: Prisma.JsonValue): ProtocolAttendee[] {
 }
 
 function parseChoiceMapping(value: Prisma.JsonValue | null): ProtocolChoiceMapping | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
   const result: ProtocolChoiceMapping = {};
   for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
     if (raw === 'yes' || raw === 'no' || raw === 'abstain') {
@@ -169,21 +183,33 @@ export interface ValidatedProtocolBody {
 type Validation<T> = { ok: true; data: T } | { ok: false; error: string };
 
 function trimRequired(value: unknown, max: number, label: string): Validation<string> {
-  if (typeof value !== 'string') return { ok: false, error: `${label} must be a string` };
+  if (typeof value !== 'string') {
+    return { ok: false, error: `${label} must be a string` };
+  }
   const trimmed = value.trim();
-  if (trimmed.length === 0) return { ok: false, error: `${label} is required` };
-  if (trimmed.length > max)
+  if (trimmed.length === 0) {
+    return { ok: false, error: `${label} is required` };
+  }
+  if (trimmed.length > max) {
     return { ok: false, error: `${label} must be at most ${max} characters` };
+  }
   return { ok: true, data: trimmed };
 }
 
 function trimOptional(value: unknown, max: number, label: string): Validation<string | null> {
-  if (value === undefined || value === null) return { ok: true, data: null };
-  if (typeof value !== 'string') return { ok: false, error: `${label} must be a string` };
+  if (value === undefined || value === null) {
+    return { ok: true, data: null };
+  }
+  if (typeof value !== 'string') {
+    return { ok: false, error: `${label} must be a string` };
+  }
   const trimmed = value.trim();
-  if (trimmed.length === 0) return { ok: true, data: null };
-  if (trimmed.length > max)
+  if (trimmed.length === 0) {
+    return { ok: true, data: null };
+  }
+  if (trimmed.length > max) {
     return { ok: false, error: `${label} must be at most ${max} characters` };
+  }
   return { ok: true, data: trimmed };
 }
 
@@ -194,11 +220,17 @@ export function validateProtocolBody(input: unknown): Validation<ValidatedProtoc
   const body = input as Record<string, unknown>;
 
   const nameRes = trimRequired(body.name, PROTOCOL_NAME_MAX_LENGTH, 'name');
-  if (!nameRes.ok) return nameRes;
+  if (!nameRes.ok) {
+    return nameRes;
+  }
 
-  if (typeof body.date !== 'string') return { ok: false, error: 'date is required' };
+  if (typeof body.date !== 'string') {
+    return { ok: false, error: 'date is required' };
+  }
   const parsedDate = new Date(body.date);
-  if (Number.isNaN(parsedDate.getTime())) return { ok: false, error: 'date is invalid' };
+  if (Number.isNaN(parsedDate.getTime())) {
+    return { ok: false, error: 'date is invalid' };
+  }
 
   if (
     typeof body.number !== 'number' ||
@@ -241,13 +273,17 @@ export function validateProtocolBody(input: unknown): Validation<ValidatedProtoc
       PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH,
       `responsibles[${i}].posada`,
     );
-    if (!posadaRes.ok) return posadaRes;
+    if (!posadaRes.ok) {
+      return posadaRes;
+    }
     const fullnameRes = trimRequired(
       r.fullname,
       PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH,
       `responsibles[${i}].fullname`,
     );
-    if (!fullnameRes.ok) return fullnameRes;
+    if (!fullnameRes.ok) {
+      return fullnameRes;
+    }
     responsibles.push({ posada: posadaRes.data, fullname: fullnameRes.data });
   }
 
@@ -270,19 +306,25 @@ export function validateProtocolBody(input: unknown): Validation<ValidatedProtoc
         PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH,
         `attendance[${i}].fullname`,
       );
-      if (!fullnameRes.ok) return fullnameRes;
+      if (!fullnameRes.ok) {
+        return fullnameRes;
+      }
       const posadaRes = trimRequired(
         a.posada,
         PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH,
         `attendance[${i}].posada`,
       );
-      if (!posadaRes.ok) return posadaRes;
+      if (!posadaRes.ok) {
+        return posadaRes;
+      }
       const presentRes = trimRequired(
         a.present_text,
         PROTOCOL_ATTENDEE_PRESENT_TEXT_MAX_LENGTH,
         `attendance[${i}].present_text`,
       );
-      if (!presentRes.ok) return presentRes;
+      if (!presentRes.ok) {
+        return presentRes;
+      }
       let userId: string | null = null;
       if (a.userId !== undefined && a.userId !== null) {
         if (typeof a.userId !== 'string' || a.userId.length === 0) {
@@ -317,13 +359,17 @@ export function validateProtocolBody(input: unknown): Validation<ValidatedProtoc
       PROTOCOL_AGENDA_ITEM_NAME_MAX_LENGTH,
       `agendaItems[${i}].name`,
     );
-    if (!aNameRes.ok) return aNameRes;
+    if (!aNameRes.ok) {
+      return aNameRes;
+    }
     const resultRes = trimOptional(
       a.result,
       PROTOCOL_AGENDA_ITEM_RESULT_MAX_LENGTH,
       `agendaItems[${i}].result`,
     );
-    if (!resultRes.ok) return resultRes;
+    if (!resultRes.ok) {
+      return resultRes;
+    }
 
     if (!Array.isArray(a.listeners) || a.listeners.length === 0) {
       return { ok: false, error: `agendaItems[${i}].listeners must be a non-empty array` };
@@ -345,13 +391,17 @@ export function validateProtocolBody(input: unknown): Validation<ValidatedProtoc
         PROTOCOL_LISTENER_FULLNAME_MAX_LENGTH,
         `agendaItems[${i}].listeners[${j}].fullname`,
       );
-      if (!fnRes.ok) return fnRes;
+      if (!fnRes.ok) {
+        return fnRes;
+      }
       const speechRes = trimRequired(
         l.speech,
         PROTOCOL_LISTENER_SPEECH_MAX_LENGTH,
         `agendaItems[${i}].listeners[${j}].speech`,
       );
-      if (!speechRes.ok) return speechRes;
+      if (!speechRes.ok) {
+        return speechRes;
+      }
       listeners.push({ fullname: fnRes.data, speech: speechRes.data });
     }
 
@@ -453,7 +503,9 @@ export async function buildOssSnapshot(
       contact: true,
     },
   });
-  if (!group) throw new Error('Group not found while building OSS snapshot');
+  if (!group) {
+    throw new Error('Group not found while building OSS snapshot');
+  }
 
   const fromGroup: ProtocolOssSnapshot = {
     name: group.full_name?.trim() || group.name,
@@ -462,7 +514,9 @@ export async function buildOssSnapshot(
     contact: group.contact ?? '',
   };
 
-  if (!override) return fromGroup;
+  if (!override) {
+    return fromGroup;
+  }
   return {
     name: override.name?.trim() || fromGroup.name,
     address: override.address ?? fromGroup.address,
@@ -485,7 +539,9 @@ export async function computeProtocolCounts(
 
   let present = 0;
   for (const a of attendees) {
-    if (isAttendeePresentByText(a.present_text)) present++;
+    if (isAttendeePresentByText(a.present_text)) {
+      present++;
+    }
   }
 
   const quorum = Math.ceil((memberCount * 2) / 3);
@@ -524,9 +580,13 @@ export function buildVoteTotals(
   for (const c of choiceCounts) {
     const m = mapping[c.id];
     const count = c.voteCount ?? 0;
-    if (m === 'yes') yes += count;
-    else if (m === 'no') no += count;
-    else if (m === 'abstain') abstain += count;
+    if (m === 'yes') {
+      yes += count;
+    } else if (m === 'no') {
+      no += count;
+    } else if (m === 'abstain') {
+      abstain += count;
+    }
   }
   return { yes_count: yes, no_count: no, not_decided_count: abstain };
 }
@@ -598,7 +658,9 @@ export async function buildGeneratorPayload(protocolId: string): Promise<Generat
       },
     },
   });
-  if (!row) throw new Error('Protocol not found');
+  if (!row) {
+    throw new Error('Protocol not found');
+  }
 
   const protocol = shapeProtocol(row);
   const counts = await computeProtocolCounts(protocol.groupId, protocol.attendance);
@@ -609,7 +671,9 @@ export async function buildGeneratorPayload(protocolId: string): Promise<Generat
       name: agenda.name,
       listeners: agenda.listeners,
     };
-    if (agenda.result) event.result = agenda.result;
+    if (agenda.result) {
+      event.result = agenda.result;
+    }
     if (rawAgenda.election && agenda.choiceMapping) {
       const counts = rawAgenda.election.choices.map((c) => ({
         id: c.id,
@@ -631,7 +695,9 @@ export async function buildGeneratorPayload(protocolId: string): Promise<Generat
     events,
     responsibles: protocol.responsibles,
   };
-  if (protocol.visitors !== null) payload.visitors = protocol.visitors;
+  if (protocol.visitors !== null) {
+    payload.visitors = protocol.visitors;
+  }
   if (protocol.attendance.length > 0) {
     payload.members = protocol.attendance.map((a) => ({
       fullname: a.fullname,

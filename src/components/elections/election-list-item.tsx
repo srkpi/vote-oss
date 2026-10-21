@@ -44,8 +44,8 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
       href={`/elections/${election.id}`}
       className={cn(
         'group flex items-stretch gap-4 px-4 py-4 sm:px-6',
-        'border-border-subtle border-b last:border-b-0',
-        'hover:bg-surface transition-colors duration-150',
+        'border-b border-border-subtle last:border-b-0',
+        'transition-colors duration-150 hover:bg-surface',
         'animate-fade-up',
         voteStatus === 'cannot_vote' && 'opacity-70 hover:opacity-100',
       )}
@@ -67,13 +67,13 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
         </div>
 
         {/* Title */}
-        <p className="font-display text-foreground group-hover:text-kpi-navy min-w-0 text-sm font-semibold wrap-break-word transition-colors duration-150 sm:text-base">
+        <p className="min-w-0 font-display text-sm font-semibold wrap-break-word text-foreground transition-colors duration-150 group-hover:text-kpi-navy sm:text-base">
           {election.title}
         </p>
 
         {/* Author + date */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
+          <span className="font-body flex items-center gap-1.5 text-xs text-muted-foreground">
             <Avatar
               icon
               src={election.createdBy.avatarUrl}
@@ -82,7 +82,7 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
             />
             {election.createdBy.fullName}
           </span>
-          <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
+          <span className="font-body flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="h-4 w-4 shrink-0" />
             {isOpen && (
               <>
@@ -107,8 +107,8 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
                 className={cn(
                   'font-body flex items-center gap-1 truncate rounded-full border px-2 py-0.5 text-xs',
                   c.winner
-                    ? 'border-kpi-navy/30 bg-kpi-navy/8 text-kpi-navy font-semibold'
-                    : 'bg-surface text-muted-foreground border-border-subtle',
+                    ? 'border-kpi-navy/30 bg-kpi-navy/8 font-semibold text-kpi-navy'
+                    : 'border-border-subtle bg-surface text-muted-foreground',
                 )}
               >
                 {c.winner && <Crown className="h-2.5 w-2.5 shrink-0" />}
@@ -116,7 +116,7 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
               </span>
             ))}
             {hiddenCount > 0 && (
-              <span className="font-body text-muted-foreground/70 border-border-subtle bg-surface rounded-full border px-2 py-0.5 text-xs">
+              <span className="font-body rounded-full border border-border-subtle bg-surface px-2 py-0.5 text-xs text-muted-foreground/70">
                 +{hiddenCount}
               </span>
             )}
@@ -126,8 +126,8 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
 
       {/* ── Right: ballot count — always visible on all screen sizes ───────── */}
       <div className="flex shrink-0 items-center gap-1.5 self-center">
-        <span className="font-body text-muted-foreground text-sm">{election.ballotCount}</span>
-        <FileText className="text-kpi-gray-mid h-4 w-4" />
+        <span className="font-body text-sm text-muted-foreground">{election.ballotCount}</span>
+        <FileText className="h-4 w-4 text-kpi-gray-mid" />
       </div>
     </Link>
   );
@@ -136,7 +136,7 @@ export function ElectionListItem({ election, index = 0 }: ElectionListItemProps)
 export function ElectionListItemSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
-      className="animate-fade-up border-border-subtle flex items-stretch gap-4 border-b px-4 py-4 last:border-b-0 sm:px-6"
+      className="animate-fade-up flex items-stretch gap-4 border-b border-border-subtle px-4 py-4 last:border-b-0 sm:px-6"
       style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
     >
       <div className="skeleton w-1 self-stretch rounded-sm" />

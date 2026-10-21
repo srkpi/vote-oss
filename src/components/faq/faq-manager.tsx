@@ -362,8 +362,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       ))}
 
       {addingCategory ? (
-        <div className="border-border-color bg-card shadow-card rounded-xl border p-4 sm:p-5">
-          <p className="font-body text-foreground mb-3 text-sm font-semibold">Нова категорія</p>
+        <div className="border-border-color rounded-xl border bg-card p-4 shadow-card sm:p-5">
+          <p className="font-body mb-3 text-sm font-semibold text-foreground">Нова категорія</p>
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-1">
               <Input
@@ -400,7 +400,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
                 setAddingCategory(false);
                 setNewCategoryTitle('');
               }}
-              className="text-muted-foreground hover:text-foreground flex h-10 w-9 items-center justify-center rounded-(--radius) transition-colors"
+              className="flex h-10 w-9 items-center justify-center rounded-(--radius) text-muted-foreground transition-colors hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>

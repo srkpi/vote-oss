@@ -34,8 +34,12 @@ interface KyivParts {
 }
 
 function toDate(v: Date | string | null | undefined): Date | null {
-  if (!v) return null;
-  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  if (!v) {
+    return null;
+  }
+  if (v instanceof Date) {
+    return isNaN(v.getTime()) ? null : v;
+  }
   const d = new Date(v);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -62,7 +66,9 @@ function buildKyivUtc(parts: KyivParts): Date {
 }
 
 function formatDisplay(utc: Date | null): string {
-  if (!utc) return '';
+  if (!utc) {
+    return '';
+  }
   return format(toZonedTime(utc, KYIV_TZ), 'dd.MM.yyyy HH:mm', { timeZone: KYIV_TZ });
 }
 
@@ -76,15 +82,25 @@ function daysInMonth(year: number, month: number): number {
 }
 
 function snapToStep(value: number, step: number): number {
-  if (step <= 1) return value;
+  if (step <= 1) {
+    return value;
+  }
   return Math.round(value / step) * step;
 }
 
 function partsCompare(a: KyivParts, b: KyivParts): number {
-  if (a.year !== b.year) return a.year - b.year;
-  if (a.month !== b.month) return a.month - b.month;
-  if (a.day !== b.day) return a.day - b.day;
-  if (a.hour !== b.hour) return a.hour - b.hour;
+  if (a.year !== b.year) {
+    return a.year - b.year;
+  }
+  if (a.month !== b.month) {
+    return a.month - b.month;
+  }
+  if (a.day !== b.day) {
+    return a.day - b.day;
+  }
+  if (a.hour !== b.hour) {
+    return a.hour - b.hour;
+  }
   return a.minute - b.minute;
 }
 
@@ -173,14 +189,16 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
     React.useEffect(() => {
       if (open) {
         const target = utcValue ? getKyivParts(utcValue) : fallbackParts;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // oxlint-disable-next-line react/set-state-in-effect
         setView({ year: target.year, month: target.month });
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      // oxlint-disable-next-line react/exhaustive-deps
     }, [open]);
 
     const openPopover = React.useCallback(() => {
-      if (disabled || !triggerRef.current) return;
+      if (disabled || !triggerRef.current) {
+        return;
+      }
       setPosition(computePosition(triggerRef.current, 0));
       setOpen(true);
     }, [disabled]);
@@ -193,15 +211,21 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
     // Re-measure once the popover mounts to use its real height.
     const popoverCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
       popoverRef.current = node;
-      if (!node || !triggerRef.current) return;
+      if (!node || !triggerRef.current) {
+        return;
+      }
       setPosition(computePosition(triggerRef.current, node.offsetHeight));
     }, []);
 
     // Reposition on scroll/resize while open.
     React.useEffect(() => {
-      if (!open) return;
+      if (!open) {
+        return;
+      }
       const update = () => {
-        if (!triggerRef.current) return;
+        if (!triggerRef.current) {
+          return;
+        }
         const h = popoverRef.current?.offsetHeight ?? 0;
         setPosition(computePosition(triggerRef.current, h));
       };
@@ -215,11 +239,17 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
 
     // Outside-pointer-down close.
     React.useEffect(() => {
-      if (!open) return;
+      if (!open) {
+        return;
+      }
       const handler = (e: PointerEvent) => {
         const t = e.target as Node;
-        if (triggerRef.current?.contains(t)) return;
-        if (popoverRef.current?.contains(t)) return;
+        if (triggerRef.current?.contains(t)) {
+          return;
+        }
+        if (popoverRef.current?.contains(t)) {
+          return;
+        }
         closePopover();
       };
       document.addEventListener('pointerdown', handler);
@@ -228,7 +258,9 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
 
     // Esc to close.
     React.useEffect(() => {
-      if (!open) return;
+      if (!open) {
+        return;
+      }
       const handler = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           e.preventDefault();
@@ -244,8 +276,12 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
       (parts: KyivParts) => {
         // Clamp to min/max range so the picker never produces an out-of-range value.
         let candidate = parts;
-        if (minParts && partsCompare(candidate, minParts) < 0) candidate = minParts;
-        if (maxParts && partsCompare(candidate, maxParts) > 0) candidate = maxParts;
+        if (minParts && partsCompare(candidate, minParts) < 0) {
+          candidate = minParts;
+        }
+        if (maxParts && partsCompare(candidate, maxParts) > 0) {
+          candidate = maxParts;
+        }
         onChange(buildKyivUtc(candidate));
       },
       [minParts, maxParts, onChange],
@@ -254,11 +290,15 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
     const isDayDisabled = (year: number, month: number, day: number): boolean => {
       if (minParts) {
         const endOfDay: KyivParts = { year, month, day, hour: 23, minute: 59 };
-        if (partsCompare(endOfDay, minParts) < 0) return true;
+        if (partsCompare(endOfDay, minParts) < 0) {
+          return true;
+        }
       }
       if (maxParts) {
         const startOfDay: KyivParts = { year, month, day, hour: 0, minute: 0 };
-        if (partsCompare(startOfDay, maxParts) > 0) return true;
+        if (partsCompare(startOfDay, maxParts) > 0) {
+          return true;
+        }
       }
       return false;
     };
@@ -284,14 +324,18 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
 
     const handleHourChange = (raw: string) => {
       const n = parseInt(raw, 10);
-      if (Number.isNaN(n)) return;
+      if (Number.isNaN(n)) {
+        return;
+      }
       const hour = Math.max(0, Math.min(23, n));
       emit({ ...currentParts, hour });
     };
 
     const handleMinuteChange = (raw: string) => {
       const n = parseInt(raw, 10);
-      if (Number.isNaN(n)) return;
+      if (Number.isNaN(n)) {
+        return;
+      }
       const minute = snapToStep(Math.max(0, Math.min(59, n)), minuteStep);
       emit({ ...currentParts, minute });
     };
@@ -377,29 +421,29 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
         }}
         className={cn(
           'z-50 overflow-hidden rounded-lg',
-          'border-border-color bg-card border',
+          'border-border-color border bg-card',
           'shadow-lg',
           'animate-scale-in',
         )}
         role="dialog"
       >
         {/* Month header */}
-        <div className="border-border-subtle flex items-center justify-between border-b px-3 py-2">
+        <div className="flex items-center justify-between border-b border-border-subtle px-3 py-2">
           <button
             type="button"
             onClick={prevMonth}
-            className="text-muted-foreground hover:bg-surface hover:text-foreground rounded p-1 transition-colors"
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
             aria-label="Попередній місяць"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <div className="font-body text-foreground text-sm font-semibold">
+          <div className="font-body text-sm font-semibold text-foreground">
             {MONTHS_UK[view.month]} {view.year}
           </div>
           <button
             type="button"
             onClick={nextMonth}
-            className="text-muted-foreground hover:bg-surface hover:text-foreground rounded p-1 transition-colors"
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
             aria-label="Наступний місяць"
           >
             <ChevronRight className="h-4 w-4" />
@@ -410,7 +454,7 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
         <div className="px-3 pt-3">
           <div className="mb-1.5 grid grid-cols-7 gap-0.5">
             {WEEKDAYS_UK.map((wd) => (
-              <div key={wd} className="font-body text-muted-foreground text-center text-xs">
+              <div key={wd} className="font-body text-center text-xs text-muted-foreground">
                 {wd}
               </div>
             ))}
@@ -435,13 +479,13 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
                   onClick={() => handleDayClick(c)}
                   className={cn(
                     'font-body h-8 rounded text-center text-sm transition-colors',
-                    'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+                    'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
                     dayDisabled && 'cursor-not-allowed opacity-30',
                     !dayDisabled && !isSelected && 'hover:bg-surface',
                     c.otherMonth && !isSelected && 'text-muted-foreground',
                     !c.otherMonth && !isSelected && 'text-foreground',
                     isSelected && 'bg-kpi-navy font-semibold text-white',
-                    isToday && !isSelected && 'ring-kpi-blue-light/40 ring-1',
+                    isToday && !isSelected && 'ring-1 ring-kpi-blue-light/40',
                   )}
                 >
                   {c.day}
@@ -452,9 +496,9 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
         </div>
 
         {/* Time row */}
-        <div className="border-border-subtle mt-2 flex items-center gap-2 border-t px-3 py-2.5">
-          <Clock className="text-muted-foreground h-4 w-4 shrink-0" />
-          <span className="font-body text-foreground text-sm">Час</span>
+        <div className="mt-2 flex items-center gap-2 border-t border-border-subtle px-3 py-2.5">
+          <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="font-body text-sm text-foreground">Час</span>
           <div className="flex flex-1 items-center justify-end gap-1">
             <TimeSpinner
               value={currentParts.hour}
@@ -464,7 +508,7 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
               onDecrement={() => adjustHour(-1)}
               ariaLabel="Години"
             />
-            <span className="font-body text-foreground text-sm font-semibold">:</span>
+            <span className="font-body text-sm font-semibold text-foreground">:</span>
             <TimeSpinner
               value={currentParts.minute}
               max={59}
@@ -490,22 +534,22 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
           aria-haspopup="dialog"
           aria-expanded={open}
           className={cn(
-            'bg-card flex h-10 w-full items-center gap-2 rounded-(--radius)',
+            'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-card',
             'border-border-color border',
             'font-body px-3 text-left text-sm',
             'transition-colors duration-150',
-            !disabled && 'hover:border-kpi-blue-light cursor-pointer',
-            open && 'border-kpi-blue-light ring-kpi-blue-light/20 ring-2',
+            !disabled && 'cursor-pointer hover:border-kpi-blue-light',
+            open && 'border-kpi-blue-light ring-2 ring-kpi-blue-light/20',
             error && !open && 'border-error focus:border-error focus:ring-error/20',
-            disabled && 'bg-surface cursor-not-allowed opacity-50',
-            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+            disabled && 'cursor-not-allowed bg-surface opacity-50',
+            'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
           )}
         >
-          <CalendarDays className="text-muted-foreground h-4 w-4 shrink-0" />
+          <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span
             className={cn(
               'flex-1 truncate font-mono tabular-nums',
-              !displayValue && 'text-subtle font-sans',
+              !displayValue && 'font-sans text-subtle',
             )}
           >
             {displayValue || placeholder}
@@ -542,16 +586,18 @@ function TimeSpinner({
   const [focused, setFocused] = React.useState(false);
 
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!focused) setDraft(String(value).padStart(2, '0'));
+    if (!focused) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setDraft(String(value).padStart(2, '0'));
+    }
   }, [value, focused]);
 
   return (
-    <div className="border-border-color bg-card flex items-center rounded border">
+    <div className="border-border-color flex items-center rounded border bg-card">
       <button
         type="button"
         onClick={onDecrement}
-        className="text-muted-foreground hover:bg-surface hover:text-foreground rounded-l px-1.5 py-1 transition-colors"
+        className="rounded-l px-1.5 py-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
         aria-label={`${ariaLabel} -${step}`}
         tabIndex={-1}
       >
@@ -578,9 +624,13 @@ function TimeSpinner({
         onChange={(e) => {
           const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 2);
           setDraft(v);
-          if (v === '') return;
+          if (v === '') {
+            return;
+          }
           const n = parseInt(v, 10);
-          if (n > max) return;
+          if (n > max) {
+            return;
+          }
           onChange(v);
         }}
         onKeyDown={(e) => {
@@ -592,12 +642,12 @@ function TimeSpinner({
             onDecrement();
           }
         }}
-        className="font-body text-foreground w-8 bg-transparent py-1 text-center text-sm tabular-nums focus:outline-none"
+        className="font-body w-8 bg-transparent py-1 text-center text-sm text-foreground tabular-nums focus:outline-none"
       />
       <button
         type="button"
         onClick={onIncrement}
-        className="text-muted-foreground hover:bg-surface hover:text-foreground rounded-r px-1.5 py-1 transition-colors"
+        className="rounded-r px-1.5 py-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
         aria-label={`${ariaLabel} +${step}`}
         tabIndex={-1}
       >

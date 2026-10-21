@@ -15,15 +15,21 @@ export function useCatgirlImage(): CatgirlImage | null {
   const [image, setImage] = useState<CatgirlImage | null>(null);
 
   useEffect(() => {
-    if (!enabled || image) return;
+    if (!enabled || image) {
+      return;
+    }
 
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
 
     const tryClaim = (): boolean => {
       const next = claimNextCatgirlImage();
-      if (!next) return false;
-      if (!cancelled) setImage(next);
+      if (!next) {
+        return false;
+      }
+      if (!cancelled) {
+        setImage(next);
+      }
       return true;
     };
 
@@ -41,7 +47,7 @@ export function useCatgirlImage(): CatgirlImage | null {
       cancelled = true;
       unsubscribe?.();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [enabled]);
 
   return enabled ? image : null;

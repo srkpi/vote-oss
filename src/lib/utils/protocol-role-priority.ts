@@ -58,25 +58,43 @@ function isActing(normalized: string, role: string): boolean {
  */
 export function getRolePriority(posadaRaw: string): number {
   const s = normalize(posadaRaw).trim();
-  if (!s) return ROLE_PRIORITY_OTHER;
+  if (!s) {
+    return ROLE_PRIORITY_OTHER;
+  }
 
   // President family — check the more specific "заступник"/"в.о." forms
   // before the bare word, since e.g. "президента" (genitive, as in
   // "заступник президента") also contains the substring "президент".
-  if (isDeputy(s, 'президент')) return 1;
-  if (isActing(s, 'президент')) return 2;
-  if (s.includes('президент')) return 0;
+  if (isDeputy(s, 'президент')) {
+    return 1;
+  }
+  if (isActing(s, 'президент')) {
+    return 2;
+  }
+  if (s.includes('президент')) {
+    return 0;
+  }
 
   // Голова family — same reasoning, plus the bare check uses the exact
   // nominative word "голова" (not just the "голов" stem) so that unrelated
   // titles like "Головний бухгалтер" (Chief Accountant) don't match: their
   // 6th letter is "н", not "а", so "голова" isn't a substring of "головний".
-  if (isActing(s, 'голов')) return 4;
-  if (isDeputy(s, 'голов')) return 6;
-  if (s.includes('голова')) return 3;
+  if (isActing(s, 'голов')) {
+    return 4;
+  }
+  if (isDeputy(s, 'голов')) {
+    return 6;
+  }
+  if (s.includes('голова')) {
+    return 3;
+  }
 
-  if (s.includes('секретар')) return 5;
-  if (s.includes('член')) return 7;
+  if (s.includes('секретар')) {
+    return 5;
+  }
+  if (s.includes('член')) {
+    return 7;
+  }
 
   return ROLE_PRIORITY_OTHER;
 }
@@ -90,6 +108,8 @@ export function compareByRoleImportance<T extends { posada: string; fullname: st
   b: T,
 ): number {
   const diff = getRolePriority(a.posada) - getRolePriority(b.posada);
-  if (diff !== 0) return diff;
+  if (diff !== 0) {
+    return diff;
+  }
   return a.fullname.localeCompare(b.fullname, 'uk');
 }

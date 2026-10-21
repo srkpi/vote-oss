@@ -27,13 +27,17 @@ export function CatgirlLightbox({ image, onClose }: CatgirlLightboxProps) {
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        onClose();
+      }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  if (typeof document === 'undefined') return null;
+  if (typeof document === 'undefined') {
+    return null;
+  }
 
   const src = source === 'original' ? image.originalUrl : image.url;
   const attributionHref = image.artistProfileUrl ?? image.sourceUrl ?? null;
@@ -67,7 +71,7 @@ export function CatgirlLightbox({ image, onClose }: CatgirlLightboxProps) {
       </button>
 
       <figure className="animate-scale-in relative z-0 flex max-h-full max-w-full flex-col items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* oxlint-disable-next-line nextjs/no-img-element */}
         <img
           src={src}
           alt={image.artistName ? `Ілюстрація від ${image.artistName}` : 'Catgirl'}

@@ -15,27 +15,27 @@ export function ConfirmChoice({ choices, onBack, onConfirm, loading }: ConfirmCh
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <div className="border-kpi-navy/20 bg-kpi-navy/10 mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2">
-          <HelpCircle className="text-kpi-navy h-8 w-8" />
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-kpi-navy/20 bg-kpi-navy/10">
+          <HelpCircle className="h-8 w-8 text-kpi-navy" />
         </div>
-        <h4 className="font-display text-foreground text-xl font-semibold">
+        <h4 className="font-display text-xl font-semibold text-foreground">
           Підтвердіть свій вибір
         </h4>
-        <p className="font-body text-muted-foreground text-sm">
+        <p className="font-body text-sm text-muted-foreground">
           Після підтвердження змінити голос неможливо
         </p>
       </div>
 
       <div className="ph-no-capture space-y-2">
-        <p className="font-body text-muted-foreground text-xs tracking-wider uppercase">
+        <p className="font-body text-xs tracking-wider text-muted-foreground uppercase">
           {choices.length > 1 ? 'Ваші вибори:' : 'Ваш вибір:'}
         </p>
         {choices.map((choice) => (
           <div
             key={choice.id}
-            className={cn('rounded-lg p-4', 'border-kpi-navy/20 bg-kpi-navy/5 border-2')}
+            className={cn('rounded-lg p-4', 'border-2 border-kpi-navy/20 bg-kpi-navy/5')}
           >
-            <span className="font-body text-kpi-navy min-w-0 font-semibold wrap-break-word">
+            <span className="font-body min-w-0 font-semibold wrap-break-word text-kpi-navy">
               {choice.choice}
             </span>
           </div>

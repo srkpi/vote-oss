@@ -59,7 +59,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
+  if (!id) {
+    return Errors.badRequest('id is required');
+  }
 
   let body: { title?: string };
   try {
@@ -77,7 +79,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const existing = await prisma.faqCategory.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ category not found');
+  if (!existing) {
+    return Errors.notFound('FAQ category not found');
+  }
 
   const updated = await prisma.faqCategory.update({
     where: { id },
@@ -143,10 +147,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
+  if (!id) {
+    return Errors.badRequest('id is required');
+  }
 
   const existing = await prisma.faqCategory.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ category not found');
+  if (!existing) {
+    return Errors.notFound('FAQ category not found');
+  }
 
   await prisma.faqCategory.delete({ where: { id } });
 

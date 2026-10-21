@@ -70,7 +70,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
 
   useEffect(() => {
     const record = getVote(electionId);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setMyVoteRecord(record);
   }, [electionId]);
 
@@ -87,7 +87,9 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
   // actually change the result — the my-ballot pagination effect and the
   // intersection observer below both depend on it.
   const filteredBallots = useMemo(() => {
-    if (!trimmedQuery) return ballots;
+    if (!trimmedQuery) {
+      return ballots;
+    }
     const q = trimmedQuery.toLowerCase();
 
     return ballots.filter((b) => {
@@ -115,19 +117,25 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
 
   const pageBallotIds = pagedBallots.map((b) => b.id).join(',');
   useEffect(() => {
-    if (!decryptionDone) return;
+    if (!decryptionDone) {
+      return;
+    }
     const voterIds = pagedBallots
       .map((b) => decryptedMap.get(b.id)?.voter?.userId)
       .filter((id): id is string => !!id);
-    if (voterIds.length > 0) void ensureAvatars(voterIds);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (voterIds.length > 0) {
+      void ensureAvatars(voterIds);
+    }
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [pageBallotIds, decryptionDone]);
 
   useEffect(() => {
-    if (!myVoteRecord) return;
+    if (!myVoteRecord) {
+      return;
+    }
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setPage(Math.floor(idx / BALLOTS_PAGE_SIZE) + 1);
     }
   }, [myVoteRecord, filteredBallots]);
@@ -149,7 +157,9 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
   }, [safePage, pagedBallots]);
 
   const handleScrollToMyBallot = () => {
-    if (!myVoteRecord) return;
+    if (!myVoteRecord) {
+      return;
+    }
     const idx = filteredBallots.findIndex((b) => b.currentHash === myVoteRecord.ballotHash);
     if (idx !== -1) {
       const targetPage = Math.floor(idx / BALLOTS_PAGE_SIZE) + 1;
@@ -167,8 +177,11 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -187,12 +200,16 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
   const myDecryption = myBallot && decryptionDone ? decryptedMap.get(myBallot.id) : undefined;
 
   const myVoteMatchesDecryption = (() => {
-    if (!myDecryption || !myVoteRecord || !myDecryption.valid) return null;
+    if (!myDecryption || !myVoteRecord || !myDecryption.valid) {
+      return null;
+    }
     const decryptedIds = myDecryption.choiceIds || [];
     const storedIds = Array.isArray(myVoteRecord.choiceIds)
       ? myVoteRecord.choiceIds
       : [myVoteRecord.choiceIds];
-    if (decryptedIds.length !== storedIds.length) return false;
+    if (decryptedIds.length !== storedIds.length) {
+      return false;
+    }
     return storedIds.every((id) => decryptedIds.includes(id));
   })();
 
@@ -257,8 +274,8 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
 
           {ballots.length > 0 && (
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="font-body text-muted-foreground flex shrink-0 items-center gap-2 text-sm">
-                <FileText className="text-kpi-gray-mid h-4 w-4" />
+              <div className="font-body flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
+                <FileText className="h-4 w-4 text-kpi-gray-mid" />
                 <span>
                   {trimmedQuery
                     ? `Знайдено ${pluralize(filteredBallots.length, ['бюлетень', 'бюлетені', 'бюлетенів'])} з ${ballots.length}`
@@ -279,23 +296,23 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
           )}
 
           {ballots.length === 0 ? (
-            <div className="border-border-color bg-card rounded-xl border p-12 text-center shadow-sm">
+            <div className="border-border-color rounded-xl border bg-card p-12 text-center shadow-sm">
               <EmptyState
                 title={isClosed ? 'Жодних бюлетенів не було подано' : 'Бюлетенів поки немає'}
-                icon={<FileText className="text-kpi-gray-mid h-7 w-7" />}
+                icon={<FileText className="h-7 w-7 text-kpi-gray-mid" />}
               />
             </div>
           ) : pagedBallots.length === 0 ? (
-            <div className="border-border-color bg-card rounded-xl border p-12 text-center shadow-sm">
+            <div className="border-border-color rounded-xl border bg-card p-12 text-center shadow-sm">
               <EmptyState
                 title="Нічого не знайдено"
-                icon={<CircleSlash2 className="text-kpi-gray-mid h-7 w-7" />}
+                icon={<CircleSlash2 className="h-7 w-7 text-kpi-gray-mid" />}
               />
             </div>
           ) : (
-            <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+            <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
               {decryptionDone && invalidHashCount > 0 && (
-                <div className="font-body border-error/20 bg-error-bg text-error flex items-center gap-2 border-b px-5 py-3 text-sm">
+                <div className="font-body flex items-center gap-2 border-b border-error/20 bg-error-bg px-5 py-3 text-sm text-error">
                   <ShieldAlert className="h-4 w-4 shrink-0" />
                   <span>
                     <strong>{invalidHashCount}</strong>{' '}
@@ -305,13 +322,13 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
                 </div>
               )}
               {decryptionDone && invalidHashCount === 0 && (
-                <div className="font-body border-success/20 bg-success-bg text-success flex items-center gap-2 border-b px-5 py-3 text-sm">
+                <div className="font-body flex items-center gap-2 border-b border-success/20 bg-success-bg px-5 py-3 text-sm text-success">
                   <ShieldCheck className="h-4 w-4 shrink-0" />
                   <span>Ланцюжок бюлетенів цілісний — усі хеші вірні</span>
                 </div>
               )}
 
-              <div className="ph-no-capture divide-border-subtle divide-y">
+              <div className="ph-no-capture divide-y divide-border-subtle">
                 {pagedBallots.map((ballot, index) => {
                   const isMyBallot =
                     myVoteRecord !== null && ballot.currentHash === myVoteRecord.ballotHash;
@@ -320,7 +337,7 @@ export function BallotsClient({ initialData, isAdmin }: BallotsClientProps) {
                       key={ballot.id}
                       ref={isMyBallot ? myBallotRef : undefined}
                       className={cn(
-                        isMyBallot && 'ring-kpi-blue-light relative rounded-none ring-2 ring-inset',
+                        isMyBallot && 'relative rounded-none ring-2 ring-kpi-blue-light ring-inset',
                       )}
                     >
                       <BallotRow

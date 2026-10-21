@@ -70,7 +70,9 @@ export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
 
   for (const { faculty: rawFaculty, name } of data) {
     const faculty = fixFacultyName(rawFaculty.trim());
-    if (!map[faculty]) map[faculty] = [];
+    if (!map[faculty]) {
+      map[faculty] = [];
+    }
     map[faculty].push(name);
   }
 

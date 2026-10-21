@@ -34,8 +34,8 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
       href={`/registration/${form.id}`}
       className={cn(
         'group flex items-stretch gap-4 px-4 py-4 sm:px-6',
-        'border-border-subtle border-b last:border-b-0',
-        'hover:bg-surface transition-colors duration-150',
+        'border-b border-border-subtle last:border-b-0',
+        'transition-colors duration-150 hover:bg-surface',
         !actionable && 'opacity-70 hover:opacity-100',
         'animate-fade-up',
       )}
@@ -54,7 +54,7 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
 
         <p
           className={cn(
-            'font-display text-foreground min-w-0 text-sm font-semibold wrap-break-word transition-colors duration-150 sm:text-base',
+            'min-w-0 font-display text-sm font-semibold wrap-break-word text-foreground transition-colors duration-150 sm:text-base',
             'group-hover:text-kpi-navy',
           )}
         >
@@ -62,11 +62,11 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
         </p>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
+          <span className="font-body flex items-center gap-1.5 text-xs text-muted-foreground">
             <ClipboardList className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{form.groupName}</span>
           </span>
-          <span className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
+          <span className="font-body flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="h-3.5 w-3.5 shrink-0" />
             {isOpen && (
               <>
@@ -85,19 +85,19 @@ export function RegistrationListItem({ form, status, index = 0 }: RegistrationLi
         {(form.requiresCampaignProgram || form.teamSize > 0 || form.restrictions.length > 0) && (
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
             {form.requiresCampaignProgram && (
-              <span className="font-body bg-surface text-muted-foreground border-border-subtle inline-flex items-center gap-1 truncate rounded-full border px-2 py-0.5 text-xs">
+              <span className="font-body inline-flex items-center gap-1 truncate rounded-full border border-border-subtle bg-surface px-2 py-0.5 text-xs text-muted-foreground">
                 <FileText className="h-2.5 w-2.5 shrink-0" />
                 Програма
               </span>
             )}
             {form.teamSize > 0 && (
-              <span className="font-body bg-surface text-muted-foreground border-border-subtle inline-flex items-center gap-1 truncate rounded-full border px-2 py-0.5 text-xs">
+              <span className="font-body inline-flex items-center gap-1 truncate rounded-full border border-border-subtle bg-surface px-2 py-0.5 text-xs text-muted-foreground">
                 <Users className="h-2.5 w-2.5 shrink-0" />
                 Команда: {form.teamSize}
               </span>
             )}
             {form.restrictions.length > 0 && (
-              <span className="font-body bg-surface text-muted-foreground border-border-subtle inline-flex items-center gap-1 truncate rounded-full border px-2 py-0.5 text-xs">
+              <span className="font-body inline-flex items-center gap-1 truncate rounded-full border border-border-subtle bg-surface px-2 py-0.5 text-xs text-muted-foreground">
                 <ShieldCheck className="h-2.5 w-2.5 shrink-0" />
                 {form.restrictions.map((r) => r.value).join(', ')}
               </span>

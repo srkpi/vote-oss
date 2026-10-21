@@ -32,7 +32,9 @@ export function CreatePetitionForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
 
     setLoading(true);
     setError(null);

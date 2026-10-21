@@ -27,7 +27,7 @@ export function AdminMobileCard({
   return (
     <div
       className={cn(
-        'border-border-color bg-card rounded-lg border p-4 shadow-sm',
+        'border-border-color rounded-lg border bg-card p-4 shadow-sm',
         isCurrentUser && 'border-kpi-navy',
       )}
     >
@@ -42,9 +42,9 @@ export function AdminMobileCard({
           />
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-body text-foreground text-sm font-semibold">{admin.fullName}</p>
+              <p className="font-body text-sm font-semibold text-foreground">{admin.fullName}</p>
             </div>
-            <p className="font-body text-muted-foreground mt-0.5 text-xs">
+            <p className="font-body mt-0.5 text-xs text-muted-foreground">
               {admin.faculty} · {admin.group}
             </p>
           </div>
@@ -57,7 +57,7 @@ export function AdminMobileCard({
                 variant="ghost"
                 size="xs"
                 onClick={onEdit}
-                className="text-muted-foreground hover:text-kpi-navy hover:bg-surface"
+                className="text-muted-foreground hover:bg-surface hover:text-kpi-navy"
                 title="Редагувати права"
               >
                 <Pencil className="h-4 w-4" />
@@ -113,11 +113,11 @@ export function AdminMobileCard({
           )}
       </div>
 
-      <p className="font-body text-muted-foreground mt-2 text-xs">
+      <p className="font-body mt-2 text-xs text-muted-foreground">
         Призначено: <LocalDate date={admin.promotedAt} />
       </p>
       {admin.promoter && (
-        <p className="font-body text-muted-foreground text-xs">{admin.promoter.fullName}</p>
+        <p className="font-body text-xs text-muted-foreground">{admin.promoter.fullName}</p>
       )}
     </div>
   );

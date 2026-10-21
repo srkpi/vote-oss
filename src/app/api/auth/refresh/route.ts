@@ -55,7 +55,9 @@ export async function POST(req: NextRequest) {
   }
 
   const auth = await requireRefreshAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { user } = auth;
 

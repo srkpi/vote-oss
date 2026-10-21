@@ -5,22 +5,22 @@ import * as React from 'react';
 import { cn } from '@/lib/utils/common';
 
 const badgeVariants = cva(
-  'inline-flex items-center justify-center gap-1 font-medium font-body whitespace-nowrap rounded-full border border-transparent transition-colors duration-150 select-none',
+  'font-body inline-flex items-center justify-center gap-1 rounded-full border border-transparent font-medium whitespace-nowrap transition-colors duration-150 select-none',
   {
     variants: {
       variant: {
-        default: 'bg-border-color text-foreground border-border-color',
-        secondary: 'bg-surface text-muted-foreground border-border-subtle',
-        outline: 'bg-transparent text-foreground border-border-color',
-        navy: 'bg-kpi-navy text-white border-kpi-navy',
-        primary: 'bg-kpi-navy text-white border-kpi-navy',
-        success: 'bg-success-bg text-success border-success/30',
-        warning: 'bg-warning-bg text-kpi-orange border-kpi-orange/30',
-        error: 'bg-error-bg text-error border-error/30',
-        destructive: 'bg-error-bg text-error border-error/30',
-        info: 'bg-info-bg text-kpi-blue-light border-kpi-blue-light/30',
-        accent: 'bg-kpi-orange text-white border-kpi-orange',
-        ghost: 'bg-transparent text-muted-foreground border-transparent hover:bg-surface',
+        default: 'bg-border-color border-border-color text-foreground',
+        secondary: 'border-border-subtle bg-surface text-muted-foreground',
+        outline: 'border-border-color bg-transparent text-foreground',
+        navy: 'border-kpi-navy bg-kpi-navy text-white',
+        primary: 'border-kpi-navy bg-kpi-navy text-white',
+        success: 'border-success/30 bg-success-bg text-success',
+        warning: 'border-kpi-orange/30 bg-warning-bg text-kpi-orange',
+        error: 'border-error/30 bg-error-bg text-error',
+        destructive: 'border-error/30 bg-error-bg text-error',
+        info: 'border-kpi-blue-light/30 bg-info-bg text-kpi-blue-light',
+        accent: 'border-kpi-orange bg-kpi-orange text-white',
+        ghost: 'border-transparent bg-transparent text-muted-foreground hover:bg-surface',
       },
       size: {
         sm: 'h-4 px-1.5 text-[10px]',

@@ -34,11 +34,11 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className="bg-surface border-border-color relative grow overflow-hidden rounded-full border data-horizontal:h-2 data-horizontal:w-full data-vertical:h-full data-vertical:w-2"
+        className="border-border-color relative grow overflow-hidden rounded-full border bg-surface data-horizontal:h-2 data-horizontal:w-full data-vertical:h-full data-vertical:w-2"
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
-          className="bg-kpi-navy absolute select-none data-horizontal:h-full data-vertical:w-full"
+          className="absolute bg-kpi-navy select-none data-horizontal:h-full data-vertical:w-full"
         />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
@@ -46,9 +46,9 @@ function Slider({
           data-slot="slider-thumb"
           key={index}
           className={cn(
-            'border-kpi-navy relative block size-5 shrink-0 rounded-full border-2 bg-white shadow-sm transition-all duration-150 select-none after:absolute after:-inset-2',
+            'relative block size-5 shrink-0 rounded-full border-2 border-kpi-navy bg-white shadow-sm transition-all duration-150 select-none after:absolute after:-inset-2',
             'cursor-grab hover:scale-110 active:cursor-grabbing',
-            'focus-visible:ring-kpi-blue-light/20 focus-visible:border-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+            'focus-visible:border-kpi-blue-light focus-visible:ring-2 focus-visible:ring-kpi-blue-light/20 focus-visible:outline-none',
             'disabled:pointer-events-none disabled:opacity-50',
           )}
         />

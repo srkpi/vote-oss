@@ -55,7 +55,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const cached = await getCachedElections();
   if (cached) {
     const found = cached.find((e) => e.id === electionId);
-    if (!found || found.deletedAt) return Errors.notFound('Election or petition not found');
+    if (!found || found.deletedAt) {
+      return Errors.notFound('Election or petition not found');
+    }
 
     return NextResponse.json({
       title: found.title,
@@ -68,7 +70,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     select: { title: true, type: true },
   });
 
-  if (!election) return Errors.notFound('Election or petition not found');
+  if (!election) {
+    return Errors.notFound('Election or petition not found');
+  }
 
   return NextResponse.json({
     title: election.title,

@@ -24,11 +24,15 @@ function sortedChoicesForDisplay(election: Election) {
     // Winners first
     const aWinner = a.winner ? 1 : 0;
     const bWinner = b.winner ? 1 : 0;
-    if (bWinner !== aWinner) return bWinner - aWinner;
+    if (bWinner !== aWinner) {
+      return bWinner - aWinner;
+    }
     // Then by votes descending
     const aVotes = a.votes ?? 0;
     const bVotes = b.votes ?? 0;
-    if (bVotes !== aVotes) return bVotes - aVotes;
+    if (bVotes !== aVotes) {
+      return bVotes - aVotes;
+    }
     // Fall back to position
     return a.position - b.position;
   });
@@ -50,7 +54,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
     <div
       className={cn(
         'group relative',
-        'bg-card rounded-xl',
+        'rounded-xl bg-card',
         'border-border-color border',
         'shadow-card',
         'hover:shadow-card-hover',
@@ -65,7 +69,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         href={`/elections/${election.id}`}
         className={cn(
           'absolute inset-0 z-0 rounded-xl',
-          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+          'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
         )}
         aria-label={election.title}
       />
@@ -73,12 +77,12 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
       <div
         className={cn(
           'h-1',
-          isOpen && voteStatus === 'can_vote' && 'from-success bg-linear-to-r to-emerald-400',
-          isOpen && voteStatus === 'voted' && 'from-kpi-blue-light bg-linear-to-r to-blue-400',
+          isOpen && voteStatus === 'can_vote' && 'bg-linear-to-r from-success to-emerald-400',
+          isOpen && voteStatus === 'voted' && 'bg-linear-to-r from-kpi-blue-light to-blue-400',
           isOpen && voteStatus === 'cannot_vote' && 'bg-linear-to-r from-rose-400 to-rose-300',
-          isOpen && !voteStatus && 'from-success bg-linear-to-r to-emerald-400',
-          isUpcoming && 'from-kpi-orange bg-linear-to-r to-amber-400',
-          isClosed && 'from-kpi-gray-light bg-linear-to-r to-gray-300',
+          isOpen && !voteStatus && 'bg-linear-to-r from-success to-emerald-400',
+          isUpcoming && 'bg-linear-to-r from-kpi-orange to-amber-400',
+          isClosed && 'bg-linear-to-r from-kpi-gray-light to-gray-300',
         )}
       />
 
@@ -92,8 +96,8 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
 
         <h3
           className={cn(
-            'font-display text-foreground text-xl leading-snug font-semibold',
-            'group-hover:text-kpi-navy line-clamp-2 wrap-break-word transition-colors duration-200',
+            'font-display text-xl leading-snug font-semibold text-foreground',
+            'line-clamp-2 wrap-break-word transition-colors duration-200 group-hover:text-kpi-navy',
           )}
         >
           {election.title}
@@ -102,8 +106,8 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         <CatgirlGallery size="sm" />
 
         <div className="space-y-2">
-          <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <Calendar className="text-kpi-gray-mid h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4 shrink-0 text-kpi-gray-mid" />
             <span>
               {isOpen && (
                 <>
@@ -123,7 +127,7 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
             </span>
           </div>
 
-          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Avatar
               icon
               src={election.createdBy.avatarUrl}
@@ -145,8 +149,8 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
                   'truncate border',
                   'flex items-center gap-1',
                   isWinner
-                    ? 'border-kpi-navy/30 bg-kpi-navy/8 text-kpi-navy font-semibold'
-                    : 'bg-surface text-muted-foreground border-border-subtle',
+                    ? 'border-kpi-navy/30 bg-kpi-navy/8 font-semibold text-kpi-navy'
+                    : 'border-border-subtle bg-surface text-muted-foreground',
                 )}
               >
                 {isWinner && <Crown className="h-2.5 w-2.5 shrink-0" />}
@@ -155,16 +159,16 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
             );
           })}
           {hiddenCount > 0 && (
-            <span className="border-border-subtle bg-surface text-muted-foreground rounded-full border px-2.5 py-1 text-xs">
+            <span className="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-muted-foreground">
               +{hiddenCount}
             </span>
           )}
         </div>
 
-        <div className="border-border-subtle mt-auto flex items-center justify-between border-t pt-4">
+        <div className="mt-auto flex items-center justify-between border-t border-border-subtle pt-4">
           <div className="flex items-center gap-3">
-            <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-              <FileText className="text-kpi-gray-mid h-4 w-4" />
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <FileText className="h-4 w-4 text-kpi-gray-mid" />
               <span>{pluralize(election.ballotCount, ['голос', 'голоси', 'голосів'])}</span>
             </div>
             {voteStatus === 'cannot_vote' && <StatusBadge status="unavailable" />}

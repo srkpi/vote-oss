@@ -36,7 +36,7 @@ function DeferredChartArea({
 
   useEffect(() => {
     // Reset on re-mount (tab switch remounts this component).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setHasSize(false);
 
     let rafId: number | undefined = undefined;
@@ -44,7 +44,9 @@ function DeferredChartArea({
 
     const check = () => {
       const el = containerRef.current;
-      if (!el) return;
+      if (!el) {
+        return;
+      }
       if (el.clientWidth > 0) {
         setHasSize(true);
         obs?.disconnect();
@@ -71,7 +73,7 @@ function DeferredChartArea({
       obs?.disconnect();
     };
     // containerRef is a stable ref object — intentionally omitted from deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, []);
 
   return (
@@ -119,9 +121,9 @@ export function ChartWrapper({
   };
 
   return (
-    <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
-      <div className="border-border-subtle flex items-center justify-between border-b px-6 py-4">
-        <h3 className="font-display text-foreground text-sm font-semibold">{title}</h3>
+    <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border-subtle px-6 py-4">
+        <h3 className="font-display text-sm font-semibold text-foreground">{title}</h3>
         <Button
           size="xs"
           variant="outline"

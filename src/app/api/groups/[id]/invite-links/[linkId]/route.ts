@@ -52,11 +52,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; linkId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId, linkId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
-  if (!isValidUuid(linkId)) return Errors.badRequest('Invalid link id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
+  if (!isValidUuid(linkId)) {
+    return Errors.badRequest('Invalid link id');
+  }
 
   const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
 
@@ -65,7 +71,9 @@ export async function DELETE(
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   if (auth.user.sub !== group.owner_id && !isAdminWithManageGroups) {
     return Errors.forbidden('Only the group owner can revoke invite links');
@@ -76,9 +84,15 @@ export async function DELETE(
     select: { group_id: true, deleted_at: true },
   });
 
-  if (!link) return Errors.notFound('Invite link not found');
-  if (link.group_id !== groupId) return Errors.notFound('Invite link not found');
-  if (link.deleted_at) return Errors.badRequest('Invite link is already revoked');
+  if (!link) {
+    return Errors.notFound('Invite link not found');
+  }
+  if (link.group_id !== groupId) {
+    return Errors.notFound('Invite link not found');
+  }
+  if (link.deleted_at) {
+    return Errors.badRequest('Invite link is already revoked');
+  }
 
   await prisma.groupInviteLink.update({
     where: { id: linkId },

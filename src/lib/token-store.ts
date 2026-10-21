@@ -65,8 +65,12 @@ export async function isAccessTokenValid(jti: string, iat: number): Promise<bool
   }
 
   const bloomResult = await isTokenClean(jti);
-  if (bloomResult === true) return true;
-  if (bloomResult === false) return false;
+  if (bloomResult === true) {
+    return true;
+  }
+  if (bloomResult === false) {
+    return false;
+  }
 
   const record = await prisma.jwtToken.findFirst({
     where: { access_jti: jti },
@@ -88,8 +92,12 @@ export async function isRefreshTokenValid(jti: string, iat: number): Promise<boo
   }
 
   const bloomResult = await isTokenClean(jti);
-  if (bloomResult === true) return true;
-  if (bloomResult === false) return false;
+  if (bloomResult === true) {
+    return true;
+  }
+  if (bloomResult === false) {
+    return false;
+  }
 
   const record = await prisma.jwtToken.findFirst({
     where: { refresh_jti: jti },
@@ -149,7 +157,9 @@ export async function revokeByRefreshJti(
     prisma.jwtToken.deleteMany({ where: { refresh_jti: refreshJti } }),
   ];
 
-  if (record?.access_jti) ops.push(bloomAdd(record.access_jti, accessTtl));
+  if (record?.access_jti) {
+    ops.push(bloomAdd(record.access_jti, accessTtl));
+  }
 
   await Promise.all(ops);
 

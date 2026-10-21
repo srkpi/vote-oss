@@ -68,7 +68,9 @@ export function CampaignsPanel({
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
     const result = await api.campaigns.delete(deleteTarget.id);
     if (result.success) {
@@ -82,11 +84,11 @@ export function CampaignsPanel({
   };
 
   return (
-    <div className="border-border-color shadow-card bg-card rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+    <div className="border-border-color rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <div className="flex items-center gap-2">
-          <Megaphone className="text-kpi-gray-mid h-4 w-4" />
-          <h2 className="font-display text-foreground text-base font-semibold">Вибори</h2>
+          <Megaphone className="h-4 w-4 text-kpi-gray-mid" />
+          <h2 className="font-display text-base font-semibold text-foreground">Вибори</h2>
         </div>
         <Button variant="accent" size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-3.5 w-3.5" />
@@ -99,11 +101,11 @@ export function CampaignsPanel({
           <Alert variant="error">{initialLoadError}</Alert>
         </div>
       ) : campaigns.length === 0 ? (
-        <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+        <p className="font-body px-5 py-8 text-center text-sm text-muted-foreground">
           У цій групі ще немає виборчих кампаній
         </p>
       ) : (
-        <ul className="divide-border-subtle divide-y">
+        <ul className="divide-y divide-border-subtle">
           {paged.map((c) => {
             const badge = CAMPAIGN_STATE_BADGE[c.state];
             return (
@@ -114,10 +116,10 @@ export function CampaignsPanel({
                       {c.positionTitle}
                       <StatusBadge status={badge.kind} size="sm" label={badge.label} />
                     </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {ELECTION_KIND_LABEL[c.electionKind]}
                     </p>
-                    <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <CalendarClock className="h-3 w-3" />
                         Голосування: <LocalDateTime date={c.votingOpensAt} /> —{' '}
@@ -167,7 +169,7 @@ export function CampaignsPanel({
       )}
 
       {totalPages > 1 && (
-        <div className="border-border-subtle border-t px-5 py-3">
+        <div className="border-t border-border-subtle px-5 py-3">
           <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
         </div>
       )}
@@ -251,7 +253,9 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
   // Re-renders every minute so date-pickers and validation stay in sync with "now".
   const [renderNowMs, setRenderNowMs] = useState(() => Date.now());
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const id = setInterval(() => setRenderNowMs(Date.now()), 60_000);
     return () => clearInterval(id);
   }, [open]);
@@ -259,14 +263,16 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
 
   // Reset state and seed sensible defaults each time the dialog opens.
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const announced = defaultAnnouncedAt();
     const regCloses = new Date(announced.getTime() + 7 * DAY_MS);
     const sigOpens = new Date(regCloses.getTime() + 2 * DAY_MS);
     const sigCloses = new Date(sigOpens.getTime() + 7 * DAY_MS);
     const votingOpens = new Date(sigCloses.getTime() + 2 * DAY_MS);
     const votingCloses = new Date(votingOpens.getTime() + 3 * DAY_MS);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setPositionTitle('');
     setElectionKind('REGULAR');
     setAnnouncedAt(announced);
@@ -285,9 +291,11 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
 
   // Load faculty list once.
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     if (facultyOptions.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setFacultiesLoading(false);
       return;
     }
@@ -296,7 +304,9 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
         const list = Object.keys(res.data).sort((a, b) => {
           const aNN = a.startsWith('НН ');
           const bNN = b.startsWith('НН ');
-          if (aNN !== bNN) return aNN ? 1 : -1;
+          if (aNN !== bNN) {
+            return aNN ? 1 : -1;
+          }
           return a.localeCompare(b, 'uk');
         });
         setFacultyOptions(list);
@@ -312,8 +322,12 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
   };
 
   const handleSubmit = async () => {
-    if (!registrationClosesAt || !votingOpensAt || !votingClosesAt) return;
-    if (signatureCollection && (!signaturesOpensAt || !signaturesClosesAt)) return;
+    if (!registrationClosesAt || !votingOpensAt || !votingClosesAt) {
+      return;
+    }
+    if (signatureCollection && (!signaturesOpensAt || !signaturesClosesAt)) {
+      return;
+    }
 
     const futureChecks: Array<[Date, string]> = [
       [announcedAt, 'Початок реєстрації'],
@@ -398,7 +412,7 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
 
           <FormField label="Тип виборів" required>
             <select
-              className="border-border-color bg-card w-full rounded-md border px-3 py-2 text-sm"
+              className="border-border-color w-full rounded-md border bg-card px-3 py-2 text-sm"
               value={electionKind}
               onChange={(e) => setElectionKind(e.target.value as ElectionKind)}
             >
@@ -486,7 +500,7 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                 <span>Кандидат має додати посилання на передвиборчу програму</span>
               </label>
               <div>
-                <label className="text-foreground mb-1 flex items-center gap-2 text-sm">
+                <label className="mb-1 flex items-center gap-2 text-sm text-foreground">
                   <span>Розмір команди</span>
                   <Input
                     type="number"
@@ -535,18 +549,18 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
 
           <FormField label="Підрозділи (необов’язково)">
             {facultiesLoading ? (
-              <p className="text-muted-foreground text-xs">Завантажуємо список підрозділів…</p>
+              <p className="text-xs text-muted-foreground">Завантажуємо список підрозділів…</p>
             ) : (
               <div className="border-border-color max-h-48 overflow-y-auto rounded-md border p-2">
                 {facultyOptions.length === 0 ? (
-                  <p className="text-muted-foreground p-2 text-xs">
+                  <p className="p-2 text-xs text-muted-foreground">
                     Не вдалося завантажити підрозділи
                   </p>
                 ) : (
                   facultyOptions.map((f) => (
                     <label
                       key={f}
-                      className="hover:bg-surface flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-surface"
                     >
                       <input
                         type="checkbox"
@@ -559,7 +573,7 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
                 )}
               </div>
             )}
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="mt-1 text-xs text-muted-foreground">
               Якщо обрано хоча б один підрозділ — у виборах беруть участь лише його студенти.
             </p>
           </FormField>

@@ -32,7 +32,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'border-border-subtle bg-card border-b py-4 sm:py-6',
+        'border-b border-border-subtle bg-card py-4 sm:py-6',
         !isContainer && 'px-4 sm:px-8',
       )}
     >
@@ -49,7 +49,7 @@ export function PageHeader({
           <Link
             href={backHref}
             className={cn(
-              'border-border-subtle hover:bg-surface text-muted-foreground hover:text-foreground',
+              'border-border-subtle text-muted-foreground hover:bg-surface hover:text-foreground',
               'mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
               'border transition-all duration-200',
               backClassName,
@@ -64,7 +64,7 @@ export function PageHeader({
             {nav && nav.length > 0 && (
               <nav
                 className={cn(
-                  'font-body text-muted-foreground mb-2 flex items-center gap-x-2 gap-y-1 text-sm sm:mb-3',
+                  'font-body mb-2 flex items-center gap-x-2 gap-y-1 text-sm text-muted-foreground sm:mb-3',
                   'flex-wrap', // Allows breadcrumbs to wrap to a second line if needed
                 )}
               >
@@ -77,7 +77,7 @@ export function PageHeader({
                         <span
                           className={cn(
                             'max-w-37.5 truncate sm:max-w-75', // Truncates very long titles
-                            isLast ? 'text-foreground font-medium' : 'text-muted-foreground',
+                            isLast ? 'font-medium text-foreground' : 'text-muted-foreground',
                           )}
                         >
                           {item.label}
@@ -85,7 +85,7 @@ export function PageHeader({
                       ) : (
                         <Link
                           href={item.href}
-                          className="hover:text-kpi-navy max-w-30 truncate transition-colors sm:max-w-xs"
+                          className="max-w-30 truncate transition-colors hover:text-kpi-navy sm:max-w-xs"
                         >
                           {item.label}
                         </Link>
@@ -95,11 +95,11 @@ export function PageHeader({
                 })}
               </nav>
             )}
-            <h1 className="font-display text-foreground text-2xl leading-tight font-bold wrap-break-word sm:text-3xl">
+            <h1 className="font-display text-2xl leading-tight font-bold wrap-break-word text-foreground sm:text-3xl">
               {title}
             </h1>
             {description && (
-              <p className="font-body text-muted-foreground mt-1 text-sm wrap-break-word">
+              <p className="font-body mt-1 text-sm wrap-break-word text-muted-foreground">
                 {description}
               </p>
             )}

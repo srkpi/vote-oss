@@ -57,13 +57,15 @@ function AuroraBackdropMesh({ quality, intensity = 1, catgirl = false }: AuroraB
       uIntensity: { value: intensity },
       uAspect: { value: 1 },
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
     [],
   );
 
   useFrame(({ clock, viewport, camera }) => {
     const material = materialRef.current;
-    if (!material) return;
+    if (!material) {
+      return;
+    }
 
     material.uniforms.uTime.value = clock.elapsedTime;
     material.uniforms.uIntensity.value = intensity;

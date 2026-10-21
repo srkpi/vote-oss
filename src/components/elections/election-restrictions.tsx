@@ -33,7 +33,9 @@ export const AccessRestrictions = ({
 }: ElectionRestrictionsProps) => {
   const groupedRestrictions = restrictions.reduce(
     (acc, curr) => {
-      if (!acc[curr.type]) acc[curr.type] = [];
+      if (!acc[curr.type]) {
+        acc[curr.type] = [];
+      }
       acc[curr.type].push(curr.value);
       return acc;
     },
@@ -43,13 +45,13 @@ export const AccessRestrictions = ({
   const hasBypassRequired = !!groupedRestrictions['BYPASS_REQUIRED'];
 
   return (
-    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border p-5">
-      <h3 className="font-display text-foreground mb-4 text-base font-semibold">
+    <div className="border-border-color overflow-hidden rounded-xl border bg-card p-5 shadow-card">
+      <h3 className="mb-4 font-display text-base font-semibold text-foreground">
         Обмеження доступу
       </h3>
 
       {hasBypassRequired && (
-        <p className="font-body border-warning/30 bg-warning-bg text-warning mb-4 flex rounded-lg border p-3 text-sm">
+        <p className="font-body mb-4 flex rounded-lg border border-warning/30 bg-warning-bg p-3 text-sm text-warning">
           Голосування доступне лише за токеном
         </p>
       )}
@@ -59,10 +61,14 @@ export const AccessRestrictions = ({
           const type = typeKey as RestrictionType;
           const values = groupedRestrictions[type];
 
-          if (!values || !values.length) return null;
+          if (!values || !values.length) {
+            return null;
+          }
 
           // BYPASS_REQUIRED is shown via the banner above, skip normal rendering
-          if (type === 'BYPASS_REQUIRED') return null;
+          if (type === 'BYPASS_REQUIRED') {
+            return null;
+          }
 
           // Sort LEVEL_COURSE values by level then course for consistent display
           const sortedValues =
@@ -71,14 +77,16 @@ export const AccessRestrictions = ({
                   const levelOrder: Record<string, number> = { b: 0, m: 1, g: 2 };
                   const aLevel = levelOrder[a[0]!] ?? 99;
                   const bLevel = levelOrder[b[0]!] ?? 99;
-                  if (aLevel !== bLevel) return aLevel - bLevel;
+                  if (aLevel !== bLevel) {
+                    return aLevel - bLevel;
+                  }
                   return parseInt(a.slice(1)) - parseInt(b.slice(1));
                 })
               : [...values].sort();
 
           return (
             <div key={type} className="flex flex-col gap-2">
-              <span className="font-body text-muted-foreground text-xs font-medium tracking-wider uppercase">
+              <span className="font-body text-xs font-medium tracking-wider text-muted-foreground uppercase">
                 {label}
               </span>
 

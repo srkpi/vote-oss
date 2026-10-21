@@ -14,8 +14,12 @@ function computeStatus(
   closesAt: Date,
   now: Date,
 ): CampaignSignatureElectionSummary['status'] {
-  if (now < opensAt) return 'upcoming';
-  if (now >= closesAt) return 'closed';
+  if (now < opensAt) {
+    return 'upcoming';
+  }
+  if (now >= closesAt) {
+    return 'closed';
+  }
   return 'open';
 }
 
@@ -61,10 +65,14 @@ function computeStatus(
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid campaign id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid campaign id');
+  }
 
   const campaign = await prisma.electionCampaign.findUnique({
     where: { id },
@@ -83,8 +91,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     await requireVKSUGroupMember(campaign.group_id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 

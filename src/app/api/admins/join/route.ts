@@ -73,8 +73,12 @@ export async function POST(req: NextRequest) {
     include: { creator: true },
   });
 
-  if (!inviteToken) return Errors.notFound('Invalid invite token');
-  if (inviteToken.valid_due < now) return Errors.badRequest('Invite token has expired');
+  if (!inviteToken) {
+    return Errors.notFound('Invalid invite token');
+  }
+  if (inviteToken.valid_due < now) {
+    return Errors.badRequest('Invite token has expired');
+  }
   if (inviteToken.current_usage >= inviteToken.max_usage) {
     return Errors.badRequest('Invite token has reached its maximum usage');
   }

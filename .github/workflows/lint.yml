@@ -30,5 +30,8 @@ jobs:
       - name: Run TypeScript type check
         run: pnpm type-check
 
-      - name: Run ESLint
+      - name: Run Oxlint
         run: pnpm lint
+
+      - name: Check formatting with Oxfmt
+        run: pnpm format:check

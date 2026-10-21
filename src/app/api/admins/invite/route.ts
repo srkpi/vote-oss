@@ -239,7 +239,9 @@ export async function POST(req: NextRequest) {
   } = body;
   let { restrictedToFaculty = true } = body;
 
-  if (!validDue) return Errors.badRequest('validDue is required');
+  if (!validDue) {
+    return Errors.badRequest('validDue is required');
+  }
 
   const validDueDate = new Date(validDue);
   if (isNaN(validDueDate.getTime()) || validDueDate <= new Date()) {

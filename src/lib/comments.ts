@@ -39,7 +39,9 @@ export async function getPetitionGate(
     },
   });
 
-  if (!election) return { ok: false, status: 404, message: 'Petition not found' };
+  if (!election) {
+    return { ok: false, status: 404, message: 'Petition not found' };
+  }
   if (election.type !== 'PETITION') {
     return { ok: false, status: 400, message: 'Comments are only available for petitions' };
   }
@@ -134,7 +136,9 @@ export function shapeComment(
 
 /** Batched "is this user currently an admin" check — one query per page, not per row. */
 export async function getAdminUserIdSet(userIds: string[]): Promise<Set<string>> {
-  if (userIds.length === 0) return new Set();
+  if (userIds.length === 0) {
+    return new Set();
+  }
   const admins = await prisma.admin.findMany({
     where: { user_id: { in: userIds }, deleted_at: null },
     select: { user_id: true },
@@ -187,7 +191,9 @@ export async function listComments(
   const avatarIds = new Set<string>();
   for (const row of page) {
     avatarIds.add(row.user_id);
-    if (row.deleted_by) avatarIds.add(row.deleted_by);
+    if (row.deleted_by) {
+      avatarIds.add(row.deleted_by);
+    }
   }
 
   const [adminUserIds, avatarMap, myVoteRows] = await Promise.all([
