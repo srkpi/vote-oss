@@ -8,47 +8,6 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { faqItemBodySchema } from '@/lib/schemas/faq';
 
-/**
- * @swagger
- * /api/faq/items/{id}:
- *   put:
- *     summary: Update a FAQ item
- *     description: >
- *       Replaces the title and content of an existing FAQ item. Content must
- *       be a valid serialised Quill Delta JSON string. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ item ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FaqItemCreateBody'
- *     responses:
- *       200:
- *         description: Item updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FaqItem'
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Item not found
- */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -108,33 +67,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 }
 
-/**
- * @swagger
- * /api/faq/items/{id}:
- *   delete:
- *     summary: Delete a FAQ item
- *     description: Permanently deletes the specified FAQ item. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ item ID
- *     responses:
- *       204:
- *         description: Item deleted
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Item not found
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

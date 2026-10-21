@@ -11,65 +11,6 @@ import {
   RegistrationWindowClosedError,
 } from '@/lib/registration-forms';
 
-/**
- * @swagger
- * /api/team-invites/{token}/accept:
- *   post:
- *     summary: Accept a team invite token
- *     description: >
- *       Marks the token as used with response=ACCEPTED and records the
- *       invitee's identity (userId, fullName, group, faculty). After this
- *       the slot enters the `awaiting_candidate` state — the registration's
- *       author must then explicitly confirm or decline via
- *       PATCH /api/registrations/{id}/team/{slot}/decision. The registration
- *       is only auto-promoted to PENDING_REVIEW once the candidate confirms
- *       every slot.
- *
- *       The caller must be authenticated and may not be the registration's
- *       candidate (you cannot accept your own invite). The invite's form
- *       must still exist (not soft-deleted) and its submission window must
- *       still be open — team assembly stops once the form closes, same as
- *       new applications.
- *     tags:
- *       - TeamInvites
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: Raw (unhashed) team invite token
- *     responses:
- *       200:
- *         description: Invite accepted
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - accepted
- *                 - registrationStatus
- *               properties:
- *                 accepted:
- *                   type: boolean
- *                   example: true
- *                 registrationStatus:
- *                   type: string
- *                   enum: [AWAITING_TEAM]
- *                   description: Always AWAITING_TEAM at this point; promotion to PENDING_REVIEW happens on candidate confirmation.
- *       400:
- *         description: Token expired, form's submission window closed, registration not accepting team members, or any other terminal-state conflict
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is the registration's candidate (cannot accept own invite)
- *       404:
- *         description: Invite token not found, or its form is soft-deleted
- *       409:
- *         description: Token already used or revoked
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

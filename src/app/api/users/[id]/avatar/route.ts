@@ -17,57 +17,6 @@ import { prisma } from '@/lib/prisma';
 import { rateLimitAvatarUpload } from '@/lib/rate-limit';
 import { PUBLIC_BUCKET, putObject, removeObject } from '@/lib/storage/minio';
 
-/**
- * @swagger
- * /api/users/{id}/avatar:
- *   put:
- *     summary: Upload or replace the caller's own avatar
- *     description: >
- *       Self-serve only — the path id must match the authenticated user.
- *       Accepts `multipart/form-data` with a single `file` field (PNG, JPEG,
- *       or WebP, max 256 KiB). The image is decoded and re-encoded from
- *       scratch to a 512×512 WebP; EXIF/ICC metadata is always stripped.
- *       Rate-limited per user.
- *     tags:
- *       - Users
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - file
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Avatar uploaded
- *       400:
- *         description: Missing/empty file field
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller may only upload their own avatar
- *       413:
- *         description: File too large, or too large even after compression
- *       415:
- *         description: Unsupported or invalid image
- *       429:
- *         description: Too many uploads — try again later
- *       502:
- *         description: Object storage upload failed
- */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {
@@ -206,32 +155,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-/**
- * @swagger
- * /api/users/{id}/avatar:
- *   delete:
- *     summary: Remove a user's avatar
- *     description: >
- *       Removable by the user themselves, or by any admin. A no-op (204) if
- *       no avatar is currently set.
- *     tags:
- *       - Users
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       204:
- *         description: Avatar removed (or none was set)
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is neither the user nor an admin
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

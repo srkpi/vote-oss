@@ -5,37 +5,6 @@ import { requireAuth } from '@/lib/auth';
 import { fetchFacultyGroups } from '@/lib/campus-api';
 import { Errors } from '@/lib/errors';
 
-/**
- * @swagger
- * /api/campus/groups:
- *   get:
- *     summary: Get faculty to groups mapping
- *     description: >
- *       Returns the full faculty-to-groups mapping sourced from the campus API.
- *       Used to populate faculty/group pickers in the election creation form.
- *       Requires any authenticated user.
- *     tags:
- *       - Campus
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: Faculty to groups mapping
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               additionalProperties:
- *                 type: array
- *                 items:
- *                   type: string
- *               example:
- *                 "ФІОТ": ["ІП-24", "ІП-25"]
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Failed to fetch data from the campus API
- */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

@@ -12,65 +12,6 @@ import { isValidUuid } from '@/lib/utils/common';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 import type { ElectionRestriction, ElectionType } from '@/types/election';
 
-/**
- * @swagger
- * /api/elections/{id}/ballots:
- *   get:
- *     summary: List all ballots for an election
- *     description: >
- *       Returns the full ordered ballot chain for the given election together
- *       with complete election metadata. The `anonymous` field on the returned
- *       election indicates whether voter identities are embedded in ballots.
- *       When `anonymous` is false, decrypting ballots on the client will reveal
- *       each voter's `userId` and `fullName`.
- *
- *       The private key is included in the response (`privateKey` on the
- *       election object) once the election is closed, or — for non-anonymous
- *       elections — while voting is still live (since non-anonymous elections
- *       carry no zero-knowledge guarantee to preserve).
- *
- *       Access rules mirror GET /api/elections/{id}/ballots: unrestricted
- *       admins always have access; faculty-restricted admins require a matching
- *       FACULTY restriction or publicViewing; regular users must satisfy the
- *       election's restrictions or the election must be publicViewing.
- *     tags:
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     responses:
- *       200:
- *         description: Election metadata and ordered ballot chain
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - election
- *                 - ballots
- *               properties:
- *                 election:
- *                   $ref: '#/components/schemas/ElectionForBallotsResponse'
- *                 ballots:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Ballot'
- *       400:
- *         description: Invalid election UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not eligible to view this election and publicViewing is false
- *       404:
- *         description: Election not found (non-admins also receive 404 for soft-deleted elections)
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

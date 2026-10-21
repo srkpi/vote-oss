@@ -18,49 +18,6 @@ import { adminCanManageElectionBypass } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
 import type { ElectionRestriction } from '@/types/election';
 
-/**
- * @swagger
- * /api/elections/{id}/bypass:
- *   get:
- *     summary: List bypass tokens for an election
- *     description: >
- *       Returns ALL bypass tokens for the election — including soft-deleted
- *       ones — so admins can review the full access history.
- *       Soft-deleted tokens have a non-null `deletedAt` field and are shown
- *       with their complete usage records for audit purposes.
- *       The caller must be the election creator or a transitive ancestor
- *       in the admin hierarchy.
- *     tags:
- *       - Bypass
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     responses:
- *       200:
- *         description: Array of election bypass tokens (active and deleted)
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/ElectionBypassToken'
- *       400:
- *         description: Invalid election UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Election not found
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -138,76 +95,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   );
 }
 
-/**
- * @swagger
- * /api/elections/{id}/bypass:
- *   post:
- *     summary: Create an election bypass token
- *     description: >
- *       Creates a new election-scoped bypass token that grants the holder
- *       access to vote despite not meeting some of the election's restrictions.
- *       The token's validity is implicitly tied to the election's closes_at —
- *       no explicit validUntil is accepted. The caller must be the election
- *       creator or a transitive ancestor in the admin hierarchy.
- *     tags:
- *       - Bypass
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ElectionBypassTokenCreateBody'
- *     responses:
- *       201:
- *         description: Bypass token created – raw token returned here only
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - token
- *                 - tokenHash
- *                 - electionId
- *                 - bypassRestrictions
- *                 - maxUsage
- *               properties:
- *                 token:
- *                   type: string
- *                   description: Raw token to share with the student
- *                 tokenHash:
- *                   type: string
- *                   description: SHA-256 hash of the token
- *                 electionId:
- *                   type: string
- *                   format: uuid
- *                 bypassRestrictions:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/ElectionRestrictionType'
- *                 maxUsage:
- *                   type: integer
- *                   minimum: 1
- *                   description: Maximum number of times this token can be used
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Election not found
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

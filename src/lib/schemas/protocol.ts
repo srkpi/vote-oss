@@ -40,7 +40,7 @@ export const protocolBodySchema = z
       .string()
       .refine((value) => !Number.isNaN(new Date(value).getTime()), 'date is invalid')
       .transform((value) => new Date(value)),
-    number: z.int().positive(),
+    number: z.int().positive().max(Number.MAX_SAFE_INTEGER),
     visitors: z
       .number()
       .min(0)

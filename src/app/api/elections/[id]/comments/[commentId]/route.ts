@@ -14,54 +14,6 @@ async function loadComment(electionId: string, commentId: string) {
   return prisma.comment.findFirst({ where: { id: commentId, election_id: electionId } });
 }
 
-/**
- * @swagger
- * /api/elections/{id}/comments/{commentId}:
- *   patch:
- *     summary: Edit a comment (author only)
- *     description: >
- *       Only the comment's own author may edit it — admins with
- *       manage_petitions can delete but not edit someone else's comment.
- *       Blocked with 403 while the discussion is closed.
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: path
- *         name: commentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CommentCreateBody'
- *     responses:
- *       200:
- *         description: The updated comment
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Comment'
- *       400:
- *         description: Empty body or too long
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Not the comment's author, or the discussion is closed
- *       404:
- *         description: Petition or comment not found
- */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> },
@@ -130,48 +82,6 @@ export async function PATCH(
   );
 }
 
-/**
- * @swagger
- * /api/elections/{id}/comments/{commentId}:
- *   delete:
- *     summary: Delete a comment (soft delete)
- *     description: >
- *       The comment's own author may always delete it, even while the
- *       discussion is closed. Admins with manage_petitions may delete any
- *       comment at any time. The row is kept — with its text cleared from
- *       API responses — so the UI can show a "comment deleted" placeholder
- *       naming who deleted it and when.
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: path
- *         name: commentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: The comment, now shown as deleted
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Comment'
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Not the comment's author and not a manage_petitions admin
- *       404:
- *         description: Petition or comment not found
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> },
