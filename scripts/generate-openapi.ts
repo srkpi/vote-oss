@@ -1,7 +1,6 @@
 import fs from 'fs';
-import path from 'path';
-
 import { createSwaggerSpec } from 'next-swagger-doc';
+import path from 'path';
 import { z } from 'zod';
 
 import {
