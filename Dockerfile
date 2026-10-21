@@ -1,8 +1,9 @@
 FROM node:24-alpine AS base
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
+COPY package.json ./
+RUN npm install --global "$(node -p 'require("./package.json").packageManager')"
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat

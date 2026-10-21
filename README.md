@@ -73,7 +73,7 @@
 | **API Docs**              | [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                      |
 | **Testing**               | [Jest 30](https://jestjs.io/), [ts-jest](https://github.com/kulshekhar/ts-jest), [Allure](https://allurereport.org/)                                                                         |
 | **Linting / Formatting**  | [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter)                                                                                      |
-| **Package Manager**       | [pnpm 11](https://pnpm.io/)                                                                                                                                                                  |
+| **Package Manager**       | [pnpm 12](https://pnpm.io/)                                                                                                                                                                  |
 | **Containerisation**      | [Docker](https://www.docker.com/) (multi-stage build), [Caddy](https://caddyserver.com/) reverse proxy                                                                                       |
 | **CI/CD**                 | GitHub Actions                                                                                                                                                                               |
 
@@ -124,7 +124,7 @@ The application uses **PostgreSQL** as its primary database and connects to it t
 ### Prerequisites
 
 - **Node.js** 24.x (see `.nvmrc`)
-- **pnpm** ≥ 10 (`npm install -g pnpm`)
+- **pnpm** 12.14.0 (`npm install -g pnpm@12.14.0`)
 - **Docker** and **Docker Compose** (for local dependencies)
 - Access to **KPI ID** — or use the included [Mock Integrations API](#mock-integrations-api) for local development
 
