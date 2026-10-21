@@ -81,7 +81,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* App Router root layout loads fonts globally. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        {}
         {/* oxlint-disable-next-line nextjs/no-page-custom-font */}
         <link
           rel="stylesheet"
