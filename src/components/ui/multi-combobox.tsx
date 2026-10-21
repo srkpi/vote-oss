@@ -94,9 +94,7 @@ export function MultiCombobox({
         ref={triggerRef}
         id={id}
         role="combobox"
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        aria-controls={open ? listboxId : undefined}
+
         tabIndex={disabled ? -1 : 0}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={(e) => {
@@ -191,7 +189,7 @@ export function MultiCombobox({
                     key={option}
                     type="button"
                     role="option"
-                    aria-selected={isSelected}
+
                     disabled={isDisabled}
                     onClick={() => toggleOption(option)}
                     className={cn(

@@ -31,7 +31,6 @@ export function CharCounter({
         isOver ? 'font-semibold text-error' : 'text-muted-foreground',
         className,
       )}
-      aria-live="polite"
     >
       {isOver ? `−${Math.abs(remaining)}` : remaining}
     </span>

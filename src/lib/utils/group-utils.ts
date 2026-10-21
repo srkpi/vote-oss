@@ -115,23 +115,23 @@ export function parseGroupYearEnteredDigit(group: string): number | null {
  * Calculate the current academic course for a student given the last digit of
  * the year they entered university and the current date.
  *
- * Algorithm:
- *   adj = yearEnteredDigit
- *   if (currentYearLastDigit < adj) adj -= 10   // entered in previous decade
- *   course = currentYearLastDigit - adj          // before 1 Sep
- *          = currentYearLastDigit - adj + 1      // from 1 Sep onward
+ * Adjust the entry-year digit by subtracting 10 if it belongs to the previous
+ * decade. Subtract that adjusted digit from the current year's last digit to
+ * get the course before September, then add 1 from September onward.
  */
 export function calculateCourse(yearEnteredDigit: number, now: Date = new Date()): number {
   const yearLastDigit = now.getFullYear() % 10;
-  let adj = yearEnteredDigit;
+  let adjustedYearEnteredDigit = yearEnteredDigit;
 
-  if (yearLastDigit < adj) {
-    adj -= 10;
+  if (yearLastDigit < adjustedYearEnteredDigit) {
+    adjustedYearEnteredDigit -= 10;
   }
 
   // month is 0-indexed: August = 7, September = 8
   const isBeforeSeptember = now.getMonth() < 8;
-  return isBeforeSeptember ? yearLastDigit - adj : yearLastDigit - adj + 1;
+  return isBeforeSeptember
+    ? yearLastDigit - adjustedYearEnteredDigit
+    : yearLastDigit - adjustedYearEnteredDigit + 1;
 }
 
 /**
@@ -191,7 +191,7 @@ export function filterGroupsByLevelCourses(
   }
 
   return groups.filter((group) => {
-    const lc = parseGroupLevelCourse(group, now);
-    return lc !== null && levelCourses.includes(lc);
+    const levelCourse = parseGroupLevelCourse(group, now);
+    return levelCourse !== null && levelCourses.includes(levelCourse);
   });
 }

@@ -106,7 +106,7 @@ function Button({
     return (
       <Comp
         data-slot="button"
-        aria-disabled={isDisabled || undefined}
+
         className={cn(
           buttonVariants({ variant, size }),
           fullWidth && 'w-full',

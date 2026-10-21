@@ -91,13 +91,11 @@ export function ElectionsMobileFiltersSheet({
             transition={{ duration: 0.2 }}
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
-            aria-hidden="true"
           />
 
           <motion.div
             role="dialog"
-            aria-modal="true"
-            aria-label="Фільтри"
+
             drag="y"
             dragControls={dragControls}
             dragListener={false}
@@ -117,7 +115,6 @@ export function ElectionsMobileFiltersSheet({
               <div
                 onPointerDown={(e) => dragControls.start(e)}
                 className="flex touch-none justify-center py-2.5 active:cursor-grabbing"
-                aria-hidden="true"
               >
                 <div className="h-1.5 w-10 rounded-full bg-border" />
               </div>
@@ -277,7 +274,6 @@ function OptionList({
                 type="button"
                 onClick={() => setSearch('')}
                 className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label="Очистити пошук"
               >
                 <X className="h-3.5 w-3.5" />
               </button>

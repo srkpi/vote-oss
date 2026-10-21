@@ -40,7 +40,7 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
     >
       <button
         type="button"
-        aria-describedby={open ? id : undefined}
+
         onClick={(e) => {
           e.stopPropagation();
           setOpen((o) => !o);

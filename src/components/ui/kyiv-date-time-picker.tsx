@@ -433,7 +433,6 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
             type="button"
             onClick={prevMonth}
             className="rounded p-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-            aria-label="Попередній місяць"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -444,7 +443,6 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
             type="button"
             onClick={nextMonth}
             className="rounded p-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-            aria-label="Наступний місяць"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -506,17 +504,14 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
               onChange={handleHourChange}
               onIncrement={() => adjustHour(1)}
               onDecrement={() => adjustHour(-1)}
-              ariaLabel="Години"
             />
             <span className="font-body text-sm font-semibold text-foreground">:</span>
             <TimeSpinner
               value={currentParts.minute}
               max={59}
-              step={minuteStep}
               onChange={handleMinuteChange}
               onIncrement={() => adjustMinute(1)}
               onDecrement={() => adjustMinute(-1)}
-              ariaLabel="Хвилини"
             />
           </div>
         </div>
@@ -531,8 +526,7 @@ export const KyivDateTimePicker = React.forwardRef<HTMLButtonElement, KyivDateTi
           type="button"
           disabled={disabled}
           onClick={() => (open ? closePopover() : openPopover())}
-          aria-haspopup="dialog"
-          aria-expanded={open}
+
           className={cn(
             'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-card',
             'border-border-color border',
@@ -566,22 +560,12 @@ KyivDateTimePicker.displayName = 'KyivDateTimePicker';
 interface TimeSpinnerProps {
   value: number;
   max: number;
-  step?: number;
   onChange: (raw: string) => void;
   onIncrement: () => void;
   onDecrement: () => void;
-  ariaLabel: string;
 }
 
-function TimeSpinner({
-  value,
-  max,
-  step = 1,
-  onChange,
-  onIncrement,
-  onDecrement,
-  ariaLabel,
-}: TimeSpinnerProps) {
+function TimeSpinner({ value, max, onChange, onIncrement, onDecrement }: TimeSpinnerProps) {
   const [draft, setDraft] = React.useState<string>(String(value).padStart(2, '0'));
   const [focused, setFocused] = React.useState(false);
 
@@ -598,7 +582,7 @@ function TimeSpinner({
         type="button"
         onClick={onDecrement}
         className="rounded-l px-1.5 py-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-        aria-label={`${ariaLabel} -${step}`}
+
         tabIndex={-1}
       >
         <ChevronLeft className="h-3 w-3" />
@@ -607,7 +591,7 @@ function TimeSpinner({
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
-        aria-label={ariaLabel}
+
         value={draft}
         onFocus={(e) => {
           setFocused(true);
@@ -648,7 +632,7 @@ function TimeSpinner({
         type="button"
         onClick={onIncrement}
         className="rounded-r px-1.5 py-1 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-        aria-label={`${ariaLabel} +${step}`}
+
         tabIndex={-1}
       >
         <ChevronRight className="h-3 w-3" />

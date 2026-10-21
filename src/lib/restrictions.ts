@@ -122,8 +122,10 @@ export function adminCanAccessElection(
   adminFaculty: string,
   restrictions: ElectionRestriction[],
 ): boolean {
-  const facRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
-  return facRestrictions.length === 0 || facRestrictions.some((r) => r.value === adminFaculty);
+  const facultyRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
+  return (
+    facultyRestrictions.length === 0 || facultyRestrictions.some((r) => r.value === adminFaculty)
+  );
 }
 
 /**
