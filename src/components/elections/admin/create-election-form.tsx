@@ -1,8 +1,17 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  Controller,
+  useFieldArray,
+  useForm,
+  useWatch,
+  type FieldPath,
+  type FieldPathValue,
+} from 'react-hook-form';
 
 import { WinningConditionsSection } from '@/components/elections/admin/winning-conditions-section';
 import { Alert } from '@/components/ui/alert';
@@ -29,19 +38,13 @@ import {
   LEVEL_COURSE_MASTER_COURSES,
   STUDY_FORM_LABELS,
   UI_STUDY_FORMS,
-  WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE,
-  WINNING_CONDITION_PERCENTAGE_MIN,
-  WINNING_CONDITION_QUORUM_MAX,
-  WINNING_CONDITION_QUORUM_MIN,
-  WINNING_CONDITION_VOTES_MAX,
-  WINNING_CONDITION_VOTES_MIN,
 } from '@/lib/constants';
-import { cn, pluralize } from '@/lib/utils/common';
 import {
-  filterGroupsByLevelCourses,
-  filterGroupsByStudyForms,
-  parseGroupLevel,
-} from '@/lib/utils/group-utils';
+  createElectionFormSchema,
+  getElectionCampusGroups,
+  type ElectionFormValues,
+} from '@/lib/schemas/election-form';
+import { cn, pluralize } from '@/lib/utils/common';
 import type {
   CreateElectionRestriction,
   ElectionDetail,
@@ -116,9 +119,6 @@ export function CreateElectionForm({
   const router = useRouter();
   const { toast } = useToast();
   const isEdit = mode === 'edit';
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [facultyGroups, setFacultyGroups] = useState<Record<string, string[]>>({});
   const [groupsLoading, setGroupsLoading] = useState(true);
@@ -208,80 +208,118 @@ export function CreateElectionForm({
     return initialData.restrictions.some((r) => r.type === 'BYPASS_REQUIRED');
   };
 
-  // Form state
-  const [form, setForm] = useState({
-    title: initialData?.title ?? '',
-    description: initialData?.description ?? '',
-    opensAt: initialData?.opensAt ?? '',
-    closesAt: initialData?.closesAt ?? '',
-    minChoices: initialData?.minChoices ?? 1,
-    maxChoices: initialData?.maxChoices ?? 1,
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    setError,
+    clearErrors,
+    trigger,
+    formState: { errors, isSubmitting: loading, isSubmitted },
+  } = useForm<ElectionFormValues>({
+    resolver: zodResolver(createElectionFormSchema(facultyGroups, groupsLoading)),
+    defaultValues: {
+      title: initialData?.title ?? '',
+      description: initialData?.description ?? '',
+      opensAt: initialData?.opensAt ?? '',
+      closesAt: initialData?.closesAt ?? '',
+      minChoices: initialData?.minChoices ?? 1,
+      maxChoices: initialData?.maxChoices ?? 1,
+      winningConditions: initialData?.winningConditions
+        ? wcToState(initialData.winningConditions)
+        : DEFAULT_WC_STATE,
+      faculties: getInitialFaculties(),
+      groups: getInitialGroups(),
+      studyForms: getInitialForms(),
+      levelCourses: getInitialLevelCourses(),
+      groupMemberships: getInitialGroupMemberships(),
+      bypassRequired: getInitialBypassRequired(),
+      includeFacultyRestriction: true,
+      shuffleChoices: initialData?.shuffleChoices ?? false,
+      publicViewing: initialData?.publicViewing ?? false,
+      anonymous: initialData?.anonymous ?? true,
+      choices: initialData?.choices?.map(({ choice }) => ({ value: choice })) ?? [
+        { value: '' },
+        { value: '' },
+      ],
+    },
   });
+  const form = useWatch({ control }) as ElectionFormValues;
+  const { fields: choices, append, remove } = useFieldArray({ control, name: 'choices' });
+  const {
+    faculties: selectedFaculties,
+    groups: selectedGroups,
+    studyForms: selectedForms,
+    levelCourses: selectedLevelCourses,
+    groupMemberships: selectedGroupMemberships,
+    winningConditions: winningConditionsState,
+    bypassRequired,
+    includeFacultyRestriction,
+    shuffleChoices,
+    publicViewing,
+    anonymous,
+  } = form;
+  const error = errors.root?.message;
+  const winningConditionErrors = {
+    reachesPercentage: errors.winningConditions?.reachesPercentage?.message ?? '',
+    reachesVotes: errors.winningConditions?.reachesVotes?.message ?? '',
+    quorum: errors.winningConditions?.quorum?.message ?? '',
+  };
 
-  const [winningConditionsState, setWinningConditionsState] = useState<WinningConditionsState>(
-    initialData?.winningConditions ? wcToState(initialData.winningConditions) : DEFAULT_WC_STATE,
-  );
+  function updateField<K extends FieldPath<ElectionFormValues>>(
+    name: K,
+    value: FieldPathValue<ElectionFormValues, K>,
+  ) {
+    setValue(name, value, { shouldDirty: true });
+    if (isSubmitted) {
+      void trigger();
+    }
+    clearErrors('root');
+  }
 
-  // Restriction state
-  const [selectedFaculties, setSelectedFaculties] = useState<string[]>(getInitialFaculties);
-  const [selectedGroups, setSelectedGroups] = useState<string[]>(getInitialGroups);
-  const [selectedForms, setSelectedForms] = useState<string[]>(getInitialForms);
-  const [selectedLevelCourses, setSelectedLevelCourses] =
-    useState<string[]>(getInitialLevelCourses);
-  const [selectedGroupMemberships, setSelectedGroupMemberships] = useState<string[]>(
-    getInitialGroupMemberships,
-  );
-  const [bypassRequired, setBypassRequired] = useState(getInitialBypassRequired);
-
-  // When the admin is faculty-restricted but has ≥1 GROUP_MEMBERSHIP restriction,
-  // they may opt out of the automatic faculty restriction.
   const canBypassFaculty = !!restrictedToFaculty && selectedGroupMemberships.length > 0;
-  const [includeFacultyRestriction, setIncludeFacultyRestriction] = useState(true);
-
   useEffect(() => {
-    // If the bypass condition is no longer met, re-enable the faculty restriction.
     if (!canBypassFaculty) {
-      // oxlint-disable-next-line react/set-state-in-effect
-      setIncludeFacultyRestriction(true);
+      setValue('includeFacultyRestriction', true);
     }
-  }, [canBypassFaculty]);
+  }, [canBypassFaculty, setValue]);
 
-  // Election options
-  const [shuffleChoices, setShuffleChoices] = useState(initialData?.shuffleChoices ?? false);
-  const [publicViewing, setPublicViewing] = useState(initialData?.publicViewing ?? false);
-  const [anonymous, setAnonymous] = useState(initialData?.anonymous ?? true);
-
-  const [choices, setChoices] = useState<string[]>(
-    initialData?.choices?.map((c) => c.choice) ?? ['', ''],
+  const availableGroups = useMemo(
+    () =>
+      getElectionCampusGroups(
+        facultyGroups,
+        selectedFaculties,
+        selectedForms,
+        selectedLevelCourses,
+      ),
+    [facultyGroups, selectedFaculties, selectedForms, selectedLevelCourses],
   );
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  // Available campus groups filtered by faculties + form + level
-  const availableGroups = useMemo(() => {
-    let groups = Array.from(new Set(selectedFaculties.flatMap((f) => facultyGroups[f] ?? []))).sort(
-      (a, b) => a.localeCompare(b, 'uk'),
-    );
-    groups = groups.filter((g) => parseGroupLevel(g) !== 'g');
-    if (selectedForms.length > 0) {
-      groups = filterGroupsByStudyForms(groups, selectedForms);
-    }
-    if (selectedLevelCourses.length > 0) {
-      groups = filterGroupsByLevelCourses(groups, selectedLevelCourses);
-    }
-    return groups;
-  }, [selectedFaculties, facultyGroups, selectedForms, selectedLevelCourses]);
-
   useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect
-    setSelectedGroups((prev) => prev.filter((g) => availableGroups.includes(g)));
-  }, [availableGroups]);
+    if (groupsLoading) {
+      return;
+    }
+    const current = getValues('groups');
+    const next = current.filter((group) => availableGroups.includes(group));
+    if (next.length !== current.length) {
+      setValue('groups', next);
+      if (isSubmitted) {
+        void trigger();
+      }
+    }
+  }, [availableGroups, groupsLoading, getValues, setValue, isSubmitted, trigger]);
 
   useEffect(() => {
     if (choices.length <= 1) {
-      // oxlint-disable-next-line react/set-state-in-effect
-      setShuffleChoices(false);
+      setValue('shuffleChoices', false);
     }
-  }, [choices.length]);
+    setValue('minChoices', Math.min(getValues('minChoices'), choices.length));
+    setValue('maxChoices', Math.min(getValues('maxChoices'), choices.length));
+    if (isSubmitted) {
+      void trigger();
+    }
+  }, [choices.length, getValues, setValue, isSubmitted, trigger]);
 
   const noGroupsMatchCriteria =
     selectedFaculties.length > 0 &&
@@ -289,202 +327,38 @@ export function CreateElectionForm({
     (selectedForms.length > 0 || selectedLevelCourses.length > 0) &&
     !groupsLoading;
 
-  const restrictions: CreateElectionRestriction[] = [
-    ...(restrictedToFaculty && !includeFacultyRestriction
-      ? []
-      : selectedFaculties.map((v) => ({ type: 'FACULTY' as const, value: v }))),
-    ...selectedGroups.map((v) => ({ type: 'GROUP' as const, value: v })),
-    ...selectedForms.map((v) => ({ type: 'STUDY_FORM' as const, value: v })),
-    ...selectedLevelCourses.map((v) => ({ type: 'LEVEL_COURSE' as const, value: v })),
-    ...selectedGroupMemberships.map((v) => ({ type: 'GROUP_MEMBERSHIP' as const, value: v })),
-    ...(bypassRequired ? [{ type: 'BYPASS_REQUIRED' as const, value: 'true' }] : []),
-  ];
-
-  function handleFacultiesChange(faculties: string[]) {
-    if (restrictedToFaculty) {
-      return;
-    }
-    setSelectedFaculties(faculties);
-    setFieldErrors((p) => ({ ...p, faculties: '' }));
-    setError(null);
+  function getRestrictions(values: ElectionFormValues): CreateElectionRestriction[] {
+    return [
+      ...(restrictedToFaculty && !values.includeFacultyRestriction
+        ? []
+        : values.faculties.map((v) => ({ type: 'FACULTY' as const, value: v }))),
+      ...values.groups.map((v) => ({ type: 'GROUP' as const, value: v })),
+      ...values.studyForms.map((v) => ({ type: 'STUDY_FORM' as const, value: v })),
+      ...values.levelCourses.map((v) => ({ type: 'LEVEL_COURSE' as const, value: v })),
+      ...values.groupMemberships.map((v) => ({ type: 'GROUP_MEMBERSHIP' as const, value: v })),
+      ...(values.bypassRequired ? [{ type: 'BYPASS_REQUIRED' as const, value: 'true' }] : []),
+    ];
   }
+  const restrictions = getRestrictions(form);
 
-  const updateForm = (field: string, value: string | number) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setFieldErrors((prev) => ({ ...prev, [field]: '' }));
-    setError(null);
-  };
-
-  const updateChoice = (index: number, value: string) => {
-    setChoices((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-    setFieldErrors((prev) => ({ ...prev, [`choice_${index}`]: '' }));
-    setError(null);
-  };
-
-  const addChoice = () => {
-    if (choices.length < ELECTION_CHOICES_MAX) {
-      setChoices((p) => [...p, '']);
-    }
-  };
-
-  const removeChoice = (index: number) => {
-    if (choices.length > ELECTION_CHOICES_MIN) {
-      setChoices((p) => p.filter((_, i) => i !== index));
-    }
-  };
-
-  const toggleLevelCourse = (value: string) => {
-    setSelectedLevelCourses((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
-    );
-    setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
-    setError(null);
-  };
-
-  function validateWinningConditionsUI(): boolean {
-    const errors: Record<string, string> = {};
-    const wc = winningConditionsState;
-
-    if (choices.length > 1) {
-      if (
-        !wc.hasMostVotes &&
-        !wc.reachesPercentageEnabled &&
-        !wc.reachesVotesEnabled &&
-        !wc.quorumEnabled
-      ) {
-        errors.winningConditions = 'Виберіть принаймні одну умову перемоги';
-      }
-
-      if (wc.reachesPercentageEnabled) {
-        if (
-          isNaN(wc.reachesPercentage) ||
-          wc.reachesPercentage < WINNING_CONDITION_PERCENTAGE_MIN ||
-          wc.reachesPercentage >= WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE
-        ) {
-          errors.reachesPercentage = `Значення повинно бути від ${WINNING_CONDITION_PERCENTAGE_MIN} до менш ніж ${WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE}`;
-        }
-      }
-
-      if (wc.reachesVotesEnabled) {
-        if (
-          !Number.isInteger(wc.reachesVotes) ||
-          wc.reachesVotes < WINNING_CONDITION_VOTES_MIN ||
-          wc.reachesVotes > WINNING_CONDITION_VOTES_MAX
-        ) {
-          errors.reachesVotes = `Ціле число від ${WINNING_CONDITION_VOTES_MIN} до ${WINNING_CONDITION_VOTES_MAX}`;
-        }
-      }
-    } else if (!wc.quorumEnabled) {
-      errors.quorum = 'Має бути задано для опитувань з 1 варіантом голосу';
-    }
-
-    if (wc.quorumEnabled) {
-      if (
-        !Number.isInteger(wc.quorum) ||
-        wc.quorum < WINNING_CONDITION_QUORUM_MIN ||
-        wc.quorum > WINNING_CONDITION_QUORUM_MAX
-      ) {
-        errors.quorum = `Ціле число від ${WINNING_CONDITION_QUORUM_MIN} до ${WINNING_CONDITION_QUORUM_MAX}`;
-      }
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors((prev) => ({ ...prev, ...errors }));
-      return false;
-    }
-
-    return true;
-  }
-
-  const validate = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!form.title.trim()) {
-      errors.title = "Назва обов'язкова";
-    } else if (form.title.length > ELECTION_TITLE_MAX_LENGTH) {
-      errors.title = `Назва не може перевищувати ${ELECTION_TITLE_MAX_LENGTH} символів`;
-    }
-
-    if (form.description.length > ELECTION_DESCRIPTION_MAX_LENGTH) {
-      errors.description = `Опис не може перевищувати ${ELECTION_DESCRIPTION_MAX_LENGTH} символів`;
-    }
-
-    if (!form.opensAt) {
-      errors.opensAt = "Дата початку обов'язкова";
-    }
-    if (!form.closesAt) {
-      errors.closesAt = "Дата завершення обов'язкова";
-    }
-
-    const openDate = new Date(form.opensAt),
-      closeDate = new Date(form.closesAt);
-    if (form.opensAt && form.closesAt && closeDate <= openDate) {
-      errors.closesAt = 'Дата завершення має бути після дати початку';
-    }
-
-    choices.forEach((choice, i) => {
-      if (!choice.trim()) {
-        errors[`choice_${i}`] = 'Варіант не може бути порожнім';
-      } else if (choice.length > ELECTION_CHOICE_MAX_LENGTH) {
-        errors[`choice_${i}`] =
-          `Варіант не може перевищувати ${ELECTION_CHOICE_MAX_LENGTH} символів`;
-      }
-    });
-
-    if (new Set(choices.map((c) => c.trim().toLowerCase())).size !== choices.length) {
-      errors.choices = 'Варіанти не можуть повторюватися';
-    }
-
-    if (noGroupsMatchCriteria) {
-      errors.levelCourses =
-        'Жодна група не відповідає вибраним обмеженням. Змініть критерії або приберіть деякі фільтри.';
-    }
-
-    if (selectedFaculties.length > 0 && selectedGroups.length > 0 && !groupsLoading) {
-      const redundantFaculties = selectedFaculties.filter((faculty) => {
-        const groupsInFaculty = facultyGroups[faculty] || [];
-        return !selectedGroups.some((g) => groupsInFaculty.includes(g));
-      });
-
-      if (redundantFaculties.length > 0) {
-        errors.faculties = `Зайві підрозділи (не містять обраних груп): ${redundantFaculties.join(', ')}`;
-      }
-    }
-
-    setFieldErrors(errors);
-    const baseValid = Object.keys(errors).length === 0;
-    const wcValid = validateWinningConditionsUI();
-    return baseValid && wcValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) {
-      setError('Будь ласка, виправте підсвічені помилки валідації');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-
-    const filteredChoices = choices.filter((c) => c.trim());
-    const trimmedDescription = form.description.trim();
+  const onSubmit = async (values: ElectionFormValues) => {
+    clearErrors('root');
+    const restrictions = getRestrictions(values);
+    const filteredChoices = values.choices.map(({ value }) => value.trim());
+    const trimmedDescription = values.description.trim();
     const payload = {
-      title: form.title.trim(),
+      title: values.title.trim(),
       description: trimmedDescription ? trimmedDescription : null,
-      opensAt: new Date(form.opensAt).toISOString(),
-      closesAt: new Date(form.closesAt).toISOString(),
+      opensAt: new Date(values.opensAt).toISOString(),
+      closesAt: new Date(values.closesAt).toISOString(),
       choices: filteredChoices,
-      minChoices: Math.min(form.minChoices, filteredChoices.length),
-      maxChoices: Math.min(form.maxChoices, filteredChoices.length),
+      minChoices: Math.min(values.minChoices, filteredChoices.length),
+      maxChoices: Math.min(values.maxChoices, filteredChoices.length),
       restrictions,
-      winningConditions: wcStateToPayload(winningConditionsState, filteredChoices.length),
-      shuffleChoices,
-      publicViewing: restrictions.length === 0 || publicViewing,
-      anonymous,
+      winningConditions: wcStateToPayload(values.winningConditions, filteredChoices.length),
+      shuffleChoices: filteredChoices.length > 1 && values.shuffleChoices,
+      publicViewing: restrictions.length === 0 || values.publicViewing,
+      anonymous: values.anonymous,
     };
 
     if (isEdit && electionId) {
@@ -492,30 +366,29 @@ export function CreateElectionForm({
       if (result.success) {
         toast({
           title: 'Голосування оновлено!',
-          description: `"${form.title}" успішно оновлено.`,
+          description: `"${values.title}" успішно оновлено.`,
           variant: 'success',
           duration: 6000,
         });
         router.push(`/admin/elections/${electionId}`);
         router.refresh();
       } else {
-        setError(result.error);
+        setError('root', { message: result.error });
       }
     } else {
       const result = await api.elections.create(payload);
       if (result.success) {
         toast({
           title: 'Голосування створено!',
-          description: `"${form.title}" успішно опубліковано.`,
+          description: `"${values.title}" успішно опубліковано.`,
           variant: 'success',
           duration: 6000,
         });
         router.push(`/admin/elections/${result.data.id}`);
       } else {
-        setError(result.error);
+        setError('root', { message: result.error });
       }
     }
-    setLoading(false);
   };
 
   const [renderTime] = useState(() => Date.now());
@@ -531,21 +404,27 @@ export function CreateElectionForm({
   }));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, () =>
+        setError('root', { message: 'Будь ласка, виправте підсвічені помилки валідації' }),
+      )}
+      onChange={() => clearErrors('root')}
+      className="space-y-8"
+    >
       {/* ── Basic info ─────────────────────────────────────────────────────── */}
       <section>
         <h2 className="mb-4 font-display text-xl font-semibold text-foreground">
           Основна інформація
         </h2>
         <div className="space-y-5">
-          <FormField label="Назва" required error={fieldErrors.title} htmlFor="title">
+          <FormField label="Назва" required error={errors.title?.message} htmlFor="title">
             <div className="space-y-1">
               <Input
                 id="title"
-                value={form.title}
-                onChange={(e) => updateForm('title', e.target.value)}
+                {...register('title')}
                 placeholder="Введіть назву голосування"
-                error={!!fieldErrors.title || form.title.length > ELECTION_TITLE_MAX_LENGTH}
+                error={!!errors.title?.message || form.title.length > ELECTION_TITLE_MAX_LENGTH}
               />
               <div className="flex justify-end">
                 <CharCounter value={form.title} max={ELECTION_TITLE_MAX_LENGTH} />
@@ -555,20 +434,19 @@ export function CreateElectionForm({
 
           <FormField
             label="Опис голосування"
-            error={fieldErrors.description}
+            error={errors.description?.message}
             htmlFor="description"
             hint="Необов'язково"
           >
             <div className="space-y-1">
               <Textarea
                 id="description"
-                value={form.description}
-                onChange={(e) => updateForm('description', e.target.value)}
+                {...register('description')}
                 placeholder="Коротко опишіть мету голосування, контекст і деталі"
                 rows={4}
                 maxLength={ELECTION_DESCRIPTION_MAX_LENGTH}
                 error={
-                  !!fieldErrors.description ||
+                  !!errors.description?.message ||
                   form.description.length > ELECTION_DESCRIPTION_MAX_LENGTH
                 }
               />
@@ -579,26 +457,51 @@ export function CreateElectionForm({
           </FormField>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <FormField label="Початок" required error={fieldErrors.opensAt} htmlFor="opensAt">
-              <KyivDateTimePicker
-                id="opensAt"
-                value={form.opensAt}
-                onChange={(date) => updateForm('opensAt', date.toISOString())}
-                min={minDateTime}
-                max={maxOpensAt}
-                minuteStep={30}
-                error={!!fieldErrors.opensAt}
+            <FormField label="Початок" required error={errors.opensAt?.message} htmlFor="opensAt">
+              <Controller
+                control={control}
+                name="opensAt"
+                render={({ field }) => (
+                  <KyivDateTimePicker
+                    id="opensAt"
+                    value={field.value}
+                    onChange={(date) => {
+                      field.onChange(date.toISOString());
+                      clearErrors('root');
+                    }}
+                    ref={field.ref}
+                    min={minDateTime}
+                    max={maxOpensAt}
+                    minuteStep={30}
+                    error={!!errors.opensAt?.message}
+                  />
+                )}
               />
             </FormField>
-            <FormField label="Завершення" required error={fieldErrors.closesAt} htmlFor="closesAt">
-              <KyivDateTimePicker
-                id="closesAt"
-                value={form.closesAt}
-                onChange={(date) => updateForm('closesAt', date.toISOString())}
-                min={form.opensAt || minDateTime}
-                max={maxClosesAt}
-                minuteStep={30}
-                error={!!fieldErrors.closesAt}
+            <FormField
+              label="Завершення"
+              required
+              error={errors.closesAt?.message}
+              htmlFor="closesAt"
+            >
+              <Controller
+                control={control}
+                name="closesAt"
+                render={({ field }) => (
+                  <KyivDateTimePicker
+                    id="closesAt"
+                    value={field.value}
+                    onChange={(date) => {
+                      field.onChange(date.toISOString());
+                      clearErrors('root');
+                    }}
+                    ref={field.ref}
+                    min={form.opensAt || minDateTime}
+                    max={maxClosesAt}
+                    minuteStep={30}
+                    error={!!errors.closesAt?.message}
+                  />
+                )}
               />
             </FormField>
           </div>
@@ -613,37 +516,43 @@ export function CreateElectionForm({
         <p className="font-body mb-4 text-sm text-muted-foreground">
           Додайте від {ELECTION_CHOICES_MIN} до {ELECTION_CHOICES_MAX} варіантів
         </p>
-        {fieldErrors.choices && (
+        {errors.choices?.root?.message && (
           <Alert variant="error" className="mb-3">
-            {fieldErrors.choices}
+            {errors.choices?.root?.message}
           </Alert>
         )}
 
         <div className="space-y-3">
           {choices.map((choice, index) => (
-            <div key={index} className="flex items-start gap-3">
+            <div key={choice.id} className="flex items-start gap-3">
               <div className="flex-1 space-y-1">
                 <Input
-                  value={choice}
-                  onChange={(e) => updateChoice(index, e.target.value)}
+                  {...register(`choices.${index}.value`)}
                   placeholder={`Варіант ${index + 1}`}
                   error={
-                    !!fieldErrors[`choice_${index}`] || choice.length > ELECTION_CHOICE_MAX_LENGTH
+                    !!errors.choices?.[index]?.value?.message ||
+                    (form.choices[index]?.value ?? choice.value).length > ELECTION_CHOICE_MAX_LENGTH
                   }
                 />
                 <div className="flex items-center justify-between">
-                  {fieldErrors[`choice_${index}`] ? (
-                    <p className="text-xs text-error">{fieldErrors[`choice_${index}`]}</p>
+                  {errors.choices?.[index]?.value?.message ? (
+                    <p className="text-xs text-error">{errors.choices?.[index]?.value?.message}</p>
                   ) : (
                     <span />
                   )}
-                  <CharCounter value={choice} max={ELECTION_CHOICE_MAX_LENGTH} />
+                  <CharCounter
+                    value={form.choices[index]?.value ?? choice.value}
+                    max={ELECTION_CHOICE_MAX_LENGTH}
+                  />
                 </div>
               </div>
               {choices.length > ELECTION_CHOICES_MIN && (
                 <button
                   type="button"
-                  onClick={() => removeChoice(index)}
+                  onClick={() => {
+                    remove(index);
+                    clearErrors('root');
+                  }}
                   className={cn(
                     'flex h-10 w-10 shrink-0 items-center justify-center rounded-(--radius)',
                     'text-muted-foreground transition-colors duration-150 hover:bg-error-bg hover:text-error',
@@ -662,7 +571,10 @@ export function CreateElectionForm({
             variant="secondary"
             size="sm"
             className="mt-4"
-            onClick={addChoice}
+            onClick={() => {
+              append({ value: '' });
+              clearErrors('root');
+            }}
             icon={<Plus className="h-4 w-4" />}
           >
             Додати варіант
@@ -674,7 +586,7 @@ export function CreateElectionForm({
             label="Перемішувати варіанти"
             description="У кожного користувача буде свій випадковий порядок відображення варіантів"
             checked={shuffleChoices}
-            onChange={setShuffleChoices}
+            onChange={(value) => updateField('shuffleChoices', value)}
             className="mt-6"
           />
         )}
@@ -685,7 +597,7 @@ export function CreateElectionForm({
             <FormField
               label="Дозволено обирати варіантів"
               required
-              error={fieldErrors.minChoices || fieldErrors.maxChoices}
+              error={errors.minChoices?.message || errors.maxChoices?.message}
               htmlFor="choices-slider"
             >
               <Slider
@@ -698,9 +610,8 @@ export function CreateElectionForm({
                 step={1}
                 value={[form.minChoices, form.maxChoices]}
                 onValueChange={([newMin, newMax]) => {
-                  setForm((prev) => ({ ...prev, minChoices: newMin, maxChoices: newMax }));
-                  setFieldErrors((prev) => ({ ...prev, minChoices: '', maxChoices: '' }));
-                  setError(null);
+                  updateField('minChoices', newMin);
+                  updateField('maxChoices', newMax);
                 }}
                 className="my-5"
               />
@@ -736,18 +647,8 @@ export function CreateElectionForm({
           section="validity"
           state={winningConditionsState}
           validChoicesCount={choices.length}
-          onChange={(next) => {
-            setWinningConditionsState(next);
-            setFieldErrors((prev) => ({
-              ...prev,
-              winningConditions: '',
-              reachesPercentage: '',
-              reachesVotes: '',
-              quorum: '',
-            }));
-            setError(null);
-          }}
-          errors={fieldErrors}
+          onChange={(next) => updateField('winningConditions', next)}
+          errors={winningConditionErrors}
         />
       </section>
 
@@ -765,21 +666,11 @@ export function CreateElectionForm({
             section="winning"
             state={winningConditionsState}
             validChoicesCount={choices.length}
-            onChange={(next) => {
-              setWinningConditionsState(next);
-              setFieldErrors((prev) => ({
-                ...prev,
-                winningConditions: '',
-                reachesPercentage: '',
-                reachesVotes: '',
-                quorum: '',
-              }));
-              setError(null);
-            }}
-            errors={fieldErrors}
+            onChange={(next) => updateField('winningConditions', next)}
+            errors={winningConditionErrors}
           />
-          {fieldErrors.winningConditions && (
-            <p className="mt-2 text-sm text-error">{fieldErrors.winningConditions}</p>
+          {errors.winningConditions?.root?.message && (
+            <p className="mt-2 text-sm text-error">{errors.winningConditions?.root?.message}</p>
           )}
         </section>
       )}
@@ -812,7 +703,7 @@ export function CreateElectionForm({
                   : 'Акаунт обмежений одним підрозділом'
                 : undefined
             }
-            error={fieldErrors.faculties}
+            error={errors.faculties?.message}
           >
             {restrictedToFaculty ? (
               <div className="space-y-3">
@@ -840,7 +731,7 @@ export function CreateElectionForm({
                         : 'Обмеження підрозділу знято — діє обмеження за членством у групі'
                     }
                     checked={includeFacultyRestriction}
-                    onChange={setIncludeFacultyRestriction}
+                    onChange={(value) => updateField('includeFacultyRestriction', value)}
                   />
                 )}
               </div>
@@ -849,7 +740,11 @@ export function CreateElectionForm({
                 id="faculties"
                 options={groupsLoading ? [] : facultyOptions}
                 value={selectedFaculties}
-                onChange={handleFacultiesChange}
+                onChange={(value) => {
+                  if (!restrictedToFaculty) {
+                    updateField('faculties', value);
+                  }
+                }}
                 placeholder={groupsLoading ? 'Завантаження…' : 'Без обмеження'}
                 searchPlaceholder="Пошук підрозділу…"
                 disabled={groupsLoading}
@@ -863,16 +758,12 @@ export function CreateElectionForm({
             <ChipSelect
               options={studyFormOptions}
               value={selectedForms}
-              onChange={(forms) => {
-                setSelectedForms(forms);
-                setFieldErrors((prev) => ({ ...prev, levelCourses: '' }));
-                setError(null);
-              }}
+              onChange={(value) => updateField('studyForms', value)}
             />
           </FormField>
 
           {/* Level & course */}
-          <FormField label="Рівень та курс" error={fieldErrors.levelCourses}>
+          <FormField label="Рівень та курс" error={errors.levelCourses?.message}>
             <div className={`grid grid-cols-1 gap-4 sm:grid-cols-${LEVEL_COLUMNS.length}`}>
               {LEVEL_COLUMNS.map(({ key, label, courses }) => (
                 <div key={key} className="space-y-2">
@@ -885,7 +776,14 @@ export function CreateElectionForm({
                         <button
                           key={value}
                           type="button"
-                          onClick={() => toggleLevelCourse(value)}
+                          onClick={() =>
+                            updateField(
+                              'levelCourses',
+                              selectedLevelCourses.includes(value)
+                                ? selectedLevelCourses.filter((course) => course !== value)
+                                : [...selectedLevelCourses, value],
+                            )
+                          }
                           className={cn(
                             'flex h-10 w-10 items-center justify-center rounded-(--radius) border',
                             'font-body text-sm font-semibold transition-colors duration-150',
@@ -904,7 +802,7 @@ export function CreateElectionForm({
               ))}
             </div>
 
-            {noGroupsMatchCriteria && !fieldErrors.levelCourses && (
+            {noGroupsMatchCriteria && !errors.levelCourses?.message && (
               <p className="mt-2 text-sm text-warning">
                 Жодна група з обраних підрозділів не відповідає цим критеріям.
               </p>
@@ -927,10 +825,7 @@ export function CreateElectionForm({
               id="groups"
               options={availableGroups}
               value={selectedGroups}
-              onChange={(g) => {
-                setSelectedGroups(g);
-                setError(null);
-              }}
+              onChange={(value) => updateField('groups', value)}
               placeholder="Без обмеження"
               searchPlaceholder="Пошук групи…"
               disabled={selectedFaculties.length === 0 || groupsLoading || noGroupsMatchCriteria}
@@ -966,10 +861,12 @@ export function CreateElectionForm({
                         key={grp.id}
                         type="button"
                         onClick={() => {
-                          setSelectedGroupMemberships((prev) =>
-                            isSelected ? prev.filter((id) => id !== grp.id) : [...prev, grp.id],
+                          updateField(
+                            'groupMemberships',
+                            isSelected
+                              ? selectedGroupMemberships.filter((id) => id !== grp.id)
+                              : [...selectedGroupMemberships, grp.id],
                           );
-                          setError(null);
                         }}
                         className={cn(
                           'font-body min-w-0 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-all duration-150',
@@ -1000,7 +897,7 @@ export function CreateElectionForm({
             label="Доступ лише за токеном"
             description="Участь зможуть взяти лише люди, яким видано токен доступу до голосування."
             checked={bypassRequired}
-            onChange={setBypassRequired}
+            onChange={(value) => updateField('bypassRequired', value)}
           />
 
           {restrictions.length > 0 && (
@@ -1008,7 +905,7 @@ export function CreateElectionForm({
               label="Публічний перегляд"
               description="Будь-який авторизований користувач може переглядати сторінку голосування."
               checked={publicViewing}
-              onChange={setPublicViewing}
+              onChange={(value) => updateField('publicViewing', value)}
             />
           )}
 
@@ -1016,7 +913,7 @@ export function CreateElectionForm({
             label="Анонімне голосування"
             description="Особи учасників криптографічно захищені й не можуть бути розкриті"
             checked={anonymous}
-            onChange={setAnonymous}
+            onChange={(value) => updateField('anonymous', value)}
           />
 
           {!anonymous && (
@@ -1032,7 +929,7 @@ export function CreateElectionForm({
       {/* ── Submit ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
         {error && (
-          <Alert variant="error" title="Помилка" onDismiss={() => setError(null)}>
+          <Alert variant="error" title="Помилка" onDismiss={() => clearErrors('root')}>
             {error}
           </Alert>
         )}
