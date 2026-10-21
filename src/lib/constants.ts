@@ -265,10 +265,6 @@ export const RATE_LIMIT_INVITE_MAX = 20;
 export const RATE_LIMIT_AVATAR_WINDOW_MS = 60_000;
 export const RATE_LIMIT_AVATAR_MAX = 6;
 
-// DIIA auth
-export const DIIA_POLL_INTERVAL_MS = 5_000;
-export const DIIA_LINK_TTL_MS = 2 * 60 * 1_000;
-
 // UI
 export const CHAR_COUNTER_THRESHOLD = 0.6;
 
