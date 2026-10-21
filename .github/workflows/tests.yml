@@ -31,7 +31,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Allure
-        run: npm install -g allure
+        run: npm install -g allure@3.21.0
 
       - name: Generate Prisma Client
         run: pnpm db:generate
