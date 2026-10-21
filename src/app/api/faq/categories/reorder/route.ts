@@ -8,42 +8,6 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { faqReorderBodySchema } from '@/lib/schemas/faq';
 
-/**
- * @swagger
- * /api/faq/categories/reorder:
- *   patch:
- *     summary: Reorder FAQ categories
- *     description: >
- *       Accepts a complete ordered array of category IDs and updates their
- *       `position` values atomically. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - order
- *             properties:
- *               order:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: Complete ordered list of all category IDs
- *     responses:
- *       204:
- *         description: Categories reordered
- *       400:
- *         description: Invalid order array or unknown category IDs
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- */
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

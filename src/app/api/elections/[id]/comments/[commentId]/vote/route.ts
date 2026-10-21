@@ -19,56 +19,6 @@ async function loadVotableComment(electionId: string, commentId: string) {
   });
 }
 
-/**
- * @swagger
- * /api/elections/{id}/comments/{commentId}/vote:
- *   put:
- *     summary: Cast or change your vote on a comment
- *     description: >
- *       Idempotent set: call again with a different value to switch your
- *       vote. Comment votes are **not** anonymous — your name is visible
- *       to anyone who opens the "who voted" list on this comment. Voting
- *       stays open even while the petition's discussion is closed. You
- *       cannot vote on your own comment.
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: path
- *         name: commentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CommentVoteBody'
- *     responses:
- *       200:
- *         description: Updated vote totals
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CommentVoteSummary'
- *       400:
- *         description: Invalid value, or voting on your own comment
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Petition or comment not found
- *       429:
- *         description: Too many vote changes recently
- */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> },
@@ -170,40 +120,6 @@ export async function PUT(
   });
 }
 
-/**
- * @swagger
- * /api/elections/{id}/comments/{commentId}/vote:
- *   delete:
- *     summary: Revoke your vote on a comment
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: path
- *         name: commentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Updated vote totals
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CommentVoteSummary'
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Petition, comment, or existing vote not found
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> },

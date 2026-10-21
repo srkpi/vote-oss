@@ -48,7 +48,6 @@
     "lucide-react": "^1.48.0",
     "minio": "^8.0.7",
     "next": "16.3.6",
-    "next-swagger-doc": "^0.5.0",
     "posthog-js": "^1.434.12",
     "posthog-node": "^5.53.0",
     "postprocessing": "^6.39.5",
@@ -96,7 +95,8 @@
     "tailwindcss": "^4.3.3",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@asteasolutions/zod-to-openapi": "^9.1.0"
   },
   "overrides": {
     "@types/react": "19.2.14",

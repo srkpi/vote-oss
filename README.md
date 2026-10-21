@@ -70,7 +70,7 @@
 | **Cryptography**          | Node.js built-in `crypto` — RSA-2048 key generation, ECDSA signing, SHA-256 hashing                                                                                                          |
 | **Rich Text**             | [Quill](https://quilljs.com/) (Delta format)                                                                                                                                                 |
 | **Analytics**             | [PostHog](https://posthog.com/) (client-side + server-side, OpenTelemetry log export)                                                                                                        |
-| **API Docs**              | [next-swagger-doc](https://github.com/jellydn/next-swagger-doc) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                                         |
+| **API Docs**              | [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                      |
 | **Testing**               | [Jest 30](https://jestjs.io/), [ts-jest](https://github.com/kulshekhar/ts-jest), [Allure](https://allurereport.org/)                                                                         |
 | **Linting / Formatting**  | [ESLint 9](https://eslint.org/) (flat config), [Prettier](https://prettier.io/), [simple-import-sort](https://github.com/lydell/eslint-plugin-simple-import-sort)                            |
 | **Package Manager**       | [pnpm 11](https://pnpm.io/)                                                                                                                                                                  |
@@ -286,29 +286,29 @@ curl http://localhost:3001/students | jq .
 
 ## Scripts
 
-| Command                 | Description                                             |
-| ----------------------- | ------------------------------------------------------- |
-| `pnpm dev`              | Generate OpenAPI spec, then start Next.js in dev mode   |
-| `pnpm build`            | Generate OpenAPI spec, then build for production        |
-| `pnpm start`            | Start the production server                             |
-| `pnpm lint`             | Run ESLint across the entire codebase                   |
-| `pnpm type-check`       | Run TypeScript type checking without emitting files     |
-| `pnpm format`           | Format all files with Prettier                          |
-| `pnpm format:check`     | Check formatting without writing changes                |
-| `pnpm test`             | Run the Jest test suite                                 |
-| `pnpm test:watch`       | Run Jest in watch mode                                  |
-| `pnpm test:coverage`    | Run Jest and collect coverage reports                   |
-| `pnpm test:ci`          | Run Jest in CI mode (no watch, force exit)              |
-| `pnpm allure:generate`  | Generate an Allure HTML report from test results        |
-| `pnpm allure:open`      | Open the generated Allure report in a browser           |
-| `pnpm allure:serve`     | Serve Allure results interactively                      |
-| `pnpm db:migrate`       | Run Prisma migrations (dev — with prompts)              |
-| `pnpm db:migrate:prod`  | Run Prisma migrations (production — no prompts)         |
-| `pnpm db:generate`      | Regenerate the Prisma client after schema changes       |
-| `pnpm db:studio`        | Launch Prisma Studio                                    |
-| `pnpm db:reset`         | Reset the database and re-run all migrations            |
-| `pnpm db:seed`          | Seed the database with a test admin and invite token    |
-| `pnpm generate:openapi` | Regenerate `public/openapi.json` from JSDoc annotations |
+| Command                 | Description                                                   |
+| ----------------------- | ------------------------------------------------------------- |
+| `pnpm dev`              | Generate OpenAPI spec, then start Next.js in dev mode         |
+| `pnpm build`            | Generate OpenAPI spec, then build for production              |
+| `pnpm start`            | Start the production server                                   |
+| `pnpm lint`             | Run ESLint across the entire codebase                         |
+| `pnpm type-check`       | Run TypeScript type checking without emitting files           |
+| `pnpm format`           | Format all files with Prettier                                |
+| `pnpm format:check`     | Check formatting without writing changes                      |
+| `pnpm test`             | Run the Jest test suite                                       |
+| `pnpm test:watch`       | Run Jest in watch mode                                        |
+| `pnpm test:coverage`    | Run Jest and collect coverage reports                         |
+| `pnpm test:ci`          | Run Jest in CI mode (no watch, force exit)                    |
+| `pnpm allure:generate`  | Generate an Allure HTML report from test results              |
+| `pnpm allure:open`      | Open the generated Allure report in a browser                 |
+| `pnpm allure:serve`     | Serve Allure results interactively                            |
+| `pnpm db:migrate`       | Run Prisma migrations (dev — with prompts)                    |
+| `pnpm db:migrate:prod`  | Run Prisma migrations (production — no prompts)               |
+| `pnpm db:generate`      | Regenerate the Prisma client after schema changes             |
+| `pnpm db:studio`        | Launch Prisma Studio                                          |
+| `pnpm db:reset`         | Reset the database and re-run all migrations                  |
+| `pnpm db:seed`          | Seed the database with a test admin and invite token          |
+| `pnpm generate:openapi` | Regenerate `public/openapi.json` from typed route definitions |
 
 ## Testing
 
@@ -426,7 +426,7 @@ curl -X POST https://voteoss.kpi.ua/api/cron/campaign-tick \
 
 ## API Documentation
 
-The full OpenAPI 3.0 specification is auto-generated from JSDoc `@swagger` annotations at build time and written to `public/openapi.json`.
+The OpenAPI 3.0 specification is generated from typed route registrations and shared Zod schemas at build time and written to `public/openapi.json`.
 
 **Interactive Swagger UI:** [https://voteoss.kpi.ua/docs](https://voteoss.kpi.ua/docs)
 
@@ -500,3 +500,5 @@ This project is open source. See the [LICENSE](LICENSE) file for details.
 ### Shared validation
 
 Request bodies, external API responses, and environment values are validated with Zod schemas in `src/lib/schemas/`. FAQ, petition creation, and admin join forms use React Hook Form with `@hookform/resolvers/zod` to share validation rules with the server.
+
+API documentation is defined in `src/lib/openapi/routes/`, with reusable models in `src/lib/openapi/components.ts` and shared Zod schemas registered in `src/lib/openapi/schemas.ts`. Add each handler method, path, parameters, security requirements, and responses to its matching route module.

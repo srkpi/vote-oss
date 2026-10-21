@@ -7,44 +7,6 @@ import { Errors } from '@/lib/errors';
 import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/bypass/election/{tokenHash}:
- *   delete:
- *     summary: Soft-delete an election bypass token
- *     description: >
- *       Marks the specified election bypass token as deleted (sets `deleted_at`
- *       and `deleted_by`). As part of the same operation, all existing active
- *       usages of the token are revoked (their `revoked_at` and `revoked_by`
- *       are set), immediately removing the bypass eligibility for every user
- *       who had activated this token for this election.
- *
- *       The token and its full usage history remain visible in the election
- *       bypass panel for audit purposes. The caller must be the token's creator
- *       or a transitive ancestor of the creator in the admin hierarchy.
- *     tags:
- *       - Bypass
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: tokenHash
- *         required: true
- *         schema:
- *           type: string
- *         description: SHA-256 hex hash of the raw bypass token
- *     responses:
- *       204:
- *         description: Token soft-deleted and all usages revoked
- *       400:
- *         description: Missing tokenHash or token is already deleted
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller is outside the creator's hierarchy branch
- *       404:
- *         description: Token not found
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ tokenHash: string }> },

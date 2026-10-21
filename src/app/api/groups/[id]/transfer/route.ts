@@ -9,59 +9,6 @@ import { prisma } from '@/lib/prisma';
 import { groupTransferBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/groups/{id}/transfer:
- *   post:
- *     summary: Transfer group ownership to another member
- *     description: >
- *       Transfers ownership of the group to another user. After transfer,
- *       the previous owner becomes a plain member.
- *
- *       Authorization:
- *         - The current group owner can transfer to any active member.
- *         - An admin with `manage_groups` can only transfer ownership to
- *           **themselves** (admin takeover for moderation purposes). If the
- *           admin is not already a member, they are automatically added.
- *
- *       The owned-groups caches of both the previous and new owner are
- *       invalidated.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Group UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - newOwnerId
- *             properties:
- *               newOwnerId:
- *                 type: string
- *                 description: User ID of the user who will become the new owner.
- *     responses:
- *       204:
- *         description: Ownership transferred
- *       400:
- *         description: Invalid UUID, missing newOwnerId, or the specified user is already the owner
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not the current owner and is not an admin with manage_groups, or an admin is trying to transfer to someone other than themselves
- *       404:
- *         description: Group not found, soft-deleted, or the target user is not an active member (and the caller is not an admin taking over)
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

@@ -132,59 +132,6 @@ function extractStudyFormsFromElections(elections: CachedElection[]): string[] {
 // GET /api/elections
 // ---------------------------------------------------------------------------
 
-/**
- * @swagger
- * /api/elections:
- *   get:
- *     summary: List elections visible to the caller
- *     description: >
- *       Returns a structured envelope containing elections the caller is
- *       eligible to see, filter metadata for dropdown population, and the
- *       total count. Ballot counts are served from short-lived real-time
- *       Redis counters overlaid on the longer-lived metadata cache.
- *
- *       For regular users (non-admin) each election includes a `voteStatus`
- *       field: `can_vote`, `voted`, or `cannot_vote`. Admin responses omit
- *       `voteStatus` and instead include soft-deletion and permission fields.
- *
- *       Sorting: Regular elections are ordered by `opens_at` descending.
- *       Petitions can be sorted by `createdAt` (default) or `votes` via the
- *       `sort` query parameter.
- *     tags:
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: query
- *         name: type
- *         required: false
- *         schema:
- *           type: string
- *           enum: [ALL, ELECTION, PETITION]
- *           default: ELECTION
- *         description: Filter by election type. Defaults to ELECTION.
- *       - in: query
- *         name: sort
- *         required: false
- *         schema:
- *           type: string
- *           enum: [createdAt, votes]
- *           default: createdAt
- *         description: >
- *           Petition sort order. Only meaningful when type=PETITION.
- *           `votes` sorts by total ballot count descending.
- *     responses:
- *       200:
- *         description: Elections list response
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ElectionsListResponse'
- *       400:
- *         description: Invalid type filter value
- *       401:
- *         description: Unauthorized
- */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) {
@@ -415,66 +362,6 @@ export async function GET(req: NextRequest) {
 // POST /api/elections
 // ---------------------------------------------------------------------------
 
-/**
- * @swagger
- * /api/elections:
- *   post:
- *     summary: Create an election or petition
- *     description: >
- *       Creates a new election (admin-only) or petition (any authenticated
- *       user). Non-admin users are always routed to the petition code path
- *       regardless of the `type` field. Admins with `manage_petitions` have
- *       their petitions auto-approved on creation; petitions from other users
- *       start unapproved.
- *
- *       Election-specific behaviour:
- *         - An RSA key pair is generated per election. The private key is
- *           encrypted with AES-256-GCM before being stored.
- *         - FACULTY and GROUP restriction values are validated against the
- *           live campus API.
- *         - Faculty-restricted admins must include a FACULTY restriction for
- *           their own faculty (or at least one GROUP_MEMBERSHIP restriction).
- *         - The `anonymous` flag (default true) controls whether voter identity
- *           is embedded in ballot envelopes.
- *         - The `shuffleChoices` flag is not allowed for single-choice elections.
- *         - `publicViewing` defaults to true when no restrictions are set.
- *
- *       Petition-specific behaviour:
- *         - All body fields except `title` and `description` are ignored.
- *         - A single "Підтримати" choice is seeded automatically.
- *         - Petitions are always non-anonymous, publicly viewable, and use a
- *           fixed quorum winning condition.
- *         - An unapproved petition's `closes_at` is set to `created_at` (i.e.
- *           it is effectively closed until an admin approves it).
- *     tags:
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ElectionCreateBody'
- *     responses:
- *       201:
- *         description: Election or petition created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Election'
- *       400:
- *         description: >
- *           Validation error: missing required fields, invalid dates,
- *           invalid choice count, invalid restriction type or value, invalid
- *           winning conditions, or campus API validation failure.
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – non-admin attempting to create a regular election
- *       500:
- *         description: Campus API unavailable during restriction validation
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

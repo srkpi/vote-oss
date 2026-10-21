@@ -10,59 +10,6 @@ import { prisma } from '@/lib/prisma';
 import { shapeRegistration } from '@/lib/registrations';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/registrations/{id}/reject:
- *   post:
- *     summary: Reject a candidate registration with a mandatory reason
- *     description: >
- *       Transitions the registration from PENDING_REVIEW to REJECTED. A
- *       non-empty rejection reason is mandatory and is shown to the candidate.
- *       Records the reviewer's identity and the review timestamp. Caller must
- *       be an active member of the form's owning ВКСУ group.
- *     tags:
- *       - CandidateRegistrations
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Registration UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - reason
- *             properties:
- *               reason:
- *                 type: string
- *                 minLength: 1
- *                 description: Human-readable reason for the rejection shown to the candidate.
- *     responses:
- *       200:
- *         description: Registration rejected
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CandidateRegistration'
- *       400:
- *         description: Invalid UUID, missing or empty reason, or reason exceeds maximum length
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not an active member of the owning ВКСУ group
- *       404:
- *         description: Registration not found or its form is soft-deleted
- *       409:
- *         description: Registration is not in PENDING_REVIEW state
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) return Errors.unauthorized(auth.error);

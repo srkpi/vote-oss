@@ -7,39 +7,6 @@ import { Errors } from '@/lib/errors';
 import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/admins/{userId}:
- *   get:
- *     summary: Get a single admin by user ID
- *     description: Returns full admin details for the given user ID. Served from cache when available. Requires admin authentication.
- *     tags:
- *       - Admins
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID of the admin to retrieve
- *     responses:
- *       200:
- *         description: Admin record
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Admin'
- *       400:
- *         description: Missing userId
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller is not an admin
- *       404:
- *         description: Admin not found
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -94,81 +61,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   });
 }
 
-/**
- * @swagger
- * /api/admins/{userId}:
- *   patch:
- *     summary: Update an admin's permissions
- *     description: >
- *       Updates one or more permission flags for the target admin. Settable
- *       flags are `manageAdmins`, `manageGroups`, `managePetitions`,
- *       `manageFaq`, and `restrictedToFaculty`. At least one must be provided.
- *
- *       Authorization rules:
- *         - Caller must have `manage_admins`.
- *         - Caller must be a transitive ancestor of the target in the admin
- *           hierarchy.
- *         - A faculty-restricted caller cannot set `restrictedToFaculty: false`
- *           (cannot grant broader access than their own).
- *
- *       Side-effects on permission change:
- *         - If `manageAdmins` changes, all invite tokens created by the target
- *           are hard-deleted (they may have granted incorrect permissions).
- *         - If `restrictedToFaculty` changes from false → true, invite tokens
- *           created by the target with `restrictedToFaculty: false` are
- *           hard-deleted.
- *     tags:
- *       - Admins
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID of the admin to update
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               manageAdmins:
- *                 type: boolean
- *                 description: Grant or revoke the ability to invite/remove other admins.
- *               manageGroups:
- *                 type: boolean
- *                 description: Grant or revoke the ability to manage groups.
- *               managePetitions:
- *                 type: boolean
- *                 description: Grant or revoke the ability to approve/delete petitions.
- *               manageFaq:
- *                 type: boolean
- *                 description: Grant or revoke the ability to manage FAQ content.
- *               restrictedToFaculty:
- *                 type: boolean
- *                 description: >
- *                   When true, the admin can only see and manage resources
- *                   scoped to their own faculty. A faculty-restricted caller
- *                   cannot set this to false.
- *     responses:
- *       204:
- *         description: Permissions updated successfully
- *       400:
- *         description: >
- *           Missing userId, attempting to update self, no fields provided,
- *           or faculty-restricted caller trying to grant unrestricted access.
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: >
- *           Caller lacks manage_admins, or the target is outside the caller's
- *           hierarchy branch.
- *       404:
- *         description: Target admin not found or already deleted
- */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -275,40 +167,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
   return new NextResponse(null, { status: 204 });
 }
 
-/**
- * @swagger
- * /api/admins/{userId}:
- *   delete:
- *     summary: Remove an admin
- *     description: >
- *       Soft-deletes the target admin and hard-deletes all invite tokens they
- *       created. Direct children of the removed admin are re-parented to the
- *       removed admin's own parent, keeping the hierarchy intact without gaps.
- *       The caller must have `manage_admins` and be a transitive ancestor of
- *       the target in the admin hierarchy. A caller cannot remove themselves.
- *     tags:
- *       - Admins
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: The user ID of the admin to remove
- *     responses:
- *       204:
- *         description: Admin successfully removed
- *       400:
- *         description: Missing userId or attempting to remove self
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – no manage_admins permission or target is outside caller's hierarchy branch
- *       404:
- *         description: Target admin not found
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> },

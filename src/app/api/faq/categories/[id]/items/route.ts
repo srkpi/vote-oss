@@ -8,48 +8,6 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { faqItemBodySchema } from '@/lib/schemas/faq';
 
-/**
- * @swagger
- * /api/faq/categories/{id}/items:
- *   post:
- *     summary: Add a FAQ item to a category
- *     description: >
- *       Creates a new FAQ item appended at the end of the category's item
- *       list. Content must be a valid serialised Quill Delta JSON string.
- *       Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ category ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FaqItemCreateBody'
- *     responses:
- *       201:
- *         description: Item created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FaqItem'
- *       400:
- *         description: Validation error (missing fields, invalid Delta, content too long)
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Category not found
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

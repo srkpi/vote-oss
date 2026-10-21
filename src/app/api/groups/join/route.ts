@@ -9,48 +9,6 @@ import { invalidateUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
 import { tokenBodySchema } from '@/lib/schemas/group';
 
-/**
- * @swagger
- * /api/groups/join:
- *   post:
- *     summary: Join a group via invite token
- *     description: >
- *       Validates and applies a raw group invite token.  Idempotent — joining
- *       a group you are already a member of returns success without incrementing
- *       the usage counter.
- *     tags: [Groups]
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [token]
- *             properties:
- *               token:
- *                 type: string
- *     responses:
- *       200:
- *         description: Joined (or already a member)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 groupId:
- *                   type: string
- *                   format: uuid
- *                 groupName:
- *                   type: string
- *       400:
- *         description: Token expired or usage limit reached
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Invalid token
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

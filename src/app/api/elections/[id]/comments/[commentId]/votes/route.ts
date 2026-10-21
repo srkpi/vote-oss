@@ -10,55 +10,6 @@ import { apiError, Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/elections/{id}/comments/{commentId}/votes:
- *   get:
- *     summary: List who voted on a comment
- *     description: >
- *       Comment votes are not anonymous — returns each voter's name,
- *       direction, and timestamp, newest first. Avatars are resolved
- *       client-side via the app's avatar store, the same as everywhere
- *       else.
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: path
- *         name: commentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: query
- *         name: cursor
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *     responses:
- *       200:
- *         description: Voter list plus current totals
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CommentVotersResponse'
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Petition or comment not found
- */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> },
