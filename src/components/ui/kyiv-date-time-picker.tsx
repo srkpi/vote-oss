@@ -1,20 +1,22 @@
 'use client';
 
-import { format } from 'date-fns';
+import { closestTo, eachMinuteOfInterval, endOfDay, format, startOfDay } from 'date-fns';
 import { CalendarDays, Clock } from 'lucide-react';
 import { Popover } from 'radix-ui';
 import { useId, useState, type Ref } from 'react';
+import { TZDate } from 'react-day-picker';
 import { uk } from 'react-day-picker/locale';
+import { z } from 'zod';
 
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils/common';
-import {
-  KYIV_TIME_ZONE,
-  kyivDate,
-  firstKyivTimeSlot,
-  kyivTimeSlots,
-  selectKyivDay,
-} from '@/lib/utils/kyiv-date-time';
+
+const KYIV_TIME_ZONE = 'Europe/Kyiv';
+const kyivDateSchema = z
+  .union([z.date(), z.string().min(1)])
+  .pipe(z.coerce.date())
+  .transform((date) => new TZDate(date, KYIV_TIME_ZONE));
+const minuteStepSchema = z.number().int().min(1).max(60).catch(1);
 
 export interface KyivDateTimePickerProps {
   ref?: Ref<HTMLButtonElement>;
@@ -46,11 +48,48 @@ export function KyivDateTimePicker({
   const timeId = useId();
   const [open, setOpen] = useState(false);
   const [fallbackDate, setFallbackDate] = useState(() => new Date());
-  const selected = kyivDate(value);
-  const minDate = kyivDate(min);
-  const maxDate = kyivDate(max);
-  const day = selected ?? minDate ?? kyivDate(fallbackDate)!;
-  const slots = open ? kyivTimeSlots(day, minuteStep, minDate, maxDate) : [];
+  const selected = kyivDateSchema.safeParse(value).data;
+  const minDate = kyivDateSchema.safeParse(min).data;
+  const maxDate = kyivDateSchema.safeParse(max).data;
+  const day = selected ?? minDate ?? new TZDate(fallbackDate, KYIV_TIME_ZONE);
+  const step = minuteStepSchema.parse(minuteStep);
+  let slotSchema = z.date();
+  if (minDate) {
+    slotSchema = slotSchema.min(minDate);
+  }
+  if (maxDate) {
+    slotSchema = slotSchema.max(maxDate);
+  }
+  const timesForDay = (date: Date, firstOnly = false) => {
+    const zoned = new TZDate(date, KYIV_TIME_ZONE);
+    const start =
+      Math.ceil(Math.max(+startOfDay(zoned), minDate ? +minDate : -Infinity) / 60_000) * 60_000;
+    const end = Math.min(
+      +endOfDay(zoned),
+      maxDate ? +maxDate : Infinity,
+      firstOnly ? start + 59 * 60_000 : Infinity,
+    );
+    if (start > end) {
+      return [];
+    }
+    return eachMinuteOfInterval({
+      start: new TZDate(start, KYIV_TIME_ZONE),
+      end: new TZDate(end, KYIV_TIME_ZONE),
+    }).filter((time) => time.getMinutes() % step === 0 && slotSchema.safeParse(time).success);
+  };
+  const times = open ? timesForDay(day) : [];
+  const labels = times.map((time) => format(time, 'HH:mm'));
+  const counts = new Map<string, number>();
+  for (const label of labels) {
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  const slots = times.map((time, index) => ({
+    value: time.toISOString(),
+    label:
+      counts.get(labels[index])! > 1
+        ? labels[index] + ' (' + format(time, 'xxx') + ')'
+        : labels[index],
+  }));
 
   return (
     <Popover.Root
@@ -107,11 +146,13 @@ export function KyivDateTimePicker({
             timeZone={KYIV_TIME_ZONE}
             selected={selected}
             defaultMonth={day}
-            disabled={(date) => firstKyivTimeSlot(date, minuteStep, minDate, maxDate) === undefined}
+            disabled={(date) => !timesForDay(date, true).length}
             onSelect={(date) => {
-              const next = selectKyivDay(date, day, minuteStep, minDate, maxDate);
+              const target = new TZDate(date, KYIV_TIME_ZONE);
+              target.setHours(day.getHours(), day.getMinutes(), 0, 0);
+              const next = closestTo(target, timesForDay(date));
               if (next) {
-                onChange(next);
+                onChange(new Date(next));
               }
             }}
           />
