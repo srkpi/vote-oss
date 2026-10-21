@@ -8,45 +8,6 @@ import { Errors } from '@/lib/errors';
 import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
 import type { DiiaKpiIdResponse } from '@/types/auth';
 
-/**
- * @swagger
- * /api/auth/diia/init:
- *   post:
- *     summary: Initialise a Diia authentication session
- *     description: >
- *       Contacts the KPI-ID provider to create a new Diia deep-link / QR code.
- *       Returns the deep-link, request ID (used for polling), a pre-rendered
- *       QR code data-URL, and an expiry timestamp.  The link is valid for
- *       approximately 2 minutes.  Rate-limited per IP.
- *     tags:
- *       - Auth
- *     responses:
- *       200:
- *         description: Deep-link and QR code ready
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 deepLink:
- *                   type: string
- *                 requestId:
- *                   type: string
- *                 qrCode:
- *                   type: string
- *                   description: Base-64 PNG data-URL
- *                 expiresAt:
- *                   type: string
- *                   format: date-time
- *       429:
- *         description: Too many requests
- *         headers:
- *           Retry-After:
- *             schema:
- *               type: integer
- *       500:
- *         description: Failed to contact KPI-ID provider
- */
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const rl = await rateLimitLogin(ip);

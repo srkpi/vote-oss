@@ -6,45 +6,6 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/elections/{id}/og:
- *   get:
- *     summary: Get election or petition Open Graph metadata
- *     description: >
- *       Returns minimal public metadata for building Open Graph tags and link previews.
- *       This endpoint is public and does not require authentication.
- *     tags:
- *       - Elections
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     responses:
- *       200:
- *         description: Election or petition public metadata
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - title
- *                 - type
- *               properties:
- *                 title:
- *                   type: string
- *                   description: Election title
- *                 type:
- *                   $ref: '#/components/schemas/ElectionType'
- *       400:
- *         description: Invalid UUID
- *       404:
- *         description: Election or petition not found
- */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: electionId } = await params;
 

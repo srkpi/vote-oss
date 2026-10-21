@@ -143,44 +143,6 @@ function buildTallyResults(
 // GET /api/elections/[id]
 // ---------------------------------------------------------------------------
 
-/**
- * @swagger
- * /api/elections/{id}:
- *   get:
- *     summary: Get a single election
- *     description: >
- *       Returns full election details including choices, ballot count, and
- *       winning conditions.  The `anonymous` field indicates whether voter
- *       identities are cryptographically embedded in ballots.  Access is
- *       subject to faculty/group eligibility.
- *     tags:
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     responses:
- *       200:
- *         description: Election details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ElectionDetail'
- *       400:
- *         description: Invalid UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: User is not eligible for this election
- *       404:
- *         description: Election not found
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {
@@ -640,41 +602,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // DELETE /api/elections/[id]
 // ---------------------------------------------------------------------------
 
-/**
- * @swagger
- * /api/elections/{id}:
- *   delete:
- *     summary: Soft-delete an election
- *     description: >
- *       Marks an election as deleted (sets deleted_at / deleted_by). The
- *       election is hidden from non-admin users immediately but remains
- *       visible to admins and can be restored. Requires admin authentication.
- *       Admins may only delete elections that were created by themselves or a
- *       subordinate in the admin hierarchy.
- *     tags:
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     responses:
- *       204:
- *         description: Election deleted
- *       400:
- *         description: Invalid UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – not an admin or election belongs to a different faculty
- *       404:
- *         description: Election not found
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -739,57 +666,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 // PATCH /api/elections/[id]
 // ---------------------------------------------------------------------------
 
-/**
- * @swagger
- * /api/elections/{id}:
- *   patch:
- *     summary: Update an upcoming election
- *     description: >
- *       Updates the configuration, choices, restrictions, and metadata of an
- *       existing election. This operation is restricted to administrators.
- *       An election can only be edited if it has not started yet (current time
- *       is before `opensAt`) and it is not a petition. The updating admin
- *       must have created the election or be an ancestor of the creator in
- *       the admin hierarchy. The update completely replaces existing choices
- *       and restrictions.
- *     tags:
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ElectionEditBody'
- *     responses:
- *       204:
- *         description: Election updated successfully. No content returned.
- *       400:
- *         description: >
- *           Invalid request. Reason can include: invalid UUID, invalid JSON,
- *           missing required fields, malformed dates, violation of choice
- *           bounds (min/max constraints), target election is a petition,
- *           election has already started, or failed restriction validations
- *           (e.g., graduate course constraints, faculty mismatch).
- *       401:
- *         description: Unauthorized. Session cookie missing or invalid.
- *       403:
- *         description: >
- *           Forbidden. User is not an admin, or does not have permissions
- *           over this election, its faculty scope, or the specified group
- *           constraints.
- *       404:
- *         description: Election not found or has been soft-deleted.
- */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

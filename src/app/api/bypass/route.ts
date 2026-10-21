@@ -16,39 +16,6 @@ import { Errors } from '@/lib/errors';
 import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/bypass:
- *   get:
- *     summary: List global bypass tokens
- *     description: >
- *       Returns all global bypass tokens whose `valid_until` is in the future,
- *       regardless of whether they have been soft-deleted. This means tokens
- *       that have been deleted but have not yet expired are still returned
- *       (with a non-null `deletedAt`) so that their full usage history remains
- *       accessible for audit purposes. Fully expired tokens are excluded.
- *
- *       Only non-restricted admins may access this endpoint. The `canDelete`
- *       and `canRevokeUsages` flags on each token indicate what actions the
- *       calling admin may perform.
- *     tags:
- *       - Bypass
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: Array of global bypass tokens (including soft-deleted, excluding expired)
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/GlobalBypassToken'
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller is a faculty-restricted admin
- */
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -115,67 +82,6 @@ export async function GET(req: NextRequest) {
   );
 }
 
-/**
- * @swagger
- * /api/bypass:
- *   post:
- *     summary: Create a global bypass token
- *     description: >
- *       Creates a new global bypass token that allows a student to bypass
- *       platform-level access checks (not-studying status or graduate level).
- *       Only non-restricted admins can create global bypass tokens.
- *     tags:
- *       - Bypass
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/GlobalBypassTokenCreateBody'
- *     responses:
- *       201:
- *         description: Token created — raw token returned once
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - token
- *                 - tokenHash
- *                 - bypassNotStudying
- *                 - bypassGraduate
- *                 - maxUsage
- *                 - validUntil
- *               properties:
- *                 token:
- *                   type: string
- *                   description: Raw token to share with the student
- *                 tokenHash:
- *                   type: string
- *                   description: SHA-256 hash of the token
- *                 bypassNotStudying:
- *                   type: boolean
- *                   description: Whether this token allows bypassing "not studying" status
- *                 bypassGraduate:
- *                   type: boolean
- *                   description: Whether this token allows bypassing "graduate" status
- *                 maxUsage:
- *                   type: integer
- *                   minimum: 1
- *                   description: Maximum number of times this token can be used
- *                 validUntil:
- *                   type: string
- *                   format: date-time
- *                   description: Expiration timestamp
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – restricted admin
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

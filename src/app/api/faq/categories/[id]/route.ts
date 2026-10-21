@@ -8,45 +8,6 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { faqCategoryBodySchema } from '@/lib/schemas/faq';
 
-/**
- * @swagger
- * /api/faq/categories/{id}:
- *   put:
- *     summary: Update a FAQ category title
- *     description: Renames the specified FAQ category. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ category ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FaqCategoryCreateBody'
- *     responses:
- *       200:
- *         description: Category updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FaqCategoryMeta'
- *       400:
- *         description: Missing or invalid title
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Category not found
- */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -101,33 +62,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 }
 
-/**
- * @swagger
- * /api/faq/categories/{id}:
- *   delete:
- *     summary: Delete a FAQ category
- *     description: Permanently deletes the category and all its items. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ category ID
- *     responses:
- *       204:
- *         description: Category deleted
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Category not found
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

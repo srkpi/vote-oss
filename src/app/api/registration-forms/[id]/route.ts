@@ -10,57 +10,6 @@ import { shapeRegistration } from '@/lib/registrations';
 import { checkRestrictions } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/registration-forms/{id}:
- *   get:
- *     summary: Get registration form details (candidate-facing)
- *     description: >
- *       Returns the full form details, the caller's existing registration on
- *       this form (if any, including draft), and an `eligible` flag derived
- *       from the form's restrictions. Any authenticated user may call this
- *       endpoint; the `eligible` flag tells the UI whether the user satisfies
- *       the restrictions without exposing an error.
- *     tags:
- *       - CandidateRegistrations
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Registration form UUID
- *     responses:
- *       200:
- *         description: Form details with caller eligibility and existing registration
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/CandidateRegistrationForm'
- *                 - type: object
- *                   required:
- *                     - eligible
- *                     - myRegistration
- *                   properties:
- *                     eligible:
- *                       type: boolean
- *                       description: Whether the caller satisfies every restriction on the form.
- *                     myRegistration:
- *                       nullable: true
- *                       allOf:
- *                         - $ref: '#/components/schemas/CandidateRegistration'
- *                       description: The caller's existing registration on this form, or null.
- *       400:
- *         description: Invalid form UUID
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Form not found, soft-deleted, or its group is not VKSU or is soft-deleted
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {
@@ -105,62 +54,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 }
 
-/**
- * @swagger
- * /api/registration-forms/{id}:
- *   patch:
- *     summary: Update a candidate registration form
- *     description: >
- *       Replaces all mutable fields on the form. Existing restrictions are
- *       hard-deleted and recreated atomically. Caller must be an active ВКСУ
- *       member of the form's group. The same validation rules as form
- *       creation apply, plus phase-based field locking: before `opensAt`,
- *       every field is free to move (a backdated `opensAt` is clamped to
- *       now, same as creation); once registration has opened, every field
- *       EXCEPT `closesAt` is frozen at its current value, and `closesAt` may
- *       only be moved later, never earlier; once `closesAt` has passed, the
- *       form is closed and nothing may change at all. Forms owned by an
- *       election campaign (`registration_form_id` on the campaign) reject
- *       any date change outright — edit those from the campaign's PATCH
- *       endpoint instead, so the two can't drift apart.
- *     tags:
- *       - CandidateRegistrationForms
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Registration form UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateCandidateRegistrationFormBody'
- *     responses:
- *       200:
- *         description: Form updated; returns the full updated form
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CandidateRegistrationForm'
- *       400:
- *         description: >
- *           Invalid UUID, body validation error, an attempted change to a
- *           field that's locked in the form's current phase, the form is
- *           already closed, or an attempted date change on a campaign-owned
- *           form
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not an active ВКСУ group member
- *       404:
- *         description: Form not found or soft-deleted
- */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {
@@ -257,39 +150,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json(shapeForm(updated));
 }
 
-/**
- * @swagger
- * /api/registration-forms/{id}:
- *   delete:
- *     summary: Soft-delete a candidate registration form
- *     description: >
- *       Marks the form as deleted. Soft-deleted forms are no longer returned
- *       in any listing endpoint. Caller must be an active ВКСУ member of the
- *       form's group.
- *     tags:
- *       - CandidateRegistrationForms
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Registration form UUID
- *     responses:
- *       204:
- *         description: Form soft-deleted
- *       400:
- *         description: Invalid form UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not an active ВКСУ group member
- *       404:
- *         description: Form not found or already soft-deleted
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (!auth.ok) {

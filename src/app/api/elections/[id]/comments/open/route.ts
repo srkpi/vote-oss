@@ -7,38 +7,6 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/elections/{id}/comments/open:
- *   post:
- *     summary: Open discussion on a petition (admin, manage_petitions)
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Discussion opened
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/DiscussionStatus'
- *       400:
- *         description: Invalid UUID, not a petition, or already open
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Admin lacks manage_petitions
- *       404:
- *         description: Petition not found
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

@@ -7,50 +7,6 @@ import { Errors } from '@/lib/errors';
 import { isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/admins/leave:
- *   post:
- *     summary: Leave the admin platform
- *     description: >
- *       Allows an admin to voluntarily soft-delete their own record. If the
- *       caller has subordinates they must supply a `replacementId` — an admin
- *       in their hierarchy branch who will take their place. The replacement is
- *       promoted to the caller's position in the hierarchy tree. Admins with no
- *       subordinates may leave without specifying a replacement. The last admin
- *       on the platform cannot leave.
- *     tags:
- *       - Admins
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               replacementId:
- *                 type: string
- *                 nullable: true
- *                 description: >
- *                   User ID of the admin (from caller's subtree) who should
- *                   take the caller's place. Required when the caller has
- *                   subordinates; omit or set to null otherwise.
- *     responses:
- *       204:
- *         description: Successfully left the platform
- *       400:
- *         description: >
- *           Only admin on platform, or has subordinates but no replacementId
- *           provided, or replacement is not in caller's hierarchy branch.
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller is not an admin
- *       404:
- *         description: Replacement admin not found or is inactive
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

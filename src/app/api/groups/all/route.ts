@@ -6,26 +6,6 @@ import { Errors } from '@/lib/errors';
 import { shapeFileSummary } from '@/lib/files';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/groups/all:
- *   get:
- *     summary: List all groups (admin only)
- *     description: >
- *       Returns every non-deleted group in the system with member counts and
- *       owner information.  Requires admin authentication with manage_groups
- *       permission.
- *     tags: [Groups]
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: Array of all groups
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – not an admin or missing manage_groups permission
- */
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {

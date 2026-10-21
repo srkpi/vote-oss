@@ -16,34 +16,6 @@ import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 import { adminInviteBodySchema } from '@/lib/schemas/group';
 
-/**
- * @swagger
- * /api/admins/invite:
- *   get:
- *     summary: List visible admin invite tokens
- *     description: >
- *       Returns all non-expired, non-exhausted invite tokens that the caller
- *       created or that were created by an admin in their subordinate
- *       hierarchy. As a side-effect, stale tokens (expired or exhausted) are
- *       hard-deleted from the database. Requires `manage_admins`.
- *     tags:
- *       - Admin Invites
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: Array of visible invite tokens
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/InviteToken'
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller does not have manage_admins
- */
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -132,77 +104,6 @@ export async function GET(req: NextRequest) {
   );
 }
 
-/**
- * @swagger
- * /api/admins/invite:
- *   post:
- *     summary: Create an admin invite token
- *     description: >
- *       Generates a new admin invite token with the specified permissions and
- *       validity. The raw plaintext token is returned exactly once and is
- *       never stored; only its SHA-256 hash is persisted. Requires
- *       `manage_admins`. A caller may hold at most `INVITE_TOKEN_MAX_COUNT`
- *       active tokens at a time.
- *
- *       Permission constraints:
- *         - A caller may only grant permission flags they themselves hold
- *           (e.g. cannot grant `manageGroups` without having `manageGroups`).
- *         - A faculty-restricted caller always creates faculty-restricted tokens
- *           regardless of the `restrictedToFaculty` field in the request body.
- *     tags:
- *       - Admin Invites
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/InviteTokenCreateBody'
- *     responses:
- *       201:
- *         description: Token created – raw token returned here only
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - token
- *                 - maxUsage
- *                 - manageAdmins
- *                 - manageGroups
- *                 - managePetitions
- *                 - manageFaq
- *                 - restrictedToFaculty
- *                 - validDue
- *               properties:
- *                 token:
- *                   type: string
- *                   description: Raw (unhashed) invite token. Share this with the invitee; it is not stored on the server.
- *                 maxUsage:
- *                   type: integer
- *                 manageAdmins:
- *                   type: boolean
- *                 manageGroups:
- *                   type: boolean
- *                 managePetitions:
- *                   type: boolean
- *                 manageFaq:
- *                   type: boolean
- *                 restrictedToFaculty:
- *                   type: boolean
- *                 validDue:
- *                   type: string
- *                   format: date-time
- *       400:
- *         description: Validation error, missing validDue, invalid date, or token limit reached
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: >
- *           Caller lacks manage_admins, or is attempting to grant a permission
- *           they do not hold themselves.
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
