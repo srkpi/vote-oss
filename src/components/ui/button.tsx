@@ -74,7 +74,7 @@ export type ButtonSize =
   | 'icon-lg';
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  extends React.ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
   icon?: React.ReactNode;
@@ -82,7 +82,6 @@ export interface ButtonProps
   fullWidth?: boolean;
   variant?: ButtonVariant;
   size?: ButtonSize;
-  ref?: React.Ref<HTMLButtonElement>;
 }
 
 function Button({
