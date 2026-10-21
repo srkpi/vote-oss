@@ -36,7 +36,7 @@ describe('POST /api/cron/cleanup-bypass', () => {
     expect(json.error).toBe('Unauthorized');
   });
 
-  it('deletes expired global bypass tokens and returns count', async () => {
+  it('deletes global bypass tokens matching the cleanup cutoff and returns count', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     prismaMock.globalBypassToken.deleteMany.mockResolvedValueOnce({ count: 5 });
 
@@ -74,7 +74,7 @@ describe('POST /api/cron/cleanup-bypass', () => {
     consoleSpy.mockRestore();
   });
 
-  it('uses the current date to determine expiry', async () => {
+  it('uses now plus the maximum session duration as the cleanup cutoff', async () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
     // Mocking the system time so 'new Date()' is predictable
