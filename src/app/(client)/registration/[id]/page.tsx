@@ -10,12 +10,18 @@ interface RegistrationFormPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: RegistrationFormPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: RegistrationFormPageProps): Promise<Metadata | null> {
   const { id } = await params;
-  const { data } = await serverApi.registrationForms.get(id);
+  const { data, success } = await serverApi.registrationForms.get(id);
+  if (!success) {
+    return null;
+  }
+
   return {
-    title: data?.title ?? 'Реєстрація',
-    description: data?.description ?? 'Подача заявки кандидата',
+    title: data.title,
+    description: data.description,
   };
 }
 

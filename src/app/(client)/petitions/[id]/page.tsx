@@ -24,31 +24,25 @@ interface PetitionPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: PetitionPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PetitionPageProps): Promise<Metadata | null> {
   const { id } = await params;
-  const { data, status } = await serverApi.elections.og(id);
-
-  let metaTitle = 'Петиція';
-  if (status === 404) {
-    metaTitle = '404 | Петицію не знайдено';
-  } else if (status === 400) {
-    metaTitle = '400 | Некоректний ID петиції';
-  } else if (data?.title) {
-    metaTitle = data.title;
+  const { data, success } = await serverApi.elections.get(id);
+  if (!success) {
+    return null;
   }
 
   return {
-    title: metaTitle,
-    description: metaTitle,
+    title: data.title,
+    description: data.title,
     openGraph: {
-      title: metaTitle,
-      description: metaTitle,
+      title: data.title,
+      description: data.title,
       url: new URL(`/petitions/${id}`, APP_URL),
     },
     twitter: {
       card: 'summary_large_image',
-      title: metaTitle,
-      description: metaTitle,
+      title: data.title,
+      description: data.title,
     },
   };
 }
