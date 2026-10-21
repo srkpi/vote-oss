@@ -7,14 +7,12 @@ import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 jest.mock('@/lib/bloom', () => bloomMock);
 jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
 
-import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 import {
   isAccessTokenValid,
   isRefreshTokenValid,
   persistTokenPair,
   revokeByAccessJti,
   revokeByRefreshJti,
-  revokeTokenPair,
 } from '@/lib/token-store';
 
 const NOW_SECS = Math.floor(Date.now() / 1_000);
@@ -247,44 +245,6 @@ describe('token-store', () => {
       expect(prismaMock.jwtToken.deleteMany).toHaveBeenCalledWith({
         where: { refresh_jti: 'refresh-jti' },
       });
-    });
-  });
-
-  describe('revokeTokenPair', () => {
-    beforeEach(() => allure.story('revokeTokenPair'));
-
-    it('bloom-adds both access and refresh JTIs', async () => {
-      prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
-      await revokeTokenPair('acc-jti', 'ref-jti', RECENT_IAT, RECENT_IAT);
-      const addedJtis = bloomMock.bloomAdd.mock.calls.map((c) => c[0]);
-      expect(addedJtis).toContain('acc-jti');
-      expect(addedJtis).toContain('ref-jti');
-    });
-
-    it('deletes the DB record by access_jti', async () => {
-      prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
-      await revokeTokenPair('acc-jti', 'ref-jti', RECENT_IAT, RECENT_IAT);
-      expect(prismaMock.jwtToken.deleteMany).toHaveBeenCalledWith({
-        where: { access_jti: 'acc-jti' },
-      });
-    });
-
-    it('computes access TTL correctly', async () => {
-      prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
-      const iat = NOW_SECS - 60; // 60 seconds ago
-      await revokeTokenPair('acc-jti', 'ref-jti', iat, iat);
-      const accCall = bloomMock.bloomAdd.mock.calls.find((c) => c[0] === 'acc-jti')!;
-      const expectedTtl = ACCESS_TOKEN_TTL_SECS - 60;
-      expect(accCall[1]).toBeCloseTo(expectedTtl, -1);
-    });
-
-    it('computes refresh TTL correctly', async () => {
-      prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
-      const iat = NOW_SECS - 3600;
-      await revokeTokenPair('acc-jti', 'ref-jti', iat, iat);
-      const refCall = bloomMock.bloomAdd.mock.calls.find((c) => c[0] === 'ref-jti')!;
-      const expectedTtl = REFRESH_TOKEN_TTL_SECS - 3600;
-      expect(refCall[1]).toBeCloseTo(expectedTtl, -2);
     });
   });
 });

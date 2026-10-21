@@ -30,11 +30,8 @@ export const cacheMock = {
   overlayLiveBallotCounts: jest.fn<Promise<CachedElection[]>, [CachedElection[]]>(),
   getCachedUserVotedElections: jest.fn<Promise<Set<string> | null>, [string]>(),
   setCachedUserVotedElections: jest.fn<Promise<void>, [string, string[]]>(),
-  invalidateUserVotedElections: jest.fn<Promise<void>, [string]>(),
-  getLiveElectionBallotCount: jest.fn<Promise<number | null>, [string]>(),
   setLiveElectionBallotCount: jest.fn<Promise<void>, [string, number]>(),
   incrementLiveElectionBallotCount: jest.fn<Promise<number | null>, [string]>(),
-  invalidateLiveElectionBallotCount: jest.fn<Promise<void>, [string]>(),
 };
 
 export function resetCacheMock(): void {
@@ -54,9 +51,6 @@ export function resetCacheMock(): void {
   cacheMock.overlayLiveBallotCounts.mockReset().mockImplementation(async (e) => e);
   cacheMock.getCachedUserVotedElections.mockReset().mockResolvedValue(null);
   cacheMock.setCachedUserVotedElections.mockReset().mockResolvedValue(undefined);
-  cacheMock.invalidateUserVotedElections.mockReset().mockResolvedValue(undefined);
-  cacheMock.getLiveElectionBallotCount.mockReset().mockResolvedValue(null);
   cacheMock.setLiveElectionBallotCount.mockReset().mockResolvedValue(undefined);
   cacheMock.incrementLiveElectionBallotCount.mockReset().mockResolvedValue(null);
-  cacheMock.invalidateLiveElectionBallotCount.mockReset().mockResolvedValue(undefined);
 }

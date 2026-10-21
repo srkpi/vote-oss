@@ -14,7 +14,6 @@
  *   - persistTokenPair    → resolves void
  *   - revokeByAccessJti   → resolves void
  *   - revokeByRefreshJti  → resolves { accessJti: 'access-jti-stub' }
- *   - revokeTokenPair     → resolves void
  */
 
 export const tokenStoreMock = {
@@ -26,7 +25,6 @@ export const tokenStoreMock = {
   isRefreshTokenValid: jest.fn<Promise<boolean>, [string, number]>(),
   revokeByAccessJti: jest.fn<Promise<void>, [string, number]>(),
   revokeByRefreshJti: jest.fn<Promise<{ accessJti: string | null }>, [string, number]>(),
-  revokeTokenPair: jest.fn<Promise<void>, [string, string, number, number]>(),
 };
 
 export function resetTokenStoreMock(): void {
@@ -35,5 +33,4 @@ export function resetTokenStoreMock(): void {
   tokenStoreMock.isRefreshTokenValid.mockReset().mockResolvedValue(true);
   tokenStoreMock.revokeByAccessJti.mockReset().mockResolvedValue(undefined);
   tokenStoreMock.revokeByRefreshJti.mockReset().mockResolvedValue({ accessJti: 'access-jti-stub' });
-  tokenStoreMock.revokeTokenPair.mockReset().mockResolvedValue(undefined);
 }

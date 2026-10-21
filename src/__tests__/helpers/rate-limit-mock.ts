@@ -17,7 +17,6 @@ export const rateLimitMock = {
   rateLimit: jest.fn().mockResolvedValue(notLimited),
   rateLimitLogin: jest.fn().mockResolvedValue(notLimited),
   rateLimitRefresh: jest.fn().mockResolvedValue(notLimited),
-  rateLimitInvite: jest.fn().mockResolvedValue(notLimited),
   rateLimitAvatarUpload: jest.fn().mockResolvedValue(notLimited),
   rateLimitComment: jest.fn().mockResolvedValue(notLimited),
   rateLimitCommentVote: jest.fn().mockResolvedValue(notLimited),
@@ -28,7 +27,6 @@ export function resetRateLimitMock(): void {
   rateLimitMock.rateLimit.mockReset().mockResolvedValue(notLimited);
   rateLimitMock.rateLimitLogin.mockReset().mockResolvedValue(notLimited);
   rateLimitMock.rateLimitRefresh.mockReset().mockResolvedValue(notLimited);
-  rateLimitMock.rateLimitInvite.mockReset().mockResolvedValue(notLimited);
   rateLimitMock.rateLimitAvatarUpload.mockReset().mockResolvedValue(notLimited);
   rateLimitMock.rateLimitComment.mockReset().mockResolvedValue(notLimited);
   rateLimitMock.rateLimitCommentVote.mockReset().mockResolvedValue(notLimited);
