@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 /**
  * Smoke-test the constants module.
  *

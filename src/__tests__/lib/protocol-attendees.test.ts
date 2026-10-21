@@ -1,3 +1,5 @@
+import { describe, it, expect } from 'vitest';
+
 import { PRESENT_TEXT_FEMALE, PRESENT_TEXT_MALE } from '@/lib/constants';
 import { deriveAttendees } from '@/lib/utils/protocol-attendees';
 import type { GroupMemberSummary } from '@/types/group';

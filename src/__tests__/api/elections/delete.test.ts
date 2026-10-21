@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import {
   ADMIN_PAYLOAD,
@@ -14,14 +15,20 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => ({
-  invalidateElections: jest.fn().mockResolvedValue(undefined),
-  getCachedElections: jest.fn().mockResolvedValue(null),
-  getCachedAdmins: jest.fn().mockResolvedValue(null),
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', () => ({
+  invalidateElections: vi.fn().mockResolvedValue(undefined),
+  getCachedElections: vi.fn().mockResolvedValue(null),
+  getCachedAdmins: vi.fn().mockResolvedValue(null),
 }));
 
 import { DELETE } from '@/app/api/elections/[id]/route';
@@ -216,7 +223,7 @@ describe('DELETE /api/elections/[id]', () => {
   });
 
   it('invalidates the elections cache after soft deletion', async () => {
-    const { invalidateElections } = jest.requireMock('@/lib/cache');
+    const { invalidateElections } = await vi.importMock('@/lib/cache');
     const req = await adminReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
     mockAdminGraph();

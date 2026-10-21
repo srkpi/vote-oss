@@ -1,9 +1,14 @@
+import { vi } from 'vitest';
+
 /**
  * Mock for @/lib/campus-api's fetchFacultyGroups.
  *
  * Usage:
  *   import { fetchFacultyGroupsMock } from '@/__tests__/helpers/campus-api-mock';
- *   jest.mock('@/lib/campus-api', () => ({ fetchFacultyGroups: fetchFacultyGroupsMock }));
+ *   vi.mock('@/lib/campus-api', async () => {
+ *     const { fetchFacultyGroupsMock } = await import('@/__tests__/helpers/campus-api-mock');
+ *     return { fetchFacultyGroups: fetchFacultyGroupsMock };
+ *   });
  */
 
-export const fetchFacultyGroupsMock = jest.fn<Promise<Record<string, string[]>>, []>();
+export const fetchFacultyGroupsMock = vi.fn<(...args: []) => Promise<Record<string, string[]>>>();

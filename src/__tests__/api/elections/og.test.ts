@@ -1,12 +1,19 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import { MOCK_ELECTION_ID } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeRequest, parseJson } from '@/__tests__/helpers/request';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/cache', () => cacheMock);
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
 
 import { GET } from '@/app/api/elections/[id]/og/route';
 

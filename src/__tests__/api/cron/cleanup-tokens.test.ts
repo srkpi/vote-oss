@@ -1,11 +1,15 @@
 import type { NextRequest } from 'next/server';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { POST } from '@/app/api/cron/cleanup-tokens/route';
 import { CRON_SECRET } from '@/lib/config/server';
 import { REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
 
 const createRequest = (token?: string) =>
   ({
@@ -17,7 +21,7 @@ const createRequest = (token?: string) =>
 describe('POST /api/cron/cleanup-tokens', () => {
   beforeEach(() => {
     resetPrismaMock();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('returns 401 if no authorization header', async () => {
@@ -37,7 +41,7 @@ describe('POST /api/cron/cleanup-tokens', () => {
   });
 
   it('deletes expired tokens and returns count', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 3 });
 
     const res = await POST(createRequest(`Bearer ${CRON_SECRET}`));
@@ -56,7 +60,7 @@ describe('POST /api/cron/cleanup-tokens', () => {
   });
 
   it('logs errors and returns 500 on failure', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     prismaMock.jwtToken.deleteMany.mockRejectedValueOnce(new Error('DB error'));
 
     const res = await POST(createRequest(`Bearer ${CRON_SECRET}`));
@@ -73,9 +77,9 @@ describe('POST /api/cron/cleanup-tokens', () => {
   });
 
   it('uses correct expiry date based on REFRESH_TOKEN_TTL_SECS', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const fixedTime = 1_700_000_000_000; // some fixed timestamp
-    const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(fixedTime);
+    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(fixedTime);
 
     prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 0 });
 

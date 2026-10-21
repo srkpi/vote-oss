@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -12,14 +13,23 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
-jest.mock('@/lib/redis', () => ({
-  redis: { del: jest.fn().mockResolvedValue(1), get: jest.fn().mockResolvedValue(null) },
-  safeRedis: jest.fn().mockImplementation((fn: () => unknown) => {
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
+vi.mock('@/lib/redis', () => ({
+  redis: { del: vi.fn().mockResolvedValue(1), get: vi.fn().mockResolvedValue(null) },
+  safeRedis: vi.fn().mockImplementation((fn: () => unknown) => {
     try {
       return fn();
     } catch {
@@ -159,7 +169,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
       }),
     );
 
-    const { safeRedis } = jest.requireMock('@/lib/redis');
+    const { safeRedis } = await vi.importMock('@/lib/redis');
     await DELETE(req, params('hash-abc'));
     expect(safeRedis).toHaveBeenCalled();
   });

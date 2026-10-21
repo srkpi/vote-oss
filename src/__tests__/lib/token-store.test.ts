@@ -1,11 +1,18 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { bloomMock, resetBloomMock } from '@/__tests__/helpers/bloom-mock';
 import { JWT_TOKEN_RECORD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 
-jest.mock('@/lib/bloom', () => bloomMock);
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+vi.mock('@/lib/bloom', async () => {
+  const { bloomMock } = await import('@/__tests__/helpers/bloom-mock');
+  return bloomMock;
+});
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
 
 import { ACCESS_TOKEN_TTL_SECS, REFRESH_TOKEN_TTL_SECS } from '@/lib/constants';
 import {

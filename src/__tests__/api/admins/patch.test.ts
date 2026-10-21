@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -14,11 +15,20 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
 
 import { PATCH } from '@/app/api/admins/[userId]/route';
 
@@ -91,7 +101,7 @@ describe('PATCH /api/admins/[userId]', () => {
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
     const req = makeAuthRequest(access.token, { method: 'PATCH' });
-    req.json = jest.fn().mockRejectedValueOnce(new Error('bad json'));
+    req.json = vi.fn().mockRejectedValueOnce(new Error('bad json'));
     const res = await PATCH(req, params('admin-002'));
     expect(res.status).toBe(400);
   });

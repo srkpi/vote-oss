@@ -1,16 +1,26 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { fetchFacultyGroupsMock } from '@/__tests__/helpers/campus-api-mock';
 import { JWT_TOKEN_RECORD, makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/campus-api', () => ({
-  fetchFacultyGroups: fetchFacultyGroupsMock,
-}));
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/campus-api', async () => {
+  const { fetchFacultyGroupsMock } = await import('@/__tests__/helpers/campus-api-mock');
+  return {
+    fetchFacultyGroups: fetchFacultyGroupsMock,
+  };
+});
 
 import { GET } from '@/app/api/campus/groups/route';
 
@@ -60,7 +70,7 @@ describe('GET /api/campus/groups', () => {
   it('returns 500 when campus API throws', async () => {
     fetchFacultyGroupsMock.mockRejectedValueOnce(new Error('campus down'));
     const req = await authReq();
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const res = await GET(req);
     expect(res.status).toBe(500);
     spy.mockRestore();

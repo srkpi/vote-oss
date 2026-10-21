@@ -1,11 +1,15 @@
 import type { NextRequest } from 'next/server';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { POST } from '@/app/api/cron/cleanup-bypass/route';
 import { CRON_SECRET } from '@/lib/config/server';
 import { SESSION_INITIAL_AUTH_MAX_DAYS } from '@/lib/constants';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
 
 const createRequest = (token?: string) =>
   ({
@@ -17,7 +21,7 @@ const createRequest = (token?: string) =>
 describe('POST /api/cron/cleanup-bypass', () => {
   beforeEach(() => {
     resetPrismaMock();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('returns 401 if no authorization header', async () => {
@@ -37,7 +41,7 @@ describe('POST /api/cron/cleanup-bypass', () => {
   });
 
   it('deletes expired global bypass tokens and returns count', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     prismaMock.globalBypassToken.deleteMany.mockResolvedValueOnce({ count: 5 });
 
     const res = await POST(createRequest(`Bearer ${CRON_SECRET}`));
@@ -58,7 +62,7 @@ describe('POST /api/cron/cleanup-bypass', () => {
   });
 
   it('logs errors and returns 500 on failure', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     prismaMock.globalBypassToken.deleteMany.mockRejectedValueOnce(new Error('DB error'));
 
     const res = await POST(createRequest(`Bearer ${CRON_SECRET}`));
@@ -75,13 +79,13 @@ describe('POST /api/cron/cleanup-bypass', () => {
   });
 
   it('uses the current date to determine expiry', async () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     // Mocking the system time so 'new Date()' is predictable
     const fixedTime = new Date('2026-04-02T12:00:00Z');
     const timeWithSessionMaxDays = new Date(fixedTime);
     timeWithSessionMaxDays.setDate(fixedTime.getDate() + SESSION_INITIAL_AUTH_MAX_DAYS);
-    jest.useFakeTimers().setSystemTime(fixedTime);
+    vi.useFakeTimers().setSystemTime(fixedTime);
 
     prismaMock.globalBypassToken.deleteMany.mockResolvedValueOnce({ count: 0 });
 
@@ -97,7 +101,7 @@ describe('POST /api/cron/cleanup-bypass', () => {
       }),
     );
 
-    jest.useRealTimers();
+    vi.useRealTimers();
     consoleSpy.mockRestore();
   });
 });

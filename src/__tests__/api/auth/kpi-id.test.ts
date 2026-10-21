@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, type Mock, describe, it, expect, beforeEach } from 'vitest';
 
 import { kpiIdMock, resetKpiIdMock } from '@/__tests__/helpers/kpi-id-mock';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
@@ -8,16 +9,28 @@ import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-s
 import { COOKIE_ACCESS, COOKIE_PENDING_BYPASS, COOKIE_RETURN_TO } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 
-jest.mock('@/lib/kpi-id', () => kpiIdMock);
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/rate-limit', () => rateLimitMock);
-jest.mock('@/lib/auth', () => ({
-  requireAuth: jest.fn().mockResolvedValue({ ok: false }),
+vi.mock('@/lib/kpi-id', async () => {
+  const { kpiIdMock } = await import('@/__tests__/helpers/kpi-id-mock');
+  return kpiIdMock;
+});
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/rate-limit', async () => {
+  const { rateLimitMock } = await import('@/__tests__/helpers/rate-limit-mock');
+  return rateLimitMock;
+});
+vi.mock('@/lib/auth', () => ({
+  requireAuth: vi.fn().mockResolvedValue({ ok: false }),
 }));
-jest.mock('@/lib/bypass', () => ({
-  applyBypassToken: jest.fn(),
-  invalidateUserBypassCache: jest.fn().mockResolvedValue(undefined),
+vi.mock('@/lib/bypass', () => ({
+  applyBypassToken: vi.fn(),
+  invalidateUserBypassCache: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { POST } from '@/app/api/auth/kpi-id/route';
@@ -30,9 +43,9 @@ describe('POST /api/auth/kpi-id', () => {
     resetTokenStoreMock();
     resetRateLimitMock();
     resetKpiIdMock();
-    (requireAuth as jest.Mock).mockResolvedValue({ ok: false });
+    (requireAuth as Mock).mockResolvedValue({ ok: false });
     // Default: bypass succeeds (won't be called unless pending_bypass cookie present)
-    (applyBypassToken as jest.Mock).mockReset().mockResolvedValue({
+    (applyBypassToken as Mock).mockReset().mockResolvedValue({
       type: 'GLOBAL',
       electionId: null,
     });
@@ -75,7 +88,7 @@ describe('POST /api/auth/kpi-id', () => {
   // ── Auth flow ─────────────────────────────────────────────────────────────
 
   it('revokes previous token if already authenticated', async () => {
-    (requireAuth as jest.Mock).mockResolvedValueOnce({ ok: true, user: { jti: 'old', iat: 123 } });
+    (requireAuth as Mock).mockResolvedValueOnce({ ok: true, user: { jti: 'old', iat: 123 } });
     await POST(makeRequest({ method: 'POST', body: { ticketId: 'ticket-user-1' } }));
     expect(tokenStoreMock.revokeByAccessJti).toHaveBeenCalledWith('old', 123);
   });
@@ -171,7 +184,7 @@ describe('POST /api/auth/kpi-id', () => {
   });
 
   it('redirects to /elections when global bypass was pre-applied', async () => {
-    (applyBypassToken as jest.Mock).mockResolvedValueOnce({ type: 'GLOBAL', electionId: null });
+    (applyBypassToken as Mock).mockResolvedValueOnce({ type: 'GLOBAL', electionId: null });
     const { body } = await parseJson<{ redirectTo: string }>(
       await POST(
         makeRequest({
@@ -185,7 +198,7 @@ describe('POST /api/auth/kpi-id', () => {
   });
 
   it('redirects to the election page when an election bypass was pre-applied', async () => {
-    (applyBypassToken as jest.Mock).mockResolvedValueOnce({
+    (applyBypassToken as Mock).mockResolvedValueOnce({
       type: 'ELECTION',
       electionId: 'abc-election-id',
     });
@@ -202,7 +215,7 @@ describe('POST /api/auth/kpi-id', () => {
   });
 
   it('ignores bypass failure and falls back to return_to when applyBypassToken throws', async () => {
-    (applyBypassToken as jest.Mock).mockRejectedValueOnce(new Error('expired'));
+    (applyBypassToken as Mock).mockRejectedValueOnce(new Error('expired'));
     const { body } = await parseJson<{ redirectTo: string }>(
       await POST(
         makeRequest({
@@ -233,7 +246,7 @@ describe('POST /api/auth/kpi-id', () => {
   });
 
   it('still succeeds even when bypass is invalid (getCampusUserData determines access)', async () => {
-    (applyBypassToken as jest.Mock).mockRejectedValueOnce(new Error('Usage limit reached'));
+    (applyBypassToken as Mock).mockRejectedValueOnce(new Error('Usage limit reached'));
     const res = await POST(
       makeRequest({
         method: 'POST',

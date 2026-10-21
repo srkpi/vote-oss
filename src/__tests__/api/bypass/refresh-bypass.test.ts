@@ -1,14 +1,24 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
-import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
+import { resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import { makeRefreshRequest } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/rate-limit', () => rateLimitMock);
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/rate-limit', async () => {
+  const { rateLimitMock } = await import('@/__tests__/helpers/rate-limit-mock');
+  return rateLimitMock;
+});
 
 import { POST } from '@/app/api/auth/refresh/route';
 

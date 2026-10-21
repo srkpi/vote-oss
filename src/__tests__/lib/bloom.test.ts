@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import {
   bloomHitResults,
@@ -11,17 +12,20 @@ import {
 // ---------------------------------------------------------------------------
 // Module mock – must precede the import of bloom
 // ---------------------------------------------------------------------------
-jest.mock('@/lib/redis', () => ({
-  redis: redisMock,
-  isRedisReady: jest.fn(() => redisMock.status === 'ready'),
-  safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
-    try {
-      return await fn();
-    } catch {
-      return null;
-    }
-  },
-}));
+vi.mock('@/lib/redis', async () => {
+  const { redisMock } = await import('@/__tests__/helpers/redis-mock');
+  return {
+    redis: redisMock,
+    isRedisReady: vi.fn(() => redisMock.status === 'ready'),
+    safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await fn();
+      } catch {
+        return null;
+      }
+    },
+  };
+});
 
 import {
   bloomAdd,
@@ -41,11 +45,11 @@ describe('bloom filter', () => {
     resetRedisMock();
     invalidateResetAtCache();
     allure.feature('Bloom Filter');
-    jest.spyOn(Date, 'now').mockReturnValue(NOW_MS);
+    vi.spyOn(Date, 'now').mockReturnValue(NOW_MS);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   // ── revokedKey ────────────────────────────────────────────────────────────
@@ -141,14 +145,14 @@ describe('bloom filter', () => {
     });
 
     it('returns "error" when pipeline.exec() rejects', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockRejectedValueOnce(new Error('timeout'));
       expect(await bloomCheck(SAMPLE_JTI)).toBe('error');
       spy.mockRestore();
     });
 
     it('returns "error" when pipeline.exec() returns null', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockResolvedValueOnce(null);
       expect(await bloomCheck(SAMPLE_JTI)).toBe('error');
       spy.mockRestore();
@@ -245,7 +249,7 @@ describe('bloom filter', () => {
     });
 
     it('returns null when bloomCheck returns "error" (Redis unavailable)', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockRejectedValueOnce(new Error('timeout'));
       expect(await isTokenClean(SAMPLE_JTI)).toBeNull();
       spy.mockRestore();

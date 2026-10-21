@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 import {

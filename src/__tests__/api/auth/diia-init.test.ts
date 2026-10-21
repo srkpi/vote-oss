@@ -1,13 +1,20 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { qrCodeMock } from '@/__tests__/helpers/qrcode-mock';
 import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import { makeRequest, parseJson } from '@/__tests__/helpers/request';
 
-jest.mock('@/lib/rate-limit', () => rateLimitMock);
-jest.mock('qrcode', () => qrCodeMock);
+vi.mock('@/lib/rate-limit', async () => {
+  const { rateLimitMock } = await import('@/__tests__/helpers/rate-limit-mock');
+  return rateLimitMock;
+});
+vi.mock('qrcode', async () => {
+  const { qrCodeMock } = await import('@/__tests__/helpers/qrcode-mock');
+  return { default: qrCodeMock };
+});
 
-const fetchMock = jest.fn();
+const fetchMock = vi.fn();
 global.fetch = fetchMock;
 
 import { POST } from '@/app/api/auth/diia/init/route';
@@ -118,7 +125,7 @@ describe('POST /api/auth/diia/init', () => {
   // ── Provider failures ─────────────────────────────────────────────────────
 
   it('returns 500 when the KPI-ID provider returns a non-OK HTTP status', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderError(503);
 
     const req = makeRequest({ method: 'POST' });
@@ -129,7 +136,7 @@ describe('POST /api/auth/diia/init', () => {
   });
 
   it('returns 500 when a 4xx error is returned by the provider', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderError(404);
 
     const req = makeRequest({ method: 'POST' });
@@ -140,7 +147,7 @@ describe('POST /api/auth/diia/init', () => {
   });
 
   it('returns 500 when the fetch to the provider throws a network error', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderNetworkFailure();
 
     const req = makeRequest({ method: 'POST' });
@@ -151,7 +158,7 @@ describe('POST /api/auth/diia/init', () => {
   });
 
   it('returns 500 when provider responds with an empty deepLink', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderOk(makeLinkResponse({ deepLink: '' }));
 
     const req = makeRequest({ method: 'POST' });
@@ -162,7 +169,7 @@ describe('POST /api/auth/diia/init', () => {
   });
 
   it('returns 500 when provider responds with an empty requestId', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderOk(makeLinkResponse({ requestId: '' }));
 
     const req = makeRequest({ method: 'POST' });
@@ -173,7 +180,7 @@ describe('POST /api/auth/diia/init', () => {
   });
 
   it('returns 500 when provider response omits deepLink entirely', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderOk(makeLinkResponse({ deepLink: undefined }));
 
     const req = makeRequest({ method: 'POST' });
@@ -184,7 +191,7 @@ describe('POST /api/auth/diia/init', () => {
   });
 
   it('returns 500 when provider response omits requestId entirely', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderOk(makeLinkResponse({ requestId: undefined }));
 
     const req = makeRequest({ method: 'POST' });
@@ -197,7 +204,7 @@ describe('POST /api/auth/diia/init', () => {
   // ── QR code failures ──────────────────────────────────────────────────────
 
   it('returns 500 when QRCode.toDataURL throws', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderOk();
     qrCodeMock.toDataURL.mockRejectedValueOnce(new Error('canvas error'));
 

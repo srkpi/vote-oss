@@ -1,10 +1,17 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { redisMock, resetRedisMock } from '@/__tests__/helpers/redis-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/redis', () => ({ redis: redisMock }));
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/redis', async () => {
+  const { redisMock } = await import('@/__tests__/helpers/redis-mock');
+  return { redis: redisMock };
+});
 
 import { GET } from '@/app/api/health/route';
 
@@ -28,7 +35,7 @@ describe('GET /api/health', () => {
 
   it('returns 503 when DB check fails', async () => {
     prismaMock.$queryRaw.mockRejectedValueOnce(new Error('DB down'));
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -43,7 +50,7 @@ describe('GET /api/health', () => {
   it('returns 503 when Redis check fails', async () => {
     prismaMock.$queryRaw.mockResolvedValueOnce(1);
     redisMock.ping.mockRejectedValueOnce(new Error('Redis down'));
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -58,7 +65,7 @@ describe('GET /api/health', () => {
   it('returns 503 when both DB and Redis fail', async () => {
     prismaMock.$queryRaw.mockRejectedValueOnce(new Error('DB down'));
     redisMock.ping.mockRejectedValueOnce(new Error('Redis down'));
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -73,7 +80,7 @@ describe('GET /api/health', () => {
   it('handles unexpected ping responses gracefully', async () => {
     prismaMock.$queryRaw.mockResolvedValueOnce(1);
     redisMock.ping.mockResolvedValueOnce('INVALID');
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -86,7 +93,7 @@ describe('GET /api/health', () => {
   });
 
   it('logs errors without throwing', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     prismaMock.$queryRaw.mockRejectedValueOnce(new Error('DB down'));
     redisMock.ping.mockRejectedValueOnce(new Error('Redis down'));

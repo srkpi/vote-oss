@@ -1,3 +1,5 @@
+import { describe, it, expect } from 'vitest';
+
 import { GET } from '@/app/api/info/route';
 import { getBuildInfo } from '@/lib/build-info';
 import { APP_NAME, APP_URL } from '@/lib/config/client';

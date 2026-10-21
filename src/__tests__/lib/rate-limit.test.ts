@@ -1,21 +1,25 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 import { redisMock, resetRedisMock } from '@/__tests__/helpers/redis-mock';
 
 // ---------------------------------------------------------------------------
 // Module mock
 // ---------------------------------------------------------------------------
-jest.mock('@/lib/redis', () => ({
-  redis: redisMock,
-  isRedisReady: jest.fn(() => redisMock.status === 'ready'),
-  safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
-    try {
-      return await fn();
-    } catch {
-      return null;
-    }
-  },
-}));
+vi.mock('@/lib/redis', async () => {
+  const { redisMock } = await import('@/__tests__/helpers/redis-mock');
+  return {
+    redis: redisMock,
+    isRedisReady: vi.fn(() => redisMock.status === 'ready'),
+    safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await fn();
+      } catch {
+        return null;
+      }
+    },
+  };
+});
 
 import { getClientIp, rateLimit } from '@/lib/rate-limit';
 

@@ -1,8 +1,9 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
+import { resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
-import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
+import { resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -15,15 +16,30 @@ import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/req
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
-jest.mock('@/lib/campus-api', () => campusMock);
-jest.mock('@/lib/encryption', () => ({
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
+vi.mock('@/lib/campus-api', async () => {
+  const { campusMock } = await import('@/__tests__/helpers/campus-mock');
+  return campusMock;
+});
+vi.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
-jest.mock('@/lib/avatars', () => avatarsMock);
+vi.mock('@/lib/avatars', async () => {
+  const { avatarsMock } = await import('@/__tests__/helpers/avatars-mock');
+  return avatarsMock;
+});
 
 import { GET, POST } from '@/app/api/elections/route';
 

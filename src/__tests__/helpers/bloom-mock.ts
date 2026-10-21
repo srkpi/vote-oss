@@ -1,9 +1,14 @@
+import { vi } from 'vitest';
+
 /**
  * Mock for @/lib/bloom.
  *
  * Usage:
  *   import { bloomMock, resetBloomMock } from '@/__tests__/helpers/bloom-mock';
- *   jest.mock('@/lib/bloom', () => bloomMock);
+ *   vi.mock('@/lib/bloom', async () => {
+ *     const { bloomMock } = await import('@/__tests__/helpers/bloom-mock');
+ *     return bloomMock;
+ *   });
  *   beforeEach(() => resetBloomMock());
  *
  * Default: bloomAdd resolves, getBloomResetAt resolves to 0 (no reset gate),
@@ -11,10 +16,10 @@
  */
 
 export const bloomMock = {
-  bloomAdd: jest.fn<Promise<void>, [string, number]>().mockResolvedValue(undefined),
-  getBloomResetAt: jest.fn<Promise<number>, []>().mockResolvedValue(0),
-  isTokenClean: jest.fn<Promise<boolean | null>, [string]>().mockResolvedValue(true),
-  revokedKey: jest.fn((jti: string) => `revoked:${jti}`),
+  bloomAdd: vi.fn<(...args: [string, number]) => Promise<void>>().mockResolvedValue(undefined),
+  getBloomResetAt: vi.fn<(...args: []) => Promise<number>>().mockResolvedValue(0),
+  isTokenClean: vi.fn<(...args: [string]) => Promise<boolean | null>>().mockResolvedValue(true),
+  revokedKey: vi.fn((jti: string) => `revoked:${jti}`),
 };
 
 export function resetBloomMock(): void {

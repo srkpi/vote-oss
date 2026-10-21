@@ -1,5 +1,6 @@
 import * as allure from 'allure-js-commons';
 import { NextResponse } from 'next/server';
+import { vi, type Mock, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { getUserBypassInfo } from '@/lib/bypass';
 import { fetchFacultyGroups } from '@/lib/campus-api';
@@ -17,12 +18,12 @@ import {
 } from '@/lib/kpi-id';
 import type { KpiIdUserInfo } from '@/types/auth';
 
-jest.mock('@/lib/campus-api', () => ({
-  fetchFacultyGroups: jest.fn(),
+vi.mock('@/lib/campus-api', () => ({
+  fetchFacultyGroups: vi.fn(),
 }));
 
-jest.mock('@/lib/bypass', () => ({
-  getUserBypassInfo: jest.fn(),
+vi.mock('@/lib/bypass', () => ({
+  getUserBypassInfo: vi.fn(),
 }));
 
 const DEFAULT_CAMPUS_RESPONSE = {
@@ -41,18 +42,18 @@ const DEFAULT_FACULTY_GROUPS: Record<string, string[]> = {
 describe('kpi-id module', () => {
   beforeEach(() => {
     allure.feature('KPI ID Auth Logic');
-    global.fetch = jest.fn();
-    (fetchFacultyGroups as jest.Mock).mockResolvedValue(DEFAULT_FACULTY_GROUPS);
-    (getUserBypassInfo as jest.Mock).mockResolvedValue({ global: {} });
+    global.fetch = vi.fn();
+    (fetchFacultyGroups as Mock).mockResolvedValue(DEFAULT_FACULTY_GROUPS);
+    (getUserBypassInfo as Mock).mockResolvedValue({ global: {} });
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('resolveTicket', () => {
     it('returns parsed user info on successful response', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           data: { AUTH_METHOD: ALLOWED_AUTH_METHODS[0], STUDENT_ID: 'user-123', NAME: 'Ivan' },
@@ -68,12 +69,12 @@ describe('kpi-id module', () => {
     });
 
     it('throws InvalidTicketError if response is not ok', async () => {
-      (fetch as jest.Mock).mockResolvedValue({ ok: false });
+      (fetch as Mock).mockResolvedValue({ ok: false });
       await expect(resolveTicket('bad-ticket')).rejects.toThrow(InvalidTicketError);
     });
 
     it('throws NotAllowedAuthMethodError if AUTH_METHOD is not allowed', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           data: { AUTH_METHOD: 'WRONG', STUDENT_ID: 'student-123', NAME: 'Petro' },
@@ -83,7 +84,7 @@ describe('kpi-id module', () => {
     });
 
     it('throws NotStudentError if only EMPLOYEE_ID is present', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           data: { AUTH_METHOD: ALLOWED_AUTH_METHODS[0], EMPLOYEE_ID: 'emp-123', NAME: 'Petro' },
@@ -105,7 +106,7 @@ describe('kpi-id module', () => {
     };
 
     it('returns data and empty errors array for active student', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => DEFAULT_CAMPUS_RESPONSE,
       });
@@ -116,7 +117,7 @@ describe('kpi-id module', () => {
     });
 
     it('includes NotStudyingError if status is not Studying', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, status: 'Dismissed' }),
       });
@@ -126,8 +127,8 @@ describe('kpi-id module', () => {
     });
 
     it('includes GraduateUserError if group ends with graduate suffix (e.g., ф)', async () => {
-      (fetchFacultyGroups as jest.Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetchFacultyGroups as Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, groupName: 'FT-51ф' }),
       });
@@ -137,8 +138,8 @@ describe('kpi-id module', () => {
     });
 
     it('can accumulate multiple errors (NotStudying AND Graduate)', async () => {
-      (fetchFacultyGroups as jest.Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetchFacultyGroups as Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           ...DEFAULT_CAMPUS_RESPONSE,
@@ -164,7 +165,7 @@ describe('kpi-id module', () => {
     };
 
     it('returns UserInfo on success', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => DEFAULT_CAMPUS_RESPONSE,
       });
@@ -175,7 +176,7 @@ describe('kpi-id module', () => {
     });
 
     it('success for students on academic leave', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, status: 'OnAcademicLeave' }),
       });
@@ -186,7 +187,7 @@ describe('kpi-id module', () => {
     });
 
     it('returns 403 Forbidden for NotStudyingError if no bypass exists', async () => {
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, status: 'Dismissed' }),
       });
@@ -196,8 +197,8 @@ describe('kpi-id module', () => {
     });
 
     it('bypasses NotStudyingError if bypassNotStudying is true', async () => {
-      (getUserBypassInfo as jest.Mock).mockResolvedValue({ global: { bypassNotStudying: true } });
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (getUserBypassInfo as Mock).mockResolvedValue({ global: { bypassNotStudying: true } });
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, status: 'Dismissed' }),
       });
@@ -207,8 +208,8 @@ describe('kpi-id module', () => {
     });
 
     it('returns 403 Forbidden for GraduateUserError if no bypass exists', async () => {
-      (fetchFacultyGroups as jest.Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (fetchFacultyGroups as Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, groupName: 'FT-51ф' }),
       });
@@ -218,9 +219,9 @@ describe('kpi-id module', () => {
     });
 
     it('bypasses GraduateUserError if bypassGraduate is true', async () => {
-      (getUserBypassInfo as jest.Mock).mockResolvedValue({ global: { bypassGraduate: true } });
-      (fetchFacultyGroups as jest.Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (getUserBypassInfo as Mock).mockResolvedValue({ global: { bypassGraduate: true } });
+      (fetchFacultyGroups as Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ ...DEFAULT_CAMPUS_RESPONSE, groupName: 'FT-51ф' }),
       });
@@ -230,9 +231,9 @@ describe('kpi-id module', () => {
     });
 
     it('fails if user has both errors but only one is bypassed', async () => {
-      (getUserBypassInfo as jest.Mock).mockResolvedValue({ global: { bypassGraduate: true } });
-      (fetchFacultyGroups as jest.Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
-      (fetch as jest.Mock).mockResolvedValueOnce({
+      (getUserBypassInfo as Mock).mockResolvedValue({ global: { bypassGraduate: true } });
+      (fetchFacultyGroups as Mock).mockResolvedValue({ TEST: ['FT-51ф'] });
+      (fetch as Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           ...DEFAULT_CAMPUS_RESPONSE,

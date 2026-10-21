@@ -1,9 +1,14 @@
+import { vi } from 'vitest';
+
 /**
  * Mock for @/lib/rate-limit.
  *
  * Usage:
  *   import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
- *   jest.mock('@/lib/rate-limit', () => rateLimitMock);
+ *   vi.mock('@/lib/rate-limit', async () => {
+ *     const { rateLimitMock } = await import('@/__tests__/helpers/rate-limit-mock');
+ *     return rateLimitMock;
+ *   });
  *   beforeEach(() => resetRateLimitMock());
  *
  * Default: all limiters resolve with { limited: false }.
@@ -14,14 +19,14 @@
 const notLimited = { limited: false, remaining: 10, resetInMs: 60_000 };
 
 export const rateLimitMock = {
-  rateLimit: jest.fn().mockResolvedValue(notLimited),
-  rateLimitLogin: jest.fn().mockResolvedValue(notLimited),
-  rateLimitRefresh: jest.fn().mockResolvedValue(notLimited),
-  rateLimitInvite: jest.fn().mockResolvedValue(notLimited),
-  rateLimitAvatarUpload: jest.fn().mockResolvedValue(notLimited),
-  rateLimitComment: jest.fn().mockResolvedValue(notLimited),
-  rateLimitCommentVote: jest.fn().mockResolvedValue(notLimited),
-  getClientIp: jest.fn().mockReturnValue('127.0.0.1'),
+  rateLimit: vi.fn().mockResolvedValue(notLimited),
+  rateLimitLogin: vi.fn().mockResolvedValue(notLimited),
+  rateLimitRefresh: vi.fn().mockResolvedValue(notLimited),
+  rateLimitInvite: vi.fn().mockResolvedValue(notLimited),
+  rateLimitAvatarUpload: vi.fn().mockResolvedValue(notLimited),
+  rateLimitComment: vi.fn().mockResolvedValue(notLimited),
+  rateLimitCommentVote: vi.fn().mockResolvedValue(notLimited),
+  getClientIp: vi.fn().mockReturnValue('127.0.0.1'),
 };
 
 export function resetRateLimitMock(): void {

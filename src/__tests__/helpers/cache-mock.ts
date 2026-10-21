@@ -1,9 +1,13 @@
+import { vi } from 'vitest';
 /**
  * Mock for @/lib/cache.
  *
  * Usage:
  *   import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
- *   jest.mock('@/lib/cache', () => cacheMock);
+ *   vi.mock('@/lib/cache', async () => {
+ *     const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+ *     return cacheMock;
+ *   });
  *   beforeEach(() => resetCacheMock());
  *
  * Defaults: all getters return null (cache-miss), all setters/invalidators
@@ -14,27 +18,27 @@ import type { CachedElection } from '@/types/election';
 import type { FaqCategoryData } from '@/types/faq';
 
 export const cacheMock = {
-  getCachedElections: jest.fn<Promise<null>, []>(),
-  setCachedElections: jest.fn<Promise<void>, [CachedElection[]]>(),
-  invalidateElections: jest.fn<Promise<void>, []>(),
-  getCachedAdmins: jest.fn<Promise<null>, []>(),
-  setCachedAdmins: jest.fn<Promise<void>, [unknown[]]>(),
-  invalidateAdmins: jest.fn<Promise<void>, []>(),
-  getCachedInviteTokens: jest.fn<Promise<null>, []>(),
-  setCachedInviteTokens: jest.fn<Promise<void>, [unknown[]]>(),
-  invalidateInviteTokens: jest.fn<Promise<void>, []>(),
-  getCachedFaq: jest.fn<Promise<null>, []>(),
-  setCachedFaq: jest.fn<Promise<void>, [FaqCategoryData[]]>(),
-  invalidateFaq: jest.fn<Promise<void>, []>(),
-  addToUserVotedElections: jest.fn<Promise<void>, [string, string]>(),
-  overlayLiveBallotCounts: jest.fn<Promise<CachedElection[]>, [CachedElection[]]>(),
-  getCachedUserVotedElections: jest.fn<Promise<Set<string> | null>, [string]>(),
-  setCachedUserVotedElections: jest.fn<Promise<void>, [string, string[]]>(),
-  invalidateUserVotedElections: jest.fn<Promise<void>, [string]>(),
-  getLiveElectionBallotCount: jest.fn<Promise<number | null>, [string]>(),
-  setLiveElectionBallotCount: jest.fn<Promise<void>, [string, number]>(),
-  incrementLiveElectionBallotCount: jest.fn<Promise<number | null>, [string]>(),
-  invalidateLiveElectionBallotCount: jest.fn<Promise<void>, [string]>(),
+  getCachedElections: vi.fn<(...args: []) => Promise<null>>(),
+  setCachedElections: vi.fn<(...args: [CachedElection[]]) => Promise<void>>(),
+  invalidateElections: vi.fn<(...args: []) => Promise<void>>(),
+  getCachedAdmins: vi.fn<(...args: []) => Promise<null>>(),
+  setCachedAdmins: vi.fn<(...args: [unknown[]]) => Promise<void>>(),
+  invalidateAdmins: vi.fn<(...args: []) => Promise<void>>(),
+  getCachedInviteTokens: vi.fn<(...args: []) => Promise<null>>(),
+  setCachedInviteTokens: vi.fn<(...args: [unknown[]]) => Promise<void>>(),
+  invalidateInviteTokens: vi.fn<(...args: []) => Promise<void>>(),
+  getCachedFaq: vi.fn<(...args: []) => Promise<null>>(),
+  setCachedFaq: vi.fn<(...args: [FaqCategoryData[]]) => Promise<void>>(),
+  invalidateFaq: vi.fn<(...args: []) => Promise<void>>(),
+  addToUserVotedElections: vi.fn<(...args: [string, string]) => Promise<void>>(),
+  overlayLiveBallotCounts: vi.fn<(...args: [CachedElection[]]) => Promise<CachedElection[]>>(),
+  getCachedUserVotedElections: vi.fn<(...args: [string]) => Promise<Set<string> | null>>(),
+  setCachedUserVotedElections: vi.fn<(...args: [string, string[]]) => Promise<void>>(),
+  invalidateUserVotedElections: vi.fn<(...args: [string]) => Promise<void>>(),
+  getLiveElectionBallotCount: vi.fn<(...args: [string]) => Promise<number | null>>(),
+  setLiveElectionBallotCount: vi.fn<(...args: [string, number]) => Promise<void>>(),
+  incrementLiveElectionBallotCount: vi.fn<(...args: [string]) => Promise<number | null>>(),
+  invalidateLiveElectionBallotCount: vi.fn<(...args: [string]) => Promise<void>>(),
 };
 
 export function resetCacheMock(): void {

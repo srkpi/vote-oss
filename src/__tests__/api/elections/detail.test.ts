@@ -1,6 +1,7 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
+import { resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   encryptBallot,
@@ -14,19 +15,31 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
-jest.mock('@/lib/encryption', () => ({
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
+vi.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
-jest.mock('@/lib/bypass', () => ({
-  getElectionBypassForUser: jest.fn().mockResolvedValue(null),
+vi.mock('@/lib/bypass', () => ({
+  getElectionBypassForUser: vi.fn().mockResolvedValue(null),
 }));
-jest.mock('@/lib/avatars', () => avatarsMock);
+vi.mock('@/lib/avatars', async () => {
+  const { avatarsMock } = await import('@/__tests__/helpers/avatars-mock');
+  return avatarsMock;
+});
 
 import { GET } from '@/app/api/elections/[id]/route';
 
@@ -523,7 +536,7 @@ describe('GET /api/elections/[id]', () => {
   });
 
   it('invalidates elections cache after computing tallies', async () => {
-    const { invalidateElections } = jest.requireMock('@/lib/cache');
+    const { invalidateElections } = await vi.importMock('@/lib/cache');
     const req = await authRequest();
     const election = makeElection({
       opens_at: new Date(Date.now() - 7_200_000),
@@ -540,7 +553,7 @@ describe('GET /api/elections/[id]', () => {
   });
 
   it('does NOT invalidate cache when tallies are already persisted', async () => {
-    const { invalidateElections } = jest.requireMock('@/lib/cache');
+    const { invalidateElections } = await vi.importMock('@/lib/cache');
     const req = await authRequest();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -571,7 +584,7 @@ describe('GET /api/elections/[id]', () => {
     ]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}, {}]);
 
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const res = await GET(req, PARAMS);
     expect(res.status).toBe(200);
     spy.mockRestore();

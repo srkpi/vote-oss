@@ -1,21 +1,25 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { redisMock, resetRedisMock } from '@/__tests__/helpers/redis-mock';
 
 // ---------------------------------------------------------------------------
 // Redis mock
 // ---------------------------------------------------------------------------
-jest.mock('@/lib/redis', () => ({
-  redis: redisMock,
-  isRedisReady: jest.fn(() => true),
-  safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
-    try {
-      return await fn();
-    } catch {
-      return null;
-    }
-  },
-}));
+vi.mock('@/lib/redis', async () => {
+  const { redisMock } = await import('@/__tests__/helpers/redis-mock');
+  return {
+    redis: redisMock,
+    isRedisReady: vi.fn(() => true),
+    safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await fn();
+      } catch {
+        return null;
+      }
+    },
+  };
+});
 
 import { fetchFacultyGroups, fixFacultyName } from '@/lib/campus-api';
 
@@ -24,10 +28,10 @@ import { fetchFacultyGroups, fixFacultyName } from '@/lib/campus-api';
 // ---------------------------------------------------------------------------
 
 function mockFetch(data: unknown, status = 200) {
-  jest.spyOn(global, 'fetch').mockResolvedValue({
+  vi.spyOn(global, 'fetch').mockResolvedValue({
     ok: status >= 200 && status < 300,
     status,
-    json: jest.fn().mockResolvedValue(data),
+    json: vi.fn().mockResolvedValue(data),
   } as unknown as Response);
 }
 
@@ -73,17 +77,17 @@ describe('fetchFacultyGroups', () => {
     allure.feature('Campus API');
     allure.story('fetchFacultyGroups');
 
-    // Always install a jest spy so `expect(global.fetch).not.toHaveBeenCalled()`
+    // Always install a vi spy so `expect(global.fetch).not.toHaveBeenCalled()`
     // works even in tests where mockFetch() is never called.
-    jest.spyOn(global, 'fetch').mockResolvedValue({
+    vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       status: 200,
-      json: jest.fn().mockResolvedValue([]),
+      json: vi.fn().mockResolvedValue([]),
     } as unknown as Response);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('returns cached data on a Redis hit (no upstream fetch)', async () => {

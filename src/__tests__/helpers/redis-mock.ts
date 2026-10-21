@@ -1,43 +1,48 @@
+import { vi } from 'vitest';
+
 /**
  * Reusable Redis client mock.
  *
  * Import `redisMock` in tests and declare the module mock with:
  *
- *   jest.mock('@/lib/redis', () => ({
- *     redis: redisMock,
- *     isRedisReady: jest.fn(() => redisMock.status === 'ready'),
- *     safeRedis: async (fn: () => Promise<unknown>) => {
- *       try { return await fn(); } catch { return null; }
- *     },
- *   }));
+ *   vi.mock('@/lib/redis', async () => {
+ *     const { redisMock } = await import('@/__tests__/helpers/redis-mock');
+ *     return {
+ *       redis: redisMock,
+ *       isRedisReady: vi.fn(() => redisMock.status === 'ready'),
+ *       safeRedis: async (fn: () => Promise<unknown>) => {
+ *         try { return await fn(); } catch { return null; }
+ *       },
+ *     };
+ *   });
  *
  * Call `resetRedisMock()` in `beforeEach` to clear state between tests.
  * Access `redisMock._pipeline` to assert on pipeline-based commands.
  */
 
 export const pipelineMock = {
-  setbit: jest.fn().mockReturnThis(),
-  getbit: jest.fn().mockReturnThis(),
-  set: jest.fn().mockReturnThis(),
-  get: jest.fn().mockReturnThis(),
-  del: jest.fn().mockReturnThis(),
-  exists: jest.fn().mockReturnThis(),
-  exec: jest.fn().mockResolvedValue([]),
+  setbit: vi.fn().mockReturnThis(),
+  getbit: vi.fn().mockReturnThis(),
+  set: vi.fn().mockReturnThis(),
+  get: vi.fn().mockReturnThis(),
+  del: vi.fn().mockReturnThis(),
+  exists: vi.fn().mockReturnThis(),
+  exec: vi.fn().mockResolvedValue([]),
 };
 
 export const redisMock = {
   /** Simulates ioredis `.status`; set to 'reconnecting' to test fail-open paths. */
   status: 'ready' as string,
-  get: jest.fn().mockResolvedValue(null),
-  set: jest.fn().mockResolvedValue('OK'),
-  del: jest.fn().mockResolvedValue(1),
-  getbit: jest.fn().mockResolvedValue(0),
-  setbit: jest.fn().mockResolvedValue(0),
-  exists: jest.fn().mockResolvedValue(0),
-  eval: jest.fn().mockResolvedValue(null),
-  pipeline: jest.fn().mockReturnValue(pipelineMock),
-  scan: jest.fn().mockResolvedValue(['0', [] as string[]]),
-  ping: jest.fn().mockResolvedValue('PONG'),
+  get: vi.fn().mockResolvedValue(null),
+  set: vi.fn().mockResolvedValue('OK'),
+  del: vi.fn().mockResolvedValue(1),
+  getbit: vi.fn().mockResolvedValue(0),
+  setbit: vi.fn().mockResolvedValue(0),
+  exists: vi.fn().mockResolvedValue(0),
+  eval: vi.fn().mockResolvedValue(null),
+  pipeline: vi.fn().mockReturnValue(pipelineMock),
+  scan: vi.fn().mockResolvedValue(['0', [] as string[]]),
+  ping: vi.fn().mockResolvedValue('PONG'),
 };
 
 export function resetRedisMock(): void {

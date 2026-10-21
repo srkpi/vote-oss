@@ -1,10 +1,15 @@
+import { vi } from 'vitest';
+
 /**
  * Mock for @/lib/token-store.
  *
  * Usage in test files:
  *
  *   import { tokenStoreMock, resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
- *   jest.mock('@/lib/token-store', () => tokenStoreMock);
+ *   vi.mock('@/lib/token-store', async () => {
+ *     const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+ *     return tokenStoreMock;
+ *   });
  *
  *   beforeEach(() => resetTokenStoreMock());
  *
@@ -21,12 +26,12 @@ export const tokenStoreMock = {
   ACCESS_TTL_SECS: 900,
   REFRESH_TTL_SECS: 604_800,
 
-  persistTokenPair: jest.fn<Promise<void>, [string, string]>(),
-  isAccessTokenValid: jest.fn<Promise<boolean>, [string, number]>(),
-  isRefreshTokenValid: jest.fn<Promise<boolean>, [string, number]>(),
-  revokeByAccessJti: jest.fn<Promise<void>, [string, number]>(),
-  revokeByRefreshJti: jest.fn<Promise<{ accessJti: string | null }>, [string, number]>(),
-  revokeTokenPair: jest.fn<Promise<void>, [string, string, number, number]>(),
+  persistTokenPair: vi.fn<(...args: [string, string]) => Promise<void>>(),
+  isAccessTokenValid: vi.fn<(...args: [string, number]) => Promise<boolean>>(),
+  isRefreshTokenValid: vi.fn<(...args: [string, number]) => Promise<boolean>>(),
+  revokeByAccessJti: vi.fn<(...args: [string, number]) => Promise<void>>(),
+  revokeByRefreshJti: vi.fn<(...args: [string, number]) => Promise<{ accessJti: string | null }>>(),
+  revokeTokenPair: vi.fn<(...args: [string, string, number, number]) => Promise<void>>(),
 };
 
 export function resetTokenStoreMock(): void {

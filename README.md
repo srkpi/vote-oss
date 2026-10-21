@@ -71,7 +71,7 @@
 | **Rich Text**             | [Quill](https://quilljs.com/) (Delta format)                                                                                                                                                 |
 | **Analytics**             | [PostHog](https://posthog.com/) (client-side + server-side, OpenTelemetry log export)                                                                                                        |
 | **API Docs**              | [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                      |
-| **Testing**               | [Jest 30](https://jestjs.io/), [ts-jest](https://github.com/kulshekhar/ts-jest), [Allure](https://allurereport.org/)                                                                         |
+| **Testing**               | [Vitest](https://vitest.dev/), [Allure](https://allurereport.org/)                                                                                                                           |
 | **Linting / Formatting**  | [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter)                                                                                      |
 | **Package Manager**       | [pnpm 12](https://pnpm.io/)                                                                                                                                                                  |
 | **Containerisation**      | [Docker](https://www.docker.com/) (multi-stage build), [Caddy](https://caddyserver.com/) reverse proxy                                                                                       |
@@ -295,10 +295,10 @@ curl http://localhost:3001/students | jq .
 | `pnpm type-check`       | Run TypeScript type checking without emitting files           |
 | `pnpm format`           | Format all files with Oxfmt                                   |
 | `pnpm format:check`     | Check formatting without writing changes                      |
-| `pnpm test`             | Run the Jest test suite                                       |
-| `pnpm test:watch`       | Run Jest in watch mode                                        |
-| `pnpm test:coverage`    | Run Jest and collect coverage reports                         |
-| `pnpm test:ci`          | Run Jest in CI mode (no watch, force exit)                    |
+| `pnpm test`             | Run the Vitest test suite                                     |
+| `pnpm test:watch`       | Run Vitest in watch mode                                      |
+| `pnpm test:coverage`    | Run Vitest and collect coverage reports                       |
+| `pnpm test:ci`          | Run Vitest once in CI mode                                    |
 | `pnpm allure:generate`  | Generate an Allure HTML report from test results              |
 | `pnpm allure:open`      | Open the generated Allure report in a browser                 |
 | `pnpm allure:serve`     | Serve Allure results interactively                            |
@@ -312,7 +312,7 @@ curl http://localhost:3001/students | jq .
 
 ## Testing
 
-Tests live in `src/__tests__/` and are run with Jest using `ts-jest`. The test environment uses [Allure Jest](https://allurereport.org/) to produce rich test reports.
+Tests live in `src/__tests__/` and are run with Vitest. The test environment uses [Allure Vitest](https://allurereport.org/docs/vitest/) to produce rich test reports.
 
 ```bash
 # Run all tests
@@ -328,7 +328,7 @@ pnpm allure:open
 
 Allure reports for the `main` branch are automatically published to GitHub Pages by the CI pipeline.
 
-Test environment variables are pre-configured in `jest.setup.ts` so no real database or Redis instance is required for unit tests.
+Test environment variables are pre-configured in `vitest.setup.ts` so no real database or Redis instance is required for unit tests.
 
 ## Production Deployment
 
@@ -391,7 +391,7 @@ Three GitHub Actions workflows are included:
 
 #### `tests.yml` — runs on pushes to `dev`/`main` and pull requests
 
-- Runs the full Jest test suite via Allure
+- Runs the full Vitest test suite via Allure
 - Uploads the Allure report as a workflow artifact (retained for 30 days)
 - Publishes the report to GitHub Pages on merges to `main`
 

@@ -1,8 +1,10 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
-import { prismaMock } from '@/__tests__/helpers/prisma-mock';
-
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
 
 import { checkRestrictions, checkRestrictionsWithBypass } from '@/lib/restrictions';
 import type { ElectionRestriction } from '@/types/election';

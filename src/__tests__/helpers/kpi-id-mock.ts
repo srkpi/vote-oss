@@ -1,4 +1,5 @@
 import type { NextResponse } from 'next/server';
+import { vi } from 'vitest';
 
 import { ALLOWED_AUTH_METHODS } from '@/lib/constants';
 import type { KpiIdUserInfo, UserInfo } from '@/types/auth';
@@ -78,10 +79,10 @@ export const MOCK_USER_INFO: UserInfo = {
 };
 
 export const kpiIdMock = {
-  resolveTicket: jest.fn<Promise<KpiIdUserInfo>, [string]>(),
-  resolveUserData: jest.fn(),
-  getCampusUserData: jest.fn<Promise<NextResponse | UserInfo>, [KpiIdUserInfo]>(),
-  resolveFacultyShortName: jest.fn(),
+  resolveTicket: vi.fn<(...args: [string]) => Promise<KpiIdUserInfo>>(),
+  resolveUserData: vi.fn(),
+  getCampusUserData: vi.fn<(...args: [KpiIdUserInfo]) => Promise<NextResponse | UserInfo>>(),
+  resolveFacultyShortName: vi.fn(),
   ResolveUserDataError,
   InvalidTicketError,
   InvalidUserDataError,
