@@ -7,7 +7,6 @@ import { useId, useState, type Ref } from 'react';
 import { uk } from 'react-day-picker/locale';
 
 import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/form';
 import { cn } from '@/lib/utils/common';
 import {
   KYIV_TIME_ZONE,
@@ -52,27 +51,6 @@ export function KyivDateTimePicker({
   const maxDate = kyivDate(max);
   const day = selected ?? minDate ?? kyivDate(fallbackDate)!;
   const slots = open ? kyivTimeSlots(day, minuteStep, minDate, maxDate) : [];
-  const changeTime = (hour: number, minute: number) => {
-    const current = kyivDate(day)!;
-    const matching = slots.filter((slot) => {
-      const date = kyivDate(slot.value)!;
-      return date.getHours() === hour && date.getMinutes() === minute;
-    });
-    const sameOffset = matching.find(
-      (slot) => kyivDate(slot.value)!.getTimezoneOffset() === current.getTimezoneOffset(),
-    );
-    const match = sameOffset ?? matching[0];
-    if (match) {
-      onChange(new Date(match.value));
-      return;
-    }
-    current.setHours(hour, minute, 0, 0);
-    const next = selectKyivDay(day, current, minuteStep, minDate, maxDate);
-    if (next) {
-      onChange(next);
-    }
-  };
-  const repeated = slots.filter((slot) => slot.label.startsWith(format(day, 'HH:mm') + ' ('));
 
   return (
     <Popover.Root
@@ -141,44 +119,26 @@ export function KyivDateTimePicker({
             <label className="mb-2 block text-xs font-medium" htmlFor={timeId}>
               Час (Київ)
             </label>
-            <Input
-              id={timeId}
-              type="time"
-              step={minuteStep * 60}
-              min={slots[0]?.label.slice(0, 5)}
-              max={slots.at(-1)?.label.slice(0, 5)}
-              value={format(day, 'HH:mm')}
-              disabled={!slots.length}
-              leftIcon={<Clock className="h-4 w-4" />}
-              className="appearance-none tabular-nums [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-              onChange={(event) => {
-                if (event.target.value) {
-                  const [hour, minute] = event.target.value.split(':').map(Number);
-                  changeTime(hour, minute);
-                }
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  setOpen(false);
-                }
-              }}
-            />
-          </div>
-          {repeated.length > 1 && (
-            <select
-              title="Зсув київського часу"
-              value={selected?.toISOString()}
-              onChange={(event) => onChange(new Date(event.target.value))}
-              className="border-border-color mb-2 ml-3 rounded border bg-card text-xs"
-            >
-              {repeated.map((slot) => (
-                <option key={slot.value} value={slot.value}>
-                  {slot.label}
+            <div className="relative">
+              <Clock className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <select
+                id={timeId}
+                value={slots.find((slot) => slot.value === selected?.toISOString())?.value ?? ''}
+                disabled={!slots.length}
+                className="border-border-color h-10 w-full rounded-(--radius) border bg-card pr-3 pl-10 text-sm text-foreground tabular-nums focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none disabled:opacity-50"
+                onChange={(event) => onChange(new Date(event.target.value))}
+              >
+                <option value="" disabled>
+                  {selected ? format(selected, 'HH:mm') : 'Оберіть час'}
                 </option>
-              ))}
-            </select>
-          )}
+                {slots.map((slot) => (
+                  <option key={slot.value} value={slot.value}>
+                    {slot.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
