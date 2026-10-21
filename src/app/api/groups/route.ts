@@ -2,6 +2,7 @@ import type { File as DbFile } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getCachedElections } from '@/lib/cache';
 import { GROUP_MAX_OWNED, GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
@@ -9,6 +10,7 @@ import { Errors } from '@/lib/errors';
 import { shapeFileSummary } from '@/lib/files';
 import { invalidateUserOwnedGroups } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupCreateBodySchema } from '@/lib/schemas/group';
 
 /**
  * @swagger
@@ -226,12 +228,11 @@ export async function POST(req: NextRequest) {
     return Errors.forbidden('Only admin with manage groups permission can create groups');
   }
 
-  let body: { name?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupCreateBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const name = body.name?.trim();
   if (!name) {

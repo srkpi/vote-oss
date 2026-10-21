@@ -1,12 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin } from '@/lib/auth';
 import { invalidateFaq } from '@/lib/cache';
-import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import { deltaToPlainText, parseQuillDelta } from '@/lib/utils/common';
+import { faqItemBodySchema } from '@/lib/schemas/faq';
 
 /**
  * @swagger
@@ -72,36 +72,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.notFound('FAQ category not found');
   }
 
-  let body: { title?: string; content?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, faqItemBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { title, content } = body;
-
-  if (!title || typeof title !== 'string' || !title.trim()) {
-    return Errors.badRequest('title is required');
-  }
-  if (title.trim().length > FAQ_ITEM_TITLE_MAX_LENGTH) {
-    return Errors.badRequest(`title must be at most ${FAQ_ITEM_TITLE_MAX_LENGTH} characters`);
-  }
-
-  if (content === undefined || content === null || typeof content !== 'string') {
-    return Errors.badRequest('content is required');
-  }
-
-  if (!parseQuillDelta(content)) {
-    return Errors.badRequest('content must be a valid Quill Delta JSON string');
-  }
-
-  const plainText = deltaToPlainText(content);
-  if (plainText.length > FAQ_ITEM_CONTENT_MAX_LENGTH) {
-    return Errors.badRequest(
-      `content plain text must be at most ${FAQ_ITEM_CONTENT_MAX_LENGTH} characters`,
-    );
-  }
 
   const last = await prisma.faqItem.findFirst({
     where: { category_id: categoryId },

@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 
@@ -11,13 +11,11 @@ import {
   type DeleteItemTarget,
   RenameCategoryDialog,
 } from '@/components/faq/category-dialogs';
+import { CategoryTitleForm } from '@/components/faq/category-title-form';
 import { FaqItemDialog } from '@/components/faq/faq-item-dialog';
 import { Button } from '@/components/ui/button';
-import { CharCounter } from '@/components/ui/char-counter';
-import { Input } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
-import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import type { FaqCategoryData, FaqItemData } from '@/types/faq';
 
 interface ItemDialogState {
@@ -38,12 +36,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const [addingCategory, setAddingCategory] = useState(false);
-  const [newCategoryTitle, setNewCategoryTitle] = useState('');
-  const [addingCategoryLoading, setAddingCategoryLoading] = useState(false);
 
   const [renameCategory, setRenameCategory] = useState<FaqCategoryData | null>(null);
-  const [renameCategoryTitle, setRenameCategoryTitle] = useState('');
-  const [renameCategoryLoading, setRenameCategoryLoading] = useState(false);
 
   const [deleteCategory, setDeleteCategory] = useState<FaqCategoryData | null>(null);
   const [deleteCategoryLoading, setDeleteCategoryLoading] = useState(false);
@@ -67,51 +61,25 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       variant: 'error',
     });
 
-  const handleCreateCategory = async () => {
-    const title = newCategoryTitle.trim();
-    if (!title) {
-      return;
-    }
-
-    setAddingCategoryLoading(true);
+  const handleCreateCategory = async (title: string) => {
     const { data, error } = await api.faq.categories.create(title);
-    setAddingCategoryLoading(false);
-
     if (error !== null) {
-      err(error);
-      return;
+      throw new Error(error);
     }
-
     setCategories((prev) => [...prev, { ...data, items: [] }]);
-    setNewCategoryTitle('');
     setAddingCategory(false);
     toast({ title: 'Категорію створено', variant: 'success' });
     router.refresh();
   };
 
-  const openRename = (category: FaqCategoryData) => {
-    setRenameCategory(category);
-    setRenameCategoryTitle(category.title);
-  };
-
-  const handleRenameCategory = async () => {
+  const handleRenameCategory = async (title: string) => {
     if (!renameCategory) {
       return;
     }
-    const title = renameCategoryTitle.trim();
-    if (!title) {
-      return;
-    }
-
-    setRenameCategoryLoading(true);
     const { error } = await api.faq.categories.update(renameCategory.id, title);
-    setRenameCategoryLoading(false);
-
     if (error !== null) {
-      err(error);
-      return;
+      throw new Error(error);
     }
-
     setCategories((prev) =>
       prev.map((category) =>
         category.id === renameCategory.id ? { ...category, title } : category,
@@ -346,7 +314,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
           onToggleCollapse={() => toggleCollapse(category.id)}
           onMoveUp={() => moveCategory(categoryIndex, 'up')}
           onMoveDown={() => moveCategory(categoryIndex, 'down')}
-          onRename={() => openRename(category)}
+          onRename={() => setRenameCategory(category)}
           onDelete={() => setDeleteCategory(category)}
           onAddItem={() => setItemDialog({ open: true, categoryId: category.id })}
           onEditItem={(item) => setItemDialog({ open: true, categoryId: category.id, item })}
@@ -364,47 +332,10 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       {addingCategory ? (
         <div className="border-border-color rounded-xl border bg-card p-4 shadow-card sm:p-5">
           <p className="font-body mb-3 text-sm font-semibold text-foreground">Нова категорія</p>
-          <div className="flex items-start gap-2">
-            <div className="flex-1 space-y-1">
-              <Input
-                value={newCategoryTitle}
-                onChange={(e) => setNewCategoryTitle(e.target.value)}
-                placeholder="Назва категорії"
-                error={newCategoryTitle.length > FAQ_CATEGORY_TITLE_MAX_LENGTH}
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleCreateCategory();
-                  }
-                  if (e.key === 'Escape') {
-                    setAddingCategory(false);
-                    setNewCategoryTitle('');
-                  }
-                }}
-              />
-              <div className="flex justify-end">
-                <CharCounter value={newCategoryTitle} max={FAQ_CATEGORY_TITLE_MAX_LENGTH} />
-              </div>
-            </div>
-            <Button
-              variant="accent"
-              size="md"
-              onClick={handleCreateCategory}
-              loading={addingCategoryLoading}
-            >
-              Додати
-            </Button>
-            <button
-              type="button"
-              onClick={() => {
-                setAddingCategory(false);
-                setNewCategoryTitle('');
-              }}
-              className="flex h-10 w-9 items-center justify-center rounded-(--radius) text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
+          <CategoryTitleForm
+            onSave={handleCreateCategory}
+            onCancel={() => setAddingCategory(false)}
+          />
         </div>
       ) : (
         <Button
@@ -419,11 +350,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
       <RenameCategoryDialog
         category={renameCategory}
-        title={renameCategoryTitle}
-        onTitleChange={setRenameCategoryTitle}
         onConfirm={handleRenameCategory}
         onClose={() => setRenameCategory(null)}
-        loading={renameCategoryLoading}
       />
 
       <DeleteCategoryDialog

@@ -1,11 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { invalidateAdmins, invalidateInviteTokens } from '@/lib/cache';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { tokenBodySchema } from '@/lib/schemas/group';
 
 /**
  * @swagger
@@ -53,12 +55,11 @@ export async function POST(req: NextRequest) {
 
   const { user } = auth;
 
-  let body: { token?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, tokenBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { token } = body;
   if (!token || typeof token !== 'string') {

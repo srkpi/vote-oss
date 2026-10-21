@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import {
   GROUP_INVITE_LINK_LABEL_MAX_LENGTH,
@@ -13,6 +14,7 @@ import {
 import { generateBase64Token, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { groupInviteBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
 function canManageLinks(
@@ -242,12 +244,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.forbidden('Only the group owner can create invite links');
   }
 
-  let body: { label?: string; maxUsage?: number; expiresAt?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupInviteBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { label, maxUsage, expiresAt } = body;
 

@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { getAvatarUrlMap } from '@/lib/avatars';
 import {
@@ -34,6 +35,7 @@ import {
   invalidateVKSUGroupIds,
 } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupUpdateBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 import { parseWinningConditions } from '@/lib/winning-conditions';
 import type { VerifiedPayload } from '@/types/auth';
@@ -588,12 +590,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return Errors.badRequest('Invalid group id');
   }
 
-  let body: { name?: string; type?: 'VKSU' | 'OTHER'; requisites?: RequisitesPatch };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupUpdateBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const wantsRename = body.name !== undefined;
   const wantsTypeChange = body.type !== undefined;

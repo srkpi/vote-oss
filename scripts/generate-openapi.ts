@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { createSwaggerSpec } from 'next-swagger-doc';
+import { z } from 'zod';
 
 import {
   BYPASS_TOKEN_MAX_USAGE_MAX,
@@ -11,9 +12,6 @@ import {
   ELECTION_MAX_CHOICES_MAX,
   ELECTION_MIN_CHOICES_MIN,
   ELECTION_TITLE_MAX_LENGTH,
-  FAQ_CATEGORY_TITLE_MAX_LENGTH,
-  FAQ_ITEM_CONTENT_MAX_LENGTH,
-  FAQ_ITEM_TITLE_MAX_LENGTH,
   INVITE_TOKEN_MAX_USAGE_MAX,
   INVITE_TOKEN_MAX_USAGE_MIN,
   INVITE_TOKEN_MAX_VALID_DAYS,
@@ -24,6 +22,18 @@ import {
   WINNING_CONDITION_VOTES_MAX,
   WINNING_CONDITION_VOTES_MIN,
 } from '../src/lib/constants';
+import { faqCategoryBodySchema, faqItemBodySchema } from '../src/lib/schemas/faq';
+import { protocolBodySchema } from '../src/lib/schemas/protocol';
+
+type ApiSchema = NonNullable<
+  NonNullable<
+    NonNullable<Parameters<typeof createSwaggerSpec>[0]>['definition']['components']
+  >['schemas']
+>[string];
+
+// Zod targets OpenAPI 3.0 here; swagger-jsdoc uses a separate schema type.
+const jsonSchema = (schema: z.ZodType) =>
+  z.toJSONSchema(schema, { target: 'openapi-3.0', io: 'input' }) as ApiSchema;
 
 const spec = createSwaggerSpec({
   apiFolder: 'src/app/api',
@@ -1053,26 +1063,9 @@ const spec = createSwaggerSpec({
           },
         },
 
-        FaqCategoryCreateBody: {
-          type: 'object',
-          required: ['title'],
-          properties: {
-            title: { type: 'string', minLength: 1, maxLength: FAQ_CATEGORY_TITLE_MAX_LENGTH },
-          },
-        },
+        FaqCategoryCreateBody: jsonSchema(faqCategoryBodySchema),
 
-        FaqItemCreateBody: {
-          type: 'object',
-          required: ['title', 'content'],
-          properties: {
-            title: { type: 'string', minLength: 1, maxLength: FAQ_ITEM_TITLE_MAX_LENGTH },
-            content: {
-              type: 'string',
-              minLength: 1,
-              description: `Serialised Quill Delta JSON string. Plain-text length must not exceed ${FAQ_ITEM_CONTENT_MAX_LENGTH} characters.`,
-            },
-          },
-        },
+        FaqItemCreateBody: jsonSchema(faqItemBodySchema),
 
         /** Lightweight category shape returned by POST /api/faq and PUT /api/faq/categories/[id] */
         FaqCategoryMeta: {
@@ -2035,48 +2028,7 @@ const spec = createSwaggerSpec({
           },
         },
 
-        CreateProtocolBody: {
-          type: 'object',
-          required: ['number', 'name', 'date', 'responsibles', 'attendance', 'agendaItems'],
-          properties: {
-            number: {
-              type: 'integer',
-              minimum: 1,
-              description: 'Sequential protocol number for the year.',
-            },
-            name: { type: 'string', minLength: 1 },
-            date: {
-              type: 'string',
-              format: 'date',
-              description: 'Date of the meeting (YYYY-MM-DD).',
-            },
-            visitors: { type: 'integer', minimum: 0, nullable: true },
-            responsibles: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/ProtocolResponsible' },
-            },
-            attendance: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/ProtocolAttendee' },
-            },
-            agendaItems: {
-              type: 'array',
-              items: { $ref: '#/components/schemas/ProtocolAgendaItemInput' },
-            },
-            ossSnapshotOverride: {
-              type: 'object',
-              nullable: true,
-              description:
-                "Optional override of the group's current requisites at creation time. Only the provided fields are overridden; omitted fields fall back to the group's live values.",
-              properties: {
-                name: { type: 'string' },
-                address: { type: 'string' },
-                email: { type: 'string' },
-                contact: { type: 'string' },
-              },
-            },
-          },
-        },
+        CreateProtocolBody: jsonSchema(protocolBodySchema),
       },
     },
   },

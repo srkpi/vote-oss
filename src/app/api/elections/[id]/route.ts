@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getAvatarUrlMap } from '@/lib/avatars';
 import { getElectionBypassForUser } from '@/lib/bypass';
@@ -32,6 +33,7 @@ import {
   adminCanRestoreElection,
   checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
+import { electionUpdateBodySchema } from '@/lib/schemas/election';
 import { isValidUuid } from '@/lib/utils/common';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
@@ -840,26 +842,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   // Parse body
-  let body: {
-    title?: string;
-    description?: string | null;
-    opensAt?: string;
-    closesAt?: string;
-    choices?: string[];
-    minChoices?: number;
-    maxChoices?: number;
-    restrictions?: CreateElectionRestriction[];
-    winningConditions?: unknown;
-    shuffleChoices?: boolean;
-    publicViewing?: boolean;
-    anonymous?: boolean;
-  };
-
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, electionUpdateBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { title, opensAt, closesAt, choices } = body;
   const description = typeof body.description === 'string' ? body.description.trim() : null;

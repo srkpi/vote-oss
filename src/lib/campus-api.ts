@@ -16,12 +16,7 @@
 import { CAMPUS_API_URL } from '@/lib/config/server';
 import { CACHE_KEY_CAMPUS_GROUPS, CACHE_TTL_CAMPUS_GROUPS_SECS } from '@/lib/constants';
 import { redis, safeRedis } from '@/lib/redis';
-
-interface RawCampusGroup {
-  id: number;
-  name: string;
-  faculty: string;
-}
+import { campusGroupsSchema, facultyGroupsSchema } from '@/lib/schemas/external';
 
 /**
  * Fix malformed "НН" faculty names.
@@ -54,7 +49,10 @@ export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
   const cached = await safeRedis(() => redis.get(CACHE_KEY_CAMPUS_GROUPS));
   if (cached) {
     try {
-      return JSON.parse(cached) as Record<string, string[]>;
+      const result = facultyGroupsSchema.safeParse(JSON.parse(cached));
+      if (result.success) {
+        return result.data;
+      }
     } catch {
       // Corrupted cache entry – fall through to a fresh fetch
     }
@@ -65,7 +63,11 @@ export async function fetchFacultyGroups(): Promise<Record<string, string[]>> {
     throw new Error(`Campus API responded with status ${res.status}`);
   }
 
-  const data = (await res.json()) as RawCampusGroup[];
+  const result = campusGroupsSchema.safeParse(await res.json());
+  if (!result.success) {
+    throw new Error('Campus API returned invalid group data');
+  }
+  const data = result.data;
   const map: Record<string, string[]> = {};
 
   for (const { faculty: rawFaculty, name } of data) {

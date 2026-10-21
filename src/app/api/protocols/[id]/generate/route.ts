@@ -6,6 +6,7 @@ import { PROTOCOL_GENERATOR_URL, PROTOCOL_TEMPLATE_ID } from '@/lib/config/serve
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { buildGeneratorPayload } from '@/lib/protocols';
+import { documentContentTypeSchema } from '@/lib/schemas/external';
 import { isValidUuid } from '@/lib/utils/common';
 
 function sanitizeFilename(name: string, fallback: string): string {
@@ -146,7 +147,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     );
   }
 
-  const contentType = response.headers.get('content-type') ?? 'application/pdf';
+  const contentTypeResult = documentContentTypeSchema.safeParse(
+    response.headers.get('content-type') ?? 'application/pdf',
+  );
+  if (!contentTypeResult.success || !response.body) {
+    await response.body?.cancel();
+    return NextResponse.json({ message: 'Генератор не повернув PDF документ' }, { status: 502 });
+  }
+  const contentType = contentTypeResult.data;
   const baseName = protocol.number
     ? `Protocol_No${protocol.number}_${protocol.date.toISOString().slice(0, 10)}`
     : `Protocol_${protocol.date.toISOString().slice(0, 10)}`;

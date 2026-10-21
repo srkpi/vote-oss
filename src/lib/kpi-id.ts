@@ -6,9 +6,10 @@ import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
 import { CAMPUS_API_URL, CAMPUS_INTEGRATION_API_KEY, KPI_APP_SECRET } from '@/lib/config/server';
 import { ALLOWED_AUTH_METHODS } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
+import { campusUserSchema, kpiTicketResponseSchema } from '@/lib/schemas/external';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
 import type { ApiError } from '@/types/api';
-import type { CampusUserInfo, KpiIdUserInfo, UserInfo } from '@/types/auth';
+import type { KpiIdUserInfo, UserInfo } from '@/types/auth';
 
 export class ResolveUserDataError extends Error {
   constructor(message: string) {
@@ -255,12 +256,11 @@ export async function resolveTicket(ticketId: string): Promise<KpiIdUserInfo> {
     throw new InvalidTicketError();
   }
 
-  const body = (await res.json()) as { data?: KpiIdUserInfo };
-  const data = body.data;
-
-  if (!data) {
+  const result = kpiTicketResponseSchema.safeParse(await res.json());
+  if (!result.success || !result.data.data) {
     throw new InvalidTicketError();
   }
+  const data = result.data.data;
   if (!data.STUDENT_ID && !data.EMPLOYEE_ID) {
     throw new InvalidUserDataError();
   }
@@ -290,10 +290,11 @@ export async function resolveUserData(
     return { errors: [new InvalidUserDataError()] };
   }
 
-  const campusData = (await res.json()) as CampusUserInfo | undefined;
-  if (!campusData) {
+  const result = campusUserSchema.safeParse(await res.json());
+  if (!result.success) {
     return { errors: [new InvalidUserDataError()] };
   }
+  const campusData = result.data;
 
   const errors = [];
   if (campusData.status !== 'Studying' && campusData.status !== 'OnAcademicLeave') {

@@ -1,11 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { GROUP_MEMBER_ROLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { invalidateUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupMemberRoleBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
 /**
@@ -190,12 +192,11 @@ export async function PATCH(
     return Errors.badRequest('userId is required');
   }
 
-  let body: { role?: string | null };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupMemberRoleBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
   if (!('role' in body)) {
     return Errors.badRequest('role is required (string or null)');
   }

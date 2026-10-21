@@ -1,13 +1,17 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Check, CheckCircle, Key, Shield, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import type { z } from 'zod';
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api/browser';
+import { tokenRedemptionSchema } from '@/lib/schemas/group';
 import { cn } from '@/lib/utils/common';
 
 interface JoinAdminFormProps {
@@ -18,22 +22,25 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [token, setToken] = useState(initialToken ?? '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof tokenRedemptionSchema>>({
+    resolver: zodResolver(tokenRedemptionSchema),
+    defaultValues: { token: initialToken ?? '' },
+  });
+  const token = useWatch({ control, name: 'token' });
+  const loading = isSubmitting;
+  const error = errors.root?.message ?? errors.token?.message;
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
-    e.preventDefault();
-    const trimmed = token.trim();
-    if (!trimmed) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const result = await api.admins.join(trimmed);
+  const redeemToken = handleSubmit(async (values) => {
+    const result = await api.admins.join(values.token);
 
     if (result.success) {
       await api.auth.refresh();
@@ -50,10 +57,9 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
         router.refresh();
       }, 1500);
     } else {
-      setError(result.error);
-      setLoading(false);
+      setError('root', { message: result.error });
     }
-  };
+  });
 
   if (success) {
     return (
@@ -72,9 +78,9 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={redeemToken} noValidate className="space-y-5">
       {error && (
-        <Alert variant="error" title="Помилка" onDismiss={() => setError(null)}>
+        <Alert variant="error" title="Помилка" onDismiss={() => clearErrors()}>
           {error}
         </Alert>
       )}
@@ -91,11 +97,8 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
           <input
             id="token"
             type="text"
-            value={token}
-            onChange={(e) => {
-              setToken(e.target.value);
-              setError(null);
-            }}
+            {...register('token', { onChange: () => clearErrors('root') })}
+            disabled={loading}
             placeholder="Вставте токен запрошення"
             className={cn(
               'flex h-10 w-full rounded-(--radius) bg-card',
@@ -113,7 +116,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
           {token && !loading && (
             <button
               type="button"
-              onClick={() => setToken('')}
+              onClick={() => setValue('token', '', { shouldDirty: true, shouldValidate: true })}
               className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />

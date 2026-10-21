@@ -1,10 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin } from '@/lib/auth';
 import { invalidateFaq } from '@/lib/cache';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { faqReorderBodySchema } from '@/lib/schemas/faq';
 
 /**
  * @swagger
@@ -54,17 +56,13 @@ export async function PATCH(req: NextRequest) {
     return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
-  let body: { order?: string[] };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, faqReorderBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { order } = body;
-  if (!Array.isArray(order) || order.some((id) => typeof id !== 'string')) {
-    return Errors.badRequest('order must be an array of category IDs');
-  }
 
   // Verify all provided IDs are real categories
   const existing = await prisma.faqCategory.findMany({ select: { id: true } });

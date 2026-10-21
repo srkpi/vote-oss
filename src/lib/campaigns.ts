@@ -31,9 +31,10 @@ import { generateElectionKeyPair } from '@/lib/crypto';
 import { safeDecrypt } from '@/lib/elections-view';
 import { encryptField } from '@/lib/encryption';
 import { prisma } from '@/lib/prisma';
+import { campaignCreateBodySchema, campaignDatesBodySchema } from '@/lib/schemas/campaign';
+import { validationMessage } from '@/lib/schemas/common';
 import type {
   CampaignBoundaryEditability,
-  CreateElectionCampaignRequest,
   ElectionCampaign,
   ElectionCampaignRestriction,
 } from '@/types/campaign';
@@ -185,10 +186,11 @@ export function validateCreateCampaignBody(
   body: unknown,
   now: Date = new Date(),
 ): { ok: true; data: ValidatedCreateCampaignBody } | { ok: false; error: string } {
-  if (!body || typeof body !== 'object') {
-    return { ok: false, error: 'Invalid body' };
+  const parsedBody = campaignCreateBodySchema.safeParse(body);
+  if (!parsedBody.success) {
+    return { ok: false, error: validationMessage(parsedBody.error) };
   }
-  const raw = body as Partial<CreateElectionCampaignRequest> & Record<string, unknown>;
+  const raw = parsedBody.data;
 
   const positionTitle = typeof raw.positionTitle === 'string' ? raw.positionTitle.trim() : '';
   if (!positionTitle) {
@@ -465,10 +467,11 @@ export function validateCampaignDatesUpdate(
   existing: CampaignBoundaryRow,
   now: Date = new Date(),
 ): { ok: true; data: ValidatedCampaignDatesUpdate } | { ok: false; error: string } {
-  if (!body || typeof body !== 'object') {
-    return { ok: false, error: 'Invalid body' };
+  const parsedBody = campaignDatesBodySchema.safeParse(body);
+  if (!parsedBody.success) {
+    return { ok: false, error: validationMessage(parsedBody.error) };
   }
-  const raw = body as Record<string, unknown>;
+  const raw = parsedBody.data;
 
   const announcedRes = parseTimestamp(raw.announcedAt, 'announcedAt');
   if (!announcedRes.ok) {

@@ -496,3 +496,7 @@ Global bypass tokens grant platform access to students who fail eligibility chec
 ## License
 
 This project is open source. See the [LICENSE](LICENSE) file for details.
+
+### Shared validation
+
+Request bodies, external API responses, and environment values are validated with Zod schemas in `src/lib/schemas/`. FAQ, petition creation, and admin join forms use React Hook Form with `@hookform/resolvers/zod` to share validation rules with the server.

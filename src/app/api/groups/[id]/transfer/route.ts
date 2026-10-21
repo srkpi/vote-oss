@@ -1,10 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { Errors } from '@/lib/errors';
 import { invalidateUserOwnedGroups } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupTransferBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
 /**
@@ -71,12 +73,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return Errors.badRequest('Invalid group id');
   }
 
-  let body: { newOwnerId?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupTransferBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { newOwnerId } = body;
   if (!newOwnerId || typeof newOwnerId !== 'string') {
