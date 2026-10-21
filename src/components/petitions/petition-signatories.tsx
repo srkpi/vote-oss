@@ -43,14 +43,14 @@ export function PetitionSignatories({
     }
     const results: Signatory[] = [];
     for (const ballot of initialData.ballots) {
-      const dec = decryptedMap.get(ballot.id);
-      if (dec?.valid && dec.voter) {
+      const decryptedBallot = decryptedMap.get(ballot.id);
+      if (decryptedBallot?.valid && decryptedBallot.voter) {
         results.push({
           ballotId: ballot.id,
-          userId: dec.voter.userId,
-          fullName: dec.voter.fullName,
+          userId: decryptedBallot.voter.userId,
+          fullName: decryptedBallot.voter.fullName,
           signedAt: ballot.createdAt,
-          hashValid: dec.hashValid,
+          hashValid: decryptedBallot.hashValid,
         });
       }
     }
