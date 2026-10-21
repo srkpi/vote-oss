@@ -9,7 +9,9 @@ export const buildGiniMetric: MetricBuilder = ({
   choiceCount,
   decryptionDone,
 }) => {
-  if (!decryptionDone || choiceCount < 2 || metrics.gini === null) return null;
+  if (!decryptionDone || choiceCount < 2 || metrics.gini === null) {
+    return null;
+  }
 
   const g = metrics.gini * 100;
   const n = choiceCount;

@@ -15,7 +15,9 @@ interface PageProps {
 }
 
 export default async function TeamAcceptPage({ params }: PageProps) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
   const { token } = await params;
@@ -26,7 +28,7 @@ export default async function TeamAcceptPage({ params }: PageProps) {
   const { data, error, status } = await serverApi.teamInvites.get(token);
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <TeamAcceptClient
         token={token}
         currentUserId={session.userId}

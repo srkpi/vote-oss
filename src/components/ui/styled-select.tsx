@@ -70,7 +70,9 @@ export function StyledSelect({
   const selectedOption = options.find((o) => o.value === value);
 
   function openDropdown() {
-    if (disabled || !triggerRef.current) return;
+    if (disabled || !triggerRef.current) {
+      return;
+    }
     setActiveIndex(options.findIndex((o) => o.value === value));
     // Initial position assumes downward; refined once dropdown mounts.
     setPosition(computePosition(triggerRef.current, 0));
@@ -84,7 +86,9 @@ export function StyledSelect({
   }
 
   function selectOption(option: StyledSelectOption) {
-    if (option.disabled) return;
+    if (option.disabled) {
+      return;
+    }
     onChange(option.value);
     closeDropdown();
     triggerRef.current?.focus();
@@ -94,15 +98,21 @@ export function StyledSelect({
   // can re-measure with its real height and decide whether to flip upward.
   const dropdownCallbackRef = (node: HTMLDivElement | null) => {
     dropdownRef.current = node;
-    if (!node || !triggerRef.current) return;
+    if (!node || !triggerRef.current) {
+      return;
+    }
     setPosition(computePosition(triggerRef.current, node.offsetHeight));
   };
 
   // Keep position synced while open
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const update = () => {
-      if (!triggerRef.current) return;
+      if (!triggerRef.current) {
+        return;
+      }
       const h = dropdownRef.current?.offsetHeight ?? 0;
       setPosition(computePosition(triggerRef.current, h));
     };
@@ -116,11 +126,17 @@ export function StyledSelect({
 
   // Close on outside pointer events
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     function handlePointerDown(e: PointerEvent) {
       const target = e.target as Node;
-      if (triggerRef.current?.contains(target)) return;
-      if (dropdownRef.current?.contains(target)) return;
+      if (triggerRef.current?.contains(target)) {
+        return;
+      }
+      if (dropdownRef.current?.contains(target)) {
+        return;
+      }
       closeDropdown();
     }
     document.addEventListener('pointerdown', handlePointerDown);
@@ -128,7 +144,9 @@ export function StyledSelect({
   }, [open]);
 
   useEffect(() => {
-    if (activeIndex < 0 || !listRef.current) return;
+    if (activeIndex < 0 || !listRef.current) {
+      return;
+    }
     const items = listRef.current.querySelectorAll<HTMLElement>('[role="option"]');
     items[activeIndex]?.scrollIntoView({ block: 'nearest' });
   }, [activeIndex]);
@@ -178,7 +196,7 @@ export function StyledSelect({
       className={cn(
         'z-50',
         'overflow-hidden rounded-lg',
-        'border-border-color bg-card border',
+        'border-border-color border bg-card',
         'shadow-lg',
         'animate-scale-in',
       )}
@@ -190,7 +208,7 @@ export function StyledSelect({
         className="max-h-60 overflow-y-auto overscroll-contain py-1"
       >
         {options.length === 0 ? (
-          <div className="font-body text-muted-foreground px-3 py-6 text-center text-sm">
+          <div className="font-body px-3 py-6 text-center text-sm text-muted-foreground">
             Немає варіантів
           </div>
         ) : (
@@ -209,7 +227,7 @@ export function StyledSelect({
                 className={cn(
                   'font-body flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm',
                   'transition-colors duration-75',
-                  isSelected ? 'text-kpi-navy font-medium' : 'text-foreground',
+                  isSelected ? 'font-medium text-kpi-navy' : 'text-foreground',
                   isActive && !isSelected ? 'bg-surface' : '',
                   isSelected ? 'bg-kpi-navy/5' : '',
                   isActive && isSelected ? 'bg-kpi-navy/10' : '',
@@ -218,7 +236,7 @@ export function StyledSelect({
               >
                 <Check
                   className={cn(
-                    'text-kpi-navy h-3.5 w-3.5 shrink-0',
+                    'h-3.5 w-3.5 shrink-0 text-kpi-navy',
                     isSelected ? 'opacity-100' : 'opacity-0',
                   )}
                 />
@@ -246,15 +264,15 @@ export function StyledSelect({
         onClick={() => (open ? closeDropdown() : openDropdown())}
         onKeyDown={handleKeyDown}
         className={cn(
-          'bg-card flex h-10 w-full items-center gap-2 rounded-(--radius)',
+          'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-card',
           'border-border-color border',
           'font-body px-3 text-left text-sm',
           'transition-colors duration-150',
-          !disabled && 'hover:border-kpi-blue-light cursor-pointer',
-          open && 'border-kpi-blue-light ring-kpi-blue-light/20 ring-2',
+          !disabled && 'cursor-pointer hover:border-kpi-blue-light',
+          open && 'border-kpi-blue-light ring-2 ring-kpi-blue-light/20',
           error && !open && 'border-error focus:border-error focus:ring-error/20',
-          disabled && 'bg-surface cursor-not-allowed opacity-50',
-          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+          disabled && 'cursor-not-allowed bg-surface opacity-50',
+          'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
         )}
       >
         <span className={cn('flex-1 truncate', !selectedOption && 'text-subtle')}>
@@ -262,7 +280,7 @@ export function StyledSelect({
         </span>
         <ChevronDown
           className={cn(
-            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-150',
+            'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150',
             open && (position?.upward ? '-rotate-180' : 'rotate-180'),
           )}
         />

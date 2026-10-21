@@ -24,7 +24,7 @@ export function Tabs<T extends string>({
   return (
     <div
       className={cn(
-        'no-scrollbar border-border-subtle bg-card overflow-x-auto rounded-lg border p-1 shadow-xs',
+        'no-scrollbar overflow-x-auto rounded-lg border border-border-subtle bg-card p-1 shadow-xs',
         className,
       )}
       style={{ WebkitOverflowScrolling: 'touch' }}

@@ -42,7 +42,7 @@ function IconButton({
         'flex h-6 w-6 items-center justify-center rounded-sm',
         'transition-colors focus:outline-none',
         disabled
-          ? 'text-subtle cursor-not-allowed'
+          ? 'cursor-not-allowed text-subtle'
           : cn(
               'cursor-pointer',
               accent
@@ -65,13 +65,17 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isEditing) setTimeout(() => inputRef.current?.focus(), 0);
+    if (isEditing) {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
   }, [isEditing]);
 
   // Dismiss on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose();
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onClose();
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -80,7 +84,9 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
   // Dismiss on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+      }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
@@ -91,7 +97,9 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
 
   const handleSave = () => {
     const url = input.trim();
-    if (!url) return;
+    if (!url) {
+      return;
+    }
     onSave(url.startsWith('http') ? url : `https://${url}`);
     setIsEditing(false);
   };
@@ -100,7 +108,7 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
     <div
       ref={panelRef}
       style={{ position: 'absolute', top, left, zIndex: 99999 }}
-      className="border-border-color bg-surface text-foreground flex items-center gap-2 rounded-(--radius) border px-3 py-2 text-sm whitespace-nowrap shadow-lg"
+      className="border-border-color flex items-center gap-2 rounded-(--radius) border bg-surface px-3 py-2 text-sm whitespace-nowrap text-foreground shadow-lg"
       onMouseDown={(e) => {
         // Prevent the editor from losing its selection when the user clicks
         // anywhere on the tooltip — EXCEPT on the input itself, which needs
@@ -124,7 +132,7 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
               }
             }}
             placeholder="https://example.com"
-            className="border-border-subtle bg-surface text-foreground placeholder:text-subtle focus:border-border-color w-56 rounded-sm border px-2 py-0.5 text-sm outline-none"
+            className="focus:border-border-color w-56 rounded-sm border border-border-subtle bg-surface px-2 py-0.5 text-sm text-foreground outline-none placeholder:text-subtle"
           />
           <IconButton onClick={handleSave} title="Save" accent disabled={!input.trim()}>
             <Check size={14} />
@@ -139,7 +147,7 @@ export function LinkTooltip({ anchorRect, href, onSave, onRemove, onClose }: Lin
             <ExternalLink size={13} className="-mt-0.5 mr-1 inline" />
             {href}
           </TextLink>
-          <span className="text-border-subtle mx-0.5 select-none">|</span>
+          <span className="mx-0.5 text-border-subtle select-none">|</span>
           <IconButton
             onClick={() => {
               setInput(href);

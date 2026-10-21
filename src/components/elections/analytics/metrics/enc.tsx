@@ -9,7 +9,9 @@ export const buildEncMetric: MetricBuilder = ({
   choiceCount,
   decryptionDone,
 }) => {
-  if (!decryptionDone || choiceCount < 2 || metrics.enc === null) return null;
+  if (!decryptionDone || choiceCount < 2 || metrics.enc === null) {
+    return null;
+  }
 
   const enc = metrics.enc;
   const n = choiceCount;

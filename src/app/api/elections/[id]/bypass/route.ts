@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -67,13 +68,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const election = await prisma.election.findUnique({
     where: { id: electionId, deleted_at: null },
     select: { id: true, created_by: true },
   });
-  if (!election) return Errors.notFound('Election not found');
+  if (!election) {
+    return Errors.notFound('Election not found');
+  }
 
   const adminGraph = await buildAdminGraph();
   if (!adminCanManageElectionBypass(auth.user.sub, election.created_by, adminGraph)) {
@@ -210,13 +215,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const election = await prisma.election.findUnique({
     where: { id: electionId, deleted_at: null },
     include: { restrictions: { select: { type: true, value: true } } },
   });
-  if (!election) return Errors.notFound('Election not found');
+  if (!election) {
+    return Errors.notFound('Election not found');
+  }
 
   if (election.restrictions.length === 0) {
     return Errors.badRequest(

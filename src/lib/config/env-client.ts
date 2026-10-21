@@ -1,5 +1,7 @@
 function requirePublicEnv(key: string, value: string | undefined): string {
-  if (!value?.trim()) throw new Error(`❌ Missing environment variable: ${key}`);
+  if (!value?.trim()) {
+    throw new Error(`❌ Missing environment variable: ${key}`);
+  }
   return value.trim();
 }
 

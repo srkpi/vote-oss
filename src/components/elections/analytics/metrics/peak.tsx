@@ -30,7 +30,9 @@ import type { MetricBuilder } from '@/types/metrics';
 const BURST_THRESHOLD_PCT = 35;
 
 export const buildPeakMetric: MetricBuilder = ({ metrics, totalBallots }) => {
-  if (totalBallots < 1 || metrics.peakHourConcentration === null) return null;
+  if (totalBallots < 1 || metrics.peakHourConcentration === null) {
+    return null;
+  }
 
   const pct = metrics.peakHourConcentration;
   const label = metrics.peakHourLabel ?? null;

@@ -48,7 +48,9 @@ export function VoteForm({ election }: VoteFormProps) {
   }
 
   const handleSubmit = async () => {
-    if (!canProceed) return;
+    if (!canProceed) {
+      return;
+    }
     setStep('submitting');
     setError(null);
 
@@ -146,7 +148,7 @@ export function VoteForm({ election }: VoteFormProps) {
 
       {step === 'select' && (
         <>
-          <p className="font-body text-muted-foreground text-sm">{selectionHint}</p>
+          <p className="font-body text-sm text-muted-foreground">{selectionHint}</p>
           <div className="ph-no-capture space-y-3">
             {election.choices.map((choice, index) => {
               const isSelected = selectedChoices.some((c) => c.id === choice.id);
@@ -179,7 +181,7 @@ export function VoteForm({ election }: VoteFormProps) {
             Продовжити
           </Button>
 
-          <p className="font-body text-muted-foreground text-center text-xs leading-relaxed">
+          <p className="font-body text-center text-xs leading-relaxed text-muted-foreground">
             Ваш голос зашифровано
             {election.anonymous ? ' та анонімізовано' : ' разом із вашим ПІБ та ідентифікатором'}.
             Після подання змінити вибір неможливо.
@@ -198,10 +200,10 @@ export function VoteForm({ election }: VoteFormProps) {
 
       {step === 'submitting' && (
         <div className="flex flex-col items-center gap-6 py-8">
-          <Loader2 className="text-kpi-navy h-16 w-16 animate-spin" />
+          <Loader2 className="h-16 w-16 animate-spin text-kpi-navy" />
           <div className="text-center">
-            <p className="font-display text-foreground text-lg font-semibold">Обробка голосу…</p>
-            <p className="font-body text-muted-foreground mt-1 text-sm">
+            <p className="font-display text-lg font-semibold text-foreground">Обробка голосу…</p>
+            <p className="font-body mt-1 text-sm text-muted-foreground">
               Шифруємо та записуємо ваш голос
             </p>
           </div>

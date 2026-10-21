@@ -25,13 +25,17 @@ export function Dialog({ open, onClose, children }: DialogProps) {
 
   React.useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) onClose();
+      if (e.key === 'Escape' && open) {
+        onClose();
+      }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   return (
     <div
@@ -68,7 +72,7 @@ export function DialogPanel({ className, maxWidth = 'md', children, ...props }: 
         'mx-auto flex w-full flex-col',
         maxWidths[maxWidth],
         'max-h-[calc(100dvh-2rem)]',
-        'bg-card rounded-xl',
+        'rounded-xl bg-card',
         'shadow-xl',
         'overflow-hidden',
         className,
@@ -101,7 +105,7 @@ export function DialogTitle({
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h2 className={cn('font-display text-foreground text-2xl font-semibold', className)} {...props}>
+    <h2 className={cn('font-display text-2xl font-semibold text-foreground', className)} {...props}>
       {children}
     </h2>
   );
@@ -113,7 +117,7 @@ export function DialogDescription({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('text-muted-foreground mt-1 text-sm', className)} {...props}>
+    <p className={cn('mt-1 text-sm text-muted-foreground', className)} {...props}>
       {children}
     </p>
   );
@@ -163,7 +167,7 @@ export function DialogCloseButton({ onClose }: DialogCloseButtonProps) {
         'text-muted-foreground',
         'hover:bg-surface hover:text-foreground',
         'transition-colors duration-150',
-        'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+        'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
       )}
       aria-label="Закрити"
     >

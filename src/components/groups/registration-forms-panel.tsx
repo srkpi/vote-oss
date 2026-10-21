@@ -61,8 +61,12 @@ type FormStatus = 'upcoming' | 'open' | 'closed';
 
 function computeStatus(opensAt: string, closesAt: string): FormStatus {
   const now = Date.now();
-  if (now < new Date(opensAt).getTime()) return 'upcoming';
-  if (now > new Date(closesAt).getTime()) return 'closed';
+  if (now < new Date(opensAt).getTime()) {
+    return 'upcoming';
+  }
+  if (now > new Date(closesAt).getTime()) {
+    return 'closed';
+  }
   return 'open';
 }
 
@@ -93,7 +97,9 @@ export function RegistrationFormsPanel({
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
     const result = await api.registrationForms.delete(deleteTarget.id);
     if (result.success) {
@@ -109,7 +115,9 @@ export function RegistrationFormsPanel({
   const upsertForm = (form: CandidateRegistrationFormAdminSummary) => {
     setForms((prev) => {
       const idx = prev.findIndex((f) => f.id === form.id);
-      if (idx === -1) return [form, ...prev];
+      if (idx === -1) {
+        return [form, ...prev];
+      }
       const next = [...prev];
       next[idx] = form;
       return next;
@@ -117,11 +125,11 @@ export function RegistrationFormsPanel({
   };
 
   return (
-    <div className="border-border-color shadow-card bg-card rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+    <div className="border-border-color rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <div className="flex items-center gap-2">
-          <ClipboardList className="text-kpi-gray-mid h-4 w-4" />
-          <h2 className="font-display text-foreground text-base font-semibold">
+          <ClipboardList className="h-4 w-4 text-kpi-gray-mid" />
+          <h2 className="font-display text-base font-semibold text-foreground">
             Реєстрація кандидатів
           </h2>
         </div>
@@ -136,11 +144,11 @@ export function RegistrationFormsPanel({
           <Alert variant="error">{initialLoadError}</Alert>
         </div>
       ) : forms.length === 0 ? (
-        <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+        <p className="font-body px-5 py-8 text-center text-sm text-muted-foreground">
           У цій групі ще немає форм реєстрації кандидатів
         </p>
       ) : (
-        <ul className="divide-border-subtle divide-y">
+        <ul className="divide-y divide-border-subtle">
           {pagedForms.map((form) => {
             const status = computeStatus(form.opensAt, form.closesAt);
             return (
@@ -148,12 +156,12 @@ export function RegistrationFormsPanel({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-body text-foreground text-sm font-semibold">
+                      <p className="font-body text-sm font-semibold text-foreground">
                         {form.title}
                       </p>
                       <StatusBadge status={status} size="sm" />
                     </div>
-                    <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       {form.requiresCampaignProgram && (
                         <span className="inline-flex items-center gap-1">
                           <FileText className="h-3 w-3" />
@@ -173,16 +181,16 @@ export function RegistrationFormsPanel({
                         </span>
                       )}
                     </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       <LocalDateTime date={form.opensAt} /> — <LocalDateTime date={form.closesAt} />
                     </p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      <span className="text-foreground font-semibold">{form.submittedCount}</span>{' '}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground">{form.submittedCount}</span>{' '}
                       {pluralize(form.submittedCount, ['заявка', 'заявки', 'заявок'], false)}
                       {form.pendingReviewCount > 0 && (
                         <>
                           , на розгляді —{' '}
-                          <span className="text-foreground font-semibold">
+                          <span className="font-semibold text-foreground">
                             {form.pendingReviewCount}
                           </span>
                         </>
@@ -223,7 +231,7 @@ export function RegistrationFormsPanel({
       )}
 
       {totalPages > 1 && (
-        <div className="border-border-subtle border-t px-5 py-3">
+        <div className="border-t border-border-subtle px-5 py-3">
           <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
         </div>
       )}
@@ -318,7 +326,9 @@ function RegistrationFormDialog({
   // in sync with "now" while the dialog is left open.
   const [renderNowMs, setRenderNowMs] = useState(() => Date.now());
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const id = setInterval(() => setRenderNowMs(Date.now()), 60_000);
     return () => clearInterval(id);
   }, [open]);
@@ -340,9 +350,11 @@ function RegistrationFormDialog({
           : 'not_started';
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     if (editTarget) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setTitle(editTarget.title);
       setDescription(editTarget.description ?? '');
       setRequiresCampaignProgram(editTarget.requiresCampaignProgram);
@@ -364,9 +376,11 @@ function RegistrationFormDialog({
 
   // Load faculty list once — skip entirely once restrictions are no longer editable.
   useEffect(() => {
-    if (!open || phase !== 'not_started') return;
+    if (!open || phase !== 'not_started') {
+      return;
+    }
     if (facultyOptions.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setFacultiesLoading(false);
       return;
     }
@@ -375,7 +389,9 @@ function RegistrationFormDialog({
         const list = Object.keys(res.data).sort((a, b) => {
           const aNN = a.startsWith('НН ');
           const bNN = b.startsWith('НН ');
-          if (aNN !== bNN) return aNN ? 1 : -1;
+          if (aNN !== bNN) {
+            return aNN ? 1 : -1;
+          }
           return a.localeCompare(b, 'uk');
         });
         setFacultyOptions(list);
@@ -385,7 +401,9 @@ function RegistrationFormDialog({
   }, [open, phase, facultyOptions.length]);
 
   const handleSubmit = async () => {
-    if (phase === 'closed') return;
+    if (phase === 'closed') {
+      return;
+    }
 
     if (phase === 'not_started') {
       // Both dates are free, but still have to be in the future.
@@ -566,7 +584,7 @@ function RegistrationFormDialog({
                     <span>Кандидат має додати посилання на передвиборчу програму</span>
                   </label>
                   <div>
-                    <label className="text-foreground mb-1 flex items-center gap-2 text-sm">
+                    <label className="mb-1 flex items-center gap-2 text-sm text-foreground">
                       <span>Розмір команди</span>
                       <Input
                         type="number"
@@ -585,7 +603,7 @@ function RegistrationFormDialog({
                         className="w-20"
                       />
                     </label>
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-xs text-muted-foreground">
                       Кількість співбалотників, яких має запросити кандидат (0–
                       {REGISTRATION_FORM_MAX_TEAM_SIZE}). Кожен отримує окреме посилання-запрошення.
                     </p>
@@ -595,18 +613,18 @@ function RegistrationFormDialog({
 
               <FormField label="Підрозділи (необов’язково)">
                 {facultiesLoading ? (
-                  <p className="text-muted-foreground text-xs">Завантажуємо список підрозділів…</p>
+                  <p className="text-xs text-muted-foreground">Завантажуємо список підрозділів…</p>
                 ) : (
                   <div className="border-border-color max-h-48 overflow-y-auto rounded-md border p-2">
                     {facultyOptions.length === 0 ? (
-                      <p className="text-muted-foreground p-2 text-xs">
+                      <p className="p-2 text-xs text-muted-foreground">
                         Не вдалося завантажити підрозділи
                       </p>
                     ) : (
                       facultyOptions.map((f) => (
                         <label
                           key={f}
-                          className="hover:bg-surface flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm"
+                          className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-surface"
                         >
                           <input
                             type="checkbox"
@@ -619,7 +637,7 @@ function RegistrationFormDialog({
                     )}
                   </div>
                 )}
-                <p className="text-muted-foreground mt-1 text-xs">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Якщо обрано хоча б один підрозділ — заявку зможуть подавати лише його студенти.
                 </p>
               </FormField>
@@ -684,7 +702,7 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
 
   useEffect(() => {
     if (!form) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setItems([]);
       setLoadError(null);
       setPage(1);
@@ -695,9 +713,14 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
     setLoadError(null);
     setPage(1);
     api.registrationForms.submissions(form.id).then((res) => {
-      if (cancelled) return;
-      if (res.success) setItems(res.data);
-      else setLoadError(res.error);
+      if (cancelled) {
+        return;
+      }
+      if (res.success) {
+        setItems(res.data);
+      } else {
+        setLoadError(res.error);
+      }
       setLoading(false);
     });
     return () => {
@@ -729,7 +752,9 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
   };
 
   const handleRejectConfirm = async () => {
-    if (!rejectTarget) return;
+    if (!rejectTarget) {
+      return;
+    }
     setRejecting(true);
     const result = await api.registrations.reject(rejectTarget.id, rejectReason.trim());
     setRejecting(false);
@@ -753,22 +778,22 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
           </DialogHeader>
           <DialogBody className="space-y-3">
             {loading ? (
-              <p className="text-muted-foreground text-sm">Завантажуємо…</p>
+              <p className="text-sm text-muted-foreground">Завантажуємо…</p>
             ) : loadError ? (
               <Alert variant="error">{loadError}</Alert>
             ) : items.length === 0 ? (
-              <p className="text-muted-foreground py-6 text-center text-sm">
+              <p className="py-6 text-center text-sm text-muted-foreground">
                 Поки що жодних поданих заявок
               </p>
             ) : (
               pagedItems.map((reg) => (
-                <div key={reg.id} className="border-border-subtle space-y-2 rounded-lg border p-3">
+                <div key={reg.id} className="space-y-2 rounded-lg border border-border-subtle p-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-body text-foreground text-sm font-semibold">
+                    <p className="font-body text-sm font-semibold text-foreground">
                       {reg.fullName}
                     </p>
                     {(reg.faculty || reg.group) && (
-                      <span className="text-muted-foreground text-xs">
+                      <span className="text-xs text-muted-foreground">
                         · {[reg.faculty, reg.group].filter(Boolean).join(' · ')}
                       </span>
                     )}
@@ -781,8 +806,8 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                       {REG_STATUS_LABEL[reg.status]}
                     </span>
                   </div>
-                  <p className="text-muted-foreground font-mono text-xs">{reg.userId}</p>
-                  <div className="text-foreground space-y-0.5 text-xs">
+                  <p className="font-mono text-xs text-muted-foreground">{reg.userId}</p>
+                  <div className="space-y-0.5 text-xs text-foreground">
                     <p>Тел.: {reg.phoneNumber}</p>
                     {reg.telegramTag && <p>Telegram: {reg.telegramTag}</p>}
                     {reg.campaignProgramUrl && (
@@ -792,12 +817,12 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
                     )}
                   </div>
                   {reg.submittedAt && (
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-xs text-muted-foreground">
                       Подано: <LocalDateTime date={reg.submittedAt} />
                     </p>
                   )}
                   {reg.status === 'REJECTED' && reg.rejectionReason && (
-                    <p className="text-error text-xs">Відхилено: {reg.rejectionReason}</p>
+                    <p className="text-xs text-error">Відхилено: {reg.rejectionReason}</p>
                   )}
                   {form && form.teamSize > 0 && (
                     <TeamSlotsPanel registrationId={reg.id} readOnly compact />
@@ -846,7 +871,7 @@ function SubmissionsDialog({ form, onClose }: SubmissionsDialogProps) {
             <DialogCloseButton onClose={() => setRejectTarget(null)} />
           </DialogHeader>
           <DialogBody className="space-y-3">
-            <p className="text-foreground text-sm">
+            <p className="text-sm text-foreground">
               Заявка кандидата <strong>{rejectTarget?.fullName}</strong>. Причину буде показано
               кандидату.
             </p>

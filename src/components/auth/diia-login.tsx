@@ -55,8 +55,12 @@ const TimerDisplay = memo(({ expiresAt, onExpire }: TimerDisplayProps) => {
 
       if (currentColorRef.current !== newColor) {
         currentColorRef.current = newColor;
-        if (barRef.current) barRef.current.style.backgroundColor = hexColor;
-        if (textRef.current) textRef.current.style.color = hexColor;
+        if (barRef.current) {
+          barRef.current.style.backgroundColor = hexColor;
+        }
+        if (textRef.current) {
+          textRef.current.style.color = hexColor;
+        }
       }
 
       if (textRef.current) {
@@ -85,13 +89,13 @@ const TimerDisplay = memo(({ expiresAt, onExpire }: TimerDisplayProps) => {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="font-body text-muted-foreground text-xs">Час дії</span>
+        <span className="font-body text-xs text-muted-foreground">Час дії</span>
         <span
           ref={textRef}
           className="font-body text-xs font-medium tabular-nums transition-colors duration-300"
         />
       </div>
-      <div className="bg-border-subtle h-1.5 w-full overflow-hidden rounded-full">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-border-subtle">
         <div
           ref={barRef}
           className="h-full w-full rounded-full transition-colors duration-300"
@@ -139,11 +143,15 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
     stopPoll();
     pollTimerRef.current = setInterval(async () => {
       const requestId = requestIdRef.current;
-      if (!requestId) return;
+      if (!requestId) {
+        return;
+      }
 
       try {
         const res = await api.auth.diiaCheck(requestId);
-        if (!res.success) return;
+        if (!res.success) {
+          return;
+        }
 
         if (res.data.status === 'success') {
           stopPoll();
@@ -160,7 +168,9 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
   };
 
   const startFlow = async () => {
-    if (startingRef.current) return;
+    if (startingRef.current) {
+      return;
+    }
     startingRef.current = true;
 
     stopPoll();
@@ -198,7 +208,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
   );
   useEffect(() => {
     if (shouldAutoStart && phase === 'idle') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       startAutoFlow();
     }
   }, [shouldAutoStart, phase]);
@@ -216,8 +226,8 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
           className,
         )}
       >
-        <div className="border-foreground h-5 w-5 animate-spin rounded-full border-2 border-t-transparent" />
-        <span className="text-muted-foreground text-sm">Завантаження…</span>
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+        <span className="text-sm text-muted-foreground">Завантаження…</span>
       </div>
     );
   }
@@ -225,7 +235,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
   if (phase === 'waiting' && initData) {
     return (
       <div className={cn('space-y-4', fullWidth && 'w-full', className)}>
-        <p className="text-muted-foreground text-center text-sm leading-relaxed">
+        <p className="text-center text-sm leading-relaxed text-muted-foreground">
           Відскануйте QR-код у застосунку Дія
         </p>
 
@@ -235,7 +245,7 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
           rel="noopener noreferrer"
           className={cn(
             'mx-auto block w-fit overflow-hidden rounded transition-colors',
-            'border-border hover:border-kpi-blue-light/50 border-2',
+            'border-2 border-border hover:border-kpi-blue-light/50',
             'lg:pointer-events-none lg:border-none lg:hover:border-none',
           )}
         >
@@ -252,22 +262,22 @@ export function DiiaLogin({ fullWidth = false, className }: DiiaLoginProps) {
       <div
         className={cn('flex flex-col items-center gap-3 py-4', fullWidth && 'w-full', className)}
       >
-        <div className="animate-scale-in bg-success-bg border-success/30 flex h-14 w-14 items-center justify-center rounded-full border">
-          <CheckIcon className="text-success h-7 w-7" />
+        <div className="animate-scale-in flex h-14 w-14 items-center justify-center rounded-full border border-success/30 bg-success-bg">
+          <CheckIcon className="h-7 w-7 text-success" />
         </div>
-        <p className="text-foreground font-semibold">Авторизація успішна!</p>
+        <p className="font-semibold text-foreground">Авторизація успішна!</p>
       </div>
     );
   }
 
   return (
     <div className={cn('space-y-3', fullWidth && 'w-full', className)}>
-      <div className="border-error/20 bg-error-bg text-error rounded-lg border p-3 text-center text-sm">
+      <div className="rounded-lg border border-error/20 bg-error-bg p-3 text-center text-sm text-error">
         {errorMsg ?? 'Щось пішло не так.'}
       </div>
       <button
         onClick={startFlow}
-        className="hover:bg-surface h-10 w-full rounded border text-sm font-medium"
+        className="h-10 w-full rounded border text-sm font-medium hover:bg-surface"
       >
         Спробувати знову
       </button>

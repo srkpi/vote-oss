@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -205,10 +206,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!validUntil) return Errors.badRequest('validUntil is required');
+  if (!validUntil) {
+    return Errors.badRequest('validUntil is required');
+  }
 
   const validUntilDate = new Date(validUntil);
-  if (isNaN(validUntilDate.getTime())) return Errors.badRequest('Invalid validUntil date');
+  if (isNaN(validUntilDate.getTime())) {
+    return Errors.badRequest('Invalid validUntil date');
+  }
 
   const now = new Date();
   const minDate = new Date(now.getTime() + BYPASS_TOKEN_MIN_HOURS * 60 * 60 * 1000);

@@ -116,7 +116,9 @@ export async function GET(req: NextRequest) {
   const avatarIds = new Set<string>();
   for (const a of admins) {
     avatarIds.add(a.userId);
-    if (a.promoter) avatarIds.add(a.promoter.userId);
+    if (a.promoter) {
+      avatarIds.add(a.promoter.userId);
+    }
   }
   const avatarMap = await getAvatarUrlMap([...avatarIds]);
 

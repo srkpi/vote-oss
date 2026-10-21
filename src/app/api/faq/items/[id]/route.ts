@@ -62,10 +62,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
+  if (!id) {
+    return Errors.badRequest('id is required');
+  }
 
   const existing = await prisma.faqItem.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ item not found');
+  if (!existing) {
+    return Errors.notFound('FAQ item not found');
+  }
 
   let body: { title?: string; content?: string };
   try {
@@ -167,10 +171,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
+  if (!id) {
+    return Errors.badRequest('id is required');
+  }
 
   const existing = await prisma.faqItem.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ item not found');
+  if (!existing) {
+    return Errors.notFound('FAQ item not found');
+  }
 
   await prisma.faqItem.delete({ where: { id } });
 

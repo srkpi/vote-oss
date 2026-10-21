@@ -58,17 +58,29 @@ interface ElectionsFilterProps {
 
 function countActiveFilters(state: ElectionsFilterState): number {
   let count = 0;
-  if (state.statuses.length > 0) count++;
-  if (state.voteStatus !== DEFAULT_FILTER_STATE.voteStatus) count++;
-  if (state.anonymous !== DEFAULT_FILTER_STATE.anonymous) count++;
-  if (state.faculties.length > 0) count++;
-  if (state.studyForms.length > 0) count++;
+  if (state.statuses.length > 0) {
+    count++;
+  }
+  if (state.voteStatus !== DEFAULT_FILTER_STATE.voteStatus) {
+    count++;
+  }
+  if (state.anonymous !== DEFAULT_FILTER_STATE.anonymous) {
+    count++;
+  }
+  if (state.faculties.length > 0) {
+    count++;
+  }
+  if (state.studyForms.length > 0) {
+    count++;
+  }
   return count;
 }
 
 function matchesFilters(election: Election, filters: ElectionsFilterState): boolean {
   // Statuses: multi-select OR — empty means show all
-  if (filters.statuses.length > 0 && !filters.statuses.includes(election.status)) return false;
+  if (filters.statuses.length > 0 && !filters.statuses.includes(election.status)) {
+    return false;
+  }
 
   // Vote status
   if (filters.voteStatus !== 'all') {
@@ -76,16 +88,24 @@ function matchesFilters(election: Election, filters: ElectionsFilterState): bool
     if (vs) {
       switch (filters.voteStatus) {
         case 'available':
-          if (vs !== 'can_vote' && vs !== 'voted') return false;
+          if (vs !== 'can_vote' && vs !== 'voted') {
+            return false;
+          }
           break;
         case 'voted':
-          if (vs !== 'voted') return false;
+          if (vs !== 'voted') {
+            return false;
+          }
           break;
         case 'not_voted':
-          if (vs !== 'can_vote') return false;
+          if (vs !== 'can_vote') {
+            return false;
+          }
           break;
         case 'cannot_vote':
-          if (vs !== 'cannot_vote') return false;
+          if (vs !== 'cannot_vote') {
+            return false;
+          }
           break;
       }
     }
@@ -94,8 +114,12 @@ function matchesFilters(election: Election, filters: ElectionsFilterState): bool
 
   // Anonymous
   if (filters.anonymous !== 'all') {
-    if (filters.anonymous === 'anonymous' && !election.anonymous) return false;
-    if (filters.anonymous === 'non_anonymous' && election.anonymous) return false;
+    if (filters.anonymous === 'anonymous' && !election.anonymous) {
+      return false;
+    }
+    if (filters.anonymous === 'non_anonymous' && election.anonymous) {
+      return false;
+    }
   }
 
   // Faculty (OR — election must have at least one matching faculty)
@@ -103,8 +127,12 @@ function matchesFilters(election: Election, filters: ElectionsFilterState): bool
     const electionFaculties = election.restrictions
       .filter((r) => r.type === 'FACULTY')
       .map((r) => r.value);
-    if (electionFaculties.length === 0) return false;
-    if (!filters.faculties.some((f) => electionFaculties.includes(f))) return false;
+    if (electionFaculties.length === 0) {
+      return false;
+    }
+    if (!filters.faculties.some((f) => electionFaculties.includes(f))) {
+      return false;
+    }
   }
 
   // Study form (OR)
@@ -112,15 +140,21 @@ function matchesFilters(election: Election, filters: ElectionsFilterState): bool
     const electionForms = election.restrictions
       .filter((r) => r.type === 'STUDY_FORM')
       .map((r) => r.value);
-    if (electionForms.length === 0) return false;
-    if (!filters.studyForms.some((sf) => electionForms.includes(sf))) return false;
+    if (electionForms.length === 0) {
+      return false;
+    }
+    if (!filters.studyForms.some((sf) => electionForms.includes(sf))) {
+      return false;
+    }
   }
 
   return true;
 }
 
 function matchesSearch(election: Election, query: string): boolean {
-  if (!query) return true;
+  if (!query) {
+    return true;
+  }
   const q = query.toLowerCase();
   return (
     election.title.toLowerCase().includes(q) ||
@@ -162,8 +196,10 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_ELECTIONS_VIEW_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (stored === 'list' || stored === 'grid') setViewMode(stored);
+      if (stored === 'list' || stored === 'grid') {
+        // oxlint-disable-next-line react/set-state-in-effect
+        setViewMode(stored);
+      }
     } catch {
       /* ignore */
     }
@@ -332,7 +368,7 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
 
         {/* Summary */}
         {hasDifferentFromDefault && filtered.length > 0 && (
-          <p className="font-body text-muted-foreground text-xs">
+          <p className="font-body text-xs text-muted-foreground">
             {search
               ? `Знайдено: ${pluralize(filtered.length, ['голосування', 'голосування', 'голосувань'])}`
               : `${pluralize(filtered.length, ['голосування', 'голосування', 'голосувань'])} з ${elections.length}`}
@@ -342,7 +378,7 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
 
       {/* ── Elections grid / list ───────────────────────────────────────────── */}
       {paged.length === 0 ? (
-        <div className="border-border-color bg-card rounded-xl border shadow-sm">
+        <div className="border-border-color rounded-xl border bg-card shadow-sm">
           <EmptyState
             icon={<FileText className="h-8 w-8" />}
             title={hasDifferentFromDefault ? 'Голосувань не знайдено' : 'Голосувань поки що немає'}
@@ -366,7 +402,7 @@ export function ElectionsFilter({ elections, meta }: ElectionsFilterProps) {
           ))}
         </div>
       ) : (
-        <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
           {paged.map((election, i) => (
             <ElectionListItem
               key={election.id}

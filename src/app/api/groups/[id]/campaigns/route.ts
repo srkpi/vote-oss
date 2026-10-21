@@ -46,16 +46,22 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const group = await prisma.group.findUnique({
     where: { id },
     select: { deleted_at: true },
   });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   const campaigns = await prisma.electionCampaign.findMany({
     where: { group_id: id, deleted_at: null },
@@ -121,17 +127,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   let group: { id: string; name: string };
   try {
     group = await requireVKSUGroupMember(id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 
@@ -143,7 +157,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const validation = validateCreateCampaignBody(body);
-  if (!validation.ok) return Errors.badRequest(validation.error);
+  if (!validation.ok) {
+    return Errors.badRequest(validation.error);
+  }
   const data = validation.data;
 
   const created = await prisma.electionCampaign.create({

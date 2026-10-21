@@ -59,13 +59,17 @@ export async function DELETE(
   }
 
   const { tokenHash, userId } = await params;
-  if (!tokenHash || !userId) return Errors.badRequest('tokenHash and userId are required');
+  if (!tokenHash || !userId) {
+    return Errors.badRequest('tokenHash and userId are required');
+  }
 
   const token = await prisma.electionBypassToken.findUnique({
     where: { token_hash: tokenHash },
   });
 
-  if (!token) return Errors.notFound('Election bypass token not found');
+  if (!token) {
+    return Errors.notFound('Election bypass token not found');
+  }
 
   if (token.created_by !== auth.user.sub && auth.admin.restricted_to_faculty) {
     return Errors.forbidden('Insufficient permissions to revoke this bypass usage');
@@ -75,8 +79,12 @@ export async function DELETE(
     where: { token_hash_user_id: { token_hash: tokenHash, user_id: userId } },
   });
 
-  if (!usage) return Errors.notFound('Bypass usage not found');
-  if (usage.revoked_at) return Errors.conflict('Bypass usage is already revoked');
+  if (!usage) {
+    return Errors.notFound('Bypass usage not found');
+  }
+  if (usage.revoked_at) {
+    return Errors.conflict('Bypass usage is already revoked');
+  }
 
   await prisma.electionBypassTokenUsage.update({
     where: { token_hash_user_id: { token_hash: tokenHash, user_id: userId } },

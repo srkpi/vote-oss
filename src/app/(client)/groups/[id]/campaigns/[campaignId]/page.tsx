@@ -20,10 +20,14 @@ interface Props {
 }
 
 export default async function CampaignDashboardPage({ params }: Props) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   const { id, campaignId } = await params;
 
@@ -32,15 +36,23 @@ export default async function CampaignDashboardPage({ params }: Props) {
     serverApi.campaigns.get(campaignId),
   ]);
 
-  if (!groupRes.success || !groupRes.data) notFound();
-  if (!campaignRes.success || !campaignRes.data) notFound();
-  if (campaignRes.data.groupId !== id) notFound();
+  if (!groupRes.success || !groupRes.data) {
+    notFound();
+  }
+  if (!campaignRes.success || !campaignRes.data) {
+    notFound();
+  }
+  if (campaignRes.data.groupId !== id) {
+    notFound();
+  }
 
   // Dashboard mirrors the panel's gate: VKSU-typed group + active member.
   const group = groupRes.data;
   const isActiveMember = group.members.some((m) => m.userId === session.userId);
   const canViewDashboard = group.type === 'VKSU' && isActiveMember;
-  if (!canViewDashboard) notFound();
+  if (!canViewDashboard) {
+    notFound();
+  }
 
   let registrationForm: CandidateRegistrationFormAdminSummary | null = null;
   if (campaignRes.data.registrationFormId) {
@@ -54,17 +66,21 @@ export default async function CampaignDashboardPage({ params }: Props) {
   let signatureElections: CampaignSignatureElectionSummary[] = [];
   if (campaignRes.data.signatureCollection) {
     const sigRes = await serverApi.campaigns.signatureElections(campaignId);
-    if (sigRes.success) signatureElections = sigRes.data;
+    if (sigRes.success) {
+      signatureElections = sigRes.data;
+    }
   }
 
   let finalElection: CampaignFinalElectionSummary | null = null;
   if (campaignRes.data.finalElectionId) {
     const finalRes = await serverApi.campaigns.finalElection(campaignId);
-    if (finalRes.success) finalElection = finalRes.data;
+    if (finalRes.success) {
+      finalElection = finalRes.data;
+    }
   }
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <CampaignDashboard
         group={group}
         campaign={campaignRes.data}

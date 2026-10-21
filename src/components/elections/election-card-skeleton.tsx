@@ -1,7 +1,7 @@
 export function ElectionCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
-      className="animate-fade-up border-border-color bg-card overflow-hidden rounded-xl border"
+      className="animate-fade-up border-border-color overflow-hidden rounded-xl border bg-card"
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
       <div className="skeleton h-1" />

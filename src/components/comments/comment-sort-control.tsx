@@ -44,9 +44,13 @@ export function CommentSortControl({
   const { label, Icon: CurrentIcon } = FIELD_OPTIONS.find((o) => o.value === sort)!;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     function onPointerDown(e: PointerEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     }
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
@@ -68,7 +72,7 @@ export function CommentSortControl({
         </Button>
 
         {open && (
-          <div className="border-border-color bg-card absolute top-full right-0 z-10 mt-1.5 min-w-44 overflow-hidden rounded-lg border py-1 shadow-sm">
+          <div className="border-border-color absolute top-full right-0 z-10 mt-1.5 min-w-44 overflow-hidden rounded-lg border bg-card py-1 shadow-sm">
             {FIELD_OPTIONS.map(({ value, label: optionLabel, Icon }) => {
               const selected = sort === value;
               return (
@@ -77,14 +81,16 @@ export function CommentSortControl({
                   type="button"
                   onClick={() => {
                     setOpen(false);
-                    if (selected) return;
+                    if (selected) {
+                      return;
+                    }
                     onChange(value, FIELD_DEFAULT_DIRECTION[value]);
                   }}
                   className={cn(
                     'font-body flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors',
                     selected
-                      ? 'text-kpi-navy font-semibold'
-                      : 'text-foreground hover:bg-surface font-medium',
+                      ? 'font-semibold text-kpi-navy'
+                      : 'font-medium text-foreground hover:bg-surface',
                   )}
                 >
                   <Icon

@@ -8,7 +8,9 @@ import { ToastProvider as ToastContextProvider, useToast } from '@/hooks/use-toa
 function ToastContainer() {
   const { toasts, dismiss } = useToast();
 
-  if (toasts.length === 0) return null;
+  if (toasts.length === 0) {
+    return null;
+  }
 
   return (
     <div

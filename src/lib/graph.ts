@@ -32,11 +32,15 @@ export function isAncestorInGraph(
   let currentId: string | null = targetUserId;
 
   while (currentId) {
-    if (visited.has(currentId)) break;
+    if (visited.has(currentId)) {
+      break;
+    }
     visited.add(currentId);
 
     const promotedBy: string | null = graph.get(currentId) ?? null;
-    if (promotedBy === ancestorId) return true;
+    if (promotedBy === ancestorId) {
+      return true;
+    }
     currentId = promotedBy;
   }
 

@@ -30,7 +30,7 @@ export function FaqAccordion({ categories, className }: FaqAccordionProps) {
     <div className={cn('space-y-10', className)}>
       {categories.map((category) => (
         <section key={category.id}>
-          <h2 className="font-display text-foreground mb-4 text-xl font-semibold wrap-break-word sm:text-2xl">
+          <h2 className="mb-4 font-display text-xl font-semibold wrap-break-word text-foreground sm:text-2xl">
             {category.title}
           </h2>
           <div className="space-y-2">
@@ -43,7 +43,7 @@ export function FaqAccordion({ categories, className }: FaqAccordionProps) {
               />
             ))}
             {category.items.length === 0 && (
-              <p className="font-body text-muted-foreground px-1 text-sm">
+              <p className="font-body px-1 text-sm text-muted-foreground">
                 Питань у цій категорії ще немає.
               </p>
             )}

@@ -74,18 +74,27 @@ export async function PUT(
   { params }: { params: Promise<{ id: string; commentId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId, commentId } = await params;
-  if (!isValidUuid(electionId) || !isValidUuid(commentId)) return Errors.badRequest('Invalid id');
+  if (!isValidUuid(electionId) || !isValidUuid(commentId)) {
+    return Errors.badRequest('Invalid id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
 
   const comment = await loadVotableComment(electionId, commentId);
-  if (!comment || comment.deleted_at) return Errors.notFound('Comment not found');
-  if (comment.user_id === auth.user.sub)
+  if (!comment || comment.deleted_at) {
+    return Errors.notFound('Comment not found');
+  }
+  if (comment.user_id === auth.user.sub) {
     return Errors.badRequest('You cannot vote on your own comment');
+  }
 
   let body: unknown;
   try {
@@ -155,7 +164,9 @@ export async function PUT(
   } catch (err) {
     // Concurrent duplicate request for the same user/comment (e.g. a
     // double-click) — safe to ignore, fall through and report current state.
-    if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) throw err;
+    if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) {
+      throw err;
+    }
   }
 
   const fresh = await prisma.comment.findUniqueOrThrow({
@@ -209,22 +220,32 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; commentId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId, commentId } = await params;
-  if (!isValidUuid(electionId) || !isValidUuid(commentId)) return Errors.badRequest('Invalid id');
+  if (!isValidUuid(electionId) || !isValidUuid(commentId)) {
+    return Errors.badRequest('Invalid id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
 
   const comment = await loadVotableComment(electionId, commentId);
-  if (!comment || comment.deleted_at) return Errors.notFound('Comment not found');
+  if (!comment || comment.deleted_at) {
+    return Errors.notFound('Comment not found');
+  }
 
   const deletedVote = await prisma.$transaction(async (tx) => {
     const existingVote = await tx.commentVote.findUnique({
       where: { comment_id_user_id: { comment_id: commentId, user_id: auth.user.sub } },
     });
-    if (!existingVote) return null;
+    if (!existingVote) {
+      return null;
+    }
 
     await tx.commentVote.delete({ where: { id: existingVote.id } });
     await tx.comment.update({
@@ -237,7 +258,9 @@ export async function DELETE(
     return existingVote;
   });
 
-  if (!deletedVote) return Errors.notFound('You have not voted on this comment');
+  if (!deletedVote) {
+    return Errors.notFound('You have not voted on this comment');
+  }
 
   const fresh = await prisma.comment.findUniqueOrThrow({
     where: { id: commentId },

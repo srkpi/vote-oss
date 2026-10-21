@@ -69,7 +69,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
   const handleCreateCategory = async () => {
     const title = newCatTitle.trim();
-    if (!title) return;
+    if (!title) {
+      return;
+    }
 
     setAddingCatLoading(true);
     const { data, error } = await api.faq.categories.create(title);
@@ -93,9 +95,13 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   };
 
   const handleRenameCategory = async () => {
-    if (!renameCat) return;
+    if (!renameCat) {
+      return;
+    }
     const title = renameCatTitle.trim();
-    if (!title) return;
+    if (!title) {
+      return;
+    }
 
     setRenameCatLoading(true);
     const { error } = await api.faq.categories.update(renameCat.id, title);
@@ -113,7 +119,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   };
 
   const handleDeleteCategory = async () => {
-    if (!deleteCat) return;
+    if (!deleteCat) {
+      return;
+    }
 
     setDeleteCatLoading(true);
     const { error } = await api.faq.categories.delete(deleteCat.id);
@@ -137,11 +145,15 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
     setCategories(next);
     const { error } = await api.faq.categories.reorder(next.map((c) => c.id));
-    if (error !== null) setCategories(categories);
+    if (error !== null) {
+      setCategories(categories);
+    }
   };
 
   const moveCategoryTo = async (fromIndex: number, toIndex: number) => {
-    if (fromIndex === toIndex) return;
+    if (fromIndex === toIndex) {
+      return;
+    }
 
     const next = [...categories];
     const [moved] = next.splice(fromIndex, 1);
@@ -150,7 +162,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     const snapshot = categories;
     setCategories(next);
     const { error } = await api.faq.categories.reorder(next.map((c) => c.id));
-    if (error !== null) setCategories(snapshot);
+    if (error !== null) {
+      setCategories(snapshot);
+    }
   };
 
   const handleCatDragStart = (index: number) => {
@@ -175,8 +189,12 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
     // Always insert before the hovered card — one unambiguous drop position per card
     let target = toIndex;
-    if (catDragIndex < target) target -= 1;
-    if (target !== catDragIndex) moveCategoryTo(catDragIndex, target);
+    if (catDragIndex < target) {
+      target -= 1;
+    }
+    if (target !== catDragIndex) {
+      moveCategoryTo(catDragIndex, target);
+    }
     handleCatDragEnd();
   };
 
@@ -219,7 +237,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   };
 
   const handleDeleteItem = async () => {
-    if (!deleteItem) return;
+    if (!deleteItem) {
+      return;
+    }
 
     setDeleteItemLoading(true);
     const { error } = await api.faq.items.delete(deleteItem.item.id);
@@ -244,7 +264,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
   const moveItem = async (categoryId: string, index: number, direction: 'up' | 'down') => {
     const cat = categories.find((c) => c.id === categoryId);
-    if (!cat) return;
+    if (!cat) {
+      return;
+    }
 
     const next = [...cat.items];
     const swapWith = direction === 'up' ? index - 1 : index + 1;
@@ -255,13 +277,17 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       categoryId,
       next.map((i) => i.id),
     );
-    if (error !== null) setCategories(categories);
+    if (error !== null) {
+      setCategories(categories);
+    }
   };
 
   /** Arbitrary reorder (drag) */
   const moveItemTo = async (categoryId: string, fromIndex: number, toIndex: number) => {
     const cat = categories.find((c) => c.id === categoryId);
-    if (!cat || fromIndex === toIndex) return;
+    if (!cat || fromIndex === toIndex) {
+      return;
+    }
 
     const next = [...cat.items];
     const [moved] = next.splice(fromIndex, 1);
@@ -273,7 +299,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       categoryId,
       next.map((i) => i.id),
     );
-    if (error !== null) setCategories(snapshot);
+    if (error !== null) {
+      setCategories(snapshot);
+    }
   };
 
   const toggleCollapse = (id: string) =>
@@ -317,8 +345,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       ))}
 
       {addingCat ? (
-        <div className="border-border-color shadow-card bg-card rounded-xl border p-4 sm:p-5">
-          <p className="font-body text-foreground mb-3 text-sm font-semibold">Нова категорія</p>
+        <div className="border-border-color rounded-xl border bg-card p-4 shadow-card sm:p-5">
+          <p className="font-body mb-3 text-sm font-semibold text-foreground">Нова категорія</p>
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-1">
               <Input
@@ -328,7 +356,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
                 error={newCatTitle.length > FAQ_CATEGORY_TITLE_MAX_LENGTH}
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateCategory();
+                  if (e.key === 'Enter') {
+                    handleCreateCategory();
+                  }
                   if (e.key === 'Escape') {
                     setAddingCat(false);
                     setNewCatTitle('');
@@ -353,7 +383,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
                 setAddingCat(false);
                 setNewCatTitle('');
               }}
-              className="text-muted-foreground hover:text-foreground flex h-10 w-9 items-center justify-center rounded-(--radius) transition-colors"
+              className="flex h-10 w-9 items-center justify-center rounded-(--radius) text-muted-foreground transition-colors hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>

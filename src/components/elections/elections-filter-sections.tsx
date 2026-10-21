@@ -148,7 +148,9 @@ export function buildElectionsFilterSections({
 
 export function electionsFilterSectionSummary(section: ElectionsFilterSection): string {
   if (section.kind === 'multi') {
-    if (section.value.length === 0) return section.placeholder;
+    if (section.value.length === 0) {
+      return section.placeholder;
+    }
     return section.options
       .filter((o) => section.value.includes(o.value))
       .map((o) => o.label)
@@ -158,7 +160,9 @@ export function electionsFilterSectionSummary(section: ElectionsFilterSection): 
 }
 
 export function electionsFilterSectionIsActive(section: ElectionsFilterSection): boolean {
-  if (section.kind === 'multi') return section.value.length > 0;
+  if (section.kind === 'multi') {
+    return section.value.length > 0;
+  }
   return section.value !== section.options[0]?.value;
 }
 
@@ -166,7 +170,9 @@ export function electionsFilterSectionBadge(section: ElectionsFilterSection): nu
   if (section.kind === 'multi') {
     return section.value.length > 0 ? section.value.length : null;
   }
-  if (section.value === section.options[0]?.value) return null;
+  if (section.value === section.options[0]?.value) {
+    return null;
+  }
   return section.options.find((o) => o.value === section.value)?.count ?? null;
 }
 

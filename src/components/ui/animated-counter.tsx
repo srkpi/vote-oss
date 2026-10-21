@@ -27,10 +27,12 @@ export function AnimatedCounter({
 
   useEffect(() => {
     const node = containerRef.current;
-    if (!node) return;
+    if (!node) {
+      return;
+    }
 
     if (target === 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setValue(0);
       return;
     }
@@ -38,7 +40,9 @@ export function AnimatedCounter({
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const start = () => {
-      if (hasAnimated.current) return;
+      if (hasAnimated.current) {
+        return;
+      }
       hasAnimated.current = true;
 
       if (prefersReducedMotion) {
@@ -65,7 +69,9 @@ export function AnimatedCounter({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting || !enabled) return;
+        if (!entry.isIntersecting || !enabled) {
+          return;
+        }
         start();
       },
       { threshold: 0.25 },
@@ -75,8 +81,12 @@ export function AnimatedCounter({
 
     return () => {
       observer.disconnect();
-      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
   }, [target, delay, duration, enabled]);
 

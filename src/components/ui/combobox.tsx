@@ -47,7 +47,9 @@ export function Combobox({
   const filtered = options.filter((opt) => opt.toLowerCase().includes(search.toLowerCase()));
 
   const dropdownCallbackRef = (node: HTMLDivElement | null) => {
-    if (!node || !containerRef.current) return;
+    if (!node || !containerRef.current) {
+      return;
+    }
 
     const triggerRect = containerRef.current.getBoundingClientRect();
     const dropdownHeight = node.offsetHeight;
@@ -58,7 +60,9 @@ export function Combobox({
   };
 
   function openDropdown() {
-    if (disabled) return;
+    if (disabled) {
+      return;
+    }
     setOpen(true);
     setActiveIndex(-1);
   }
@@ -102,7 +106,9 @@ export function Combobox({
 
   // Scroll active option into view
   useEffect(() => {
-    if (activeIndex < 0 || !listRef.current) return;
+    if (activeIndex < 0 || !listRef.current) {
+      return;
+    }
     const items = listRef.current.querySelectorAll<HTMLElement>('[role="option"]');
     items[activeIndex]?.scrollIntoView({ block: 'nearest' });
   }, [activeIndex]);
@@ -156,15 +162,15 @@ export function Combobox({
         onClick={() => (open ? closeDropdown() : openDropdown())}
         onKeyDown={handleTriggerKeyDown}
         className={cn(
-          'bg-card flex h-10 w-full items-center gap-2 rounded-(--radius)',
+          'flex h-10 w-full items-center gap-2 rounded-(--radius) bg-card',
           'border-border-color border',
           'font-body px-3 text-left text-sm',
           'transition-colors duration-150',
-          !disabled && 'hover:border-kpi-blue-light cursor-pointer',
-          open && 'border-kpi-blue-light ring-kpi-blue-light/20 ring-2',
+          !disabled && 'cursor-pointer hover:border-kpi-blue-light',
+          open && 'border-kpi-blue-light ring-2 ring-kpi-blue-light/20',
           error && !open && 'border-error focus:border-error focus:ring-error/20',
-          disabled && 'bg-surface cursor-not-allowed opacity-50',
-          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+          disabled && 'cursor-not-allowed bg-surface opacity-50',
+          'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
         )}
       >
         <span className={cn('flex-1 truncate', !value && 'text-subtle')}>
@@ -178,12 +184,14 @@ export function Combobox({
             aria-label="Скинути"
             onClick={clearValue}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') clearValue(e as unknown as React.MouseEvent);
+              if (e.key === 'Enter' || e.key === ' ') {
+                clearValue(e as unknown as React.MouseEvent);
+              }
             }}
             className={cn(
               'flex h-5 w-5 shrink-0 items-center justify-center rounded',
               'text-muted-foreground hover:text-foreground',
-              'hover:bg-surface transition-colors',
+              'transition-colors hover:bg-surface',
             )}
           >
             <X className="h-3 w-3" />
@@ -191,7 +199,7 @@ export function Combobox({
         )}
         <ChevronDown
           className={cn(
-            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-150',
+            'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150',
             open && (openUpward ? '-rotate-180' : 'rotate-180'),
           )}
         />
@@ -203,15 +211,15 @@ export function Combobox({
           className={cn(
             'absolute z-50 w-full min-w-50',
             'overflow-hidden rounded-lg',
-            'border-border-color bg-card border',
+            'border-border-color border bg-card',
             'shadow-lg',
             'animate-scale-in',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
-          <div className="border-border-subtle border-b p-2">
+          <div className="border-b border-border-subtle p-2">
             <div className="relative">
-              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 ref={searchRef}
                 value={search}
@@ -222,8 +230,8 @@ export function Combobox({
                 onKeyDown={handleSearchKeyDown}
                 placeholder={searchPlaceholder}
                 className={cn(
-                  'bg-surface h-8 w-full rounded-sm',
-                  'font-body text-foreground pr-3 pl-8 text-sm',
+                  'h-8 w-full rounded-sm bg-surface',
+                  'font-body pr-3 pl-8 text-sm text-foreground',
                   'placeholder:text-subtle',
                   'border border-transparent',
                   'focus:border-kpi-blue-light focus:outline-none',
@@ -236,7 +244,7 @@ export function Combobox({
                   type="button"
                   tabIndex={-1}
                   onClick={() => setSearch('')}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                  className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -250,7 +258,7 @@ export function Combobox({
             className="max-h-60 overflow-y-auto overscroll-contain py-1"
           >
             {filtered.length === 0 ? (
-              <div className="font-body text-muted-foreground px-3 py-6 text-center text-sm">
+              <div className="font-body px-3 py-6 text-center text-sm text-muted-foreground">
                 {emptyText}
               </div>
             ) : (
@@ -268,7 +276,7 @@ export function Combobox({
                     className={cn(
                       'font-body flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm',
                       'transition-colors duration-75',
-                      isSelected ? 'text-kpi-navy font-medium' : 'text-foreground',
+                      isSelected ? 'font-medium text-kpi-navy' : 'text-foreground',
                       isActive && !isSelected ? 'bg-surface' : '',
                       isSelected ? 'bg-kpi-navy/5' : '',
                       isActive && isSelected ? 'bg-kpi-navy/10' : '',
@@ -276,7 +284,7 @@ export function Combobox({
                   >
                     <Check
                       className={cn(
-                        'text-kpi-navy h-3.5 w-3.5 shrink-0',
+                        'h-3.5 w-3.5 shrink-0 text-kpi-navy',
                         isSelected ? 'opacity-100' : 'opacity-0',
                       )}
                     />

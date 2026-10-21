@@ -50,9 +50,9 @@ export function ToggleField({
       </div>
 
       <div>
-        <p className="font-body text-foreground text-sm font-medium">{label}</p>
+        <p className="font-body text-sm font-medium text-foreground">{label}</p>
         {description && (
-          <p className="font-body text-muted-foreground mt-0.5 text-xs">{description}</p>
+          <p className="font-body mt-0.5 text-xs text-muted-foreground">{description}</p>
         )}
       </div>
     </label>

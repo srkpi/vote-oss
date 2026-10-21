@@ -10,30 +10,30 @@ export function PetitionSupportBanner({ ballotCount, quorum }: PetitionSupportBa
   const reached = progress >= 100;
 
   return (
-    <div className="border-border-color shadow-card bg-card rounded-xl border p-6">
+    <div className="border-border-color rounded-xl border bg-card p-6 shadow-card">
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="font-body flex items-center gap-2 text-sm font-semibold">
-          <Users className="text-muted-foreground h-4 w-4" />
+          <Users className="h-4 w-4 text-muted-foreground" />
           Підтримка петиції
         </h2>
         <span
-          className={reached ? 'text-success text-sm font-bold' : 'text-kpi-navy text-sm font-bold'}
+          className={reached ? 'text-sm font-bold text-success' : 'text-sm font-bold text-kpi-navy'}
         >
           {progress}%
         </span>
       </div>
-      <div className="bg-border-subtle mb-2.5 h-2.5 overflow-hidden rounded-full">
+      <div className="mb-2.5 h-2.5 overflow-hidden rounded-full bg-border-subtle">
         <div
           className={`h-full rounded-full transition-all duration-700 ease-out ${
             reached
-              ? 'from-success bg-linear-to-r to-emerald-400'
-              : 'from-kpi-orange to-kpi-orange-dark bg-linear-to-r'
+              ? 'bg-linear-to-r from-success to-emerald-400'
+              : 'bg-linear-to-r from-kpi-orange to-kpi-orange-dark'
           }`}
           style={{ width: `${progress}%` }}
         />
       </div>
-      <p className="text-muted-foreground text-sm">
-        <span className="text-foreground font-semibold">{ballotCount}</span> з {quorum} підписів
+      <p className="text-sm text-muted-foreground">
+        <span className="font-semibold text-foreground">{ballotCount}</span> з {quorum} підписів
       </p>
     </div>
   );

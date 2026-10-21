@@ -17,30 +17,30 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-button',
-        primary: 'bg-kpi-navy text-white hover:bg-kpi-navy-hover shadow-button',
-        accent: 'bg-kpi-orange text-white hover:bg-kpi-orange-dark shadow-button-accent',
+        default: 'bg-kpi-navy text-white shadow-button hover:bg-kpi-navy-hover',
+        primary: 'bg-kpi-navy text-white shadow-button hover:bg-kpi-navy-hover',
+        accent: 'bg-kpi-orange text-white shadow-button-accent hover:bg-kpi-orange-dark',
         secondary:
-          'bg-surface text-foreground border-border-color hover:bg-surface-hover hover:border-kpi-blue-light/40',
-        ghost: 'bg-transparent text-foreground hover:bg-surface border-transparent',
+          'border-border-color bg-surface text-foreground hover:border-kpi-blue-light/40 hover:bg-surface-hover',
+        ghost: 'border-transparent bg-transparent text-foreground hover:bg-surface',
         outline:
-          'bg-transparent text-foreground border-border-color hover:bg-surface hover:border-kpi-blue-light/50',
+          'border-border-color bg-transparent text-foreground hover:border-kpi-blue-light/50 hover:bg-surface',
         danger:
-          'bg-error-bg text-error border-error/20 hover:bg-error hover:text-white hover:border-error',
-        destructive: 'bg-error text-white hover:bg-error/90 shadow-sm',
-        link: 'bg-transparent text-kpi-navy underline-offset-4 underline hover:no-underline border-transparent p-0 h-auto',
+          'border-error/20 bg-error-bg text-error hover:border-error hover:bg-error hover:text-white',
+        destructive: 'bg-error text-white shadow-sm hover:bg-error/90',
+        link: 'h-auto border-transparent bg-transparent p-0 text-kpi-navy underline underline-offset-4 hover:no-underline',
       },
       size: {
-        xs: 'h-6 px-2 text-xs rounded-md gap-1 [&_svg]:w-3 [&_svg]:h-3',
-        sm: 'h-8 px-3 text-sm rounded-(--radius) gap-1.5 [&_svg]:w-3.5 [&_svg]:h-3.5',
-        md: 'h-9 px-4 text-sm rounded-(--radius) gap-2 [&_svg]:w-4 [&_svg]:h-4',
-        default: 'h-9 px-4 text-sm rounded-(--radius) gap-2 [&_svg]:w-4 [&_svg]:h-4',
-        lg: 'h-10 px-5 text-sm rounded-lg gap-2 [&_svg]:w-4 [&_svg]:h-4',
-        xl: 'h-12 px-6 text-base rounded-lg gap-2.5 [&_svg]:w-5 [&_svg]:h-5',
-        icon: 'h-9 w-9 rounded-(--radius) p-0 [&_svg]:w-4 [&_svg]:h-4',
-        'icon-xs': 'h-6 w-6 rounded-md p-0 [&_svg]:w-3 [&_svg]:h-3',
-        'icon-sm': 'h-8 w-8 rounded-(--radius) p-0 [&_svg]:w-3.5 [&_svg]:h-3.5',
-        'icon-lg': 'h-10 w-10 rounded-lg p-0 [&_svg]:w-5 [&_svg]:h-5',
+        xs: 'h-6 gap-1 rounded-md px-2 text-xs [&_svg]:h-3 [&_svg]:w-3',
+        sm: 'h-8 gap-1.5 rounded-(--radius) px-3 text-sm [&_svg]:h-3.5 [&_svg]:w-3.5',
+        md: 'h-9 gap-2 rounded-(--radius) px-4 text-sm [&_svg]:h-4 [&_svg]:w-4',
+        default: 'h-9 gap-2 rounded-(--radius) px-4 text-sm [&_svg]:h-4 [&_svg]:w-4',
+        lg: 'h-10 gap-2 rounded-lg px-5 text-sm [&_svg]:h-4 [&_svg]:w-4',
+        xl: 'h-12 gap-2.5 rounded-lg px-6 text-base [&_svg]:h-5 [&_svg]:w-5',
+        icon: 'h-9 w-9 rounded-(--radius) p-0 [&_svg]:h-4 [&_svg]:w-4',
+        'icon-xs': 'h-6 w-6 rounded-md p-0 [&_svg]:h-3 [&_svg]:w-3',
+        'icon-sm': 'h-8 w-8 rounded-(--radius) p-0 [&_svg]:h-3.5 [&_svg]:w-3.5',
+        'icon-lg': 'h-10 w-10 rounded-lg p-0 [&_svg]:h-5 [&_svg]:w-5',
       },
     },
     defaultVariants: {
@@ -62,7 +62,16 @@ export type ButtonVariant =
   | 'link';
 
 export type ButtonSize =
-  'xs' | 'sm' | 'md' | 'default' | 'lg' | 'xl' | 'icon' | 'icon-xs' | 'icon-sm' | 'icon-lg';
+  | 'xs'
+  | 'sm'
+  | 'md'
+  | 'default'
+  | 'lg'
+  | 'xl'
+  | 'icon'
+  | 'icon-xs'
+  | 'icon-sm'
+  | 'icon-lg';
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {

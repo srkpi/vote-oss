@@ -65,10 +65,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const { id: categoryId } = await params;
-  if (!categoryId) return Errors.badRequest('categoryId is required');
+  if (!categoryId) {
+    return Errors.badRequest('categoryId is required');
+  }
 
   const category = await prisma.faqCategory.findUnique({ where: { id: categoryId } });
-  if (!category) return Errors.notFound('FAQ category not found');
+  if (!category) {
+    return Errors.notFound('FAQ category not found');
+  }
 
   let body: { order?: string[] };
   try {

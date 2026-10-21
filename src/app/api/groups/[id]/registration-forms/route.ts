@@ -66,16 +66,24 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   try {
     await requireVKSUGroupMember(id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 
@@ -95,7 +103,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   for (const row of counts) {
     const entry = countsByForm.get(row.form_id) ?? { submitted: 0, pending: 0 };
     entry.submitted += row._count._all;
-    if (row.status === 'PENDING_REVIEW') entry.pending += row._count._all;
+    if (row.status === 'PENDING_REVIEW') {
+      entry.pending += row._count._all;
+    }
     countsByForm.set(row.form_id, entry);
   }
 
@@ -170,16 +180,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   try {
     await requireVKSUGroupMember(id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 
@@ -191,7 +209,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const validation = validateCreateFormBody(body);
-  if (!validation.ok) return Errors.badRequest(validation.error);
+  if (!validation.ok) {
+    return Errors.badRequest(validation.error);
+  }
   const { title, description, requiresCampaignProgram, teamSize, opensAt, closesAt, restrictions } =
     validation.data;
 

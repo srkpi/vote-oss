@@ -126,12 +126,16 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
 
   const handleSaveDraft = async () => {
     const saved = await saveDraft();
-    if (saved) toast({ title: 'Чернетку збережено', variant: 'success' });
+    if (saved) {
+      toast({ title: 'Чернетку збережено', variant: 'success' });
+    }
   };
 
   const handleSubmit = async () => {
     const saved = await saveDraft();
-    if (!saved) return;
+    if (!saved) {
+      return;
+    }
 
     setSubmitting(true);
     const result = await api.registrations.submit(saved.id);
@@ -151,7 +155,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
   };
 
   const handleWithdraw = async () => {
-    if (!registration) return;
+    if (!registration) {
+      return;
+    }
     setWithdrawing(true);
     const wasDraft = registration.status === 'DRAFT';
     const result = await api.registrations.withdraw(registration.id);
@@ -176,14 +182,14 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         isContainer
       />
       <div className="container max-w-2xl py-8">
-        <div className="border-border-color shadow-card bg-card mb-6 space-y-3 rounded-xl border p-5">
+        <div className="border-border-color mb-6 space-y-3 rounded-xl border bg-card p-5 shadow-card">
           {form.description && (
-            <p className="text-foreground text-sm whitespace-pre-line">{form.description}</p>
+            <p className="text-sm whitespace-pre-line text-foreground">{form.description}</p>
           )}
-          <p className="text-muted-foreground text-xs">
-            Орган: <span className="text-foreground font-medium">{form.groupName}</span>
+          <p className="text-xs text-muted-foreground">
+            Орган: <span className="font-medium text-foreground">{form.groupName}</span>
           </p>
-          <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {form.requiresCampaignProgram && (
               <span className="inline-flex items-center gap-1">
                 <FileText className="h-3 w-3" />
@@ -228,14 +234,14 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {status && (
-          <div className="border-border-color shadow-card bg-card mb-6 rounded-xl border p-5">
+          <div className="border-border-color mb-6 rounded-xl border bg-card p-5 shadow-card">
             <div className="flex items-center gap-2">
               {status === 'APPROVED' ? (
-                <CheckCircle2 className="text-success h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
               ) : status === 'REJECTED' || status === 'WITHDRAWN' ? (
-                <XCircle className="text-muted-foreground h-4 w-4" />
+                <XCircle className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <Clock className="text-kpi-navy h-4 w-4" />
+                <Clock className="h-4 w-4 text-kpi-navy" />
               )}
               <span
                 className={cn(
@@ -246,13 +252,13 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
                 {STATUS_LABEL[status]}
               </span>
               {registration?.submittedAt && (
-                <span className="text-muted-foreground text-xs">
+                <span className="text-xs text-muted-foreground">
                   Подано: <LocalDateTime date={registration.submittedAt} />
                 </span>
               )}
             </div>
             {status === 'AWAITING_TEAM' && (
-              <p className="text-muted-foreground mt-2 text-sm">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Згенеруйте посилання нижче і надішліть їх членам команди. Коли учасник перейде за
                 посиланням і прийме запрошення — підтвердьте або відхиліть його у себе. Щойно ви
                 підтвердите всіх — заявка автоматично піде на розгляд.
@@ -260,16 +266,16 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             )}
             {status === 'REJECTED' && registration?.rejectionReason && (
               <div className="mt-3">
-                <p className="text-muted-foreground text-xs font-semibold uppercase">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
                   Причина відхилення
                 </p>
-                <p className="text-foreground mt-1 text-sm whitespace-pre-line">
+                <p className="mt-1 text-sm whitespace-pre-line text-foreground">
                   {registration.rejectionReason}
                 </p>
               </div>
             )}
             {registration?.reviewedByFullName && (
-              <p className="text-muted-foreground mt-2 text-xs">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Розглянув: {registration.reviewedByFullName}
                 {registration.reviewedAt && (
                   <>
@@ -283,32 +289,32 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {registration && status !== null && status !== 'DRAFT' && (
-          <div className="border-border-color shadow-card bg-card mb-6 space-y-3 rounded-xl border p-5">
-            <p className="font-display text-foreground text-sm font-semibold">Ваша заявка</p>
+          <div className="border-border-color mb-6 space-y-3 rounded-xl border bg-card p-5 shadow-card">
+            <p className="font-display text-sm font-semibold text-foreground">Ваша заявка</p>
             <dl className="grid items-baseline gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
               {registration.faculty && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Підрозділ</dt>
-                  <dd className="text-foreground wrap-break-word">{registration.faculty}</dd>
+                  <dt className="text-xs text-muted-foreground uppercase">Підрозділ</dt>
+                  <dd className="wrap-break-word text-foreground">{registration.faculty}</dd>
                 </>
               )}
               {registration.group && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Група</dt>
-                  <dd className="text-foreground wrap-break-word">{registration.group}</dd>
+                  <dt className="text-xs text-muted-foreground uppercase">Група</dt>
+                  <dd className="wrap-break-word text-foreground">{registration.group}</dd>
                 </>
               )}
-              <dt className="text-muted-foreground text-xs uppercase">Телефон</dt>
-              <dd className="text-foreground wrap-break-word">{registration.phoneNumber}</dd>
+              <dt className="text-xs text-muted-foreground uppercase">Телефон</dt>
+              <dd className="wrap-break-word text-foreground">{registration.phoneNumber}</dd>
               {registration.telegramTag && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Telegram</dt>
-                  <dd className="text-foreground wrap-break-word">{registration.telegramTag}</dd>
+                  <dt className="text-xs text-muted-foreground uppercase">Telegram</dt>
+                  <dd className="wrap-break-word text-foreground">{registration.telegramTag}</dd>
                 </>
               )}
               {form.requiresCampaignProgram && registration.campaignProgramUrl && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Програма</dt>
+                  <dt className="text-xs text-muted-foreground uppercase">Програма</dt>
                   <dd className="wrap-break-word">
                     <TextLink href={registration.campaignProgramUrl}>
                       {registration.campaignProgramUrl}
@@ -333,7 +339,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {editable && form.eligible && !closed && !notYetOpen && (
-          <div className="border-border-color shadow-card bg-card space-y-4 rounded-xl border p-5">
+          <div className="border-border-color space-y-4 rounded-xl border bg-card p-5 shadow-card">
             {error && (
               <Alert variant="error" onDismiss={() => setError(null)}>
                 {error}
@@ -418,9 +424,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
                   type="checkbox"
                   checked={confirmedNoOverlap}
                   onChange={(e) => setConfirmedNoOverlap(e.target.checked)}
-                  className="accent-kpi-navy mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-kpi-navy"
                 />
-                <span className="text-foreground text-sm">
+                <span className="text-sm text-foreground">
                   Я підтверджую, що не займаю посад у Первинній профспілковій організації студентів
                   та Науковому товаристві студентів та аспірантів
                 </span>
@@ -430,9 +436,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
                   type="checkbox"
                   checked={confirmedDataAccurate}
                   onChange={(e) => setConfirmedDataAccurate(e.target.checked)}
-                  className="accent-kpi-navy mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-kpi-navy"
                 />
-                <span className="text-foreground text-sm">
+                <span className="text-sm text-foreground">
                   Я підтверджую, що надані мною дані правдиві та актуальні
                 </span>
               </label>

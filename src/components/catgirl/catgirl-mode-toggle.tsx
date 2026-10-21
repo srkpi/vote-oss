@@ -23,15 +23,15 @@ export function CatgirlModeToggle() {
       <div
         role="status"
         aria-busy="true"
-        className="border-border bg-surface-hover flex max-w-sm animate-pulse items-center rounded-full border-2 p-2"
+        className="flex max-w-sm animate-pulse items-center rounded-full border-2 border-border bg-surface-hover p-2"
       >
         <span className="sr-only">Завантаження стану режиму…</span>
         <span className="flex flex-col items-center px-3 py-1.5" aria-hidden="true">
           <span className="flex h-6 items-center">
-            <span className="bg-border h-4 w-24 rounded-full" />
+            <span className="h-4 w-24 rounded-full bg-border" />
           </span>
           <span className="flex h-4 items-center">
-            <span className="bg-border h-2.5 w-40 rounded-full" />
+            <span className="h-2.5 w-40 rounded-full bg-border" />
           </span>
         </span>
       </div>

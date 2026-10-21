@@ -75,7 +75,7 @@ export function SceneFallback({ className, variant = 'hero' }: SceneFallbackProp
             {/* Checkmark mark — hidden in catgirl mode, see the cat-face variant below. */}
             <svg
               viewBox="0 0 24 24"
-              className="catgirl:hidden relative h-32 w-32 opacity-90 drop-shadow-[0_0_30px_rgba(var(--scene-glow-accent-rgb),0.5)] sm:h-40 sm:w-40"
+              className="relative h-32 w-32 opacity-90 drop-shadow-[0_0_30px_rgba(var(--scene-glow-accent-rgb),0.5)] sm:h-40 sm:w-40 catgirl:hidden"
               fill="none"
               stroke="white"
               strokeWidth="1.4"
@@ -87,7 +87,7 @@ export function SceneFallback({ className, variant = 'hero' }: SceneFallbackProp
             </svg>
             <svg
               viewBox="0 0 24 24"
-              className="catgirl:block relative hidden h-32 w-32 opacity-90 drop-shadow-[0_0_30px_rgba(var(--scene-glow-accent-rgb),0.5)] sm:h-40 sm:w-40"
+              className="relative hidden h-32 w-32 opacity-90 drop-shadow-[0_0_30px_rgba(var(--scene-glow-accent-rgb),0.5)] sm:h-40 sm:w-40 catgirl:block"
               fill="none"
               stroke="white"
               strokeWidth="1.4"

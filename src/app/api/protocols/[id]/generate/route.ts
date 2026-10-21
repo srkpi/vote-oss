@@ -71,10 +71,14 @@ function sanitizeFilename(name: string, fallback: string): string {
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid protocol id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid protocol id');
+  }
 
   const protocol = await prisma.protocol.findUnique({
     where: { id },

@@ -1,6 +1,7 @@
 import fs from 'fs';
-import { createSwaggerSpec } from 'next-swagger-doc';
 import path from 'path';
+
+import { createSwaggerSpec } from 'next-swagger-doc';
 
 import {
   BYPASS_TOKEN_MAX_USAGE_MAX,

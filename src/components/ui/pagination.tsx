@@ -25,7 +25,9 @@ const slideTransition = { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const };
 export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }: PaginationProps) {
   const [dir, setDir] = useState(0);
 
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {
+    return null;
+  }
 
   // Wrap setPage so we can record direction before navigating
   const navigate = (target: number | ((p: number) => number)) => {
@@ -102,7 +104,7 @@ export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }:
                 <motion.div
                   key="pill"
                   layoutId="pagination-active-pill"
-                  className="bg-primary absolute size-9 rounded-md"
+                  className="absolute size-9 rounded-md bg-primary"
                   style={{ left: i * SLOT_PX }}
                   transition={{ type: 'spring', stiffness: 340, damping: 30 }}
                 />

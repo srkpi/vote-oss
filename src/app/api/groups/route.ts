@@ -46,7 +46,9 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { user } = auth;
 
@@ -95,9 +97,13 @@ export async function GET(req: NextRequest) {
   if (cachedElections) {
     const set = new Set<string>();
     for (const e of cachedElections) {
-      if (!e.publicViewing || e.deletedAt) continue;
+      if (!e.publicViewing || e.deletedAt) {
+        continue;
+      }
       for (const r of e.restrictions) {
-        if (r.type === 'GROUP_MEMBERSHIP') set.add(r.value);
+        if (r.type === 'GROUP_MEMBERSHIP') {
+          set.add(r.value);
+        }
       }
     }
     publicGroupIds = [...set];
@@ -210,7 +216,9 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
-  if (!auth.ok) return Errors.forbidden(auth.error);
+  if (!auth.ok) {
+    return Errors.forbidden(auth.error);
+  }
 
   const { user, admin } = auth;
 
@@ -226,7 +234,9 @@ export async function POST(req: NextRequest) {
   }
 
   const name = body.name?.trim();
-  if (!name) return Errors.badRequest('name is required');
+  if (!name) {
+    return Errors.badRequest('name is required');
+  }
   if (name.length > GROUP_NAME_MAX_LENGTH) {
     return Errors.badRequest(`name must be at most ${GROUP_NAME_MAX_LENGTH} characters`);
   }

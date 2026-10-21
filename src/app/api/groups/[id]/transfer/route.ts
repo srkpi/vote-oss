@@ -62,10 +62,14 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   let body: { newOwnerId?: string };
   try {
@@ -87,7 +91,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   const isCurrentOwner = callerId === group.owner_id;
 

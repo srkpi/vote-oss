@@ -33,20 +33,24 @@ export async function generateMetadata({ params }: BallotsPageProps): Promise<Me
 export default async function BallotsPage({ params }: BallotsPageProps) {
   const { id } = await params;
 
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const [session, { data, error, status }] = await Promise.all([
     getServerSession(),
     serverApi.elections.getBallots(id),
   ]);
 
-  if (status === 404) notFound();
+  if (status === 404) {
+    notFound();
+  }
 
   if (!data) {
     if (status === 403) {
       return (
-        <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-          <div className="border-border-color bg-card w-full max-w-md overflow-hidden rounded-xl border shadow-sm">
+        <div className="flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center bg-surface p-4">
+          <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-card shadow-sm">
             <ErrorState
               title="Доступ обмежено"
               description="У вас немає доступу до бюлетенів цього голосування"
@@ -60,8 +64,8 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
 
   if (data.election.deletedAt) {
     return (
-      <div className="bg-surface flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center p-4">
-        <div className="border-border-color bg-card w-full max-w-md overflow-hidden rounded-xl border shadow-sm">
+      <div className="flex min-h-[calc(100dvh-var(--header-height))] items-center justify-center bg-surface p-4">
+        <div className="border-border-color w-full max-w-md overflow-hidden rounded-xl border bg-card shadow-sm">
           <ErrorState title="Голосування було видалено" />
         </div>
       </div>
@@ -69,7 +73,7 @@ export default async function BallotsPage({ params }: BallotsPageProps) {
   }
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <PageHeader
         nav={[
           { label: 'Голосування', href: '/elections' },

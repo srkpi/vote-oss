@@ -22,7 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <PostHogProvider session={session}>
-      <div className="bg-surface flex min-h-dvh">
+      <div className="flex min-h-dvh bg-surface">
         <AdminSidebar
           manageAdmins={session.manageAdmins}
           manageGroups={session.manageGroups}

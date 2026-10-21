@@ -62,9 +62,13 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
           acc.deleted++;
           return acc;
         }
-        if (e.status === 'open') acc.open++;
-        else if (e.status === 'upcoming') acc.upcoming++;
-        else if (e.status === 'closed') acc.closed++;
+        if (e.status === 'open') {
+          acc.open++;
+        } else if (e.status === 'upcoming') {
+          acc.upcoming++;
+        } else if (e.status === 'closed') {
+          acc.closed++;
+        }
         return acc;
       },
       {
@@ -96,7 +100,9 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
   })();
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
 
     const result = await api.elections.delete(deleteTarget.id);
@@ -128,7 +134,9 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
   };
 
   const handleRestoreConfirm = async () => {
-    if (!restoreTarget) return;
+    if (!restoreTarget) {
+      return;
+    }
     setRestoring(true);
 
     const result = await api.elections.restore(restoreTarget.id);
@@ -161,7 +169,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
 
   if (error) {
     return (
-      <div className="border-border-color shadow-card bg-card rounded-xl border">
+      <div className="border-border-color rounded-xl border bg-card shadow-card">
         <ErrorState title="Помилка завантаження" description={error} />
       </div>
     );
@@ -180,14 +188,14 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
           <SearchInput value={search} onChange={setSearch} placeholder="Пошук голосувань…" />
 
           {(search || activeTab !== 'all') && filtered.length > 0 && (
-            <p className="font-body text-muted-foreground shrink-0 text-xs">
+            <p className="font-body shrink-0 text-xs text-muted-foreground">
               {filtered.length} з {items.length}
             </p>
           )}
         </div>
 
         {filtered.length === 0 ? (
-          <div className="border-border-color shadow-card bg-card rounded-xl border">
+          <div className="border-border-color rounded-xl border bg-card shadow-card">
             <EmptyState
               icon={<FileText className="h-8 w-8" />}
               title={search ? 'Голосувань не знайдено' : 'Голосувань немає'}
@@ -195,16 +203,16 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
             />
           </div>
         ) : (
-          <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full">
                 <thead>
-                  <tr className="border-border-subtle border-b">
+                  <tr className="border-b border-border-subtle">
                     {['Назва', 'Статус', 'Початок', 'Завершення', 'Голоси', 'Доступ', ''].map(
                       (h) => (
                         <th
                           key={h}
-                          className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
+                          className="font-body px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                         >
                           {h}
                         </th>
@@ -212,7 +220,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-border-subtle divide-y">
+                <tbody className="divide-y divide-border-subtle">
                   {filtered.map((election) => (
                     <ElectionRow
                       key={election.id}
@@ -226,7 +234,7 @@ export function AdminElectionsClient({ elections, session, error }: AdminElectio
               </table>
             </div>
 
-            <div className="divide-border-subtle divide-y lg:hidden">
+            <div className="divide-y divide-border-subtle lg:hidden">
               {filtered.map((election) => (
                 <ElectionMobileCard
                   key={election.id}

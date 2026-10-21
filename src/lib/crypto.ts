@@ -122,7 +122,9 @@ export function encryptBallot(
 ): string {
   // Pad to maxChoices so all ciphertexts are the same size
   const padded = [...choiceIds];
-  while (padded.length < maxChoices) padded.push(BALLOT_PADDING);
+  while (padded.length < maxChoices) {
+    padded.push(BALLOT_PADDING);
+  }
 
   // Build plaintext based on ballot version
   const version = voter ? BALLOT_VERSION_IDENTIFIED : BALLOT_VERSION_ANONYMOUS;
@@ -208,7 +210,9 @@ export function decryptBallot(
   if (envelope.v === BALLOT_VERSION_ANONYMOUS) {
     // v1 anonymous: plaintext is a JSON array of choice IDs
     const parsed: unknown = JSON.parse(plaintext);
-    if (!Array.isArray(parsed)) throw new Error('Invalid v1 ballot payload');
+    if (!Array.isArray(parsed)) {
+      throw new Error('Invalid v1 ballot payload');
+    }
     return {
       choiceIds: (parsed as string[]).filter((id) => id !== BALLOT_PADDING),
     };
@@ -287,7 +291,9 @@ export async function computeNullifierClient(token: string): Promise<string> {
 function bufToBase64(buf: ArrayBuffer | Uint8Array): string {
   const arr = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   let binary = '';
-  for (let i = 0; i < arr.length; i++) binary += String.fromCharCode(arr[i]!);
+  for (let i = 0; i < arr.length; i++) {
+    binary += String.fromCharCode(arr[i]!);
+  }
   return btoa(binary);
 }
 
@@ -305,7 +311,9 @@ export async function encryptBallotClient(
   voter?: BallotVoterIdentity,
 ): Promise<string> {
   const padded = [...choiceIds];
-  while (padded.length < maxChoices) padded.push(BALLOT_PADDING);
+  while (padded.length < maxChoices) {
+    padded.push(BALLOT_PADDING);
+  }
 
   // Build plaintext matching the server-side format
   const version = voter ? BALLOT_VERSION_IDENTIFIED : BALLOT_VERSION_ANONYMOUS;
@@ -449,14 +457,18 @@ export async function decryptBallotData(
 
     if (envelope.v === BALLOT_VERSION_ANONYMOUS) {
       // v1 anonymous: JSON array of choice IDs
-      if (!Array.isArray(parsed)) return null;
+      if (!Array.isArray(parsed)) {
+        return null;
+      }
       return {
         choiceIds: (parsed as string[]).filter((id: string) => id !== BALLOT_PADDING),
       };
     }
 
     // v2 identified: JSON object with choices + voter identity
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
     const payload = parsed as IdentifiedBallotPayload;
     if (
       !Array.isArray(payload.choices) ||

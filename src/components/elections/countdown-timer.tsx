@@ -27,7 +27,7 @@ function BlankTimerSkeleton({ className }: { className?: string }) {
             </span>
           </div>
           {i < skeletonUnits.length - 1 && (
-            <span className="font-display mb-4 text-xl font-bold">:</span>
+            <span className="mb-4 font-display text-xl font-bold">:</span>
           )}
         </div>
       ))}
@@ -47,8 +47,8 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
     return (
       <div
         className={cn(
-          'font-body text-muted-foreground flex items-center gap-2 text-sm',
-          'animate-in fade-in duration-500 ease-out',
+          'font-body flex items-center gap-2 text-sm text-muted-foreground',
+          'animate-in duration-500 ease-out fade-in',
           className,
         )}
       >
@@ -71,7 +71,7 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
     <div
       className={cn(
         'flex items-center gap-1 sm:gap-3',
-        'animate-in fade-in zoom-in-95 duration-500 ease-out',
+        'animate-in duration-500 ease-out zoom-in-95 fade-in',
         className,
       )}
     >
@@ -81,7 +81,7 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
             <div
               className={cn(
                 'flex h-14 min-w-13 items-center justify-center',
-                'bg-kpi-navy rounded-lg',
+                'rounded-lg bg-kpi-navy',
                 'shadow-md',
               )}
             >
@@ -89,12 +89,12 @@ export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
                 {String(value).padStart(2, '0')}
               </span>
             </div>
-            <span className="font-body text-muted-foreground mt-1.5 block text-[10px] tracking-widest uppercase">
+            <span className="font-body mt-1.5 block text-[10px] tracking-widest text-muted-foreground uppercase">
               {label}
             </span>
           </div>
           {i < visibleUnits.length - 1 && (
-            <span className="font-display text-kpi-gray-mid mb-4 text-xl font-bold select-none">
+            <span className="mb-4 font-display text-xl font-bold text-kpi-gray-mid select-none">
               :
             </span>
           )}

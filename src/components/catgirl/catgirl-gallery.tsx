@@ -43,7 +43,9 @@ export function CatgirlGallery({ size = 'lg', className, loading = 'lazy' }: Cat
   // already on screen and cached.
   const [imageStatus, setImageStatus] = useState<Record<string, 'loaded' | 'error'>>({});
 
-  if (!enabled) return null;
+  if (!enabled) {
+    return null;
+  }
 
   return (
     <div className="flex w-full justify-center">
@@ -54,7 +56,7 @@ export function CatgirlGallery({ size = 'lg', className, loading = 'lazy' }: Cat
           // nothing, so the page doesn't jump from empty to full-sized the
           // moment they do.
           <div
-            className="bg-surface-hover w-full animate-pulse rounded-2xl"
+            className="w-full animate-pulse rounded-2xl bg-surface-hover"
             style={{ height: preset.targetHeight }}
             aria-hidden
           />
@@ -117,11 +119,11 @@ export function CatgirlGalleryImage({
           onClick={() => setLightboxOpen(true)}
           className={cn(
             'absolute inset-0 block h-full w-full cursor-zoom-in',
-            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+            'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
           )}
           aria-label="Переглянути зображення на весь екран"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* oxlint-disable-next-line nextjs/no-img-element */}
           <img
             src={image.url}
             alt="Catgirl"

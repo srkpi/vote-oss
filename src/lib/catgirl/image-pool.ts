@@ -15,7 +15,9 @@ let refillInFlight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
 function notify(): void {
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 export function subscribeCatgirlImagePool(listener: () => void): () => void {
@@ -24,7 +26,9 @@ export function subscribeCatgirlImagePool(listener: () => void): () => void {
 }
 
 function isCatgirlImage(value: unknown): value is CatgirlImage {
-  if (typeof value !== 'object' || value === null) return false;
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
   const v = value as Record<string, unknown>;
   return (
     typeof v.id === 'string' &&
@@ -35,12 +39,18 @@ function isCatgirlImage(value: unknown): value is CatgirlImage {
 }
 
 function loadFromStorage(): CatgirlImage[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {
+    return [];
+  }
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_CATGIRL_IMAGES_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      return [];
+    }
     const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
     return parsed.filter(isCatgirlImage);
   } catch {
     return [];
@@ -48,7 +58,9 @@ function loadFromStorage(): CatgirlImage[] {
 }
 
 function persistToStorage(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   try {
     localStorage.setItem(LOCAL_STORAGE_CATGIRL_IMAGES_KEY, JSON.stringify(pool));
   } catch {}
@@ -56,14 +68,18 @@ function persistToStorage(): void {
 
 function ensureStorageLoaded(): boolean {
   // Never mark as loaded on the server, where there is no storage to read.
-  if (storageLoaded || typeof window === 'undefined') return false;
+  if (storageLoaded || typeof window === 'undefined') {
+    return false;
+  }
   storageLoaded = true;
   pool = loadFromStorage();
   return true;
 }
 
 async function refillPool(): Promise<void> {
-  if (refillInFlight) return refillInFlight;
+  if (refillInFlight) {
+    return refillInFlight;
+  }
 
   ensureStorageLoaded();
 
@@ -81,18 +97,24 @@ async function refillPool(): Promise<void> {
         Math.min(remaining, NEKOSIA_MAX_COUNT_PER_REQUEST),
       );
 
-      if (batch.length === 0) break;
+      if (batch.length === 0) {
+        break;
+      }
 
       let addedAny = false;
       for (const image of batch) {
-        if (seen.has(image.id)) continue;
+        if (seen.has(image.id)) {
+          continue;
+        }
         seen.add(image.id);
         pool.push(image);
         addedAny = true;
       }
       persistToStorage();
       notify();
-      if (!addedAny) break;
+      if (!addedAny) {
+        break;
+      }
     }
   })().finally(() => {
     refillInFlight = null;
@@ -102,7 +124,9 @@ async function refillPool(): Promise<void> {
 }
 
 export function ensureCatgirlImagePoolReady(): void {
-  if (ensureStorageLoaded() && pool.length > 0) notify();
+  if (ensureStorageLoaded() && pool.length > 0) {
+    notify();
+  }
   if (pool.length <= CATGIRL_IMAGE_POOL_REFILL_THRESHOLD) {
     void refillPool();
   }
@@ -128,10 +152,14 @@ export function claimNextCatgirlImage(): CatgirlImage | null {
 }
 
 export function claimCatgirlImages(count: number): CatgirlImage[] {
-  if (count <= 0) return [];
+  if (count <= 0) {
+    return [];
+  }
   ensureStorageLoaded();
   const claimed = pool.splice(0, count);
-  if (claimed.length > 0) persistToStorage();
+  if (claimed.length > 0) {
+    persistToStorage();
+  }
   if (pool.length <= CATGIRL_IMAGE_POOL_REFILL_THRESHOLD) {
     void refillPool();
   }

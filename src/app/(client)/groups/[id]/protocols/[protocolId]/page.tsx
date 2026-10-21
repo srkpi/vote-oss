@@ -16,10 +16,14 @@ interface Props {
 }
 
 export default async function ProtocolDetailPage({ params }: Props) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   const { id, protocolId } = await params;
   const [groupRes, protocolRes] = await Promise.all([
@@ -27,12 +31,18 @@ export default async function ProtocolDetailPage({ params }: Props) {
     serverApi.protocols.get(protocolId),
   ]);
 
-  if (!groupRes.success || !groupRes.data) notFound();
-  if (!protocolRes.success || !protocolRes.data) notFound();
-  if (protocolRes.data.groupId !== id) notFound();
+  if (!groupRes.success || !groupRes.data) {
+    notFound();
+  }
+  if (!protocolRes.success || !protocolRes.data) {
+    notFound();
+  }
+  if (protocolRes.data.groupId !== id) {
+    notFound();
+  }
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       {protocolRes.data.isOwner ? (
         <ProtocolOwnerView group={groupRes.data} protocol={protocolRes.data} />
       ) : (

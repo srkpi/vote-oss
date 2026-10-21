@@ -153,42 +153,58 @@ export function CreateElectionForm({
   const facultyOptions = Object.keys(facultyGroups).sort((a, b) => {
     const aNN = a.startsWith('НН ');
     const bNN = b.startsWith('НН ');
-    if (aNN !== bNN) return aNN ? 1 : -1;
+    if (aNN !== bNN) {
+      return aNN ? 1 : -1;
+    }
     return a.localeCompare(b, 'uk');
   });
 
   // ── Derive initial values from initialData when in edit mode ──────────────
   const getInitialFaculties = () => {
-    if (!initialData) return restrictedToFaculty ? [restrictedToFaculty] : [];
+    if (!initialData) {
+      return restrictedToFaculty ? [restrictedToFaculty] : [];
+    }
     return initialData.restrictions.filter((r) => r.type === 'FACULTY').map((r) => r.value);
   };
 
   const getInitialGroups = () => {
-    if (!initialData) return [];
+    if (!initialData) {
+      return [];
+    }
     return initialData.restrictions.filter((r) => r.type === 'GROUP').map((r) => r.value);
   };
 
   const getInitialForms = () => {
-    if (!initialData) return [];
+    if (!initialData) {
+      return [];
+    }
     return initialData.restrictions.filter((r) => r.type === 'STUDY_FORM').map((r) => r.value);
   };
 
   const getInitialLevelCourses = () => {
-    if (!initialData) return [];
+    if (!initialData) {
+      return [];
+    }
     return initialData.restrictions.filter((r) => r.type === 'LEVEL_COURSE').map((r) => r.value);
   };
 
   const getInitialGroupMemberships = () => {
-    if (!initialData) return initialGroupMembershipId ? [initialGroupMembershipId] : [];
+    if (!initialData) {
+      return initialGroupMembershipId ? [initialGroupMembershipId] : [];
+    }
     const fromData = initialData.restrictions
       .filter((r) => r.type === 'GROUP_MEMBERSHIP')
       .map((r) => r.value);
-    if (fromData.length > 0) return fromData;
+    if (fromData.length > 0) {
+      return fromData;
+    }
     return initialGroupMembershipId ? [initialGroupMembershipId] : [];
   };
 
   const getInitialBypassRequired = () => {
-    if (!initialData) return false;
+    if (!initialData) {
+      return false;
+    }
     return initialData.restrictions.some((r) => r.type === 'BYPASS_REQUIRED');
   };
 
@@ -225,7 +241,7 @@ export function CreateElectionForm({
   useEffect(() => {
     // If the bypass condition is no longer met, re-enable the faculty restriction.
     if (!canBypassFaculty) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setIncludeFacultyRestriction(true);
     }
   }, [canBypassFaculty]);
@@ -256,13 +272,13 @@ export function CreateElectionForm({
   }, [selectedFaculties, facultyGroups, selectedForms, selectedLevelCourses]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setSelectedGroups((prev) => prev.filter((g) => availableGroups.includes(g)));
   }, [availableGroups]);
 
   useEffect(() => {
     if (choices.length <= 1) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setShuffleChoices(false);
     }
   }, [choices.length]);
@@ -285,7 +301,9 @@ export function CreateElectionForm({
   ];
 
   function handleFacultiesChange(faculties: string[]) {
-    if (restrictedToFaculty) return;
+    if (restrictedToFaculty) {
+      return;
+    }
     setSelectedFaculties(faculties);
     setFieldErrors((p) => ({ ...p, faculties: '' }));
     setError(null);
@@ -308,11 +326,15 @@ export function CreateElectionForm({
   };
 
   const addChoice = () => {
-    if (choices.length < ELECTION_CHOICES_MAX) setChoices((p) => [...p, '']);
+    if (choices.length < ELECTION_CHOICES_MAX) {
+      setChoices((p) => [...p, '']);
+    }
   };
 
   const removeChoice = (index: number) => {
-    if (choices.length > ELECTION_CHOICES_MIN) setChoices((p) => p.filter((_, i) => i !== index));
+    if (choices.length > ELECTION_CHOICES_MIN) {
+      setChoices((p) => p.filter((_, i) => i !== index));
+    }
   };
 
   const toggleLevelCourse = (value: string) => {
@@ -381,30 +403,41 @@ export function CreateElectionForm({
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!form.title.trim()) errors.title = "Назва обов'язкова";
-    else if (form.title.length > ELECTION_TITLE_MAX_LENGTH)
+    if (!form.title.trim()) {
+      errors.title = "Назва обов'язкова";
+    } else if (form.title.length > ELECTION_TITLE_MAX_LENGTH) {
       errors.title = `Назва не може перевищувати ${ELECTION_TITLE_MAX_LENGTH} символів`;
+    }
 
-    if (form.description.length > ELECTION_DESCRIPTION_MAX_LENGTH)
+    if (form.description.length > ELECTION_DESCRIPTION_MAX_LENGTH) {
       errors.description = `Опис не може перевищувати ${ELECTION_DESCRIPTION_MAX_LENGTH} символів`;
+    }
 
-    if (!form.opensAt) errors.opensAt = "Дата початку обов'язкова";
-    if (!form.closesAt) errors.closesAt = "Дата завершення обов'язкова";
+    if (!form.opensAt) {
+      errors.opensAt = "Дата початку обов'язкова";
+    }
+    if (!form.closesAt) {
+      errors.closesAt = "Дата завершення обов'язкова";
+    }
 
     const openDate = new Date(form.opensAt),
       closeDate = new Date(form.closesAt);
-    if (form.opensAt && form.closesAt && closeDate <= openDate)
+    if (form.opensAt && form.closesAt && closeDate <= openDate) {
       errors.closesAt = 'Дата завершення має бути після дати початку';
+    }
 
     choices.forEach((choice, i) => {
-      if (!choice.trim()) errors[`choice_${i}`] = 'Варіант не може бути порожнім';
-      else if (choice.length > ELECTION_CHOICE_MAX_LENGTH)
+      if (!choice.trim()) {
+        errors[`choice_${i}`] = 'Варіант не може бути порожнім';
+      } else if (choice.length > ELECTION_CHOICE_MAX_LENGTH) {
         errors[`choice_${i}`] =
           `Варіант не може перевищувати ${ELECTION_CHOICE_MAX_LENGTH} символів`;
+      }
     });
 
-    if (new Set(choices.map((c) => c.trim().toLowerCase())).size !== choices.length)
+    if (new Set(choices.map((c) => c.trim().toLowerCase())).size !== choices.length) {
       errors.choices = 'Варіанти не можуть повторюватися';
+    }
 
     if (noGroupsMatchCriteria) {
       errors.levelCourses =
@@ -501,7 +534,7 @@ export function CreateElectionForm({
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* ── Basic info ─────────────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-display text-foreground mb-4 text-xl font-semibold">
+        <h2 className="mb-4 font-display text-xl font-semibold text-foreground">
           Основна інформація
         </h2>
         <div className="space-y-5">
@@ -574,10 +607,10 @@ export function CreateElectionForm({
 
       {/* ── Choices ────────────────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
+        <h2 className="mb-1 font-display text-xl font-semibold text-foreground">
           Варіанти відповідей
         </h2>
-        <p className="font-body text-muted-foreground mb-4 text-sm">
+        <p className="font-body mb-4 text-sm text-muted-foreground">
           Додайте від {ELECTION_CHOICES_MIN} до {ELECTION_CHOICES_MAX} варіантів
         </p>
         {fieldErrors.choices && (
@@ -600,7 +633,7 @@ export function CreateElectionForm({
                 />
                 <div className="flex items-center justify-between">
                   {fieldErrors[`choice_${index}`] ? (
-                    <p className="text-error text-xs">{fieldErrors[`choice_${index}`]}</p>
+                    <p className="text-xs text-error">{fieldErrors[`choice_${index}`]}</p>
                   ) : (
                     <span />
                   )}
@@ -613,7 +646,7 @@ export function CreateElectionForm({
                   onClick={() => removeChoice(index)}
                   className={cn(
                     'flex h-10 w-10 shrink-0 items-center justify-center rounded-(--radius)',
-                    'text-muted-foreground hover:bg-error-bg hover:text-error transition-colors duration-150',
+                    'text-muted-foreground transition-colors duration-150 hover:bg-error-bg hover:text-error',
                   )}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -673,13 +706,13 @@ export function CreateElectionForm({
               />
               <div className="font-body flex items-center justify-between text-sm font-medium">
                 <div className="flex flex-col items-start">
-                  <span className="text-muted-foreground text-xs">Мінімум</span>
+                  <span className="text-xs text-muted-foreground">Мінімум</span>
                   <span className="text-foreground">
                     {Math.min(form.minChoices, choices.length)}
                   </span>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-muted-foreground text-xs">Максимум</span>
+                  <span className="text-xs text-muted-foreground">Максимум</span>
                   <span className="text-foreground">
                     {Math.min(form.maxChoices, choices.length)}
                   </span>
@@ -692,10 +725,10 @@ export function CreateElectionForm({
 
       {/* ── Election validity ──────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
+        <h2 className="mb-1 font-display text-xl font-semibold text-foreground">
           Умови дійсності голосування
         </h2>
-        <p className="font-body text-muted-foreground mb-4 text-sm">
+        <p className="font-body mb-4 text-sm text-muted-foreground">
           Визначте, які критерії встановлюють дійсність голосування. Якщо критерії не встановлено,
           достатньо одного голосу.
         </p>
@@ -721,10 +754,10 @@ export function CreateElectionForm({
       {/* ── Winning conditions ──────────────────────────────────────────────── */}
       {choices.length > 1 && (
         <section>
-          <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
+          <h2 className="mb-1 font-display text-xl font-semibold text-foreground">
             Умови перемоги
           </h2>
-          <p className="font-body text-muted-foreground mb-4 text-sm">
+          <p className="font-body mb-4 text-sm text-muted-foreground">
             Визначте, за якими критеріями обирається переможець. Усі вибрані умови застосовуються
             одночасно.
           </p>
@@ -746,17 +779,17 @@ export function CreateElectionForm({
             errors={fieldErrors}
           />
           {fieldErrors.winningConditions && (
-            <p className="text-error mt-2 text-sm">{fieldErrors.winningConditions}</p>
+            <p className="mt-2 text-sm text-error">{fieldErrors.winningConditions}</p>
           )}
         </section>
       )}
 
       {/* ── Access restrictions ─────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-display text-foreground mb-1 text-xl font-semibold">
+        <h2 className="mb-1 font-display text-xl font-semibold text-foreground">
           Обмеження доступу
         </h2>
-        <p className="font-body text-muted-foreground mb-4 text-sm">
+        <p className="font-body mb-4 text-sm text-muted-foreground">
           Залиште порожнім для всіх студентів. Різні типи обмежень застосовуються через «І», кілька
           значень одного типу — через «АБО».
         </p>
@@ -794,7 +827,7 @@ export function CreateElectionForm({
                         : 'cursor-not-allowed',
                     )}
                   />
-                  <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
+                  <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-kpi-gray-mid">
                     <Lock className="h-4 w-4" />
                   </div>
                 </div>
@@ -843,7 +876,7 @@ export function CreateElectionForm({
             <div className={`grid grid-cols-1 gap-4 sm:grid-cols-${LEVEL_COLUMNS.length}`}>
               {LEVEL_COLUMNS.map(({ key, label, courses }) => (
                 <div key={key} className="space-y-2">
-                  <p className="font-body text-foreground text-sm font-medium">{label}</p>
+                  <p className="font-body text-sm font-medium text-foreground">{label}</p>
                   <div className="flex flex-wrap gap-2">
                     {courses.map((course) => {
                       const value = `${key}${course}`;
@@ -856,10 +889,10 @@ export function CreateElectionForm({
                           className={cn(
                             'flex h-10 w-10 items-center justify-center rounded-(--radius) border',
                             'font-body text-sm font-semibold transition-colors duration-150',
-                            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+                            'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
                             isSelected
                               ? 'border-kpi-navy bg-kpi-navy text-white shadow-sm'
-                              : 'border-border-color text-foreground hover:border-kpi-blue-light bg-card',
+                              : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light',
                           )}
                         >
                           {course}
@@ -872,7 +905,7 @@ export function CreateElectionForm({
             </div>
 
             {noGroupsMatchCriteria && !fieldErrors.levelCourses && (
-              <p className="text-warning mt-2 text-sm">
+              <p className="mt-2 text-sm text-warning">
                 Жодна група з обраних підрозділів не відповідає цим критеріям.
               </p>
             )}
@@ -919,9 +952,9 @@ export function CreateElectionForm({
               }
             >
               {ownedGroupsLoading ? (
-                <p className="font-body text-muted-foreground text-sm">Завантаження…</p>
+                <p className="font-body text-sm text-muted-foreground">Завантаження…</p>
               ) : ownedGroups.length === 0 ? (
-                <p className="font-body text-muted-foreground text-sm italic">
+                <p className="font-body text-sm text-muted-foreground italic">
                   Немає доступних груп
                 </p>
               ) : (
@@ -940,10 +973,10 @@ export function CreateElectionForm({
                         }}
                         className={cn(
                           'font-body min-w-0 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-all duration-150',
-                          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+                          'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
                           isSelected
                             ? 'border-kpi-navy bg-kpi-navy text-white shadow-sm'
-                            : 'border-border-color text-foreground hover:border-kpi-blue-light bg-card',
+                            : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light',
                         )}
                       >
                         <span className="block font-semibold wrap-break-word">{grp.name}</span>
@@ -997,7 +1030,7 @@ export function CreateElectionForm({
       </section>
 
       {/* ── Submit ──────────────────────────────────────────────────────────── */}
-      <div className="border-border-subtle flex flex-col gap-3 border-t pt-4">
+      <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
         {error && (
           <Alert variant="error" title="Помилка" onDismiss={() => setError(null)}>
             {error}

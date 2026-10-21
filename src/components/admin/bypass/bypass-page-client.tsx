@@ -55,11 +55,11 @@ function TokenResult({ token }: { token: string }) {
         Скопіюйте посилання або сирий токен.
       </Alert>
       <div>
-        <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
+        <p className="font-body mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Посилання
         </p>
         <div className="flex items-center gap-2">
-          <div className="bg-surface flex-1 overflow-hidden rounded border p-2.5">
+          <div className="flex-1 overflow-hidden rounded border bg-surface p-2.5">
             <p className="font-mono text-xs break-all select-all">{link}</p>
           </div>
           <Button
@@ -72,11 +72,11 @@ function TokenResult({ token }: { token: string }) {
         </div>
       </div>
       <div>
-        <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
+        <p className="font-body mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Токен
         </p>
         <div className="flex items-center gap-2">
-          <div className="bg-surface flex-1 overflow-hidden rounded border p-2.5">
+          <div className="flex-1 overflow-hidden rounded border bg-surface p-2.5">
             <p className="font-mono text-xs break-all select-all">{token}</p>
           </div>
           <Button
@@ -106,36 +106,40 @@ function BypassTokenCard({
   const isDeleted = !!token.deletedAt;
 
   const bypasses = [];
-  if (token.bypassNotStudying) bypasses.push('Статус навчання');
-  if (token.bypassGraduate) bypasses.push('Аспірант');
+  if (token.bypassNotStudying) {
+    bypasses.push('Статус навчання');
+  }
+  if (token.bypassGraduate) {
+    bypasses.push('Аспірант');
+  }
 
   return (
     <div
-      className={`border-border-color bg-card overflow-hidden rounded-xl border ${isDeleted ? 'opacity-60' : ''}`}
+      className={`border-border-color overflow-hidden rounded-xl border bg-card ${isDeleted ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-body text-sm">{bypasses.join(', ')}</p>
-          <p className="font-body text-muted-foreground text-xs">
+          <p className="font-body text-xs text-muted-foreground">
             Використань: {token.currentUsage} / {token.maxUsage}
           </p>
-          <p className="font-body text-muted-foreground text-xs">
+          <p className="font-body text-xs text-muted-foreground">
             Дійсний до: <LocalDateTime date={token.validUntil} />
           </p>
-          <p className="font-body text-muted-foreground text-xs">Видав: {token.creator.fullName}</p>
+          <p className="font-body text-xs text-muted-foreground">Видав: {token.creator.fullName}</p>
           {isDeleted && (
             <>
-              <p className="font-body text-error text-xs">
+              <p className="font-body text-xs text-error">
                 Видалено: <LocalDateTime date={token.deletedAt!} />
               </p>
               {token.deletedBy && (
-                <p className="font-body text-error text-xs">{token.deletedBy.fullName}</p>
+                <p className="font-body text-xs text-error">{token.deletedBy.fullName}</p>
               )}
             </>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span className="font-body text-muted-foreground hidden text-xs sm:inline">
+          <span className="font-body hidden text-xs text-muted-foreground sm:inline">
             {pluralize(activeUsages.length, ['активний', 'активні', 'активних'])}
           </span>
           <Button
@@ -160,31 +164,31 @@ function BypassTokenCard({
       </div>
 
       {expanded && (
-        <div className="border-border-subtle border-t p-4 sm:p-5">
+        <div className="border-t border-border-subtle p-4 sm:p-5">
           {token.usages.length === 0 ? (
-            <p className="font-body text-muted-foreground text-sm">Токен ще не використовувався</p>
+            <p className="font-body text-sm text-muted-foreground">Токен ще не використовувався</p>
           ) : (
             <div className="space-y-2">
-              <p className="font-body text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+              <p className="font-body text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                 Використання
               </p>
               {token.usages.map((usage) => (
                 <div
                   key={usage.id}
-                  className="border-border-subtle bg-surface flex items-center justify-between gap-3 rounded-lg border p-3"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface p-3"
                 >
                   <div>
-                    <p className="text-foreground font-mono text-xs">{usage.userId}</p>
-                    <p className="font-body text-muted-foreground text-xs">
+                    <p className="font-mono text-xs text-foreground">{usage.userId}</p>
+                    <p className="font-body text-xs text-muted-foreground">
                       <LocalDateTime date={usage.usedAt} />
                     </p>
                     {usage.revokedAt && (
                       <>
-                        <p className="font-body text-error text-xs">
+                        <p className="font-body text-xs text-error">
                           Відкликано: <LocalDateTime date={usage.revokedAt} />
                         </p>
                         {usage.revokedBy && (
-                          <p className="font-body text-error text-xs">{usage.revokedBy.fullName}</p>
+                          <p className="font-body text-xs text-error">{usage.revokedBy.fullName}</p>
                         )}
                       </>
                     )}
@@ -225,6 +229,7 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
   );
   const [revoking, setRevoking] = useState(false);
 
+  // oxlint-disable-next-line react/purity -- Keep token date bounds relative to the current render time.
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
   const minDate = new Date(now.getTime() + BYPASS_TOKEN_MIN_HOURS * 60 * 60 * 1000)
@@ -241,7 +246,9 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
   const canCreate = bypassNotStudying || bypassGraduate;
 
   const handleCreate = async () => {
-    if (!canCreate) return;
+    if (!canCreate) {
+      return;
+    }
     setCreating(true);
     setCreateError(null);
 
@@ -255,7 +262,9 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
     if (result.success) {
       setNewToken(result.data.token);
       const listResult = await api.bypass.listGlobal();
-      if (listResult.success) setTokens(listResult.data);
+      if (listResult.success) {
+        setTokens(listResult.data);
+      }
       router.refresh();
     } else {
       setCreateError(result.error);
@@ -264,7 +273,9 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
 
     const result = await api.bypass.deleteGlobal(deleteTarget.tokenHash);
@@ -300,7 +311,9 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
   };
 
   const confirmRevokeUsage = async () => {
-    if (!revokeTarget) return;
+    if (!revokeTarget) {
+      return;
+    }
     setRevoking(true);
 
     const result = await api.bypass.revokeGlobalUsage(revokeTarget.tokenHash, revokeTarget.userId);
@@ -342,13 +355,13 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
   };
 
   return (
-    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
+    <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="bg-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-kpi-navy">
             <Unlock className="h-4 w-4 text-white" />
           </div>
-          <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
+          <h2 className="font-display text-base font-semibold text-foreground sm:text-lg">
             Глобальні токени доступу
           </h2>
         </div>
@@ -418,7 +431,7 @@ export function BypassPageClient({ initialTokens, error, session }: BypassPageCl
                   onChange={setBypassGraduate}
                 />
                 {!canCreate && (
-                  <p className="text-error font-body text-sm">Оберіть хоча б один варіант обходу</p>
+                  <p className="font-body text-sm text-error">Оберіть хоча б один варіант обходу</p>
                 )}
                 <FormField
                   label="Максимальна кількість використань"

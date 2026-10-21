@@ -77,7 +77,9 @@ export async function invalidateUserGroupMemberships(userId: string): Promise<vo
 
 /** Invalidate membership caches for multiple users at once. */
 export async function invalidateGroupMembershipsForUsers(userIds: string[]): Promise<void> {
-  if (userIds.length === 0) return;
+  if (userIds.length === 0) {
+    return;
+  }
   await safeRedis(async () => {
     const pipeline = redis.pipeline();
     for (const uid of userIds) {
@@ -186,7 +188,9 @@ export async function isVKSUMember(userId: string): Promise<boolean> {
     getCachedVKSUGroupIds(),
   ]);
 
-  if (memberships.length === 0 || vksuIds.length === 0) return false;
+  if (memberships.length === 0 || vksuIds.length === 0) {
+    return false;
+  }
   const vksuSet = new Set(vksuIds);
   return memberships.some((id) => vksuSet.has(id));
 }
@@ -248,7 +252,9 @@ export async function requireVKSUGroupMember(
     select: { id: true, name: true, type: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) throw new GroupNotFoundError();
+  if (!group || group.deleted_at) {
+    throw new GroupNotFoundError();
+  }
   if (group.type !== 'VKSU') {
     throw new GroupForbiddenError('Group is not a ВКСУ group');
   }

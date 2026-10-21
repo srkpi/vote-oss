@@ -57,22 +57,32 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: formId } = await params;
-  if (!isValidUuid(formId)) return Errors.badRequest('Invalid form id');
+  if (!isValidUuid(formId)) {
+    return Errors.badRequest('Invalid form id');
+  }
 
   const form = await prisma.candidateRegistrationForm.findUnique({
     where: { id: formId },
     select: { id: true, group_id: true, deleted_at: true },
   });
-  if (!form || form.deleted_at) return Errors.notFound('Form not found');
+  if (!form || form.deleted_at) {
+    return Errors.notFound('Form not found');
+  }
 
   try {
     await requireVKSUGroupMember(form.group_id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 
@@ -158,10 +168,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: formId } = await params;
-  if (!isValidUuid(formId)) return Errors.badRequest('Invalid form id');
+  if (!isValidUuid(formId)) {
+    return Errors.badRequest('Invalid form id');
+  }
 
   const form = await prisma.candidateRegistrationForm.findUnique({
     where: { id: formId },
@@ -170,15 +184,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       group: { select: { type: true, deleted_at: true } },
     },
   });
-  if (!form || form.deleted_at) return Errors.notFound('Form not found');
+  if (!form || form.deleted_at) {
+    return Errors.notFound('Form not found');
+  }
   if (form.group.deleted_at !== null || form.group.type !== 'VKSU') {
     return Errors.notFound('Form not found');
   }
 
   // Time window
   const now = new Date();
-  if (now < form.opens_at) return Errors.badRequest('Реєстрація ще не відкрита');
-  if (now > form.closes_at) return Errors.badRequest('Прийом заявок закрито');
+  if (now < form.opens_at) {
+    return Errors.badRequest('Реєстрація ще не відкрита');
+  }
+  if (now > form.closes_at) {
+    return Errors.badRequest('Прийом заявок закрито');
+  }
 
   // Eligibility
   const eligible = checkRestrictions(
@@ -191,7 +211,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       studyForm: auth.user.studyForm,
     },
   );
-  if (!eligible) return Errors.forbidden('Ви не відповідаєте обмеженням цієї форми');
+  if (!eligible) {
+    return Errors.forbidden('Ви не відповідаєте обмеженням цієї форми');
+  }
 
   let body: {
     phoneNumber?: string;
@@ -211,15 +233,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Drafts allow blank values; we still validate non-empty ones so candidates
   // see errors as they type.
   const phone = phoneRaw ? validatePhoneNumber(phoneRaw) : { ok: true as const, value: '' };
-  if (!phone.ok) return Errors.badRequest(phone.error);
+  if (!phone.ok) {
+    return Errors.badRequest(phone.error);
+  }
 
   const tag = tagRaw ? validateTelegramTag(tagRaw) : { ok: true as const, value: '' };
-  if (!tag.ok) return Errors.badRequest(tag.error);
+  if (!tag.ok) {
+    return Errors.badRequest(tag.error);
+  }
 
   let programUrl: string | null = null;
   if (programRaw !== null && programRaw !== '') {
     const res = validateCampaignProgramUrl(programRaw);
-    if (!res.ok) return Errors.badRequest(res.error);
+    if (!res.ok) {
+      return Errors.badRequest(res.error);
+    }
     programUrl = res.value;
   }
 

@@ -99,7 +99,9 @@ function extractFacultiesFromElections(elections: CachedElection[]): string[] {
   const set = new Set<string>();
   for (const e of elections) {
     for (const r of e.restrictions) {
-      if (r.type === 'FACULTY') set.add(r.value);
+      if (r.type === 'FACULTY') {
+        set.add(r.value);
+      }
     }
   }
   return [...set].sort((a, b) => a.localeCompare(b, 'uk'));
@@ -112,7 +114,9 @@ function extractStudyFormsFromElections(elections: CachedElection[]): string[] {
   const set = new Set<string>();
   for (const e of elections) {
     for (const r of e.restrictions) {
-      if (r.type === 'STUDY_FORM') set.add(r.value);
+      if (r.type === 'STUDY_FORM') {
+        set.add(r.value);
+      }
     }
   }
   return [...set].sort();
@@ -177,7 +181,9 @@ function extractStudyFormsFromElections(elections: CachedElection[]): string[] {
  */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
   const { user } = auth;
 
   const isAdmin = user.isAdmin ?? false;
@@ -339,9 +345,15 @@ export async function GET(req: NextRequest) {
   const avatarIds = new Set<string>();
   for (const e of cachedWithLiveCounts) {
     avatarIds.add(e.createdBy);
-    if (e.approvedById) avatarIds.add(e.approvedById);
-    if (e.editedByUserId) avatarIds.add(e.editedByUserId);
-    if (e.deletedByUserId) avatarIds.add(e.deletedByUserId);
+    if (e.approvedById) {
+      avatarIds.add(e.approvedById);
+    }
+    if (e.editedByUserId) {
+      avatarIds.add(e.editedByUserId);
+    }
+    if (e.deletedByUserId) {
+      avatarIds.add(e.deletedByUserId);
+    }
   }
   const avatarMap = await getAvatarUrlMap([...avatarIds]);
 
@@ -459,7 +471,9 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
   const { user } = auth;
 
   let body: {
@@ -570,9 +584,15 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   const maxCloseDate = Date.now() + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000;
 
-  if (isNaN(openDate.getTime())) return Errors.badRequest('Invalid opensAt date');
-  if (isNaN(closeDate.getTime())) return Errors.badRequest('Invalid closesAt date');
-  if (closeDate <= openDate) return Errors.badRequest('closesAt must be after opensAt');
+  if (isNaN(openDate.getTime())) {
+    return Errors.badRequest('Invalid opensAt date');
+  }
+  if (isNaN(closeDate.getTime())) {
+    return Errors.badRequest('Invalid closesAt date');
+  }
+  if (closeDate <= openDate) {
+    return Errors.badRequest('closesAt must be after opensAt');
+  }
   if (closeDate.getTime() > maxCloseDate) {
     return Errors.badRequest(
       `closesAt must be no more than ${ELECTION_MAX_CLOSES_AT_DAYS} days from now`,
@@ -867,11 +887,15 @@ async function handlePetitionCreate(
   const title = typeof body.title === 'string' ? body.title.trim() : '';
   const description = typeof body.description === 'string' ? body.description.trim() : '';
 
-  if (!title) return Errors.badRequest('title is required');
+  if (!title) {
+    return Errors.badRequest('title is required');
+  }
   if (title.length > PETITION_TITLE_MAX_LENGTH) {
     return Errors.badRequest(`Title must be at most ${PETITION_TITLE_MAX_LENGTH} characters`);
   }
-  if (!description) return Errors.badRequest('description is required for petitions');
+  if (!description) {
+    return Errors.badRequest('description is required for petitions');
+  }
   if (description.length > PETITION_TEXT_MAX_LENGTH) {
     return Errors.badRequest(`Description must be at most ${PETITION_TEXT_MAX_LENGTH} characters`);
   }

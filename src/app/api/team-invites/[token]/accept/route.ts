@@ -72,10 +72,14 @@ import {
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { token } = await params;
-  if (!token) return Errors.badRequest('Missing token');
+  if (!token) {
+    return Errors.badRequest('Missing token');
+  }
   const hash = hashToken(token);
 
   const result = await prisma.$transaction(async (tx) => {
@@ -92,7 +96,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       },
     });
 
-    if (!row) return { ok: false as const, status: 404, error: 'Invite not found' };
+    if (!row) {
+      return { ok: false as const, status: 404, error: 'Invite not found' };
+    }
     if (row.registration.user_id === auth.user.sub) {
       return {
         ok: false as const,
@@ -141,9 +147,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   });
 
   if (!result.ok) {
-    if (result.status === 404) return Errors.notFound(result.error);
-    if (result.status === 403) return Errors.forbidden(result.error);
-    if (result.status === 409) return Errors.conflict(result.error);
+    if (result.status === 404) {
+      return Errors.notFound(result.error);
+    }
+    if (result.status === 403) {
+      return Errors.forbidden(result.error);
+    }
+    if (result.status === 409) {
+      return Errors.conflict(result.error);
+    }
     return Errors.badRequest(result.error);
   }
   // Always AWAITING_TEAM at this point: promotion happens on candidate confirm.

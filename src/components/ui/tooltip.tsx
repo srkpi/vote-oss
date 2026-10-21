@@ -21,7 +21,9 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const show = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+    }
     setOpen(true);
   };
   const hide = () => {
@@ -51,7 +53,7 @@ export function Tooltip({ content, children, side = 'top', className }: TooltipP
         <span
           id={id}
           role="tooltip"
-          className={`border-border-color text-foreground bg-card pointer-events-none absolute z-20 w-max max-w-60 rounded-md border px-2.5 py-1.5 text-xs whitespace-normal shadow-lg ${
+          className={`border-border-color pointer-events-none absolute z-20 w-max max-w-60 rounded-md border bg-card px-2.5 py-1.5 text-xs whitespace-normal text-foreground shadow-lg ${
             side === 'top'
               ? 'bottom-full left-1/2 mb-1.5 -translate-x-1/2'
               : 'top-full left-1/2 mt-1.5 -translate-x-1/2'

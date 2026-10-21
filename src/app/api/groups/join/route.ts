@@ -51,7 +51,9 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { user } = auth;
 
@@ -85,13 +87,21 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!link) return Errors.notFound('Invalid invite token');
-  if (link.deleted_at) return Errors.badRequest('This invite link has been revoked');
-  if (link.expires_at < now) return Errors.badRequest('This invite link has expired');
+  if (!link) {
+    return Errors.notFound('Invalid invite token');
+  }
+  if (link.deleted_at) {
+    return Errors.badRequest('This invite link has been revoked');
+  }
+  if (link.expires_at < now) {
+    return Errors.badRequest('This invite link has expired');
+  }
   if (link.current_usage >= link.max_usage) {
     return Errors.badRequest('This invite link has reached its maximum usage');
   }
-  if (link.group.deleted_at) return Errors.badRequest('This group no longer exists');
+  if (link.group.deleted_at) {
+    return Errors.badRequest('This group no longer exists');
+  }
 
   // Check idempotency — already a member?
   const existingMembership = await prisma.groupMember.findUnique({
