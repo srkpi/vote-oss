@@ -22,16 +22,21 @@ interface Props {
 
 export default async function PetitionOgImage({ params }: Props) {
   const { id } = await params;
-  const { data, success, status } = await serverApi.elections.get(id);
-  if (!success) {
-    return new Response(null, { status: status || 503 });
-  }
-
   const { onest, bitter } = await loadOgFonts();
+  const { data, status } = await serverApi.elections.og(id);
+
+  let metaTitle = 'Петиція';
+  if (status === 404) {
+    metaTitle = 'Петицію не знайдено';
+  } else if (status === 400) {
+    metaTitle = 'Некоректний ID петиції';
+  } else if (data?.title) {
+    metaTitle = data.title;
+  }
 
   return new ImageResponse(
     buildOgImageElement({
-      title: clampTitle(data.title),
+      title: clampTitle(metaTitle),
       icon: ICON_PETITION,
       iconBg: 'rgba(240,125,0,0.18)',
       iconBorder: '2px solid rgba(240,125,0,0.55)',

@@ -29,25 +29,31 @@ interface ElectionPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: ElectionPageProps): Promise<Metadata | null> {
+export async function generateMetadata({ params }: ElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data, success } = await serverApi.elections.get(id);
-  if (!success) {
-    return null;
+  const { data, status } = await serverApi.elections.og(id);
+
+  let metaTitle = 'Голосування';
+  if (status === 404) {
+    metaTitle = '404 | Голосування не знайдено';
+  } else if (status === 400) {
+    metaTitle = '400 | Некоректний ID голосування';
+  } else if (data?.title) {
+    metaTitle = data.title;
   }
 
   return {
-    title: data.title,
-    description: data.title,
+    title: metaTitle,
+    description: metaTitle,
     openGraph: {
-      title: data.title,
-      description: data.title,
+      title: metaTitle,
+      description: metaTitle,
       url: new URL(`/elections/${id}`, APP_URL),
     },
     twitter: {
       card: 'summary_large_image',
-      title: data.title,
-      description: data.title,
+      title: metaTitle,
+      description: metaTitle,
     },
   };
 }

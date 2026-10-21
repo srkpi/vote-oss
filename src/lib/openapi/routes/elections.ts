@@ -240,7 +240,31 @@ export const electionsRoutes: RouteConfig[] = [
       '404': { description: 'Election not found' },
     },
   },
-
+  {
+    method: 'get',
+    path: '/api/elections/{id}/og',
+    summary: 'Get election or petition Open Graph metadata',
+    description:
+      'Returns minimal public metadata for building Open Graph tags and link previews. This endpoint is public and does not require authentication.\n',
+    tags: ['Elections'],
+    request: {
+      params: z.object({
+        id: z.string().openapi({ format: 'uuid', param: { description: 'Election UUID' } }),
+      }),
+    },
+    responses: {
+      '200': jsonResponse('Election or petition public metadata', {
+        type: 'object',
+        required: ['title', 'type'],
+        properties: {
+          title: { type: 'string', description: 'Election title' },
+          type: schemaRef('ElectionType'),
+        },
+      }),
+      '400': { description: 'Invalid UUID' },
+      '404': { description: 'Election or petition not found' },
+    },
+  },
   {
     method: 'get',
     path: '/api/elections/{id}/ballots',

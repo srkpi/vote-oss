@@ -211,7 +211,28 @@ export const groupsRoutes: RouteConfig[] = [
       },
     },
   },
-
+  {
+    method: 'get',
+    path: '/api/groups/{id}/og',
+    summary: 'Get group Open Graph metadata',
+    description:
+      'Returns minimal public metadata for building Open Graph tags and link previews. This endpoint is public and does not require authentication.\n',
+    tags: ['Groups'],
+    request: {
+      params: z.object({
+        id: z.string().openapi({ format: 'uuid', param: { description: 'Group UUID' } }),
+      }),
+    },
+    responses: {
+      '200': jsonResponse('Group public metadata', {
+        type: 'object',
+        required: ['name'],
+        properties: { name: { type: 'string', description: 'Group name' } },
+      }),
+      '400': { description: 'Invalid UUID' },
+      '404': { description: 'Group not found' },
+    },
+  },
   {
     method: 'get',
     path: '/api/groups/{id}/members',

@@ -14,24 +14,28 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata | null> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const { data, success } = await serverApi.groups.get(id);
-  if (!success) {
-    return null;
+  const { data, status } = await serverApi.groups.og(id);
+
+  let metaTitle = 'Група';
+  if (status === 404 || status === 400) {
+    metaTitle = '404 | Групу не знайдено';
+  } else if (data?.name) {
+    metaTitle = data.name;
   }
 
   return {
-    title: data.name,
+    title: metaTitle,
     description: 'Керування групою та членством в ній',
     openGraph: {
-      title: data.name,
+      title: metaTitle,
       description: 'Керування групою та членством в ній',
       url: new URL(`/groups/${id}`, APP_URL),
     },
     twitter: {
       card: 'summary_large_image',
-      title: data.name,
+      title: metaTitle,
       description: 'Керування групами та членством в них',
     },
   };

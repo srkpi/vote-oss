@@ -10,18 +10,10 @@ interface EditElectionPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: EditElectionPageProps): Promise<Metadata | null> {
+export async function generateMetadata({ params }: EditElectionPageProps): Promise<Metadata> {
   const { id } = await params;
-  const { data, success } = await serverApi.elections.get(id);
-  if (!success) {
-    return null;
-  }
-
-  return {
-    title: `${data.title} — Редагування`,
-  };
+  const { data } = await serverApi.elections.og(id);
+  return { title: data?.title ? `${data.title} — Редагування` : 'Редагування голосування' };
 }
 
 export default async function EditElectionPage({ params }: EditElectionPageProps) {

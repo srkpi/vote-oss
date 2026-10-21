@@ -43,6 +43,7 @@ import type {
   CreateElectionResponse,
   ElectionDetail,
   ElectionsListResponse,
+  ElectionType,
   UpdateElectionRequest,
 } from '@/types/election';
 import type {
@@ -130,6 +131,7 @@ export function createApiClient(fetcher: Fetcher) {
         return fetcher<ElectionsListResponse>(`/elections${qs ? `?${qs}` : ''}`);
       },
       get: (id: string) => fetcher<ElectionDetail>(`/elections/${id}`),
+      og: (id: string) => fetcher<{ title: string; type: ElectionType }>(`/elections/${id}/og`),
       create: (data: CreateElectionRequest) =>
         fetcher<CreateElectionResponse>('/elections', {
           method: 'POST',
@@ -386,6 +388,7 @@ export function createApiClient(fetcher: Fetcher) {
     groups: {
       list: () => fetcher<Group[]>('/groups'),
       get: (id: string) => fetcher<GroupDetail>(`/groups/${id}`),
+      og: (id: string) => fetcher<{ name: string }>(`/groups/${id}/og`),
 
       create: (name: string) =>
         fetcher<Group>('/groups', { method: 'POST', body: JSON.stringify({ name }) }),

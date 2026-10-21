@@ -22,16 +22,19 @@ interface Props {
 
 export default async function GroupOgImage({ params }: Props) {
   const { id } = await params;
-  const { data, success, status } = await serverApi.groups.get(id);
-  if (!success) {
-    return new Response(null, { status: status || 503 });
-  }
-
   const { onest, bitter } = await loadOgFonts();
+  const { data, status } = await serverApi.groups.og(id);
+
+  let metaTitle = 'Група';
+  if (status === 404) {
+    metaTitle = 'Групу не знайдено';
+  } else if (data?.name) {
+    metaTitle = data.name;
+  }
 
   return new ImageResponse(
     buildOgImageElement({
-      title: clampTitle(data.name),
+      title: clampTitle(metaTitle),
       icon: ICON_GROUPS,
       iconBg: 'rgba(0,138,207,0.18)',
       iconBorder: '2px solid rgba(0,138,207,0.55)',
