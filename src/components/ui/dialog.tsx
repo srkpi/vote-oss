@@ -38,15 +38,10 @@ export function Dialog({ open, onClose, children }: DialogProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog">
       <div
         className="animate-fade-in absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
-        aria-hidden="true"
       />
       <div className="animate-scale-in relative z-10 w-full">{children}</div>
     </div>
@@ -169,7 +164,6 @@ export function DialogCloseButton({ onClose }: DialogCloseButtonProps) {
         'transition-colors duration-150',
         'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
       )}
-      aria-label="Закрити"
     >
       <X className="h-4 w-4" />
     </button>

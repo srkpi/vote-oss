@@ -15,7 +15,7 @@ function BlankTimerSkeleton({ className }: { className?: string }) {
   const skeletonUnits = ['год', 'хв', 'с'];
 
   return (
-    <div className={cn('invisible flex items-center gap-1 sm:gap-3', className)} aria-hidden="true">
+    <div className={cn('invisible flex items-center gap-1 sm:gap-3', className)}>
       {skeletonUnits.map((label, i) => (
         <div key={label} className="flex items-center gap-1 sm:gap-3">
           <div className="text-center">

@@ -42,7 +42,6 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
           'absolute inset-0 z-0 rounded-xl',
           'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
         )}
-        aria-label={form.title}
       />
 
       <div

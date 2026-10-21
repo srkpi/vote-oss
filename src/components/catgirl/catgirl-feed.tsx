@@ -18,7 +18,6 @@ export function CatgirlFeed() {
         <div
           className="w-full animate-pulse rounded-2xl bg-surface-hover"
           style={{ height: CATGIRL_GALLERY_SIZE_PRESETS.lg.targetHeight }}
-          aria-hidden
         />
       ) : (
         <div className="flex flex-col" style={{ gap: CATGIRL_GALLERY_GAP }}>
@@ -59,7 +58,7 @@ export function CatgirlFeed() {
           </div>
         ) : (
           <>
-            <Loader2 className="h-6 w-6 animate-spin text-kpi-navy" aria-hidden="true" />
+            <Loader2 className="h-6 w-6 animate-spin text-kpi-navy" />
             <span className="sr-only" role="status">
               Завантаження…
             </span>

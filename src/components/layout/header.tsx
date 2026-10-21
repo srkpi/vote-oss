@@ -318,7 +318,6 @@ export function Header({ session }: HeaderProps) {
               'text-muted-foreground hover:bg-surface',
               'transition-colors',
             )}
-            aria-label="Меню"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

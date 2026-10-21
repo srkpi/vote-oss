@@ -55,7 +55,6 @@ export function StyledSelect({
   error = false,
   className,
   id,
-  'aria-label': ariaLabel,
 }: StyledSelectProps) {
   const uid = useId();
   const listboxId = `select-list-${uid}`;
@@ -220,7 +219,7 @@ export function StyledSelect({
                 key={option.value}
                 type="button"
                 role="option"
-                aria-selected={isSelected}
+
                 disabled={option.disabled}
                 onClick={() => selectOption(option)}
                 onMouseEnter={() => !option.disabled && setActiveIndex(index)}
@@ -256,10 +255,7 @@ export function StyledSelect({
         id={id}
         type="button"
         role="combobox"
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        aria-controls={open ? listboxId : undefined}
-        aria-label={ariaLabel}
+
         disabled={disabled}
         onClick={() => (open ? closeDropdown() : openDropdown())}
         onKeyDown={handleKeyDown}

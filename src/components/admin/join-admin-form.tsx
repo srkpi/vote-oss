@@ -82,9 +82,7 @@ export function JoinAdminForm({ initialToken }: JoinAdminFormProps) {
       <div className="space-y-2">
         <label htmlFor="token" className="font-body block text-sm font-medium text-foreground">
           Токен запрошення
-          <span className="ml-1 text-error" aria-hidden="true">
-            *
-          </span>
+          <span className="ml-1 text-error">*</span>
         </label>
         <div className="relative">
           <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">

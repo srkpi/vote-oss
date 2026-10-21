@@ -326,11 +326,7 @@ function MobileFiltersSheet({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -342,7 +338,6 @@ function MobileFiltersSheet({
             type="button"
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
-            aria-label="Закрити"
           >
             <X className="h-4 w-4" />
           </button>

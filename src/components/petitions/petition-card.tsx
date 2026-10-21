@@ -38,7 +38,6 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           'absolute inset-0 z-0 rounded-xl',
           'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
         )}
-        aria-label={petition.title}
       />
 
       <div className="flex h-full min-w-0 flex-col space-y-4 p-5">

@@ -13,11 +13,7 @@ function ToastContainer() {
   }
 
   return (
-    <div
-      className="pointer-events-none fixed right-4 bottom-4 z-100 flex flex-col items-end gap-2.5"
-      aria-live="polite"
-      aria-atomic="false"
-    >
+    <div className="pointer-events-none fixed right-4 bottom-4 z-100 flex flex-col items-end gap-2.5">
       {toasts.map((t) => (
         <div key={t.id} className="pointer-events-auto">
           <ToastItem

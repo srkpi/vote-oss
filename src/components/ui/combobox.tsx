@@ -155,9 +155,7 @@ export function Combobox({
         id={id}
         type="button"
         role="combobox"
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        aria-controls={open ? listboxId : undefined}
+
         disabled={disabled}
         onClick={() => (open ? closeDropdown() : openDropdown())}
         onKeyDown={handleTriggerKeyDown}
@@ -181,7 +179,7 @@ export function Combobox({
           <span
             role="button"
             tabIndex={-1}
-            aria-label="Скинути"
+
             onClick={clearValue}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -270,7 +268,7 @@ export function Combobox({
                     key={option}
                     type="button"
                     role="option"
-                    aria-selected={isSelected}
+
                     onClick={() => selectOption(option)}
                     onMouseEnter={() => setActiveIndex(index)}
                     className={cn(
