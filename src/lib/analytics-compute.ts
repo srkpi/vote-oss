@@ -273,9 +273,9 @@ export function computeAnalytics(
 
   if (decryptionDone) {
     sortedBallots.forEach((ballot) => {
-      const dec = decryptedMap.get(ballot.id);
-      if (dec?.valid && dec.choiceIds) {
-        dec.choiceIds.forEach((id) => {
+      const decryptedBallot = decryptedMap.get(ballot.id);
+      if (decryptedBallot?.valid && decryptedBallot.choiceIds) {
+        decryptedBallot.choiceIds.forEach((id) => {
           if (voteCounts[id] !== undefined) {
             voteCounts[id]++;
           }
@@ -292,9 +292,9 @@ export function computeAnalytics(
   let cumulativeTotal = 0;
 
   const timeSeries: AnalyticsTimePoint[] = sortedBallots.map((ballot) => {
-    const dec = decryptedMap.get(ballot.id);
-    if (decryptionDone && dec?.valid && dec.choiceIds) {
-      dec.choiceIds.forEach((id) => {
+    const decryptedBallot = decryptedMap.get(ballot.id);
+    if (decryptionDone && decryptedBallot?.valid && decryptedBallot.choiceIds) {
+      decryptedBallot.choiceIds.forEach((id) => {
         if (cumulative[id] !== undefined) {
           cumulative[id]++;
         }
@@ -609,9 +609,9 @@ export function computeAnalytics(
       });
 
       sortedBallots.forEach((ballot) => {
-        const dec = decryptedMap.get(ballot.id);
-        if (dec?.valid && dec.choiceIds) {
-          dec.choiceIds.forEach((id) => {
+        const decryptedBallot = decryptedMap.get(ballot.id);
+        if (decryptedBallot?.valid && decryptedBallot.choiceIds) {
+          decryptedBallot.choiceIds.forEach((id) => {
             if (cur[id] !== undefined) {
               cur[id]++;
             }
