@@ -1,12 +1,13 @@
 'use client';
 
 import { format } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { CalendarDays, Clock } from 'lucide-react';
 import { Popover } from 'radix-ui';
-import { useState, type Ref } from 'react';
+import { useId, useState, type Ref } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { uk } from 'react-day-picker/locale';
 
+import { Input } from '@/components/ui/form';
 import { cn } from '@/lib/utils/common';
 import {
   KYIV_TIME_ZONE,
@@ -43,6 +44,7 @@ export function KyivDateTimePicker({
   className,
   placeholder = 'ДД.ММ.РРРР ГГ:ХХ',
 }: KyivDateTimePickerProps) {
+  const timeId = useId();
   const [open, setOpen] = useState(false);
   const [fallbackDate, setFallbackDate] = useState(() => new Date());
   const selected = kyivDate(value);
@@ -50,8 +52,6 @@ export function KyivDateTimePicker({
   const maxDate = kyivDate(max);
   const day = selected ?? minDate ?? kyivDate(fallbackDate)!;
   const slots = open ? kyivTimeSlots(day, minuteStep, minDate, maxDate) : [];
-  const hour = day.getHours();
-  const minute = day.getMinutes();
   const changeTime = (hour: number, minute: number) => {
     const current = kyivDate(day)!;
     const matching = slots.filter((slot) => {
@@ -165,30 +165,33 @@ export function KyivDateTimePicker({
               hidden: 'invisible',
             }}
           />
-          <div className="flex items-center gap-2 border-t border-border-subtle px-3 py-2.5">
-            <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span>Час</span>
-            <div className="ml-auto flex items-center gap-1">
-              <TimeSpinner
-                label="Години"
-                value={hour}
-                max={23}
-                onChange={(value) => changeTime(value, minute)}
-                onStep={(direction) => changeTime((hour + direction + 24) % 24, minute)}
-                disabled={!slots.length}
-              />
-              <span className="font-semibold">:</span>
-              <TimeSpinner
-                label="Хвилини"
-                value={minute}
-                max={59}
-                onChange={(value) => changeTime(hour, value)}
-                onStep={(direction) =>
-                  changeTime(hour, (minute + direction * minuteStep + 60) % 60)
+          <div className="border-t border-border-subtle px-3 py-3">
+            <label className="mb-2 block text-xs font-medium" htmlFor={timeId}>
+              Час (Київ)
+            </label>
+            <Input
+              id={timeId}
+              type="time"
+              step={minuteStep * 60}
+              min={slots[0]?.label.slice(0, 5)}
+              max={slots.at(-1)?.label.slice(0, 5)}
+              value={format(day, 'HH:mm')}
+              disabled={!slots.length}
+              leftIcon={<Clock className="h-4 w-4" />}
+              className="appearance-none tabular-nums [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+              onChange={(event) => {
+                if (event.target.value) {
+                  const [hour, minute] = event.target.value.split(':').map(Number);
+                  changeTime(hour, minute);
                 }
-                disabled={!slots.length}
-              />
-            </div>
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  setOpen(false);
+                }
+              }}
+            />
           </div>
           {repeated.length > 1 && (
             <select
@@ -207,77 +210,5 @@ export function KyivDateTimePicker({
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  );
-}
-
-function TimeSpinner({
-  label,
-  value,
-  max,
-  onChange,
-  onStep,
-  disabled,
-}: {
-  label: string;
-  value: number;
-  max: number;
-  onChange: (value: number) => void;
-  onStep: (direction: -1 | 1) => void;
-  disabled: boolean;
-}) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const commit = () => {
-    if (draft !== null && draft.trim() && Number(draft) <= max) {
-      onChange(Number(draft));
-    }
-    setDraft(null);
-  };
-  return (
-    <div className="border-border-color flex items-center rounded border bg-card">
-      <button
-        type="button"
-        title={`Зменшити: ${label}`}
-        disabled={disabled}
-        tabIndex={-1}
-        onClick={() => onStep(-1)}
-        className="rounded-l px-1.5 py-1 text-muted-foreground hover:bg-surface"
-      >
-        <ChevronLeft className="h-3 w-3" />
-      </button>
-      <input
-        type="text"
-        title={label}
-        inputMode="numeric"
-        value={draft ?? String(value).padStart(2, '0')}
-        disabled={disabled}
-        onFocus={(event) => {
-          setDraft(String(value).padStart(2, '0'));
-          event.currentTarget.select();
-        }}
-        onChange={(event) => setDraft(event.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-            event.preventDefault();
-            setDraft(null);
-            onStep(event.key === 'ArrowUp' ? 1 : -1);
-          } else if (event.key === 'Enter') {
-            event.preventDefault();
-            event.currentTarget.blur();
-          }
-        }}
-        className="w-8 bg-transparent py-1 text-center text-sm text-foreground tabular-nums focus:outline-none"
-      />
-      <button
-        type="button"
-        title={`Збільшити: ${label}`}
-        disabled={disabled}
-        tabIndex={-1}
-        onClick={() => onStep(1)}
-        className="rounded-r px-1.5 py-1 text-muted-foreground hover:bg-surface"
-      >
-        <ChevronRight className="h-3 w-3" />
-      </button>
-    </div>
   );
 }
