@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { getAvatarUrlMap } from '@/lib/avatars';
 import {
@@ -34,6 +35,7 @@ import {
   invalidateVKSUGroupIds,
 } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupUpdateBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 import { parseWinningConditions } from '@/lib/winning-conditions';
 import type { VerifiedPayload } from '@/types/auth';
@@ -238,9 +240,15 @@ async function fetchGroupElections(
   const avatarIds = new Set<string>();
   for (const e of groupElections) {
     avatarIds.add(e.createdBy);
-    if (e.approvedById) avatarIds.add(e.approvedById);
-    if (e.editedByUserId) avatarIds.add(e.editedByUserId);
-    if (e.deletedByUserId) avatarIds.add(e.deletedByUserId);
+    if (e.approvedById) {
+      avatarIds.add(e.approvedById);
+    }
+    if (e.editedByUserId) {
+      avatarIds.add(e.editedByUserId);
+    }
+    if (e.deletedByUserId) {
+      avatarIds.add(e.deletedByUserId);
+    }
   }
   const avatarMap = await getAvatarUrlMap([...avatarIds]);
 
@@ -314,7 +322,9 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
     },
   });
 
-  if (!group) throw new GroupNotFoundError();
+  if (!group) {
+    throw new GroupNotFoundError();
+  }
 
   const isOwner = group.owner_id === user.sub;
   const isMember = isOwner || group.members.some((m) => m.user_id === user.sub);
@@ -436,17 +446,25 @@ async function fetchGroupDetail(groupId: string, user: VerifiedPayload) {
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   try {
     const detail = await fetchGroupDetail(id, auth.user);
     return NextResponse.json(detail);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 }
@@ -463,12 +481,16 @@ function normalizeRequisiteField(
   fieldName: string,
   maxLength: number,
 ): { ok: true; value: string | null } | { ok: false; error: string } {
-  if (value === null) return { ok: true, value: null };
+  if (value === null) {
+    return { ok: true, value: null };
+  }
   if (typeof value !== 'string') {
     return { ok: false, error: `requisites.${fieldName} must be a string or null` };
   }
   const trimmed = value.trim();
-  if (trimmed.length === 0) return { ok: true, value: null };
+  if (trimmed.length === 0) {
+    return { ok: true, value: null };
+  }
   if (trimmed.length > maxLength) {
     return {
       ok: false,
@@ -559,17 +581,20 @@ function normalizeRequisiteField(
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
-
-  let body: { name?: string; type?: 'VKSU' | 'OTHER'; requisites?: RequisitesPatch };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
   }
+
+  const parsedBody = await parseRequestBody(req, groupUpdateBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
 
   const wantsRename = body.name !== undefined;
   const wantsTypeChange = body.type !== undefined;
@@ -581,7 +606,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   let trimmedName: string | undefined;
   if (wantsRename) {
     trimmedName = body.name?.trim();
-    if (!trimmedName) return Errors.badRequest('name is required');
+    if (!trimmedName) {
+      return Errors.badRequest('name is required');
+    }
     if (trimmedName.length > GROUP_NAME_MAX_LENGTH) {
       return Errors.badRequest(`name must be at most ${GROUP_NAME_MAX_LENGTH} characters`);
     }
@@ -600,7 +627,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (wantsRequisites) {
     const r = body.requisites;
-    if (!r || typeof r !== 'object') return Errors.badRequest('requisites must be an object');
+    if (!r || typeof r !== 'object') {
+      return Errors.badRequest('requisites must be an object');
+    }
     normalizedRequisites = {};
     const fields: ReadonlyArray<[keyof RequisitesPatch, string, number, string]> = [
       ['fullName', 'full_name', GROUP_REQUISITES_FULL_NAME_MAX_LENGTH, 'fullName'],
@@ -609,9 +638,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ['contact', 'contact', GROUP_REQUISITES_CONTACT_MAX_LENGTH, 'contact'],
     ];
     for (const [apiKey, dbKey, max, label] of fields) {
-      if (!(apiKey in r)) continue;
+      if (!(apiKey in r)) {
+        continue;
+      }
       const result = normalizeRequisiteField(r[apiKey], label, max);
-      if (!result.ok) return Errors.badRequest(result.error);
+      if (!result.ok) {
+        return Errors.badRequest(result.error);
+      }
       (normalizedRequisites as Record<string, string | null>)[dbKey] = result.value;
     }
     if (Object.keys(normalizedRequisites).length === 0) {
@@ -631,7 +664,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     select: { owner_id: true, deleted_at: true, type: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   if (wantsRename && group.owner_id !== auth.user.sub) {
     return Errors.forbidden('Only the group owner can rename the group');
@@ -657,9 +692,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   } = {
     updated_by: auth.user.sub,
   };
-  if (wantsRename) update.name = trimmedName!;
-  if (wantsTypeChange) update.type = body.type;
-  if (normalizedRequisites) Object.assign(update, normalizedRequisites);
+  if (wantsRename) {
+    update.name = trimmedName!;
+  }
+  if (wantsTypeChange) {
+    update.type = body.type;
+  }
+  if (normalizedRequisites) {
+    Object.assign(update, normalizedRequisites);
+  }
 
   await prisma.group.update({ where: { id }, data: update });
 
@@ -712,10 +753,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
 
@@ -732,7 +777,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   if (group.owner_id !== auth.user.sub && !isAdminWithManageGroups) {
     return Errors.forbidden('Only the group owner or a groups admin can delete this group');
@@ -752,7 +799,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     invalidateGroupMembershipsForUsers(memberIds),
     invalidateUserOwnedGroups(group.owner_id),
   ];
-  if (group.type === 'VKSU') invalidations.push(invalidateVKSUGroupIds());
+  if (group.type === 'VKSU') {
+    invalidations.push(invalidateVKSUGroupIds());
+  }
   await Promise.all(invalidations);
 
   return new NextResponse(null, { status: 204 });

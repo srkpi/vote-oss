@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import {
   GROUP_INVITE_LINK_LABEL_MAX_LENGTH,
@@ -13,6 +14,7 @@ import {
 import { generateBase64Token, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { groupInviteBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
 function canManageLinks(
@@ -100,10 +102,14 @@ function mapLink(link: {
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
 
@@ -112,7 +118,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   if (!canManageLinks(auth.user.sub, group.owner_id, isAdminWithManageGroups)) {
     return Errors.forbidden('Only the group owner can manage invite links');
@@ -212,10 +220,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
 
@@ -224,24 +236,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   if (!canManageLinks(auth.user.sub, group.owner_id, isAdminWithManageGroups)) {
     return Errors.forbidden('Only the group owner can create invite links');
   }
 
-  let body: { label?: string; maxUsage?: number; expiresAt?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupInviteBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { label, maxUsage, expiresAt } = body;
 
-  if (!expiresAt) return Errors.badRequest('expiresAt is required');
+  if (!expiresAt) {
+    return Errors.badRequest('expiresAt is required');
+  }
   const expiresAtDate = new Date(expiresAt);
-  if (isNaN(expiresAtDate.getTime())) return Errors.badRequest('Invalid expiresAt date');
+  if (isNaN(expiresAtDate.getTime())) {
+    return Errors.badRequest('Invalid expiresAt date');
+  }
 
   const now = new Date();
   const minDate = new Date(now.getTime() + GROUP_INVITE_LINK_MIN_HOURS * 60 * 60 * 1000);

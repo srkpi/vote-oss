@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin } from '@/lib/auth';
 import { getAvatarUrlMap } from '@/lib/avatars';
 import { getCachedInviteTokens, invalidateInviteTokens, setCachedInviteTokens } from '@/lib/cache';
@@ -13,6 +14,7 @@ import { generateBase64Token, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
+import { adminInviteBodySchema } from '@/lib/schemas/group';
 
 /**
  * @swagger
@@ -213,21 +215,11 @@ export async function POST(req: NextRequest) {
     return Errors.forbidden('You do not have permission to create admin invites');
   }
 
-  let body: {
-    maxUsage?: number;
-    manageAdmins?: boolean;
-    manageGroups?: boolean;
-    managePetitions?: boolean;
-    manageFaq?: boolean;
-    restrictedToFaculty?: boolean;
-    validDue?: string;
-  };
-
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, adminInviteBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const {
     maxUsage = 1,
@@ -239,7 +231,9 @@ export async function POST(req: NextRequest) {
   } = body;
   let { restrictedToFaculty = true } = body;
 
-  if (!validDue) return Errors.badRequest('validDue is required');
+  if (!validDue) {
+    return Errors.badRequest('validDue is required');
+  }
 
   const validDueDate = new Date(validDue);
   if (isNaN(validDueDate.getTime()) || validDueDate <= new Date()) {

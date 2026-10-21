@@ -42,6 +42,12 @@ import { Errors } from '@/lib/errors';
 import { buildAdminGraph } from '@/lib/graph';
 import { getUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import {
+  electionCreateBodySchema,
+  electionCreateEnvelopeSchema,
+  type PetitionCreateBody,
+  petitionCreateBodySchema,
+} from '@/lib/schemas/election';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
 import { computePetitionClosesAt } from '@/lib/utils/petition-date';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
@@ -99,7 +105,9 @@ function extractFacultiesFromElections(elections: CachedElection[]): string[] {
   const set = new Set<string>();
   for (const e of elections) {
     for (const r of e.restrictions) {
-      if (r.type === 'FACULTY') set.add(r.value);
+      if (r.type === 'FACULTY') {
+        set.add(r.value);
+      }
     }
   }
   return [...set].sort((a, b) => a.localeCompare(b, 'uk'));
@@ -112,7 +120,9 @@ function extractStudyFormsFromElections(elections: CachedElection[]): string[] {
   const set = new Set<string>();
   for (const e of elections) {
     for (const r of e.restrictions) {
-      if (r.type === 'STUDY_FORM') set.add(r.value);
+      if (r.type === 'STUDY_FORM') {
+        set.add(r.value);
+      }
     }
   }
   return [...set].sort();
@@ -177,7 +187,9 @@ function extractStudyFormsFromElections(elections: CachedElection[]): string[] {
  */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
   const { user } = auth;
 
   const isAdmin = user.isAdmin ?? false;
@@ -339,9 +351,15 @@ export async function GET(req: NextRequest) {
   const avatarIds = new Set<string>();
   for (const e of cachedWithLiveCounts) {
     avatarIds.add(e.createdBy);
-    if (e.approvedById) avatarIds.add(e.approvedById);
-    if (e.editedByUserId) avatarIds.add(e.editedByUserId);
-    if (e.deletedByUserId) avatarIds.add(e.deletedByUserId);
+    if (e.approvedById) {
+      avatarIds.add(e.approvedById);
+    }
+    if (e.editedByUserId) {
+      avatarIds.add(e.editedByUserId);
+    }
+    if (e.deletedByUserId) {
+      avatarIds.add(e.deletedByUserId);
+    }
   }
   const avatarMap = await getAvatarUrlMap([...avatarIds]);
 
@@ -459,39 +477,36 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
   const { user } = auth;
 
-  let body: {
-    type?: ElectionType;
-    title?: string;
-    description?: string | null;
-    opensAt?: string;
-    closesAt?: string;
-    choices?: string[];
-    minChoices?: number;
-    maxChoices?: number;
-    restrictions?: CreateElectionRestriction[];
-    winningConditions?: unknown;
-    shuffleChoices?: boolean;
-    publicViewing?: boolean;
-    anonymous?: boolean;
-  };
-
+  let rawBody: unknown;
   try {
-    body = await req.json();
+    rawBody = await req.json();
   } catch {
     return Errors.badRequest('Invalid JSON body');
+  }
+
+  const envelope = electionCreateEnvelopeSchema.safeParse(rawBody);
+  if (!envelope.success) {
+    return Errors.badRequest('Request body must be a JSON object');
   }
 
   // Non-admin users may only create PETITION.  Coerce silently so naive
   // clients that forget to set the flag still land in the right code path.
   const isAdmin = user.isAdmin ?? false;
-  const requestedType: ElectionType = body.type === 'PETITION' ? 'PETITION' : 'ELECTION';
+  const requestedType: ElectionType = envelope.data.type === 'PETITION' ? 'PETITION' : 'ELECTION';
   const type: ElectionType = isAdmin ? requestedType : 'PETITION';
 
   if (type === 'PETITION') {
-    return handlePetitionCreate(user, body);
+    const petition = petitionCreateBodySchema.safeParse(rawBody);
+    if (!petition.success) {
+      const issue = petition.error.issues[0];
+      return Errors.badRequest(`${issue.path.join('.')}: ${issue.message}`);
+    }
+    return handlePetitionCreate(user, petition.data);
   }
 
   // ── Election branch (admin-only) ───────────────────────────────────────
@@ -504,6 +519,13 @@ export async function POST(req: NextRequest) {
   if (!admin) {
     return Errors.forbidden('Admin record not found');
   }
+
+  const parsedElection = electionCreateBodySchema.safeParse(rawBody);
+  if (!parsedElection.success) {
+    const issue = parsedElection.error.issues[0];
+    return Errors.badRequest(`${issue.path.join('.')}: ${issue.message}`);
+  }
+  const body = parsedElection.data;
 
   const { title, opensAt, closesAt, choices } = body;
   const description = typeof body.description === 'string' ? body.description.trim() : null;
@@ -570,9 +592,15 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   const maxCloseDate = Date.now() + ELECTION_MAX_CLOSES_AT_DAYS * 24 * 60 * 60 * 1000;
 
-  if (isNaN(openDate.getTime())) return Errors.badRequest('Invalid opensAt date');
-  if (isNaN(closeDate.getTime())) return Errors.badRequest('Invalid closesAt date');
-  if (closeDate <= openDate) return Errors.badRequest('closesAt must be after opensAt');
+  if (isNaN(openDate.getTime())) {
+    return Errors.badRequest('Invalid opensAt date');
+  }
+  if (isNaN(closeDate.getTime())) {
+    return Errors.badRequest('Invalid closesAt date');
+  }
+  if (closeDate <= openDate) {
+    return Errors.badRequest('closesAt must be after opensAt');
+  }
   if (closeDate.getTime() > maxCloseDate) {
     return Errors.badRequest(
       `closesAt must be no more than ${ELECTION_MAX_CLOSES_AT_DAYS} days from now`,
@@ -862,16 +890,20 @@ export async function POST(req: NextRequest) {
  */
 async function handlePetitionCreate(
   user: { sub: string; fullName: string; isAdmin?: boolean; managePetitions?: boolean },
-  body: { title?: string; description?: string | null },
+  body: PetitionCreateBody,
 ) {
   const title = typeof body.title === 'string' ? body.title.trim() : '';
   const description = typeof body.description === 'string' ? body.description.trim() : '';
 
-  if (!title) return Errors.badRequest('title is required');
+  if (!title) {
+    return Errors.badRequest('title is required');
+  }
   if (title.length > PETITION_TITLE_MAX_LENGTH) {
     return Errors.badRequest(`Title must be at most ${PETITION_TITLE_MAX_LENGTH} characters`);
   }
-  if (!description) return Errors.badRequest('description is required for petitions');
+  if (!description) {
+    return Errors.badRequest('description is required for petitions');
+  }
   if (description.length > PETITION_TEXT_MAX_LENGTH) {
     return Errors.badRequest(`Description must be at most ${PETITION_TEXT_MAX_LENGTH} characters`);
   }

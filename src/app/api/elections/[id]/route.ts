@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getAvatarUrlMap } from '@/lib/avatars';
 import { getElectionBypassForUser } from '@/lib/bypass';
@@ -32,6 +33,7 @@ import {
   adminCanRestoreElection,
   checkRestrictionsWithBypass,
 } from '@/lib/restrictions';
+import { electionUpdateBodySchema } from '@/lib/schemas/election';
 import { isValidUuid } from '@/lib/utils/common';
 import { parseGroupLevel } from '@/lib/utils/group-utils';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
@@ -73,13 +75,17 @@ async function computeTallyInMemory(
   });
 
   const tally: Record<string, number> = {};
-  for (const c of choices) tally[c.id] = 0;
+  for (const c of choices) {
+    tally[c.id] = 0;
+  }
 
   for (const ballot of ballots) {
     try {
       const { choiceIds } = decryptBallot(privateKeyPem, ballot.encrypted_ballot);
       for (const choiceId of choiceIds) {
-        if (choiceId in tally) tally[choiceId]++;
+        if (choiceId in tally) {
+          tally[choiceId]++;
+        }
       }
     } catch {
       console.error(`[tally] Failed to decrypt ballot for election ${electionId}`);
@@ -177,10 +183,14 @@ function buildTallyResults(
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const { user } = auth;
   const isAdmin = user.isAdmin ?? false;
@@ -191,7 +201,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (cached) {
     const rawFound = cached.find((e) => e.id === electionId);
-    if (!rawFound) return Errors.notFound('Election not found');
+    if (!rawFound) {
+      return Errors.notFound('Election not found');
+    }
     // Overlay real-time ballot count so freshly-cast ballots are reflected
     // without waiting for full cache invalidation.
     const [found] = await overlayLiveBallotCounts([rawFound]);
@@ -248,7 +260,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
 
-    if (!dbElection) return Errors.notFound('Election not found');
+    if (!dbElection) {
+      return Errors.notFound('Election not found');
+    }
 
     electionData = {
       id: dbElection.id,
@@ -379,7 +393,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (answerRow) {
       const authorIds = [answerRow.author_user_id];
-      if (answerRow.edited_by_user_id) authorIds.push(answerRow.edited_by_user_id);
+      if (answerRow.edited_by_user_id) {
+        authorIds.push(answerRow.edited_by_user_id);
+      }
       const answerAvatarMap = await getAvatarUrlMap(authorIds);
       officialAnswer = shapeOfficialAnswer(
         answerRow,
@@ -444,7 +460,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       );
     } else {
       const tally: Record<string, number> = {};
-      for (const c of electionData.choices) tally[c.id] = c.voteCount ?? 0;
+      for (const c of electionData.choices) {
+        tally[c.id] = c.voteCount ?? 0;
+      }
       tallyResults = buildTallyResults(
         tally,
         electionData.ballotCount,
@@ -664,7 +682,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const { admin } = auth;
 
@@ -672,8 +692,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     where: { id: electionId },
     include: { restrictions: { select: { type: true, value: true } } },
   });
-  if (!election) return Errors.notFound('Election not found');
-  if (election.deleted_at) return Errors.notFound('Election not found');
+  if (!election) {
+    return Errors.notFound('Election not found');
+  }
+  if (election.deleted_at) {
+    return Errors.notFound('Election not found');
+  }
 
   const restrictions = election.restrictions as ElectionRestriction[];
 
@@ -773,7 +797,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const { admin } = auth;
 
@@ -783,8 +809,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     include: { restrictions: { select: { type: true, value: true } } },
   });
 
-  if (!election || election.deleted_at) return Errors.notFound('Election not found');
-  if (election.type === 'PETITION') return Errors.badRequest('Petitions cannot be edited');
+  if (!election || election.deleted_at) {
+    return Errors.notFound('Election not found');
+  }
+  if (election.type === 'PETITION') {
+    return Errors.badRequest('Petitions cannot be edited');
+  }
 
   const now = new Date();
   if (election.opens_at <= now) {
@@ -812,26 +842,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   // Parse body
-  let body: {
-    title?: string;
-    description?: string | null;
-    opensAt?: string;
-    closesAt?: string;
-    choices?: string[];
-    minChoices?: number;
-    maxChoices?: number;
-    restrictions?: CreateElectionRestriction[];
-    winningConditions?: unknown;
-    shuffleChoices?: boolean;
-    publicViewing?: boolean;
-    anonymous?: boolean;
-  };
-
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, electionUpdateBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { title, opensAt, closesAt, choices } = body;
   const description = typeof body.description === 'string' ? body.description.trim() : null;
@@ -889,9 +904,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const openDate = new Date(opensAt);
   const closeDate = new Date(closesAt);
 
-  if (isNaN(openDate.getTime())) return Errors.badRequest('Invalid opensAt date');
-  if (isNaN(closeDate.getTime())) return Errors.badRequest('Invalid closesAt date');
-  if (closeDate <= openDate) return Errors.badRequest('closesAt must be after opensAt');
+  if (isNaN(openDate.getTime())) {
+    return Errors.badRequest('Invalid opensAt date');
+  }
+  if (isNaN(closeDate.getTime())) {
+    return Errors.badRequest('Invalid closesAt date');
+  }
+  if (closeDate <= openDate) {
+    return Errors.badRequest('closesAt must be after opensAt');
+  }
   if (closeDate.getTime() <= now.getTime()) {
     return Errors.badRequest('closesAt must be in the future');
   }

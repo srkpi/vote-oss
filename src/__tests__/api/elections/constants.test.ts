@@ -2,7 +2,13 @@ import * as allure from 'allure-js-commons';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
-import { ADMIN_PAYLOAD, ADMIN_RECORD, makeTokenPair } from '@/__tests__/helpers/fixtures';
+import {
+  ADMIN_PAYLOAD,
+  ADMIN_RECORD,
+  makeElection,
+  makeTokenPair,
+  USER_PAYLOAD,
+} from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, parseJson } from '@/__tests__/helpers/request';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
@@ -36,7 +42,7 @@ const validBody = {
   choices: ['Option A', 'Option B'],
 };
 
-async function makeAdminReq(body: object, adminRecord = ADMIN_RECORD) {
+async function makeAdminReq(body: unknown, adminRecord = ADMIN_RECORD) {
   const { access } = await makeTokenPair(ADMIN_PAYLOAD);
   tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
   prismaMock.admin.findUnique.mockResolvedValueOnce(adminRecord);
@@ -51,6 +57,72 @@ describe('POST /api/elections — constant-driven validation', () => {
     resetCampusMock();
     allure.feature('Elections');
     allure.story('Create Election – Constants Validation');
+  });
+
+  it.each([null, [], 'election', 42, true])('rejects a non-object body: %j', async (body) => {
+    const response = await POST(await makeAdminReq(body));
+    expect(response.status).toBe(400);
+    expect(prismaMock.election.create).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { title: 123 },
+    { description: {} },
+    { opensAt: 123 },
+    { closesAt: [] },
+    { choices: 'Option A' },
+    { choices: ['Option A', null] },
+    { choices: ['Option A', 123] },
+    { minChoices: '1' },
+    { minChoices: 1.5 },
+    { maxChoices: 1.5 },
+    { restrictions: {} },
+    { restrictions: [null] },
+    { restrictions: [{ type: 'FACULTY', value: 123 }] },
+    { restrictions: [{ value: 'FICE' }] },
+    { shuffleChoices: 'false' },
+    { publicViewing: 1 },
+    { anonymous: 'true' },
+  ])('rejects malformed election fields: %j', async (fields) => {
+    const response = await POST(await makeAdminReq({ ...validBody, ...fields }));
+    expect(response.status).toBe(400);
+    expect(prismaMock.election.create).not.toHaveBeenCalled();
+    expect(campusMock.fetchFacultyGroups).not.toHaveBeenCalled();
+  });
+
+  it('ignores election-only fields when a regular user creates a petition', async () => {
+    const { access } = await makeTokenPair(USER_PAYLOAD);
+    tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
+    prismaMock.election.create.mockResolvedValueOnce(makeElection({ type: 'PETITION' }));
+
+    const response = await POST(
+      makeAuthRequest(access.token, {
+        method: 'POST',
+        body: {
+          type: 'ELECTION',
+          title: 'Petition title',
+          description: 'Petition description',
+          choices: 'ignored',
+          restrictions: [null],
+          anonymous: 'ignored',
+        },
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(prismaMock.election.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ type: 'PETITION', anonymous: false }),
+      }),
+    );
+  });
+
+  it('validates petition field types for admins too', async () => {
+    const response = await POST(
+      await makeAdminReq({ type: 'PETITION', title: 'Petition title', description: {} }),
+    );
+    expect(response.status).toBe(400);
+    expect(prismaMock.election.create).not.toHaveBeenCalled();
   });
 
   // ── Title length ────────────────────────────────────────────────────────

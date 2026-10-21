@@ -1,10 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { Errors } from '@/lib/errors';
 import { invalidateUserOwnedGroups } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupTransferBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
 /**
@@ -62,17 +64,20 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
-
-  let body: { newOwnerId?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
   }
+
+  const parsedBody = await parseRequestBody(req, groupTransferBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
 
   const { newOwnerId } = body;
   if (!newOwnerId || typeof newOwnerId !== 'string') {
@@ -87,7 +92,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   const isCurrentOwner = callerId === group.owner_id;
 

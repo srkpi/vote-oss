@@ -1,11 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { GROUP_MEMBER_ROLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { invalidateUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupMemberRoleBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
 /**
@@ -56,11 +58,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; userId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId, userId: targetUserId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
-  if (!targetUserId) return Errors.badRequest('userId is required');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
+  if (!targetUserId) {
+    return Errors.badRequest('userId is required');
+  }
 
   const callerId = auth.user.sub;
   const isSelf = callerId === targetUserId;
@@ -71,7 +79,9 @@ export async function DELETE(
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   const isOwner = callerId === group.owner_id;
 
@@ -170,18 +180,23 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; userId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId, userId: targetUserId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
-  if (!targetUserId) return Errors.badRequest('userId is required');
-
-  let body: { role?: string | null };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
   }
+  if (!targetUserId) {
+    return Errors.badRequest('userId is required');
+  }
+
+  const parsedBody = await parseRequestBody(req, groupMemberRoleBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
   if (!('role' in body)) {
     return Errors.badRequest('role is required (string or null)');
   }
@@ -206,7 +221,9 @@ export async function PATCH(
     where: { id: groupId },
     select: { owner_id: true, deleted_at: true },
   });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
   if (group.owner_id !== auth.user.sub) {
     return Errors.forbidden('Only the group owner can edit member roles');
   }

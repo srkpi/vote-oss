@@ -1,11 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { invalidateUserGroupMemberships } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { tokenBodySchema } from '@/lib/schemas/group';
 
 /**
  * @swagger
@@ -51,16 +53,17 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { user } = auth;
 
-  let body: { token?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, tokenBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { token } = body;
   if (!token || typeof token !== 'string') {
@@ -85,13 +88,21 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  if (!link) return Errors.notFound('Invalid invite token');
-  if (link.deleted_at) return Errors.badRequest('This invite link has been revoked');
-  if (link.expires_at < now) return Errors.badRequest('This invite link has expired');
+  if (!link) {
+    return Errors.notFound('Invalid invite token');
+  }
+  if (link.deleted_at) {
+    return Errors.badRequest('This invite link has been revoked');
+  }
+  if (link.expires_at < now) {
+    return Errors.badRequest('This invite link has expired');
+  }
   if (link.current_usage >= link.max_usage) {
     return Errors.badRequest('This invite link has reached its maximum usage');
   }
-  if (link.group.deleted_at) return Errors.badRequest('This group no longer exists');
+  if (link.group.deleted_at) {
+    return Errors.badRequest('This group no longer exists');
+  }
 
   // Check idempotency — already a member?
   const existingMembership = await prisma.groupMember.findUnique({

@@ -1,8 +1,8 @@
 'use client';
 
+import { CategoryTitleForm } from '@/components/faq/category-title-form';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { CharCounter } from '@/components/ui/char-counter';
 import {
   Dialog,
   DialogBody,
@@ -12,27 +12,15 @@ import {
   DialogPanel,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/form';
-import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import type { FaqCategoryData, FaqItemData } from '@/types/faq';
 
 export interface RenameCategoryDialogProps {
   category: FaqCategoryData | null;
-  title: string;
-  onTitleChange: (value: string) => void;
-  onConfirm: () => void;
+  onConfirm: (title: string) => Promise<void>;
   onClose: () => void;
-  loading: boolean;
 }
 
-export function RenameCategoryDialog({
-  category,
-  title,
-  onTitleChange,
-  onConfirm,
-  onClose,
-  loading,
-}: RenameCategoryDialogProps) {
+export function RenameCategoryDialog({ category, onConfirm, onClose }: RenameCategoryDialogProps) {
   return (
     <Dialog open={!!category} onClose={onClose}>
       <DialogPanel maxWidth="sm">
@@ -40,28 +28,13 @@ export function RenameCategoryDialog({
           <DialogTitle>Перейменувати категорію</DialogTitle>
           <DialogCloseButton onClose={onClose} />
         </DialogHeader>
-        <DialogBody>
-          <div className="space-y-1">
-            <Input
-              value={title}
-              onChange={(e) => onTitleChange(e.target.value)}
-              error={title.length > FAQ_CATEGORY_TITLE_MAX_LENGTH}
-              onKeyDown={(e) => e.key === 'Enter' && onConfirm()}
-              autoFocus
-            />
-            <div className="flex justify-end">
-              <CharCounter value={title} max={FAQ_CATEGORY_TITLE_MAX_LENGTH} />
-            </div>
-          </div>
-        </DialogBody>
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Скасувати
-          </Button>
-          <Button variant="accent" onClick={onConfirm} loading={loading}>
-            Зберегти
-          </Button>
-        </DialogFooter>
+        <CategoryTitleForm
+          key={category?.id}
+          initialTitle={category?.title}
+          onSave={onConfirm}
+          onCancel={onClose}
+          inDialog
+        />
       </DialogPanel>
     </Dialog>
   );
