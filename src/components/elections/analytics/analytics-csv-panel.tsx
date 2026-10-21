@@ -126,14 +126,14 @@ export function AnalyticsCsvPanel({
   };
 
   return (
-    <div className="border-border-color rounded-xl border bg-card p-6 shadow-sm">
+    <div className="border-border-color bg-card rounded-xl border p-6 shadow-sm">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h3 className="flex items-center gap-2 font-display text-base font-semibold text-foreground">
-            <FileSpreadsheet className="h-4 w-4 text-kpi-orange" />
+          <h3 className="font-display text-foreground flex items-center gap-2 text-base font-semibold">
+            <FileSpreadsheet className="text-kpi-orange h-4 w-4" />
             Експорт CSV
           </h3>
-          <p className="font-body mt-1 text-xs text-muted-foreground">
+          <p className="font-body text-muted-foreground mt-1 text-xs">
             Оберіть поля. Дані обробляються локально у вашому браузері.
           </p>
         </div>
@@ -158,7 +158,7 @@ export function AnalyticsCsvPanel({
               className={cn(
                 'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all duration-150',
                 locked
-                  ? 'cursor-not-allowed border-border-subtle bg-surface opacity-40'
+                  ? 'border-border-subtle bg-surface cursor-not-allowed opacity-40'
                   : isSelected
                     ? 'border-kpi-navy/30 bg-kpi-navy/5'
                     : 'border-border-subtle bg-card hover:border-kpi-navy/20 hover:bg-surface',
@@ -169,12 +169,12 @@ export function AnalyticsCsvPanel({
                 checked={isSelected}
                 disabled={locked}
                 onChange={() => !locked && toggle(field.key)}
-                className="h-4 w-4 shrink-0 accent-kpi-navy"
+                className="accent-kpi-navy h-4 w-4 shrink-0"
               />
-              <span className="font-body text-xs text-foreground">
+              <span className="font-body text-foreground text-xs">
                 {field.label}
                 {field.encrypted && (
-                  <span className="ml-1 text-muted-foreground">(після дешифрування)</span>
+                  <span className="text-muted-foreground ml-1">(після дешифрування)</span>
                 )}
               </span>
             </label>
@@ -182,7 +182,7 @@ export function AnalyticsCsvPanel({
         })}
       </div>
 
-      <p className="font-body mt-3 text-[10px] text-muted-foreground">
+      <p className="font-body text-muted-foreground mt-3 text-[10px]">
         Вибрано полів: {selected.size} · Рядків: {ballots.length.toLocaleString('uk-UA')}
       </p>
     </div>
