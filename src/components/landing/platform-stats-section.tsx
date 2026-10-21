@@ -29,10 +29,7 @@ export function PlatformStatsSection({ stats }: PlatformStatsSectionProps) {
       {METRICS.map(({ key, label }, index) => (
         <div key={key} className="relative flex flex-col items-center gap-3 text-center">
           {index > 0 && (
-            <span
-              aria-hidden
-              className="absolute top-3 -left-px hidden h-16 border-l border-border md:block"
-            />
+            <span className="absolute top-3 -left-px hidden h-16 border-l border-border md:block" />
           )}
 
           <p className="font-display text-4xl font-bold tracking-tight text-kpi-navy tabular-nums sm:text-5xl lg:text-6xl">

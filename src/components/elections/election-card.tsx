@@ -71,7 +71,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
           'absolute inset-0 z-0 rounded-xl',
           'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
         )}
-        aria-label={election.title}
       />
 
       <div

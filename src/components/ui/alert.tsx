@@ -73,7 +73,6 @@ export function Alert({
             'transition-colors duration-150 hover:bg-foreground/5',
             'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
           )}
-          aria-label="Закрити"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -180,7 +179,6 @@ export function ToastItem({
           'text-muted-foreground hover:text-foreground',
           'transition-colors duration-150 hover:bg-surface',
         )}
-        aria-label="Закрити"
       >
         <X className="h-3.5 w-3.5" />
       </button>

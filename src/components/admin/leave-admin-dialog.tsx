@@ -122,10 +122,7 @@ export function LeaveAdminDialog({ open, onClose, admins, currentUserId }: Leave
                   htmlFor="replacement"
                   className="font-body block text-sm font-medium text-foreground"
                 >
-                  Наступник{' '}
-                  <span className="text-error" aria-hidden="true">
-                    *
-                  </span>
+                  Наступник <span className="text-error">*</span>
                 </label>
                 <StyledSelect
                   id="replacement"

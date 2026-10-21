@@ -90,9 +90,5 @@ export function AnimatedCounter({
     };
   }, [target, delay, duration, enabled]);
 
-  return (
-    <span ref={containerRef} aria-label={target.toLocaleString('uk-UA')}>
-      {value.toLocaleString('uk-UA')}
-    </span>
-  );
+  return <span ref={containerRef}>{value.toLocaleString('uk-UA')}</span>;
 }

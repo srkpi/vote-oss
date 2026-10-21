@@ -56,7 +56,6 @@ export default async function AdminDashboardPage() {
             'mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
             'border transition-all duration-200 lg:hidden',
           )}
-          aria-label="Назад"
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>

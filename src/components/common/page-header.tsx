@@ -54,7 +54,6 @@ export function PageHeader({
               'border transition-all duration-200',
               backClassName,
             )}
-            aria-label="Назад"
           >
             <ChevronLeft className="h-5 w-5" />
           </Link>

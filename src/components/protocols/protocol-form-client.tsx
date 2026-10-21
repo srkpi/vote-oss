@@ -1090,7 +1090,7 @@ export function ProtocolFormClient({
                           value={a.isPresent ? 'present' : 'absent'}
                           onChange={(v) => togglePresence(idx, v === 'present')}
                           disabled={!canEdit || isLockedByVote}
-                          aria-label="Присутність"
+
                           className="sm:w-40"
                           options={[
                             {
@@ -1120,7 +1120,7 @@ export function ProtocolFormClient({
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           ) : (
-                            <span className="w-9" aria-hidden="true" />
+                            <span className="w-9" />
                           )}
                         </div>
                       </div>
@@ -1275,7 +1275,6 @@ function QuickSortBar({
             variant={isActive ? 'primary' : 'secondary'}
             size="xs"
             onClick={() => onSort(key)}
-            aria-pressed={isActive}
           >
             {isActive && <Check className="h-3 w-3" />}
             {QUICK_SORT_LABELS[key]}

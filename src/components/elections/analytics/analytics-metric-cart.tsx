@@ -106,7 +106,6 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
     <div
       className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
       role="dialog"
-      aria-modal="true"
     >
       <div
         className="animate-fade-in absolute inset-0 bg-black/55 backdrop-blur-sm"

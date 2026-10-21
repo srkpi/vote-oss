@@ -71,7 +71,7 @@ export function CommentVoteButtons({
         onClick={() => castVote('UP')}
         disabled={isOwnComment || pending}
         title={disabledTitle}
-        aria-pressed={myVote === 'UP'}
+
         className={cn(
           myVote === 'UP'
             ? 'text-success hover:text-success'
@@ -102,7 +102,7 @@ export function CommentVoteButtons({
         onClick={() => castVote('DOWN')}
         disabled={isOwnComment || pending}
         title={disabledTitle}
-        aria-pressed={myVote === 'DOWN'}
+
         className={cn(
           myVote === 'DOWN'
             ? 'text-error hover:text-error'

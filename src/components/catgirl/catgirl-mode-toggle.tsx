@@ -22,11 +22,11 @@ export function CatgirlModeToggle() {
     return (
       <div
         role="status"
-        aria-busy="true"
+
         className="flex max-w-sm animate-pulse items-center rounded-full border-2 border-border bg-surface-hover p-2"
       >
         <span className="sr-only">Завантаження стану режиму…</span>
-        <span className="flex flex-col items-center px-3 py-1.5" aria-hidden="true">
+        <span className="flex flex-col items-center px-3 py-1.5">
           <span className="flex h-6 items-center">
             <span className="h-4 w-24 rounded-full bg-border" />
           </span>
@@ -42,7 +42,7 @@ export function CatgirlModeToggle() {
     <button
       type="button"
       role="switch"
-      aria-checked={enabled}
+
       onClick={handleClick}
       className={cn(
         'group flex max-w-sm cursor-pointer items-center gap-4 rounded-full border-2 p-2 transition-colors duration-300',

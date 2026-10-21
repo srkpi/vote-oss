@@ -46,14 +46,8 @@ export function CatgirlLightbox({ image, onClose }: CatgirlLightboxProps) {
     <div
       className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
       role="dialog"
-      aria-modal="true"
-      aria-label="Перегляд зображення на весь екран"
     >
-      <div
-        className="absolute inset-0 bg-black/85 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" onClick={onClose} />
 
       <button
         ref={closeButtonRef}
@@ -65,7 +59,6 @@ export function CatgirlLightbox({ image, onClose }: CatgirlLightboxProps) {
           'transition-colors duration-150',
           'focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:outline-none',
         )}
-        aria-label="Закрити"
       >
         <X className="h-5 w-5" />
       </button>

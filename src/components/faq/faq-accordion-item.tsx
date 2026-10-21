@@ -23,7 +23,7 @@ export function FaqAccordionItem({ item, isOpen, onToggle }: FaqAccordionItemPro
       <button
         type="button"
         onClick={onToggle}
-        aria-expanded={isOpen}
+
         className={cn(
           'flex w-full items-center justify-between gap-3',
           'px-4 py-3.5 sm:px-5 sm:py-4',
