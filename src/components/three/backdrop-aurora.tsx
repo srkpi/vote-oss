@@ -48,7 +48,7 @@ function AuroraBackdropMesh({ quality, intensity = 1 }: AuroraBackdropProps) {
       uIntensity: { value: intensity },
       uAspect: { value: 1 },
     }),
-    // oxlint-disable-next-line react/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
