@@ -36,7 +36,7 @@ const VOTER_CSV_FIELDS: CsvField[] = [
 function buildCsv(ballots: Ballot[], decryptedMap: DecryptedMap, fields: Set<string>): string {
   const active = VOTER_CSV_FIELDS.filter((f) => fields.has(f.key));
   const rows = ballots.map((ballot, i) => {
-    const dec = decryptedMap.get(ballot.id);
+    const decryptedBallot = decryptedMap.get(ballot.id);
     return active.map(({ key }) => {
       switch (key) {
         case 'index':
@@ -52,17 +52,21 @@ function buildCsv(ballots: Ballot[], decryptedMap: DecryptedMap, fields: Set<str
         case 'encryptedBallot':
           return ballot.encryptedBallot;
         case 'decryptedChoiceIds':
-          return dec?.choiceIds?.join('; ') ?? '';
+          return decryptedBallot?.choiceIds?.join('; ') ?? '';
         case 'decryptedChoiceLabels':
-          return dec?.choiceLabels?.join('; ') ?? '';
+          return decryptedBallot?.choiceLabels?.join('; ') ?? '';
         case 'hashValid':
-          return dec !== undefined ? (dec.hashValid ? 'TRUE' : 'FALSE') : '';
+          return decryptedBallot !== undefined
+            ? decryptedBallot.hashValid
+              ? 'TRUE'
+              : 'FALSE'
+            : '';
         case 'ballotValid':
-          return dec !== undefined ? (dec.valid ? 'TRUE' : 'FALSE') : '';
+          return decryptedBallot !== undefined ? (decryptedBallot.valid ? 'TRUE' : 'FALSE') : '';
         case 'voterId':
-          return dec?.voter?.userId ?? '';
+          return decryptedBallot?.voter?.userId ?? '';
         case 'voterFullName':
-          return dec?.voter?.fullName ?? '';
+          return decryptedBallot?.voter?.fullName ?? '';
         default:
           return '';
       }
@@ -157,7 +161,7 @@ export function AnalyticsCsvPanel({
                   ? 'border-border-subtle bg-surface cursor-not-allowed opacity-40'
                   : isSelected
                     ? 'border-kpi-navy/30 bg-kpi-navy/5'
-                    : 'border-border-subtle hover:border-kpi-navy/20 hover:bg-surface bg-card',
+                    : 'border-border-subtle bg-card hover:border-kpi-navy/20 hover:bg-surface',
               )}
             >
               <input

@@ -37,16 +37,16 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   const [categories, setCategories] = useState<FaqCategoryData[]>(initialCategories);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
-  const [addingCat, setAddingCat] = useState(false);
-  const [newCatTitle, setNewCatTitle] = useState('');
-  const [addingCatLoading, setAddingCatLoading] = useState(false);
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryTitle, setNewCategoryTitle] = useState('');
+  const [addingCategoryLoading, setAddingCategoryLoading] = useState(false);
 
-  const [renameCat, setRenameCat] = useState<FaqCategoryData | null>(null);
-  const [renameCatTitle, setRenameCatTitle] = useState('');
-  const [renameCatLoading, setRenameCatLoading] = useState(false);
+  const [renameCategory, setRenameCategory] = useState<FaqCategoryData | null>(null);
+  const [renameCategoryTitle, setRenameCategoryTitle] = useState('');
+  const [renameCategoryLoading, setRenameCategoryLoading] = useState(false);
 
-  const [deleteCat, setDeleteCat] = useState<FaqCategoryData | null>(null);
-  const [deleteCatLoading, setDeleteCatLoading] = useState(false);
+  const [deleteCategory, setDeleteCategory] = useState<FaqCategoryData | null>(null);
+  const [deleteCategoryLoading, setDeleteCategoryLoading] = useState(false);
 
   const [itemDialog, setItemDialog] = useState<ItemDialogState>({ open: false, categoryId: '' });
   const [itemLoading, setItemLoading] = useState(false);
@@ -54,8 +54,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   const [deleteItem, setDeleteItem] = useState<DeleteItemTarget | null>(null);
   const [deleteItemLoading, setDeleteItemLoading] = useState(false);
 
-  const [catDragIndex, setCatDragIndex] = useState<number | null>(null);
-  const [catDragOverIndex, setCatDragOverIndex] = useState<number | null>(null);
+  const [categoryDragIndex, setCategoryDragIndex] = useState<number | null>(null);
+  const [categoryDragOverIndex, setCategoryDragOverIndex] = useState<number | null>(null);
 
   // Keep a snapshot of categories before the drag so we can revert on API failure
   const categoriesBeforeDragRef = useRef<FaqCategoryData[]>([]);
@@ -68,12 +68,14 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     });
 
   const handleCreateCategory = async () => {
-    const title = newCatTitle.trim();
-    if (!title) return;
+    const title = newCategoryTitle.trim();
+    if (!title) {
+      return;
+    }
 
-    setAddingCatLoading(true);
+    setAddingCategoryLoading(true);
     const { data, error } = await api.faq.categories.create(title);
-    setAddingCatLoading(false);
+    setAddingCategoryLoading(false);
 
     if (error !== null) {
       err(error);
@@ -81,51 +83,61 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     }
 
     setCategories((prev) => [...prev, { ...data, items: [] }]);
-    setNewCatTitle('');
-    setAddingCat(false);
+    setNewCategoryTitle('');
+    setAddingCategory(false);
     toast({ title: 'Категорію створено', variant: 'success' });
     router.refresh();
   };
 
-  const openRename = (cat: FaqCategoryData) => {
-    setRenameCat(cat);
-    setRenameCatTitle(cat.title);
+  const openRename = (category: FaqCategoryData) => {
+    setRenameCategory(category);
+    setRenameCategoryTitle(category.title);
   };
 
   const handleRenameCategory = async () => {
-    if (!renameCat) return;
-    const title = renameCatTitle.trim();
-    if (!title) return;
+    if (!renameCategory) {
+      return;
+    }
+    const title = renameCategoryTitle.trim();
+    if (!title) {
+      return;
+    }
 
-    setRenameCatLoading(true);
-    const { error } = await api.faq.categories.update(renameCat.id, title);
-    setRenameCatLoading(false);
+    setRenameCategoryLoading(true);
+    const { error } = await api.faq.categories.update(renameCategory.id, title);
+    setRenameCategoryLoading(false);
 
     if (error !== null) {
       err(error);
       return;
     }
 
-    setCategories((prev) => prev.map((c) => (c.id === renameCat.id ? { ...c, title } : c)));
-    setRenameCat(null);
+    setCategories((prev) =>
+      prev.map((category) =>
+        category.id === renameCategory.id ? { ...category, title } : category,
+      ),
+    );
+    setRenameCategory(null);
     toast({ title: 'Категорію оновлено', variant: 'success' });
     router.refresh();
   };
 
   const handleDeleteCategory = async () => {
-    if (!deleteCat) return;
+    if (!deleteCategory) {
+      return;
+    }
 
-    setDeleteCatLoading(true);
-    const { error } = await api.faq.categories.delete(deleteCat.id);
-    setDeleteCatLoading(false);
+    setDeleteCategoryLoading(true);
+    const { error } = await api.faq.categories.delete(deleteCategory.id);
+    setDeleteCategoryLoading(false);
 
     if (error !== null) {
       err(error);
       return;
     }
 
-    setCategories((prev) => prev.filter((c) => c.id !== deleteCat.id));
-    setDeleteCat(null);
+    setCategories((prev) => prev.filter((category) => category.id !== deleteCategory.id));
+    setDeleteCategory(null);
     toast({ title: 'Категорію видалено', variant: 'success' });
     router.refresh();
   };
@@ -136,12 +148,16 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     [next[index], next[swapWith]] = [next[swapWith], next[index]];
 
     setCategories(next);
-    const { error } = await api.faq.categories.reorder(next.map((c) => c.id));
-    if (error !== null) setCategories(categories);
+    const { error } = await api.faq.categories.reorder(next.map((category) => category.id));
+    if (error !== null) {
+      setCategories(categories);
+    }
   };
 
   const moveCategoryTo = async (fromIndex: number, toIndex: number) => {
-    if (fromIndex === toIndex) return;
+    if (fromIndex === toIndex) {
+      return;
+    }
 
     const next = [...categories];
     const [moved] = next.splice(fromIndex, 1);
@@ -149,35 +165,41 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
     const snapshot = categories;
     setCategories(next);
-    const { error } = await api.faq.categories.reorder(next.map((c) => c.id));
-    if (error !== null) setCategories(snapshot);
+    const { error } = await api.faq.categories.reorder(next.map((category) => category.id));
+    if (error !== null) {
+      setCategories(snapshot);
+    }
   };
 
-  const handleCatDragStart = (index: number) => {
+  const handleCategoryDragStart = (index: number) => {
     categoriesBeforeDragRef.current = categories;
-    setCatDragIndex(index);
+    setCategoryDragIndex(index);
   };
 
-  const handleCatDragEnter = (index: number) => {
-    setCatDragOverIndex(index);
+  const handleCategoryDragEnter = (index: number) => {
+    setCategoryDragOverIndex(index);
   };
 
-  const handleCatDragEnd = () => {
-    setCatDragIndex(null);
-    setCatDragOverIndex(null);
+  const handleCategoryDragEnd = () => {
+    setCategoryDragIndex(null);
+    setCategoryDragOverIndex(null);
   };
 
-  const handleCatDrop = (toIndex: number) => {
-    if (catDragIndex === null) {
-      handleCatDragEnd();
+  const handleCategoryDrop = (toIndex: number) => {
+    if (categoryDragIndex === null) {
+      handleCategoryDragEnd();
       return;
     }
 
     // Always insert before the hovered card — one unambiguous drop position per card
     let target = toIndex;
-    if (catDragIndex < target) target -= 1;
-    if (target !== catDragIndex) moveCategoryTo(catDragIndex, target);
-    handleCatDragEnd();
+    if (categoryDragIndex < target) {
+      target -= 1;
+    }
+    if (target !== categoryDragIndex) {
+      moveCategoryTo(categoryDragIndex, target);
+    }
+    handleCategoryDragEnd();
   };
 
   const handleSaveItem = async (title: string, content: string) => {
@@ -193,10 +215,13 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       }
 
       setCategories((prev) =>
-        prev.map((c) =>
-          c.id === categoryId
-            ? { ...c, items: c.items.map((i) => (i.id === item.id ? { ...i, ...data } : i)) }
-            : c,
+        prev.map((category) =>
+          category.id === categoryId
+            ? {
+                ...category,
+                items: category.items.map((i) => (i.id === item.id ? { ...i, ...data } : i)),
+              }
+            : category,
         ),
       );
       toast({ title: 'Пункт оновлено', variant: 'success' });
@@ -209,7 +234,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       }
 
       setCategories((prev) =>
-        prev.map((c) => (c.id === categoryId ? { ...c, items: [...c.items, data] } : c)),
+        prev.map((category) =>
+          category.id === categoryId ? { ...category, items: [...category.items, data] } : category,
+        ),
       );
       toast({ title: 'Пункт створено', variant: 'success' });
     }
@@ -219,7 +246,9 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   };
 
   const handleDeleteItem = async () => {
-    if (!deleteItem) return;
+    if (!deleteItem) {
+      return;
+    }
 
     setDeleteItemLoading(true);
     const { error } = await api.faq.items.delete(deleteItem.item.id);
@@ -231,10 +260,10 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
     }
 
     setCategories((prev) =>
-      prev.map((c) =>
-        c.id === deleteItem.categoryId
-          ? { ...c, items: c.items.filter((i) => i.id !== deleteItem.item.id) }
-          : c,
+      prev.map((category) =>
+        category.id === deleteItem.categoryId
+          ? { ...category, items: category.items.filter((i) => i.id !== deleteItem.item.id) }
+          : category,
       ),
     );
     setDeleteItem(null);
@@ -243,37 +272,53 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
   };
 
   const moveItem = async (categoryId: string, index: number, direction: 'up' | 'down') => {
-    const cat = categories.find((c) => c.id === categoryId);
-    if (!cat) return;
+    const category = categories.find((category) => category.id === categoryId);
+    if (!category) {
+      return;
+    }
 
-    const next = [...cat.items];
+    const next = [...category.items];
     const swapWith = direction === 'up' ? index - 1 : index + 1;
     [next[index], next[swapWith]] = [next[swapWith], next[index]];
 
-    setCategories((prev) => prev.map((c) => (c.id === categoryId ? { ...c, items: next } : c)));
+    setCategories((prev) =>
+      prev.map((category) =>
+        category.id === categoryId ? { ...category, items: next } : category,
+      ),
+    );
     const { error } = await api.faq.items.reorder(
       categoryId,
       next.map((i) => i.id),
     );
-    if (error !== null) setCategories(categories);
+    if (error !== null) {
+      setCategories(categories);
+    }
   };
 
   /** Arbitrary reorder (drag) */
   const moveItemTo = async (categoryId: string, fromIndex: number, toIndex: number) => {
-    const cat = categories.find((c) => c.id === categoryId);
-    if (!cat || fromIndex === toIndex) return;
+    const category = categories.find((category) => category.id === categoryId);
+    if (!category || fromIndex === toIndex) {
+      return;
+    }
 
-    const next = [...cat.items];
+    const next = [...category.items];
     const [moved] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, moved);
 
     const snapshot = categories;
-    setCategories((prev) => prev.map((c) => (c.id === categoryId ? { ...c, items: next } : c)));
+    setCategories((prev) =>
+      prev.map((category) =>
+        category.id === categoryId ? { ...category, items: next } : category,
+      ),
+    );
     const { error } = await api.faq.items.reorder(
       categoryId,
       next.map((i) => i.id),
     );
-    if (error !== null) setCategories(snapshot);
+    if (error !== null) {
+      setCategories(snapshot);
+    }
   };
 
   const toggleCollapse = (id: string) =>
@@ -289,69 +334,71 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
 
   return (
     <div className="space-y-4">
-      {categories.map((cat, catIdx) => (
+      {categories.map((category, categoryIndex) => (
         <CategoryCard
-          key={cat.id}
-          category={cat}
-          isFirst={catIdx === 0}
-          isLast={catIdx === categories.length - 1}
-          isCollapsed={collapsed.has(cat.id)}
-          isDragging={catDragIndex === catIdx}
-          isDragOver={catDragOverIndex === catIdx}
-          onToggleCollapse={() => toggleCollapse(cat.id)}
-          onMoveUp={() => moveCategory(catIdx, 'up')}
-          onMoveDown={() => moveCategory(catIdx, 'down')}
-          onRename={() => openRename(cat)}
-          onDelete={() => setDeleteCat(cat)}
-          onAddItem={() => setItemDialog({ open: true, categoryId: cat.id })}
-          onEditItem={(item) => setItemDialog({ open: true, categoryId: cat.id, item })}
-          onDeleteItem={(item) => setDeleteItem({ item, categoryId: cat.id })}
-          onMoveItemUp={(idx) => moveItem(cat.id, idx, 'up')}
-          onMoveItemDown={(idx) => moveItem(cat.id, idx, 'down')}
-          onMoveItemTo={(from, to) => moveItemTo(cat.id, from, to)}
-          onCategoryDragStart={() => handleCatDragStart(catIdx)}
-          onCategoryDragEnter={() => handleCatDragEnter(catIdx)}
-          onCategoryDragEnd={handleCatDragEnd}
-          onCategoryDrop={() => handleCatDrop(catIdx)}
+          key={category.id}
+          category={category}
+          isFirst={categoryIndex === 0}
+          isLast={categoryIndex === categories.length - 1}
+          isCollapsed={collapsed.has(category.id)}
+          isDragging={categoryDragIndex === categoryIndex}
+          isDragOver={categoryDragOverIndex === categoryIndex}
+          onToggleCollapse={() => toggleCollapse(category.id)}
+          onMoveUp={() => moveCategory(categoryIndex, 'up')}
+          onMoveDown={() => moveCategory(categoryIndex, 'down')}
+          onRename={() => openRename(category)}
+          onDelete={() => setDeleteCategory(category)}
+          onAddItem={() => setItemDialog({ open: true, categoryId: category.id })}
+          onEditItem={(item) => setItemDialog({ open: true, categoryId: category.id, item })}
+          onDeleteItem={(item) => setDeleteItem({ item, categoryId: category.id })}
+          onMoveItemUp={(idx) => moveItem(category.id, idx, 'up')}
+          onMoveItemDown={(idx) => moveItem(category.id, idx, 'down')}
+          onMoveItemTo={(from, to) => moveItemTo(category.id, from, to)}
+          onCategoryDragStart={() => handleCategoryDragStart(categoryIndex)}
+          onCategoryDragEnter={() => handleCategoryDragEnter(categoryIndex)}
+          onCategoryDragEnd={handleCategoryDragEnd}
+          onCategoryDrop={() => handleCategoryDrop(categoryIndex)}
         />
       ))}
 
-      {addingCat ? (
-        <div className="border-border-color shadow-card bg-card rounded-xl border p-4 sm:p-5">
+      {addingCategory ? (
+        <div className="border-border-color bg-card shadow-card rounded-xl border p-4 sm:p-5">
           <p className="font-body text-foreground mb-3 text-sm font-semibold">Нова категорія</p>
           <div className="flex items-start gap-2">
             <div className="flex-1 space-y-1">
               <Input
-                value={newCatTitle}
-                onChange={(e) => setNewCatTitle(e.target.value)}
+                value={newCategoryTitle}
+                onChange={(e) => setNewCategoryTitle(e.target.value)}
                 placeholder="Назва категорії"
-                error={newCatTitle.length > FAQ_CATEGORY_TITLE_MAX_LENGTH}
+                error={newCategoryTitle.length > FAQ_CATEGORY_TITLE_MAX_LENGTH}
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateCategory();
+                  if (e.key === 'Enter') {
+                    handleCreateCategory();
+                  }
                   if (e.key === 'Escape') {
-                    setAddingCat(false);
-                    setNewCatTitle('');
+                    setAddingCategory(false);
+                    setNewCategoryTitle('');
                   }
                 }}
               />
               <div className="flex justify-end">
-                <CharCounter value={newCatTitle} max={FAQ_CATEGORY_TITLE_MAX_LENGTH} />
+                <CharCounter value={newCategoryTitle} max={FAQ_CATEGORY_TITLE_MAX_LENGTH} />
               </div>
             </div>
             <Button
               variant="accent"
               size="md"
               onClick={handleCreateCategory}
-              loading={addingCatLoading}
+              loading={addingCategoryLoading}
             >
               Додати
             </Button>
             <button
               type="button"
               onClick={() => {
-                setAddingCat(false);
-                setNewCatTitle('');
+                setAddingCategory(false);
+                setNewCategoryTitle('');
               }}
               className="text-muted-foreground hover:text-foreground flex h-10 w-9 items-center justify-center rounded-(--radius) transition-colors"
             >
@@ -363,7 +410,7 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
         <Button
           variant="secondary"
           size="md"
-          onClick={() => setAddingCat(true)}
+          onClick={() => setAddingCategory(true)}
           icon={<Plus className="h-4 w-4" />}
         >
           Додати категорію
@@ -371,19 +418,19 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       )}
 
       <RenameCategoryDialog
-        category={renameCat}
-        title={renameCatTitle}
-        onTitleChange={setRenameCatTitle}
+        category={renameCategory}
+        title={renameCategoryTitle}
+        onTitleChange={setRenameCategoryTitle}
         onConfirm={handleRenameCategory}
-        onClose={() => setRenameCat(null)}
-        loading={renameCatLoading}
+        onClose={() => setRenameCategory(null)}
+        loading={renameCategoryLoading}
       />
 
       <DeleteCategoryDialog
-        category={deleteCat}
+        category={deleteCategory}
         onConfirm={handleDeleteCategory}
-        onClose={() => setDeleteCat(null)}
-        loading={deleteCatLoading}
+        onClose={() => setDeleteCategory(null)}
+        loading={deleteCategoryLoading}
       />
 
       <FaqItemDialog

@@ -38,17 +38,19 @@ export function PetitionSignatories({
   const [page, setPage] = useState(1);
 
   const signatories: Signatory[] = useMemo(() => {
-    if (!initialData || !decryptionDone) return [];
+    if (!initialData || !decryptionDone) {
+      return [];
+    }
     const results: Signatory[] = [];
     for (const ballot of initialData.ballots) {
-      const dec = decryptedMap.get(ballot.id);
-      if (dec?.valid && dec.voter) {
+      const decryptedBallot = decryptedMap.get(ballot.id);
+      if (decryptedBallot?.valid && decryptedBallot.voter) {
         results.push({
           ballotId: ballot.id,
-          userId: dec.voter.userId,
-          fullName: dec.voter.fullName,
+          userId: decryptedBallot.voter.userId,
+          fullName: decryptedBallot.voter.fullName,
           signedAt: ballot.createdAt,
-          hashValid: dec.hashValid,
+          hashValid: decryptedBallot.hashValid,
         });
       }
     }
@@ -95,7 +97,7 @@ export function PetitionSignatories({
   }
 
   return (
-    <div className="border-border-color shadow-card bg-card rounded-xl border p-6">
+    <div className="border-border-color bg-card shadow-card rounded-xl border p-6">
       <div className="divide-border-color divide-y">
         {pageItems.map((signatory) => (
           <SignatoryRow key={signatory.ballotId} signatory={signatory} />

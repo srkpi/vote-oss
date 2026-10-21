@@ -57,7 +57,7 @@ async function restrictedAdminReq(method: string, body?: object) {
   return makeAuthRequest(access.token, { method, body });
 }
 
-const catParams = (id: string) => ({ params: Promise.resolve({ id }) });
+const categoryParams = (id: string) => ({ params: Promise.resolve({ id }) });
 const itemParams = (id: string) => ({ params: Promise.resolve({ id }) });
 
 // ===========================================================================
@@ -75,27 +75,27 @@ describe('PUT /api/faq/categories/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     const req = makeRequest({ method: 'PUT', body: { title: 'Updated' } });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 when restricted admin', async () => {
     const req = await restrictedAdminReq('PUT', { title: 'Updated' });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
   it('returns 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'Updated' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await putCategory(req, catParams('nonexistent'));
+    const res = await putCategory(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
   it('returns 400 when title is missing', async () => {
     const req = await unrestrictedAdminReq('PUT', {});
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -104,7 +104,7 @@ describe('PUT /api/faq/categories/[id]', () => {
       title: 'X'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH + 1),
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -118,7 +118,7 @@ describe('PUT /api/faq/categories/[id]', () => {
       updated_at: new Date(),
     });
 
-    const { status, body } = await parseJson<any>(await putCategory(req, catParams('cat-1')));
+    const { status, body } = await parseJson<any>(await putCategory(req, categoryParams('cat-1')));
     expect(status).toBe(200);
     expect(body.title).toBe('Updated Title');
     expect(body.updatedAt).toBeDefined();
@@ -134,7 +134,7 @@ describe('PUT /api/faq/categories/[id]', () => {
       updated_at: new Date(),
     });
 
-    await putCategory(req, catParams('cat-1'));
+    await putCategory(req, categoryParams('cat-1'));
 
     expect(prismaMock.faqCategory.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -153,7 +153,7 @@ describe('PUT /api/faq/categories/[id]', () => {
       updated_at: new Date(),
     });
 
-    await putCategory(req, catParams('cat-1'));
+    await putCategory(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
@@ -161,7 +161,7 @@ describe('PUT /api/faq/categories/[id]', () => {
   it('does not invalidate the cache when validation fails', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: '' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
-    await putCategory(req, catParams('cat-1'));
+    await putCategory(req, categoryParams('cat-1'));
     expect(cacheMock.invalidateFaq).not.toHaveBeenCalled();
   });
 });
@@ -181,20 +181,20 @@ describe('DELETE /api/faq/categories/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     const req = makeRequest({ method: 'DELETE' });
-    const res = await deleteCategory(req, catParams('cat-1'));
+    const res = await deleteCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 when restricted admin', async () => {
     const req = await restrictedAdminReq('DELETE');
-    const res = await deleteCategory(req, catParams('cat-1'));
+    const res = await deleteCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
   it('returns 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await deleteCategory(req, catParams('nonexistent'));
+    const res = await deleteCategory(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
@@ -203,7 +203,7 @@ describe('DELETE /api/faq/categories/[id]', () => {
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-1' });
 
-    const res = await deleteCategory(req, catParams('cat-1'));
+    const res = await deleteCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(204);
   });
 
@@ -212,7 +212,7 @@ describe('DELETE /api/faq/categories/[id]', () => {
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-99' });
     prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-99' });
 
-    await deleteCategory(req, catParams('cat-99'));
+    await deleteCategory(req, categoryParams('cat-99'));
 
     expect(prismaMock.faqCategory.delete).toHaveBeenCalledWith({ where: { id: 'cat-99' } });
   });
@@ -222,7 +222,7 @@ describe('DELETE /api/faq/categories/[id]', () => {
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-1' });
 
-    await deleteCategory(req, catParams('cat-1'));
+    await deleteCategory(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
@@ -243,34 +243,34 @@ describe('POST /api/faq/categories/[id]/items', () => {
 
   it('returns 401 when unauthenticated', async () => {
     const req = makeRequest({ method: 'POST', body: { title: 'Q', content: VALID_CONTENT } });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 when restricted admin', async () => {
     const req = await restrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
   it('returns 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await postItem(req, catParams('nonexistent'));
+    const res = await postItem(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
   it('returns 400 when title is missing', async () => {
     const req = await unrestrictedAdminReq('POST', { content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
   it('returns 400 when content is missing', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -280,7 +280,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: VALID_CONTENT,
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -290,7 +290,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: '<p>plain html is rejected</p>',
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -300,7 +300,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: JSON.stringify({ text: 'hello' }),
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -310,7 +310,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: OVER_LIMIT_CONTENT,
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -331,7 +331,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    const { status, body } = await parseJson<any>(await postItem(req, catParams('cat-1')));
+    const { status, body } = await parseJson<any>(await postItem(req, categoryParams('cat-1')));
     expect(status).toBe(201);
     expect(body.title).toBe('How to vote?');
     expect(body.categoryId).toBe('cat-1');
@@ -354,7 +354,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    await postItem(req, catParams('cat-1'));
+    await postItem(req, categoryParams('cat-1'));
 
     expect(prismaMock.faqItem.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -377,7 +377,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    await postItem(req, catParams('cat-1'));
+    await postItem(req, categoryParams('cat-1'));
 
     expect(prismaMock.faqItem.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -400,7 +400,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    await postItem(req, catParams('cat-1'));
+    await postItem(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
@@ -701,20 +701,20 @@ describe('PATCH /api/faq/categories/[id]/items/reorder', () => {
 
   it('returns 401 when unauthenticated', async () => {
     const req = makeRequest({ method: 'PATCH', body: { order: ['item-1', 'item-2'] } });
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
   it('returns 403 when restricted admin', async () => {
     const req = await restrictedAdminReq('PATCH', { order: ['item-1'] });
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
   it('returns 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['item-1'] });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await reorderItems(req, catParams('nonexistent'));
+    const res = await reorderItems(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
@@ -722,7 +722,7 @@ describe('PATCH /api/faq/categories/[id]/items/reorder', () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['item-foreign'] });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -732,7 +732,7 @@ describe('PATCH /api/faq/categories/[id]/items/reorder', () => {
     prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(204);
   });
 
@@ -742,7 +742,7 @@ describe('PATCH /api/faq/categories/[id]/items/reorder', () => {
     prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
-    await reorderItems(req, catParams('cat-1'));
+    await reorderItems(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });

@@ -42,12 +42,16 @@ interface ParsedGroup {
 
 function parseGroup(group: string): ParsedGroup | null {
   const dashIdx = group.indexOf('-');
-  if (dashIdx === -1) return null;
+  if (dashIdx === -1) {
+    return null;
+  }
 
   const suffix = group.slice(dashIdx + 1);
   // Match: any non-digit prefix, then exactly two digits, then the rest
   const match = suffix.match(/^([^0-9]*)(\d)(\d)(.*)$/);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   return {
     formLetters: match[1]!,
@@ -63,10 +67,14 @@ function parseGroup(group: string): ParsedGroup | null {
  */
 export function parseGroupStudyFormLetter(group: string): string | null {
   const parsed = parseGroup(group);
-  if (!parsed) return null;
+  if (!parsed) {
+    return null;
+  }
 
   for (const letter of ['з', 'о', 'п', 'в']) {
-    if (parsed.formLetters.includes(letter)) return letter;
+    if (parsed.formLetters.includes(letter)) {
+      return letter;
+    }
   }
   return null;
 }
@@ -77,12 +85,18 @@ export function parseGroupStudyFormLetter(group: string): string | null {
  */
 export function parseGroupLevel(group: string): 'b' | 'm' | 'g' {
   const parsed = parseGroup(group);
-  if (!parsed) return 'b';
+  if (!parsed) {
+    return 'b';
+  }
 
   const letters = parsed.levelLetters.toLowerCase();
   // Check graduate first (ф), then master (мн / мп), else bachelor
-  if (letters.includes('ф')) return 'g';
-  if (letters.includes('мн') || letters.includes('мп')) return 'm';
+  if (letters.includes('ф')) {
+    return 'g';
+  }
+  if (letters.includes('мн') || letters.includes('мп')) {
+    return 'm';
+  }
   return 'b';
 }
 
@@ -91,7 +105,9 @@ export function parseGroupLevel(group: string): 'b' | 'm' | 'g' {
  */
 export function parseGroupYearEnteredDigit(group: string): number | null {
   const parsed = parseGroup(group);
-  if (!parsed) return null;
+  if (!parsed) {
+    return null;
+  }
   return parsed.yearDigit;
 }
 
@@ -99,23 +115,23 @@ export function parseGroupYearEnteredDigit(group: string): number | null {
  * Calculate the current academic course for a student given the last digit of
  * the year they entered university and the current date.
  *
- * Algorithm:
- *   adj = yearEnteredDigit
- *   if (currentYearLastDigit < adj) adj -= 10   // entered in previous decade
- *   course = currentYearLastDigit - adj          // before 1 Sep
- *          = currentYearLastDigit - adj + 1      // from 1 Sep onward
+ * Adjust the entry-year digit by subtracting 10 if it belongs to the previous
+ * decade. Subtract that adjusted digit from the current year's last digit to
+ * get the course before September, then add 1 from September onward.
  */
 export function calculateCourse(yearEnteredDigit: number, now: Date = new Date()): number {
   const yearLastDigit = now.getFullYear() % 10;
-  let adj = yearEnteredDigit;
+  let adjustedYearEnteredDigit = yearEnteredDigit;
 
-  if (yearLastDigit < adj) {
-    adj -= 10;
+  if (yearLastDigit < adjustedYearEnteredDigit) {
+    adjustedYearEnteredDigit -= 10;
   }
 
   // month is 0-indexed: August = 7, September = 8
   const isBeforeSeptember = now.getMonth() < 8;
-  return isBeforeSeptember ? yearLastDigit - adj : yearLastDigit - adj + 1;
+  return isBeforeSeptember
+    ? yearLastDigit - adjustedYearEnteredDigit
+    : yearLastDigit - adjustedYearEnteredDigit + 1;
 }
 
 /**
@@ -124,7 +140,9 @@ export function calculateCourse(yearEnteredDigit: number, now: Date = new Date()
  */
 export function parseGroupLevelCourse(group: string, now: Date = new Date()): string | null {
   const yearDigit = parseGroupYearEnteredDigit(group);
-  if (yearDigit === null) return null;
+  if (yearDigit === null) {
+    return null;
+  }
 
   const level = parseGroupLevel(group);
   const course = calculateCourse(yearDigit, now);
@@ -137,14 +155,18 @@ export function parseGroupLevelCourse(group: string, now: Date = new Date()): st
  * Returns all groups unchanged if studyForms is empty.
  */
 export function filterGroupsByStudyForms(groups: string[], studyForms: string[]): string[] {
-  if (studyForms.length === 0) return groups;
+  if (studyForms.length === 0) {
+    return groups;
+  }
 
   return groups.filter((group) => {
     const groupLetter = parseGroupStudyFormLetter(group);
 
     return studyForms.some((form) => {
       const expected = STUDY_FORM_TO_LETTER[form];
-      if (expected === undefined) return true; // unknown form value — don't filter
+      if (expected === undefined) {
+        return true;
+      } // unknown form value — don't filter
       if (expected === null) {
         // FullTime-like: group must have NO encoded form letter
         return groupLetter === null;
@@ -164,10 +186,12 @@ export function filterGroupsByLevelCourses(
   levelCourses: string[],
   now: Date = new Date(),
 ): string[] {
-  if (levelCourses.length === 0) return groups;
+  if (levelCourses.length === 0) {
+    return groups;
+  }
 
   return groups.filter((group) => {
-    const lc = parseGroupLevelCourse(group, now);
-    return lc !== null && levelCourses.includes(lc);
+    const levelCourse = parseGroupLevelCourse(group, now);
+    return levelCourse !== null && levelCourses.includes(levelCourse);
   });
 }
