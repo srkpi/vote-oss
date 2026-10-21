@@ -1,5 +1,6 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Check,
   ClipboardList,
@@ -13,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 
 import { TeamSlotsPanel } from '@/components/registration/team-slots-panel';
 import { Alert } from '@/components/ui/alert';
@@ -42,6 +44,11 @@ import {
   REGISTRATION_REJECTION_REASON_MAX_LENGTH,
   REGISTRATION_SUBMISSIONS_PAGE_SIZE,
 } from '@/lib/constants';
+import {
+  createRegistrationDialogSchema,
+  getRegistrationDialogPhase,
+  type RegistrationDialogValues,
+} from '@/lib/schemas/registration-dialog-form';
 import { cn, pluralize } from '@/lib/utils/common';
 import type {
   CandidateRegistration,
@@ -300,7 +307,19 @@ function defaultEndDate(): Date {
   return d;
 }
 
-type FormDialogPhase = 'not_started' | 'open' | 'closed';
+function registrationDefaults(
+  target: CandidateRegistrationFormAdminSummary | null,
+): RegistrationDialogValues {
+  return {
+    title: target?.title ?? '',
+    description: target?.description ?? '',
+    requiresCampaignProgram: target?.requiresCampaignProgram ?? false,
+    teamSize: target?.teamSize ?? 0,
+    opensAt: target ? new Date(target.opensAt) : defaultStartDate(),
+    closesAt: target ? new Date(target.closesAt) : defaultEndDate(),
+    faculties: target?.restrictions.filter((r) => r.type === 'FACULTY').map((r) => r.value) ?? [],
+  };
+}
 
 function RegistrationFormDialog({
   groupId,
@@ -310,17 +329,22 @@ function RegistrationFormDialog({
   onSaved,
 }: RegistrationFormDialogProps) {
   const isEdit = !!editTarget;
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [requiresCampaignProgram, setRequiresCampaignProgram] = useState(false);
-  const [teamSize, setTeamSize] = useState(0);
-  const [opensAt, setOpensAt] = useState<Date>(defaultStartDate());
-  const [closesAt, setClosesAt] = useState<Date>(defaultEndDate());
-  const [faculties, setFaculties] = useState<string[]>([]);
+  const {
+    register,
+    control,
+    handleSubmit: submitForm,
+    reset,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting: submitting },
+  } = useForm<RegistrationDialogValues>({
+    resolver: zodResolver(createRegistrationDialogSchema(editTarget)),
+    defaultValues: registrationDefaults(editTarget),
+  });
+  const { title } = useWatch({ control }) as RegistrationDialogValues;
+  const error = errors.root?.message;
   const [facultyOptions, setFacultyOptions] = useState<string[]>([]);
   const [facultiesLoading, setFacultiesLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Re-renders every minute so date-pickers, phase, and validation all stay
   // in sync with "now" while the dialog is left open.
@@ -338,41 +362,13 @@ function RegistrationFormDialog({
   // derived live from its fixed opens/closes timestamps versus "now" rather
   // than snapshotted once, so the dialog re-locks itself in place if a
   // boundary passes while it's sitting open.
-  const originalOpensAt = editTarget ? new Date(editTarget.opensAt) : null;
   const originalClosesAt = editTarget ? new Date(editTarget.closesAt) : null;
-  const phase: FormDialogPhase =
-    !originalOpensAt || !originalClosesAt
-      ? 'not_started'
-      : renderNowMs >= originalClosesAt.getTime()
-        ? 'closed'
-        : renderNowMs >= originalOpensAt.getTime()
-          ? 'open'
-          : 'not_started';
-
+  const phase = getRegistrationDialogPhase(editTarget, renderNowMs);
   useEffect(() => {
-    if (!open) {
-      return;
+    if (open) {
+      reset(registrationDefaults(editTarget));
     }
-    if (editTarget) {
-      // oxlint-disable-next-line react/set-state-in-effect
-      setTitle(editTarget.title);
-      setDescription(editTarget.description ?? '');
-      setRequiresCampaignProgram(editTarget.requiresCampaignProgram);
-      setTeamSize(editTarget.teamSize);
-      setOpensAt(new Date(editTarget.opensAt));
-      setClosesAt(new Date(editTarget.closesAt));
-      setFaculties(editTarget.restrictions.filter((r) => r.type === 'FACULTY').map((r) => r.value));
-    } else {
-      setTitle('');
-      setDescription('');
-      setRequiresCampaignProgram(false);
-      setTeamSize(0);
-      setOpensAt(defaultStartDate());
-      setClosesAt(defaultEndDate());
-      setFaculties([]);
-    }
-    setError(null);
-  }, [open, editTarget]);
+  }, [open, editTarget, reset]);
 
   // Load faculty list once — skip entirely once restrictions are no longer editable.
   useEffect(() => {
@@ -400,33 +396,10 @@ function RegistrationFormDialog({
     });
   }, [open, phase, facultyOptions.length]);
 
-  const handleSubmit = async () => {
-    if (phase === 'closed') {
-      return;
-    }
-
-    if (phase === 'not_started') {
-      // Both dates are free, but still have to be in the future.
-      const nowMs = Date.now();
-      const futureChecks: Array<[Date, string]> = [
-        [opensAt, 'Початок прийому'],
-        [closesAt, 'Кінець прийому'],
-      ];
-      const pastField = futureChecks.find(([d]) => d.getTime() <= nowMs);
-      if (pastField) {
-        setError(`«${pastField[1]}» має бути після поточного часу`);
-        return;
-      }
-    } else if (originalClosesAt && closesAt.getTime() < originalClosesAt.getTime()) {
-      setError('Прийом заявок уже розпочато — «Кінець прийому» можна лише продовжити');
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-    // While open, every field except closesAt is locked — their inputs
-    // aren't even rendered in that phase, so the state below already holds
-    // the unchanged originals regardless.
+  const handleSubmit = submitForm(async (values) => {
+    clearErrors('root');
+    const { title, description, requiresCampaignProgram, teamSize, opensAt, closesAt, faculties } =
+      values;
     const restrictions: CandidateRegistrationFormRestriction[] = faculties.map((value) => ({
       type: 'FACULTY',
       value,
@@ -436,7 +409,7 @@ function RegistrationFormDialog({
       description: description.trim() || null,
       requiresCampaignProgram,
       teamSize,
-      opensAt: (originalOpensAt ?? opensAt).toISOString(),
+      opensAt: opensAt.toISOString(),
       closesAt: closesAt.toISOString(),
       restrictions,
     };
@@ -452,24 +425,17 @@ function RegistrationFormDialog({
           pendingReviewCount: editTarget.pendingReviewCount,
         });
       } else {
-        setError(result.error);
+        setError('root', { message: result.error });
       }
     } else {
       const result = await api.groups.registrationForms.create(groupId, payload);
       if (result.success) {
         onSaved(result.data);
       } else {
-        setError(result.error);
+        setError('root', { message: result.error });
       }
     }
-    setSubmitting(false);
-  };
-
-  const toggleFaculty = (faculty: string) => {
-    setFaculties((prev) =>
-      prev.includes(faculty) ? prev.filter((f) => f !== faculty) : [...prev, faculty],
-    );
-  };
+  });
 
   const canSubmit = phase !== 'closed' && title.trim().length > 0 && !submitting;
 
@@ -509,7 +475,7 @@ function RegistrationFormDialog({
         </DialogHeader>
         <DialogBody className="space-y-4">
           {error && (
-            <Alert variant="error" onDismiss={() => setError(null)}>
+            <Alert variant="error" onDismiss={() => clearErrors('root')}>
               {error}
             </Alert>
           )}
@@ -523,21 +489,28 @@ function RegistrationFormDialog({
 
           {phase === 'not_started' && (
             <>
-              <FormField label="Заголовок" required htmlFor="form-title">
+              <FormField
+                label="Заголовок"
+                required
+                htmlFor="form-title"
+                error={errors.title?.message}
+              >
                 <Input
                   id="form-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  {...register('title')}
                   maxLength={REGISTRATION_FORM_TITLE_MAX_LENGTH}
                   placeholder="Наприклад: Реєстрація на голову студради ФІОТ"
                 />
               </FormField>
 
-              <FormField label="Опис (необов’язково)" htmlFor="form-description">
+              <FormField
+                label="Опис (необов’язково)"
+                htmlFor="form-description"
+                error={errors.description?.message}
+              >
                 <Textarea
                   id="form-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  {...register('description')}
                   rows={3}
                   maxLength={REGISTRATION_FORM_DESCRIPTION_MAX_LENGTH}
                   placeholder="Деталі для кандидатів: як подати заявку, дедлайни, контакти ВКСУ"
@@ -548,39 +521,59 @@ function RegistrationFormDialog({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {phase === 'not_started' && (
-              <FormField label="Початок прийому" required htmlFor="opens-at">
-                <KyivDateTimePicker
-                  id="opens-at"
-                  value={opensAt}
-                  onChange={(d) => setOpensAt(d)}
-                  min={minFutureDate}
+              <FormField
+                label="Початок прийому"
+                required
+                htmlFor="opens-at"
+                error={errors.opensAt?.message}
+              >
+                <Controller
+                  control={control}
+                  name="opensAt"
+                  render={({ field }) => (
+                    <KyivDateTimePicker
+                      id="opens-at"
+                      value={field.value}
+                      onChange={field.onChange}
+                      ref={field.ref}
+                      min={minFutureDate}
+                    />
+                  )}
                 />
               </FormField>
             )}
-            <FormField label="Кінець прийому" required htmlFor="closes-at">
-              <KyivDateTimePicker
-                id="closes-at"
-                value={closesAt}
-                onChange={(d) => setClosesAt(d)}
-                min={
-                  originalClosesAt && originalClosesAt > minFutureDate
-                    ? originalClosesAt
-                    : minFutureDate
-                }
+            <FormField
+              label="Кінець прийому"
+              required
+              htmlFor="closes-at"
+              error={errors.closesAt?.message}
+            >
+              <Controller
+                control={control}
+                name="closesAt"
+                render={({ field }) => (
+                  <KyivDateTimePicker
+                    id="closes-at"
+                    value={field.value}
+                    onChange={field.onChange}
+                    ref={field.ref}
+                    min={
+                      originalClosesAt && originalClosesAt > minFutureDate
+                        ? originalClosesAt
+                        : minFutureDate
+                    }
+                  />
+                )}
               />
             </FormField>
           </div>
 
           {phase === 'not_started' && (
             <>
-              <FormField label="Вимоги до заявки">
+              <FormField label="Вимоги до заявки" error={errors.teamSize?.message}>
                 <div className="space-y-3">
                   <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={requiresCampaignProgram}
-                      onChange={(e) => setRequiresCampaignProgram(e.target.checked)}
-                    />
+                    <input type="checkbox" {...register('requiresCampaignProgram')} />
                     <span>Кандидат має додати посилання на передвиборчу програму</span>
                   </label>
                   <div>
@@ -590,16 +583,7 @@ function RegistrationFormDialog({
                         type="number"
                         min={0}
                         max={REGISTRATION_FORM_MAX_TEAM_SIZE}
-                        value={teamSize}
-                        onChange={(e) => {
-                          const n = parseInt(e.target.value, 10);
-                          if (Number.isNaN(n)) {
-                            setTeamSize(0);
-                            return;
-                          }
-                          const clamped = Math.max(0, Math.min(REGISTRATION_FORM_MAX_TEAM_SIZE, n));
-                          setTeamSize(clamped);
-                        }}
+                        {...register('teamSize', { valueAsNumber: true })}
                         className="w-20"
                       />
                     </label>
@@ -626,11 +610,7 @@ function RegistrationFormDialog({
                           key={f}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-surface"
                         >
-                          <input
-                            type="checkbox"
-                            checked={faculties.includes(f)}
-                            onChange={() => toggleFaculty(f)}
-                          />
+                          <input type="checkbox" value={f} {...register('faculties')} />
                           <span>{f}</span>
                         </label>
                       ))
