@@ -107,9 +107,15 @@ export function getChartTheme(isDark: boolean): ChartThemeColors {
  */
 function determineGranularity(electionStartMs: number, effectiveEndMs: number): ChartGranularity {
   const durationH = Math.max(0, effectiveEndMs - electionStartMs) / 3_600_000;
-  if (durationH < 3) return 'minute';
-  if (durationH < 72) return 'hour';
-  if (durationH < 336) return '6hour';
+  if (durationH < 3) {
+    return 'minute';
+  }
+  if (durationH < 72) {
+    return 'hour';
+  }
+  if (durationH < 336) {
+    return '6hour';
+  }
   return 'day';
 }
 
@@ -181,7 +187,9 @@ export const GRANULARITY_LABEL: Record<ChartGranularity, string> = {
  * σ in units of bins. Kernel radius = ceil(σ × 3).
  */
 function gaussianSmooth1D(data: number[], sigma: number): number[] {
-  if (data.length === 0) return [];
+  if (data.length === 0) {
+    return [];
+  }
   const radius = Math.ceil(sigma * 3);
   const result = new Array<number>(data.length).fill(0);
   for (let i = 0; i < data.length; i++) {
@@ -265,10 +273,12 @@ export function computeAnalytics(
 
   if (decryptionDone) {
     sortedBallots.forEach((ballot) => {
-      const dec = decryptedMap.get(ballot.id);
-      if (dec?.valid && dec.choiceIds) {
-        dec.choiceIds.forEach((id) => {
-          if (voteCounts[id] !== undefined) voteCounts[id]++;
+      const decryptedBallot = decryptedMap.get(ballot.id);
+      if (decryptedBallot?.valid && decryptedBallot.choiceIds) {
+        decryptedBallot.choiceIds.forEach((id) => {
+          if (voteCounts[id] !== undefined) {
+            voteCounts[id]++;
+          }
         });
       }
     });
@@ -282,10 +292,12 @@ export function computeAnalytics(
   let cumulativeTotal = 0;
 
   const timeSeries: AnalyticsTimePoint[] = sortedBallots.map((ballot) => {
-    const dec = decryptedMap.get(ballot.id);
-    if (decryptionDone && dec?.valid && dec.choiceIds) {
-      dec.choiceIds.forEach((id) => {
-        if (cumulative[id] !== undefined) cumulative[id]++;
+    const decryptedBallot = decryptedMap.get(ballot.id);
+    if (decryptionDone && decryptedBallot?.valid && decryptedBallot.choiceIds) {
+      decryptedBallot.choiceIds.forEach((id) => {
+        if (cumulative[id] !== undefined) {
+          cumulative[id]++;
+        }
       });
     }
     cumulativeTotal++;
@@ -403,7 +415,9 @@ export function computeAnalytics(
 
     let rPtr = 0;
     for (let lPtr = 0; lPtr < times.length; lPtr++) {
-      while (rPtr < times.length && times[rPtr]! - times[lPtr]! <= burstWindowMs) rPtr++;
+      while (rPtr < times.length && times[rPtr]! - times[lPtr]! <= burstWindowMs) {
+        rPtr++;
+      }
       if (rPtr - lPtr > bestWindowCount) {
         bestWindowCount = rPtr - lPtr;
       }
@@ -421,13 +435,17 @@ export function computeAnalytics(
       const densityArr = new Array<number>(NUM_BINS).fill(0);
       for (const t of times) {
         const offset = t - electionStartMs;
-        if (offset < 0 || offset > effectiveDurationMs) continue;
+        if (offset < 0 || offset > effectiveDurationMs) {
+          continue;
+        }
         densityArr[Math.min(NUM_BINS - 1, Math.floor(offset / binMs))]++;
       }
 
       // Prefix sums for O(1) range vote counts (used during zone finalisation)
       const prefix = new Array<number>(NUM_BINS + 1).fill(0);
-      for (let i = 0; i < NUM_BINS; i++) prefix[i + 1] = prefix[i]! + densityArr[i]!;
+      for (let i = 0; i < NUM_BINS; i++) {
+        prefix[i + 1] = prefix[i]! + densityArr[i]!;
+      }
 
       // Gaussian smoothing: σ = 4 % of bins (min 1.5) merges sub-clusters that
       // belong to the same real burst while preserving valley structure between
@@ -484,7 +502,9 @@ export function computeAnalytics(
       // Single ballot: treat as its own burst for label purposes
       peakCount = 1;
       const t = times[0];
-      if (t !== undefined) peakHourLabel = formatXTick(t, granularity, spanH);
+      if (t !== undefined) {
+        peakHourLabel = formatXTick(t, granularity, spanH);
+      }
     }
   } else if (totalBallots >= 1 && effectiveDurationMs === 0) {
     // Edge case: all votes cast at the exact same instant
@@ -505,9 +525,14 @@ export function computeAnalytics(
 
     for (const ballot of sortedBallots) {
       const t = new Date(ballot.createdAt).getTime();
-      if (t < electionStartMs || t > effectiveEndMs) continue;
-      if (t <= midTime) firstHalfCount++;
-      else secondHalfCount++;
+      if (t < electionStartMs || t > effectiveEndMs) {
+        continue;
+      }
+      if (t <= midTime) {
+        firstHalfCount++;
+      } else {
+        secondHalfCount++;
+      }
     }
 
     if (firstHalfCount > 0) {
@@ -544,7 +569,9 @@ export function computeAnalytics(
       let H = 0;
       election.choices.forEach((c) => {
         const p = voteCounts[c.id]! / total;
-        if (p > 0) H -= p * Math.log2(p);
+        if (p > 0) {
+          H -= p * Math.log2(p);
+        }
       });
       normalizedEntropy = H / Math.log2(election.choices.length);
 
@@ -582,10 +609,12 @@ export function computeAnalytics(
       });
 
       sortedBallots.forEach((ballot) => {
-        const dec = decryptedMap.get(ballot.id);
-        if (dec?.valid && dec.choiceIds) {
-          dec.choiceIds.forEach((id) => {
-            if (cur[id] !== undefined) cur[id]++;
+        const decryptedBallot = decryptedMap.get(ballot.id);
+        if (decryptedBallot?.valid && decryptedBallot.choiceIds) {
+          decryptedBallot.choiceIds.forEach((id) => {
+            if (cur[id] !== undefined) {
+              cur[id]++;
+            }
           });
         }
 
