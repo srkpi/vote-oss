@@ -1,5 +1,6 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ArrowDown,
   ArrowUp,
@@ -20,6 +21,14 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useForm,
+  useFieldArray,
+  useWatch,
+  type Control,
+  type UseFormRegister,
+  type FieldErrors,
+} from 'react-hook-form';
 
 import { PageHeader } from '@/components/common/page-header';
 import { Alert } from '@/components/ui/alert';
@@ -44,6 +53,11 @@ import {
   PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH,
   PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH,
 } from '@/lib/constants';
+import {
+  protocolFormSchema,
+  serializeProtocolForm,
+  type ProtocolFormValues,
+} from '@/lib/schemas/protocol-form';
 import { capitalizeFirst, cn } from '@/lib/utils/common';
 import { type AttendeeDraft, deriveAttendees } from '@/lib/utils/protocol-attendees';
 import {
@@ -56,25 +70,17 @@ import type { Election } from '@/types/election';
 import type { GroupDetail } from '@/types/group';
 import type {
   AgendaChoiceVote,
-  CreateProtocolRequest,
   Protocol,
   ProtocolChoiceMapping,
   ProtocolListener,
 } from '@/types/protocol';
 
 interface AgendaDraft {
-  uid: string;
   name: string;
   listeners: ProtocolListener[];
   result: string;
   electionId: string | null;
   choiceMapping: ProtocolChoiceMapping;
-}
-
-interface ResponsibleDraft {
-  uid: string;
-  posada: string;
-  fullname: string;
 }
 
 interface ProtocolFormClientProps {
@@ -111,7 +117,6 @@ function yearOf(dateStr: string): number {
 
 function emptyAgenda(): AgendaDraft {
   return {
-    uid: uid(),
     name: '',
     listeners: [{ fullname: '', speech: '' }],
     result: '',
@@ -148,6 +153,51 @@ function compareByQuickSortKey<T extends { fullname: string; posada: string }>(
   };
 }
 
+function protocolDefaults(
+  group: GroupDetail,
+  initialProtocol: Protocol | null,
+  initialNextNumber: number | null,
+): ProtocolFormValues {
+  const isEdit = !!initialProtocol;
+  return {
+    name: initialProtocol?.name ?? '',
+    date: initialProtocol?.date.slice(0, 10) ?? todayDate(),
+    number: initialProtocol?.number?.toString() ?? initialNextNumber?.toString() ?? '',
+    visitors: initialProtocol?.visitors?.toString() ?? '',
+    agenda: (() => {
+      if (initialProtocol && initialProtocol.agendaItems.length > 0) {
+        return initialProtocol.agendaItems.map((a) => ({
+          name: a.name,
+          listeners: a.listeners.length > 0 ? a.listeners : [{ fullname: '', speech: '' }],
+          result: a.result ?? '',
+          electionId: a.electionId,
+          choiceMapping: a.choiceMapping ?? {},
+        }));
+      }
+      return [emptyAgenda()];
+    })(),
+    responsibles: (() => {
+      if (initialProtocol && initialProtocol.responsibles.length > 0) {
+        return initialProtocol.responsibles.map((r) => ({ ...r }));
+      }
+      const owner = group.members.find((m) => m.isOwner);
+      return [
+        {
+          posada: owner?.role || 'Голова',
+          fullname: owner?.displayName ?? '',
+        },
+      ];
+    })(),
+    attendees: (() => {
+      const derived = deriveAttendees(group.members, initialProtocol?.attendance ?? null);
+      // A brand-new protocol has no saved order yet, so start from the "smart"
+      // role-importance order instead of the raw (join-date) member order —
+      // see responsiblesSortKey/attendeesSortKey below.
+      return isEdit ? derived : [...derived].sort(compareByRoleImportance);
+    })(),
+  };
+}
+
 export function ProtocolFormClient({
   group,
   initialProtocol,
@@ -160,49 +210,40 @@ export function ProtocolFormClient({
 
   const isEdit = !!initialProtocol;
 
-  const [name, setName] = useState(initialProtocol?.name ?? '');
-  const [date, setDate] = useState(initialProtocol?.date.slice(0, 10) ?? todayDate());
-  const [number, setNumber] = useState<string>(
-    initialProtocol?.number?.toString() ?? initialNextNumber?.toString() ?? '',
-  );
   const numberManuallyEdited = useRef(false);
-  const [visitors, setVisitors] = useState<string>(initialProtocol?.visitors?.toString() ?? '');
-
-  const [agenda, setAgenda] = useState<AgendaDraft[]>(() => {
-    if (initialProtocol && initialProtocol.agendaItems.length > 0) {
-      return initialProtocol.agendaItems.map((a) => ({
-        uid: uid(),
-        name: a.name,
-        listeners: a.listeners.length > 0 ? a.listeners : [{ fullname: '', speech: '' }],
-        result: a.result ?? '',
-        electionId: a.electionId,
-        choiceMapping: a.choiceMapping ?? {},
-      }));
-    }
-    return [emptyAgenda()];
+  const [defaultValues] = useState(() =>
+    protocolDefaults(group, initialProtocol, initialNextNumber),
+  );
+  const {
+    control,
+    register,
+    handleSubmit: submitForm,
+    setValue,
+    getValues,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting: submitting, isSubmitted },
+  } = useForm<ProtocolFormValues>({
+    resolver: zodResolver(protocolFormSchema),
+    defaultValues,
   });
-
-  const [responsibles, setResponsibles] = useState<ResponsibleDraft[]>(() => {
-    if (initialProtocol && initialProtocol.responsibles.length > 0) {
-      return initialProtocol.responsibles.map((r) => ({ uid: uid(), ...r }));
-    }
-    const owner = group.members.find((m) => m.isOwner);
-    return [
-      {
-        uid: uid(),
-        posada: owner?.role || 'Голова',
-        fullname: owner?.displayName ?? '',
-      },
-    ];
-  });
-
-  const [attendees, setAttendees] = useState<AttendeeDraft[]>(() => {
-    const derived = deriveAttendees(group.members, initialProtocol?.attendance ?? null);
-    // A brand-new protocol has no saved order yet, so start from the "smart"
-    // role-importance order instead of the raw (join-date) member order —
-    // see responsiblesSortKey/attendeesSortKey below.
-    return isEdit ? derived : [...derived].sort(compareByRoleImportance);
-  });
+  const { date, number, agenda, responsibles, attendees } = useWatch({
+    control,
+  }) as ProtocolFormValues;
+  const agendaFields = useFieldArray({ control, name: 'agenda' });
+  const responsibleFields = useFieldArray({ control, name: 'responsibles' });
+  const attendeeFields = useFieldArray({ control, name: 'attendees' });
+  const { append: appendAttendees } = attendeeFields;
+  const agendaRows = agendaFields.fields.map((field, index) => ({ ...field, ...agenda[index] }));
+  const responsibleRows = responsibleFields.fields.map((field, index) => ({
+    ...field,
+    ...responsibles[index],
+  }));
+  const attendeeRows = attendeeFields.fields.map((field, index) => ({
+    ...field,
+    ...attendees[index],
+  }));
+  const error = errors.root?.message;
 
   // Tracks which quick-sort chip (if any) the current order matches, so it
   // can be highlighted. `null` means the order is custom (manually
@@ -223,15 +264,13 @@ export function ProtocolFormClient({
     new Map(),
   );
 
-  const [submitting, setSubmitting] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Errors are reported in two places at once: an inline alert at the top of
   // the form (for users scrolled to the top) and a toast (visible regardless
   // of scroll position on long forms).
   const showError = (message: string) => {
-    setError(message);
+    setError('root', { message });
     toast({ title: 'Помилка', description: message, variant: 'error' });
   };
 
@@ -255,7 +294,7 @@ export function ProtocolFormClient({
       }
 
       if (!numberManuallyEdited.current) {
-        setNumber(res.data.nextNumber.toString());
+        setValue('number', res.data.nextNumber.toString());
       }
     });
     return () => {
@@ -356,48 +395,32 @@ export function ProtocolFormClient({
   // append rows for voters who aren't current group members.  Gender-aware
   // present text is derived from the voter's full name.
   useEffect(() => {
-    const syncedLockedUserIds = new Set(voterInfoByUserId.keys());
-    let addedNewAttendee = false;
-    // oxlint-disable-next-line react/set-state-in-effect
-    setAttendees((prev) => {
-      const existingUserIds = new Set(prev.filter((a) => a.userId !== null).map((a) => a.userId!));
-      let changed = false;
-      const updated = prev.map((a) => {
-        if (a.userId && syncedLockedUserIds.has(a.userId) && !a.isPresent) {
-          changed = true;
-          return {
-            ...a,
-            isPresent: true,
-            // Derive the gender-appropriate present text from the stored fullname
-            present_text: getGenderedPresentText(a.fullname),
-          };
-        }
-        return a;
-      });
-      const toAdd: AttendeeDraft[] = [];
-      for (const [userId, info] of voterInfoByUserId) {
-        if (!existingUserIds.has(userId)) {
-          toAdd.push({
-            uid: uid(),
-            userId,
-            fullname: info.fullName,
-            posada: '',
-            present_text: getGenderedPresentText(info.fullName),
-            isPresent: true,
-          });
-        }
+    const current = getValues('attendees');
+    const existing = new Set(current.map((attendee) => attendee.userId));
+    current.forEach((attendee, index) => {
+      if (attendee.userId && voterInfoByUserId.has(attendee.userId) && !attendee.isPresent) {
+        setValue(`attendees.${index}.isPresent`, true);
+        setValue(`attendees.${index}.present_text`, getGenderedPresentText(attendee.fullname));
       }
-      if (toAdd.length === 0 && !changed) {
-        return prev;
-      }
-      addedNewAttendee = toAdd.length > 0;
-      return [...updated, ...toAdd];
     });
-
-    if (addedNewAttendee) {
+    const additions: AttendeeDraft[] = [];
+    for (const [userId, info] of voterInfoByUserId) {
+      if (!existing.has(userId)) {
+        additions.push({
+          uid: uid(),
+          userId,
+          fullname: info.fullName,
+          posada: '',
+          present_text: getGenderedPresentText(info.fullName),
+          isPresent: true,
+        });
+      }
+    }
+    if (additions.length > 0) {
+      appendAttendees(additions, { shouldFocus: false });
       setAttendeesSortKey(null);
     }
-  }, [voterInfoByUserId]);
+  }, [voterInfoByUserId, getValues, setValue, appendAttendees]);
 
   let presentCount = 0;
   for (const a of attendees) {
@@ -406,67 +429,25 @@ export function ProtocolFormClient({
     }
   }
 
-  // ── Mutations on agenda ──────────────────────────────────────────────────
   const updateAgenda = (idx: number, patch: Partial<AgendaDraft>) => {
-    setAgenda((prev) => prev.map((a, i) => (i === idx ? { ...a, ...patch } : a)));
+    setValue(
+      `agenda.${idx}`,
+      { ...getValues(`agenda.${idx}`), ...patch },
+      { shouldDirty: true, shouldValidate: isSubmitted },
+    );
   };
-
   const addAgenda = () => {
-    if (agenda.length >= PROTOCOL_MAX_AGENDA_ITEMS) {
-      return;
+    if (agenda.length < PROTOCOL_MAX_AGENDA_ITEMS) {
+      agendaFields.append(emptyAgenda());
     }
-    setAgenda((prev) => [...prev, emptyAgenda()]);
   };
-
   const removeAgenda = (idx: number) => {
-    if (agenda.length <= 1) {
-      return;
+    if (agenda.length > 1) {
+      agendaFields.remove(idx);
     }
-    setAgenda((prev) => prev.filter((_, i) => i !== idx));
   };
-
   const moveAgenda = (idx: number, dir: -1 | 1) => {
-    setAgenda((prev) => {
-      const target = idx + dir;
-      if (target < 0 || target >= prev.length) {
-        return prev;
-      }
-      const copy = [...prev];
-      [copy[idx], copy[target]] = [copy[target], copy[idx]];
-      return copy;
-    });
-  };
-
-  const addListener = (idx: number) => {
-    setAgenda((prev) =>
-      prev.map((a, i) =>
-        i === idx
-          ? a.listeners.length >= PROTOCOL_MAX_LISTENERS_PER_ITEM
-            ? a
-            : { ...a, listeners: [...a.listeners, { fullname: '', speech: '' }] }
-          : a,
-      ),
-    );
-  };
-
-  const updateListener = (idx: number, lIdx: number, patch: Partial<ProtocolListener>) => {
-    setAgenda((prev) =>
-      prev.map((a, i) =>
-        i === idx
-          ? { ...a, listeners: a.listeners.map((l, j) => (j === lIdx ? { ...l, ...patch } : l)) }
-          : a,
-      ),
-    );
-  };
-
-  const removeListener = (idx: number, lIdx: number) => {
-    setAgenda((prev) =>
-      prev.map((a, i) =>
-        i === idx && a.listeners.length > 1
-          ? { ...a, listeners: a.listeners.filter((_, j) => j !== lIdx) }
-          : a,
-      ),
-    );
+    agendaFields.move(idx, idx + dir);
   };
 
   const setElectionForAgenda = (idx: number, electionId: string | null) => {
@@ -488,255 +469,137 @@ export function ProtocolFormClient({
   };
 
   const setChoiceVote = (idx: number, choiceId: string, vote: AgendaChoiceVote) => {
-    setAgenda((prev) =>
-      prev.map((a, i) =>
-        i === idx ? { ...a, choiceMapping: { ...a.choiceMapping, [choiceId]: vote } } : a,
-      ),
+    const current = getValues(`agenda.${idx}.choiceMapping`);
+    setValue(
+      `agenda.${idx}.choiceMapping`,
+      { ...current, [choiceId]: vote },
+      { shouldDirty: true, shouldValidate: isSubmitted },
     );
   };
-
-  // ── Mutations on responsibles ─────────────────────────────────────────────
   const addResponsible = () => {
-    if (responsibles.length >= PROTOCOL_MAX_RESPONSIBLES) {
-      return;
-    }
-    setResponsibles((prev) => [...prev, { uid: uid(), posada: '', fullname: '' }]);
-    setResponsiblesSortKey(null);
-  };
-
-  const updateResponsible = (idx: number, patch: Partial<ResponsibleDraft>) => {
-    setResponsibles((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
-    if ('posada' in patch || 'fullname' in patch) {
+    if (responsibles.length < PROTOCOL_MAX_RESPONSIBLES) {
+      responsibleFields.append({ posada: '', fullname: '' });
       setResponsiblesSortKey(null);
     }
   };
-
   const removeResponsible = (idx: number) => {
-    if (responsibles.length <= 1) {
-      return;
+    if (responsibles.length > 1) {
+      responsibleFields.remove(idx);
     }
-    setResponsibles((prev) => prev.filter((_, i) => i !== idx));
   };
-
   const moveResponsible = (idx: number, dir: -1 | 1) => {
-    setResponsibles((prev) => {
-      const target = idx + dir;
-      if (target < 0 || target >= prev.length) {
-        return prev;
-      }
-      const copy = [...prev];
-      [copy[idx], copy[target]] = [copy[target], copy[idx]];
-      return copy;
-    });
+    responsibleFields.move(idx, idx + dir);
     setResponsiblesSortKey(null);
   };
-
   const sortResponsibles = (key: QuickSortKey) => {
-    setResponsibles((prev) => [...prev].sort(compareByQuickSortKey(key)));
+    responsibleFields.replace([...getValues('responsibles')].sort(compareByQuickSortKey(key)));
     setResponsiblesSortKey(key);
   };
-
-  // ── Mutations on attendees ────────────────────────────────────────────────
-
-  /**
-   * Update an attendee draft.  When the fullname changes and the current
-   * present_text is one of the four standard gendered variants
-   * (присутній / присутня / відсутній / відсутня), it is automatically
-   * re-derived to match the new name's gender.  Custom values are left alone.
-   */
   const updateAttendee = (idx: number, patch: Partial<AttendeeDraft>) => {
-    setAttendees((prev) =>
-      prev.map((a, i) => {
-        if (i !== idx) {
-          return a;
-        }
-        const merged = { ...a, ...patch };
-        if ('fullname' in patch) {
-          merged.present_text = rederivePresenceText(merged.present_text, merged.fullname);
-        }
-        return merged;
-      }),
-    );
+    const current = getValues(`attendees.${idx}`);
+    const merged = { ...current, ...patch };
+    if ('fullname' in patch) {
+      merged.present_text = rederivePresenceText(merged.present_text, merged.fullname);
+    }
+    setValue(`attendees.${idx}`, merged, { shouldDirty: true, shouldValidate: isSubmitted });
     if ('posada' in patch || 'fullname' in patch) {
       setAttendeesSortKey(null);
     }
   };
-
   const togglePresence = (idx: number, present: boolean) => {
-    setAttendees((prev) =>
-      prev.map((a, i) => {
-        if (i !== idx) {
-          return a;
-        }
-        // Voters from non-anonymous elections are mechanically present —
-        // ignore attempts to mark them absent.
-        if (a.userId && lockedUserIds.has(a.userId)) {
-          return a;
-        }
-        return {
-          ...a,
-          isPresent: present,
-          // Derive gender-appropriate text from the attendee's stored fullname
-          present_text: present
-            ? getGenderedPresentText(a.fullname)
-            : getGenderedAbsentText(a.fullname),
-        };
-      }),
-    );
-  };
-
-  const addManualAttendee = () => {
-    if (attendees.length >= PROTOCOL_MAX_ATTENDEES) {
+    const current = getValues(`attendees.${idx}`);
+    if (current.userId && lockedUserIds.has(current.userId)) {
       return;
     }
-    setAttendees((prev) => [
-      ...prev,
-      {
+    updateAttendee(idx, {
+      isPresent: present,
+      present_text: present
+        ? getGenderedPresentText(current.fullname)
+        : getGenderedAbsentText(current.fullname),
+    });
+  };
+  const addManualAttendee = () => {
+    if (attendees.length < PROTOCOL_MAX_ATTENDEES) {
+      attendeeFields.append({
         uid: uid(),
         userId: null,
         fullname: '',
         posada: '',
-        // Empty name → default to male form; will re-derive once name is typed
         present_text: PRESENT_TEXT_MALE,
         isPresent: true,
-      },
-    ]);
-    setAttendeesSortKey(null);
+      });
+      setAttendeesSortKey(null);
+    }
   };
-
   const removeAttendee = (idx: number) => {
-    setAttendees((prev) => prev.filter((_, i) => i !== idx));
+    attendeeFields.remove(idx);
   };
-
   const moveAttendee = (idx: number, dir: -1 | 1) => {
-    setAttendees((prev) => {
-      const target = idx + dir;
-      if (target < 0 || target >= prev.length) {
-        return prev;
-      }
-      const copy = [...prev];
-      [copy[idx], copy[target]] = [copy[target], copy[idx]];
-      return copy;
-    });
+    attendeeFields.move(idx, idx + dir);
     setAttendeesSortKey(null);
   };
-
   const sortAttendees = (key: QuickSortKey) => {
-    setAttendees((prev) => [...prev].sort(compareByQuickSortKey(key)));
+    attendeeFields.replace([...getValues('attendees')].sort(compareByQuickSortKey(key)));
     setAttendeesSortKey(key);
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
-  const validate = (): string | null => {
-    if (!name.trim()) {
-      return 'Вкажіть назву протоколу';
-    }
-    if (!date) {
-      return 'Вкажіть дату протоколу';
-    }
-    const numberValue = parseInt(number.trim(), 10);
-    if (!Number.isFinite(numberValue) || numberValue < 1) {
-      return 'Номер протоколу має бути цілим числом від 1';
-    }
-    for (const [i, r] of responsibles.entries()) {
-      if (!r.posada.trim() || !r.fullname.trim()) {
-        return `Заповніть посаду та ПІБ відповідального #${i + 1}`;
+  const handleSubmit = submitForm(
+    async (values) => {
+      if (!canEdit) {
+        return;
       }
-    }
-    for (const [i, a] of attendees.entries()) {
-      if (!a.fullname.trim() || !a.posada.trim() || !a.present_text.trim()) {
-        return `Заповніть всі поля для учасника #${i + 1} у листі присутності`;
-      }
-    }
-    for (const [i, a] of agenda.entries()) {
-      if (!a.name.trim()) {
-        return `Вкажіть назву пункту порядку денного #${i + 1}`;
-      }
-      for (const [j, l] of a.listeners.entries()) {
-        if (!l.fullname.trim() || !l.speech.trim()) {
-          return `Заповніть слухача #${j + 1} у пункті #${i + 1}`;
+      clearErrors('root');
+      const payload = serializeProtocolForm(values);
+
+      const result =
+        isEdit && initialProtocol
+          ? await api.protocols.update(initialProtocol.id, payload)
+          : await api.groups.protocols.create(group.id, payload);
+
+      if (result.success) {
+        toast({
+          title: isEdit ? 'Протокол оновлено' : 'Протокол створено',
+          variant: 'success',
+        });
+        if (!isEdit) {
+          router.push(`/groups/${group.id}/protocols/${result.data.id}`);
+        } else {
+          router.refresh();
         }
-      }
-      if (!a.electionId) {
-        return `Пункт #${i + 1}: оберіть привʼязане голосування`;
-      }
-      const votes = new Set(Object.values(a.choiceMapping));
-      if (Object.keys(a.choiceMapping).length !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
-        return `Пункт #${i + 1}: змапте всі варіанти голосування`;
-      }
-      if (votes.size !== PROTOCOL_REQUIRED_ELECTION_CHOICES) {
-        return `Пункт #${i + 1}: кожен варіант має відповідати окремому значенню (За/Проти/Утримались)`;
-      }
-    }
-    return null;
-  };
-
-  const handleSubmit = async () => {
-    const err = validate();
-    if (err) {
-      showError(err);
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-
-    const numberValue = parseInt(number.trim(), 10);
-    const visitorsValue = visitors.trim() ? parseInt(visitors.trim(), 10) : null;
-
-    const payload: CreateProtocolRequest = {
-      number: numberValue,
-      name: name.trim(),
-      date,
-      visitors: visitorsValue !== null && visitorsValue >= 0 ? visitorsValue : null,
-      responsibles: responsibles.map((r) => ({
-        posada: r.posada.trim(),
-        fullname: r.fullname.trim(),
-      })),
-      attendance: attendees.map((a) => ({
-        userId: a.userId,
-        fullname: a.fullname.trim(),
-        posada: a.posada.trim(),
-        present_text: a.present_text.trim(),
-      })),
-      agendaItems: agenda.map((a) => ({
-        name: a.name.trim(),
-        listeners: a.listeners.map((l) => ({
-          fullname: l.fullname.trim(),
-          speech: l.speech.trim(),
-        })),
-        result: a.result.trim() || null,
-        electionId: a.electionId,
-        choiceMapping: a.electionId ? a.choiceMapping : null,
-      })),
-    };
-
-    const result =
-      isEdit && initialProtocol
-        ? await api.protocols.update(initialProtocol.id, payload)
-        : await api.groups.protocols.create(group.id, payload);
-
-    if (result.success) {
-      toast({
-        title: isEdit ? 'Протокол оновлено' : 'Протокол створено',
-        variant: 'success',
-      });
-      if (!isEdit) {
-        router.push(`/groups/${group.id}/protocols/${result.data.id}`);
       } else {
-        router.refresh();
+        showError(result.error);
       }
-    } else {
-      showError(result.error);
-    }
-    setSubmitting(false);
-  };
+    },
+    (validationErrors) => {
+      const firstMessage = (value: unknown): string | null => {
+        if (!value || typeof value !== 'object') {
+          return null;
+        }
+        if ('message' in value && typeof value.message === 'string') {
+          return value.message;
+        }
+        for (const [key, child] of Object.entries(value)) {
+          if (key === 'ref') {
+            continue;
+          }
+          const message = firstMessage(child);
+          if (message) {
+            return message;
+          }
+        }
+        return null;
+      };
+      showError(firstMessage(validationErrors) ?? 'Виправте помилки у формі');
+    },
+  );
 
   const handleGenerate = async () => {
     if (!initialProtocol) {
       return;
     }
     setGenerating(true);
-    setError(null);
+    clearErrors('root');
     try {
       const response = await fetch(`/api/protocols/${initialProtocol.id}/generate`, {
         method: 'POST',
@@ -811,7 +674,7 @@ export function ProtocolFormClient({
             </Alert>
           )}
           {error && (
-            <Alert variant="error" onDismiss={() => setError(null)}>
+            <Alert variant="error" onDismiss={() => clearErrors('root')}>
               {error}
             </Alert>
           )}
@@ -855,35 +718,39 @@ export function ProtocolFormClient({
           {/* Protocol meta */}
           <SectionCard title="Інформація про протокол">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label="Назва" required htmlFor="protocol-name" className="sm:col-span-2">
+              <FormField
+                label="Назва"
+                required
+                htmlFor="protocol-name"
+                error={errors.name?.message}
+                className="sm:col-span-2"
+              >
                 <Input
                   id="protocol-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  {...register('name')}
                   maxLength={PROTOCOL_NAME_MAX_LENGTH}
                   placeholder="Наприклад: Засідання правління"
                   disabled={!canEdit}
                 />
               </FormField>
-              <FormField label="Дата" required htmlFor="protocol-date">
-                <Input
-                  id="protocol-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  disabled={!canEdit}
-                />
+              <FormField label="Дата" required htmlFor="protocol-date" error={errors.date?.message}>
+                <Input id="protocol-date" type="date" {...register('date')} disabled={!canEdit} />
               </FormField>
-              <FormField label="Номер" required htmlFor="protocol-number">
+              <FormField
+                label="Номер"
+                required
+                htmlFor="protocol-number"
+                error={errors.number?.message}
+              >
                 <Input
                   id="protocol-number"
                   type="number"
                   min={1}
-                  value={number}
-                  onChange={(e) => {
-                    numberManuallyEdited.current = true;
-                    setNumber(e.target.value);
-                  }}
+                  {...register('number', {
+                    onChange: () => {
+                      numberManuallyEdited.current = true;
+                    },
+                  })}
                   placeholder="Наступний номер для року"
                   disabled={!canEdit}
                 />
@@ -891,6 +758,7 @@ export function ProtocolFormClient({
               <FormField
                 label="Запрошених гостей (необов'язково)"
                 htmlFor="protocol-visitors"
+                error={errors.visitors?.message}
                 className="sm:col-span-2"
               >
                 <Input
@@ -898,8 +766,7 @@ export function ProtocolFormClient({
                   type="number"
                   min={0}
                   max={PROTOCOL_MAX_VISITORS}
-                  value={visitors}
-                  onChange={(e) => setVisitors(e.target.value)}
+                  {...register('visitors')}
                   placeholder="0"
                   disabled={!canEdit}
                 />
@@ -947,21 +814,20 @@ export function ProtocolFormClient({
             }
           >
             <div className="space-y-4">
-              {agenda.map((item, idx) => (
+              {agendaRows.map((item, idx) => (
                 <AgendaItemEditor
-                  key={item.uid}
+                  key={item.id}
                   index={idx}
                   total={agenda.length}
                   item={item}
                   linkableElections={linkableElections}
                   electionsById={electionsById}
                   canEdit={canEdit}
-                  onChange={(patch) => updateAgenda(idx, patch)}
+                  control={control}
+                  register={register}
+                  errors={errors.agenda?.[idx]}
                   onRemove={() => removeAgenda(idx)}
                   onMove={(dir) => moveAgenda(idx, dir)}
-                  onAddListener={() => addListener(idx)}
-                  onUpdateListener={(lIdx, patch) => updateListener(idx, lIdx, patch)}
-                  onRemoveListener={(lIdx) => removeListener(idx, lIdx)}
                   onSelectElection={(eid) => setElectionForAgenda(idx, eid)}
                   onSetChoiceVote={(cid, vote) => setChoiceVote(idx, cid, vote)}
                 />
@@ -991,21 +857,25 @@ export function ProtocolFormClient({
               <QuickSortBar activeKey={responsiblesSortKey} onSort={sortResponsibles} />
             )}
             <div className="space-y-3">
-              {responsibles.map((r, idx) => (
+              {responsibleRows.map((r, idx) => (
                 <div
-                  key={r.uid}
+                  key={r.id}
                   className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center"
                 >
                   <Input
-                    value={r.posada}
-                    onChange={(e) => updateResponsible(idx, { posada: e.target.value })}
+                    {...register(`responsibles.${idx}.posada`, {
+                      onChange: () => setResponsiblesSortKey(null),
+                    })}
+                    error={!!errors.responsibles?.[idx]?.posada}
                     placeholder="Посада (наприклад: Голова)"
                     maxLength={PROTOCOL_RESPONSIBLE_POSADA_MAX_LENGTH}
                     disabled={!canEdit}
                   />
                   <Input
-                    value={r.fullname}
-                    onChange={(e) => updateResponsible(idx, { fullname: e.target.value })}
+                    {...register(`responsibles.${idx}.fullname`, {
+                      onChange: () => setResponsiblesSortKey(null),
+                    })}
+                    error={!!errors.responsibles?.[idx]?.fullname}
                     placeholder="Прізвище Імʼя"
                     maxLength={PROTOCOL_RESPONSIBLE_FULLNAME_MAX_LENGTH}
                     disabled={!canEdit}
@@ -1059,13 +929,13 @@ export function ProtocolFormClient({
               </p>
             ) : (
               <div className="space-y-2">
-                {attendees.map((a, idx) => {
+                {attendeeRows.map((a, idx) => {
                   const isLockedByVote = a.userId !== null && lockedUserIds.has(a.userId);
                   const isMember = a.userId !== null && memberUserIds.has(a.userId);
                   const canDelete = canEdit && !isLockedByVote && !isMember;
                   return (
                     <div
-                      key={a.uid}
+                      key={a.id}
                       className={cn(
                         'rounded-md border border-border-subtle p-3',
                         a.isPresent ? 'bg-success-bg/20' : 'bg-surface',
@@ -1073,6 +943,7 @@ export function ProtocolFormClient({
                     >
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-center">
                         <Input
+                          error={!!errors.attendees?.[idx]?.fullname}
                           value={a.fullname}
                           onChange={(e) => updateAttendee(idx, { fullname: e.target.value })}
                           placeholder="ПІБ"
@@ -1080,6 +951,7 @@ export function ProtocolFormClient({
                           disabled={!canEdit}
                         />
                         <Input
+                          error={!!errors.attendees?.[idx]?.posada}
                           value={a.posada}
                           onChange={(e) => updateAttendee(idx, { posada: e.target.value })}
                           placeholder="Посада"
@@ -1124,6 +996,15 @@ export function ProtocolFormClient({
                           )}
                         </div>
                       </div>
+                      {(errors.attendees?.[idx]?.fullname ||
+                        errors.attendees?.[idx]?.posada ||
+                        errors.attendees?.[idx]?.present_text) && (
+                        <p className="mt-1 text-xs text-error">
+                          {errors.attendees?.[idx]?.fullname?.message ||
+                            errors.attendees?.[idx]?.posada?.message ||
+                            errors.attendees?.[idx]?.present_text?.message}
+                        </p>
+                      )}
                       {isLockedByVote && (
                         <p className="mt-1.5 flex items-center gap-1 text-xs text-success">
                           <Lock className="h-3 w-3 shrink-0" />
@@ -1333,12 +1214,11 @@ interface AgendaItemEditorProps {
   linkableElections: Election[];
   electionsById: Map<string, Election>;
   canEdit: boolean;
-  onChange: (patch: Partial<AgendaDraft>) => void;
+  control: Control<ProtocolFormValues>;
+  register: UseFormRegister<ProtocolFormValues>;
+  errors?: FieldErrors<ProtocolFormValues['agenda'][number]>;
   onRemove: () => void;
   onMove: (dir: -1 | 1) => void;
-  onAddListener: () => void;
-  onUpdateListener: (lIdx: number, patch: Partial<ProtocolListener>) => void;
-  onRemoveListener: (lIdx: number) => void;
   onSelectElection: (eid: string | null) => void;
   onSetChoiceVote: (cid: string, vote: AgendaChoiceVote) => void;
 }
@@ -1350,15 +1230,15 @@ function AgendaItemEditor({
   linkableElections,
   electionsById,
   canEdit,
-  onChange,
+  control,
+  register,
+  errors,
   onRemove,
   onMove,
-  onAddListener,
-  onUpdateListener,
-  onRemoveListener,
   onSelectElection,
   onSetChoiceVote,
 }: AgendaItemEditorProps) {
+  const listeners = useFieldArray({ control, name: `agenda.${index}.listeners` });
   const linkedElection = item.electionId ? (electionsById.get(item.electionId) ?? null) : null;
   const sortedChoices = (() => {
     if (!linkedElection) {
@@ -1413,10 +1293,9 @@ function AgendaItemEditor({
       </div>
 
       <div className="space-y-3">
-        <FormField label="Назва пункту" required>
+        <FormField label="Назва пункту" required error={errors?.name?.message}>
           <Input
-            value={item.name}
-            onChange={(e) => onChange({ name: e.target.value })}
+            {...register(`agenda.${index}.name`)}
             maxLength={PROTOCOL_AGENDA_ITEM_NAME_MAX_LENGTH}
             placeholder="Про затвердження..."
             disabled={!canEdit}
@@ -1425,15 +1304,15 @@ function AgendaItemEditor({
 
         <FormField label="Слухали">
           <div className="space-y-2">
-            {item.listeners.map((l, lIdx) => (
-              <div key={lIdx} className="rounded-md border border-border-subtle p-3">
+            {listeners.fields.map((listener, lIdx) => (
+              <div key={listener.id} className="rounded-md border border-border-subtle p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <span className="text-xs text-muted-foreground">Слухач #{lIdx + 1}</span>
                   {canEdit && (
                     <Button
                       variant="ghost"
                       size="xs"
-                      onClick={() => onRemoveListener(lIdx)}
+                      onClick={() => listeners.remove(lIdx)}
                       disabled={item.listeners.length <= 1}
                       className="text-error hover:bg-error-bg"
                     >
@@ -1443,27 +1322,33 @@ function AgendaItemEditor({
                 </div>
                 <Input
                   className="mb-2"
-                  value={l.fullname}
-                  onChange={(e) => onUpdateListener(lIdx, { fullname: e.target.value })}
+                  {...register(`agenda.${index}.listeners.${lIdx}.fullname`)}
+                  error={!!errors?.listeners?.[lIdx]?.fullname}
                   placeholder="ПІБ"
                   maxLength={PROTOCOL_LISTENER_FULLNAME_MAX_LENGTH}
                   disabled={!canEdit}
                 />
                 <Textarea
                   rows={3}
-                  value={l.speech}
-                  onChange={(e) => onUpdateListener(lIdx, { speech: e.target.value })}
+                  {...register(`agenda.${index}.listeners.${lIdx}.speech`)}
+                  error={!!errors?.listeners?.[lIdx]?.speech}
                   placeholder="Зміст виступу"
                   maxLength={PROTOCOL_LISTENER_SPEECH_MAX_LENGTH}
                   disabled={!canEdit}
                 />
+                {(errors?.listeners?.[lIdx]?.fullname || errors?.listeners?.[lIdx]?.speech) && (
+                  <p className="mt-1 text-xs text-error">
+                    {errors?.listeners?.[lIdx]?.fullname?.message ||
+                      errors?.listeners?.[lIdx]?.speech?.message}
+                  </p>
+                )}
               </div>
             ))}
             {canEdit && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onAddListener}
+                onClick={() => listeners.append({ fullname: '', speech: '' })}
                 disabled={item.listeners.length >= PROTOCOL_MAX_LISTENERS_PER_ITEM}
               >
                 <Plus className="h-3.5 w-3.5" />
@@ -1473,11 +1358,10 @@ function AgendaItemEditor({
           </div>
         </FormField>
 
-        <FormField label="Постановили (необовʼязково)">
+        <FormField label="Постановили (необовʼязково)" error={errors?.result?.message}>
           <Textarea
             rows={3}
-            value={item.result}
-            onChange={(e) => onChange({ result: e.target.value })}
+            {...register(`agenda.${index}.result`)}
             maxLength={PROTOCOL_AGENDA_ITEM_RESULT_MAX_LENGTH}
             placeholder="Текст постанови"
             disabled={!canEdit}
@@ -1486,6 +1370,12 @@ function AgendaItemEditor({
 
         <FormField
           label="Привʼязане голосування"
+          error={
+            errors?.electionId?.message ||
+            (typeof errors?.choiceMapping?.message === 'string'
+              ? errors.choiceMapping.message
+              : undefined)
+          }
           required
           hint={
             linkableElections.length === 0 && canEdit
