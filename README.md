@@ -60,7 +60,7 @@
 | Layer                     | Technology                                                                                                                                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Framework**             | [Next.js 16](https://nextjs.org/) (App Router, React Server Components)                                                                                                                      |
-| **Language**              | [TypeScript 5](https://www.typescriptlang.org/)                                                                                                                                              |
+| **Language**              | [TypeScript 7](https://www.typescriptlang.org/)                                                                                                                                              |
 | **UI**                    | [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/) |
 | **Database**              | [PostgreSQL](https://www.postgresql.org/)                                                                                                                                                    |
 | **ORM**                   | [Prisma 7](https://www.prisma.io/) with `@prisma/adapter-pg`                                                                                                                                 |
@@ -123,7 +123,7 @@ The application uses **PostgreSQL** as its primary database and connects to it t
 
 ### Prerequisites
 
-- **Node.js** ≥ 20
+- **Node.js** 24.x (see `.nvmrc`)
 - **pnpm** ≥ 10 (`npm install -g pnpm`)
 - **Docker** and **Docker Compose** (for local dependencies)
 - Access to **KPI ID** — or use the included [Mock Integrations API](#mock-integrations-api) for local development
