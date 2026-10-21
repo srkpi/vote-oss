@@ -27,8 +27,8 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
         <div className="flex items-center gap-2">
           <Avatar src={token.creator.avatarUrl} name={token.creator.fullName} size={28} />
           <div>
-            <p className="font-body text-foreground text-sm">{token.creator.fullName}</p>
-            <p className="font-body text-muted-foreground text-xs">{token.creator.userId}</p>
+            <p className="font-body text-sm text-foreground">{token.creator.fullName}</p>
+            <p className="font-body text-xs text-muted-foreground">{token.creator.userId}</p>
           </div>
         </div>
       </td>
@@ -74,7 +74,7 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
 
       <td className="px-4 py-3.5">
         <div className="w-24 space-y-1.5">
-          <p className="font-body text-foreground text-sm">
+          <p className="font-body text-sm text-foreground">
             <span className="font-semibold">{token.currentUsage}</span>
             <span className="text-muted-foreground"> / {token.maxUsage}</span>
           </p>
@@ -89,11 +89,11 @@ export function TokenRow({ token, onDelete }: TokenRowProps) {
 
       <td className="px-4 py-3.5">
         <div className="flex items-center gap-1.5">
-          {urgent && <Clock className="text-kpi-orange h-3.5 w-3.5 shrink-0" />}
+          {urgent && <Clock className="h-3.5 w-3.5 shrink-0 text-kpi-orange" />}
           <span
             className={cn(
               'font-body text-sm',
-              urgent ? 'text-kpi-orange font-medium' : 'text-foreground',
+              urgent ? 'font-medium text-kpi-orange' : 'text-foreground',
             )}
           >
             {expiresText}

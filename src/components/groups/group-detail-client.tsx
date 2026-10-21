@@ -113,11 +113,11 @@ function InviteLinkResult({ token }: { token: string }) {
         Скопіюйте посилання та поділіться ним.
       </Alert>
       <div>
-        <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
+        <p className="font-body mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Посилання для вступу
         </p>
         <div className="flex items-center gap-2">
-          <div className="bg-surface flex-1 overflow-hidden rounded border p-2.5">
+          <div className="flex-1 overflow-hidden rounded border bg-surface p-2.5">
             <p className="font-mono text-xs break-all select-all">{link}</p>
           </div>
           <Button
@@ -130,11 +130,11 @@ function InviteLinkResult({ token }: { token: string }) {
         </div>
       </div>
       <div>
-        <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
+        <p className="font-body mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Токен
         </p>
         <div className="flex items-center gap-2">
-          <div className="bg-surface flex-1 overflow-hidden rounded border p-2.5">
+          <div className="flex-1 overflow-hidden rounded border bg-surface p-2.5">
             <p className="font-mono text-xs break-all select-all">{token}</p>
           </div>
           <Button
@@ -156,6 +156,7 @@ function InviteLinkResult({ token }: { token: string }) {
 
 function InviteLinkCard({ link, onRevoke }: { link: GroupInviteLink; onRevoke: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  // oxlint-disable-next-line react/purity -- Re-evaluate link expiration when the card renders.
   const isExpired = new Date(link.expiresAt) < new Date();
   const isExhausted = link.currentUsage >= link.maxUsage;
   const isRevoked = !!link.deletedAt;
@@ -164,31 +165,31 @@ function InviteLinkCard({ link, onRevoke }: { link: GroupInviteLink; onRevoke: (
   return (
     <div
       className={cn(
-        'border-border-color bg-card overflow-hidden rounded-xl border',
+        'border-border-color overflow-hidden rounded-xl border bg-card',
         isInactive && 'opacity-60',
       )}
     >
       <div className="flex items-start justify-between gap-4 p-4">
         <div className="min-w-0 flex-1 space-y-1">
           {link.label && (
-            <p className="font-body text-foreground text-sm font-medium">{link.label}</p>
+            <p className="font-body text-sm font-medium text-foreground">{link.label}</p>
           )}
-          <p className="font-body text-muted-foreground text-xs">
+          <p className="font-body text-xs text-muted-foreground">
             Використань: {link.currentUsage} / {link.maxUsage}
           </p>
-          <p className="font-body text-muted-foreground text-xs">
+          <p className="font-body text-xs text-muted-foreground">
             Дійсне до: <LocalDateTime date={link.expiresAt} />
           </p>
           {isRevoked && (
-            <p className="font-body text-error text-xs">
+            <p className="font-body text-xs text-error">
               Відкликано: <LocalDateTime date={link.deletedAt!} />
             </p>
           )}
           {isExpired && !isRevoked && (
-            <p className="font-body text-muted-foreground text-xs">Термін дії минув</p>
+            <p className="font-body text-xs text-muted-foreground">Термін дії минув</p>
           )}
           {isExhausted && !isRevoked && (
-            <p className="font-body text-muted-foreground text-xs">Ліміт використань вичерпано</p>
+            <p className="font-body text-xs text-muted-foreground">Ліміт використань вичерпано</p>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -220,15 +221,15 @@ function InviteLinkCard({ link, onRevoke }: { link: GroupInviteLink; onRevoke: (
       </div>
 
       {expanded && link.usages.length > 0 && (
-        <div className="border-border-subtle border-t p-4">
-          <p className="font-body text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
+        <div className="border-t border-border-subtle p-4">
+          <p className="font-body mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             Хто вступив
           </p>
           <div className="space-y-1.5">
             {link.usages.map((u) => (
               <div key={u.id} className="flex items-center justify-between gap-2">
-                <p className="text-foreground font-mono text-xs">{u.userId}</p>
-                <p className="font-body text-muted-foreground text-xs">
+                <p className="font-mono text-xs text-foreground">{u.userId}</p>
+                <p className="font-body text-xs text-muted-foreground">
                   <LocalDateTime date={u.usedAt} />
                 </p>
               </div>
@@ -258,18 +259,18 @@ function RequisiteRow({
   const display = value || fallback || null;
   return (
     <div className="flex items-start gap-2.5">
-      <div className="text-muted-foreground mt-0.5 shrink-0">{icon}</div>
+      <div className="mt-0.5 shrink-0 text-muted-foreground">{icon}</div>
       <div className="min-w-0 flex-1">
-        <p className="font-body text-muted-foreground text-xs">{label}</p>
+        <p className="font-body text-xs text-muted-foreground">{label}</p>
         {display ? (
-          <p className="font-body text-foreground text-sm wrap-break-word">
+          <p className="font-body text-sm wrap-break-word text-foreground">
             {display}
             {!value && fallback && (
-              <span className="text-muted-foreground text-xs"> (з назви групи)</span>
+              <span className="text-xs text-muted-foreground"> (з назви групи)</span>
             )}
           </p>
         ) : (
-          <p className="font-body text-muted-foreground text-sm italic">—</p>
+          <p className="font-body text-sm text-muted-foreground italic">—</p>
         )}
       </div>
     </div>
@@ -324,11 +325,15 @@ export function GroupDetailClient({
   const filteredElections = (() => {
     const q = electionSearch.trim().toLowerCase();
     return group.elections.filter((e) => {
-      if (electionStatuses.length > 0 && !electionStatuses.includes(e.status)) return false;
+      if (electionStatuses.length > 0 && !electionStatuses.includes(e.status)) {
+        return false;
+      }
       if (q) {
         const inTitle = e.title.toLowerCase().includes(q);
         const inAuthor = e.createdBy.fullName.toLowerCase().includes(q);
-        if (!inTitle && !inAuthor) return false;
+        if (!inTitle && !inAuthor) {
+          return false;
+        }
       }
       return true;
     });
@@ -341,7 +346,9 @@ export function GroupDetailClient({
       if (q) {
         const inTitle = e.title.toLowerCase().includes(q);
         const inAuthor = e.createdBy.fullName.toLowerCase().includes(q);
-        if (!inTitle && !inAuthor) continue;
+        if (!inTitle && !inAuthor) {
+          continue;
+        }
       }
       counts[e.status] = (counts[e.status] ?? 0) + 1;
     }
@@ -382,7 +389,9 @@ export function GroupDetailClient({
 
   const handleRename = async () => {
     const trimmed = newName.trim();
-    if (!trimmed || trimmed === group.name) return;
+    if (!trimmed || trimmed === group.name) {
+      return;
+    }
     setRenaming(true);
     setRenameError(null);
     const result = await api.groups.rename(group.id, trimmed);
@@ -432,7 +441,9 @@ export function GroupDetailClient({
   };
 
   const handleRoleSave = async () => {
-    if (!roleTarget) return;
+    if (!roleTarget) {
+      return;
+    }
     setRoleSaving(true);
     setRoleError(null);
     const trimmed = roleDraft.trim();
@@ -463,7 +474,9 @@ export function GroupDetailClient({
   const isSelfLeave = kickTarget?.userId === session.userId;
 
   const handleKickConfirm = async () => {
-    if (!kickTarget) return;
+    if (!kickTarget) {
+      return;
+    }
     setKicking(true);
     const result = await api.groups.members.remove(group.id, kickTarget.userId);
     if (result.success) {
@@ -496,7 +509,9 @@ export function GroupDetailClient({
   const transferCandidates = group.members.filter((m) => m.userId !== session.userId && !m.isOwner);
 
   const handleTransfer = async () => {
-    if (!selectedNewOwner) return;
+    if (!selectedNewOwner) {
+      return;
+    }
     setTransferring(true);
     setTransferError(null);
     const result = await api.groups.transfer(group.id, selectedNewOwner);
@@ -525,6 +540,7 @@ export function GroupDetailClient({
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteToken, setInviteToken] = useState<string | null>(null);
 
+  // oxlint-disable-next-line react/purity -- Keep invite date bounds relative to the current render time.
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
   const minDate = new Date(now.getTime() + GROUP_INVITE_LINK_MIN_HOURS * 60 * 60 * 1000)
@@ -546,7 +562,7 @@ export function GroupDetailClient({
     if (result.success) {
       setInviteToken(result.data.token);
       // Add new link to state (without token)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // oxlint-disable-next-line typescript/no-unused-vars
       const { token: _t, ...linkWithoutToken } = result.data;
       setGroup((prev) => ({
         ...prev,
@@ -650,7 +666,9 @@ export function GroupDetailClient({
   };
 
   const handleLogoRemove = async () => {
-    if (!group.requisites.logo) return;
+    if (!group.requisites.logo) {
+      return;
+    }
     setLogoUploading(true);
     const result = await api.groups.avatar.remove(group.id);
     if (!result.success) {
@@ -674,7 +692,9 @@ export function GroupDetailClient({
   const [revoking, setRevoking] = useState(false);
 
   const handleRevoke = async () => {
-    if (!revokeTarget) return;
+    if (!revokeTarget) {
+      return;
+    }
     setRevoking(true);
     const result = await api.groups.inviteLinks.revoke(group.id, revokeTarget);
     if (result.success) {
@@ -708,11 +728,11 @@ export function GroupDetailClient({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="space-y-6 lg:col-span-3">
             {/* Elections panel */}
-            <div className="border-border-color shadow-card bg-card rounded-xl border">
-              <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+            <div className="border-border-color rounded-xl border bg-card shadow-card">
+              <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <Vote className="text-kpi-gray-mid h-4 w-4" />
-                  <h2 className="font-display text-foreground text-base font-semibold">
+                  <Vote className="h-4 w-4 text-kpi-gray-mid" />
+                  <h2 className="font-display text-base font-semibold text-foreground">
                     Голосування
                   </h2>
                 </div>
@@ -724,19 +744,19 @@ export function GroupDetailClient({
                     </Link>
                   </Button>
                 ) : (
-                  <span className="font-body text-muted-foreground text-sm">
+                  <span className="font-body text-sm text-muted-foreground">
                     {group.elections.length}
                   </span>
                 )}
               </div>
 
               {group.elections.length === 0 ? (
-                <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+                <p className="font-body px-5 py-8 text-center text-sm text-muted-foreground">
                   Для цієї групи ще немає голосувань
                 </p>
               ) : (
                 <>
-                  <div className="border-border-subtle flex flex-wrap items-center gap-3 border-b px-5 py-3">
+                  <div className="flex flex-wrap items-center gap-3 border-b border-border-subtle px-5 py-3">
                     <FilterMultiDropdown
                       label="Статус"
                       options={electionStatusOptions}
@@ -754,13 +774,13 @@ export function GroupDetailClient({
 
                   <div className="overflow-hidden rounded-b-xl">
                     {pagedElections.length === 0 ? (
-                      <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+                      <p className="font-body px-5 py-8 text-center text-sm text-muted-foreground">
                         {hasElectionFilters
                           ? 'За заданими критеріями нічого не знайдено'
                           : 'Для цієї групи ще немає голосувань'}
                       </p>
                     ) : (
-                      <div className="divide-border-subtle divide-y">
+                      <div className="divide-y divide-border-subtle">
                         {pagedElections.map((election, i) => (
                           <ElectionListItem
                             key={election.id}
@@ -772,7 +792,7 @@ export function GroupDetailClient({
                     )}
 
                     {electionTotalPages > 1 && (
-                      <div className="border-border-subtle border-t px-5 py-3">
+                      <div className="border-t border-border-subtle px-5 py-3">
                         <Pagination
                           page={safeElectionPage}
                           totalPages={electionTotalPages}
@@ -815,9 +835,9 @@ export function GroupDetailClient({
           <div className="space-y-4 lg:col-span-2">
             {/* Public logo (visible to everyone when set) */}
             {!isOwner && group.requisites.logo && (
-              <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border p-4">
+              <div className="border-border-color overflow-hidden rounded-xl border bg-card p-4 shadow-card">
                 <div className="flex items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {/* oxlint-disable-next-line nextjs/no-img-element */}
                   <img
                     src={group.requisites.logo.url}
                     alt={`Логотип ${group.name}`}
@@ -828,16 +848,16 @@ export function GroupDetailClient({
             )}
 
             {/* Members panel — moved into sidebar above management */}
-            <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-              <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+            <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+              <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <Users className="text-kpi-gray-mid h-4 w-4" />
-                  <h2 className="font-display text-foreground text-base font-semibold">Учасники</h2>
+                  <Users className="h-4 w-4 text-kpi-gray-mid" />
+                  <h2 className="font-display text-base font-semibold text-foreground">Учасники</h2>
                 </div>
-                <span className="font-body text-muted-foreground text-sm">{group.memberCount}</span>
+                <span className="font-body text-sm text-muted-foreground">{group.memberCount}</span>
               </div>
 
-              <div className="divide-border-subtle divide-y">
+              <div className="divide-y divide-border-subtle">
                 {group.members.map((member) => {
                   const isSelf = member.userId === session.userId;
                   const canKick = !isSelf && canManage && !member.isOwner;
@@ -854,20 +874,20 @@ export function GroupDetailClient({
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-body text-foreground truncate text-sm font-medium">
+                          <p className="font-body truncate text-sm font-medium text-foreground">
                             {member.displayName}
                           </p>
                           {member.isOwner && (
-                            <Crown className="text-kpi-orange h-3.5 w-3.5 shrink-0" />
+                            <Crown className="h-3.5 w-3.5 shrink-0 text-kpi-orange" />
                           )}
                           {isSelf && (
-                            <span className="font-body text-muted-foreground text-xs">(ви)</span>
+                            <span className="font-body text-xs text-muted-foreground">(ви)</span>
                           )}
                         </div>
                         {member.role ? (
-                          <p className="font-body text-kpi-navy text-xs">{member.role}</p>
+                          <p className="font-body text-xs text-kpi-navy">{member.role}</p>
                         ) : null}
-                        <p className="font-body text-muted-foreground text-xs">
+                        <p className="font-body text-xs text-muted-foreground">
                           З <LocalDateTime date={member.joinedAt} />
                         </p>
                       </div>
@@ -899,7 +919,7 @@ export function GroupDetailClient({
                             variant="ghost"
                             size="xs"
                             onClick={() => setKickTarget(member)}
-                            className="text-muted-foreground hover:text-error hover:bg-error-bg"
+                            className="text-muted-foreground hover:bg-error-bg hover:text-error"
                             title="Вийти з групи"
                           >
                             <LogOut className="h-3.5 w-3.5" />
@@ -914,11 +934,11 @@ export function GroupDetailClient({
 
             {/* Requisites */}
             {isOwner && (
-              <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-                <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+              <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+                <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <IdCard className="text-kpi-gray-mid h-4 w-4" />
-                    <h3 className="font-display text-foreground text-base font-semibold">
+                    <IdCard className="h-4 w-4 text-kpi-gray-mid" />
+                    <h3 className="font-display text-base font-semibold text-foreground">
                       Реквізити
                     </h3>
                   </div>
@@ -933,20 +953,20 @@ export function GroupDetailClient({
                 </div>
 
                 {/* Logo editor — separate row, persists immediately on change */}
-                <div className="border-border-subtle border-b px-5 py-4">
+                <div className="border-b border-border-subtle px-5 py-4">
                   <div className="flex items-start gap-3">
-                    <div className="text-muted-foreground mt-0.5 shrink-0">
+                    <div className="mt-0.5 shrink-0 text-muted-foreground">
                       <ImagePlus className="h-3.5 w-3.5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-body text-muted-foreground text-xs">Логотип</p>
+                      <p className="font-body text-xs text-muted-foreground">Логотип</p>
                       {group.requisites.logo ? (
                         <div className="mt-2 flex items-center gap-3">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          {/* oxlint-disable-next-line nextjs/no-img-element */}
                           <img
                             src={group.requisites.logo.url}
                             alt="Логотип"
-                            className="border-border-subtle h-16 w-16 rounded border bg-white object-contain"
+                            className="h-16 w-16 rounded border border-border-subtle bg-white object-contain"
                           />
                           <div className="flex flex-col gap-1.5">
                             <Button
@@ -981,7 +1001,7 @@ export function GroupDetailClient({
                           >
                             Завантажити
                           </Button>
-                          <p className="font-body text-muted-foreground mt-1.5 text-xs">
+                          <p className="font-body mt-1.5 text-xs text-muted-foreground">
                             PNG, JPEG, WebP — до {Math.floor(AVATAR_MAX_SIZE_BYTES / 1024)} КБ
                           </p>
                         </div>
@@ -994,7 +1014,9 @@ export function GroupDetailClient({
                         onChange={(e) => {
                           const f = e.target.files?.[0];
                           e.target.value = '';
-                          if (f) void handleLogoFileSelected(f);
+                          if (f) {
+                            void handleLogoFileSelected(f);
+                          }
                         }}
                       />
                     </div>
@@ -1027,7 +1049,7 @@ export function GroupDetailClient({
                       />
                     </>
                   ) : (
-                    <p className="font-body text-muted-foreground text-sm">
+                    <p className="font-body text-sm text-muted-foreground">
                       Реквізити не заповнені. Вони використовуються для автоматичного формування
                       протоколів.
                     </p>
@@ -1038,8 +1060,8 @@ export function GroupDetailClient({
 
             {/* Owner actions */}
             {isOwner && (
-              <div className="border-border-color shadow-card bg-card space-y-3 overflow-hidden rounded-xl border p-5">
-                <h3 className="font-display text-foreground text-base font-semibold">Керування</h3>
+              <div className="border-border-color space-y-3 overflow-hidden rounded-xl border bg-card p-5 shadow-card">
+                <h3 className="font-display text-base font-semibold text-foreground">Керування</h3>
 
                 <Button
                   variant="secondary"
@@ -1090,8 +1112,8 @@ export function GroupDetailClient({
 
             {/* Admin takeover */}
             {isAdminWithManageGroups && !isOwner && (
-              <div className="border-border-color shadow-card bg-card space-y-3 overflow-hidden rounded-xl border p-5">
-                <h3 className="font-display text-foreground text-base font-semibold">
+              <div className="border-border-color space-y-3 overflow-hidden rounded-xl border bg-card p-5 shadow-card">
+                <h3 className="font-display text-base font-semibold text-foreground">
                   Адмін-керування
                 </h3>
                 <Button
@@ -1213,10 +1235,10 @@ export function GroupDetailClient({
                     {roleError}
                   </Alert>
                 )}
-                <p className="font-body text-muted-foreground text-sm">
+                <p className="font-body text-sm text-muted-foreground">
                   <strong>{roleTarget?.displayName}</strong>
                 </p>
-                <p className="font-body text-muted-foreground text-sm">
+                <p className="font-body text-sm text-muted-foreground">
                   Роль використовується у протоколах (наприклад, у листі присутності або серед
                   відповідальних). Залиште пустим, щоб очистити.
                 </p>
@@ -1302,7 +1324,7 @@ export function GroupDetailClient({
                   </Alert>
                 ) : (
                   <div className="space-y-2">
-                    <label className="font-body text-foreground block text-sm font-medium">
+                    <label className="font-body block text-sm font-medium text-foreground">
                       Новий власник <span className="text-error">*</span>
                     </label>
                     <StyledSelect
@@ -1358,7 +1380,7 @@ export function GroupDetailClient({
               </DialogHeader>
               <DialogBody className="space-y-4">
                 {group.inviteLinks.length === 0 ? (
-                  <p className="font-body text-muted-foreground py-4 text-center text-sm">
+                  <p className="font-body py-4 text-center text-sm text-muted-foreground">
                     Немає посилань для запрошення
                   </p>
                 ) : (
@@ -1474,7 +1496,7 @@ export function GroupDetailClient({
                     {requisitesError}
                   </Alert>
                 )}
-                <p className="font-body text-muted-foreground text-sm">
+                <p className="font-body text-sm text-muted-foreground">
                   Використовуються для автоматичного формування протоколів. Якщо повна назва не
                   задана — у протокол потрапить назва групи.
                 </p>

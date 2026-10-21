@@ -33,7 +33,9 @@ export function useCountdown(targetDate: string): TimeLeft {
     const interval = setInterval(() => {
       const next = calculateTimeLeft(targetDate);
       setTimeLeft(next);
-      if (next.expired) clearInterval(interval);
+      if (next.expired) {
+        clearInterval(interval);
+      }
     }, 1000);
 
     return () => clearInterval(interval);

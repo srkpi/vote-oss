@@ -94,7 +94,9 @@ export const kpiIdMock = {
 export function resetKpiIdMock(): void {
   kpiIdMock.resolveTicket.mockReset().mockImplementation(async (ticketId: string) => {
     const userInfo = TICKET_MAP[ticketId];
-    if (userInfo) return userInfo;
+    if (userInfo) {
+      return userInfo;
+    }
     throw new InvalidTicketError();
   });
 

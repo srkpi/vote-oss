@@ -17,15 +17,21 @@ export async function DELETE(
   }
 
   const { tokenHash } = await params;
-  if (!tokenHash) return Errors.badRequest('tokenHash is required');
+  if (!tokenHash) {
+    return Errors.badRequest('tokenHash is required');
+  }
 
   const token = await prisma.electionBypassToken.findUnique({
     where: { token_hash: tokenHash },
     include: { usages: { select: { user_id: true } } },
   });
 
-  if (!token) return Errors.notFound('Election bypass token not found');
-  if (token.deleted_at) return Errors.badRequest('Token is already deleted');
+  if (!token) {
+    return Errors.notFound('Election bypass token not found');
+  }
+  if (token.deleted_at) {
+    return Errors.badRequest('Token is already deleted');
+  }
 
   if (token.created_by !== auth.user.sub) {
     const adminGraph = await buildAdminGraph();

@@ -140,7 +140,9 @@ export function computeWinners(
 
   // Quorum gate — nobody wins if quorum not met
   if (conditions.quorum !== null && totalBallots < conditions.quorum) {
-    for (const id of Object.keys(tally)) result[id] = false;
+    for (const id of Object.keys(tally)) {
+      result[id] = false;
+    }
     return result;
   }
 
@@ -157,7 +159,9 @@ export function computeWinners(
     // Condition 2: reaches more than X% of total ballots
     if (winner && conditions.reachesPercentage !== null) {
       const pct = totalBallots > 0 ? (votes / totalBallots) * 100 : 0;
-      if (pct <= conditions.reachesPercentage) winner = false;
+      if (pct <= conditions.reachesPercentage) {
+        winner = false;
+      }
     }
 
     // Condition 3: reaches at least X votes

@@ -34,7 +34,7 @@ export function CommentItem({
 
   if (comment.deletedAt) {
     return (
-      <div className="border-border-color shadow-card bg-card rounded-xl border p-4 sm:p-5">
+      <div className="border-border-color rounded-xl border bg-card p-4 shadow-card sm:p-5">
         <div className="flex gap-3">
           <Avatar
             src={comment.author.avatarUrl}
@@ -45,7 +45,7 @@ export function CommentItem({
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
               <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                <span className="font-body text-muted-foreground truncate text-sm font-semibold">
+                <span className="font-body truncate text-sm font-semibold text-muted-foreground">
                   {comment.author.fullName}
                 </span>
                 {comment.isPetitionAuthor && (
@@ -61,11 +61,11 @@ export function CommentItem({
                 )}
               </div>
 
-              <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
+              <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
                 <LocalDateTime date={comment.createdAt} />
                 {comment.deletedAt && (
                   <Tooltip content={<LocalDateTime date={comment.deletedAt} />}>
-                    <span className="hover:text-foreground flex items-center gap-1 transition-colors">
+                    <span className="flex items-center gap-1 transition-colors hover:text-foreground">
                       <Trash2 className="h-3 w-3" />
                     </span>
                   </Tooltip>
@@ -73,7 +73,7 @@ export function CommentItem({
               </div>
             </div>
 
-            <div className="font-body text-muted-foreground text-sm italic">Коментар видалено</div>
+            <div className="font-body text-sm text-muted-foreground italic">Коментар видалено</div>
           </div>
         </div>
       </div>
@@ -82,13 +82,15 @@ export function CommentItem({
 
   const handleEditSubmit = async (body: string) => {
     const { data, error } = await api.elections.comments.update(electionId, comment.id, body);
-    if (error || !data) throw new Error(error ?? 'Не вдалося зберегти зміни');
+    if (error || !data) {
+      throw new Error(error ?? 'Не вдалося зберегти зміни');
+    }
     onUpdated(data);
     setEditing(false);
   };
 
   return (
-    <div className="group border-border-color shadow-card hover:shadow-card-hover bg-card rounded-xl border p-4 transition-shadow sm:p-5">
+    <div className="group border-border-color rounded-xl border bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover sm:p-5">
       <div className="flex gap-3">
         <Avatar
           src={comment.author.avatarUrl}
@@ -115,11 +117,11 @@ export function CommentItem({
               )}
             </div>
 
-            <div className="text-muted-foreground flex shrink-0 items-center gap-1.5 text-xs">
+            <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
               <LocalDateTime date={comment.createdAt} />
               {comment.editedAt && (
                 <Tooltip content={<LocalDateTime date={comment.editedAt} />}>
-                  <span className="hover:text-foreground flex items-center transition-colors">
+                  <span className="flex items-center transition-colors hover:text-foreground">
                     <Pencil className="h-3 w-3" />
                   </span>
                 </Tooltip>
@@ -159,7 +161,7 @@ export function CommentItem({
                   variant="ghost"
                   size="sm"
                   onClick={() => setEditing(true)}
-                  className="text-muted-foreground hover:text-foreground gap-1 px-2 text-xs"
+                  className="gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
                 >
                   <Pencil className="h-3 w-3" />
                   <span className="hidden sm:inline">Редагувати</span>
@@ -171,7 +173,7 @@ export function CommentItem({
                   variant="ghost"
                   size="sm"
                   onClick={() => onRequestDelete(comment)}
-                  className="hover:text-error text-muted-foreground gap-1 px-2 text-xs"
+                  className="gap-1 px-2 text-xs text-muted-foreground hover:text-error"
                 >
                   <Trash2 className="h-3 w-3" />
                   <span className="hidden sm:inline">Видалити</span>

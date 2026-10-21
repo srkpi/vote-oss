@@ -54,10 +54,14 @@ async function loadProtocolAccess(
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid protocol id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid protocol id');
+  }
 
   const result = await loadProtocolAccess(id, auth.user, { requireOwner: false });
   if (!result.ok) {
@@ -70,7 +74,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id },
     include: PROTOCOL_INCLUDE,
   });
-  if (!row) return Errors.notFound('Protocol not found');
+  if (!row) {
+    return Errors.notFound('Protocol not found');
+  }
 
   const protocol = shapeProtocol(row);
   const linkedElectionIds = protocol.agendaItems
@@ -121,10 +127,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid protocol id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid protocol id');
+  }
 
   const result = await loadProtocolAccess(id, auth.user, { requireOwner: true });
   if (!result.ok) {
@@ -142,7 +152,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const validation = validateProtocolBody(body);
-  if (!validation.ok) return Errors.badRequest(validation.error);
+  if (!validation.ok) {
+    return Errors.badRequest(validation.error);
+  }
   const {
     number,
     name,
@@ -174,7 +186,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const now = Date.now();
     for (const eid of linkedElectionIds) {
       const e = byId.get(eid);
-      if (!e) return Errors.badRequest(`Election ${eid} is not in this group`);
+      if (!e) {
+        return Errors.badRequest(`Election ${eid} is not in this group`);
+      }
       if (e.closes_at.getTime() > now) {
         return Errors.badRequest(`Election ${eid} is not yet closed`);
       }
@@ -240,10 +254,14 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid protocol id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid protocol id');
+  }
 
   const result = await loadProtocolAccess(id, auth.user, { requireOwner: true });
   if (!result.ok) {

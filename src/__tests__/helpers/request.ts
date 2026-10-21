@@ -28,8 +28,12 @@ export function makeRequest(options: MockRequestOptions = {}): NextRequest {
     .join('; ');
 
   const headers = new Headers();
-  if (cookieHeader) headers.set('cookie', cookieHeader);
-  if (body !== undefined) headers.set('content-type', 'application/json');
+  if (cookieHeader) {
+    headers.set('cookie', cookieHeader);
+  }
+  if (body !== undefined) {
+    headers.set('content-type', 'application/json');
+  }
 
   return new NextRequest(fullUrl.toString(), {
     method,
@@ -74,7 +78,9 @@ export function getResponseCookie(response: Response, name: string): string | nu
   for (const entry of setCookie) {
     const parts = entry.split(';');
     const [key, value] = (parts[0] ?? '').split('=');
-    if (key?.trim() === name) return value?.trim() ?? null;
+    if (key?.trim() === name) {
+      return value?.trim() ?? null;
+    }
   }
   return null;
 }
@@ -88,7 +94,9 @@ export function getCookieDirectives(
   for (const entry of setCookie) {
     const parts = entry.split(';').map((p) => p.trim());
     const [key] = (parts[0] ?? '').split('=');
-    if (key?.trim() !== name) continue;
+    if (key?.trim() !== name) {
+      continue;
+    }
 
     const directives: Record<string, string | boolean> = {};
     parts.slice(1).forEach((part) => {

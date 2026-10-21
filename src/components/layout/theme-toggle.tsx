@@ -26,7 +26,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      aria-label={isDark ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'}
+
       title={isDark ? 'Світла тема' : 'Темна тема'}
       className={cn('text-muted-foreground hover:text-foreground', className)}
     >

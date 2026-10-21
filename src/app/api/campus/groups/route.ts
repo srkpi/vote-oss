@@ -7,7 +7,9 @@ import { Errors } from '@/lib/errors';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   try {
     const groups = await fetchFacultyGroups();

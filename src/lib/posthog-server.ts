@@ -5,7 +5,9 @@ import { POSTHOG_HOST, POSTHOG_TOKEN } from '@/lib/config/client';
 let posthogInstance: PostHog | null = null;
 
 export function getPostHogServer(): PostHog | null {
-  if (!POSTHOG_TOKEN) return null;
+  if (!POSTHOG_TOKEN) {
+    return null;
+  }
 
   if (!posthogInstance) {
     posthogInstance = new PostHog(POSTHOG_TOKEN, {

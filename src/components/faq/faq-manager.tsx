@@ -330,8 +330,8 @@ export function FaqManager({ initialCategories }: FaqManagerProps) {
       ))}
 
       {addingCategory ? (
-        <div className="border-border-color bg-card shadow-card rounded-xl border p-4 sm:p-5">
-          <p className="font-body text-foreground mb-3 text-sm font-semibold">Нова категорія</p>
+        <div className="border-border-color rounded-xl border bg-card p-4 shadow-card sm:p-5">
+          <p className="font-body mb-3 text-sm font-semibold text-foreground">Нова категорія</p>
           <CategoryTitleForm
             onSave={handleCreateCategory}
             onCancel={() => setAddingCategory(false)}

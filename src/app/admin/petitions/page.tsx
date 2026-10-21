@@ -17,18 +17,28 @@ export const metadata: Metadata = {
 
 export default async function AdminPetitionsPage() {
   const session = await getServerSession();
-  if (!session) redirect('/login');
-  if (!session.managePetitions) redirect('/admin');
+  if (!session) {
+    redirect('/login');
+  }
+  if (!session.managePetitions) {
+    redirect('/admin');
+  }
 
   const { data, error } = await serverApi.elections.list({ type: 'PETITION' });
   const petitions = data?.elections ?? [];
 
   const { activeCount, closedCount, pendingCount, totalSignatures } = petitions.reduce(
     (acc, p) => {
-      if (p.deletedAt) return acc;
-      if (!p.approved) acc.pendingCount++;
-      else if (p.status === 'closed') acc.closedCount++;
-      else acc.activeCount++;
+      if (p.deletedAt) {
+        return acc;
+      }
+      if (!p.approved) {
+        acc.pendingCount++;
+      } else if (p.status === 'closed') {
+        acc.closedCount++;
+      } else {
+        acc.activeCount++;
+      }
       acc.totalSignatures += p.ballotCount ?? 0;
       return acc;
     },
@@ -72,11 +82,11 @@ export default async function AdminPetitionsPage() {
         </div>
 
         {error ? (
-          <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
             <ErrorState title="Не вдалося завантажити петиції" description={error} />
           </div>
         ) : petitions.length === 0 ? (
-          <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
             <EmptyState
               icon={<Megaphone className="h-10 w-10" />}
               title="Петицій поки немає"

@@ -42,15 +42,23 @@ const DEFAULT_FILTER_STATE: RegistrationFilterState = {
 
 function statusOf(form: RegistrationFormWithEligibility): RegistrationFormStatus {
   const now = Date.now();
-  if (now < new Date(form.opensAt).getTime()) return 'upcoming';
-  if (now > new Date(form.closesAt).getTime()) return 'closed';
+  if (now < new Date(form.opensAt).getTime()) {
+    return 'upcoming';
+  }
+  if (now > new Date(form.closesAt).getTime()) {
+    return 'closed';
+  }
   return 'open';
 }
 
 function countActiveFilters(state: RegistrationFilterState): number {
   let count = 0;
-  if (state.statuses.length > 0) count++;
-  if (state.eligibility !== DEFAULT_FILTER_STATE.eligibility) count++;
+  if (state.statuses.length > 0) {
+    count++;
+  }
+  if (state.eligibility !== DEFAULT_FILTER_STATE.eligibility) {
+    count++;
+  }
   return count;
 }
 
@@ -59,14 +67,22 @@ function matchesFilters(
   status: RegistrationFormStatus,
   filters: RegistrationFilterState,
 ): boolean {
-  if (filters.statuses.length > 0 && !filters.statuses.includes(status)) return false;
-  if (filters.eligibility === 'eligible' && !form.eligible) return false;
-  if (filters.eligibility === 'ineligible' && form.eligible) return false;
+  if (filters.statuses.length > 0 && !filters.statuses.includes(status)) {
+    return false;
+  }
+  if (filters.eligibility === 'eligible' && !form.eligible) {
+    return false;
+  }
+  if (filters.eligibility === 'ineligible' && form.eligible) {
+    return false;
+  }
   return true;
 }
 
 function matchesSearch(form: RegistrationFormWithEligibility, query: string): boolean {
-  if (!query) return true;
+  if (!query) {
+    return true;
+  }
   const q = query.toLowerCase();
   return form.title.toLowerCase().includes(q) || form.groupName.toLowerCase().includes(q);
 }
@@ -94,8 +110,10 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_REGISTRATION_VIEW_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (stored === 'list' || stored === 'grid') setViewMode(stored);
+      if (stored === 'list' || stored === 'grid') {
+        // oxlint-disable-next-line react/set-state-in-effect
+        setViewMode(stored);
+      }
     } catch {
       /* ignore */
     }
@@ -177,7 +195,7 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
         )}
 
         {!error && forms.length === 0 ? (
-          <div className="border-border-color bg-card rounded-xl border shadow-sm">
+          <div className="border-border-color rounded-xl border bg-card shadow-sm">
             <EmptyState
               icon={<ClipboardList className="h-8 w-8" />}
               title="Зараз немає відкритих форм"
@@ -226,7 +244,7 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
               </div>
 
               {hasDifferentFromDefault && filtered.length > 0 && (
-                <p className="font-body text-muted-foreground text-xs">
+                <p className="font-body text-xs text-muted-foreground">
                   {search
                     ? `Знайдено: ${pluralize(filtered.length, ['форму', 'форми', 'форм'])}`
                     : `${pluralize(filtered.length, ['форма', 'форми', 'форм'])} з ${forms.length}`}
@@ -235,7 +253,7 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
             </div>
 
             {paged.length === 0 ? (
-              <div className="border-border-color bg-card rounded-xl border shadow-sm">
+              <div className="border-border-color rounded-xl border bg-card shadow-sm">
                 <EmptyState
                   icon={<ClipboardList className="h-8 w-8" />}
                   title={hasDifferentFromDefault ? 'Форм не знайдено' : 'Форм поки що немає'}
@@ -260,7 +278,7 @@ export function RegistrationListClient({ initialForms, error }: RegistrationList
                 ))}
               </div>
             ) : (
-              <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+              <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
                 {paged.map(({ form, status }, i) => (
                   <RegistrationListItem
                     key={form.id}

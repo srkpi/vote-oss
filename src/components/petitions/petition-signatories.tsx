@@ -74,7 +74,7 @@ export function PetitionSignatories({
   if (!decryptionDone) {
     return (
       <div className="flex h-24 items-center justify-center">
-        <Loader2 className="text-kpi-navy h-6 w-6 animate-spin" />
+        <Loader2 className="h-6 w-6 animate-spin text-kpi-navy" />
       </div>
     );
   }
@@ -87,17 +87,17 @@ export function PetitionSignatories({
 
   if (signatories.length === 0) {
     return (
-      <div className="border-border-color bg-card rounded-xl border p-12 text-center shadow-sm">
+      <div className="border-border-color rounded-xl border bg-card p-12 text-center shadow-sm">
         <EmptyState
           title="Ще немає підписантів"
-          icon={<Users className="text-kpi-gray-mid h-7 w-7" />}
+          icon={<Users className="h-7 w-7 text-kpi-gray-mid" />}
         />
       </div>
     );
   }
 
   return (
-    <div className="border-border-color bg-card shadow-card rounded-xl border p-6">
+    <div className="border-border-color rounded-xl border bg-card p-6 shadow-card">
       <div className="divide-border-color divide-y">
         {pageItems.map((signatory) => (
           <SignatoryRow key={signatory.ballotId} signatory={signatory} />
@@ -118,7 +118,7 @@ function SignatoryRow({ signatory }: { signatory: Signatory }) {
     >
       <Avatar src={avatarUrl} name={signatory.fullName} size={24} />
       <span className="min-w-0 flex-1 truncate text-sm">{signatory.fullName}</span>
-      <LocalDateTime date={signatory.signedAt} className="text-muted-foreground shrink-0 text-xs" />
+      <LocalDateTime date={signatory.signedAt} className="shrink-0 text-xs text-muted-foreground" />
     </div>
   );
 }

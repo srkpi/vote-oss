@@ -1,5 +1,6 @@
-import * as allure from 'allure-js-commons';
 import { randomUUID } from 'crypto';
+
+import * as allure from 'allure-js-commons';
 
 import { MOCK_ELECTION_ID } from '@/__tests__/helpers/fixtures';
 import { BALLOT_VERSION_ANONYMOUS, INVITE_TOKEN_LENGTH } from '@/lib/constants';

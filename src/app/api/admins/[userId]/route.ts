@@ -14,13 +14,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   }
 
   const { userId } = await params;
-  if (!userId) return Errors.badRequest('userId is required');
+  if (!userId) {
+    return Errors.badRequest('userId is required');
+  }
 
   // Serve from cache when available
   const cached = await getCachedAdmins();
   if (cached) {
     const admin = cached.find((a) => a.userId === userId);
-    if (!admin) return Errors.notFound('Admin not found');
+    if (!admin) {
+      return Errors.notFound('Admin not found');
+    }
     return NextResponse.json(admin);
   }
 
@@ -42,7 +46,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     },
   });
 
-  if (!admin) return Errors.notFound('Admin not found');
+  if (!admin) {
+    return Errors.notFound('Admin not found');
+  }
 
   return NextResponse.json({
     userId: admin.user_id,
@@ -74,8 +80,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
   }
 
   const { userId: targetUserId } = await params;
-  if (!targetUserId) return Errors.badRequest('userId is required');
-  if (targetUserId === user.sub) return Errors.badRequest('You cannot modify your own permissions');
+  if (!targetUserId) {
+    return Errors.badRequest('userId is required');
+  }
+  if (targetUserId === user.sub) {
+    return Errors.badRequest('You cannot modify your own permissions');
+  }
 
   let body: {
     manageAdmins?: boolean;
@@ -130,11 +140,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ us
     manage_faq?: boolean;
     restricted_to_faculty?: boolean;
   } = {};
-  if (manageAdmins !== undefined) updateData.manage_admins = manageAdmins;
-  if (manageGroups !== undefined) updateData.manage_groups = manageGroups;
-  if (managePetitions !== undefined) updateData.manage_petitions = managePetitions;
-  if (manageFaq !== undefined) updateData.manage_faq = manageFaq;
-  if (restrictedToFaculty !== undefined) updateData.restricted_to_faculty = restrictedToFaculty;
+  if (manageAdmins !== undefined) {
+    updateData.manage_admins = manageAdmins;
+  }
+  if (manageGroups !== undefined) {
+    updateData.manage_groups = manageGroups;
+  }
+  if (managePetitions !== undefined) {
+    updateData.manage_petitions = managePetitions;
+  }
+  if (manageFaq !== undefined) {
+    updateData.manage_faq = manageFaq;
+  }
+  if (restrictedToFaculty !== undefined) {
+    updateData.restricted_to_faculty = restrictedToFaculty;
+  }
 
   await prisma.admin.update({
     where: { user_id: targetUserId },
@@ -183,8 +203,12 @@ export async function DELETE(
   }
 
   const { userId: targetUserId } = await params;
-  if (!targetUserId) return Errors.badRequest('userId is required');
-  if (targetUserId === user.sub) return Errors.badRequest('You cannot remove yourself');
+  if (!targetUserId) {
+    return Errors.badRequest('userId is required');
+  }
+  if (targetUserId === user.sub) {
+    return Errors.badRequest('You cannot remove yourself');
+  }
 
   const targetAdmin = await prisma.admin.findUnique({ where: { user_id: targetUserId } });
   if (!targetAdmin || targetAdmin.deleted_at !== null) {

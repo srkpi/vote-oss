@@ -41,11 +41,15 @@ export function PetitionOfficialAnswer({
   const { toast } = useToast();
   const router = useRouter();
 
-  if (!answer && !canManage) return null;
+  if (!answer && !canManage) {
+    return null;
+  }
 
   const handleSubmit = async (body: string) => {
     const { data, error } = await api.elections.officialAnswer.upsert(electionId, body);
-    if (error || !data) throw new Error(error ?? 'Не вдалося зберегти відповідь');
+    if (error || !data) {
+      throw new Error(error ?? 'Не вдалося зберегти відповідь');
+    }
     setEditing(false);
     router.refresh();
   };
@@ -54,7 +58,9 @@ export function PetitionOfficialAnswer({
     setDeleting(true);
     try {
       const { error } = await api.elections.officialAnswer.remove(electionId);
-      if (error) throw new Error(error);
+      if (error) {
+        throw new Error(error);
+      }
       setConfirmingDelete(false);
       router.refresh();
     } catch (err) {
@@ -84,7 +90,7 @@ export function PetitionOfficialAnswer({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <MessageSquareText className="h-4 w-4" />
             Дати офіційну відповідь
@@ -95,10 +101,10 @@ export function PetitionOfficialAnswer({
   }
 
   return (
-    <div className="border-kpi-navy/20 shadow-card from-kpi-navy/3 rounded-xl border bg-linear-to-br to-transparent p-5">
+    <div className="rounded-xl border border-kpi-navy/20 bg-linear-to-br from-kpi-navy/3 to-transparent p-5 shadow-card">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="text-kpi-navy flex items-center gap-2 text-sm font-semibold">
-          <span className="bg-kpi-navy/10 flex h-7 w-7 items-center justify-center rounded-full">
+        <div className="flex items-center gap-2 text-sm font-semibold text-kpi-navy">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-kpi-navy/10">
             <MessageSquareText className="h-4 w-4" />
           </span>
           Офіційна відповідь
@@ -108,7 +114,7 @@ export function PetitionOfficialAnswer({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="hover:bg-hover-bg text-muted-foreground hover:text-foreground rounded p-1.5"
+              className="hover:bg-hover-bg rounded p-1.5 text-muted-foreground hover:text-foreground"
               title="Редагувати відповідь"
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -116,7 +122,7 @@ export function PetitionOfficialAnswer({
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="hover:bg-hover-bg hover:text-error text-muted-foreground rounded p-1.5"
+              className="hover:bg-hover-bg rounded p-1.5 text-muted-foreground hover:text-error"
               title="Видалити відповідь"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -139,14 +145,14 @@ export function PetitionOfficialAnswer({
           <div className="font-body text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
             {linkifyText(answer.body)}
           </div>
-          <div className="text-muted-foreground mt-4 flex flex-wrap items-center gap-2 text-xs">
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Avatar src={answer.author.avatarUrl} name={answer.author.fullName} size={20} />
             <span>
               {answer.author.fullName} · <LocalDateTime date={answer.createdAt} />
             </span>
             {answer.editedAt && (
               <Tooltip content={<LocalDateTime date={answer.editedAt} />}>
-                <span className="text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                <span className="flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
                   <Pencil className="h-3 w-3" />
                 </span>
               </Tooltip>
@@ -162,7 +168,7 @@ export function PetitionOfficialAnswer({
             <DialogCloseButton onClose={() => setConfirmingDelete(false)} />
           </DialogHeader>
           <DialogBody>
-            <p className="font-body text-muted-foreground text-sm">Цю дію не можна скасувати.</p>
+            <p className="font-body text-sm text-muted-foreground">Цю дію не можна скасувати.</p>
           </DialogBody>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setConfirmingDelete(false)} disabled={deleting}>

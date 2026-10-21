@@ -80,21 +80,21 @@ export function TeamAcceptClient({
     <>
       <PageHeader title="Запрошення в команду" isContainer />
       <div className="container max-w-xl py-8">
-        <div className="border-border-color shadow-card bg-card space-y-3 rounded-xl border p-5">
-          <p className="text-foreground text-sm">
+        <div className="border-border-color space-y-3 rounded-xl border bg-card p-5 shadow-card">
+          <p className="text-sm text-foreground">
             <span className="font-semibold">{preview.candidate.fullName}</span> запрошує вас до
             команди для участі в реєстрації:
           </p>
-          <div className="border-border-subtle rounded-md border p-3">
-            <p className="font-display text-foreground text-base font-semibold">
+          <div className="rounded-md border border-border-subtle p-3">
+            <p className="font-display text-base font-semibold text-foreground">
               {preview.formTitle}
             </p>
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="mt-1 text-xs text-muted-foreground">
               <ShieldCheck className="mr-1 inline h-3 w-3" />
               Орган: {preview.groupName}
             </p>
-            <p className="text-muted-foreground mt-1 text-xs">Слот: {preview.slot}</p>
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="mt-1 text-xs text-muted-foreground">Слот: {preview.slot}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               Дійсне до: <LocalDateTime date={preview.expiresAt} />
             </p>
           </div>

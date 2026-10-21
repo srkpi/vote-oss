@@ -60,7 +60,7 @@
 | Layer                     | Technology                                                                                                                                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Framework**             | [Next.js 16](https://nextjs.org/) (App Router, React Server Components)                                                                                                                      |
-| **Language**              | [TypeScript 5](https://www.typescriptlang.org/)                                                                                                                                              |
+| **Language**              | [TypeScript 7](https://www.typescriptlang.org/)                                                                                                                                              |
 | **UI**                    | [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/) |
 | **Database**              | [PostgreSQL](https://www.postgresql.org/)                                                                                                                                                    |
 | **ORM**                   | [Prisma 7](https://www.prisma.io/) with `@prisma/adapter-pg`                                                                                                                                 |
@@ -72,7 +72,7 @@
 | **Analytics**             | [PostHog](https://posthog.com/) (client-side + server-side, OpenTelemetry log export)                                                                                                        |
 | **API Docs**              | [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                      |
 | **Testing**               | [Jest 30](https://jestjs.io/), [ts-jest](https://github.com/kulshekhar/ts-jest), [Allure](https://allurereport.org/)                                                                         |
-| **Linting / Formatting**  | [ESLint 9](https://eslint.org/) (flat config), [Prettier](https://prettier.io/), [simple-import-sort](https://github.com/lydell/eslint-plugin-simple-import-sort)                            |
+| **Linting / Formatting**  | [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter)                                                                                      |
 | **Package Manager**       | [pnpm 11](https://pnpm.io/)                                                                                                                                                                  |
 | **Containerisation**      | [Docker](https://www.docker.com/) (multi-stage build), [Caddy](https://caddyserver.com/) reverse proxy                                                                                       |
 | **CI/CD**                 | GitHub Actions                                                                                                                                                                               |
@@ -123,7 +123,7 @@ The application uses **PostgreSQL** as its primary database and connects to it t
 
 ### Prerequisites
 
-- **Node.js** ≥ 20
+- **Node.js** 24.x (see `.nvmrc`)
 - **pnpm** ≥ 10 (`npm install -g pnpm`)
 - **Docker** and **Docker Compose** (for local dependencies)
 - Access to **KPI ID** — or use the included [Mock Integrations API](#mock-integrations-api) for local development
@@ -291,9 +291,9 @@ curl http://localhost:3001/students | jq .
 | `pnpm dev`              | Generate OpenAPI spec, then start Next.js in dev mode         |
 | `pnpm build`            | Generate OpenAPI spec, then build for production              |
 | `pnpm start`            | Start the production server                                   |
-| `pnpm lint`             | Run ESLint across the entire codebase                         |
+| `pnpm lint`             | Run Oxlint across the entire codebase                         |
 | `pnpm type-check`       | Run TypeScript type checking without emitting files           |
-| `pnpm format`           | Format all files with Prettier                                |
+| `pnpm format`           | Format all files with Oxfmt                                   |
 | `pnpm format:check`     | Check formatting without writing changes                      |
 | `pnpm test`             | Run the Jest test suite                                       |
 | `pnpm test:watch`       | Run Jest in watch mode                                        |
@@ -387,7 +387,7 @@ Three GitHub Actions workflows are included:
 #### `lint.yml` — runs on every push and pull request
 
 - Runs TypeScript type checking (`pnpm type-check`)
-- Runs ESLint (`pnpm lint`)
+- Runs Oxlint (`pnpm lint`)
 
 #### `tests.yml` — runs on pushes to `dev`/`main` and pull requests
 

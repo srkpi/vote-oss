@@ -28,7 +28,9 @@ export function linkifyText(text: string): ReactNode[] {
   let key = 0;
   for (const match of text.matchAll(URL_REGEX)) {
     const start = match.index ?? 0;
-    if (start > lastIndex) nodes.push(text.slice(lastIndex, start));
+    if (start > lastIndex) {
+      nodes.push(text.slice(lastIndex, start));
+    }
     const { url, trailing } = splitUrlAndTrailing(match[0]);
     const href = url.startsWith('www.') ? `https://${url}` : url;
     nodes.push(
@@ -36,9 +38,13 @@ export function linkifyText(text: string): ReactNode[] {
         {url}
       </TextLink>,
     );
-    if (trailing) nodes.push(trailing);
+    if (trailing) {
+      nodes.push(trailing);
+    }
     lastIndex = start + match[0].length;
   }
-  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
   return nodes;
 }

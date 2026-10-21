@@ -19,7 +19,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
   return (
     <div
       className={cn(
-        'border-border-color bg-card rounded-lg border p-4 shadow-sm',
+        'border-border-color rounded-lg border bg-card p-4 shadow-sm',
         token.isOwn && 'border-kpi-navy',
       )}
     >
@@ -28,7 +28,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
           <Avatar src={token.creator.avatarUrl} name={token.creator.fullName} size={40} />
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-body text-foreground text-sm font-semibold">
+              <p className="font-body text-sm font-semibold text-foreground">
                 {token.creator.fullName}
               </p>
             </div>
@@ -85,8 +85,8 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <Users className="text-muted-foreground h-3.5 w-3.5" />
-          <span className="font-body text-foreground text-xs">
+          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="font-body text-xs text-foreground">
             <span className="font-semibold">{token.currentUsage}</span>
             <span className="text-muted-foreground"> / {token.maxUsage}</span>
           </span>
@@ -110,7 +110,7 @@ export function TokenMobileCard({ token, onDelete }: TokenRowProps) {
         <span
           className={cn(
             'font-body text-xs',
-            urgent ? 'text-kpi-orange font-medium' : 'text-muted-foreground',
+            urgent ? 'font-medium text-kpi-orange' : 'text-muted-foreground',
           )}
         >
           Дійсний до: {expiresText}

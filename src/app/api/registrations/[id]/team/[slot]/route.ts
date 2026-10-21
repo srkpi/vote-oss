@@ -18,12 +18,18 @@ export async function POST(
   { params }: { params: Promise<{ id: string; slot: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id, slot: slotParam } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid registration id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid registration id');
+  }
   const slot = parseInt(slotParam, 10);
-  if (!Number.isInteger(slot) || slot < 1) return Errors.badRequest('Invalid slot');
+  if (!Number.isInteger(slot) || slot < 1) {
+    return Errors.badRequest('Invalid slot');
+  }
 
   const reg = await prisma.candidateRegistration.findUnique({
     where: { id },
@@ -32,7 +38,9 @@ export async function POST(
       team_invite_tokens: { where: { slot } },
     },
   });
-  if (!reg) return Errors.notFound('Registration not found');
+  if (!reg) {
+    return Errors.notFound('Registration not found');
+  }
   if (reg.user_id !== auth.user.sub) {
     return Errors.forbidden('Доступно лише автору заявки');
   }
@@ -40,12 +48,18 @@ export async function POST(
   try {
     assertFormAcceptingTeamActivity(reg.form);
   } catch (err) {
-    if (err instanceof RegistrationFormNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof RegistrationWindowClosedError) return Errors.badRequest(err.message);
+    if (err instanceof RegistrationFormNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof RegistrationWindowClosedError) {
+      return Errors.badRequest(err.message);
+    }
     throw err;
   }
 
-  if (slot > reg.form.team_size) return Errors.badRequest('Slot out of range');
+  if (slot > reg.form.team_size) {
+    return Errors.badRequest('Slot out of range');
+  }
   if (reg.status !== 'AWAITING_TEAM') {
     return Errors.conflict('Запрошення можна створювати лише в стані очікування команди');
   }

@@ -133,7 +133,7 @@ export function AnalyticsCharts({
     <div className="space-y-4">
       {/* Tab header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="font-display text-foreground text-lg font-semibold">Графіки</h2>
+        <h2 className="font-display text-lg font-semibold text-foreground">Графіки</h2>
         <div className="w-full sm:w-auto sm:min-w-70">
           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={(key) => setActiveTab(key)} />
         </div>

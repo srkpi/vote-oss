@@ -19,9 +19,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isNekosiaApiImage(value: unknown): value is NekosiaApiImage {
-  if (!isRecord(value)) return false;
+  if (!isRecord(value)) {
+    return false;
+  }
   const image = value.image;
-  if (!isRecord(image)) return false;
+  if (!isRecord(image)) {
+    return false;
+  }
   const compressed = image.compressed;
   return (
     typeof value.id === 'string' &&
@@ -68,10 +72,14 @@ export async function fetchCatgirlImageBatch(count: number): Promise<CatgirlImag
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      return [];
+    }
 
     const body = (await res.json()) as NekosiaApiResponse;
-    if (!body.success) return [];
+    if (!body.success) {
+      return [];
+    }
 
     return extractApiImages(body).map(toCatgirlImage);
   } catch {

@@ -12,17 +12,25 @@ import { isValidUuid } from '@/lib/utils/common';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid form id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid form id');
+  }
 
   const form = await prisma.candidateRegistrationForm.findUnique({
     where: { id },
     include: FORM_INCLUDE,
   });
-  if (!form || form.deleted_at) return Errors.notFound('Form not found');
-  if (form.group.deleted_at !== null) return Errors.notFound('Form not found');
+  if (!form || form.deleted_at) {
+    return Errors.notFound('Form not found');
+  }
+  if (form.group.deleted_at !== null) {
+    return Errors.notFound('Form not found');
+  }
 
   const myRegistration = await prisma.candidateRegistration.findUnique({
     where: { form_id_user_id: { form_id: id, user_id: auth.user.sub } },
@@ -48,10 +56,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid form id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid form id');
+  }
 
   const existing = await prisma.candidateRegistrationForm.findUnique({
     where: { id },
@@ -68,13 +80,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       restrictions: { select: { type: true, value: true } },
     },
   });
-  if (!existing || existing.deleted_at) return Errors.notFound('Form not found');
+  if (!existing || existing.deleted_at) {
+    return Errors.notFound('Form not found');
+  }
 
   try {
     await requireVKSUGroupMember(existing.group_id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 
@@ -86,7 +104,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const validation = validateUpdateFormBody(body, existing);
-  if (!validation.ok) return Errors.badRequest(validation.error);
+  if (!validation.ok) {
+    return Errors.badRequest(validation.error);
+  }
   const { title, description, requiresCampaignProgram, teamSize, opensAt, closesAt, restrictions } =
     validation.data;
 
@@ -132,22 +152,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid form id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid form id');
+  }
 
   const existing = await prisma.candidateRegistrationForm.findUnique({
     where: { id },
     select: { id: true, group_id: true, deleted_at: true },
   });
-  if (!existing || existing.deleted_at) return Errors.notFound('Form not found');
+  if (!existing || existing.deleted_at) {
+    return Errors.notFound('Form not found');
+  }
 
   try {
     await requireVKSUGroupMember(existing.group_id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 

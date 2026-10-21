@@ -13,10 +13,14 @@ import {
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { token } = await params;
-  if (!token) return Errors.badRequest('Missing token');
+  if (!token) {
+    return Errors.badRequest('Missing token');
+  }
   const hash = hashToken(token);
 
   const row = await prisma.teamMemberInviteToken.findUnique({
@@ -31,13 +35,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       },
     },
   });
-  if (!row) return Errors.notFound('Invite not found');
+  if (!row) {
+    return Errors.notFound('Invite not found');
+  }
   if (row.registration.user_id === auth.user.sub) {
     return Errors.forbidden('Кандидат не може відхилити власне запрошення');
   }
-  if (row.used_at) return Errors.conflict('Запрошення вже використане');
-  if (row.revoked_at) return Errors.conflict('Запрошення відкликано');
-  if (row.expires_at <= new Date()) return Errors.badRequest('Термін дії запрошення минув');
+  if (row.used_at) {
+    return Errors.conflict('Запрошення вже використане');
+  }
+  if (row.revoked_at) {
+    return Errors.conflict('Запрошення відкликано');
+  }
+  if (row.expires_at <= new Date()) {
+    return Errors.badRequest('Термін дії запрошення минув');
+  }
   if (row.registration.status !== 'AWAITING_TEAM') {
     return Errors.conflict('Заявка вже не приймає членів команди');
   }
@@ -45,8 +57,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
   try {
     assertFormAcceptingTeamActivity(row.registration.form);
   } catch (err) {
-    if (err instanceof RegistrationFormNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof RegistrationWindowClosedError) return Errors.badRequest(err.message);
+    if (err instanceof RegistrationFormNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof RegistrationWindowClosedError) {
+      return Errors.badRequest(err.message);
+    }
     throw err;
   }
 

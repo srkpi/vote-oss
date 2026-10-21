@@ -26,7 +26,9 @@ export async function decryptBallots({
   signal,
 }: DecryptBallotsParams): Promise<DecryptedMap> {
   const map: DecryptedMap = new Map();
-  if (ballots.length === 0) return map;
+  if (ballots.length === 0) {
+    return map;
+  }
 
   const key = await importPrivateKey(privateKey);
 
@@ -35,7 +37,9 @@ export async function decryptBallots({
   );
 
   for (let i = 0; i < chainOrdered.length; i += DECRYPTION_BATCH_SIZE) {
-    if (signal?.aborted) return map;
+    if (signal?.aborted) {
+      return map;
+    }
 
     const batch = chainOrdered.slice(i, i + DECRYPTION_BATCH_SIZE);
 

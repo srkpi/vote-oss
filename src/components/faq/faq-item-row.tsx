@@ -44,7 +44,9 @@ export function FaqItemRow({
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     // Only accept drags that originated from this exact category
-    if (!e.dataTransfer.types.includes(dragTypeKey)) return;
+    if (!e.dataTransfer.types.includes(dragTypeKey)) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
@@ -58,7 +60,9 @@ export function FaqItemRow({
       className="relative"
       onDragOver={handleDragOver}
       onDrop={(e) => {
-        if (!e.dataTransfer.types.includes(dragTypeKey)) return;
+        if (!e.dataTransfer.types.includes(dragTypeKey)) {
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
         onDrop(index);
@@ -66,7 +70,7 @@ export function FaqItemRow({
     >
       {/* Drop indicator – above */}
       {isDragOver && dragOverPosition === 'above' && (
-        <div className="bg-kpi-blue-light pointer-events-none absolute top-0 right-4 left-4 z-10 h-0.5 rounded-full" />
+        <div className="pointer-events-none absolute top-0 right-4 left-4 z-10 h-0.5 rounded-full bg-kpi-blue-light" />
       )}
 
       <div
@@ -91,14 +95,14 @@ export function FaqItemRow({
           .filter(Boolean)
           .join(' ')}
       >
-        <GripVertical className="text-kpi-gray-light hover:text-muted-foreground mt-0.5 h-4 w-4 shrink-0 cursor-grab transition-colors active:cursor-grabbing" />
+        <GripVertical className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-kpi-gray-light transition-colors hover:text-muted-foreground active:cursor-grabbing" />
 
         <div className="min-w-0 flex-1">
-          <p className="font-body text-foreground text-sm leading-snug font-medium wrap-break-word">
+          <p className="font-body text-sm leading-snug font-medium wrap-break-word text-foreground">
             {item.title}
           </p>
           {preview && (
-            <p className="font-body text-muted-foreground mt-0.5 line-clamp-1 text-xs wrap-break-word">
+            <p className="font-body mt-0.5 line-clamp-1 text-xs wrap-break-word text-muted-foreground">
               {preview}
             </p>
           )}
@@ -110,7 +114,7 @@ export function FaqItemRow({
             onClick={onMoveUp}
             disabled={isFirst}
             title="Вгору"
-            className="text-muted-foreground hover:text-foreground flex h-6 w-6 items-center justify-center rounded transition-colors disabled:opacity-30"
+            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
           >
             <ChevronUp className="h-3.5 w-3.5" />
           </button>
@@ -119,7 +123,7 @@ export function FaqItemRow({
             onClick={onMoveDown}
             disabled={isLast}
             title="Вниз"
-            className="text-muted-foreground hover:text-foreground flex h-6 w-6 items-center justify-center rounded transition-colors disabled:opacity-30"
+            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
           >
             <ChevronDown className="h-3.5 w-3.5" />
           </button>
@@ -127,7 +131,7 @@ export function FaqItemRow({
             type="button"
             onClick={onEdit}
             title="Редагувати"
-            className="text-muted-foreground hover:text-foreground flex h-6 w-6 items-center justify-center rounded transition-colors"
+            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
           >
             <Edit2 className="h-3 w-3" />
           </button>
@@ -135,7 +139,7 @@ export function FaqItemRow({
             type="button"
             onClick={onDelete}
             title="Видалити"
-            className="text-muted-foreground hover:text-error flex h-6 w-6 items-center justify-center rounded transition-colors"
+            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:text-error"
           >
             <Trash2 className="h-3 w-3" />
           </button>
@@ -144,7 +148,7 @@ export function FaqItemRow({
 
       {/* Drop indicator – below */}
       {isDragOver && dragOverPosition === 'below' && (
-        <div className="bg-kpi-blue-light pointer-events-none absolute right-4 bottom-0 left-4 z-10 h-0.5 rounded-full" />
+        <div className="pointer-events-none absolute right-4 bottom-0 left-4 z-10 h-0.5 rounded-full bg-kpi-blue-light" />
       )}
     </div>
   );

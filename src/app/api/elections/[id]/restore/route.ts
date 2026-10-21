@@ -31,7 +31,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const { admin } = auth;
 
@@ -39,7 +41,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id: electionId },
     include: { restrictions: { select: { type: true, value: true } } },
   });
-  if (!election) return Errors.notFound('Election not found');
+  if (!election) {
+    return Errors.notFound('Election not found');
+  }
 
   if (!election.deleted_at) {
     return Errors.badRequest('Election is not deleted');

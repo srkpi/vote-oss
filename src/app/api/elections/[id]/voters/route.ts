@@ -14,10 +14,14 @@ import type { ElectionRestriction } from '@/types/election';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   // Reuse the same access model as /ballots — admins, eligible users, or
   // public-viewing observers may read.
@@ -35,7 +39,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const cached = await getCachedElections();
   if (cached) {
     const found = cached.find((e) => e.id === electionId);
-    if (!found) return Errors.notFound('Election not found');
+    if (!found) {
+      return Errors.notFound('Election not found');
+    }
     electionData = {
       id: found.id,
       opens_at: new Date(found.opensAt),
@@ -60,7 +66,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         restrictions: { select: { type: true, value: true } },
       },
     });
-    if (!dbElection) return Errors.notFound('Election not found');
+    if (!dbElection) {
+      return Errors.notFound('Election not found');
+    }
     electionData = {
       ...dbElection,
       restrictions: dbElection.restrictions as ElectionRestriction[],
@@ -69,7 +77,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { user } = auth;
 
-  if (!user.isAdmin && electionData.deleted_at) return Errors.notFound('Election not found');
+  if (!user.isAdmin && electionData.deleted_at) {
+    return Errors.notFound('Election not found');
+  }
 
   if (electionData.anonymous) {
     return Errors.badRequest('This election is anonymous — voter identities are not available');

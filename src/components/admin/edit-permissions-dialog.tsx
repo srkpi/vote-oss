@@ -104,7 +104,9 @@ export function EditPermissionsDialog({
   };
 
   const handleClose = () => {
-    if (loading) return;
+    if (loading) {
+      return;
+    }
     setError(null);
     setManageAdmins(admin.manageAdmins);
     setManageGroups(admin.manageGroups);

@@ -11,15 +11,11 @@ export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
   ({ className, required, children, ...props }, ref) => (
     <label
       ref={ref}
-      className={cn('font-body text-foreground mb-1.5 block text-sm font-medium', className)}
+      className={cn('font-body mb-1.5 block text-sm font-medium text-foreground', className)}
       {...props}
     >
       {children}
-      {required && (
-        <span className="text-error ml-1" aria-hidden="true">
-          *
-        </span>
-      )}
+      {required && <span className="ml-1 text-error">*</span>}
     </label>
   ),
 );
@@ -37,31 +33,31 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       return (
         <div className="relative">
           {leftIcon && (
-            <div className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
+            <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
               {leftIcon}
             </div>
           )}
           <input
             type={type}
             className={cn(
-              'bg-card flex h-10 w-full rounded-(--radius)',
+              'flex h-10 w-full rounded-(--radius) bg-card',
               'border-border-color border',
-              'font-body text-foreground px-3 py-2 text-sm',
+              'font-body px-3 py-2 text-sm text-foreground',
               'placeholder:text-subtle',
               'transition-colors duration-150',
               'hover:border-kpi-blue-light',
-              'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
+              'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
               error && 'border-error focus:border-error focus:ring-error/20',
-              'disabled:bg-surface disabled:cursor-not-allowed disabled:opacity-50',
+              'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
               className,
             )}
             ref={ref}
             {...props}
           />
           {rightIcon && (
-            <div className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
+            <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
               {rightIcon}
             </div>
           )}
@@ -73,15 +69,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          'bg-card flex h-10 w-full rounded-(--radius)',
+          'flex h-10 w-full rounded-(--radius) bg-card',
           'border-border-color border',
-          'font-body text-foreground px-3 py-2 text-sm',
+          'font-body px-3 py-2 text-sm text-foreground',
           'placeholder:text-subtle',
           'transition-colors duration-150',
           'hover:border-kpi-blue-light',
-          'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
+          'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
           error && 'border-error focus:border-error focus:ring-error/20',
-          'disabled:bg-surface disabled:cursor-not-allowed disabled:opacity-50',
+          'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
           className,
         )}
         ref={ref}
@@ -100,16 +96,16 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, error, ...props }, ref) => (
     <textarea
       className={cn(
-        'bg-card flex min-h-20 w-full rounded-(--radius)',
+        'flex min-h-20 w-full rounded-(--radius) bg-card',
         'border-border-color border',
-        'font-body text-foreground px-3 py-2 text-sm',
+        'font-body px-3 py-2 text-sm text-foreground',
         'placeholder:text-subtle',
         'resize-y',
         'transition-colors duration-150',
         'hover:border-kpi-blue-light',
-        'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
+        'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
         error && 'border-error focus:border-error focus:ring-error/20',
-        'disabled:bg-surface disabled:cursor-not-allowed disabled:opacity-50',
+        'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
         className,
       )}
       ref={ref}
@@ -146,9 +142,9 @@ export function FormField({
         </Label>
       )}
       {children}
-      {hint && !error && <p className="text-muted-foreground text-xs">{hint}</p>}
+      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
       {error && (
-        <p className="text-error flex items-center gap-1 text-xs">
+        <p className="flex items-center gap-1 text-xs text-error">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           {error}
         </p>

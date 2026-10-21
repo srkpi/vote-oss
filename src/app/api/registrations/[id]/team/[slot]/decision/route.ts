@@ -17,12 +17,18 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; slot: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id, slot: slotParam } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid registration id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid registration id');
+  }
   const slot = parseInt(slotParam, 10);
-  if (!Number.isInteger(slot) || slot < 1) return Errors.badRequest('Invalid slot');
+  if (!Number.isInteger(slot) || slot < 1) {
+    return Errors.badRequest('Invalid slot');
+  }
 
   let body: { decision?: 'CONFIRMED' | 'DECLINED' };
   try {
@@ -43,7 +49,9 @@ export async function PATCH(
         team_invite_tokens: { where: { slot } },
       },
     });
-    if (!reg) return { ok: false as const, status: 404, error: 'Registration not found' };
+    if (!reg) {
+      return { ok: false as const, status: 404, error: 'Registration not found' };
+    }
     if (reg.user_id !== auth.user.sub) {
       return { ok: false as const, status: 403, error: 'Доступно лише автору заявки' };
     }
@@ -117,9 +125,15 @@ export async function PATCH(
   });
 
   if (!result.ok) {
-    if (result.status === 404) return Errors.notFound(result.error);
-    if (result.status === 403) return Errors.forbidden(result.error);
-    if (result.status === 409) return Errors.conflict(result.error);
+    if (result.status === 404) {
+      return Errors.notFound(result.error);
+    }
+    if (result.status === 403) {
+      return Errors.forbidden(result.error);
+    }
+    if (result.status === 409) {
+      return Errors.conflict(result.error);
+    }
     return Errors.badRequest(result.error);
   }
 

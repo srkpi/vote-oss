@@ -154,16 +154,22 @@ function matchCost(alias: string, words: string[]): number {
   const memo = new Map<string, number>();
 
   const go = (i: number, last: number, from: number): number => {
-    if (i === alias.length) return SKIPPED_WORD_COST * (words.length - 1 - last);
+    if (i === alias.length) {
+      return SKIPPED_WORD_COST * (words.length - 1 - last);
+    }
 
     const memoKey = `${i}:${last}:${from}`;
     const cached = memo.get(memoKey);
-    if (cached !== undefined) return cached;
+    if (cached !== undefined) {
+      return cached;
+    }
 
     let best = Infinity;
     for (let w = Math.max(last, 0); w < words.length; w++) {
       for (let c = w === last ? from : 0; c < words[w].length; c++) {
-        if (words[w][c] !== alias[i]) continue;
+        if (words[w][c] !== alias[i]) {
+          continue;
+        }
         const skipped = w === last ? 0 : w - last - 1;
         const cost =
           (c === 0 ? 0 : INSIDE_WORD_COST) + SKIPPED_WORD_COST * skipped + go(i + 1, w, c + 1);
@@ -207,10 +213,14 @@ export function resolveFacultyShortName(
     facultyGroups[short].some((g) => letters(g) === normGroup),
   );
 
-  if (matches.length === 1) return matches[0];
+  if (matches.length === 1) {
+    return matches[0];
+  }
 
   const candidates = matches.length > 0 ? matches : Object.keys(facultyGroups);
-  if (candidates.length === 0) throw new InvalidUserDataError();
+  if (candidates.length === 0) {
+    throw new InvalidUserDataError();
+  }
 
   const words = nameWords(fullFaculty);
   const scored = candidates
@@ -220,7 +230,9 @@ export function resolveFacultyShortName(
     }))
     .sort((a, b) => a.cost - b.cost || a.key.localeCompare(b.key));
 
-  if (Number.isFinite(scored[0].cost)) return scored[0].key;
+  if (Number.isFinite(scored[0].cost)) {
+    return scored[0].key;
+  }
 
   // Nothing can be spelled out of the full name: fall back to Levenshtein.
   const target = letters(abbreviateFaculty(fullFaculty));
@@ -230,7 +242,9 @@ export function resolveFacultyShortName(
 }
 
 export async function resolveTicket(ticketId: string): Promise<KpiIdUserInfo> {
-  if (!ticketId) throw new InvalidTicketError();
+  if (!ticketId) {
+    throw new InvalidTicketError();
+  }
 
   const url = new URL(`${KPI_AUTH_URL}/api/ticket`);
   url.searchParams.set('ticketId', ticketId);
@@ -238,7 +252,9 @@ export async function resolveTicket(ticketId: string): Promise<KpiIdUserInfo> {
   url.searchParams.set('appSecret', KPI_APP_SECRET);
 
   const res = await fetch(url.toString());
-  if (!res.ok) throw new InvalidTicketError();
+  if (!res.ok) {
+    throw new InvalidTicketError();
+  }
 
   const result = kpiTicketResponseSchema.safeParse(await res.json());
   if (!result.success || !result.data.data) {
@@ -251,8 +267,12 @@ export async function resolveTicket(ticketId: string): Promise<KpiIdUserInfo> {
   if (!ALLOWED_AUTH_METHODS.includes(data.AUTH_METHOD)) {
     throw new NotAllowedAuthMethodError();
   }
-  if (!data.STUDENT_ID && data.EMPLOYEE_ID) throw new NotStudentError();
-  if (!data.STUDENT_ID || !data.NAME) throw new InvalidUserDataError();
+  if (!data.STUDENT_ID && data.EMPLOYEE_ID) {
+    throw new NotStudentError();
+  }
+  if (!data.STUDENT_ID || !data.NAME) {
+    throw new InvalidUserDataError();
+  }
 
   return data;
 }
@@ -333,13 +353,17 @@ export async function getCampusUserData(
       return Errors.forbidden(graduateError.message);
     }
 
-    if (userInfo) return userInfo;
+    if (userInfo) {
+      return userInfo;
+    }
 
     console.error('[auth/shared] resolveTicket errors:', errors);
     return Errors.internal('Failed to contact auth provider');
   }
 
-  if (!userInfo) return Errors.internal('Failed to resolve user info');
+  if (!userInfo) {
+    return Errors.internal('Failed to resolve user info');
+  }
 
   return userInfo;
 }

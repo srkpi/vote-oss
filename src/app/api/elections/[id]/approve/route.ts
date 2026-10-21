@@ -21,10 +21,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const election = await prisma.election.findUnique({ where: { id: electionId } });
-  if (!election || election.deleted_at) return Errors.notFound('Petition not found');
+  if (!election || election.deleted_at) {
+    return Errors.notFound('Petition not found');
+  }
   if (election.type !== 'PETITION') {
     return Errors.badRequest('Only petitions can be approved');
   }

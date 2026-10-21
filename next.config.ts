@@ -35,6 +35,9 @@ const ContentSecurityPolicy = `
   .trim();
 
 const nextConfig: NextConfig = {
+  experimental: {
+    useTypeScriptCli: true,
+  },
   output: 'standalone',
   reactCompiler: true,
   poweredByHeader: false,

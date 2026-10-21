@@ -46,7 +46,9 @@ export function useCatgirlGallery(size: CatgirlGallerySize): UseCatgirlGalleryRe
   const [images, setImages] = useState<CatgirlImage[]>([]);
 
   useEffect(() => {
-    if (!enabled || images.length >= CATGIRL_GALLERY_BUFFER_SIZE) return;
+    if (!enabled || images.length >= CATGIRL_GALLERY_BUFFER_SIZE) {
+      return;
+    }
 
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
@@ -59,12 +61,20 @@ export function useCatgirlGallery(size: CatgirlGallerySize): UseCatgirlGalleryRe
 
     const topUp = (): boolean => {
       const needed = CATGIRL_GALLERY_BUFFER_SIZE - heldCount;
-      if (needed <= 0) return true;
+      if (needed <= 0) {
+        return true;
+      }
       const claimed = claimCatgirlImages(needed).filter((image) => !seenIds.has(image.id));
-      if (claimed.length === 0) return false;
-      for (const image of claimed) seenIds.add(image.id);
+      if (claimed.length === 0) {
+        return false;
+      }
+      for (const image of claimed) {
+        seenIds.add(image.id);
+      }
       heldCount += claimed.length;
-      if (!cancelled) setImages((current) => [...current, ...claimed]);
+      if (!cancelled) {
+        setImages((current) => [...current, ...claimed]);
+      }
       return heldCount >= CATGIRL_GALLERY_BUFFER_SIZE;
     };
 
@@ -82,12 +92,14 @@ export function useCatgirlGallery(size: CatgirlGallerySize): UseCatgirlGalleryRe
       cancelled = true;
       unsubscribe?.();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [enabled]);
 
   const preset = CATGIRL_GALLERY_SIZE_PRESETS[size];
   const rows = useMemo(() => {
-    if (!enabled || containerWidth === null || images.length === 0) return [];
+    if (!enabled || containerWidth === null || images.length === 0) {
+      return [];
+    }
     return computeJustifiedGalleryLayout(images, containerWidth, {
       ...preset,
       gap: CATGIRL_GALLERY_GAP,

@@ -16,9 +16,8 @@ export function CatgirlFeed() {
     <div ref={containerRef} className="w-full">
       {rows.length === 0 ? (
         <div
-          className="bg-surface-hover w-full animate-pulse rounded-2xl"
+          className="w-full animate-pulse rounded-2xl bg-surface-hover"
           style={{ height: CATGIRL_GALLERY_SIZE_PRESETS.lg.targetHeight }}
-          aria-hidden
         />
       ) : (
         <div className="flex flex-col" style={{ gap: CATGIRL_GALLERY_GAP }}>
@@ -50,7 +49,7 @@ export function CatgirlFeed() {
       <div ref={sentinelRef} className="flex h-20 items-center justify-center">
         {stalled ? (
           <div className="flex flex-col items-center gap-2 text-center">
-            <p className="font-body text-kpi-navy text-sm">
+            <p className="font-body text-sm text-kpi-navy">
               Не вдалося завантажити нові зображення
             </p>
             <Button variant="secondary" size="sm" onClick={retry}>
@@ -59,7 +58,7 @@ export function CatgirlFeed() {
           </div>
         ) : (
           <>
-            <Loader2 className="text-kpi-navy h-6 w-6 animate-spin" aria-hidden="true" />
+            <Loader2 className="h-6 w-6 animate-spin text-kpi-navy" />
             <span className="sr-only" role="status">
               Завантаження…
             </span>

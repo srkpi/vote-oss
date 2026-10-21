@@ -38,9 +38,9 @@ export function WinningConditionsSection({
               type="checkbox"
               checked={state.hasMostVotes}
               onChange={(e) => set({ hasMostVotes: e.target.checked })}
-              className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+              className="border-border-color mt-0.5 h-4 w-4 cursor-pointer rounded accent-kpi-navy"
             />
-            <span className="font-body text-foreground text-sm font-medium">
+            <span className="font-body text-sm font-medium text-foreground">
               Найбільша кількість голосів
             </span>
           </label>
@@ -51,9 +51,9 @@ export function WinningConditionsSection({
                 type="checkbox"
                 checked={state.reachesPercentageEnabled}
                 onChange={(e) => set({ reachesPercentageEnabled: e.target.checked })}
-                className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+                className="border-border-color mt-0.5 h-4 w-4 cursor-pointer rounded accent-kpi-navy"
               />
-              <span className="font-body text-foreground text-sm font-medium">
+              <span className="font-body text-sm font-medium text-foreground">
                 Більше ніж{' '}
                 {state.reachesPercentageEnabled ? (
                   <span className="text-kpi-navy">{state.reachesPercentage}%</span>
@@ -72,7 +72,9 @@ export function WinningConditionsSection({
                     value={state.reachesPercentage}
                     onChange={(e) => {
                       const v = parseFloat(e.target.value);
-                      if (!isNaN(v)) set({ reachesPercentage: v });
+                      if (!isNaN(v)) {
+                        set({ reachesPercentage: v });
+                      }
                     }}
                     min={WINNING_CONDITION_PERCENTAGE_MIN}
                     max={WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE - 0.01}
@@ -80,10 +82,10 @@ export function WinningConditionsSection({
                     error={!!errors.reachesPercentage}
                     className="w-24"
                   />
-                  <span className="font-body text-muted-foreground text-sm">%</span>
+                  <span className="font-body text-sm text-muted-foreground">%</span>
                 </div>
                 {errors.reachesPercentage && (
-                  <p className="text-error mt-1 text-xs">{errors.reachesPercentage}</p>
+                  <p className="mt-1 text-xs text-error">{errors.reachesPercentage}</p>
                 )}
               </div>
             )}
@@ -95,9 +97,9 @@ export function WinningConditionsSection({
                 type="checkbox"
                 checked={state.reachesVotesEnabled}
                 onChange={(e) => set({ reachesVotesEnabled: e.target.checked })}
-                className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+                className="border-border-color mt-0.5 h-4 w-4 cursor-pointer rounded accent-kpi-navy"
               />
-              <span className="font-body text-foreground text-sm font-medium">
+              <span className="font-body text-sm font-medium text-foreground">
                 Щонайменше{' '}
                 {state.reachesVotesEnabled ? (
                   <>
@@ -117,7 +119,9 @@ export function WinningConditionsSection({
                   value={state.reachesVotes}
                   onChange={(e) => {
                     const v = parseInt(e.target.value, 10);
-                    if (!isNaN(v)) set({ reachesVotes: v });
+                    if (!isNaN(v)) {
+                      set({ reachesVotes: v });
+                    }
                   }}
                   min={WINNING_CONDITION_VOTES_MIN}
                   max={WINNING_CONDITION_VOTES_MAX}
@@ -126,7 +130,7 @@ export function WinningConditionsSection({
                   className="w-32"
                 />
                 {errors.reachesVotes && (
-                  <p className="text-error mt-1 text-xs">{errors.reachesVotes}</p>
+                  <p className="mt-1 text-xs text-error">{errors.reachesVotes}</p>
                 )}
               </div>
             )}
@@ -141,9 +145,9 @@ export function WinningConditionsSection({
               type="checkbox"
               checked={state.quorumEnabled}
               onChange={(e) => set({ quorumEnabled: e.target.checked })}
-              className="border-border-color accent-kpi-navy mt-0.5 h-4 w-4 cursor-pointer rounded"
+              className="border-border-color mt-0.5 h-4 w-4 cursor-pointer rounded accent-kpi-navy"
             />
-            <span className="font-body text-foreground text-sm font-medium">
+            <span className="font-body text-sm font-medium text-foreground">
               Кворум{' '}
               {state.quorumEnabled ? (
                 <>
@@ -163,7 +167,9 @@ export function WinningConditionsSection({
                 value={state.quorum}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v)) set({ quorum: v });
+                  if (!isNaN(v)) {
+                    set({ quorum: v });
+                  }
                 }}
                 min={WINNING_CONDITION_QUORUM_MIN}
                 max={WINNING_CONDITION_QUORUM_MAX}
@@ -171,11 +177,11 @@ export function WinningConditionsSection({
                 error={!!errors.quorum}
                 className="w-32"
               />
-              {errors.quorum && <p className="text-error mt-1 text-xs">{errors.quorum}</p>}
+              {errors.quorum && <p className="mt-1 text-xs text-error">{errors.quorum}</p>}
             </div>
           )}
           {!state.quorumEnabled && errors.quorum && (
-            <p className="text-error mt-1 text-xs">{errors.quorum}</p>
+            <p className="mt-1 text-xs text-error">{errors.quorum}</p>
           )}
         </div>
       )}

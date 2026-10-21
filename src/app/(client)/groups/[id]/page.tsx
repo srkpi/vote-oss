@@ -42,15 +42,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function GroupDetailPage({ params }: Props) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   const { id } = await params;
   const { data: group, status } = await serverApi.groups.get(id);
 
-  if (status === 404 || !group) notFound();
+  if (status === 404 || !group) {
+    notFound();
+  }
 
   // Mirror the gating in GroupDetailClient so we only fetch forms when the
   // panel will actually render.
@@ -89,7 +95,7 @@ export default async function GroupDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <GroupDetailClient
         group={group}
         session={session}

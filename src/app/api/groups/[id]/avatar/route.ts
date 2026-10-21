@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'crypto';
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -20,16 +21,22 @@ export const runtime = 'nodejs';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     select: { id: true, owner_id: true, deleted_at: true, logo_file_id: true },
   });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
   if (group.owner_id !== auth.user.sub) {
     return Errors.forbidden('Only the group owner can change the logo');
   }
@@ -162,16 +169,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     select: { id: true, owner_id: true, deleted_at: true, logo_file_id: true },
   });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
   if (group.owner_id !== auth.user.sub) {
     return Errors.forbidden('Only the group owner can remove the logo');
   }
@@ -191,7 +204,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       where: { id: previousLogoId },
       select: { bucket: true, object_key: true, deleted_at: true },
     });
-    if (!prev || prev.deleted_at) return null;
+    if (!prev || prev.deleted_at) {
+      return null;
+    }
 
     await tx.file.update({
       where: { id: previousLogoId },

@@ -8,10 +8,14 @@ import { Errors } from '@/lib/errors';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const raw = req.nextUrl.searchParams.get('ids');
-  if (!raw) return Errors.badRequest('Query param "ids" is required');
+  if (!raw) {
+    return Errors.badRequest('Query param "ids" is required');
+  }
 
   const ids = [
     ...new Set(
@@ -21,7 +25,9 @@ export async function GET(req: NextRequest) {
         .filter(Boolean),
     ),
   ];
-  if (ids.length === 0) return Errors.badRequest('Query param "ids" is required');
+  if (ids.length === 0) {
+    return Errors.badRequest('Query param "ids" is required');
+  }
   if (ids.length > MAX_RESOLVE_AVATAR_URLS_PER_REQUEST) {
     return Errors.badRequest(
       `Too many ids — max ${MAX_RESOLVE_AVATAR_URLS_PER_REQUEST} per request`,

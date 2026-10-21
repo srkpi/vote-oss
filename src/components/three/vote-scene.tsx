@@ -42,7 +42,7 @@ export function VoteScene({
   const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setCapability({ webgl: detectWebglSupport(), tier: detectDeviceTier() });
   }, []);
 
@@ -52,14 +52,20 @@ export function VoteScene({
   });
   const hasFiredFullyLoaded = useRef(false);
   const fireFullyLoadedOnce = useCallback(() => {
-    if (hasFiredFullyLoaded.current) return;
+    if (hasFiredFullyLoaded.current) {
+      return;
+    }
     hasFiredFullyLoaded.current = true;
     onSceneFullyLoadedRef.current?.();
   }, []);
 
   useEffect(() => {
-    if (capability === null) return;
-    if (!capability.webgl || reducedMotion) fireFullyLoadedOnce();
+    if (capability === null) {
+      return;
+    }
+    if (!capability.webgl || reducedMotion) {
+      fireFullyLoadedOnce();
+    }
   }, [capability, reducedMotion, fireFullyLoadedOnce]);
 
   const showRealScene = inView && capability !== null && capability.webgl && !reducedMotion;
@@ -69,7 +75,7 @@ export function VoteScene({
     <div
       ref={containerRef}
       className={cn(
-        'catgirl:bg-[#28101f] absolute inset-0 overflow-hidden bg-[#0a1f42]',
+        'absolute inset-0 overflow-hidden bg-[#0a1f42] catgirl:bg-[#28101f]',
         className,
       )}
     >

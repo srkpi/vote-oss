@@ -9,10 +9,14 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { token } = await params;
-  if (!token) return Errors.badRequest('Missing token');
+  if (!token) {
+    return Errors.badRequest('Missing token');
+  }
   const hash = hashToken(token);
 
   const row = await prisma.teamMemberInviteToken.findUnique({
@@ -39,7 +43,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     },
   });
 
-  if (!row) return Errors.notFound('Invite not found');
+  if (!row) {
+    return Errors.notFound('Invite not found');
+  }
 
   const form = row.registration.form;
   const now = new Date();

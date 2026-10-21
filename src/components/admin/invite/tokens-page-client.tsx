@@ -35,7 +35,7 @@ export function TokensPageClient({
   const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setTokens(initialTokens);
   }, [initialTokens]);
 
@@ -56,13 +56,13 @@ export function TokensPageClient({
   const totalCount = tokens.length;
 
   return (
-    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
+    <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="bg-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-kpi-navy">
             <Key className="h-4 w-4 text-white" />
           </div>
-          <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
+          <h2 className="font-display text-base font-semibold text-foreground sm:text-lg">
             Токени запрошення
           </h2>
         </div>
@@ -88,7 +88,7 @@ export function TokensPageClient({
       {!error && (
         <div className="space-y-5 p-4 sm:p-6">
           {totalCount > 0 && (
-            <div className="font-body text-muted-foreground flex flex-col gap-2 px-1 text-sm sm:flex-row sm:items-center sm:gap-4">
+            <div className="font-body flex flex-col gap-2 px-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
               <span>
                 <strong className="text-foreground">{totalCount}</strong>{' '}
                 {totalCount === 1

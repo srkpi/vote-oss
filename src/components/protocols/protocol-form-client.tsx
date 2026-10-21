@@ -134,10 +134,16 @@ const QUICK_SORT_LABELS: Record<QuickSortKey, string> = {
 function compareByQuickSortKey<T extends { fullname: string; posada: string }>(
   key: QuickSortKey,
 ): (a: T, b: T) => number {
-  if (key === 'smart') return compareByRoleImportance;
+  if (key === 'smart') {
+    return compareByRoleImportance;
+  }
   return (a, b) => {
-    if (key === 'fullname') return a.fullname.localeCompare(b.fullname, 'uk');
-    if (key === 'posada') return a.posada.localeCompare(b.posada, 'uk');
+    if (key === 'fullname') {
+      return a.fullname.localeCompare(b.fullname, 'uk');
+    }
+    if (key === 'posada') {
+      return a.posada.localeCompare(b.posada, 'uk');
+    }
     return a.posada.localeCompare(b.posada, 'uk') || a.fullname.localeCompare(b.fullname, 'uk');
   };
 }
@@ -231,8 +237,12 @@ export function ProtocolFormClient({
 
   // ── Auto-suggest protocol number on year change ──────────────────────────
   useEffect(() => {
-    if (isEdit) return;
-    if (numberManuallyEdited.current) return;
+    if (isEdit) {
+      return;
+    }
+    if (numberManuallyEdited.current) {
+      return;
+    }
     const year = yearOf(date);
     if (initialNextNumber !== null && year === new Date().getFullYear() && number === '') {
       // already prefilled by parent
@@ -240,14 +250,18 @@ export function ProtocolFormClient({
     }
     let cancelled = false;
     api.groups.protocols.listWithNextNumber(group.id, year).then((res) => {
-      if (cancelled || !res.success) return;
+      if (cancelled || !res.success) {
+        return;
+      }
 
-      if (!numberManuallyEdited.current) setNumber(res.data.nextNumber.toString());
+      if (!numberManuallyEdited.current) {
+        setNumber(res.data.nextNumber.toString());
+      }
     });
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [date, group.id, isEdit]);
 
   // ── Linkable elections (closed + 3 choices) ────────────────────────────────
@@ -261,7 +275,9 @@ export function ProtocolFormClient({
 
   const electionsById = useMemo(() => {
     const m = new Map<string, Election>();
-    for (const e of group.elections) m.set(e.id, e);
+    for (const e of group.elections) {
+      m.set(e.id, e);
+    }
     return m;
   }, [group.elections]);
 
@@ -271,7 +287,9 @@ export function ProtocolFormClient({
   const linkedNonAnonElectionIds: string[] = (() => {
     const ids = new Set<string>();
     for (const item of agenda) {
-      if (!item.electionId) continue;
+      if (!item.electionId) {
+        continue;
+      }
       const e = electionsById.get(item.electionId);
       if (e && !e.anonymous && e.status === 'closed') {
         ids.add(item.electionId);
@@ -284,18 +302,27 @@ export function ProtocolFormClient({
 
   // Fetch voters for any newly-linked non-anonymous closed election.
   useEffect(() => {
-    if (!canEdit) return;
+    if (!canEdit) {
+      return;
+    }
     const toFetch = linkedNonAnonElectionIds.filter((id) => !voterCache.has(id));
-    if (toFetch.length === 0) return;
+    if (toFetch.length === 0) {
+      return;
+    }
     let cancelled = false;
     Promise.all(toFetch.map((id) => api.elections.getVoters(id).then((res) => ({ id, res })))).then(
       (results) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         setVoterCache((prev) => {
           const next = new Map(prev);
           for (const { id, res } of results) {
-            if (res.success) next.set(id, res.data.voters);
-            else next.set(id, []);
+            if (res.success) {
+              next.set(id, res.data.voters);
+            } else {
+              next.set(id, []);
+            }
           }
           return next;
         });
@@ -304,16 +331,20 @@ export function ProtocolFormClient({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [linkedNonAnonElectionIdsKey, canEdit]);
 
   const voterInfoByUserId = useMemo(() => {
     const map = new Map<string, { userId: string; fullName: string }>();
     for (const electionId of linkedNonAnonElectionIds) {
       const voters = voterCache.get(electionId);
-      if (!voters) continue;
+      if (!voters) {
+        continue;
+      }
       for (const v of voters) {
-        if (!map.has(v.userId)) map.set(v.userId, v);
+        if (!map.has(v.userId)) {
+          map.set(v.userId, v);
+        }
       }
     }
     return map;
@@ -327,7 +358,7 @@ export function ProtocolFormClient({
   useEffect(() => {
     const syncedLockedUserIds = new Set(voterInfoByUserId.keys());
     let addedNewAttendee = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setAttendees((prev) => {
       const existingUserIds = new Set(prev.filter((a) => a.userId !== null).map((a) => a.userId!));
       let changed = false;
@@ -356,7 +387,9 @@ export function ProtocolFormClient({
           });
         }
       }
-      if (toAdd.length === 0 && !changed) return prev;
+      if (toAdd.length === 0 && !changed) {
+        return prev;
+      }
       addedNewAttendee = toAdd.length > 0;
       return [...updated, ...toAdd];
     });
@@ -368,7 +401,9 @@ export function ProtocolFormClient({
 
   let presentCount = 0;
   for (const a of attendees) {
-    if (a.isPresent) presentCount++;
+    if (a.isPresent) {
+      presentCount++;
+    }
   }
 
   // ── Mutations on agenda ──────────────────────────────────────────────────
@@ -377,19 +412,25 @@ export function ProtocolFormClient({
   };
 
   const addAgenda = () => {
-    if (agenda.length >= PROTOCOL_MAX_AGENDA_ITEMS) return;
+    if (agenda.length >= PROTOCOL_MAX_AGENDA_ITEMS) {
+      return;
+    }
     setAgenda((prev) => [...prev, emptyAgenda()]);
   };
 
   const removeAgenda = (idx: number) => {
-    if (agenda.length <= 1) return;
+    if (agenda.length <= 1) {
+      return;
+    }
     setAgenda((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const moveAgenda = (idx: number, dir: -1 | 1) => {
     setAgenda((prev) => {
       const target = idx + dir;
-      if (target < 0 || target >= prev.length) return prev;
+      if (target < 0 || target >= prev.length) {
+        return prev;
+      }
       const copy = [...prev];
       [copy[idx], copy[target]] = [copy[target], copy[idx]];
       return copy;
@@ -434,7 +475,9 @@ export function ProtocolFormClient({
       return;
     }
     const e = electionsById.get(electionId);
-    if (!e) return;
+    if (!e) {
+      return;
+    }
     const sorted = [...e.choices].sort((a, b) => a.position - b.position);
     const mapping: ProtocolChoiceMapping = {};
     const order: AgendaChoiceVote[] = ['yes', 'no', 'abstain'];
@@ -454,25 +497,33 @@ export function ProtocolFormClient({
 
   // ── Mutations on responsibles ─────────────────────────────────────────────
   const addResponsible = () => {
-    if (responsibles.length >= PROTOCOL_MAX_RESPONSIBLES) return;
+    if (responsibles.length >= PROTOCOL_MAX_RESPONSIBLES) {
+      return;
+    }
     setResponsibles((prev) => [...prev, { uid: uid(), posada: '', fullname: '' }]);
     setResponsiblesSortKey(null);
   };
 
   const updateResponsible = (idx: number, patch: Partial<ResponsibleDraft>) => {
     setResponsibles((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
-    if ('posada' in patch || 'fullname' in patch) setResponsiblesSortKey(null);
+    if ('posada' in patch || 'fullname' in patch) {
+      setResponsiblesSortKey(null);
+    }
   };
 
   const removeResponsible = (idx: number) => {
-    if (responsibles.length <= 1) return;
+    if (responsibles.length <= 1) {
+      return;
+    }
     setResponsibles((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const moveResponsible = (idx: number, dir: -1 | 1) => {
     setResponsibles((prev) => {
       const target = idx + dir;
-      if (target < 0 || target >= prev.length) return prev;
+      if (target < 0 || target >= prev.length) {
+        return prev;
+      }
       const copy = [...prev];
       [copy[idx], copy[target]] = [copy[target], copy[idx]];
       return copy;
@@ -496,7 +547,9 @@ export function ProtocolFormClient({
   const updateAttendee = (idx: number, patch: Partial<AttendeeDraft>) => {
     setAttendees((prev) =>
       prev.map((a, i) => {
-        if (i !== idx) return a;
+        if (i !== idx) {
+          return a;
+        }
         const merged = { ...a, ...patch };
         if ('fullname' in patch) {
           merged.present_text = rederivePresenceText(merged.present_text, merged.fullname);
@@ -504,16 +557,22 @@ export function ProtocolFormClient({
         return merged;
       }),
     );
-    if ('posada' in patch || 'fullname' in patch) setAttendeesSortKey(null);
+    if ('posada' in patch || 'fullname' in patch) {
+      setAttendeesSortKey(null);
+    }
   };
 
   const togglePresence = (idx: number, present: boolean) => {
     setAttendees((prev) =>
       prev.map((a, i) => {
-        if (i !== idx) return a;
+        if (i !== idx) {
+          return a;
+        }
         // Voters from non-anonymous elections are mechanically present —
         // ignore attempts to mark them absent.
-        if (a.userId && lockedUserIds.has(a.userId)) return a;
+        if (a.userId && lockedUserIds.has(a.userId)) {
+          return a;
+        }
         return {
           ...a,
           isPresent: present,
@@ -527,7 +586,9 @@ export function ProtocolFormClient({
   };
 
   const addManualAttendee = () => {
-    if (attendees.length >= PROTOCOL_MAX_ATTENDEES) return;
+    if (attendees.length >= PROTOCOL_MAX_ATTENDEES) {
+      return;
+    }
     setAttendees((prev) => [
       ...prev,
       {
@@ -550,7 +611,9 @@ export function ProtocolFormClient({
   const moveAttendee = (idx: number, dir: -1 | 1) => {
     setAttendees((prev) => {
       const target = idx + dir;
-      if (target < 0 || target >= prev.length) return prev;
+      if (target < 0 || target >= prev.length) {
+        return prev;
+      }
       const copy = [...prev];
       [copy[idx], copy[target]] = [copy[target], copy[idx]];
       return copy;
@@ -565,8 +628,12 @@ export function ProtocolFormClient({
 
   // ── Submit ────────────────────────────────────────────────────────────────
   const validate = (): string | null => {
-    if (!name.trim()) return 'Вкажіть назву протоколу';
-    if (!date) return 'Вкажіть дату протоколу';
+    if (!name.trim()) {
+      return 'Вкажіть назву протоколу';
+    }
+    if (!date) {
+      return 'Вкажіть дату протоколу';
+    }
     const numberValue = parseInt(number.trim(), 10);
     if (!Number.isFinite(numberValue) || numberValue < 1) {
       return 'Номер протоколу має бути цілим числом від 1';
@@ -582,7 +649,9 @@ export function ProtocolFormClient({
       }
     }
     for (const [i, a] of agenda.entries()) {
-      if (!a.name.trim()) return `Вкажіть назву пункту порядку денного #${i + 1}`;
+      if (!a.name.trim()) {
+        return `Вкажіть назву пункту порядку денного #${i + 1}`;
+      }
       for (const [j, l] of a.listeners.entries()) {
         if (!l.fullname.trim() || !l.speech.trim()) {
           return `Заповніть слухача #${j + 1} у пункті #${i + 1}`;
@@ -663,7 +732,9 @@ export function ProtocolFormClient({
   };
 
   const handleGenerate = async () => {
-    if (!initialProtocol) return;
+    if (!initialProtocol) {
+      return;
+    }
     setGenerating(true);
     setError(null);
     try {
@@ -675,7 +746,9 @@ export function ProtocolFormClient({
         let message = `Помилка генерації (${response.status})`;
         try {
           const body = await response.json();
-          if (body && typeof body.message === 'string') message = body.message;
+          if (body && typeof body.message === 'string') {
+            message = body.message;
+          }
         } catch {
           /* ignore parse errors */
         }
@@ -981,7 +1054,7 @@ export function ProtocolFormClient({
               <QuickSortBar activeKey={attendeesSortKey} onSort={sortAttendees} />
             )}
             {attendees.length === 0 ? (
-              <p className="font-body text-muted-foreground py-4 text-center text-sm">
+              <p className="font-body py-4 text-center text-sm text-muted-foreground">
                 Учасників ще немає
               </p>
             ) : (
@@ -994,7 +1067,7 @@ export function ProtocolFormClient({
                     <div
                       key={a.uid}
                       className={cn(
-                        'border-border-subtle rounded-md border p-3',
+                        'rounded-md border border-border-subtle p-3',
                         a.isPresent ? 'bg-success-bg/20' : 'bg-surface',
                       )}
                     >
@@ -1017,7 +1090,7 @@ export function ProtocolFormClient({
                           value={a.isPresent ? 'present' : 'absent'}
                           onChange={(v) => togglePresence(idx, v === 'present')}
                           disabled={!canEdit || isLockedByVote}
-                          aria-label="Присутність"
+
                           className="sm:w-40"
                           options={[
                             {
@@ -1047,22 +1120,22 @@ export function ProtocolFormClient({
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           ) : (
-                            <span className="w-9" aria-hidden="true" />
+                            <span className="w-9" />
                           )}
                         </div>
                       </div>
                       {isLockedByVote && (
-                        <p className="text-success mt-1.5 flex items-center gap-1 text-xs">
+                        <p className="mt-1.5 flex items-center gap-1 text-xs text-success">
                           <Lock className="h-3 w-3 shrink-0" />
                           Підтверджено голосуванням — присутність не можна змінити
                           {!isMember && ' (не входить до групи)'}
                         </p>
                       )}
                       {!isLockedByVote && a.userId === null && (
-                        <p className="text-muted-foreground mt-1.5 text-xs">Ручний рядок</p>
+                        <p className="mt-1.5 text-xs text-muted-foreground">Ручний рядок</p>
                       )}
                       {!isLockedByVote && a.userId !== null && !isMember && (
-                        <p className="text-muted-foreground mt-1.5 text-xs">
+                        <p className="mt-1.5 text-xs text-muted-foreground">
                           Колишній учасник групи
                         </p>
                       )}
@@ -1131,11 +1204,11 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-border-color shadow-card bg-card rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between gap-4 border-b px-5 py-4">
+    <div className="border-border-color rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between gap-4 border-b border-border-subtle px-5 py-4">
         <div className="min-w-0">
-          <h2 className="font-display text-foreground text-base font-semibold">{title}</h2>
-          {subtitle && <p className="font-body text-muted-foreground mt-0.5 text-xs">{subtitle}</p>}
+          <h2 className="font-display text-base font-semibold text-foreground">{title}</h2>
+          {subtitle && <p className="font-body mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
@@ -1190,7 +1263,7 @@ function QuickSortBar({
 }) {
   return (
     <div className="mb-3 flex flex-wrap items-center gap-2">
-      <span className="text-muted-foreground flex items-center gap-1 text-xs">
+      <span className="flex items-center gap-1 text-xs text-muted-foreground">
         <ArrowUpDown className="h-3 w-3" />
         Сортувати:
       </span>
@@ -1202,7 +1275,6 @@ function QuickSortBar({
             variant={isActive ? 'primary' : 'secondary'}
             size="xs"
             onClick={() => onSort(key)}
-            aria-pressed={isActive}
           >
             {isActive && <Check className="h-3 w-3" />}
             {QUICK_SORT_LABELS[key]}
@@ -1224,9 +1296,9 @@ function RequisiteLine({
 }) {
   return (
     <div className="flex items-start gap-2 text-sm">
-      {icon && <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>}
-      <span className="text-muted-foreground w-24 shrink-0 text-xs">{label}</span>
-      <span className="text-foreground font-body wrap-break-word">{value}</span>
+      {icon && <span className="mt-0.5 shrink-0 text-muted-foreground">{icon}</span>}
+      <span className="w-24 shrink-0 text-xs text-muted-foreground">{label}</span>
+      <span className="font-body wrap-break-word text-foreground">{value}</span>
     </div>
   );
 }
@@ -1243,13 +1315,13 @@ function CountTile({
   hint?: string;
 }) {
   return (
-    <div className="border-border-subtle bg-surface space-y-1 rounded-lg border p-3">
-      <div className="text-muted-foreground flex items-center gap-2 text-xs">
+    <div className="space-y-1 rounded-lg border border-border-subtle bg-surface p-3">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         {icon}
         <span>{label}</span>
       </div>
-      <p className="font-display text-foreground text-2xl font-semibold">{value}</p>
-      {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+      <p className="font-display text-2xl font-semibold text-foreground">{value}</p>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
@@ -1289,7 +1361,9 @@ function AgendaItemEditor({
 }: AgendaItemEditorProps) {
   const linkedElection = item.electionId ? (electionsById.get(item.electionId) ?? null) : null;
   const sortedChoices = (() => {
-    if (!linkedElection) return [];
+    if (!linkedElection) {
+      return [];
+    }
     return [...linkedElection.choices].sort((a, b) => a.position - b.position);
   })();
 
@@ -1297,10 +1371,10 @@ function AgendaItemEditor({
     <div className="border-border-color rounded-lg border p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="bg-kpi-navy/10 text-kpi-navy flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-kpi-navy/10 text-xs font-semibold text-kpi-navy">
             {index + 1}
           </span>
-          <p className="font-body text-foreground text-sm font-semibold">Пункт {index + 1}</p>
+          <p className="font-body text-sm font-semibold text-foreground">Пункт {index + 1}</p>
         </div>
         {canEdit && (
           <div className="flex items-center gap-1">
@@ -1352,9 +1426,9 @@ function AgendaItemEditor({
         <FormField label="Слухали">
           <div className="space-y-2">
             {item.listeners.map((l, lIdx) => (
-              <div key={lIdx} className="border-border-subtle rounded-md border p-3">
+              <div key={lIdx} className="rounded-md border border-border-subtle p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground text-xs">Слухач #{lIdx + 1}</span>
+                  <span className="text-xs text-muted-foreground">Слухач #{lIdx + 1}</span>
                   {canEdit && (
                     <Button
                       variant="ghost"
@@ -1439,8 +1513,8 @@ function AgendaItemEditor({
         </FormField>
 
         {linkedElection && (
-          <div className="border-border-subtle bg-surface rounded-md border p-3">
-            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
+          <div className="rounded-md border border-border-subtle bg-surface p-3">
+            <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
               Мапінг варіантів — За / Проти / Утримались
             </p>
             <div className="space-y-2">
@@ -1450,8 +1524,8 @@ function AgendaItemEditor({
                   className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-foreground text-sm">{c.choice}</p>
-                    <p className="text-muted-foreground text-xs">Голосів: {c.votes ?? 0}</p>
+                    <p className="text-sm text-foreground">{c.choice}</p>
+                    <p className="text-xs text-muted-foreground">Голосів: {c.votes ?? 0}</p>
                   </div>
                   <div className="flex shrink-0 gap-1">
                     {(['yes', 'no', 'abstain'] as AgendaChoiceVote[]).map((v) => (
@@ -1463,8 +1537,8 @@ function AgendaItemEditor({
                         className={cn(
                           'rounded-md border px-3 py-1 text-xs transition-colors',
                           item.choiceMapping[c.id] === v
-                            ? 'bg-kpi-navy border-kpi-navy text-white'
-                            : 'border-border-color hover:border-kpi-blue-light text-foreground bg-card',
+                            ? 'border-kpi-navy bg-kpi-navy text-white'
+                            : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light',
                           !canEdit && 'cursor-not-allowed opacity-60',
                         )}
                       >

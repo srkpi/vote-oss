@@ -35,14 +35,18 @@ export function CommentVoteButtons({
   const { toast } = useToast();
 
   const castVote = async (value: 'UP' | 'DOWN') => {
-    if (pending || isOwnComment) return;
+    if (pending || isOwnComment) {
+      return;
+    }
     setPending(true);
     try {
       const result =
         myVote === value
           ? await api.elections.comments.revokeVote(electionId, commentId)
           : await api.elections.comments.vote(electionId, commentId, value);
-      if (result.error || !result.data) throw new Error(result.error ?? 'Не вдалося проголосувати');
+      if (result.error || !result.data) {
+        throw new Error(result.error ?? 'Не вдалося проголосувати');
+      }
       onVoteChange(result.data);
     } catch (err) {
       toast({
@@ -67,7 +71,7 @@ export function CommentVoteButtons({
         onClick={() => castVote('UP')}
         disabled={isOwnComment || pending}
         title={disabledTitle}
-        aria-pressed={myVote === 'UP'}
+
         className={cn(
           myVote === 'UP'
             ? 'text-success hover:text-success'
@@ -84,7 +88,7 @@ export function CommentVoteButtons({
         ref={anchorRef}
         onClick={() => hasVoters && setPopoverOpen((o) => !o)}
         disabled={!hasVoters}
-        className="text-muted-foreground hover:text-foreground px-2 tabular-nums"
+        className="px-2 text-muted-foreground tabular-nums hover:text-foreground"
       >
         {upCount}
         <span className="text-border-color">·</span>
@@ -98,7 +102,7 @@ export function CommentVoteButtons({
         onClick={() => castVote('DOWN')}
         disabled={isOwnComment || pending}
         title={disabledTitle}
-        aria-pressed={myVote === 'DOWN'}
+
         className={cn(
           myVote === 'DOWN'
             ? 'text-error hover:text-error'

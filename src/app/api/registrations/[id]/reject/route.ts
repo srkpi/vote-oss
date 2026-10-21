@@ -12,10 +12,14 @@ import { isValidUuid } from '@/lib/utils/common';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid registration id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid registration id');
+  }
 
   let body: { reason?: string };
   try {
@@ -25,7 +29,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const reason = (body.reason ?? '').trim();
-  if (!reason) return Errors.badRequest('Причина відхилення обовʼязкова');
+  if (!reason) {
+    return Errors.badRequest('Причина відхилення обовʼязкова');
+  }
   if (reason.length > REGISTRATION_REJECTION_REASON_MAX_LENGTH) {
     return Errors.badRequest(
       `Причина не довша за ${REGISTRATION_REJECTION_REASON_MAX_LENGTH} символів`,
@@ -36,13 +42,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id },
     include: { form: { select: { group_id: true, deleted_at: true } } },
   });
-  if (!reg || reg.form.deleted_at) return Errors.notFound('Registration not found');
+  if (!reg || reg.form.deleted_at) {
+    return Errors.notFound('Registration not found');
+  }
 
   try {
     await requireVKSUGroupMember(reg.form.group_id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 

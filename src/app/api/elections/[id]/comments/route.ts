@@ -18,23 +18,34 @@ import type { CommentSort, CommentSortDirection } from '@/types/comment';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
 
   const { searchParams } = new URL(req.url);
   const cursor = searchParams.get('cursor');
-  if (cursor && !isValidUuid(cursor)) return Errors.badRequest('Invalid cursor');
+  if (cursor && !isValidUuid(cursor)) {
+    return Errors.badRequest('Invalid cursor');
+  }
 
   const limitParam = searchParams.get('limit');
   const limit = limitParam ? Number.parseInt(limitParam, 10) : COMMENTS_INITIAL_PAGE_SIZE;
-  if (!Number.isFinite(limit) || limit < 1) return Errors.badRequest('Invalid limit');
-  if (limit > COMMENTS_LOAD_MORE_PAGE_SIZE)
+  if (!Number.isFinite(limit) || limit < 1) {
+    return Errors.badRequest('Invalid limit');
+  }
+  if (limit > COMMENTS_LOAD_MORE_PAGE_SIZE) {
     return Errors.badRequest(`Limit should not be larger than ${COMMENTS_LOAD_MORE_PAGE_SIZE}`);
+  }
 
   const sortParam = searchParams.get('sort');
   if (sortParam && sortParam !== 'date' && sortParam !== 'rating') {
@@ -60,13 +71,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
   if (gate.petition.commentsClosed) {
     return Errors.forbidden('Discussion is closed for this petition');
   }

@@ -11,16 +11,22 @@ const NON_FINAL_STATUSES = new Set(['DRAFT', 'AWAITING_TEAM', 'PENDING_REVIEW'])
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid registration id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid registration id');
+  }
 
   const reg = await prisma.candidateRegistration.findUnique({
     where: { id },
     include: { form: { select: { deleted_at: true } } },
   });
-  if (!reg || reg.form.deleted_at) return Errors.notFound('Registration not found');
+  if (!reg || reg.form.deleted_at) {
+    return Errors.notFound('Registration not found');
+  }
   if (reg.user_id !== auth.user.sub) {
     return Errors.forbidden('Тільки автор може відкликати свою заявку');
   }

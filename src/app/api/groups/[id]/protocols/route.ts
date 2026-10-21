@@ -22,15 +22,21 @@ async function requireProtocolViewer(groupId: string): Promise<void> {
     where: { id: groupId },
     select: { deleted_at: true },
   });
-  if (!group || group.deleted_at) throw new GroupNotFoundError();
+  if (!group || group.deleted_at) {
+    throw new GroupNotFoundError();
+  }
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const { searchParams } = new URL(req.url);
   const yearParam = searchParams.get('nextNumberForYear');
@@ -38,8 +44,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     await requireProtocolViewer(id);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 
@@ -76,15 +86,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   try {
     await requireGroupOwner(id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
     if (err instanceof GroupForbiddenError) {
       return Errors.forbidden('Only the group owner can create protocols');
     }
@@ -99,7 +115,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const validation = validateProtocolBody(body);
-  if (!validation.ok) return Errors.badRequest(validation.error);
+  if (!validation.ok) {
+    return Errors.badRequest(validation.error);
+  }
   const {
     number,
     name,

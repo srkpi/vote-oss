@@ -38,7 +38,9 @@ interface PetitionsPageProps {
 }
 
 export default async function PetitionsPage({ searchParams }: PetitionsPageProps) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
   if (!session) {
@@ -52,7 +54,7 @@ export default async function PetitionsPage({ searchParams }: PetitionsPageProps
   const petitions = data?.elections ?? [];
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <SessionGuard userId={session.userId} />
       <PageHeader
         title="Петиції"
@@ -69,7 +71,7 @@ export default async function PetitionsPage({ searchParams }: PetitionsPageProps
 
       <div className="container py-8">
         {error ? (
-          <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
             <ErrorState title="Не вдалося завантажити петиції" description={error} />
           </div>
         ) : (

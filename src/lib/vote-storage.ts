@@ -10,7 +10,9 @@ function key(electionId: string): string {
 }
 
 export function saveVote(record: VoteRecord): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   try {
     localStorage.setItem(key(record.electionId), JSON.stringify(record));
   } catch {
@@ -19,10 +21,14 @@ export function saveVote(record: VoteRecord): void {
 }
 
 export function getVote(electionId: string): VoteRecord | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {
+    return null;
+  }
   try {
     const raw = localStorage.getItem(key(electionId));
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     return JSON.parse(raw) as VoteRecord;
   } catch {
     return null;
@@ -30,7 +36,9 @@ export function getVote(electionId: string): VoteRecord | null {
 }
 
 export function clearAllVotes(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   try {
     const toRemove = Object.keys(localStorage).filter(
       (k) => k.startsWith(LOCAL_STORAGE_VOTE_KEY_PREFIX) || k.startsWith(CONFETTI_KEY_PREFIX),
@@ -47,7 +55,9 @@ export function clearAllVotes(): void {
 // ---------------------------------------------------------------------------
 
 export function getStoredSessionUserId(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {
+    return null;
+  }
   try {
     return localStorage.getItem(SESSION_USER_KEY);
   } catch {
@@ -56,7 +66,9 @@ export function getStoredSessionUserId(): string | null {
 }
 
 export function setStoredSessionUserId(userId: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   try {
     localStorage.setItem(SESSION_USER_KEY, userId);
   } catch {
@@ -72,7 +84,9 @@ export function setStoredSessionUserId(userId: string): void {
  * token expiry" scenarios.
  */
 export function syncSessionUser(currentUserId: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   try {
     const stored = getStoredSessionUserId();
     if (stored !== currentUserId) {

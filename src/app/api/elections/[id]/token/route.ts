@@ -15,10 +15,14 @@ import type { ElectionRestriction } from '@/types/election';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const { user } = auth;
   const now = new Date();
@@ -27,10 +31,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id: electionId, deleted_at: null },
     include: { restrictions: { select: { type: true, value: true } } },
   });
-  if (!election) return Errors.notFound('Election not found');
+  if (!election) {
+    return Errors.notFound('Election not found');
+  }
 
-  if (now < election.opens_at) return Errors.badRequest('Election has not started yet');
-  if (now > election.closes_at) return Errors.badRequest('Election has already closed');
+  if (now < election.opens_at) {
+    return Errors.badRequest('Election has not started yet');
+  }
+  if (now > election.closes_at) {
+    return Errors.badRequest('Election has already closed');
+  }
 
   const restrictions = election.restrictions as ElectionRestriction[];
 
@@ -47,7 +57,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const existingToken = await prisma.issuedToken.findUnique({
     where: { election_id_user_id: { election_id: electionId, user_id: user.sub } },
   });
-  if (existingToken) return Errors.conflict('Vote token already issued for this election');
+  if (existingToken) {
+    return Errors.conflict('Vote token already issued for this election');
+  }
 
   const { token } = generateVoteToken(electionId);
 

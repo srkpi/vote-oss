@@ -23,13 +23,17 @@ export async function DELETE(
   }
 
   const { tokenHash } = await params;
-  if (!tokenHash) return Errors.badRequest('tokenHash is required');
+  if (!tokenHash) {
+    return Errors.badRequest('tokenHash is required');
+  }
 
   const token = await prisma.adminInviteToken.findUnique({
     where: { token_hash: tokenHash },
   });
 
-  if (!token) return Errors.notFound('Invite token not found');
+  if (!token) {
+    return Errors.notFound('Invite token not found');
+  }
 
   // Owner may always delete their own token without a graph query
   if (token.created_by !== user.sub) {

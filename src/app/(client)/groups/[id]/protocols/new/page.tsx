@@ -15,22 +15,31 @@ interface Props {
 }
 
 export default async function NewProtocolPage({ params }: Props) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   const { id } = await params;
   const { data: group, status } = await serverApi.groups.get(id);
-  if (status === 404 || !group) notFound();
-  if (group.ownerId !== session.userId) notFound();
+  if (status === 404 || !group) {
+    notFound();
+  }
+  if (group.ownerId !== session.userId) {
+    notFound();
+  }
 
+  // oxlint-disable-next-line react/purity -- This server page uses the request's current year to look up protocol numbers.
   const year = new Date().getFullYear();
   const nextRes = await serverApi.groups.protocols.listWithNextNumber(id, year);
   const initialNextNumber = nextRes.success ? nextRes.data.nextNumber : null;
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <ProtocolFormClient
         group={group}
         initialProtocol={null}

@@ -9,7 +9,9 @@ export const buildEntropyMetric: MetricBuilder = ({
   choiceCount,
   decryptionDone,
 }) => {
-  if (!decryptionDone || choiceCount < 2 || metrics.normalizedEntropy === null) return null;
+  if (!decryptionDone || choiceCount < 2 || metrics.normalizedEntropy === null) {
+    return null;
+  }
 
   const ent = metrics.normalizedEntropy * 100;
   const n = choiceCount;
