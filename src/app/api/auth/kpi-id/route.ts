@@ -22,71 +22,6 @@ import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
 import { persistTokenPair, revokeByAccessJti } from '@/lib/token-store';
 import type { TokenPayload } from '@/types/auth';
 
-/**
- * @swagger
- * /api/auth/kpi-id:
- *   post:
- *     summary: Authenticate via KPI-ID ticket
- *     description: >
- *       Exchanges a KPI-ID CAS ticket for a pair of HTTP-only JWT cookies
- *       (access + refresh). The ticket must have been issued through Diia
- *       authentication (AUTH_METHOD === "DIIA"). Non-student accounts,
- *       graduate students, and tickets issued via other auth methods are
- *       rejected. Rate-limited per IP.
- *
- *       If a `pending_bypass` cookie is present (set by the proxy when an
- *       unauthenticated user was redirected from /use/[token]), the endpoint
- *       attempts to pre-apply that bypass token before checking campus eligibility.
- *       This resolves the chicken-and-egg situation where a student needs the
- *       bypass to log in but could previously only apply tokens after login.
- *
- *       Returns a JSON body with `redirectTo` so the client does not need a
- *       separate call to /api/auth/return-to.
- *     tags:
- *       - Auth
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - ticketId
- *             properties:
- *               ticketId:
- *                 type: string
- *                 description: CAS service ticket obtained from the KPI-ID provider
- *     responses:
- *       200:
- *         description: Authentication successful; JWT cookies set
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 redirectTo:
- *                   type: string
- *                   description: Post-login redirect path
- *         headers:
- *           Set-Cookie:
- *             description: HTTP-only access and refresh token cookies
- *             schema:
- *               type: string
- *       400:
- *         description: Missing or invalid ticketId
- *       401:
- *         description: Ticket is invalid or expired
- *       403:
- *         description: Account is not a student, not authenticated through Diia, or is a graduate student
- *       429:
- *         description: Too many login attempts
- *         headers:
- *           Retry-After:
- *             schema:
- *               type: integer
- *       500:
- *         description: Failed to contact the KPI-ID auth provider
- */
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const rl = await rateLimitLogin(ip);
@@ -145,7 +80,9 @@ export async function POST(req: NextRequest) {
   }
 
   const auth = await requireAuth(req);
-  if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
+  if (auth.ok) {
+    await revokeByAccessJti(auth.user.jti, auth.user.iat);
+  }
 
   const now = Math.floor(Date.now() / 1000);
   const initialAuthAt = now;

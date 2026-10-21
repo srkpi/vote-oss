@@ -7,7 +7,6 @@ import { HeroReadyProvider } from '@/components/landing/hero-ready-context';
 import { HeroVoteScene } from '@/components/landing/hero-vote-scene';
 import { PlatformStatsSection } from '@/components/landing/platform-stats-section';
 import { StatItem } from '@/components/landing/stat-item';
-import { VisitorCounter } from '@/components/landing/visitor-counter';
 import { VoteScene } from '@/components/three/vote-scene';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
@@ -93,7 +92,7 @@ export default async function HomePage() {
 
           <div className="relative z-10 container py-16 md:py-32">
             <div className="max-w-3xl">
-              <h1 className="font-display mb-6 text-5xl leading-[1.05] font-bold text-white md:text-6xl lg:text-7xl">
+              <h1 className="mb-6 font-display text-5xl leading-[1.05] font-bold text-white md:text-6xl lg:text-7xl">
                 Голос кожного{' '}
                 <span className="relative">
                   <span
@@ -102,7 +101,7 @@ export default async function HomePage() {
                   >
                     важливий
                   </span>
-                  <span className="from-kpi-orange absolute right-0 -bottom-1 left-0 h-0.5 rounded-full bg-linear-to-r to-amber-400 opacity-60" />
+                  <span className="absolute right-0 -bottom-1 left-0 h-0.5 rounded-full bg-linear-to-r from-kpi-orange to-amber-400 opacity-60" />
                 </span>
               </h1>
 
@@ -137,7 +136,7 @@ export default async function HomePage() {
                     }}
                   >
                     <svg
-                      className="text-kpi-blue-light h-3 w-3"
+                      className="h-3 w-3 text-kpi-blue-light"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -169,9 +168,9 @@ export default async function HomePage() {
       </HeroReadyProvider>
 
       {/* Features */}
-      <section className="bg-background relative z-20 my-20 -mt-px">
+      <section className="relative z-20 my-20 -mt-px bg-background">
         <div className="container">
-          <h2 className="font-display text-foreground mb-8 text-center text-4xl font-bold">
+          <h2 className="mb-8 text-center font-display text-4xl font-bold text-foreground">
             Чому {APP_NAME}?
           </h2>
 
@@ -181,11 +180,11 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <p className="font-body text-muted-foreground mt-8 text-center text-xs">
+          <p className="font-body mt-8 text-center text-xs text-muted-foreground">
             Використовуючи платформу, ви погоджуєтесь з{' '}
             <Link
               href="/privacy"
-              className="hover:text-kpi-navy underline underline-offset-2 transition-colors"
+              className="underline underline-offset-2 transition-colors hover:text-kpi-navy"
             >
               Політикою конфіденційності
             </Link>
@@ -198,7 +197,7 @@ export default async function HomePage() {
         <section className="bg-surface py-20">
           <div className="container">
             <div className="mb-10 flex items-center justify-between">
-              <h2 className="font-display text-foreground text-3xl font-bold">
+              <h2 className="font-display text-3xl font-bold text-foreground">
                 <span className="md:hidden">Голосування</span>
                 <span className="hidden sm:inline">Активні голосування</span>
               </h2>
@@ -220,7 +219,7 @@ export default async function HomePage() {
       )}
 
       {/* Stats */}
-      <section className="bg-kpi-navy relative overflow-hidden py-20 md:pb-25 2xl:pb-30">
+      <section className="relative overflow-hidden bg-kpi-navy py-20 md:pb-25 2xl:pb-30">
         <VoteScene variant="ambient" />
 
         <div className="relative z-10 container">
@@ -241,16 +240,6 @@ export default async function HomePage() {
           </svg>
         </div>
       </section>
-
-      <footer className="bg-background relative z-20 -mt-px">
-        <div className="flex flex-col items-center px-2">
-          <VisitorCounter
-            name={APP_NAME}
-            scale={1.2}
-            className="mt-4 mb-4 md:mt-0 lg:-mt-2 xl:-mt-4 2xl:-mt-6"
-          />
-        </div>
-      </footer>
     </>
   );
 }

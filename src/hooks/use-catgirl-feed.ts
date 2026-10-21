@@ -77,7 +77,9 @@ export function useCatgirlFeed(): UseCatgirlFeedResult {
     let claimed = claimCatgirlImages(CATGIRL_FEED_BATCH_SIZE);
     while (claimed.length > 0) {
       const fresh = claimed.filter((image) => {
-        if (seenIdsRef.current.has(image.id)) return false;
+        if (seenIdsRef.current.has(image.id)) {
+          return false;
+        }
         seenIdsRef.current.add(image.id);
         return true;
       });
@@ -91,8 +93,12 @@ export function useCatgirlFeed(): UseCatgirlFeedResult {
   }, []);
 
   const loadMore = useCallback(() => {
-    if (cancelWaitRef.current) return;
-    if (takeImages()) return;
+    if (cancelWaitRef.current) {
+      return;
+    }
+    if (takeImages()) {
+      return;
+    }
 
     // The pool is empty — the failed claim above has already kicked off a
     // refill. Wait for it to land rather than polling, and give up after a
@@ -103,13 +109,17 @@ export function useCatgirlFeed(): UseCatgirlFeedResult {
     const stopWaiting = () => {
       unsubscribe?.();
       unsubscribe = null;
-      if (stallTimer !== null) clearTimeout(stallTimer);
+      if (stallTimer !== null) {
+        clearTimeout(stallTimer);
+      }
       stallTimer = null;
       cancelWaitRef.current = null;
     };
 
     unsubscribe = subscribeCatgirlImagePool(() => {
-      if (takeImages()) stopWaiting();
+      if (takeImages()) {
+        stopWaiting();
+      }
     });
     stallTimer = setTimeout(() => {
       stopWaiting();
@@ -129,12 +139,18 @@ export function useCatgirlFeed(): UseCatgirlFeedResult {
 
   useEffect(() => {
     // Nothing to lay out against yet, or loading is paused until `retry`.
-    if (!sentinel || !hasWidth || stalled) return;
-    if (typeof IntersectionObserver === 'undefined') return;
+    if (!sentinel || !hasWidth || stalled) {
+      return;
+    }
+    if (typeof IntersectionObserver === 'undefined') {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadMore();
+        }
       },
       { rootMargin: `0px 0px ${CATGIRL_FEED_PREFETCH_MARGIN_PX}px 0px` },
     );
@@ -149,7 +165,9 @@ export function useCatgirlFeed(): UseCatgirlFeedResult {
   }, [sentinel, hasWidth, stalled, images.length, loadMore]);
 
   const rows = useMemo(() => {
-    if (!containerWidth || images.length === 0) return [];
+    if (!containerWidth || images.length === 0) {
+      return [];
+    }
     return computeJustifiedGalleryLayout(images, containerWidth, FEED_LAYOUT_OPTIONS);
   }, [containerWidth, images]);
 

@@ -50,13 +50,17 @@ export function detectImageMime(buf: Buffer): AllowedImageMimeType | null {
   // GIF: "GIF87a" or "GIF89a"
   if (buf.length >= 6) {
     const head = buf.slice(0, 6).toString('ascii');
-    if (head === 'GIF87a' || head === 'GIF89a') return 'image/gif';
+    if (head === 'GIF87a' || head === 'GIF89a') {
+      return 'image/gif';
+    }
   }
   // WebP: "RIFF" .... "WEBP"
   if (buf.length >= 12) {
     const riff = buf.slice(0, 4).toString('ascii');
     const webp = buf.slice(8, 12).toString('ascii');
-    if (riff === 'RIFF' && webp === 'WEBP') return 'image/webp';
+    if (riff === 'RIFF' && webp === 'WEBP') {
+      return 'image/webp';
+    }
   }
   return null;
 }

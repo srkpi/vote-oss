@@ -34,13 +34,17 @@ export function checkRestrictionsWithBypass(
   bypassedTypes: string[] | null,
   groupMemberships: string[] | null,
 ): boolean {
-  if (restrictions.length === 0) return true;
+  if (restrictions.length === 0) {
+    return true;
+  }
 
   const bypassSet = bypassedTypes && bypassedTypes.length > 0 ? new Set(bypassedTypes) : null;
   const byType = new Map<string, string[]>();
 
   for (const r of restrictions) {
-    if (bypassSet?.has(r.type)) continue;
+    if (bypassSet?.has(r.type)) {
+      continue;
+    }
 
     const existing = byType.get(r.type) ?? [];
     existing.push(r.value);
@@ -74,7 +78,9 @@ export function checkRestrictionsWithBypass(
 
       case 'LEVEL_COURSE': {
         const yearDigit = parseGroupYearEnteredDigit(user.group);
-        if (yearDigit === null) return false;
+        if (yearDigit === null) {
+          return false;
+        }
         const level = parseGroupLevel(user.group);
         const course = calculateCourse(yearDigit);
         const userValue = `${level}${course}`;
@@ -89,7 +95,9 @@ export function checkRestrictionsWithBypass(
 
       case 'GROUP_MEMBERSHIP':
         // `values` is an array of group UUIDs (OR semantics — user must be in at least one)
-        if (!groupMemberships || groupMemberships.length === 0) return false;
+        if (!groupMemberships || groupMemberships.length === 0) {
+          return false;
+        }
         satisfied = values.some((groupId) => groupMemberships.includes(groupId));
         break;
 
@@ -98,7 +106,9 @@ export function checkRestrictionsWithBypass(
         return false;
     }
 
-    if (!satisfied) return false;
+    if (!satisfied) {
+      return false;
+    }
   }
 
   return true;
@@ -112,8 +122,10 @@ export function adminCanAccessElection(
   adminFaculty: string,
   restrictions: ElectionRestriction[],
 ): boolean {
-  const facRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
-  return facRestrictions.length === 0 || facRestrictions.some((r) => r.value === adminFaculty);
+  const facultyRestrictions = restrictions.filter((r) => r.type === 'FACULTY');
+  return (
+    facultyRestrictions.length === 0 || facultyRestrictions.some((r) => r.value === adminFaculty)
+  );
 }
 
 /**
@@ -124,7 +136,9 @@ export function adminCanDeleteElection(
   election: { restrictions: ElectionRestriction[]; created_by: string },
   adminGraph: Map<string, string | null>,
 ): boolean {
-  if (election.created_by === admin.user_id) return true;
+  if (election.created_by === admin.user_id) {
+    return true;
+  }
   return isAncestorInGraph(adminGraph, admin.user_id, election.created_by);
 }
 
@@ -133,8 +147,12 @@ export function adminCanRestoreElection(
   election: { restrictions: ElectionRestriction[]; deletedByUserId: string | null },
   adminGraph: Map<string, string | null>,
 ): boolean {
-  if (!election.deletedByUserId) return false;
-  if (election.deletedByUserId === admin.user_id) return true;
+  if (!election.deletedByUserId) {
+    return false;
+  }
+  if (election.deletedByUserId === admin.user_id) {
+    return true;
+  }
   return isAncestorInGraph(adminGraph, admin.user_id, election.deletedByUserId);
 }
 
@@ -147,6 +165,8 @@ export function adminCanManageElectionBypass(
   electionCreatedBy: string,
   adminGraph: Map<string, string | null>,
 ): boolean {
-  if (electionCreatedBy === adminUserId) return true;
+  if (electionCreatedBy === adminUserId) {
+    return true;
+  }
   return isAncestorInGraph(adminGraph, adminUserId, electionCreatedBy);
 }

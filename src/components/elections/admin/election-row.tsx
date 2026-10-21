@@ -21,7 +21,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
   const canEdit = election.canEdit ?? false;
 
   return (
-    <tr className="group hover:bg-surface transition-colors duration-150">
+    <tr className="group transition-colors duration-150 hover:bg-surface">
       <td
         className="max-w-xs cursor-pointer px-4 py-3.5"
         onClick={() => router.push(`/admin/elections/${election.id}`)}
@@ -34,17 +34,17 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
           >
             {election.title}
           </p>
-          <p className="font-body text-muted-foreground/60 mt-0.5 truncate text-xs">
+          <p className="font-body mt-0.5 truncate text-xs text-muted-foreground/60">
             {election.createdBy.fullName}
           </p>
           {election.editedAt && election.editedBy && (
-            <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 truncate text-xs">
+            <p className="font-body mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground/50">
               <Pencil className="h-3 w-3" />
               {election.editedBy.fullName}
             </p>
           )}
           {isDeleted && election.deletedBy && (
-            <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 truncate text-xs">
+            <p className="font-body mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground/50">
               <Trash2 className="h-3 w-3" />
               {election.deletedBy.fullName}
             </p>
@@ -88,7 +88,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
             {election.ballotCount.toLocaleString('uk-UA')}
           </span>
           {election.status === 'open' && !isDeleted && (
-            <span className="bg-success h-1.5 w-1.5 shrink-0 animate-pulse rounded-full" />
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-success" />
           )}
         </div>
       </td>
@@ -111,7 +111,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
               variant="ghost"
               size="md"
               asChild
-              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+              className="text-kpi-navy transition-colors hover:bg-kpi-blue-light/10"
             >
               <Link href={`/admin/elections/${election.id}/edit`}>
                 <Pencil className="h-3.5 w-3.5" />
@@ -126,7 +126,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
                 e.stopPropagation();
                 onRestore();
               }}
-              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+              className="text-kpi-navy transition-colors hover:bg-kpi-blue-light/10"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
@@ -138,7 +138,7 @@ export function ElectionRow({ election, canDelete, onDelete, onRestore }: Electi
                 e.stopPropagation();
                 onDelete();
               }}
-              className="text-error hover:bg-error-bg transition-colors"
+              className="text-error transition-colors hover:bg-error-bg"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

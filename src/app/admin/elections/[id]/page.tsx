@@ -50,7 +50,9 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
 
   const { data: election, status } = await serverApi.elections.get(id);
 
-  if (status === 404 || !election) notFound();
+  if (status === 404 || !election) {
+    notFound();
+  }
 
   const canDelete = election.canDelete ?? false;
   const canRestore = election.canRestore ?? false;
@@ -114,15 +116,15 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
       <div className="p-4 sm:p-8">
         {/* Soft-deleted banner */}
         {isDeleted && election.deletedBy && (
-          <div className="border-error/30 bg-error-bg mb-6 flex items-start gap-3 rounded-xl border p-4 sm:gap-4 sm:p-5">
-            <div className="bg-error/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-              <AlertTriangle className="text-error h-5 w-5" />
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-error/30 bg-error-bg p-4 sm:gap-4 sm:p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-error/15">
+              <AlertTriangle className="h-5 w-5 text-error" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-error font-display text-sm font-semibold sm:text-base">
+              <p className="font-display text-sm font-semibold text-error sm:text-base">
                 Голосування видалено
               </p>
-              <p className="font-body text-error/80 mt-0.5 text-xs sm:text-sm">
+              <p className="font-body mt-0.5 text-xs text-error/80 sm:text-sm">
                 <span className="font-semibold">{election.deletedBy.fullName}</span>
                 {election.deletedAt && (
                   <>
@@ -143,26 +145,26 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <div className="space-y-6 xl:col-span-2">
             {isOpen && !isDeleted && (
-              <div className="border-success/20 bg-success-bg flex items-center gap-3 rounded-xl border p-4 sm:gap-4 sm:p-5">
-                <div className="bg-success flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12">
+              <div className="flex items-center gap-3 rounded-xl border border-success/20 bg-success-bg p-4 sm:gap-4 sm:p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success sm:h-12 sm:w-12">
                   <span className="relative flex h-3 w-3">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
                     <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-display text-success text-sm font-semibold sm:text-base">
+                  <p className="font-display text-sm font-semibold text-success sm:text-base">
                     Голосування активне
                   </p>
-                  <p className="font-body text-success/80 mt-0.5 text-xs sm:text-sm">
+                  <p className="font-body mt-0.5 text-xs text-success/80 sm:text-sm">
                     Завершується <LocalDateTime date={election.closesAt} />
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-display text-success text-2xl font-bold sm:text-3xl">
+                  <p className="font-display text-2xl font-bold text-success sm:text-3xl">
                     {election.ballotCount.toLocaleString('uk-UA')}
                   </p>
-                  <p className="font-body text-success/70 text-xs">
+                  <p className="font-body text-xs text-success/70">
                     {pluralize(election.ballotCount, ['бюлетень', 'бюлетені', 'бюлетенів'], false)}{' '}
                     подано
                   </p>
@@ -180,9 +182,9 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                 hideOwnVote
               />
             ) : (
-              <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-                <div className="border-border-subtle border-b px-4 py-4 sm:px-6">
-                  <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
+              <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+                <div className="border-b border-border-subtle px-4 py-4 sm:px-6">
+                  <h2 className="font-display text-base font-semibold text-foreground sm:text-lg">
                     Варіанти відповідей
                   </h2>
                 </div>
@@ -190,9 +192,9 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                   {election.choices.map((choice) => (
                     <div
                       key={choice.id}
-                      className="border-border-subtle bg-surface flex items-center gap-3 rounded-lg border p-3 sm:gap-4 sm:p-3.5"
+                      className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface p-3 sm:gap-4 sm:p-3.5"
                     >
-                      <span className="font-body text-foreground min-w-0 flex-1 text-sm wrap-break-word">
+                      <span className="font-body min-w-0 flex-1 text-sm wrap-break-word text-foreground">
                         {choice.choice}
                       </span>
                     </div>
@@ -212,7 +214,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
           </div>
 
           <div className="space-y-5">
-            <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
+            <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
               <div className="space-y-4 p-4 sm:p-5">
                 <TimelineItem
                   label="Створено"
@@ -264,7 +266,7 @@ export default async function AdminElectionDetailPage({ params }: AdminElectionP
                     election.anonymous ? (
                       'Анонімне голосування'
                     ) : (
-                      <span className="text-kpi-orange font-semibold">
+                      <span className="font-semibold text-kpi-orange">
                         Неанонімне — ПІБ голосуючих видимі під час голосування
                       </span>
                     )

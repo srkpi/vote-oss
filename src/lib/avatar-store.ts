@@ -27,7 +27,9 @@ const inFlight = new Set<string>();
 const listeners = new Set<() => void>();
 
 function notify(): void {
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 export function subscribeAvatars(listener: () => void): () => void {
@@ -53,12 +55,16 @@ export function primeAvatars(entries: Iterable<readonly [string, AvatarValue]>):
       changed = true;
     }
   }
-  if (changed) notify();
+  if (changed) {
+    notify();
+  }
 }
 
 /** Authoritatively set (or clear) a single user's avatar, e.g. after upload/delete. */
 export function setAvatar(userId: string, url: AvatarValue): void {
-  if (cache.get(userId) === url) return;
+  if (cache.get(userId) === url) {
+    return;
+  }
   cache.set(userId, url);
   notify();
 }
@@ -71,7 +77,9 @@ export function setAvatar(userId: string, url: AvatarValue): void {
  */
 export async function ensureAvatars(userIds: readonly string[]): Promise<void> {
   const missing = [...new Set(userIds)].filter((id) => !!id && !cache.has(id) && !inFlight.has(id));
-  if (missing.length === 0) return;
+  if (missing.length === 0) {
+    return;
+  }
 
   missing.forEach((id) => inFlight.add(id));
   try {
@@ -79,7 +87,9 @@ export async function ensureAvatars(userIds: readonly string[]): Promise<void> {
       const chunk = missing.slice(i, i + MAX_RESOLVE_AVATAR_URLS_PER_REQUEST);
       const result = await api.users.avatars(chunk);
       if (result.success) {
-        for (const id of chunk) cache.set(id, result.data.avatars[id] ?? null);
+        for (const id of chunk) {
+          cache.set(id, result.data.avatars[id] ?? null);
+        }
       }
       // On failure we simply leave those ids unresolved so a later call can
       // retry, instead of caching a transient failure as "no avatar".
@@ -102,7 +112,9 @@ function selfKey(userId: string): string {
 }
 
 export function primeSelfAvatarFromStorage(userId: string): void {
-  if (typeof window === 'undefined' || cache.has(userId)) return;
+  if (typeof window === 'undefined' || cache.has(userId)) {
+    return;
+  }
   try {
     const raw = localStorage.getItem(selfKey(userId));
     if (raw !== null) {
@@ -115,7 +127,9 @@ export function primeSelfAvatarFromStorage(userId: string): void {
 }
 
 function persistSelfAvatar(userId: string, url: AvatarValue): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   try {
     localStorage.setItem(selfKey(userId), url ?? '');
   } catch {

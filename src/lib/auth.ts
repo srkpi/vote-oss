@@ -68,7 +68,9 @@ export async function requireRefreshAuth(req: NextRequest): Promise<AuthFailure 
 
 export async function requireAdmin(req: NextRequest): Promise<AuthFailure | AuthAdminSuccess> {
   const auth = await requireAuth(req);
-  if (!auth.ok) return auth;
+  if (!auth.ok) {
+    return auth;
+  }
 
   const { user } = auth;
 

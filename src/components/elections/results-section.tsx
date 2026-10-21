@@ -31,9 +31,9 @@ export function ResultsSection({
 
   if (variant === 'admin') {
     return (
-      <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-        <div className="border-border-subtle flex items-center gap-3 border-b px-4 py-4 sm:px-6">
-          <h2 className="font-display text-foreground flex-1 text-base font-semibold sm:text-lg">
+      <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+        <div className="flex items-center gap-3 border-b border-border-subtle px-4 py-4 sm:px-6">
+          <h2 className="flex-1 font-display text-base font-semibold text-foreground sm:text-lg">
             {title}
           </h2>
           <Badge variant="secondary" size="md">
@@ -55,9 +55,9 @@ export function ResultsSection({
   }
 
   return (
-    <div className="border-border-color bg-card rounded-xl border p-6 shadow-sm">
+    <div className="border-border-color rounded-xl border bg-card p-6 shadow-sm">
       <div className="mb-5 flex items-center justify-between">
-        <h2 className="font-display text-foreground text-xl font-semibold">{title}</h2>
+        <h2 className="font-display text-xl font-semibold text-foreground">{title}</h2>
         {showSort && <SortChoicesButton value={sortOrder} onChange={setSortOrder} />}
       </div>
       <ResultsChart

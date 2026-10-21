@@ -1,6 +1,5 @@
 import type { Admin, InviteToken, InviteTokenRequest, InviteTokenResponse } from '@/types/admin';
 import type { ApiResult } from '@/types/api';
-import type { DiiaInitResponse } from '@/types/auth';
 import type { BallotsResponse } from '@/types/ballot';
 import type {
   CreateElectionBypassTokenRequest,
@@ -108,12 +107,6 @@ export function createApiClient(fetcher: Fetcher) {
           method: 'POST',
           body: JSON.stringify({ ticketId }),
         }),
-      diiaInit: () => fetcher<DiiaInitResponse>('/auth/diia/init', { method: 'POST' }),
-      diiaCheck: (requestId: string) =>
-        fetcher<{ status: 'success' | 'processing'; redirectTo?: string }>('/auth/diia/check', {
-          method: 'POST',
-          body: JSON.stringify({ requestId }),
-        }),
       refresh: () => fetcher<void>('/auth/refresh', { method: 'POST' }),
       logout: () => fetcher<void>('/auth/logout', { method: 'POST' }),
     },
@@ -121,8 +114,12 @@ export function createApiClient(fetcher: Fetcher) {
     elections: {
       list: (params?: { type?: 'ELECTION' | 'PETITION' | 'ALL'; sort?: 'createdAt' | 'votes' }) => {
         const search = new URLSearchParams();
-        if (params?.type) search.set('type', params.type);
-        if (params?.sort) search.set('sort', params.sort);
+        if (params?.type) {
+          search.set('type', params.type);
+        }
+        if (params?.sort) {
+          search.set('sort', params.sort);
+        }
         const qs = search.toString();
         return fetcher<ElectionsListResponse>(`/elections${qs ? `?${qs}` : ''}`);
       },
@@ -174,10 +171,18 @@ export function createApiClient(fetcher: Fetcher) {
           },
         ) => {
           const qs = new URLSearchParams();
-          if (opts?.cursor) qs.set('cursor', opts.cursor);
-          if (opts?.limit) qs.set('limit', String(opts.limit));
-          if (opts?.sort) qs.set('sort', opts.sort);
-          if (opts?.direction) qs.set('direction', opts.direction);
+          if (opts?.cursor) {
+            qs.set('cursor', opts.cursor);
+          }
+          if (opts?.limit) {
+            qs.set('limit', String(opts.limit));
+          }
+          if (opts?.sort) {
+            qs.set('sort', opts.sort);
+          }
+          if (opts?.direction) {
+            qs.set('direction', opts.direction);
+          }
           const query = qs.toString();
           return fetcher<CommentsListResponse>(
             `/elections/${electionId}/comments${query ? `?${query}` : ''}`,
@@ -212,8 +217,12 @@ export function createApiClient(fetcher: Fetcher) {
           opts?: { cursor?: string; limit?: number },
         ) => {
           const qs = new URLSearchParams();
-          if (opts?.cursor) qs.set('cursor', opts.cursor);
-          if (opts?.limit) qs.set('limit', String(opts.limit));
+          if (opts?.cursor) {
+            qs.set('cursor', opts.cursor);
+          }
+          if (opts?.limit) {
+            qs.set('limit', String(opts.limit));
+          }
           const query = qs.toString();
           return fetcher<CommentVotersResponse>(
             `/elections/${electionId}/comments/${commentId}/votes${query ? `?${query}` : ''}`,

@@ -77,14 +77,22 @@ export function CategoryCard({
       return;
     }
     let target = toIndex;
-    if (itemDragOverPosition === 'below') target = toIndex + 1;
-    if (itemDragIndex < target) target -= 1;
-    if (target !== itemDragIndex) onMoveItemTo(itemDragIndex, target);
+    if (itemDragOverPosition === 'below') {
+      target = toIndex + 1;
+    }
+    if (itemDragIndex < target) {
+      target -= 1;
+    }
+    if (target !== itemDragIndex) {
+      onMoveItemTo(itemDragIndex, target);
+    }
     handleItemDragEnd();
   };
 
   const handleCategoryDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!e.dataTransfer.types.includes('faq-category')) return;
+    if (!e.dataTransfer.types.includes('faq-category')) {
+      return;
+    }
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     // No position needed — we always show a single "insert before" line above
@@ -94,7 +102,7 @@ export function CategoryCard({
   return (
     <div className="relative">
       {isDragOver && (
-        <div className="bg-kpi-blue-light pointer-events-none absolute -top-px right-0 left-0 z-20 h-0.5 rounded-full" />
+        <div className="pointer-events-none absolute -top-px right-0 left-0 z-20 h-0.5 rounded-full bg-kpi-blue-light" />
       )}
 
       <div
@@ -107,12 +115,14 @@ export function CategoryCard({
           .join(' ')}
         onDragOver={handleCategoryDragOver}
         onDrop={(e) => {
-          if (!e.dataTransfer.types.includes('faq-category')) return;
+          if (!e.dataTransfer.types.includes('faq-category')) {
+            return;
+          }
           e.preventDefault();
           onCategoryDrop?.();
         }}
       >
-        <div className="border-border-subtle bg-surface flex items-center gap-2 border-b px-4 py-3.5 sm:px-5">
+        <div className="flex items-center gap-2 border-b border-border-subtle bg-surface px-4 py-3.5 sm:px-5">
           <div
             draggable
             onDragStart={(e) => {
@@ -133,16 +143,16 @@ export function CategoryCard({
             }}
             className="shrink-0 cursor-grab active:cursor-grabbing"
           >
-            <GripVertical className="text-kpi-gray-light hover:text-muted-foreground pointer-events-none h-4 w-4 transition-colors" />
+            <GripVertical className="pointer-events-none h-4 w-4 text-kpi-gray-light transition-colors hover:text-muted-foreground" />
           </div>
 
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="font-display text-foreground hover:text-kpi-navy min-w-0 flex-1 text-left text-base font-semibold transition-colors"
+            className="min-w-0 flex-1 text-left font-display text-base font-semibold text-foreground transition-colors hover:text-kpi-navy"
           >
             <span className="wrap-break-word">{category.title}</span>
-            <span className="font-body text-muted-foreground ml-2 text-xs font-normal">
+            <span className="font-body ml-2 text-xs font-normal text-muted-foreground">
               ({category.items.length})
             </span>
           </button>
@@ -153,7 +163,7 @@ export function CategoryCard({
               onClick={onMoveUp}
               disabled={isFirst}
               title="Вгору"
-              className="text-muted-foreground hover:text-foreground flex h-7 w-7 items-center justify-center rounded transition-colors disabled:opacity-30"
+              className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
             >
               <ChevronUp className="h-4 w-4" />
             </button>
@@ -162,7 +172,7 @@ export function CategoryCard({
               onClick={onMoveDown}
               disabled={isLast}
               title="Вниз"
-              className="text-muted-foreground hover:text-foreground flex h-7 w-7 items-center justify-center rounded transition-colors disabled:opacity-30"
+              className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
             >
               <ChevronDown className="h-4 w-4" />
             </button>
@@ -172,7 +182,7 @@ export function CategoryCard({
             type="button"
             onClick={onRename}
             title="Перейменувати"
-            className="text-muted-foreground hover:bg-surface-hover hover:text-foreground flex h-7 w-7 items-center justify-center rounded transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
           >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
@@ -180,14 +190,14 @@ export function CategoryCard({
             type="button"
             onClick={onDelete}
             title="Видалити"
-            className="text-muted-foreground hover:bg-error-bg hover:text-error flex h-7 w-7 items-center justify-center rounded transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-error-bg hover:text-error"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
 
         {!isCollapsed && (
-          <div className="divide-border-subtle divide-y">
+          <div className="divide-y divide-border-subtle">
             {category.items.map((item, idx) => (
               <FaqItemRow
                 key={item.id}

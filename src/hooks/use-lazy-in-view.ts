@@ -23,12 +23,16 @@ export function useLazyInView<T extends HTMLElement>(
   const [inView, setInView] = useState(eager);
 
   useEffect(() => {
-    if (eager || inView) return;
+    if (eager || inView) {
+      return;
+    }
     const node = ref.current;
-    if (!node) return;
+    if (!node) {
+      return;
+    }
 
     if (typeof IntersectionObserver === 'undefined') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setInView(true);
       return;
     }

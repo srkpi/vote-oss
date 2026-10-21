@@ -45,7 +45,9 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
   const [savingType, setSavingType] = useState(false);
 
   const filtered = (() => {
-    if (!search.trim()) return groups;
+    if (!search.trim()) {
+      return groups;
+    }
     const q = search.toLowerCase().trim();
     return groups.filter(
       (g) =>
@@ -56,7 +58,9 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
   })();
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
     const result = await api.groups.delete(deleteTarget.id);
     if (result.success) {
@@ -70,7 +74,9 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
   };
 
   const handleTypeChange = async () => {
-    if (!typeChange) return;
+    if (!typeChange) {
+      return;
+    }
     setSavingType(true);
     const result = await api.groups.setType(typeChange.group.id, typeChange.nextType);
     if (result.success) {
@@ -90,18 +96,18 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
   };
 
   return (
-    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-      <div className="border-border-subtle flex flex-col gap-4 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+      <div className="flex flex-col gap-4 border-b border-border-subtle px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="bg-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-kpi-navy">
             <Users className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
+            <h2 className="font-display text-base font-semibold text-foreground sm:text-lg">
               Групи
             </h2>
             {groups.length > 0 && (
-              <p className="font-body text-muted-foreground text-xs">
+              <p className="font-body text-xs text-muted-foreground">
                 {pluralize(groups.length, ['група в', 'групи в', 'груп у'])} системі
               </p>
             )}
@@ -135,20 +141,20 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
           <div className="hidden overflow-x-auto lg:block">
             <table className="w-full">
               <thead>
-                <tr className="border-border-subtle border-b">
+                <tr className="border-b border-border-subtle">
                   {['Назва', 'Тип', 'Власник', 'Учасники', ''].map((h) => (
                     <th
                       key={h}
-                      className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
+                      className="font-body px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-border-subtle divide-y">
+              <tbody className="divide-y divide-border-subtle">
                 {filtered.map((group) => (
-                  <tr key={group.id} className="hover:bg-surface group transition-colors">
+                  <tr key={group.id} className="group transition-colors hover:bg-surface">
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar
@@ -165,7 +171,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                                   : 'bg-kpi-gray-mid'),
                           )}
                         />
-                        <p className="font-body text-foreground max-w-xs truncate text-sm font-medium">
+                        <p className="font-body max-w-xs truncate text-sm font-medium text-foreground">
                           {group.name}
                         </p>
                       </div>
@@ -174,21 +180,23 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                       <GroupTypeSelect
                         value={group.type}
                         onChange={(nextType) => {
-                          if (nextType !== group.type) setTypeChange({ group, nextType });
+                          if (nextType !== group.type) {
+                            setTypeChange({ group, nextType });
+                          }
                         }}
                       />
                     </td>
                     <td className="px-4 py-3.5">
-                      <p className="font-body text-foreground text-sm">
+                      <p className="font-body text-sm text-foreground">
                         {group.ownerName ?? (
-                          <span className="text-muted-foreground font-mono text-xs">
+                          <span className="font-mono text-xs text-muted-foreground">
                             {group.ownerId}
                           </span>
                         )}
                       </p>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="font-body text-foreground text-sm">{group.memberCount}</span>
+                      <span className="font-body text-sm text-foreground">{group.memberCount}</span>
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -218,7 +226,7 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
             {filtered.map((group) => (
               <div
                 key={group.id}
-                className="border-border-color bg-card rounded-lg border p-4 shadow-sm"
+                className="border-border-color rounded-lg border bg-card p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -237,16 +245,16 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                       )}
                     />
                     <div>
-                      <p className="font-body text-foreground text-sm font-semibold">
+                      <p className="font-body text-sm font-semibold text-foreground">
                         {group.name}
                       </p>
                       <div className="mt-0.5 flex items-center gap-1">
-                        <Crown className="text-kpi-orange h-3 w-3" />
-                        <p className="font-body text-muted-foreground text-xs">
+                        <Crown className="h-3 w-3 text-kpi-orange" />
+                        <p className="font-body text-xs text-muted-foreground">
                           {group.ownerName ?? group.ownerId}
                         </p>
                       </div>
-                      <p className="font-body text-muted-foreground mt-0.5 text-xs">
+                      <p className="font-body mt-0.5 text-xs text-muted-foreground">
                         {pluralize(group.memberCount, ['учасник', 'учасники', 'учасників'])}
                       </p>
                     </div>
@@ -268,11 +276,13 @@ export function AdminGroupsClient({ initialGroups, error }: AdminGroupsClientPro
                   </div>
                 </div>
                 <div className="mt-3">
-                  <p className="text-muted-foreground mb-1 text-xs">Тип групи</p>
+                  <p className="mb-1 text-xs text-muted-foreground">Тип групи</p>
                   <GroupTypeSelect
                     value={group.type}
                     onChange={(nextType) => {
-                      if (nextType !== group.type) setTypeChange({ group, nextType });
+                      if (nextType !== group.type) {
+                        setTypeChange({ group, nextType });
+                      }
                     }}
                   />
                 </div>
@@ -348,7 +358,7 @@ interface GroupTypeSelectProps {
 function GroupTypeSelect({ value, onChange }: GroupTypeSelectProps) {
   return (
     <div className="inline-flex items-center gap-2">
-      {value === 'VKSU' && <ShieldCheck className="text-kpi-navy h-3.5 w-3.5" />}
+      {value === 'VKSU' && <ShieldCheck className="h-3.5 w-3.5 text-kpi-navy" />}
       <StyledSelect
         value={value}
         onChange={(v) => onChange(v as GroupType)}

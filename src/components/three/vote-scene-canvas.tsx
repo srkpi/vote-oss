@@ -112,8 +112,12 @@ function ResponsiveLogoMark({
 }: { visibility: LogoVisibility } & ComponentProps<typeof LogoMark>) {
   const width = useThree((state) => state.size.width);
 
-  if (visibility === 'never') return null;
-  if (visibility === 'desktop-only' && width < DESKTOP_BREAKPOINT_PX) return null;
+  if (visibility === 'never') {
+    return null;
+  }
+  if (visibility === 'desktop-only' && width < DESKTOP_BREAKPOINT_PX) {
+    return null;
+  }
 
   return <LogoMark {...logoProps} />;
 }
@@ -150,7 +154,9 @@ export function VoteSceneCanvas({
   });
 
   useEffect(() => {
-    if (!showEnhancements) return;
+    if (!showEnhancements) {
+      return;
+    }
     let innerRaf = 0;
     const outerRaf = requestAnimationFrame(() => {
       innerRaf = requestAnimationFrame(() => onFullyReadyRef.current?.());

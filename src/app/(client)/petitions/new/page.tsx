@@ -12,10 +12,12 @@ export const metadata: Metadata = {
 
 export default async function NewPetitionPage() {
   const session = await getServerSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <PageHeader
         nav={[{ label: 'Петиції', href: '/petitions' }, { label: 'Нова' }]}
         title="Нова петиція"
@@ -23,7 +25,7 @@ export default async function NewPetitionPage() {
         isContainer
       />
       <div className="container py-8">
-        <div className="border-border-color bg-card mx-auto max-w-2xl rounded-xl border p-6 shadow-sm sm:p-8">
+        <div className="border-border-color mx-auto max-w-2xl rounded-xl border bg-card p-6 shadow-sm sm:p-8">
           <CreatePetitionForm />
         </div>
       </div>

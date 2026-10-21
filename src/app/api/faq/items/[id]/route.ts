@@ -1,54 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin } from '@/lib/auth';
 import { invalidateFaq } from '@/lib/cache';
-import { FAQ_ITEM_CONTENT_MAX_LENGTH, FAQ_ITEM_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
-import { deltaToPlainText, parseQuillDelta } from '@/lib/utils/common';
+import { faqItemBodySchema } from '@/lib/schemas/faq';
 
-/**
- * @swagger
- * /api/faq/items/{id}:
- *   put:
- *     summary: Update a FAQ item
- *     description: >
- *       Replaces the title and content of an existing FAQ item. Content must
- *       be a valid serialised Quill Delta JSON string. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ item ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FaqItemCreateBody'
- *     responses:
- *       200:
- *         description: Item updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FaqItem'
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Item not found
- */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -62,41 +21,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
+  if (!id) {
+    return Errors.badRequest('id is required');
+  }
 
   const existing = await prisma.faqItem.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ item not found');
-
-  let body: { title?: string; content?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  if (!existing) {
+    return Errors.notFound('FAQ item not found');
   }
+
+  const parsedBody = await parseRequestBody(req, faqItemBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
 
   const { title, content } = body;
-
-  if (!title || typeof title !== 'string' || !title.trim()) {
-    return Errors.badRequest('title is required');
-  }
-  if (title.trim().length > FAQ_ITEM_TITLE_MAX_LENGTH) {
-    return Errors.badRequest(`title must be at most ${FAQ_ITEM_TITLE_MAX_LENGTH} characters`);
-  }
-
-  if (content === undefined || content === null || typeof content !== 'string') {
-    return Errors.badRequest('content is required');
-  }
-
-  if (!parseQuillDelta(content)) {
-    return Errors.badRequest('content must be a valid Quill Delta JSON string');
-  }
-
-  const plainText = deltaToPlainText(content);
-  if (plainText.length > FAQ_ITEM_CONTENT_MAX_LENGTH) {
-    return Errors.badRequest(
-      `content plain text must be at most ${FAQ_ITEM_CONTENT_MAX_LENGTH} characters`,
-    );
-  }
 
   const updated = await prisma.faqItem.update({
     where: { id },
@@ -127,33 +67,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 }
 
-/**
- * @swagger
- * /api/faq/items/{id}:
- *   delete:
- *     summary: Delete a FAQ item
- *     description: Permanently deletes the specified FAQ item. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ item ID
- *     responses:
- *       204:
- *         description: Item deleted
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Item not found
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -167,10 +80,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
+  if (!id) {
+    return Errors.badRequest('id is required');
+  }
 
   const existing = await prisma.faqItem.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ item not found');
+  if (!existing) {
+    return Errors.notFound('FAQ item not found');
+  }
 
   await prisma.faqItem.delete({ where: { id } });
 

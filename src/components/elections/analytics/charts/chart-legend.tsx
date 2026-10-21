@@ -3,16 +3,18 @@
 import type { LegendEntry } from '@/types/analytics-charts';
 
 export function InlineLegend({ entries }: { entries: LegendEntry[] }) {
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return null;
+  }
   return (
-    <div className="border-border-subtle flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t px-4 py-3 sm:px-6">
+    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-border-subtle px-4 py-3 sm:px-6">
       {entries.map((entry) => (
         <div key={entry.color + entry.label} className="flex items-center gap-1.5">
           <span
             className="h-2.5 w-2.5 shrink-0 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-muted-foreground max-w-40 truncate text-xs">{entry.label}</span>
+          <span className="max-w-40 truncate text-xs text-muted-foreground">{entry.label}</span>
         </div>
       ))}
     </div>
@@ -26,7 +28,9 @@ export function drawLegend(
   areaY: number,
   areaW: number,
 ): void {
-  if (entries.length === 0) return;
+  if (entries.length === 0) {
+    return;
+  }
 
   const DOT = 10;
   const GAP = 8;

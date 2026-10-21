@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'crypto';
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
@@ -18,83 +19,24 @@ import { isValidUuid } from '@/lib/utils/common';
 
 export const runtime = 'nodejs';
 
-/**
- * @swagger
- * /api/groups/{id}/avatar:
- *   put:
- *     summary: Upload or replace the group logo
- *     description: >
- *       Accepts a `multipart/form-data` request with a single `file` field.
- *       Atomically uploads the new logo to the object storage bucket, links
- *       it to the group in the database, and soft-deletes the previous logo
- *       file row (if any) followed by best-effort removal of the old object
- *       from storage. Only the group owner may call this endpoint.
- *
- *       Allowed MIME types: `image/png`, `image/jpeg`, `image/webp`,
- *       `image/gif`. SVG is intentionally rejected. The MIME type is detected
- *       from the file magic bytes regardless of the declared content-type.
- *
- *       Maximum file size is enforced by the server; the exact limit is
- *       configured via `AVATAR_MAX_SIZE_BYTES`.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Group UUID
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - file
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *                 description: Image file (PNG, JPEG, WebP, or GIF). Maximum size enforced server-side.
- *     responses:
- *       200:
- *         description: Logo uploaded and linked
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FileSummary'
- *       400:
- *         description: Missing or empty file field, or non-multipart request body
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not the group owner
- *       404:
- *         description: Group not found or soft-deleted
- *       413:
- *         description: File exceeds the maximum allowed size
- *       415:
- *         description: Unsupported file type or declared content-type does not match detected MIME type
- *       502:
- *         description: Object storage upload failed
- */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     select: { id: true, owner_id: true, deleted_at: true, logo_file_id: true },
   });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
   if (group.owner_id !== auth.user.sub) {
     return Errors.forbidden('Only the group owner can change the logo');
   }
@@ -225,50 +167,24 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-/**
- * @swagger
- * /api/groups/{id}/avatar:
- *   delete:
- *     summary: Remove the group logo
- *     description: >
- *       Unlinks the group logo by setting `logo_file_id` to null and
- *       soft-deletes the associated File row, followed by best-effort removal
- *       of the object from storage. A no-op (204) is returned if no logo is
- *       currently set. Only the group owner may call this endpoint.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Group UUID
- *     responses:
- *       204:
- *         description: Logo removed (or no logo was set)
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not the group owner
- *       404:
- *         description: Group not found or soft-deleted
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const group = await prisma.group.findUnique({
     where: { id: groupId },
     select: { id: true, owner_id: true, deleted_at: true, logo_file_id: true },
   });
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
   if (group.owner_id !== auth.user.sub) {
     return Errors.forbidden('Only the group owner can remove the logo');
   }
@@ -288,7 +204,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       where: { id: previousLogoId },
       select: { bucket: true, object_key: true, deleted_at: true },
     });
-    if (!prev || prev.deleted_at) return null;
+    if (!prev || prev.deleted_at) {
+      return null;
+    }
 
     await tx.file.update({
       where: { id: previousLogoId },

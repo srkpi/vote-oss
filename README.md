@@ -60,7 +60,7 @@
 | Layer                     | Technology                                                                                                                                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Framework**             | [Next.js 16](https://nextjs.org/) (App Router, React Server Components)                                                                                                                      |
-| **Language**              | [TypeScript 5](https://www.typescriptlang.org/)                                                                                                                                              |
+| **Language**              | [TypeScript 7](https://www.typescriptlang.org/)                                                                                                                                              |
 | **UI**                    | [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/) |
 | **Database**              | [PostgreSQL](https://www.postgresql.org/)                                                                                                                                                    |
 | **ORM**                   | [Prisma 7](https://www.prisma.io/) with `@prisma/adapter-pg`                                                                                                                                 |
@@ -70,10 +70,10 @@
 | **Cryptography**          | Node.js built-in `crypto` — RSA-2048 key generation, ECDSA signing, SHA-256 hashing                                                                                                          |
 | **Rich Text**             | [Quill](https://quilljs.com/) (Delta format)                                                                                                                                                 |
 | **Analytics**             | [PostHog](https://posthog.com/) (client-side + server-side, OpenTelemetry log export)                                                                                                        |
-| **API Docs**              | [next-swagger-doc](https://github.com/jellydn/next-swagger-doc) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                                         |
+| **API Docs**              | [@asteasolutions/zod-to-openapi](https://github.com/asteasolutions/zod-to-openapi) + [swagger-ui-react](https://www.npmjs.com/package/swagger-ui-react)                                      |
 | **Testing**               | [Jest 30](https://jestjs.io/), [ts-jest](https://github.com/kulshekhar/ts-jest), [Allure](https://allurereport.org/)                                                                         |
-| **Linting / Formatting**  | [ESLint 9](https://eslint.org/) (flat config), [Prettier](https://prettier.io/), [simple-import-sort](https://github.com/lydell/eslint-plugin-simple-import-sort)                            |
-| **Package Manager**       | [pnpm 11](https://pnpm.io/)                                                                                                                                                                  |
+| **Linting / Formatting**  | [Oxlint](https://oxc.rs/docs/guide/usage/linter) and [Oxfmt](https://oxc.rs/docs/guide/usage/formatter)                                                                                      |
+| **Package Manager**       | [pnpm 12](https://pnpm.io/)                                                                                                                                                                  |
 | **Containerisation**      | [Docker](https://www.docker.com/) (multi-stage build), [Caddy](https://caddyserver.com/) reverse proxy                                                                                       |
 | **CI/CD**                 | GitHub Actions                                                                                                                                                                               |
 
@@ -87,44 +87,44 @@ A Caddy reverse proxy sits in front of the app, routing `/files/*` to MinIO and 
 
 The application uses **PostgreSQL** as its primary database and connects to it through **Prisma ORM** using the `@prisma/adapter-pg` native driver adapter. The Prisma schema is located at [`prisma/schema.prisma`](prisma/schema.prisma).
 
-| Model                                  | Description                                                                                   |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `JwtToken`                             | Stores access/refresh JTI pairs for revocation tracking                                       |
-| `Admin`                                | Admin users with a self-referential hierarchy tree (`promoter` → `subordinates`)              |
-| `AdminInviteToken`                     | Hashed, time-limited, multi-use tokens for onboarding new admins                              |
-| `Election`                             | An election or petition with RSA key pair, open/close timestamps, and choice constraints      |
-| `ElectionRestriction`                  | Scoping rules attached to an election (faculty, group, study year, etc.)                      |
-| `ElectionChoice`                       | An individual answer option within an election                                                |
-| `IssuedToken`                          | Records which users have been issued a vote token (prevents double-token issuance)            |
-| `Ballot`                               | An encrypted, signed, chained ballot entry                                                    |
-| `UsedTokenNullifier`                   | SHA-256 hash of spent vote tokens (prevents double-voting)                                    |
-| `GlobalBypassToken`                    | Platform-level bypass tokens for students with access issues                                  |
-| `GlobalBypassTokenUsage`               | Per-user usage records for global bypass tokens                                               |
-| `ElectionBypassToken`                  | Election-scoped bypass tokens that waive specific restrictions                                |
-| `ElectionBypassTokenUsage`             | Per-user usage records for election bypass tokens                                             |
-| `FaqCategory`                          | A top-level FAQ section with an ordered position                                              |
-| `FaqItem`                              | A single Q&A entry inside a category, storing content as a Quill Delta JSON string            |
-| `Group`                                | A student group with ownership, requisites, and optional logo                                 |
-| `File`                                 | Object storage file record (MinIO bucket + key) for group logos                               |
-| `GroupMember`                          | Membership record linking a user to a group                                                   |
-| `GroupInviteLink`                      | Hashed invite link with usage cap and expiry for joining a group                              |
-| `GroupInviteLinkUsage`                 | Per-user usage records for group invite links                                                 |
-| `Protocol`                             | A meeting protocol with agenda, attendance, and an OSS snapshot                               |
-| `ProtocolAgendaItem`                   | A single agenda item, optionally linked to a closed election with a yes/no/abstain mapping    |
-| `ElectionCampaign`                     | Orchestrates a full election process through multiple phases                                  |
-| `ElectionCampaignRestriction`          | Eligibility restrictions inherited by all child entities of a campaign                        |
-| `CandidateRegistrationForm`            | A candidate registration form owned by a group                                                |
-| `CandidateRegistrationFormRestriction` | Per-form eligibility restriction                                                              |
-| `CandidateRegistration`                | A candidate's registration submission with status lifecycle                                   |
-| `TeamMemberInviteToken`                | Per-slot invite tokens for registrations that require a team                                  |
-| `UserProfile`                          | Stores information about user avatar, more settings will be in the future                     |
+| Model                                  | Description                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `JwtToken`                             | Stores access/refresh JTI pairs for revocation tracking                                    |
+| `Admin`                                | Admin users with a self-referential hierarchy tree (`promoter` → `subordinates`)           |
+| `AdminInviteToken`                     | Hashed, time-limited, multi-use tokens for onboarding new admins                           |
+| `Election`                             | An election or petition with RSA key pair, open/close timestamps, and choice constraints   |
+| `ElectionRestriction`                  | Scoping rules attached to an election (faculty, group, study year, etc.)                   |
+| `ElectionChoice`                       | An individual answer option within an election                                             |
+| `IssuedToken`                          | Records which users have been issued a vote token (prevents double-token issuance)         |
+| `Ballot`                               | An encrypted, signed, chained ballot entry                                                 |
+| `UsedTokenNullifier`                   | SHA-256 hash of spent vote tokens (prevents double-voting)                                 |
+| `GlobalBypassToken`                    | Platform-level bypass tokens for students with access issues                               |
+| `GlobalBypassTokenUsage`               | Per-user usage records for global bypass tokens                                            |
+| `ElectionBypassToken`                  | Election-scoped bypass tokens that waive specific restrictions                             |
+| `ElectionBypassTokenUsage`             | Per-user usage records for election bypass tokens                                          |
+| `FaqCategory`                          | A top-level FAQ section with an ordered position                                           |
+| `FaqItem`                              | A single Q&A entry inside a category, storing content as a Quill Delta JSON string         |
+| `Group`                                | A student group with ownership, requisites, and optional logo                              |
+| `File`                                 | Object storage file record (MinIO bucket + key) for group logos                            |
+| `GroupMember`                          | Membership record linking a user to a group                                                |
+| `GroupInviteLink`                      | Hashed invite link with usage cap and expiry for joining a group                           |
+| `GroupInviteLinkUsage`                 | Per-user usage records for group invite links                                              |
+| `Protocol`                             | A meeting protocol with agenda, attendance, and an OSS snapshot                            |
+| `ProtocolAgendaItem`                   | A single agenda item, optionally linked to a closed election with a yes/no/abstain mapping |
+| `ElectionCampaign`                     | Orchestrates a full election process through multiple phases                               |
+| `ElectionCampaignRestriction`          | Eligibility restrictions inherited by all child entities of a campaign                     |
+| `CandidateRegistrationForm`            | A candidate registration form owned by a group                                             |
+| `CandidateRegistrationFormRestriction` | Per-form eligibility restriction                                                           |
+| `CandidateRegistration`                | A candidate's registration submission with status lifecycle                                |
+| `TeamMemberInviteToken`                | Per-slot invite tokens for registrations that require a team                               |
+| `UserProfile`                          | Stores information about user avatar, more settings will be in the future                  |
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Node.js** ≥ 20
-- **pnpm** ≥ 10 (`npm install -g pnpm`)
+- **Node.js** 24.x (see `.nvmrc`)
+- **pnpm** 12.14.0 (`npm install -g pnpm@12.14.0`)
 - **Docker** and **Docker Compose** (for local dependencies)
 - Access to **KPI ID** — or use the included [Mock Integrations API](#mock-integrations-api) for local development
 
@@ -248,22 +248,22 @@ For local development there is a lightweight mock server that replaces the real 
 
 ### What it mocks
 
-| Real service    | Mock endpoint                               | Description                                                 |
-| --------------- | ------------------------------------------- | ----------------------------------------------------------- |
-| KPI ID ticket   | `GET /api/ticket`                           | Returns synthetic user info for a given ticket ID           |
-| Campus student  | `GET /api/integration/voteoss/students/:id` | Returns synthetic academic data                             |
-| Campus groups   | `GET /group/all`                            | Returns real KPI faculty/group structure from `groups.json` |
+| Real service   | Mock endpoint                               | Description                                                 |
+| -------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| KPI ID ticket  | `GET /api/ticket`                           | Returns synthetic user info for a given ticket ID           |
+| Campus student | `GET /api/integration/voteoss/students/:id` | Returns synthetic academic data                             |
+| Campus groups  | `GET /group/all`                            | Returns real KPI faculty/group structure from `groups.json` |
 
 ### Dynamic ticket IDs
 
 The same ticket always returns the same student — results are hash-seeded and stateless.
 
-| Ticket          | Resolves to                                                |
-| --------------- | ---------------------------------------------------------- |
-| `s1` … `s100`   | A random student from any faculty                          |
-| `s1@ФІОТ`       | A student whose group belongs to the ФІОТ faculty          |
-| `s7@КА-31`      | A student in group КА-31 specifically                      |
-| `s3@ФЕЛ`        | A student whose group belongs to the ФЕЛ faculty           |
+| Ticket        | Resolves to                                       |
+| ------------- | ------------------------------------------------- |
+| `s1` … `s100` | A random student from any faculty                 |
+| `s1@ФІОТ`     | A student whose group belongs to the ФІОТ faculty |
+| `s7@КА-31`    | A student in group КА-31 specifically             |
+| `s3@ФЕЛ`      | A student whose group belongs to the ФЕЛ faculty  |
 
 ### Predefined edge-case tickets
 
@@ -286,29 +286,29 @@ curl http://localhost:3001/students | jq .
 
 ## Scripts
 
-| Command                 | Description                                             |
-| ----------------------- | ------------------------------------------------------- |
-| `pnpm dev`              | Generate OpenAPI spec, then start Next.js in dev mode   |
-| `pnpm build`            | Generate OpenAPI spec, then build for production        |
-| `pnpm start`            | Start the production server                             |
-| `pnpm lint`             | Run ESLint across the entire codebase                   |
-| `pnpm type-check`       | Run TypeScript type checking without emitting files     |
-| `pnpm format`           | Format all files with Prettier                          |
-| `pnpm format:check`     | Check formatting without writing changes                |
-| `pnpm test`             | Run the Jest test suite                                 |
-| `pnpm test:watch`       | Run Jest in watch mode                                  |
-| `pnpm test:coverage`    | Run Jest and collect coverage reports                   |
-| `pnpm test:ci`          | Run Jest in CI mode (no watch, force exit)              |
-| `pnpm allure:generate`  | Generate an Allure HTML report from test results        |
-| `pnpm allure:open`      | Open the generated Allure report in a browser           |
-| `pnpm allure:serve`     | Serve Allure results interactively                      |
-| `pnpm db:migrate`       | Run Prisma migrations (dev — with prompts)              |
-| `pnpm db:migrate:prod`  | Run Prisma migrations (production — no prompts)         |
-| `pnpm db:generate`      | Regenerate the Prisma client after schema changes       |
-| `pnpm db:studio`        | Launch Prisma Studio                                    |
-| `pnpm db:reset`         | Reset the database and re-run all migrations            |
-| `pnpm db:seed`          | Seed the database with a test admin and invite token    |
-| `pnpm generate:openapi` | Regenerate `public/openapi.json` from JSDoc annotations |
+| Command                 | Description                                                   |
+| ----------------------- | ------------------------------------------------------------- |
+| `pnpm dev`              | Generate OpenAPI spec, then start Next.js in dev mode         |
+| `pnpm build`            | Generate OpenAPI spec, then build for production              |
+| `pnpm start`            | Start the production server                                   |
+| `pnpm lint`             | Run Oxlint across the entire codebase                         |
+| `pnpm type-check`       | Run TypeScript type checking without emitting files           |
+| `pnpm format`           | Format all files with Oxfmt                                   |
+| `pnpm format:check`     | Check formatting without writing changes                      |
+| `pnpm test`             | Run the Jest test suite                                       |
+| `pnpm test:watch`       | Run Jest in watch mode                                        |
+| `pnpm test:coverage`    | Run Jest and collect coverage reports                         |
+| `pnpm test:ci`          | Run Jest in CI mode (no watch, force exit)                    |
+| `pnpm allure:generate`  | Generate an Allure HTML report from test results              |
+| `pnpm allure:open`      | Open the generated Allure report in a browser                 |
+| `pnpm allure:serve`     | Serve Allure results interactively                            |
+| `pnpm db:migrate`       | Run Prisma migrations (dev — with prompts)                    |
+| `pnpm db:migrate:prod`  | Run Prisma migrations (production — no prompts)               |
+| `pnpm db:generate`      | Regenerate the Prisma client after schema changes             |
+| `pnpm db:studio`        | Launch Prisma Studio                                          |
+| `pnpm db:reset`         | Reset the database and re-run all migrations                  |
+| `pnpm db:seed`          | Seed the database with a test admin and invite token          |
+| `pnpm generate:openapi` | Regenerate `public/openapi.json` from typed route definitions |
 
 ## Testing
 
@@ -387,7 +387,7 @@ Three GitHub Actions workflows are included:
 #### `lint.yml` — runs on every push and pull request
 
 - Runs TypeScript type checking (`pnpm type-check`)
-- Runs ESLint (`pnpm lint`)
+- Runs Oxlint (`pnpm lint`)
 
 #### `tests.yml` — runs on pushes to `dev`/`main` and pull requests
 
@@ -411,11 +411,11 @@ Build-time environment variables (`NEXT_PUBLIC_*`) are sourced from GitHub Actio
 
 The following endpoints must be called on a schedule. Protect each with `Authorization: Bearer <CRON_SECRET>`.
 
-| Endpoint                        | Recommended schedule | Purpose                                                   |
-| ------------------------------- | -------------------- | --------------------------------------------------------- |
-| `POST /api/cron/cleanup-tokens` | Weekly               | Delete expired JWT token rows from the database           |
-| `POST /api/cron/cleanup-bypass` | Weekly               | Delete expired global bypass token records                |
-| `POST /api/cron/campaign-tick`  | Every 5–15 minutes   | Advance election campaigns through their state machine    |
+| Endpoint                        | Recommended schedule | Purpose                                                |
+| ------------------------------- | -------------------- | ------------------------------------------------------ |
+| `POST /api/cron/cleanup-tokens` | Weekly               | Delete expired JWT token rows from the database        |
+| `POST /api/cron/cleanup-bypass` | Weekly               | Delete expired global bypass token records             |
+| `POST /api/cron/campaign-tick`  | Every 5–15 minutes   | Advance election campaigns through their state machine |
 
 Example:
 
@@ -426,7 +426,7 @@ curl -X POST https://voteoss.kpi.ua/api/cron/campaign-tick \
 
 ## API Documentation
 
-The full OpenAPI 3.0 specification is auto-generated from JSDoc `@swagger` annotations at build time and written to `public/openapi.json`.
+The OpenAPI 3.0 specification is generated from typed route registrations and shared Zod schemas at build time and written to `public/openapi.json`.
 
 **Interactive Swagger UI:** [https://voteoss.kpi.ua/docs](https://voteoss.kpi.ua/docs)
 
@@ -496,3 +496,9 @@ Global bypass tokens grant platform access to students who fail eligibility chec
 ## License
 
 This project is open source. See the [LICENSE](LICENSE) file for details.
+
+### Shared validation
+
+Request bodies, external API responses, and environment values are validated with Zod schemas in `src/lib/schemas/`. FAQ, petition creation, and admin join forms use React Hook Form with `@hookform/resolvers/zod` to share validation rules with the server.
+
+API documentation is defined in `src/lib/openapi/routes/`, with reusable models in `src/lib/openapi/components.ts` and shared Zod schemas registered in `src/lib/openapi/schemas.ts`. Add each handler method, path, parameters, security requirements, and responses to its matching route module.

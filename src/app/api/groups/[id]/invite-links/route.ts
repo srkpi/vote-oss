@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import {
   GROUP_INVITE_LINK_LABEL_MAX_LENGTH,
@@ -13,6 +14,7 @@ import {
 import { generateBase64Token, hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { groupInviteBodySchema } from '@/lib/schemas/group';
 import { isValidUuid } from '@/lib/utils/common';
 
 function canManageLinks(
@@ -59,51 +61,16 @@ function mapLink(link: {
   };
 }
 
-/**
- * @swagger
- * /api/groups/{id}/invite-links:
- *   get:
- *     summary: List invite links for a group
- *     description: >
- *       Returns all invite links for the group — both active and revoked — so
- *       the owner can review the full history. Only the group owner or an
- *       admin with `manage_groups` may access this endpoint.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Group UUID
- *     responses:
- *       200:
- *         description: Array of invite links ordered by creation date descending
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/GroupInviteLink'
- *       400:
- *         description: Invalid group UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is neither the group owner nor an admin with manage_groups
- *       404:
- *         description: Group not found or soft-deleted
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
 
@@ -112,7 +79,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   if (!canManageLinks(auth.user.sub, group.owner_id, isAdminWithManageGroups)) {
     return Errors.forbidden('Only the group owner can manage invite links');
@@ -142,80 +111,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json(links.map(mapLink));
 }
 
-/**
- * @swagger
- * /api/groups/{id}/invite-links:
- *   post:
- *     summary: Create a new invite link for the group
- *     description: >
- *       Generates a new invite link with the specified usage cap and expiry.
- *       The raw token is returned exactly once (in the `token` field) and
- *       is not stored; only its hash is persisted. Only the group owner or
- *       an admin with `manage_groups` may create links. A group may have at
- *       most `GROUP_INVITE_LINK_MAX_ACTIVE` active links simultaneously.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Group UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - maxUsage
- *               - expiresAt
- *             properties:
- *               label:
- *                 type: string
- *                 description: Optional human-readable label for the link (e.g. "Freshers 2024").
- *               maxUsage:
- *                 type: integer
- *                 minimum: 1
- *                 description: Maximum number of times this link may be used to join the group.
- *               expiresAt:
- *                 type: string
- *                 format: date-time
- *                 description: Expiry timestamp. Must be at least 1 hour and at most the configured maximum days in the future.
- *     responses:
- *       201:
- *         description: Invite link created – raw token returned here only
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/GroupInviteLink'
- *                 - type: object
- *                   required:
- *                     - token
- *                   properties:
- *                     token:
- *                       type: string
- *                       description: Raw (unhashed) invite token. Share this with prospective members; it is not stored on the server.
- *       400:
- *         description: Validation error or the group already has the maximum number of active invite links
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is neither the group owner nor an admin with manage_groups
- *       404:
- *         description: Group not found or soft-deleted
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
 
@@ -224,24 +129,29 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     select: { owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   if (!canManageLinks(auth.user.sub, group.owner_id, isAdminWithManageGroups)) {
     return Errors.forbidden('Only the group owner can create invite links');
   }
 
-  let body: { label?: string; maxUsage?: number; expiresAt?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupInviteBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { label, maxUsage, expiresAt } = body;
 
-  if (!expiresAt) return Errors.badRequest('expiresAt is required');
+  if (!expiresAt) {
+    return Errors.badRequest('expiresAt is required');
+  }
   const expiresAtDate = new Date(expiresAt);
-  if (isNaN(expiresAtDate.getTime())) return Errors.badRequest('Invalid expiresAt date');
+  if (isNaN(expiresAtDate.getTime())) {
+    return Errors.badRequest('Invalid expiresAt date');
+  }
 
   const now = new Date();
   const minDate = new Date(now.getTime() + GROUP_INVITE_LINK_MIN_HOURS * 60 * 60 * 1000);

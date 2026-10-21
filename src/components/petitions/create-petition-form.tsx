@@ -1,7 +1,10 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useTransition } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import type { z } from 'zod';
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -14,33 +17,33 @@ import {
   PETITION_TEXT_MAX_LENGTH,
   PETITION_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
+import { petitionSubmissionSchema } from '@/lib/schemas/election';
 
 export function CreatePetitionForm() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isNavigating, startTransition] = useTransition();
+  const {
+    register,
+    control,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof petitionSubmissionSchema>>({
+    resolver: zodResolver(petitionSubmissionSchema),
+    mode: 'onChange',
+    defaultValues: { title: '', description: '' },
+  });
+  const [title, description] = useWatch({ control, name: ['title', 'description'] });
+  const loading = isSubmitting || isNavigating;
+  const error = errors.root?.message;
 
-  const canSubmit =
-    title.trim().length > 0 &&
-    description.trim().length > 0 &&
-    title.length <= PETITION_TITLE_MAX_LENGTH &&
-    description.length <= PETITION_TEXT_MAX_LENGTH;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-
-    setLoading(true);
-    setError(null);
-
+  const submitPetition = handleSubmit(async (values) => {
     const res = await api.elections.create({
       type: 'PETITION',
-      title: title.trim(),
-      description: description.trim(),
+      ...values,
     });
 
     if (res.success) {
@@ -51,18 +54,19 @@ export function CreatePetitionForm() {
           : 'Очікує апруву адміністратором.',
         variant: 'success',
       });
-      router.push(`/petitions/${res.data.id}`);
-      router.refresh();
+      startTransition(() => {
+        router.push(`/petitions/${res.data.id}`);
+        router.refresh();
+      });
     } else {
-      setError(res.error);
-      setLoading(false);
+      setError('root', { message: res.error });
     }
-  };
+  });
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={submitPetition} noValidate className="space-y-5">
       {error && (
-        <Alert variant="error" onDismiss={() => setError(null)}>
+        <Alert variant="error" onDismiss={() => clearErrors('root')}>
           {error}
         </Alert>
       )}
@@ -71,23 +75,25 @@ export function CreatePetitionForm() {
         Кворум — {PETITION_QUORUM} підписів. Діє 1 місяць від апруву адміністратором.
       </Alert>
 
-      <FormField label="Назва петиції" required htmlFor="title">
+      <FormField label="Назва петиції" required htmlFor="title" error={errors.title?.message}>
         <Input
           id="title"
-          value={title}
+          {...register('title')}
           maxLength={PETITION_TITLE_MAX_LENGTH}
-          onChange={(e) => setTitle(e.target.value)}
+          error={!!errors.title}
+          disabled={loading}
           placeholder="Коротко сформулюйте суть петиції"
         />
         <CharCounter value={title.length} max={PETITION_TITLE_MAX_LENGTH} />
       </FormField>
 
-      <FormField label="Опис" required htmlFor="description">
+      <FormField label="Опис" required htmlFor="description" error={errors.description?.message}>
         <Textarea
           id="description"
-          value={description}
+          {...register('description')}
           maxLength={PETITION_TEXT_MAX_LENGTH}
-          onChange={(e) => setDescription(e.target.value)}
+          error={!!errors.description}
+          disabled={loading}
           placeholder="Детально опишіть проблему та пропозицію"
           rows={8}
         />
@@ -98,7 +104,7 @@ export function CreatePetitionForm() {
         <Button type="button" variant="secondary" onClick={() => router.back()} disabled={loading}>
           Скасувати
         </Button>
-        <Button type="submit" variant="accent" loading={loading} disabled={!canSubmit}>
+        <Button type="submit" variant="accent" loading={loading}>
           Створити петицію
         </Button>
       </div>

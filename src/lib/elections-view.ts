@@ -37,8 +37,12 @@ export function computeStatus(opensAt: string | Date, closesAt: string | Date): 
   const open = typeof opensAt === 'string' ? new Date(opensAt).getTime() : opensAt.getTime();
   const close = typeof closesAt === 'string' ? new Date(closesAt).getTime() : closesAt.getTime();
 
-  if (now < open) return 'upcoming';
-  if (now <= close) return 'open';
+  if (now < open) {
+    return 'upcoming';
+  }
+  if (now <= close) {
+    return 'open';
+  }
   return 'closed';
 }
 
@@ -51,10 +55,14 @@ export function buildTallyResults(
   ballotCount: number,
   conditions: WinningConditions,
 ): TallyResult[] | null {
-  if (choices.some((c) => c.voteCount === null)) return null;
+  if (choices.some((c) => c.voteCount === null)) {
+    return null;
+  }
 
   const tally: Record<string, number> = {};
-  for (const c of choices) tally[c.id] = c.voteCount!;
+  for (const c of choices) {
+    tally[c.id] = c.voteCount!;
+  }
 
   const winners = computeWinners(tally, ballotCount, conditions);
 
@@ -118,10 +126,14 @@ export function toClientElections(
 
   return cached
     .filter((e) => {
-      if (typeFilter && typeFilter !== 'ALL' && e.type !== typeFilter) return false;
+      if (typeFilter && typeFilter !== 'ALL' && e.type !== typeFilter) {
+        return false;
+      }
 
       const isDeleted = !!e.deletedAt;
-      if (!isAdmin && isDeleted) return false;
+      if (!isAdmin && isDeleted) {
+        return false;
+      }
 
       // Petitions: unapproved petitions are only visible to admins with
       // manage_petitions.  Approved petitions follow normal access rules (they
@@ -130,7 +142,9 @@ export function toClientElections(
         return isPetitionManager;
       }
 
-      if (isAdmin && !isAdminRestricted) return true;
+      if (isAdmin && !isAdminRestricted) {
+        return true;
+      }
       if (isAdmin && isAdminRestricted) {
         return adminCanAccessElection(user.faculty, e.restrictions);
       }

@@ -9,7 +9,9 @@ export const buildMarginMetric: MetricBuilder = ({
   choiceCount,
   decryptionDone,
 }) => {
-  if (!decryptionDone || choiceCount < 2 || metrics.leadingMargin === null) return null;
+  if (!decryptionDone || choiceCount < 2 || metrics.leadingMargin === null) {
+    return null;
+  }
 
   const lm = metrics.leadingMargin;
 

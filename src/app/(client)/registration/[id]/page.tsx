@@ -20,17 +20,23 @@ export async function generateMetadata({ params }: RegistrationFormPageProps): P
 }
 
 export default async function RegistrationFormPage({ params }: RegistrationFormPageProps) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   const { id } = await params;
   const { data, status } = await serverApi.registrationForms.get(id);
-  if (status === 404 || !data) notFound();
+  if (status === 404 || !data) {
+    notFound();
+  }
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <RegistrationFormClient initial={data} />
     </div>
   );

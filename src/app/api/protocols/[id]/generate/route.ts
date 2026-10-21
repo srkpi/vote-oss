@@ -6,6 +6,7 @@ import { PROTOCOL_GENERATOR_URL, PROTOCOL_TEMPLATE_ID } from '@/lib/config/serve
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { buildGeneratorPayload } from '@/lib/protocols';
+import { documentContentTypeSchema } from '@/lib/schemas/external';
 import { isValidUuid } from '@/lib/utils/common';
 
 function sanitizeFilename(name: string, fallback: string): string {
@@ -17,64 +18,16 @@ function sanitizeFilename(name: string, fallback: string): string {
   return cleaned.length > 0 ? cleaned : fallback;
 }
 
-/**
- * @swagger
- * /api/protocols/{id}/generate:
- *   post:
- *     summary: Generate the protocol PDF via the external document generator
- *     description: >
- *       Calls the external KPI docs generator service with the full protocol
- *       payload and streams the resulting PDF binary directly to the client.
- *       No PDF is stored on this server; each call produces a fresh render.
- *       Any authenticated user may generate the PDF for a non-deleted protocol.
- *
- *       The endpoint performs a pre-flight check and returns 400 if:
- *         - The group's requisites are incomplete (all four fields — name,
- *           address, email, contact — must be non-null).
- *         - The protocol has no responsibles.
- *         - The protocol has no agenda items.
- *     tags:
- *       - Protocols
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Protocol UUID
- *     responses:
- *       200:
- *         description: PDF binary stream
- *         content:
- *           application/pdf:
- *             schema:
- *               type: string
- *               format: binary
- *         headers:
- *           Content-Disposition:
- *             description: Attachment filename derived from the protocol number and date.
- *             schema:
- *               type: string
- *       400:
- *         description: >
- *           Invalid UUID, group requisites incomplete, no responsibles, or no
- *           agenda items.
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Protocol not found, soft-deleted, or its group is soft-deleted
- *       502:
- *         description: Failed to contact the external document generator or the generator returned an error
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid protocol id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid protocol id');
+  }
 
   const protocol = await prisma.protocol.findUnique({
     where: { id },
@@ -142,7 +95,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     );
   }
 
-  const contentType = response.headers.get('content-type') ?? 'application/pdf';
+  const contentTypeResult = documentContentTypeSchema.safeParse(
+    response.headers.get('content-type') ?? 'application/pdf',
+  );
+  if (!contentTypeResult.success || !response.body) {
+    await response.body?.cancel();
+    return NextResponse.json({ message: 'Генератор не повернув PDF документ' }, { status: 502 });
+  }
+  const contentType = contentTypeResult.data;
   const baseName = protocol.number
     ? `Protocol_No${protocol.number}_${protocol.date.toISOString().slice(0, 10)}`
     : `Protocol_${protocol.date.toISOString().slice(0, 10)}`;

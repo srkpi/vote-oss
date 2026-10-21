@@ -50,9 +50,13 @@ export function ElectionsMobileFiltersSheet({
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -61,7 +65,9 @@ export function ElectionsMobileFiltersSheet({
   // Land back on the section list next time the sheet opens, once the
   // close animation has had time to finish (avoids a visible jump-cut).
   useEffect(() => {
-    if (open) return;
+    if (open) {
+      return;
+    }
     const t = setTimeout(() => setActiveKey(null), 300);
     return () => clearTimeout(t);
   }, [open]);
@@ -85,13 +91,11 @@ export function ElectionsMobileFiltersSheet({
             transition={{ duration: 0.2 }}
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
-            aria-hidden="true"
           />
 
           <motion.div
             role="dialog"
-            aria-modal="true"
-            aria-label="Фільтри"
+
             drag="y"
             dragControls={dragControls}
             dragListener={false}
@@ -103,7 +107,7 @@ export function ElectionsMobileFiltersSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 34, stiffness: 340 }}
-            className="bg-card relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl shadow-2xl"
+            className="relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl bg-card shadow-2xl"
           >
             {/* Handle + header. Only the handle itself starts the drag gesture,
                 so the back/close buttons below always receive their taps. */}
@@ -111,9 +115,8 @@ export function ElectionsMobileFiltersSheet({
               <div
                 onPointerDown={(e) => dragControls.start(e)}
                 className="flex touch-none justify-center py-2.5 active:cursor-grabbing"
-                aria-hidden="true"
               >
-                <div className="bg-border h-1.5 w-10 rounded-full" />
+                <div className="h-1.5 w-10 rounded-full bg-border" />
               </div>
 
               <div className="px-4 pb-3">
@@ -121,13 +124,13 @@ export function ElectionsMobileFiltersSheet({
                   <button
                     type="button"
                     onClick={() => setActiveKey(null)}
-                    className="text-foreground hover:bg-surface -ml-1.5 flex items-center gap-1 rounded-full py-1.5 pr-3 pl-1.5 text-sm font-semibold transition-colors"
+                    className="-ml-1.5 flex items-center gap-1 rounded-full py-1.5 pr-3 pl-1.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     {activeSection.title}
                   </button>
                 ) : (
-                  <h2 className="font-display text-foreground pl-1.5 text-base font-semibold">
+                  <h2 className="pl-1.5 font-display text-base font-semibold text-foreground">
                     Фільтри
                   </h2>
                 )}
@@ -158,7 +161,7 @@ export function ElectionsMobileFiltersSheet({
                     transition={{ duration: 0.15 }}
                     className="px-2 pb-3"
                   >
-                    <div className="divide-border-subtle divide-y">
+                    <div className="divide-y divide-border-subtle">
                       {sections.map((section) => (
                         <SectionRow
                           key={section.key}
@@ -179,7 +182,7 @@ export function ElectionsMobileFiltersSheet({
             </div>
 
             {/* Footer CTA — always reachable, never dependent on scroll position. */}
-            <div className="border-border-subtle shrink-0 border-t px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="shrink-0 border-t border-border-subtle px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <Button variant="primary" fullWidth size="lg" onClick={onClose}>
                 Показати {pluralize(totalCount, ['голосування', 'голосування', 'голосувань'])}
               </Button>
@@ -202,25 +205,25 @@ function SectionRow({ section, onOpen }: { section: ElectionsFilterSection; onOp
     <button
       type="button"
       onClick={onOpen}
-      className="hover:bg-surface active:bg-surface flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors"
+      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-surface active:bg-surface"
     >
       <span className="min-w-0 flex-1">
-        <span className="text-foreground block truncate text-sm font-medium">{section.title}</span>
+        <span className="block truncate text-sm font-medium text-foreground">{section.title}</span>
         <span
           className={cn(
             'mt-0.5 block truncate text-xs',
-            isActive ? 'text-kpi-navy font-medium' : 'text-muted-foreground',
+            isActive ? 'font-medium text-kpi-navy' : 'text-muted-foreground',
           )}
         >
           {summary}
         </span>
       </span>
       {badge !== null && (
-        <span className="bg-kpi-navy/10 text-kpi-navy shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
+        <span className="shrink-0 rounded-full bg-kpi-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-kpi-navy tabular-nums">
           {badge}
         </span>
       )}
-      <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
     </button>
   );
 }
@@ -257,21 +260,20 @@ function OptionList({
       {showSearch && (
         <div className="px-4 pb-2">
           <div className="relative">
-            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2" />
+            <Search className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               autoFocus
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Пошук…"
-              className="font-body border-border-color bg-surface placeholder:text-subtle focus:border-kpi-blue-light h-10 w-full rounded-lg border py-1 pr-9 pl-9 text-sm focus:outline-none"
+              className="font-body border-border-color h-10 w-full rounded-lg border bg-surface py-1 pr-9 pl-9 text-sm placeholder:text-subtle focus:border-kpi-blue-light focus:outline-none"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-                aria-label="Очистити пошук"
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -281,7 +283,7 @@ function OptionList({
       )}
 
       {filtered.length === 0 ? (
-        <p className="text-muted-foreground px-5 py-10 text-center text-sm">Нічого не знайдено</p>
+        <p className="px-5 py-10 text-center text-sm text-muted-foreground">Нічого не знайдено</p>
       ) : (
         <div className="px-2 pb-2">
           {filtered.map((opt) => (
@@ -296,11 +298,11 @@ function OptionList({
       )}
 
       {section.kind === 'multi' && section.value.length > 0 && (
-        <div className="border-border-subtle border-t p-3">
+        <div className="border-t border-border-subtle p-3">
           <button
             type="button"
             onClick={() => section.onChange([])}
-            className="font-body text-muted-foreground hover:bg-surface hover:text-foreground w-full rounded-md px-2 py-2 text-center text-xs transition-colors"
+            className="font-body w-full rounded-md px-2 py-2 text-center text-xs text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
           >
             Скинути вибір
           </button>
@@ -332,7 +334,7 @@ function OptionRow({
       onClick={onPick}
       className={cn(
         'font-body flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3 text-left text-sm transition-colors',
-        isSelected ? 'bg-kpi-navy/5 text-kpi-navy font-medium' : 'text-foreground',
+        isSelected ? 'bg-kpi-navy/5 font-medium text-kpi-navy' : 'text-foreground',
         !isSelected && !isDisabled && 'hover:bg-surface active:bg-surface',
         isDisabled && 'cursor-not-allowed opacity-35',
       )}
@@ -354,7 +356,7 @@ function OptionRow({
               isSelected ? 'border-kpi-navy' : 'border-border-color',
             )}
           >
-            {isSelected && <span className="bg-kpi-navy h-2.5 w-2.5 rounded-full" />}
+            {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-kpi-navy" />}
           </span>
         )}
         <span className="truncate">{option.label}</span>

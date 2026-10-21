@@ -51,11 +51,11 @@ function TokenResult({ token }: { token: string }) {
         Поділіться посиланням зі студентом.
       </Alert>
       <div>
-        <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
+        <p className="font-body mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Посилання
         </p>
         <div className="flex items-center gap-2">
-          <div className="bg-surface flex-1 overflow-hidden rounded border p-2.5">
+          <div className="flex-1 overflow-hidden rounded border bg-surface p-2.5">
             <p className="font-mono text-xs break-all select-all">{link}</p>
           </div>
           <Button
@@ -68,11 +68,11 @@ function TokenResult({ token }: { token: string }) {
         </div>
       </div>
       <div>
-        <p className="font-body text-muted-foreground mb-1.5 text-xs font-semibold tracking-wider uppercase">
+        <p className="font-body mb-1.5 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           Токен
         </p>
         <div className="flex items-center gap-2">
-          <div className="bg-surface flex-1 overflow-hidden rounded border p-2.5">
+          <div className="flex-1 overflow-hidden rounded border bg-surface p-2.5">
             <p className="font-mono text-xs break-all select-all">{token}</p>
           </div>
           <Button
@@ -108,22 +108,22 @@ function BypassTokenItem({
 
   return (
     <div
-      className={`border-border-color bg-card overflow-hidden rounded-lg border ${isDeleted ? 'opacity-60' : ''}`}
+      className={`border-border-color overflow-hidden rounded-lg border bg-card ${isDeleted ? 'opacity-60' : ''}`}
     >
       <div className="flex items-center justify-between gap-3 p-3 sm:p-4">
         <div className="min-w-0 flex-1">
-          <p className="font-body text-foreground text-sm">{bypassLabel}</p>
-          <p className="font-body text-muted-foreground text-xs">{token.creator.fullName}</p>
-          <p className="font-body text-muted-foreground text-xs">
+          <p className="font-body text-sm text-foreground">{bypassLabel}</p>
+          <p className="font-body text-xs text-muted-foreground">{token.creator.fullName}</p>
+          <p className="font-body text-xs text-muted-foreground">
             Використань: {token.currentUsage} / {token.maxUsage}
           </p>
           {isDeleted && (
             <>
-              <p className="font-body text-error text-xs">
+              <p className="font-body text-xs text-error">
                 Видалено: <LocalDateTime date={token.deletedAt!} />
               </p>
               {token.deletedBy && (
-                <p className="font-body text-error text-xs">{token.deletedBy.fullName}</p>
+                <p className="font-body text-xs text-error">{token.deletedBy.fullName}</p>
               )}
             </>
           )}
@@ -157,22 +157,22 @@ function BypassTokenItem({
       </div>
 
       {expanded && hasUsages && (
-        <div className="border-border-subtle bg-surface border-t px-3 py-3 sm:px-4">
+        <div className="border-t border-border-subtle bg-surface px-3 py-3 sm:px-4">
           <div className="space-y-2">
             {token.usages.map((usage) => (
               <div key={usage.id} className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-foreground font-mono text-xs">{usage.userId}</p>
-                  <p className="font-body text-muted-foreground text-xs">
+                  <p className="font-mono text-xs text-foreground">{usage.userId}</p>
+                  <p className="font-body text-xs text-muted-foreground">
                     <LocalDateTime date={usage.usedAt} />
                   </p>
                   {usage.revokedAt && (
                     <>
-                      <p className="font-body text-error text-xs">
+                      <p className="font-body text-xs text-error">
                         Відкликано: <LocalDateTime date={usage.revokedAt} />
                       </p>
                       {usage.revokedBy && (
-                        <p className="font-body text-error text-xs">{usage.revokedBy.fullName}</p>
+                        <p className="font-body text-xs text-error">{usage.revokedBy.fullName}</p>
                       )}
                     </>
                   )}
@@ -216,7 +216,7 @@ export function ElectionBypassPanel({
   const [maxUsage, setMaxUsage] = useState(1);
 
   const presentTypes = [...new Set(restrictions.map((r) => r.type))].filter((t) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line typescript/no-explicit-any
     BYPASSABLE_RESTRICTION_TYPES.includes(t as any),
   );
 
@@ -237,7 +237,9 @@ export function ElectionBypassPanel({
     if (result.success) {
       setNewToken(result.data.token);
       const listResult = await api.elections.bypass.list(electionId);
-      if (listResult.success) setTokens(listResult.data);
+      if (listResult.success) {
+        setTokens(listResult.data);
+      }
     } else {
       setCreateError(result.error);
     }
@@ -245,7 +247,9 @@ export function ElectionBypassPanel({
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
 
     const result = await api.bypass.deleteElection(deleteTarget.tokenHash);
@@ -314,13 +318,13 @@ export function ElectionBypassPanel({
   const deletedTokenCount = tokens.filter((t) => !!t.deletedAt).length;
 
   return (
-    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-5">
+    <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-4 sm:px-5">
         <div className="flex items-center gap-2">
-          <Key className="text-kpi-gray-mid h-4 w-4" />
-          <h3 className="font-display text-foreground text-base font-semibold">Токени доступу</h3>
+          <Key className="h-4 w-4 text-kpi-gray-mid" />
+          <h3 className="font-display text-base font-semibold text-foreground">Токени доступу</h3>
           {deletedTokenCount > 0 && (
-            <span className="font-body text-muted-foreground hidden text-xs sm:inline">
+            <span className="font-body hidden text-xs text-muted-foreground sm:inline">
               ({activeTokenCount} активних, {deletedTokenCount} видалених)
             </span>
           )}
@@ -333,7 +337,7 @@ export function ElectionBypassPanel({
 
       <div className="p-4 sm:p-5">
         {tokens.length === 0 ? (
-          <p className="font-body text-muted-foreground text-sm">
+          <p className="font-body text-sm text-muted-foreground">
             Немає токенів для цього голосування
           </p>
         ) : (
@@ -372,7 +376,7 @@ export function ElectionBypassPanel({
 
                 {presentTypes.length > 0 && (
                   <div>
-                    <p className="font-body text-foreground mb-2 text-sm font-medium">
+                    <p className="font-body mb-2 text-sm font-medium text-foreground">
                       Обійти обмеження:
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -395,7 +399,7 @@ export function ElectionBypassPanel({
                       })}
                     </div>
                     {bypassRestrictions.length === 0 && (
-                      <p className="text-error font-body mt-1.5 text-xs">
+                      <p className="font-body mt-1.5 text-xs text-error">
                         Оберіть хоча б один тип обмеження для обходу
                       </p>
                     )}

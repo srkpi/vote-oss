@@ -66,7 +66,9 @@ export function TeamSlotsPanel({
   useEffect(() => {
     let cancelled = false;
     api.registrations.team(registrationId).then((res) => {
-      if (cancelled) return;
+      if (cancelled) {
+        return;
+      }
       if (res.success) {
         setSlots(res.data.slots);
         setTeamSize(res.data.teamSize);
@@ -152,14 +154,14 @@ export function TeamSlotsPanel({
   return (
     <div
       className={
-        compact ? '' : 'border-border-color shadow-card bg-card mb-6 rounded-xl border p-5'
+        compact ? '' : 'border-border-color mb-6 rounded-xl border bg-card p-5 shadow-card'
       }
     >
       <div className={cn('flex items-center gap-2', compact ? 'mb-1.5' : 'mb-3')}>
         <Users className={cn('text-kpi-gray-mid', compact ? 'h-3.5 w-3.5' : 'h-4 w-4')} />
         <h2
           className={cn(
-            'font-display text-foreground font-semibold',
+            'font-display font-semibold text-foreground',
             compact ? 'text-xs tracking-wider uppercase' : 'text-base',
           )}
         >
@@ -169,14 +171,14 @@ export function TeamSlotsPanel({
         </h2>
       </div>
       {!readOnly && (
-        <p className="text-muted-foreground mb-4 text-sm">
+        <p className="mb-4 text-sm text-muted-foreground">
           Створіть посилання для кожного слота і надішліть їх відповідним людям. Заявка перейде на
           розгляд після того, як усі слоти будуть прийняті.
         </p>
       )}
 
       {loading ? (
-        <p className="text-muted-foreground text-xs">Завантажуємо…</p>
+        <p className="text-xs text-muted-foreground">Завантажуємо…</p>
       ) : loadError ? (
         <Alert variant="error">{loadError}</Alert>
       ) : (
@@ -191,13 +193,13 @@ export function TeamSlotsPanel({
             return (
               <li
                 key={s.slot}
-                className={compact ? '' : 'border-border-subtle rounded-lg border p-3'}
+                className={compact ? '' : 'rounded-lg border border-border-subtle p-3'}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <UserPlus className="text-muted-foreground h-3.5 w-3.5" />
+                  <UserPlus className="h-3.5 w-3.5 text-muted-foreground" />
                   <span
                     className={cn(
-                      'font-body text-foreground font-semibold',
+                      'font-body font-semibold text-foreground',
                       compact ? 'text-xs' : 'text-sm',
                     )}
                   >
@@ -212,12 +214,12 @@ export function TeamSlotsPanel({
                     {STATE_LABEL[s.state]}
                   </span>
                   {s.expiresAt && s.state === 'pending' && (
-                    <span className="text-muted-foreground text-xs">
+                    <span className="text-xs text-muted-foreground">
                       до <LocalDateTime date={s.expiresAt} />
                     </span>
                   )}
                   {compact && s.member && (
-                    <span className="text-foreground text-xs">
+                    <span className="text-xs text-foreground">
                       · <span className="font-medium">{s.member.fullName || s.member.userId}</span>
                       {(s.member.faculty || s.member.group) && (
                         <span className="text-muted-foreground">
@@ -229,7 +231,7 @@ export function TeamSlotsPanel({
                   )}
                 </div>
                 {!compact && s.member && (
-                  <p className="text-foreground mt-1 text-xs">
+                  <p className="mt-1 text-xs text-foreground">
                     {s.state === 'accepted'
                       ? 'Учасник: '
                       : s.state === 'awaiting_candidate'
@@ -246,11 +248,11 @@ export function TeamSlotsPanel({
                 )}
                 {!readOnly && fresh && (
                   <div className="mt-2 space-y-1">
-                    <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+                    <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                       Посилання (показано лише зараз)
                     </p>
                     <div className="flex items-center gap-2">
-                      <div className="bg-surface flex-1 overflow-hidden rounded border p-2">
+                      <div className="flex-1 overflow-hidden rounded border bg-surface p-2">
                         <p className="font-mono text-xs break-all select-all">{link}</p>
                       </div>
                       <Button

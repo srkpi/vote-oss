@@ -113,7 +113,9 @@ const MIN_ASPECT_RATIO = 0.45;
 const MAX_ASPECT_RATIO = 2.2;
 
 function clampedAspectRatio(item: GalleryLayoutSource): number {
-  if (!(item.width > 0) || !(item.height > 0)) return 1;
+  if (!(item.width > 0) || !(item.height > 0)) {
+    return 1;
+  }
   const raw = item.width / item.height;
   return Math.min(MAX_ASPECT_RATIO, Math.max(MIN_ASPECT_RATIO, raw));
 }
@@ -132,14 +134,18 @@ export function computeJustifiedGalleryLayout<T extends GalleryLayoutSource>(
 ): GalleryLayoutRow<T>[] {
   const { targetHeight, minHeight, maxHeight, gap, maxImages, maxRows, maxPerRow } = options;
   const trailingRow = options.trailingRow ?? 'justify';
-  if (containerWidth <= 0 || maxImages <= 0 || maxRows <= 0 || maxPerRow <= 0) return [];
+  if (containerWidth <= 0 || maxImages <= 0 || maxRows <= 0 || maxPerRow <= 0) {
+    return [];
+  }
 
   const rows: GalleryLayoutRow<T>[] = [];
   let rowItems: T[] = [];
   let rowAspectSum = 0;
 
   const finalizeRow = (): void => {
-    if (rowItems.length === 0) return;
+    if (rowItems.length === 0) {
+      return;
+    }
     const gapsWidth = gap * (rowItems.length - 1);
     const availableWidth = Math.max(containerWidth - gapsWidth, 1);
     const idealHeight = availableWidth / rowAspectSum;
@@ -169,7 +175,9 @@ export function computeJustifiedGalleryLayout<T extends GalleryLayoutSource>(
 
   let placed = 0;
   for (const item of items) {
-    if (placed >= maxImages || rows.length >= maxRows) break;
+    if (placed >= maxImages || rows.length >= maxRows) {
+      break;
+    }
 
     const aspect = clampedAspectRatio(item);
 
@@ -184,7 +192,9 @@ export function computeJustifiedGalleryLayout<T extends GalleryLayoutSource>(
       // not just the one that didn't really belong).
       if (rowItems.length >= maxPerRow || heightIfAdded < minHeight) {
         finalizeRow();
-        if (rows.length >= maxRows) break;
+        if (rows.length >= maxRows) {
+          break;
+        }
       }
     }
 
@@ -196,11 +206,15 @@ export function computeJustifiedGalleryLayout<T extends GalleryLayoutSource>(
     const naturalHeight = Math.max(containerWidth - gapsWidth, 1) / rowAspectSum;
     if (naturalHeight <= targetHeight) {
       finalizeRow();
-      if (rows.length >= maxRows) break;
+      if (rows.length >= maxRows) {
+        break;
+      }
     }
   }
 
-  if (trailingRow === 'justify' && rows.length < maxRows) finalizeRow();
+  if (trailingRow === 'justify' && rows.length < maxRows) {
+    finalizeRow();
+  }
 
   return rows;
 }

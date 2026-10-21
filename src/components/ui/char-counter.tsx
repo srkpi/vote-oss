@@ -18,7 +18,9 @@ export function CharCounter({
   const remaining = max - used;
   const ratio = used / max;
 
-  if (ratio < threshold) return null;
+  if (ratio < threshold) {
+    return null;
+  }
 
   const isOver = remaining < 0;
 
@@ -26,10 +28,9 @@ export function CharCounter({
     <span
       className={cn(
         'font-body text-xs tabular-nums',
-        isOver ? 'text-error font-semibold' : 'text-muted-foreground',
+        isOver ? 'font-semibold text-error' : 'text-muted-foreground',
         className,
       )}
-      aria-live="polite"
     >
       {isOver ? `−${Math.abs(remaining)}` : remaining}
     </span>

@@ -29,7 +29,9 @@ function parseSetCookie(cookieStr: string): { name: string; value: string } | nu
   const semi = cookieStr.indexOf(';');
   const pair = semi === -1 ? cookieStr : cookieStr.slice(0, semi);
   const eq = pair.indexOf('=');
-  if (eq === -1) return null;
+  if (eq === -1) {
+    return null;
+  }
   return { name: pair.slice(0, eq).trim(), value: pair.slice(eq + 1).trim() };
 }
 
@@ -81,7 +83,9 @@ export async function proxy(req: NextRequest) {
   if (accessCookie) {
     try {
       const payload = await verifyAccessToken(accessCookie);
-      if (payload?.tokenType === 'access') user = payload;
+      if (payload?.tokenType === 'access') {
+        user = payload;
+      }
     } catch {
       // invalid token
     }
@@ -102,7 +106,9 @@ export async function proxy(req: NextRequest) {
             newSetCookies = refreshRes.headers.getSetCookie();
           } else {
             const raw = refreshRes.headers.get('set-cookie');
-            if (raw) newSetCookies = [raw];
+            if (raw) {
+              newSetCookies = [raw];
+            }
           }
         }
       }
@@ -149,10 +155,12 @@ export async function proxy(req: NextRequest) {
     return response;
   }
 
-  if (user && isAdminOnly && !user.isAdmin)
+  if (user && isAdminOnly && !user.isAdmin) {
     return NextResponse.redirect(new URL('/', req.nextUrl.origin));
-  if (user && user.isAdmin && pathname.startsWith('/join'))
+  }
+  if (user && user.isAdmin && pathname.startsWith('/join')) {
     return NextResponse.redirect(new URL('/admin', req.nextUrl.origin));
+  }
 
   const requestHeaders = new Headers(req.headers);
   if (user) {
@@ -193,9 +201,15 @@ export async function proxy(req: NextRequest) {
 
     for (const str of newSetCookies) {
       const parsed = parseSetCookie(str);
-      if (!parsed) continue;
-      if (parsed.name === COOKIE_ACCESS) newAccessValue = parsed.value;
-      if (parsed.name === COOKIE_REFRESH) newRefreshValue = parsed.value;
+      if (!parsed) {
+        continue;
+      }
+      if (parsed.name === COOKIE_ACCESS) {
+        newAccessValue = parsed.value;
+      }
+      if (parsed.name === COOKIE_REFRESH) {
+        newRefreshValue = parsed.value;
+      }
     }
 
     if (newAccessValue || newRefreshValue) {
@@ -204,8 +218,12 @@ export async function proxy(req: NextRequest) {
         .map((c) => c.trim())
         .filter((c) => !c.startsWith(`${COOKIE_ACCESS}=`) && !c.startsWith(`${COOKIE_REFRESH}=`));
 
-      if (newAccessValue) existingCookies.push(`${COOKIE_ACCESS}=${newAccessValue}`);
-      if (newRefreshValue) existingCookies.push(`${COOKIE_REFRESH}=${newRefreshValue}`);
+      if (newAccessValue) {
+        existingCookies.push(`${COOKIE_ACCESS}=${newAccessValue}`);
+      }
+      if (newRefreshValue) {
+        existingCookies.push(`${COOKIE_REFRESH}=${newRefreshValue}`);
+      }
 
       requestHeaders.set('cookie', existingCookies.join('; '));
     }

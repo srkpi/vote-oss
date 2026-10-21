@@ -51,11 +51,15 @@ export function AvatarDeleteDialogProvider({ children }: { children: React.React
   const requestDelete = useCallback((t: DeleteTarget) => setTarget(t), []);
 
   const close = useCallback(() => {
-    if (!deleting) setTarget(null);
+    if (!deleting) {
+      setTarget(null);
+    }
   }, [deleting]);
 
   const handleConfirm = async () => {
-    if (!target) return;
+    if (!target) {
+      return;
+    }
     setDeleting(true);
     const result = await api.users.avatar.remove(target.userId);
     setDeleting(false);
@@ -78,7 +82,7 @@ export function AvatarDeleteDialogProvider({ children }: { children: React.React
             <DialogCloseButton onClose={close} />
           </DialogHeader>
           <DialogBody>
-            <p className="font-body text-muted-foreground text-sm">
+            <p className="font-body text-sm text-muted-foreground">
               Фото профілю користувача{' '}
               <strong className="text-foreground">{target?.fullName}</strong> буде видалено.
               Користувач зможе завантажити нове самостійно.

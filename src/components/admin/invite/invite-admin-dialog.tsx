@@ -94,7 +94,9 @@ export function InviteAdminDialog({
   };
 
   const handleCopy = async () => {
-    if (!result) return;
+    if (!result) {
+      return;
+    }
     await navigator.clipboard.writeText(result.token);
     setCopied(true);
     toast({ title: 'Скопійовано!', variant: 'success', duration: 2000 });
@@ -102,7 +104,9 @@ export function InviteAdminDialog({
   };
 
   const handleCopyLink = async () => {
-    if (!result) return;
+    if (!result) {
+      return;
+    }
     const link = `${window.location.origin}/join/${result.token}`;
     await navigator.clipboard.writeText(link);
     setCopiedLink(true);

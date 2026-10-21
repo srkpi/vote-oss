@@ -28,15 +28,27 @@ import type { TeamSlot, TeamSlotState } from '@/types/candidate-registration';
  * token has ever been issued).
  */
 function classifyToken(t: TeamMemberInviteToken | null, now: Date): TeamSlotState {
-  if (!t) return 'empty';
+  if (!t) {
+    return 'empty';
+  }
   if (t.used_at) {
-    if (t.response === 'REJECTED') return 'rejected';
-    if (t.candidate_decision === 'CONFIRMED') return 'accepted';
-    if (t.candidate_decision === 'DECLINED') return 'declined';
+    if (t.response === 'REJECTED') {
+      return 'rejected';
+    }
+    if (t.candidate_decision === 'CONFIRMED') {
+      return 'accepted';
+    }
+    if (t.candidate_decision === 'DECLINED') {
+      return 'declined';
+    }
     return 'awaiting_candidate';
   }
-  if (t.revoked_at) return 'expired';
-  if (t.expires_at <= now) return 'expired';
+  if (t.revoked_at) {
+    return 'expired';
+  }
+  if (t.expires_at <= now) {
+    return 'expired';
+  }
   return 'pending';
 }
 
@@ -53,7 +65,9 @@ export function buildSlots(
   const latestBySlot = new Map<number, TeamMemberInviteToken>();
   for (const t of tokens) {
     const prev = latestBySlot.get(t.slot);
-    if (!prev || t.created_at > prev.created_at) latestBySlot.set(t.slot, t);
+    if (!prev || t.created_at > prev.created_at) {
+      latestBySlot.set(t.slot, t);
+    }
   }
 
   const slots: TeamSlot[] = [];

@@ -24,14 +24,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Install Allure
-        run: npm install -g allure
+        run: npm install -g allure@3.21.0
 
       - name: Generate Prisma Client
         run: pnpm db:generate

@@ -25,7 +25,9 @@ const slideTransition = { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const };
 export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }: PaginationProps) {
   const [dir, setDir] = useState(0);
 
-  if (totalPages <= 1) return null;
+  if (totalPages <= 1) {
+    return null;
+  }
 
   // Wrap setPage so we can record direction before navigating
   const navigate = (target: number | ((p: number) => number)) => {
@@ -57,7 +59,7 @@ export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }:
             size="icon-sm"
             disabled={page <= 1}
             onClick={() => navigate(1)}
-            aria-label="Перша сторінка"
+
             icon={<ChevronsLeft />}
           />
         </motion.div>
@@ -72,7 +74,7 @@ export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }:
           size="icon-sm"
           disabled={page <= 1}
           onClick={() => navigate((p) => p - 1)}
-          aria-label="Попередня сторінка"
+
           icon={<ChevronLeft />}
         />
       </motion.div>
@@ -102,7 +104,7 @@ export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }:
                 <motion.div
                   key="pill"
                   layoutId="pagination-active-pill"
-                  className="bg-primary absolute size-9 rounded-md"
+                  className="absolute size-9 rounded-md bg-primary"
                   style={{ left: i * SLOT_PX }}
                   transition={{ type: 'spring', stiffness: 340, damping: 30 }}
                 />
@@ -115,8 +117,7 @@ export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }:
                 size="icon"
                 variant={p === page ? 'default' : 'ghost'}
                 onClick={() => navigate(p)}
-                aria-label={`Сторінка ${p}`}
-                aria-current={p === page ? 'page' : undefined}
+
                 className={`relative z-10 transition-colors duration-150 ${p === page ? 'pointer-events-none bg-transparent font-semibold' : ''}`}
               >
                 {p}
@@ -135,7 +136,7 @@ export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }:
           size="icon-sm"
           disabled={page >= totalPages}
           onClick={() => navigate((p) => p + 1)}
-          aria-label="Наступна сторінка"
+
           icon={<ChevronRight />}
         />
       </motion.div>
@@ -150,7 +151,7 @@ export function Pagination({ page, totalPages, maxVisibleButtons = 5, setPage }:
             size="icon-sm"
             disabled={page >= totalPages}
             onClick={() => navigate(totalPages)}
-            aria-label="Остання сторінка"
+
             icon={<ChevronsRight />}
           />
         </motion.div>
