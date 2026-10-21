@@ -15,7 +15,9 @@ interface MyVoteBannerProps {
 }
 
 const formatLabels = (labels: string | string[] | undefined | null) => {
-  if (!labels) return '';
+  if (!labels) {
+    return '';
+  }
   return Array.isArray(labels) ? labels.join(', ') : labels;
 };
 
@@ -50,11 +52,11 @@ export function MyVoteBanner({
           )}
         >
           {matchesDecryption === true ? (
-            <CheckCircle className="text-success h-5 w-5" />
+            <CheckCircle className="h-5 w-5 text-success" />
           ) : matchesDecryption === false ? (
-            <AlertTriangle className="text-error h-5 w-5" />
+            <AlertTriangle className="h-5 w-5 text-error" />
           ) : (
-            <UserCheck className="text-kpi-blue-light h-5 w-5" />
+            <UserCheck className="h-5 w-5 text-kpi-blue-light" />
           )}
         </div>
 
@@ -75,20 +77,20 @@ export function MyVoteBanner({
           </p>
 
           <div className="ph-no-capture font-body flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <span className="text-muted-foreground min-w-0 wrap-break-word">
+            <span className="min-w-0 wrap-break-word text-muted-foreground">
               Збережений вибір: <strong className="text-foreground">{storedChoices}</strong>
             </span>
 
             {decryptionDone && decryptedChoices && matchesDecryption === false && (
-              <span className="text-error wrap-break-word">
+              <span className="wrap-break-word text-error">
                 Розшифровано: <strong>{decryptedChoices}</strong>
               </span>
             )}
           </div>
 
           {!found && (
-            <p className="font-body text-muted-foreground flex items-center gap-1.5 text-xs">
-              <AlertTriangle className="text-kpi-orange h-3.5 w-3.5" />
+            <p className="font-body flex items-center gap-1.5 text-xs text-muted-foreground">
+              <AlertTriangle className="h-3.5 w-3.5 text-kpi-orange" />
               Бюлетень з таким хешем не знайдено на цій сторінці. Можливо, він ще не завантажений.
             </p>
           )}

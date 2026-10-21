@@ -57,8 +57,12 @@ export function validateRestrictions(
 ):
   | { ok: true; restrictions: CandidateRegistrationFormRestriction[] }
   | { ok: false; error: string } {
-  if (raw === undefined || raw === null) return { ok: true, restrictions: [] };
-  if (!Array.isArray(raw)) return { ok: false, error: 'restrictions must be an array' };
+  if (raw === undefined || raw === null) {
+    return { ok: true, restrictions: [] };
+  }
+  if (!Array.isArray(raw)) {
+    return { ok: false, error: 'restrictions must be an array' };
+  }
   if (raw.length > REGISTRATION_FORM_MAX_RESTRICTIONS) {
     return {
       ok: false,
@@ -83,7 +87,9 @@ export function validateRestrictions(
       };
     }
     const trimmed = value.trim();
-    if (!trimmed) return { ok: false, error: 'restriction value must not be empty' };
+    if (!trimmed) {
+      return { ok: false, error: 'restriction value must not be empty' };
+    }
     if (trimmed.length > REGISTRATION_FORM_RESTRICTION_VALUE_MAX_LENGTH) {
       return {
         ok: false,
@@ -92,7 +98,9 @@ export function validateRestrictions(
     }
 
     const dedupeKey = `${type}|${trimmed}`;
-    if (seen.has(dedupeKey)) continue;
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
     seen.add(dedupeKey);
     result.push({ type, value: trimmed });
   }
@@ -118,12 +126,16 @@ export interface ValidatedFormBody {
 export function validateFormBody(
   body: unknown,
 ): { ok: true; data: ValidatedFormBody } | { ok: false; error: string } {
-  if (!body || typeof body !== 'object') return { ok: false, error: 'Invalid body' };
+  if (!body || typeof body !== 'object') {
+    return { ok: false, error: 'Invalid body' };
+  }
   const { title, description, requiresCampaignProgram, teamSize, opensAt, closesAt, restrictions } =
     body as Record<string, unknown>;
 
   const trimmedTitle = typeof title === 'string' ? title.trim() : '';
-  if (!trimmedTitle) return { ok: false, error: 'title is required' };
+  if (!trimmedTitle) {
+    return { ok: false, error: 'title is required' };
+  }
   if (trimmedTitle.length > REGISTRATION_FORM_TITLE_MAX_LENGTH) {
     return {
       ok: false,
@@ -190,7 +202,9 @@ export function validateFormBody(
   }
 
   const restrictionsRes = validateRestrictions(restrictions);
-  if (!restrictionsRes.ok) return { ok: false, error: restrictionsRes.error };
+  if (!restrictionsRes.ok) {
+    return { ok: false, error: restrictionsRes.error };
+  }
 
   return {
     ok: true,
@@ -219,7 +233,9 @@ export function validateCreateFormBody(
   now: Date = new Date(),
 ): { ok: true; data: ValidatedFormBody } | { ok: false; error: string } {
   const base = validateFormBody(body);
-  if (!base.ok) return base;
+  if (!base.ok) {
+    return base;
+  }
 
   const opensAt = base.data.opensAt < now ? now : base.data.opensAt;
   if (base.data.closesAt <= opensAt) {
@@ -236,8 +252,12 @@ export function formPhase(
   form: { opens_at: Date; closes_at: Date },
   now: Date = new Date(),
 ): RegistrationFormPhase {
-  if (now >= form.closes_at) return 'closed';
-  if (now >= form.opens_at) return 'open';
+  if (now >= form.closes_at) {
+    return 'closed';
+  }
+  if (now >= form.opens_at) {
+    return 'open';
+  }
   return 'not_started';
 }
 
@@ -245,7 +265,9 @@ function sameRestrictions(
   a: CandidateRegistrationFormRestriction[],
   b: CandidateRegistrationFormRestriction[],
 ): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
   const normalize = (list: CandidateRegistrationFormRestriction[]) =>
     list
       .map((r) => `${r.type}:${r.value}`)
@@ -285,7 +307,9 @@ export function validateUpdateFormBody(
   now: Date = new Date(),
 ): { ok: true; data: ValidatedFormBody } | { ok: false; error: string } {
   const base = validateFormBody(body);
-  if (!base.ok) return base;
+  if (!base.ok) {
+    return base;
+  }
 
   const phase = formPhase(existing, now);
 
@@ -360,7 +384,13 @@ export function assertFormAcceptingTeamActivity(
   form: { deleted_at: Date | null; opens_at: Date; closes_at: Date } | null | undefined,
   now: Date = new Date(),
 ): void {
-  if (!form || form.deleted_at) throw new RegistrationFormNotFoundError();
-  if (now < form.opens_at) throw new RegistrationWindowClosedError('Реєстрація ще не відкрита');
-  if (now > form.closes_at) throw new RegistrationWindowClosedError('Прийом заявок закрито');
+  if (!form || form.deleted_at) {
+    throw new RegistrationFormNotFoundError();
+  }
+  if (now < form.opens_at) {
+    throw new RegistrationWindowClosedError('Реєстрація ще не відкрита');
+  }
+  if (now > form.closes_at) {
+    throw new RegistrationWindowClosedError('Прийом заявок закрито');
+  }
 }

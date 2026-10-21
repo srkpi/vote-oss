@@ -7,14 +7,16 @@ interface CatgirlAttributionProps {
 }
 
 export function CatgirlAttribution({ image, className }: CatgirlAttributionProps) {
-  if (!image.artistName) return null;
+  if (!image.artistName) {
+    return null;
+  }
 
   const href = image.artistProfileUrl ?? image.sourceUrl ?? undefined;
 
   return (
     <span
       className={cn(
-        'text-muted-foreground bg-card/80 absolute right-2 bottom-2 z-10 rounded-full px-2 py-0.5 text-[10px] backdrop-blur-sm',
+        'absolute right-2 bottom-2 z-10 rounded-full bg-card/80 px-2 py-0.5 text-[10px] text-muted-foreground backdrop-blur-sm',
         className,
       )}
     >

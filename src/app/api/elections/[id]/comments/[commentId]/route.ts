@@ -67,20 +67,30 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; commentId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId, commentId } = await params;
-  if (!isValidUuid(electionId) || !isValidUuid(commentId)) return Errors.badRequest('Invalid id');
+  if (!isValidUuid(electionId) || !isValidUuid(commentId)) {
+    return Errors.badRequest('Invalid id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
 
   const existing = await loadComment(electionId, commentId);
-  if (!existing || existing.deleted_at) return Errors.notFound('Comment not found');
-  if (existing.user_id !== auth.user.sub)
+  if (!existing || existing.deleted_at) {
+    return Errors.notFound('Comment not found');
+  }
+  if (existing.user_id !== auth.user.sub) {
     return Errors.forbidden('You can only edit your own comment');
-  if (gate.petition.commentsClosed)
+  }
+  if (gate.petition.commentsClosed) {
     return Errors.forbidden('Discussion is closed for this petition');
+  }
 
   let body: unknown;
   try {
@@ -89,8 +99,9 @@ export async function PATCH(
     return Errors.badRequest('Invalid JSON body');
   }
   const text = (body as { body?: unknown })?.body;
-  if (typeof text !== 'string' || text.trim().length === 0)
+  if (typeof text !== 'string' || text.trim().length === 0) {
     return Errors.badRequest('Comment body is required');
+  }
   if (text.length > COMMENT_MAX_LENGTH) {
     return Errors.badRequest(`Comment must be at most ${COMMENT_MAX_LENGTH} characters`);
   }
@@ -166,16 +177,24 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; commentId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId, commentId } = await params;
-  if (!isValidUuid(electionId) || !isValidUuid(commentId)) return Errors.badRequest('Invalid id');
+  if (!isValidUuid(electionId) || !isValidUuid(commentId)) {
+    return Errors.badRequest('Invalid id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
 
   const existing = await loadComment(electionId, commentId);
-  if (!existing || existing.deleted_at) return Errors.notFound('Comment not found');
+  if (!existing || existing.deleted_at) {
+    return Errors.notFound('Comment not found');
+  }
 
   const isOwnComment = existing.user_id === auth.user.sub;
   if (!isOwnComment && !gate.isPetitionManager) {

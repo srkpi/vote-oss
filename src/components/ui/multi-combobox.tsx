@@ -45,7 +45,9 @@ export function MultiCombobox({
   const filtered = options.filter((opt) => opt.toLowerCase().includes(search.toLowerCase()));
 
   const dropdownCallbackRef = (node: HTMLDivElement | null) => {
-    if (!node || !containerRef.current) return;
+    if (!node || !containerRef.current) {
+      return;
+    }
     const triggerRect = containerRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - triggerRect.bottom;
     const spaceAbove = triggerRect.top;
@@ -74,7 +76,9 @@ export function MultiCombobox({
     if (value.includes(option)) {
       onChange(value.filter((v) => v !== option));
     } else {
-      if (maxSelected && value.length >= maxSelected) return;
+      if (maxSelected && value.length >= maxSelected) {
+        return;
+      }
       onChange([...value, option]);
     }
   }
@@ -90,45 +94,45 @@ export function MultiCombobox({
         ref={triggerRef}
         id={id}
         role="combobox"
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        aria-controls={open ? listboxId : undefined}
+
         tabIndex={disabled ? -1 : 0}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={(e) => {
-          if (disabled) return;
+          if (disabled) {
+            return;
+          }
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setOpen((o) => !o);
           }
         }}
         className={cn(
-          'bg-card flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-(--radius)',
+          'flex min-h-10 w-full flex-wrap items-center gap-1.5 rounded-(--radius) bg-card',
           'border-border-color border',
           'font-body px-2.5 py-1.5 text-left text-sm',
           'transition-colors duration-150',
-          !disabled && 'hover:border-kpi-blue-light cursor-pointer',
-          open && 'border-kpi-blue-light ring-kpi-blue-light/20 ring-2',
+          !disabled && 'cursor-pointer hover:border-kpi-blue-light',
+          open && 'border-kpi-blue-light ring-2 ring-kpi-blue-light/20',
           error && !open && 'border-error',
-          disabled && 'bg-surface cursor-not-allowed opacity-50',
+          disabled && 'cursor-not-allowed bg-surface opacity-50',
           'outline-none',
           className,
         )}
       >
         {value.length === 0 ? (
-          <span className="text-subtle flex-1">{placeholder}</span>
+          <span className="flex-1 text-subtle">{placeholder}</span>
         ) : (
           <>
             {value.map((v) => (
               <span
                 key={v}
-                className="bg-kpi-navy/10 text-kpi-navy flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium"
+                className="flex items-center gap-1 rounded-md bg-kpi-navy/10 px-1.5 py-0.5 text-xs font-medium text-kpi-navy"
               >
                 {v}
                 <button
                   type="button"
                   onClick={(e) => removeValue(v, e)}
-                  className="text-kpi-navy/60 hover:text-kpi-navy ml-0.5"
+                  className="ml-0.5 text-kpi-navy/60 hover:text-kpi-navy"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -139,7 +143,7 @@ export function MultiCombobox({
         )}
         <ChevronDown
           className={cn(
-            'text-muted-foreground h-4 w-4 shrink-0 transition-transform duration-150',
+            'h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150',
             open && 'rotate-180',
           )}
         />
@@ -150,29 +154,29 @@ export function MultiCombobox({
           ref={dropdownCallbackRef}
           className={cn(
             'absolute z-50 w-full min-w-50 overflow-hidden rounded-lg',
-            'border-border-color animate-scale-in bg-card border shadow-lg',
+            'border-border-color animate-scale-in border bg-card shadow-lg',
             openUpward ? 'bottom-full mb-1' : 'top-full mt-1',
           )}
         >
-          <div className="border-border-subtle border-b p-2">
+          <div className="border-b border-border-subtle p-2">
             <div className="relative">
-              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <input
                 ref={searchRef}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={searchPlaceholder}
                 className={cn(
-                  'bg-surface h-8 w-full rounded-sm',
-                  'font-body text-foreground placeholder:text-subtle pr-3 pl-8 text-sm',
-                  'focus:border-kpi-blue-light border border-transparent focus:outline-none',
+                  'h-8 w-full rounded-sm bg-surface',
+                  'font-body pr-3 pl-8 text-sm text-foreground placeholder:text-subtle',
+                  'border border-transparent focus:border-kpi-blue-light focus:outline-none',
                 )}
               />
             </div>
           </div>
           <div id={listboxId} role="listbox" className="max-h-60 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <div className="font-body text-muted-foreground px-3 py-6 text-center text-sm">
+              <div className="font-body px-3 py-6 text-center text-sm text-muted-foreground">
                 {emptyText}
               </div>
             ) : (
@@ -185,13 +189,13 @@ export function MultiCombobox({
                     key={option}
                     type="button"
                     role="option"
-                    aria-selected={isSelected}
+
                     disabled={isDisabled}
                     onClick={() => toggleOption(option)}
                     className={cn(
                       'font-body flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm',
                       'transition-colors duration-75',
-                      isSelected ? 'bg-kpi-navy/5 text-kpi-navy font-medium' : 'text-foreground',
+                      isSelected ? 'bg-kpi-navy/5 font-medium text-kpi-navy' : 'text-foreground',
                       !isSelected && !isDisabled && 'hover:bg-surface',
                       isDisabled && 'cursor-not-allowed opacity-40',
                     )}
@@ -211,11 +215,11 @@ export function MultiCombobox({
             )}
           </div>
           {value.length > 0 && (
-            <div className="border-border-subtle border-t p-2">
+            <div className="border-t border-border-subtle p-2">
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="font-body text-muted-foreground hover:text-foreground w-full rounded px-2 py-1 text-xs transition-colors"
+                className="font-body w-full rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 Скинути все
               </button>

@@ -7,17 +7,17 @@ import * as React from 'react';
 import { cn } from '@/lib/utils/common';
 
 const alertVariants = cva(
-  'relative flex w-full gap-3 rounded-lg border p-4 text-sm font-body transition-all duration-200',
+  'font-body relative flex w-full gap-3 rounded-lg border p-4 text-sm transition-all duration-200',
   {
     variants: {
       variant: {
-        default: 'bg-card border-border-color text-foreground',
-        success: 'bg-success-bg border-success/30 text-foreground [&_.alert-icon]:text-success',
+        default: 'border-border-color bg-card text-foreground',
+        success: 'border-success/30 bg-success-bg text-foreground [&_.alert-icon]:text-success',
         warning:
-          'bg-warning-bg border-kpi-orange/30 text-foreground [&_.alert-icon]:text-kpi-orange',
-        error: 'bg-error-bg border-error/30 text-foreground [&_.alert-icon]:text-error',
-        info: 'bg-info-bg border-kpi-blue-light/30 text-foreground [&_.alert-icon]:text-kpi-blue-light',
-        destructive: 'bg-error-bg border-error/30 text-foreground [&_.alert-icon]:text-error',
+          'border-kpi-orange/30 bg-warning-bg text-foreground [&_.alert-icon]:text-kpi-orange',
+        error: 'border-error/30 bg-error-bg text-foreground [&_.alert-icon]:text-error',
+        info: 'border-kpi-blue-light/30 bg-info-bg text-foreground [&_.alert-icon]:text-kpi-blue-light',
+        destructive: 'border-error/30 bg-error-bg text-foreground [&_.alert-icon]:text-error',
       },
     },
     defaultVariants: {
@@ -60,7 +60,7 @@ export function Alert({
       <div className="min-w-0 flex-1">
         {title && <p className="font-body mb-0.5 text-sm leading-tight font-semibold">{title}</p>}
         {children && (
-          <div className="font-body text-foreground/80 text-sm leading-relaxed">{children}</div>
+          <div className="font-body text-sm leading-relaxed text-foreground/80">{children}</div>
         )}
       </div>
       {onDismiss && (
@@ -70,10 +70,9 @@ export function Alert({
           className={cn(
             'shrink-0 self-start rounded-md p-0.5',
             'text-muted-foreground hover:text-foreground',
-            'hover:bg-foreground/5 transition-colors duration-150',
-            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+            'transition-colors duration-150 hover:bg-foreground/5',
+            'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
           )}
-          aria-label="Закрити"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -94,7 +93,7 @@ export function AlertTitle({ className, ...props }: React.HTMLAttributes<HTMLDiv
 export function AlertDescription({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('font-body text-foreground/80 text-sm leading-relaxed', className)}
+      className={cn('font-body text-sm leading-relaxed text-foreground/80', className)}
       {...props}
     />
   );
@@ -146,7 +145,7 @@ export function ToastItem({
       className={cn(
         'relative flex items-start gap-3',
         'w-80 overflow-hidden',
-        'bg-card rounded-xl',
+        'rounded-xl bg-card',
         'border-border-color border',
         'shadow-xl',
         'p-4',
@@ -164,9 +163,9 @@ export function ToastItem({
       <div className={cn('mt-0.5 shrink-0', toastIconColors[variant])}>{TOAST_ICONS[variant]}</div>
 
       <div className="min-w-0 flex-1 pr-1">
-        <p className="font-body text-foreground text-sm leading-tight font-semibold">{title}</p>
+        <p className="font-body text-sm leading-tight font-semibold text-foreground">{title}</p>
         {description && (
-          <p className="font-body text-muted-foreground mt-0.5 text-xs leading-relaxed">
+          <p className="font-body mt-0.5 text-xs leading-relaxed text-muted-foreground">
             {description}
           </p>
         )}
@@ -178,9 +177,8 @@ export function ToastItem({
         className={cn(
           'shrink-0 self-start rounded-md p-0.5',
           'text-muted-foreground hover:text-foreground',
-          'hover:bg-surface transition-colors duration-150',
+          'transition-colors duration-150 hover:bg-surface',
         )}
-        aria-label="Закрити"
       >
         <X className="h-3.5 w-3.5" />
       </button>

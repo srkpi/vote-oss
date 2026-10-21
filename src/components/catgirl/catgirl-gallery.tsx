@@ -43,7 +43,9 @@ export function CatgirlGallery({ size = 'lg', className, loading = 'lazy' }: Cat
   // already on screen and cached.
   const [imageStatus, setImageStatus] = useState<Record<string, 'loaded' | 'error'>>({});
 
-  if (!enabled) return null;
+  if (!enabled) {
+    return null;
+  }
 
   return (
     <div className="flex w-full justify-center">
@@ -54,9 +56,8 @@ export function CatgirlGallery({ size = 'lg', className, loading = 'lazy' }: Cat
           // nothing, so the page doesn't jump from empty to full-sized the
           // moment they do.
           <div
-            className="bg-surface-hover w-full animate-pulse rounded-2xl"
+            className="w-full animate-pulse rounded-2xl bg-surface-hover"
             style={{ height: preset.targetHeight }}
-            aria-hidden
           />
         ) : (
           <div className="flex flex-col" style={{ gap: CATGIRL_GALLERY_GAP }}>
@@ -110,18 +111,17 @@ export function CatgirlGalleryImage({
       className="relative z-10 shrink-0 overflow-hidden rounded-2xl shadow-[0_8px_24px_-12px_rgba(157,23,77,0.35)] transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-14px_rgba(157,23,77,0.45)]"
       style={{ width: box.width, height: box.height }}
     >
-      <div className="absolute inset-0" style={{ backgroundColor: image.color }} aria-hidden />
+      <div className="absolute inset-0" style={{ backgroundColor: image.color }} />
       {status !== 'error' && (
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
           className={cn(
             'absolute inset-0 block h-full w-full cursor-zoom-in',
-            'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+            'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
           )}
-          aria-label="Переглянути зображення на весь екран"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {/* oxlint-disable-next-line nextjs/no-img-element */}
           <img
             src={image.url}
             alt="Catgirl"

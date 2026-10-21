@@ -3,7 +3,9 @@ import { Clock } from 'lucide-react';
 import type { MetricBuilder } from '@/types/metrics';
 
 export const buildMedianMetric: MetricBuilder = ({ metrics, totalBallots }) => {
-  if (totalBallots < 2 || metrics.medianTimePercentile === null) return null;
+  if (totalBallots < 2 || metrics.medianTimePercentile === null) {
+    return null;
+  }
 
   const mp = metrics.medianTimePercentile;
   // isElectionClosed: when true, mp is relative to the full scheduled duration;

@@ -122,18 +122,18 @@ export function AdminSidebar({
 
   return (
     <>
-      <aside className="border-border-subtle bg-card sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r lg:flex">
-        <div className="border-border-subtle border-b p-5">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border-subtle bg-card lg:flex">
+        <div className="border-b border-border-subtle p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="bg-kpi-orange flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-kpi-orange shadow-sm">
                 <Settings className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <p className="font-display text-foreground truncate text-sm leading-tight font-semibold">
+                <p className="truncate font-display text-sm leading-tight font-semibold text-foreground">
                   Адмін-панель
                 </p>
-                <p className="font-body text-muted-foreground truncate text-[10px] tracking-wider uppercase">
+                <p className="font-body truncate text-[10px] tracking-wider text-muted-foreground uppercase">
                   {APP_NAME}
                 </p>
               </div>
@@ -143,7 +143,7 @@ export function AdminSidebar({
         </div>
 
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
-          <p className="font-body text-muted-foreground px-3 pt-3 pb-2 text-[10px] font-semibold tracking-widest uppercase">
+          <p className="font-body px-3 pt-3 pb-2 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
             Навігація
           </p>
           {navItems.map((item) => (
@@ -165,10 +165,10 @@ export function AdminSidebar({
         </nav>
 
         <div className="mt-auto p-3">
-          <hr className="border-border-subtle mb-3" />
+          <hr className="mb-3 border-border-subtle" />
           <Link
             href="/"
-            className="font-body text-muted-foreground hover:bg-error-bg hover:text-error flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium transition-all duration-150"
+            className="font-body flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-150 hover:bg-error-bg hover:text-error"
           >
             <LogOut className="h-4 w-4" />
             На головну
@@ -176,7 +176,7 @@ export function AdminSidebar({
         </div>
       </aside>
 
-      <div className="safe-area-pb border-border-subtle bg-card fixed right-0 bottom-0 left-0 z-40 border-t shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden dark:shadow-[0_-4px_12px_rgb(0_0_0/0.4)]">
+      <div className="safe-area-pb fixed right-0 bottom-0 left-0 z-40 border-t border-border-subtle bg-card shadow-[0_-4px_12px_rgb(28_57_110/0.08)] lg:hidden dark:shadow-[0_-4px_12px_rgb(0_0_0/0.4)]">
         <div className="flex scrollbar-none items-stretch overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map((item) => {
             const active = isActive(item.href, item.exact);

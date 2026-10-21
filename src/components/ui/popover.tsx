@@ -71,7 +71,9 @@ export function Popover({
   const [position, setPosition] = React.useState<PopoverPosition | null>(null);
 
   const recompute = React.useCallback(() => {
-    if (!anchorRef.current) return;
+    if (!anchorRef.current) {
+      return;
+    }
 
     // Use scrollHeight to get the true unconstrained content height
     const height = popoverRef.current?.scrollHeight || 260;
@@ -93,19 +95,27 @@ export function Popover({
   }, [anchorRef, width]);
 
   React.useLayoutEffect(() => {
-    if (open) recompute();
+    if (open) {
+      recompute();
+    }
   }, [open, recompute]);
 
   React.useEffect(() => {
-    if (!open) return undefined;
+    if (!open) {
+      return undefined;
+    }
 
     const handleOutside = (event: PointerEvent) => {
       const target = event.target as Node;
-      if (popoverRef.current?.contains(target) || anchorRef.current?.contains(target)) return;
+      if (popoverRef.current?.contains(target) || anchorRef.current?.contains(target)) {
+        return;
+      }
       onOpenChange(false);
     };
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onOpenChange(false);
+      if (event.key === 'Escape') {
+        onOpenChange(false);
+      }
     };
 
     document.addEventListener('pointerdown', handleOutside);
@@ -128,7 +138,9 @@ export function Popover({
     };
   }, [open, onOpenChange, recompute, anchorRef]);
 
-  if (!open || typeof document === 'undefined') return null;
+  if (!open || typeof document === 'undefined') {
+    return null;
+  }
 
   // Dynamically apply top vs bottom so they never conflict
   const style: React.CSSProperties = {
@@ -155,7 +167,7 @@ export function Popover({
       className={cn(
         'z-50 rounded-lg',
         'overflow-x-hidden overflow-y-auto', // Ensure scrolling happens
-        'border-border-color bg-card border',
+        'border-border-color border bg-card',
         'shadow-lg',
         'animate-scale-in',
         className,

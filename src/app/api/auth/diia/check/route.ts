@@ -119,7 +119,9 @@ export async function POST(req: NextRequest) {
   }
 
   const { requestId } = body;
-  if (!requestId) return Errors.badRequest('requestId is required');
+  if (!requestId) {
+    return Errors.badRequest('requestId is required');
+  }
 
   let checkData: CheckResponse;
   try {
@@ -228,7 +230,9 @@ export async function POST(req: NextRequest) {
   }
 
   const auth = await requireAuth(req);
-  if (auth.ok) await revokeByAccessJti(auth.user.jti, auth.user.iat);
+  if (auth.ok) {
+    await revokeByAccessJti(auth.user.jti, auth.user.iat);
+  }
 
   const now = Math.floor(Date.now() / 1000);
   const initialAuthAt = now;

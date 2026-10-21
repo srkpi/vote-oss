@@ -6,7 +6,9 @@
  * waiting for a mount to fail.
  */
 export function detectWebglSupport(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {
+    return false;
+  }
 
   try {
     const canvas = document.createElement('canvas');
@@ -15,7 +17,9 @@ export function detectWebglSupport(): boolean {
       canvas.getContext('webgl') ??
       canvas.getContext('experimental-webgl');
 
-    if (!context) return false;
+    if (!context) {
+      return false;
+    }
 
     // A context can be "acquired" but already lost (some virtualized CI /
     // remote-desktop environments do this) — treat that as unsupported too.
@@ -39,7 +43,9 @@ export type DeviceTier = 'high' | 'low';
  * on a device that's obviously not going to sustain it.
  */
 export function detectDeviceTier(): DeviceTier {
-  if (typeof window === 'undefined') return 'high';
+  if (typeof window === 'undefined') {
+    return 'high';
+  }
 
   const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false;
   const fewCores = (navigator.hardwareConcurrency ?? 8) <= 4;
@@ -48,8 +54,12 @@ export function detectDeviceTier(): DeviceTier {
     (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData ===
       true;
 
-  if (saveData) return 'low';
-  if (coarsePointer && fewCores) return 'low';
+  if (saveData) {
+    return 'low';
+  }
+  if (coarsePointer && fewCores) {
+    return 'low';
+  }
 
   return 'high';
 }

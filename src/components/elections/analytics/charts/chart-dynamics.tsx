@@ -52,7 +52,7 @@ function DynamicsChartInner({
   const [currentMs, setCurrentMs] = useState<number | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setCurrentMs(Date.now());
   }, []);
 
@@ -99,7 +99,9 @@ function DynamicsChartInner({
       cy?: number;
       payload?: { _synthetic?: boolean };
     }) {
-      if (payload?._synthetic || !showDots || cx == null || cy == null) return <g />;
+      if (payload?._synthetic || !showDots || cx == null || cy == null) {
+        return <g />;
+      }
       return <circle cx={cx} cy={cy} r={3} fill={color} strokeWidth={0} />;
     }
     return DotRenderer;

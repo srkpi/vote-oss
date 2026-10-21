@@ -89,19 +89,27 @@ function timelineEntryBadge(
   current: CampaignState,
 ): { kind: StatusKind; label: string } {
   const fullLabel = CAMPAIGN_STATE_BADGE[entry].label;
-  if (entry === current) return CAMPAIGN_STATE_BADGE[entry];
+  if (entry === current) {
+    return CAMPAIGN_STATE_BADGE[entry];
+  }
   if (current === 'COMPLETED' || current === 'FAILED' || current === 'CANCELLED') {
     return { kind: 'closed', label: fullLabel };
   }
   const entryIdx = STATE_ORDER.indexOf(entry);
   const currentIdx = STATE_ORDER.indexOf(current);
-  if (entryIdx < currentIdx) return { kind: 'closed', label: fullLabel };
+  if (entryIdx < currentIdx) {
+    return { kind: 'closed', label: fullLabel };
+  }
   return { kind: 'upcoming', label: fullLabel };
 }
 
 function editabilityHint(state: CampaignBoundaryEditability): string | undefined {
-  if (state === 'locked') return 'Вже минуло — редагування недоступне';
-  if (state === 'extend_only') return 'Вже триває — можна лише перенести на пізніше';
+  if (state === 'locked') {
+    return 'Вже минуло — редагування недоступне';
+  }
+  if (state === 'extend_only') {
+    return 'Вже триває — можна лише перенести на пізніше';
+  }
   return undefined;
 }
 
@@ -135,7 +143,7 @@ function BoundaryField({
   return (
     <FormField label={label} required htmlFor={id} hint={editabilityHint(editability)}>
       <div className="flex items-center gap-2">
-        {locked && <Lock className="text-muted-foreground h-3.5 w-3.5 shrink-0" />}
+        {locked && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
         <KyivDateTimePicker
           id={id}
           value={value}
@@ -154,7 +162,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
   const router = useRouter();
   const [campaign, setCampaign] = useState(initialCampaign);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setCampaign(initialCampaign);
   }, [initialCampaign]);
 
@@ -229,11 +237,11 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
   const timeline = buildTimeline(campaign);
 
   return (
-    <section className="border-border-color shadow-card bg-card rounded-xl border">
-      <header className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+    <section className="border-border-color rounded-xl border bg-card shadow-card">
+      <header className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <div className="flex items-center gap-2">
-          <ScrollText className="text-kpi-gray-mid h-4 w-4" />
-          <h2 className="font-display text-foreground text-base font-semibold">Етапи кампанії</h2>
+          <ScrollText className="h-4 w-4 text-kpi-gray-mid" />
+          <h2 className="font-display text-base font-semibold text-foreground">Етапи кампанії</h2>
         </div>
         {anyEditable && !editing && (
           <Button variant="ghost" size="sm" onClick={startEditing}>
@@ -244,7 +252,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
       </header>
 
       {!editing ? (
-        <ol className="divide-border-subtle divide-y">
+        <ol className="divide-y divide-border-subtle">
           {timeline.map((entry) => {
             const stageBadge = timelineEntryBadge(entry.state, campaign.state);
             return (
@@ -255,7 +263,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
                 <div className="flex items-center gap-3">
                   <StatusBadge status={stageBadge.kind} label={stageBadge.label} size="sm" />
                 </div>
-                <span className="text-muted-foreground text-xs">
+                <span className="text-xs text-muted-foreground">
                   <LocalDateTime date={entry.startsAt.toISOString()} /> —{' '}
                   <LocalDateTime date={entry.endsAt.toISOString()} />
                 </span>
@@ -272,7 +280,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
           )}
 
           <div>
-            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Реєстрація
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -299,7 +307,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
 
           {hasSignaturePhase && signaturesOpensAt && signaturesClosesAt && (
             <div>
-              <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+              <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Збір підписів
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -326,7 +334,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
           )}
 
           <div>
-            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Голосування
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -42,16 +42,24 @@ export function formatTimeRemaining(targetDate: string): string {
   const target = new Date(targetDate).getTime();
   const diff = target - now;
 
-  if (diff <= 0) return 'Завершено';
+  if (diff <= 0) {
+    return 'Завершено';
+  }
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-  if (days > 0) return `${days} дн. ${hours} год.`;
-  if (hours > 0) return `${hours} год. ${minutes} хв.`;
-  if (minutes > 0) return `${minutes} хв. ${seconds} с.`;
+  if (days > 0) {
+    return `${days} дн. ${hours} год.`;
+  }
+  if (hours > 0) {
+    return `${hours} год. ${minutes} хв.`;
+  }
+  if (minutes > 0) {
+    return `${minutes} хв. ${seconds} с.`;
+  }
   return `${seconds} с.`;
 }
 
@@ -97,13 +105,19 @@ export function getElectionStatus(opensAt: string, closesAt: string): ElectionSt
   const open = new Date(opensAt);
   const close = new Date(closesAt);
 
-  if (now < open) return 'upcoming';
-  if (now <= close) return 'open';
+  if (now < open) {
+    return 'upcoming';
+  }
+  if (now <= close) {
+    return 'open';
+  }
   return 'closed';
 }
 
 export function truncate(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str;
+  if (str.length <= maxLength) {
+    return str;
+  }
   return str.slice(0, maxLength - 3) + '…';
 }
 
@@ -131,7 +145,9 @@ export function pluralize(
 }
 
 export function calculateVotePercentage(votes: number, total: number): number {
-  if (total === 0) return 0;
+  if (total === 0) {
+    return 0;
+  }
   return Math.round((votes / total) * 100 * 10) / 10;
 }
 
@@ -159,13 +175,19 @@ export function isValidUuid(id: string): boolean {
 }
 
 export function tokenUsageFraction(token: InviteToken): number {
-  if (token.maxUsage === 0) return 0;
+  if (token.maxUsage === 0) {
+    return 0;
+  }
   return token.currentUsage / token.maxUsage;
 }
 
 export function tokenUsageColor(fraction: number): string {
-  if (fraction >= 1) return 'bg-error';
-  if (fraction >= 0.8) return 'bg-kpi-orange';
+  if (fraction >= 1) {
+    return 'bg-error';
+  }
+  if (fraction >= 0.8) {
+    return 'bg-kpi-orange';
+  }
   return 'bg-success';
 }
 
@@ -197,7 +219,9 @@ export function parseQuillDelta(content: string): QuillDelta | null {
  */
 export function deltaToPlainText(content: string): string {
   const delta = parseQuillDelta(content);
-  if (!delta) return '';
+  if (!delta) {
+    return '';
+  }
 
   const text = delta.ops
     .filter((op) => typeof op.insert === 'string')
@@ -210,6 +234,8 @@ export function deltaToPlainText(content: string): string {
 
 /** Capitalizes the first letter of a word. */
 export function capitalizeFirst(str: string): string {
-  if (!str) return str;
+  if (!str) {
+    return str;
+  }
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

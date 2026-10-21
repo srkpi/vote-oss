@@ -24,25 +24,25 @@ export function SignPetitionPanel({ petition }: SignPetitionPanelProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setAlreadySigned(petition.hasVoted || !!getVote(petition.id));
   }, [petition.id, petition.hasVoted]);
 
   if (alreadySigned === null) {
     return (
       <div className="flex h-24 items-center justify-center">
-        <Loader2 className="text-kpi-navy h-6 w-6 animate-spin" />
+        <Loader2 className="h-6 w-6 animate-spin text-kpi-navy" />
       </div>
     );
   }
 
   if (alreadySigned) {
     return (
-      <div className="border-success/30 bg-success-bg flex items-center gap-3 rounded-xl border p-4">
-        <CheckCircle2 className="text-success h-6 w-6 shrink-0" />
+      <div className="flex items-center gap-3 rounded-xl border border-success/30 bg-success-bg p-4">
+        <CheckCircle2 className="h-6 w-6 shrink-0 text-success" />
         <div>
-          <p className="font-display text-foreground font-semibold">Ви підписали цю петицію</p>
-          <p className="font-body text-muted-foreground text-sm">Дякуємо за вашу підтримку!</p>
+          <p className="font-display font-semibold text-foreground">Ви підписали цю петицію</p>
+          <p className="font-body text-sm text-muted-foreground">Дякуємо за вашу підтримку!</p>
         </div>
       </div>
     );

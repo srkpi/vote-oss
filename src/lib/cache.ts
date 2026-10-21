@@ -44,7 +44,9 @@ import type { FaqCategoryData } from '@/types/faq';
 /** Return cached elections, or null if not cached / Redis down. */
 export async function getCachedElections(): Promise<CachedElection[] | null> {
   const raw = await safeRedis(() => redis.get(CACHE_KEY_ELECTIONS));
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     return JSON.parse(raw) as CachedElection[];
   } catch {
@@ -84,7 +86,9 @@ function electionCountKey(electionId: string): string {
  */
 export async function getLiveElectionBallotCount(electionId: string): Promise<number | null> {
   const raw = await safeRedis(() => redis.get(electionCountKey(electionId)));
-  if (raw === null) return null;
+  if (raw === null) {
+    return null;
+  }
   const n = parseInt(raw, 10);
   return isNaN(n) ? null : n;
 }
@@ -145,7 +149,9 @@ export async function invalidateLiveElectionBallotCount(electionId: string): Pro
 export async function overlayLiveBallotCounts(
   elections: CachedElection[],
 ): Promise<CachedElection[]> {
-  if (elections.length === 0) return elections;
+  if (elections.length === 0) {
+    return elections;
+  }
 
   const results = await safeRedis(async () => {
     const pipeline = redis.pipeline();
@@ -155,13 +161,19 @@ export async function overlayLiveBallotCounts(
     return pipeline.exec();
   });
 
-  if (!results) return elections; // Redis down — keep cached counts
+  if (!results) {
+    return elections;
+  } // Redis down — keep cached counts
 
   return elections.map((election, i) => {
     const [err, raw] = results[i] as [Error | null, string | null];
-    if (err || raw === null) return election;
+    if (err || raw === null) {
+      return election;
+    }
     const live = parseInt(raw, 10);
-    if (isNaN(live)) return election;
+    if (isNaN(live)) {
+      return election;
+    }
     return { ...election, ballotCount: live };
   });
 }
@@ -180,7 +192,9 @@ function userVotedKey(userId: string): string {
  */
 export async function getCachedUserVotedElections(userId: string): Promise<Set<string> | null> {
   const raw = await safeRedis(() => redis.get(userVotedKey(userId)));
-  if (raw === null) return null;
+  if (raw === null) {
+    return null;
+  }
   try {
     const arr = JSON.parse(raw) as string[];
     return new Set(arr);
@@ -223,7 +237,9 @@ export async function addToUserVotedElections(userId: string, electionId: string
     } else {
       ids = [];
     }
-    if (!ids.includes(electionId)) ids.push(electionId);
+    if (!ids.includes(electionId)) {
+      ids.push(electionId);
+    }
     await redis.set(userVotedKey(userId), JSON.stringify(ids), 'EX', CACHE_TTL_USER_VOTED_SECS);
   });
 }
@@ -240,7 +256,9 @@ export async function invalidateUserVotedElections(userId: string): Promise<void
 /** Return cached admin list, or null if not cached / Redis down. */
 export async function getCachedAdmins(): Promise<Admin[] | null> {
   const raw = await safeRedis(() => redis.get(CACHE_KEY_ADMINS));
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     return JSON.parse(raw) as Admin[];
   } catch {
@@ -266,7 +284,9 @@ export async function invalidateAdmins(): Promise<void> {
 
 export async function getCachedInviteTokens(): Promise<CachedInviteToken[] | null> {
   const raw = await safeRedis(() => redis.get(CACHE_KEY_INVITE_TOKENS));
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     return JSON.parse(raw) as CachedInviteToken[];
   } catch {
@@ -296,7 +316,9 @@ export async function invalidateInviteTokens(): Promise<void> {
  */
 export async function getCachedFaq(): Promise<FaqCategoryData[] | null> {
   const raw = await safeRedis(() => redis.get(CACHE_KEY_FAQ));
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     return JSON.parse(raw) as FaqCategoryData[];
   } catch {

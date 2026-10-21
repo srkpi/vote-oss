@@ -27,11 +27,15 @@ function avatarCacheKey(userId: string): string {
 export async function getAvatarUrlMap(userIds: readonly string[]): Promise<Map<string, string>> {
   const ids = [...new Set(userIds)].filter(Boolean);
   const result = new Map<string, string>();
-  if (ids.length === 0) return result;
+  if (ids.length === 0) {
+    return result;
+  }
 
   const cached = await safeRedis(async () => {
     const pipeline = redis.pipeline();
-    for (const id of ids) pipeline.get(avatarCacheKey(id));
+    for (const id of ids) {
+      pipeline.get(avatarCacheKey(id));
+    }
     return pipeline.exec();
   });
 

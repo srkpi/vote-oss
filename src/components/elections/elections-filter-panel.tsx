@@ -101,7 +101,9 @@ export function ElectionsFiltersButton({
   // lives inside this same ref, so clicking it again to close never races
   // against this listener.
   useEffect(() => {
-    if (isMobile || !open) return;
+    if (isMobile || !open) {
+      return;
+    }
     const onPointer = (e: PointerEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -128,26 +130,26 @@ export function ElectionsFiltersButton({
           'font-body inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-all duration-150',
           activeCount > 0
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy shadow-sm'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
+            : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light/50',
         )}
       >
         <Filter className="h-3.5 w-3.5" />
         <span>Фільтри</span>
         {activeCount > 0 && (
-          <span className="bg-kpi-navy flex h-4.5 w-4.5 items-center justify-center rounded-full text-[10px] font-bold text-white">
+          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-kpi-navy text-[10px] font-bold text-white">
             {activeCount}
           </span>
         )}
         <ChevronDown
           className={cn(
-            'text-muted-foreground hidden h-3.5 w-3.5 transition-transform duration-150 sm:block',
+            'hidden h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 sm:block',
             open && 'rotate-180',
           )}
         />
       </button>
 
       {!isMobile && open && (
-        <div className="border-border-color animate-scale-in bg-card absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border p-5 shadow-xl">
+        <div className="border-border-color animate-scale-in absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border bg-card p-5 shadow-xl">
           <ElectionsFiltersContent {...sectionsInput} activeCount={activeCount} onReset={onReset} />
         </div>
       )}

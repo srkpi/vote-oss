@@ -32,7 +32,9 @@ export const metadata: Metadata = {
 };
 
 export default async function ElectionsPage() {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
   if (!session) {
@@ -45,7 +47,7 @@ export default async function ElectionsPage() {
   const meta = data?.meta ?? { faculties: [], studyForms: [] };
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <SessionGuard userId={session.userId} />
       <PageHeader
         title="Голосування"
@@ -64,7 +66,7 @@ export default async function ElectionsPage() {
 
       <div className="container py-8">
         {error ? (
-          <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+          <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
             <ErrorState title="Не вдалося завантажити голосування" description={error} />
           </div>
         ) : (

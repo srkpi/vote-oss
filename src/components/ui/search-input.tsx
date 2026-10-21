@@ -17,7 +17,7 @@ export function SearchInput({
 }: SearchInputProps) {
   return (
     <div className={cn('relative w-full flex-1', className)}>
-      <div className="text-kpi-gray-mid pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">
+      <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-kpi-gray-mid">
         <Search className="h-4 w-4" />
       </div>
 
@@ -28,9 +28,9 @@ export function SearchInput({
         placeholder={placeholder}
         className={cn(
           'font-body h-9 w-full pr-3 pl-9 text-sm',
-          'border-border-color bg-card rounded-lg border',
+          'border-border-color rounded-lg border bg-card',
           'placeholder:text-subtle',
-          'focus:border-kpi-blue-light focus:ring-kpi-blue-light/20 focus:ring-2 focus:outline-none',
+          'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
           'shadow-xs transition-colors duration-150',
         )}
       />
@@ -38,7 +38,7 @@ export function SearchInput({
       {value && (
         <button
           onClick={() => onChange('')}
-          className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 transition-colors"
+          className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
         >
           <X className="h-3.5 w-3.5" />
         </button>

@@ -40,7 +40,9 @@ export function CommentComposer({
   const isLocked = submitting || disabled;
 
   const handleSubmit = async () => {
-    if (!isValid || isLocked) return;
+    if (!isValid || isLocked) {
+      return;
+    }
     setSubmitting(true);
     try {
       await onSubmit(trimmed);

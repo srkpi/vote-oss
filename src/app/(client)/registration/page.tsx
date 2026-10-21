@@ -20,15 +20,19 @@ export const metadata: Metadata = {
 };
 
 export default async function RegistrationListPage() {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   const session = await getServerSession();
-  if (!session) redirect('/login');
+  if (!session) {
+    redirect('/login');
+  }
 
   const { data: forms, error } = await serverApi.registrationForms.list();
 
   return (
-    <div className="bg-surface min-h-[calc(100dvh-var(--header-height))]">
+    <div className="min-h-[calc(100dvh-var(--header-height))] bg-surface">
       <RegistrationListClient initialForms={forms ?? []} error={error} />
     </div>
   );

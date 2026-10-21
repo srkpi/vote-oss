@@ -25,9 +25,14 @@ export function ChipSelect({
   className,
 }: ChipSelectProps) {
   function toggle(v: string) {
-    if (disabled) return;
-    if (value.includes(v)) onChange(value.filter((x) => x !== v));
-    else onChange([...value, v]);
+    if (disabled) {
+      return;
+    }
+    if (value.includes(v)) {
+      onChange(value.filter((x) => x !== v));
+    } else {
+      onChange([...value, v]);
+    }
   }
 
   return (
@@ -42,10 +47,10 @@ export function ChipSelect({
             onClick={() => toggle(opt.value)}
             className={cn(
               'font-body h-8 rounded-lg border px-3 text-sm font-medium transition-all duration-150',
-              'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none',
+              'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none',
               selected
                 ? 'border-kpi-navy bg-kpi-navy text-white shadow-sm'
-                : 'border-border-color text-foreground hover:border-kpi-blue-light bg-card',
+                : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light',
               disabled && 'cursor-not-allowed opacity-50',
               error && !selected && 'border-error',
             )}

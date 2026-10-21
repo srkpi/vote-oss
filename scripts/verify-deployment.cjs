@@ -35,7 +35,7 @@
  * attestation hardware, which is out of scope for this project.
  */
 
-/* eslint-disable @typescript-eslint/no-require-imports -- intentionally
+/* oxlint-disable typescript/no-require-imports -- intentionally
   CommonJS (see header above): this must also run correctly when piped
   into `node -` via stdin, which has no file extension for Node to infer
   ESM from and isn't guaranteed to auto-detect `import` on every Node

@@ -40,8 +40,8 @@ coverage
 *.md
 *.log
 *.tsbuildinfo
-.prettierignore
-.prettierrc
+.oxlintrc.json
+.oxfmtrc.json
 Caddyfile
 images
 

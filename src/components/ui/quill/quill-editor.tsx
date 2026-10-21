@@ -89,14 +89,18 @@ export default function QuillEditor({
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
       const rect = sel.getRangeAt(0).getBoundingClientRect();
-      if (rect.width > 0 || rect.height > 0) return rect;
+      if (rect.width > 0 || rect.height > 0) {
+        return rect;
+      }
     }
     return quill.root.getBoundingClientRect();
   };
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const editorDiv = container.ownerDocument.createElement('div');
     container.appendChild(editorDiv);
@@ -109,10 +113,14 @@ export default function QuillEditor({
           handlers: {
             link() {
               const range = quill.getSelection();
-              if (!range) return;
+              if (!range) {
+                return;
+              }
               const existingHref = (quill.getFormat(range).link as string | undefined) ?? '';
               const rect = getSelectionRect(quill);
-              if (!rect) return;
+              if (!rect) {
+                return;
+              }
               setTooltip({ anchorRect: rect, href: existingHref, range });
             },
           },
@@ -126,16 +134,22 @@ export default function QuillEditor({
 
     // Suppress the native Snow tooltip — we render our own portal instead
     const nativeTooltip = container.querySelector('.ql-tooltip') as HTMLElement | null;
-    if (nativeTooltip) nativeTooltip.style.display = 'none';
+    if (nativeTooltip) {
+      nativeTooltip.style.display = 'none';
+    }
 
     // Open tooltip when cursor lands on an existing link
     quill.on('selection-change' as Parameters<typeof quill.on>[0], (range: QuillRange | null) => {
-      if (!range) return; // editor lost focus — keep tooltip open for interaction
+      if (!range) {
+        return;
+      } // editor lost focus — keep tooltip open for interaction
 
       const format = quill.getFormat(range);
       if (format.link) {
         const rect = getSelectionRect(quill);
-        if (rect) setTooltip({ anchorRect: rect, href: format.link as string, range });
+        if (rect) {
+          setTooltip({ anchorRect: rect, href: format.link as string, range });
+        }
       } else {
         setTooltip(null);
       }
@@ -163,13 +177,15 @@ export default function QuillEditor({
       container.innerHTML = '';
       setTooltip(null);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, []);
 
   // Sync when parent resets the value (e.g. dialog re-open)
   useEffect(() => {
     const quill = quillRef.current;
-    if (!quill || value === lastEmitted.current) return;
+    if (!quill || value === lastEmitted.current) {
+      return;
+    }
     try {
       quill.setContents(JSON.parse(value), 'silent' as EmitterSource);
       lastEmitted.current = value;
@@ -183,7 +199,9 @@ export default function QuillEditor({
 
   const handleLinkSave = (url: string) => {
     const quill = quillRef.current;
-    if (!quill || !tooltip) return;
+    if (!quill || !tooltip) {
+      return;
+    }
 
     // If the user only placed a cursor (no selection), expand to the full
     // link blot so the edit applies to the entire linked text.
@@ -197,7 +215,9 @@ export default function QuillEditor({
 
   const handleLinkRemove = () => {
     const quill = quillRef.current;
-    if (!quill || !tooltip) return;
+    if (!quill || !tooltip) {
+      return;
+    }
 
     const range =
       tooltip.range.length > 0 ? tooltip.range : getLinkRange(quill, tooltip.range.index);
@@ -239,7 +259,7 @@ export default function QuillEditor({
             value={charCount}
             max={maxLength}
             threshold={0}
-            className="border-border-subtle bg-surface flex justify-end rounded-b-(--radius) border-t px-3 py-1.5"
+            className="flex justify-end rounded-b-(--radius) border-t border-border-subtle bg-surface px-3 py-1.5"
           />
         )}
       </div>

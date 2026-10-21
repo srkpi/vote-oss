@@ -98,10 +98,14 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   let body: {
     token?: string;
@@ -129,10 +133,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     include: { choices: true },
   });
 
-  if (!election) return Errors.notFound('Election not found');
+  if (!election) {
+    return Errors.notFound('Election not found');
+  }
 
-  if (now < election.opens_at) return Errors.badRequest('Election has not started yet');
-  if (now > election.closes_at) return Errors.badRequest('Election has already closed');
+  if (now < election.opens_at) {
+    return Errors.badRequest('Election has not started yet');
+  }
+  if (now > election.closes_at) {
+    return Errors.badRequest('Election has already closed');
+  }
 
   const privateKeyPem = decryptField(election.private_key);
 
@@ -153,7 +163,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const usedNullifier = await prisma.usedTokenNullifier.findUnique({
     where: { nullifier, election_id: electionId },
   });
-  if (usedNullifier) return Errors.conflict('This vote token has already been used');
+  if (usedNullifier) {
+    return Errors.conflict('This vote token has already been used');
+  }
 
   let decryptResult: ReturnType<typeof decryptBallot>;
   try {

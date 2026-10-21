@@ -5,7 +5,9 @@ import type { MetricBuilder } from '@/types/metrics';
 
 export const buildVelocityMetric: MetricBuilder = ({ metrics, totalBallots }) => {
   // Velocity is only meaningful with at least 4 ballots spread across two halves.
-  if (totalBallots < 4 || metrics.velocityRatio === null) return null;
+  if (totalBallots < 4 || metrics.velocityRatio === null) {
+    return null;
+  }
 
   const vr = metrics.velocityRatio;
   // isElectionClosed tells us whether we are comparing the two halves of the

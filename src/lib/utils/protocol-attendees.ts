@@ -41,7 +41,9 @@ export function deriveAttendees(
   const seenUserIds = new Set<string>();
 
   for (const s of saved ?? []) {
-    if (s.userId) seenUserIds.add(s.userId);
+    if (s.userId) {
+      seenUserIds.add(s.userId);
+    }
     result.push({
       uid: uid(),
       userId: s.userId,
@@ -54,7 +56,9 @@ export function deriveAttendees(
   }
 
   for (const m of members) {
-    if (seenUserIds.has(m.userId)) continue;
+    if (seenUserIds.has(m.userId)) {
+      continue;
+    }
     // New member not yet in saved snapshot — derive gender-aware absent text
     result.push({
       uid: uid(),

@@ -16,7 +16,7 @@ export function VoteStatusWrapper({ election }: VoteStatusWrapperProps) {
   const [localRecord, setLocalRecord] = useState<VoteRecord | null | undefined>(undefined);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setLocalRecord(getVote(election.id));
   }, [election.id]);
 
@@ -24,7 +24,7 @@ export function VoteStatusWrapper({ election }: VoteStatusWrapperProps) {
   if (localRecord === undefined) {
     return (
       <div className="flex h-24 items-center justify-center">
-        <div className="border-kpi-navy h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-kpi-navy border-t-transparent" />
       </div>
     );
   }

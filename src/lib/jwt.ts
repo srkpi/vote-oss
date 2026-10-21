@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+
 import { jwtVerify, SignJWT } from 'jose';
 
 import { JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, NODE_ENV } from '@/lib/config/server';
@@ -38,7 +39,9 @@ export async function signRefreshToken(
 
 export async function verifyAccessToken(token: string): Promise<VerifiedPayload> {
   const { payload } = await jwtVerify(token, ACCESS_SECRET_ENCODED);
-  if (payload['tokenType'] !== 'access') throw new Error('Invalid token type');
+  if (payload['tokenType'] !== 'access') {
+    throw new Error('Invalid token type');
+  }
 
   return {
     sub: payload.sub as string,
@@ -63,7 +66,9 @@ export async function verifyAccessToken(token: string): Promise<VerifiedPayload>
 
 export async function verifyRefreshToken(token: string): Promise<VerifiedPayload> {
   const { payload } = await jwtVerify(token, REFRESH_SECRET_ENCODED);
-  if (payload['tokenType'] !== 'refresh') throw new Error('Invalid token type');
+  if (payload['tokenType'] !== 'refresh') {
+    throw new Error('Invalid token type');
+  }
 
   return {
     sub: payload.sub as string,

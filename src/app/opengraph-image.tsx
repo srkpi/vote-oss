@@ -1,6 +1,7 @@
 import fs from 'fs';
-import { ImageResponse } from 'next/og';
 import path from 'path';
+
+import { ImageResponse } from 'next/og';
 
 import { APP_NAME } from '@/lib/config/client';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';

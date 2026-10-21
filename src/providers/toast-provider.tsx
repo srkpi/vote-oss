@@ -8,14 +8,12 @@ import { ToastProvider as ToastContextProvider, useToast } from '@/hooks/use-toa
 function ToastContainer() {
   const { toasts, dismiss } = useToast();
 
-  if (toasts.length === 0) return null;
+  if (toasts.length === 0) {
+    return null;
+  }
 
   return (
-    <div
-      className="pointer-events-none fixed right-4 bottom-4 z-100 flex flex-col items-end gap-2.5"
-      aria-live="polite"
-      aria-atomic="false"
-    >
+    <div className="pointer-events-none fixed right-4 bottom-4 z-100 flex flex-col items-end gap-2.5">
       {toasts.map((t) => (
         <div key={t.id} className="pointer-events-auto">
           <ToastItem

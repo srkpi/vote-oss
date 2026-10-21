@@ -22,7 +22,9 @@ export function useAutoResizeTextarea(value: string) {
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
     // Reset height to auto to accurately measure the new height
     el.style.height = 'auto';

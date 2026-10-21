@@ -17,7 +17,9 @@ import { prisma } from '@/lib/prisma';
 
 function looksEncrypted(value: string | null): boolean {
   // encryptField output is <ivHex>:<authTagHex>:<cipherHex>
-  if (!value) return false;
+  if (!value) {
+    return false;
+  }
   const parts = value.split(':');
   return (
     parts.length === 3 &&

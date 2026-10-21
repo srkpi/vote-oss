@@ -44,7 +44,9 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const group = await prisma.group.findUnique({
     where: { id, deleted_at: null },
@@ -53,7 +55,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     },
   });
 
-  if (!group) return Errors.notFound(new GroupNotFoundError().message);
+  if (!group) {
+    return Errors.notFound(new GroupNotFoundError().message);
+  }
 
   return NextResponse.json({ name: group.name });
 }

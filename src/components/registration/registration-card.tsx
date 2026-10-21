@@ -27,10 +27,10 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
   return (
     <div
       className={cn(
-        'group bg-card relative h-full overflow-hidden rounded-xl',
+        'group relative h-full overflow-hidden rounded-xl bg-card',
         'border-border-color border',
         'shadow-card',
-        'hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1',
+        'transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover',
         !actionable && 'opacity-90 hover:opacity-100',
         'animate-fade-up',
       )}
@@ -40,18 +40,17 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
         href={`/registration/${form.id}`}
         className={cn(
           'absolute inset-0 z-0 rounded-xl',
-          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+          'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
         )}
-        aria-label={form.title}
       />
 
       <div
         className={cn(
           'h-1',
-          isOpen && form.eligible && 'from-success bg-linear-to-r to-emerald-400',
+          isOpen && form.eligible && 'bg-linear-to-r from-success to-emerald-400',
           isOpen && !form.eligible && 'bg-linear-to-r from-rose-400 to-rose-300',
-          isUpcoming && 'from-kpi-orange bg-linear-to-r to-amber-400',
-          isClosed && 'from-kpi-gray-light bg-linear-to-r to-gray-300',
+          isUpcoming && 'bg-linear-to-r from-kpi-orange to-amber-400',
+          isClosed && 'bg-linear-to-r from-kpi-gray-light to-gray-300',
         )}
       />
 
@@ -66,7 +65,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
 
         <h3
           className={cn(
-            'font-display text-foreground text-xl leading-snug font-semibold',
+            'font-display text-xl leading-snug font-semibold text-foreground',
             'group-hover:text-kpi-navy',
             'line-clamp-2 wrap-break-word transition-colors duration-200',
           )}
@@ -75,7 +74,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
         </h3>
 
         {form.description && (
-          <p className="font-body text-muted-foreground line-clamp-2 text-sm wrap-break-word">
+          <p className="font-body line-clamp-2 text-sm wrap-break-word text-muted-foreground">
             {form.description}
           </p>
         )}
@@ -84,13 +83,13 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
 
         <div className="mt-auto">
           <div className="space-y-2">
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <ClipboardList className="text-kpi-gray-mid h-4 w-4 shrink-0" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ClipboardList className="h-4 w-4 shrink-0 text-kpi-gray-mid" />
               <span className="truncate">{form.groupName}</span>
             </div>
 
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Calendar className="text-kpi-gray-mid h-4 w-4 shrink-0" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4 shrink-0 text-kpi-gray-mid" />
               <span>
                 {isOpen && (
                   <>
@@ -113,19 +112,19 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
 
           <div className="flex flex-wrap gap-1.5 pt-2">
             {form.requiresCampaignProgram && (
-              <span className="font-body bg-surface text-muted-foreground border-border-subtle inline-flex items-center gap-1 truncate rounded-full border px-2.5 py-1 text-xs">
+              <span className="font-body inline-flex items-center gap-1 truncate rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-muted-foreground">
                 <FileText className="h-3 w-3 shrink-0" />
                 Програма
               </span>
             )}
             {form.teamSize > 0 && (
-              <span className="font-body bg-surface text-muted-foreground border-border-subtle inline-flex items-center gap-1 truncate rounded-full border px-2.5 py-1 text-xs">
+              <span className="font-body inline-flex items-center gap-1 truncate rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-muted-foreground">
                 <Users className="h-3 w-3 shrink-0" />
                 Команда: {form.teamSize}
               </span>
             )}
             {form.restrictions.length > 0 && (
-              <span className="font-body bg-surface text-muted-foreground border-border-subtle inline-flex items-center gap-1 truncate rounded-full border px-2.5 py-1 text-xs">
+              <span className="font-body inline-flex items-center gap-1 truncate rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-muted-foreground">
                 <ShieldCheck className="h-3 w-3 shrink-0" />
                 {form.restrictions.map((r) => r.value).join(', ')}
               </span>
@@ -140,7 +139,7 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
 export function RegistrationCardSkeleton({ index = 0 }: { index?: number }) {
   return (
     <div
-      className="animate-fade-up border-border-color bg-card overflow-hidden rounded-xl border"
+      className="animate-fade-up border-border-color overflow-hidden rounded-xl border bg-card"
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
     >
       <div className="skeleton h-1" />

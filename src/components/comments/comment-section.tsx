@@ -52,11 +52,15 @@ function compareComments(
   let result: number;
   if (sort === 'rating') {
     result = a.upCount - a.downCount - (b.upCount - b.downCount);
-    if (result === 0) result = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+    if (result === 0) {
+      result = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+    }
   } else {
     result = Date.parse(a.createdAt) - Date.parse(b.createdAt);
   }
-  if (result === 0) result = a.id.localeCompare(b.id);
+  if (result === 0) {
+    result = a.id.localeCompare(b.id);
+  }
   return direction === 'asc' ? result : -result;
 }
 
@@ -89,7 +93,9 @@ export function CommentSection({
     setCreating(true);
     try {
       const { data: created, error } = await api.elections.comments.create(electionId, body);
-      if (error || !created) throw new Error(error ?? 'Не вдалося опублікувати коментар');
+      if (error || !created) {
+        throw new Error(error ?? 'Не вдалося опублікувати коментар');
+      }
 
       onCommentCreated?.();
 
@@ -107,14 +113,18 @@ export function CommentSection({
         let pages = 0;
 
         while (more) {
-          if (++pages > MAX_BACKFILL_PAGES) throw new Error('Забагато сторінок для довантаження');
+          if (++pages > MAX_BACKFILL_PAGES) {
+            throw new Error('Забагато сторінок для довантаження');
+          }
           const { data, error: pageError } = await api.elections.comments.list(electionId, {
             cursor: cursor ?? undefined,
             limit: COMMENTS_LOAD_MORE_PAGE_SIZE,
             sort,
             direction,
           });
-          if (pageError || !data) throw new Error(pageError ?? 'Не вдалося довантажити коментарі');
+          if (pageError || !data) {
+            throw new Error(pageError ?? 'Не вдалося довантажити коментарі');
+          }
           merged = [...merged, ...data.comments];
           cursor = data.nextCursor;
           more = data.hasMore;
@@ -148,7 +158,9 @@ export function CommentSection({
         sort,
         direction,
       });
-      if (error || !data) throw new Error(error ?? 'Не вдалося завантажити коментарі');
+      if (error || !data) {
+        throw new Error(error ?? 'Не вдалося завантажити коментарі');
+      }
       // Continuing the list in whatever order is currently active, so the
       // new page always belongs after what's already on screen.
       setComments((prev) => [...prev, ...data.comments]);
@@ -166,7 +178,9 @@ export function CommentSection({
   };
 
   const handleSortChange = async (nextSort: CommentSort, nextDirection: CommentSortDirection) => {
-    if (nextSort === sort && nextDirection === direction) return;
+    if (nextSort === sort && nextDirection === direction) {
+      return;
+    }
     setSort(nextSort);
     setDirection(nextDirection);
     setSortLoading(true);
@@ -176,7 +190,9 @@ export function CommentSection({
         sort: nextSort,
         direction: nextDirection,
       });
-      if (error || !data) throw new Error(error ?? 'Не вдалося змінити сортування');
+      if (error || !data) {
+        throw new Error(error ?? 'Не вдалося змінити сортування');
+      }
       setComments(data.comments);
       setNextCursor(data.nextCursor);
       setHasMore(data.hasMore);
@@ -192,11 +208,15 @@ export function CommentSection({
   };
 
   const handleConfirmDelete = async () => {
-    if (!pendingDelete) return;
+    if (!pendingDelete) {
+      return;
+    }
     setDeleting(true);
     try {
       const { data, error } = await api.elections.comments.remove(electionId, pendingDelete.id);
-      if (error || !data) throw new Error(error ?? 'Не вдалося видалити коментар');
+      if (error || !data) {
+        throw new Error(error ?? 'Не вдалося видалити коментар');
+      }
       handleUpdated(data);
       setPendingDelete(null);
     } catch (err) {
@@ -288,7 +308,7 @@ export function CommentSection({
             <DialogCloseButton onClose={() => setPendingDelete(null)} />
           </DialogHeader>
           <DialogBody>
-            <p className="font-body text-muted-foreground text-sm">
+            <p className="font-body text-sm text-muted-foreground">
               Текст коментаря буде прибрано, але запис про його видалення залишиться видимим.
             </p>
           </DialogBody>

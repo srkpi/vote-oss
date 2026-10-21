@@ -46,7 +46,9 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
         let message = `Помилка генерації (${response.status})`;
         try {
           const body = await response.json();
-          if (body && typeof body.message === 'string') message = body.message;
+          if (body && typeof body.message === 'string') {
+            message = body.message;
+          }
         } catch {
           /* ignore parse errors */
         }
@@ -126,11 +128,11 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
             </Button>
           </div>
 
-          <article className="border-border-color shadow-card bg-card rounded-xl border px-6 py-10 sm:px-12 sm:py-14">
+          <article className="border-border-color rounded-xl border bg-card px-6 py-10 shadow-card sm:px-12 sm:py-14">
             {/* Letterhead */}
-            <header className="border-border-subtle mb-10 flex flex-col items-center gap-3 border-b pb-6 text-center">
+            <header className="mb-10 flex flex-col items-center gap-3 border-b border-border-subtle pb-6 text-center">
               {logo && (
-                /* eslint-disable-next-line @next/next/no-img-element */
+                /* oxlint-disable-next-line nextjs/no-img-element */
                 <img
                   src={logo.url}
                   alt={`Логотип ${oss.name}`}
@@ -138,11 +140,11 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
                 />
               )}
               {oss.name && (
-                <p className="font-display text-foreground text-base leading-tight font-semibold uppercase sm:text-lg">
+                <p className="font-display text-base leading-tight font-semibold text-foreground uppercase sm:text-lg">
                   {oss.name}
                 </p>
               )}
-              <div className="text-muted-foreground space-y-0.5 text-sm">
+              <div className="space-y-0.5 text-sm text-muted-foreground">
                 {oss.address && <p>{oss.address}</p>}
                 {(oss.email || oss.contact) && (
                   <p>
@@ -156,15 +158,15 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
 
             {/* Title */}
             <div className="mb-10 text-center">
-              <h1 className="font-display text-foreground text-2xl font-bold tracking-wide uppercase sm:text-3xl">
+              <h1 className="font-display text-2xl font-bold tracking-wide text-foreground uppercase sm:text-3xl">
                 Протокол № {protocol.number}/{year}
               </h1>
               {protocol.name && (
-                <p className="font-display text-foreground mt-3 text-lg sm:text-xl">
+                <p className="mt-3 font-display text-lg text-foreground sm:text-xl">
                   {protocol.name}
                 </p>
               )}
-              <p className="text-muted-foreground mt-3 text-sm">від {dateLabel}</p>
+              <p className="mt-3 text-sm text-muted-foreground">від {dateLabel}</p>
             </div>
 
             {/* Attendance summary */}
@@ -181,10 +183,10 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
             {protocol.agendaItems.length > 0 && (
               <section className="mb-10">
                 <SectionHeading>Порядок денний</SectionHeading>
-                <ol className="text-foreground space-y-1 text-sm leading-relaxed">
+                <ol className="space-y-1 text-sm leading-relaxed text-foreground">
                   {protocol.agendaItems.map((item, idx) => (
                     <li key={`overview-${item.id}`} className="flex gap-2">
-                      <span className="text-muted-foreground w-6 shrink-0 text-right">
+                      <span className="w-6 shrink-0 text-right text-muted-foreground">
                         {idx + 1}.
                       </span>
                       <span className="flex-1">{item.name}</span>
@@ -201,12 +203,12 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
                   const totals = protocol.agendaVoteTotals[item.id] ?? null;
                   return (
                     <article key={item.id} className="space-y-3">
-                      <h3 className="font-display text-foreground text-base font-semibold uppercase">
+                      <h3 className="font-display text-base font-semibold text-foreground uppercase">
                         {idx + 1}. {item.name}
                       </h3>
                       {item.listeners.length > 0 && (
                         <div className="space-y-2 pl-4 text-sm">
-                          <p className="font-display text-foreground text-sm font-semibold tracking-wider uppercase">
+                          <p className="font-display text-sm font-semibold tracking-wider text-foreground uppercase">
                             Слухали:
                           </p>
                           {item.listeners.map((l, lIdx) => (
@@ -220,7 +222,7 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
                       )}
                       {item.result && (
                         <div className="pl-4 text-sm">
-                          <p className="font-display text-foreground text-sm font-semibold tracking-wider uppercase">
+                          <p className="font-display text-sm font-semibold tracking-wider text-foreground uppercase">
                             Вирішили:
                           </p>
                           <p className="text-justify leading-relaxed">{item.result}</p>
@@ -228,7 +230,7 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
                       )}
                       {totals && (
                         <div className="pl-4 text-sm">
-                          <p className="font-display text-foreground text-sm font-semibold tracking-wider uppercase">
+                          <p className="font-display text-sm font-semibold tracking-wider text-foreground uppercase">
                             Голосували:
                           </p>
                           <p className="leading-relaxed">
@@ -243,7 +245,7 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
                         </div>
                       )}
                       {item.electionId && !totals && (
-                        <p className="text-muted-foreground pl-4 text-xs italic">
+                        <p className="pl-4 text-xs text-muted-foreground italic">
                           Деталі голосування недоступні для перегляду.
                         </p>
                       )}
@@ -255,17 +257,17 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
 
             {/* Signatures */}
             {protocol.responsibles.length > 0 && (
-              <footer className="border-border-subtle mt-12 space-y-5 border-t pt-8">
+              <footer className="mt-12 space-y-5 border-t border-border-subtle pt-8">
                 {protocol.responsibles.map((r, idx) => (
                   <div
                     key={`resp-${idx}`}
                     className="grid grid-cols-[1fr_auto_1fr] items-end gap-4 text-sm"
                   >
                     <span className="text-foreground">{r.posada}</span>
-                    <span className="border-border-color text-muted-foreground w-28 border-b pb-0.5 text-center text-xs">
+                    <span className="border-border-color w-28 border-b pb-0.5 text-center text-xs text-muted-foreground">
                       підпис
                     </span>
-                    <span className="text-foreground text-right font-medium">{r.fullname}</span>
+                    <span className="text-right font-medium text-foreground">{r.fullname}</span>
                   </div>
                 ))}
               </footer>
@@ -275,10 +277,10 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
             {protocol.attendance.length > 0 && (
               <section className="mb-10 pt-8">
                 <SectionHeading>Лист присутності</SectionHeading>
-                <ol className="text-foreground space-y-1.5 text-sm leading-relaxed">
+                <ol className="space-y-1.5 text-sm leading-relaxed text-foreground">
                   {protocol.attendance.map((a, idx) => (
                     <li key={`${a.userId ?? 'manual'}-${idx}`} className="flex gap-2">
-                      <span className="text-muted-foreground w-6 shrink-0 text-right">
+                      <span className="w-6 shrink-0 text-right text-muted-foreground">
                         {idx + 1}.
                       </span>
                       <span className="flex-1">
@@ -286,7 +288,7 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
                         {a.posada && <span className="text-muted-foreground"> — {a.posada}</span>}
                         <span
                           className={
-                            isPresent(a) ? 'text-success ml-2' : 'text-muted-foreground ml-2'
+                            isPresent(a) ? 'ml-2 text-success' : 'ml-2 text-muted-foreground'
                           }
                         >
                           — {a.present_text}
@@ -307,8 +309,8 @@ export function ProtocolDocumentView({ group, protocol, onBackToEdit }: Protocol
 function SummaryRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start">
-      <span className="text-muted-foreground text-xs tracking-wider uppercase">{label}</span>
-      <span className="font-display text-foreground text-lg font-semibold tabular-nums">
+      <span className="text-xs tracking-wider text-muted-foreground uppercase">{label}</span>
+      <span className="font-display text-lg font-semibold text-foreground tabular-nums">
         {value}
       </span>
     </div>
@@ -317,7 +319,7 @@ function SummaryRow({ label, value }: { label: string; value: number }) {
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-display text-foreground border-border-subtle mb-3 border-b pb-1.5 text-sm font-semibold tracking-wider uppercase">
+    <h2 className="mb-3 border-b border-border-subtle pb-1.5 font-display text-sm font-semibold tracking-wider text-foreground uppercase">
       {children}
     </h2>
   );

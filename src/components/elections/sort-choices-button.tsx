@@ -27,9 +27,13 @@ export function SortChoicesButton({ value, onChange }: SortChoicesButtonProps) {
   const isActive = value !== 'original';
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     function onPointerDown(e: PointerEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     }
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
@@ -47,7 +51,7 @@ export function SortChoicesButton({ value, onChange }: SortChoicesButtonProps) {
       </Button>
 
       {open && (
-        <div className="border-border-color bg-card absolute top-full right-0 z-10 mt-1.5 min-w-36 overflow-hidden rounded-lg border py-1 shadow-sm">
+        <div className="border-border-color absolute top-full right-0 z-10 mt-1.5 min-w-36 overflow-hidden rounded-lg border bg-card py-1 shadow-sm">
           {OPTIONS.map(({ value: v, label, Icon }) => {
             const selected = value === v;
             return (
@@ -61,8 +65,8 @@ export function SortChoicesButton({ value, onChange }: SortChoicesButtonProps) {
                 className={cn(
                   'font-body flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors',
                   selected
-                    ? 'text-kpi-navy font-semibold'
-                    : 'text-foreground hover:bg-surface font-medium',
+                    ? 'font-semibold text-kpi-navy'
+                    : 'font-medium text-foreground hover:bg-surface',
                 )}
               >
                 <Icon

@@ -25,7 +25,9 @@ export function useElementWidth<T extends HTMLElement>(): [React.RefCallback<T>,
   const [width, setWidth] = useState<number | null>(null);
 
   const ref = useCallback((node: T | null) => {
-    if (!node) return;
+    if (!node) {
+      return;
+    }
 
     if (typeof ResizeObserver === 'undefined') {
       setWidth(node.getBoundingClientRect().width);
@@ -34,7 +36,9 @@ export function useElementWidth<T extends HTMLElement>(): [React.RefCallback<T>,
 
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
-      if (!entry) return;
+      if (!entry) {
+        return;
+      }
       const next = entry.contentRect.width;
       // Skip sub-pixel noise: some browsers fire ResizeObserver for
       // fractional changes that would otherwise re-run the layout

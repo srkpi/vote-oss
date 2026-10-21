@@ -69,10 +69,14 @@ import { isValidUuid } from '@/lib/utils/common';
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid registration id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid registration id');
+  }
 
   const reg = await prisma.candidateRegistration.findUnique({
     where: { id },
@@ -86,7 +90,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     },
   });
 
-  if (!reg) return Errors.notFound('Registration not found');
+  if (!reg) {
+    return Errors.notFound('Registration not found');
+  }
   if (reg.user_id !== auth.user.sub) {
     return Errors.forbidden('Тільки автор може подати свою заявку');
   }
@@ -100,8 +106,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   const now = new Date();
-  if (now < form.opens_at) return Errors.badRequest('Реєстрація ще не відкрита');
-  if (now > form.closes_at) return Errors.badRequest('Прийом заявок закрито');
+  if (now < form.opens_at) {
+    return Errors.badRequest('Реєстрація ще не відкрита');
+  }
+  if (now > form.closes_at) {
+    return Errors.badRequest('Прийом заявок закрито');
+  }
 
   const eligible = checkRestrictions(
     form.restrictions.map((r) => ({ type: r.type, value: r.value })),
@@ -113,18 +123,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       studyForm: auth.user.studyForm,
     },
   );
-  if (!eligible) return Errors.forbidden('Ви не відповідаєте обмеженням цієї форми');
+  if (!eligible) {
+    return Errors.forbidden('Ви не відповідаєте обмеженням цієї форми');
+  }
 
   // Hard-validate every required field at submit time.
   const phone = validatePhoneNumber(safeDecrypt(reg.phone_number));
-  if (!phone.ok) return Errors.badRequest(phone.error);
+  if (!phone.ok) {
+    return Errors.badRequest(phone.error);
+  }
 
   // Telegram tag is optional — only validate when the candidate provided one.
   const decryptedTag = safeDecrypt(reg.telegram_tag).trim();
   let normalisedTag = '';
   if (decryptedTag) {
     const tag = validateTelegramTag(decryptedTag);
-    if (!tag.ok) return Errors.badRequest(tag.error);
+    if (!tag.ok) {
+      return Errors.badRequest(tag.error);
+    }
     normalisedTag = tag.value;
   }
 
@@ -133,7 +149,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return Errors.badRequest('Для цієї форми обовʼязкове посилання на передвиборчу програму');
     }
     const res = validateCampaignProgramUrl(safeDecrypt(reg.campaign_program_url));
-    if (!res.ok) return Errors.badRequest(res.error);
+    if (!res.ok) {
+      return Errors.badRequest(res.error);
+    }
   }
 
   const nextStatus = form.team_size > 0 ? 'AWAITING_TEAM' : 'PENDING_REVIEW';

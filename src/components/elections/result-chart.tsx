@@ -53,7 +53,7 @@ export function ResultsChart({
 
     const localRecord = getVote(electionId);
     if (localRecord && localRecord.choiceIds && !hideOwnVote) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setUserChoices(localRecord.choiceIds);
     }
 
@@ -61,12 +61,16 @@ export function ResultsChart({
   }, [electionId, hideOwnVote]);
 
   useEffect(() => {
-    if (userChoices.length === 0 || hideOwnVote || totalBallots === 0) return;
+    if (userChoices.length === 0 || hideOwnVote || totalBallots === 0) {
+      return;
+    }
 
     const triggerConfetti = async () => {
       try {
         const confettiKey = `${CONFETTI_KEY_PREFIX}${electionId}`;
-        if (localStorage.getItem(confettiKey)) return;
+        if (localStorage.getItem(confettiKey)) {
+          return;
+        }
 
         const userWon = userChoices.some((id) => {
           const c = choices.find((c) => c.id === id);
@@ -129,22 +133,22 @@ export function ResultsChart({
                   {choice.choice}
                 </span>
                 {isUserChoice && (
-                  <span className="bg-success/15 text-success rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                  <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-success uppercase">
                     Ваш вибір
                   </span>
                 )}
               </div>
               <div className="shrink-0 text-right">
-                <span className="font-display text-foreground text-xl font-bold">
+                <span className="font-display text-xl font-bold text-foreground">
                   {animated ? pct : 0}%
                 </span>
-                <p className="font-body text-muted-foreground text-xs">
+                <p className="font-body text-xs text-muted-foreground">
                   {pluralize(votes, ['голос', 'голоси', 'голосів'])}
                 </p>
               </div>
             </div>
 
-            <div className="bg-border-subtle h-2 w-full overflow-hidden rounded-full">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-border-subtle">
               <div
                 className={cn(
                   'h-full rounded-full bg-linear-to-r transition-all duration-1000 ease-out',

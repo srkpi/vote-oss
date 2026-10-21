@@ -80,7 +80,9 @@ export function Header({ session }: HeaderProps) {
       return;
     }
 
-    if (!session) return;
+    if (!session) {
+      return;
+    }
     setAvatarBusy(true);
     const result = await api.users.avatar.set(session.userId, file);
     setAvatarBusy(false);
@@ -97,7 +99,9 @@ export function Header({ session }: HeaderProps) {
   };
 
   const handleAvatarRemove = async () => {
-    if (!session) return;
+    if (!session) {
+      return;
+    }
     setAvatarBusy(true);
     const result = await api.users.avatar.remove(session.userId);
     setAvatarBusy(false);
@@ -131,13 +135,13 @@ export function Header({ session }: HeaderProps) {
             alt="Logo"
             height={32}
             width={32}
-            className="catgirl:block hidden"
+            className="hidden catgirl:block"
           />
           <div className="flex flex-col justify-center">
-            <span className="font-display text-kpi-navy text-lg leading-tight font-semibold">
+            <span className="font-display text-lg leading-tight font-semibold text-kpi-navy">
               {APP_NAME}
             </span>
-            <span className="font-body text-muted-foreground text-[10px] tracking-widest uppercase">
+            <span className="font-body text-[10px] tracking-widest text-muted-foreground uppercase">
               Система голосування
             </span>
           </div>
@@ -171,16 +175,16 @@ export function Header({ session }: HeaderProps) {
                 }}
                 className={cn(
                   'flex items-center gap-2 rounded-lg px-2 py-1.5 lg:px-3',
-                  'hover:bg-surface transition-colors duration-150',
+                  'transition-colors duration-150 hover:bg-surface',
                   'font-body text-sm font-medium',
                 )}
               >
                 <Avatar src={avatarUrl} name={session.fullName} size={28} />
                 <div className="hidden text-left sm:block">
-                  <p className="text-foreground text-xs leading-tight font-semibold">
+                  <p className="text-xs leading-tight font-semibold text-foreground">
                     {session.fullName.split(' ')[0]}
                   </p>
-                  <p className="text-muted-foreground text-[10px] leading-tight">
+                  <p className="text-[10px] leading-tight text-muted-foreground">
                     {session.faculty}
                     {Boolean(session.group) && (
                       <span className="inline-block">&nbsp;·&nbsp;{session.group}</span>
@@ -195,7 +199,7 @@ export function Header({ session }: HeaderProps) {
                   <div
                     className={cn(
                       'absolute top-full right-0 mt-2 w-68',
-                      'bg-card rounded-xl shadow-xl',
+                      'rounded-xl bg-card shadow-xl',
                       'border-border-color border',
                       'overflow-hidden',
                       'origin-top-right',
@@ -205,10 +209,10 @@ export function Header({ session }: HeaderProps) {
                       <div className="flex items-center gap-3">
                         <Avatar src={avatarUrl} name={session.fullName} size={48} />
                         <div className="min-w-0 flex-1">
-                          <p className="text-foreground text-sm font-semibold wrap-break-word">
+                          <p className="text-sm font-semibold wrap-break-word text-foreground">
                             {session.fullName}
                           </p>
-                          <p className="text-muted-foreground mt-1 text-sm">
+                          <p className="mt-1 text-sm text-muted-foreground">
                             {session.faculty}
                             {Boolean(session.group) && (
                               <span className="inline-block">&nbsp;·&nbsp;{session.group}</span>
@@ -226,7 +230,9 @@ export function Header({ session }: HeaderProps) {
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             e.target.value = '';
-                            if (file) void handleAvatarFile(file);
+                            if (file) {
+                              void handleAvatarFile(file);
+                            }
                           }}
                         />
                         <Button
@@ -254,8 +260,8 @@ export function Header({ session }: HeaderProps) {
 
                       {session.studyForm && (
                         <>
-                          <p className="text-muted-foreground mb-1 text-xs">Форма навчання:</p>
-                          <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
+                          <p className="mb-1 text-xs text-muted-foreground">Форма навчання:</p>
+                          <p className="text-sm leading-snug font-medium wrap-break-word text-foreground">
                             {STUDY_FORM_LABELS[session.studyForm as StudyFormValue]}
                           </p>
                         </>
@@ -263,32 +269,32 @@ export function Header({ session }: HeaderProps) {
 
                       {session.speciality && (
                         <>
-                          <p className="text-muted-foreground mb-1 text-xs">Спеціальність:</p>
-                          <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
+                          <p className="mb-1 text-xs text-muted-foreground">Спеціальність:</p>
+                          <p className="text-sm leading-snug font-medium wrap-break-word text-foreground">
                             {session.speciality}
                           </p>
                         </>
                       )}
 
-                      <p className="text-muted-foreground mb-1 text-xs">Ідентифікатор KPI ID:</p>
-                      <p className="text-foreground text-sm leading-snug font-medium wrap-break-word">
+                      <p className="mb-1 text-xs text-muted-foreground">Ідентифікатор KPI ID:</p>
+                      <p className="text-sm leading-snug font-medium wrap-break-word text-foreground">
                         {session.userId}
                       </p>
 
                       {session.isAdmin && (
-                        <span className="bg-kpi-orange inline-block rounded-full px-3 py-1 text-[11px] font-semibold tracking-wide text-white uppercase">
+                        <span className="inline-block rounded-full bg-kpi-orange px-3 py-1 text-[11px] font-semibold tracking-wide text-white uppercase">
                           Адміністратор
                         </span>
                       )}
                     </div>
 
-                    <div className="border-border-subtle border-t" />
+                    <div className="border-t border-border-subtle" />
 
                     <Button
                       size="lg"
                       onClick={handleLogout}
                       disabled={loggingOut}
-                      className="text-error hover:bg-error-bg bg-card flex w-full items-center gap-2.5 rounded-none text-sm transition-colors disabled:opacity-50"
+                      className="flex w-full items-center gap-2.5 rounded-none bg-card text-sm text-error transition-colors hover:bg-error-bg disabled:opacity-50"
                     >
                       <LogOut className="h-4 w-4" />
                       {loggingOut ? 'Виходимо…' : 'Вийти'}
@@ -312,7 +318,6 @@ export function Header({ session }: HeaderProps) {
               'text-muted-foreground hover:bg-surface',
               'transition-colors',
             )}
-            aria-label="Меню"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -328,7 +333,7 @@ export function Header({ session }: HeaderProps) {
           <div
             className={cn(
               'absolute top-full right-0 left-0 lg:hidden',
-              'border-border-color bg-card border-b',
+              'border-border-color border-b bg-card',
               'shadow-lg',
               'animate-fade-down',
             )}

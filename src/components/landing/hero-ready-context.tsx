@@ -24,7 +24,9 @@ export function HeroReadyProvider({ children }: { children: ReactNode }) {
   const hasMarked = useRef(false);
 
   const markHeroReady = useCallback(() => {
-    if (hasMarked.current) return;
+    if (hasMarked.current) {
+      return;
+    }
     hasMarked.current = true;
     setHeroReady(true);
   }, []);

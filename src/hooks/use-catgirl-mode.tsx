@@ -62,7 +62,9 @@ function getServerReadySnapshot(): boolean {
 }
 
 function emitChange(): void {
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    listener();
+  }
 }
 
 function applyCatgirlMode(next: boolean): void {
@@ -71,7 +73,9 @@ function applyCatgirlMode(next: boolean): void {
     window.localStorage.setItem(LOCAL_STORAGE_CATGIRL_MODE_KEY, next ? '1' : '0');
   } catch {}
   emitChange();
-  if (next) ensureCatgirlImagePoolReady();
+  if (next) {
+    ensureCatgirlImagePoolReady();
+  }
 }
 
 export function CatgirlModeProvider({ children }: { children: ReactNode }) {
@@ -79,7 +83,9 @@ export function CatgirlModeProvider({ children }: { children: ReactNode }) {
   const ready = useSyncExternalStore(subscribeToNothing, getReadySnapshot, getServerReadySnapshot);
 
   useEffect(() => {
-    if (enabled) ensureCatgirlImagePoolReady();
+    if (enabled) {
+      ensureCatgirlImagePoolReady();
+    }
   }, [enabled]);
 
   const setEnabled = useCallback((next: boolean) => {

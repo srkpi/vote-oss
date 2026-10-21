@@ -9,12 +9,16 @@ export const buildFrontrunnerMetric: MetricBuilder = ({
   choiceCount,
   decryptionDone,
 }) => {
-  if (!decryptionDone || choiceCount < 2 || metrics.frontrunnerChanges === null) return null;
+  if (!decryptionDone || choiceCount < 2 || metrics.frontrunnerChanges === null) {
+    return null;
+  }
 
   const fc = metrics.frontrunnerChanges;
 
   // With only 1 ballot, no changes are possible — metric is trivial
-  if (totalBallots < 2) return null;
+  if (totalBallots < 2) {
+    return null;
+  }
 
   // ── Thresholds ───────────────────────────────────────────────────────────────
   // 0:     stable leader from the very first ballot

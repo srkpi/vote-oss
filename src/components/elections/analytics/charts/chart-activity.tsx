@@ -28,7 +28,9 @@ interface BarShapeProps {
 }
 
 function BarShape({ x, y, width, height, payload, maxCount, normalFill }: BarShapeProps) {
-  if (!height || height <= 0) return null;
+  if (!height || height <= 0) {
+    return null;
+  }
   const isMax = payload.count === maxCount;
   return (
     <rect
@@ -110,7 +112,7 @@ function ActivityChartInner({
         dataKey="count"
         maxBarSize={56}
         isAnimationActive={width == null}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line typescript/no-explicit-any
         shape={(props: any) => (
           <BarShape {...props} maxCount={metrics.maxCount} normalFill={chartTheme.fallbackLine} />
         )}

@@ -73,10 +73,14 @@ import type { ElectionRestriction, ElectionType } from '@/types/election';
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   // ── Fetch election ────────────────────────────────────────────────────────
   let electionData: {
@@ -101,7 +105,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const cached = await getCachedElections();
   if (cached) {
     const found = cached.find((e) => e.id === electionId);
-    if (!found) return Errors.notFound('Election not found');
+    if (!found) {
+      return Errors.notFound('Election not found');
+    }
 
     electionData = {
       id: found.id,
@@ -147,7 +153,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
 
-    if (!dbElection) return Errors.notFound('Election not found');
+    if (!dbElection) {
+      return Errors.notFound('Election not found');
+    }
 
     electionData = {
       ...dbElection,
@@ -158,11 +166,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { user } = auth;
 
   // Deleted elections: non-admins see 404
-  if (!user.isAdmin && electionData.deleted_at) return Errors.notFound('Election not found');
+  if (!user.isAdmin && electionData.deleted_at) {
+    return Errors.notFound('Election not found');
+  }
   if (electionData.type === 'PETITION' && !electionData.approved) {
     const isPetitionManager = !user.isAdmin && user.managePetitions === true;
-    if (!isPetitionManager && electionData.created_by !== user.sub)
+    if (!isPetitionManager && electionData.created_by !== user.sub) {
       return Errors.notFound('Election not found');
+    }
   }
 
   const restrictions = electionData.restrictions;

@@ -52,7 +52,9 @@ import { checkRestrictions } from '@/lib/restrictions';
  */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const forms = await prisma.candidateRegistrationForm.findMany({
     where: {

@@ -34,7 +34,9 @@ export function PetitionsListClient({ petitions, sort }: PetitionsListClientProp
 
   const filtered = (() => {
     const q = search.toLowerCase().trim();
-    if (!q) return visible;
+    if (!q) {
+      return visible;
+    }
     return visible.filter(
       (p) => p.title.toLowerCase().includes(q) || p.createdBy.fullName.toLowerCase().includes(q),
     );
@@ -42,15 +44,18 @@ export function PetitionsListClient({ petitions, sort }: PetitionsListClientProp
 
   const handleSortChange = (next: SortKey) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (next === 'createdAt') params.delete('sort');
-    else params.set('sort', next);
+    if (next === 'createdAt') {
+      params.delete('sort');
+    } else {
+      params.set('sort', next);
+    }
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
   if (visible.length === 0) {
     return (
-      <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+      <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
         <EmptyState
           icon={<Megaphone className="h-10 w-10" />}
           title="Немає жодної петиції"
@@ -78,7 +83,7 @@ export function PetitionsListClient({ petitions, sort }: PetitionsListClientProp
       </div>
 
       {filtered.length === 0 ? (
-        <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
           <EmptyState
             icon={<Megaphone className="h-10 w-10" />}
             title="Нічого не знайдено"
