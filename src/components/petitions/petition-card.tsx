@@ -1,7 +1,6 @@
 import { Clock } from 'lucide-react';
 import Link from 'next/link';
 
-import { CatgirlGallery } from '@/components/catgirl/catgirl-gallery';
 import { Avatar } from '@/components/ui/avatar';
 import { LocalDate } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -24,7 +23,7 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
   return (
     <div
       className={cn(
-        'group bg-card relative rounded-xl',
+        'group relative rounded-xl bg-card',
         'border-border-color border',
         'shadow-card hover:shadow-card-hover',
         'transition-all duration-300 hover:-translate-y-1',
@@ -36,7 +35,7 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
         href={`/petitions/${petition.id}`}
         className={cn(
           'absolute inset-0 z-0 rounded-xl',
-          'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset',
+          'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:outline-none focus-visible:ring-inset',
         )}
         aria-label={petition.title}
       />
@@ -49,35 +48,33 @@ export function PetitionCard({ petition, index = 0 }: PetitionCardProps) {
           {!isPending && !isClosed && <StatusBadge status="open" />}
         </div>
 
-        <h3 className="font-display text-foreground line-clamp-2 text-xl leading-snug font-semibold wrap-break-word">
+        <h3 className="line-clamp-2 font-display text-xl leading-snug font-semibold wrap-break-word text-foreground">
           {petition.title}
         </h3>
 
         {petition.description && (
-          <p className="font-body text-muted-foreground line-clamp-3 text-sm wrap-break-word">
+          <p className="font-body line-clamp-3 text-sm wrap-break-word text-muted-foreground">
             {petition.description}
           </p>
         )}
 
-        <CatgirlGallery size="sm" />
-
         <div className="mt-auto space-y-1.5">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-body text-muted-foreground text-xs">
+            <span className="font-body text-xs text-muted-foreground">
               Підписів: <strong className="text-foreground">{petition.ballotCount}</strong> /{' '}
               {quorum}
             </span>
-            <span className="font-body text-foreground text-xs font-semibold">{pct}%</span>
+            <span className="font-body text-xs font-semibold text-foreground">{pct}%</span>
           </div>
-          <div className="bg-surface h-1.5 w-full overflow-hidden rounded-full">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
             <div
-              className={cn('bg-kpi-navy h-full rounded-full transition-all duration-500')}
+              className={cn('h-full rounded-full bg-kpi-navy transition-all duration-500')}
               style={{ width: `${pct}%` }}
             />
           </div>
         </div>
 
-        <div className="text-muted-foreground font-body min-w-0 space-y-1.5 text-xs">
+        <div className="font-body min-w-0 space-y-1.5 text-xs text-muted-foreground">
           <div className="flex min-w-0 items-center gap-1.5">
             <Avatar
               icon

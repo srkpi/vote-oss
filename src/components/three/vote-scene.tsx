@@ -42,7 +42,7 @@ export function VoteScene({
   const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setCapability({ webgl: detectWebglSupport(), tier: detectDeviceTier() });
   }, []);
 
@@ -68,10 +68,7 @@ export function VoteScene({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        'catgirl:bg-[#28101f] absolute inset-0 overflow-hidden bg-[#0a1f42]',
-        className,
-      )}
+      className={cn('absolute inset-0 overflow-hidden bg-[#0a1f42]', className)}
     >
       <SceneFallback
         variant={variant}

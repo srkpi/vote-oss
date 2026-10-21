@@ -7,7 +7,6 @@ import { HeroReadyProvider } from '@/components/landing/hero-ready-context';
 import { HeroVoteScene } from '@/components/landing/hero-vote-scene';
 import { PlatformStatsSection } from '@/components/landing/platform-stats-section';
 import { StatItem } from '@/components/landing/stat-item';
-import { VisitorCounter } from '@/components/landing/visitor-counter';
 import { VoteScene } from '@/components/three/vote-scene';
 import { Button } from '@/components/ui/button';
 import { serverApi } from '@/lib/api/server';
@@ -241,16 +240,6 @@ export default async function HomePage() {
           </svg>
         </div>
       </section>
-
-      <footer className="bg-background relative z-20 -mt-px">
-        <div className="flex flex-col items-center px-2">
-          <VisitorCounter
-            name={APP_NAME}
-            scale={1.2}
-            className="mt-4 mb-4 md:mt-0 lg:-mt-2 xl:-mt-4 2xl:-mt-6"
-          />
-        </div>
-      </footer>
     </>
   );
 }

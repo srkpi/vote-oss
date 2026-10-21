@@ -72,10 +72,10 @@ export function SceneFallback({ className, variant = 'hero' }: SceneFallbackProp
                   'radial-gradient(circle, rgba(var(--scene-glow-accent-rgb), 0.45) 0%, transparent 70%)',
               }}
             />
-            {/* Checkmark mark — hidden in catgirl mode, see the cat-face variant below. */}
+
             <svg
               viewBox="0 0 24 24"
-              className="catgirl:hidden relative h-32 w-32 opacity-90 drop-shadow-[0_0_30px_rgba(var(--scene-glow-accent-rgb),0.5)] sm:h-40 sm:w-40"
+              className="relative h-32 w-32 opacity-90 drop-shadow-[0_0_30px_rgba(var(--scene-glow-accent-rgb),0.5)] sm:h-40 sm:w-40"
               fill="none"
               stroke="white"
               strokeWidth="1.4"
@@ -84,24 +84,6 @@ export function SceneFallback({ className, variant = 'hero' }: SceneFallbackProp
             >
               <path d="M21.801 10A10 10 0 1 1 17 3.335" />
               <path d="m9 11 3 3L22 4" />
-            </svg>
-            <svg
-              viewBox="0 0 24 24"
-              className="catgirl:block relative hidden h-32 w-32 opacity-90 drop-shadow-[0_0_30px_rgba(var(--scene-glow-accent-rgb),0.5)] sm:h-40 sm:w-40"
-              fill="none"
-              stroke="white"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M 8.18 5.75 L 2.35 2.03 L 5.38 8.55" />
-              <path d="M 15.83 5.75 L 21.65 2.03 L 18.62 8.55" />
-              <circle cx="12" cy="12.38" r="7.65" />
-              <circle cx="9.71" cy="11.92" r="0.83" fill="white" stroke="none" />
-              <circle cx="14.3" cy="11.92" r="0.83" fill="white" stroke="none" />
-              <path d="M 11.1 13.58 L 12.9 13.58 L 12 14.55 Z" fill="white" stroke="none" />
-              <path d="M 12 14.55 Q 11.18 15.6 10.58 16.13" strokeWidth="1" />
-              <path d="M 12 14.55 Q 12.83 15.6 13.43 16.13" strokeWidth="1" />
             </svg>
           </div>
         </div>
