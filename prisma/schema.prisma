@@ -758,3 +758,11 @@ model UserProfile {
   @@index([avatar_file_id])
   @@map("user_profiles")
 }
+
+// Keep existing Vote OSS user IDs stable while binding accounts to OIDC subjects.
+model KpiIdentity {
+  subject String @id
+  user_id String @unique
+
+  @@map("kpi_identities")
+}

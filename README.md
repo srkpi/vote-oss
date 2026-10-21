@@ -66,7 +66,7 @@
 | **ORM**                   | [Prisma 7](https://www.prisma.io/) with `@prisma/adapter-pg`                                                                                                                                 |
 | **Cache / Session Store** | [Redis](https://redis.io/) via [ioredis](https://github.com/redis/ioredis)                                                                                                                   |
 | **Object Storage**        | [MinIO](https://min.io/) (S3-compatible) for group logos and uploaded files                                                                                                                  |
-| **Authentication**        | [KPI ID](https://auth.kpi.ua) (CAS-based) + Diia verification, JWT (access + refresh) via [jose](https://github.com/panva/jose)                                                              |
+| **Authentication**        | [KPI ID](https://auth.kpi.ua) (OpenID Connect) + Diia/BankID verification, JWT (access + refresh) via [jose](https://github.com/panva/jose)                                                              |
 | **Cryptography**          | Node.js built-in `crypto` — RSA-2048 key generation, ECDSA signing, SHA-256 hashing                                                                                                          |
 | **Rich Text**             | [Quill](https://quilljs.com/) (Delta format)                                                                                                                                                 |
 | **Analytics**             | [PostHog](https://posthog.com/) (client-side + server-side, OpenTelemetry log export)                                                                                                        |
@@ -496,3 +496,27 @@ Global bypass tokens grant platform access to students who fail eligibility chec
 ## License
 
 This project is open source. See the [LICENSE](LICENSE) file for details.
+
+## KPI ID OpenID Connect
+
+The login button starts Authorization Code flow at `/api/auth/kpi-id/login`.
+
+Apply database migrations before deploying. OIDC subjects are bound to existing
+Vote OSS user IDs in `kpi_identities`, preserving rights and voting history when
+the same student record is used. Subsequent student record changes retain this
+internal ID. For users who already have history under another student record,
+seed their subject-to-user-ID mapping before their first OIDC login. Multiple
+student records are checked for current Campus eligibility.
+
+PKCE S256, state, nonce and ID token validation are handled by openid-client.
+Login transactions are kept in an encrypted, HTTP-only cookie for 15 minutes,
+allowing time to complete identification. The cookie uses a separate key derived
+from `JWT_ACCESS_SECRET` and is scoped to the callback. KPI ID enforces one-time
+code use; the callback clears the transaction after a validated exchange or provider
+error. Invalid callbacks preserve an otherwise valid transaction.
+Redis is still used for local session and rate-limit operations. Only trusted Diia/BankID identities with
+student records are accepted; existing Campus and bypass rules still apply.
+Each login requests fresh authentication. Vote OSS retains its own rotating JWT
+session; no KPI ID refresh token is requested or stored.
+
+Provider integration documentation: https://auth.kpi.ua/uk/integration
