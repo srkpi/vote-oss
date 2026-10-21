@@ -330,6 +330,35 @@ Allure reports for the `main` branch are automatically published to GitHub Pages
 
 Test environment variables are pre-configured in `vitest.setup.ts` so no real database or Redis instance is required for unit tests.
 
+Suites use standard Vitest `it`, `beforeEach`, and `afterEach` imports. Reset shared mocks and freeze time explicitly:
+
+```ts
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+```
+
+`TEST_NOW` is defined in `src/__tests__/helpers/time.ts`. Use it for dates created during test collection, and `vi.setSystemTime` inside tests to check time boundaries. Keep test cases sequential when they share mocks.
+
+Use `it.each` for validation matrices, `vi.mocked` for typed mock responses, and `vi.stubGlobal` for fetch stubs. Global stubs are restored automatically between tests.
+
+Test names follow the [10-rule naming guide](https://alexop.dev/posts/frontend-testing-guide-10-essential-rules/):
+
+- Begin with `should` and an action verb; state the outcome and triggering event or important precondition.
+- Group related cases by feature and condition using `describe`.
+- Name state transitions explicitly, including their starting and resulting states.
+- Describe asynchronous milestones and specific error causes using domain language.
+- Describe UI feedback as the user experiences it. Organize complex workflows into clear stages, with each test independently setting up its scenario.
+
+For example: `should revoke all invitations when admin management permission changes from enabled to disabled`.
+
 ## Production Deployment
 
 ### Docker Compose

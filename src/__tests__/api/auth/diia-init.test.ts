@@ -1,9 +1,11 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { qrCodeMock } from '@/__tests__/helpers/qrcode-mock';
 import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import { makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
+import { DIIA_LINK_TTL_MS } from '@/lib/constants';
 
 vi.mock('@/lib/rate-limit', async () => {
   const { rateLimitMock } = await import('@/__tests__/helpers/rate-limit-mock');
@@ -14,8 +16,7 @@ vi.mock('qrcode', async () => {
   return { default: qrCodeMock };
 });
 
-const fetchMock = vi.fn();
-global.fetch = fetchMock;
+const fetchMock = vi.fn<typeof fetch>();
 
 import { POST } from '@/app/api/auth/diia/init/route';
 
@@ -50,9 +51,18 @@ function mockProviderNetworkFailure() {
 // Suite
 // ---------------------------------------------------------------------------
 
-describe('POST /api/auth/diia/init', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetRateLimitMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Initializing Diia sign-in (POST /api/auth/diia/init)', () => {
   beforeEach(() => {
-    resetRateLimitMock();
+    vi.stubGlobal('fetch', fetchMock);
     fetchMock.mockReset();
     qrCodeMock.toDataURL.mockReset().mockResolvedValue(MOCK_QR_DATA_URL);
     allure.feature('Auth');
@@ -61,149 +71,153 @@ describe('POST /api/auth/diia/init', () => {
 
   // ── Rate limiting ──────────────────────────────────────────────────────────
 
-  it('returns 429 when rate limit is exceeded', async () => {
-    rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
-      limited: true,
-      remaining: 0,
-      resetInMs: 60_000,
+  describe('when enforcing sign-in request limits', () => {
+    it('should return 429 when rate limit is exceeded', async () => {
+      rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
+        limited: true,
+        remaining: 0,
+        resetInMs: 60_000,
+      });
+
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
+
+      expect(res.status).toBe(429);
     });
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+    it('should tell the caller how many seconds to wait when sign-in is rate-limited', async () => {
+      rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
+        limited: true,
+        remaining: 0,
+        resetInMs: 45_000,
+      });
 
-    expect(res.status).toBe(429);
-  });
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-  it('includes Retry-After header rounded up to seconds on 429', async () => {
-    rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
-      limited: true,
-      remaining: 0,
-      resetInMs: 45_000,
+      expect(res.headers.get('Retry-After')).toBe('45');
     });
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+    it('should round Retry-After up when resetInMs is not a whole number of seconds', async () => {
+      rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
+        limited: true,
+        remaining: 0,
+        resetInMs: 30_500,
+      });
 
-    expect(res.headers.get('Retry-After')).toBe('45');
-  });
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-  it('rounds Retry-After up when resetInMs is not a whole number of seconds', async () => {
-    rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
-      limited: true,
-      remaining: 0,
-      resetInMs: 30_500,
+      expect(res.headers.get('Retry-After')).toBe('31');
     });
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+    it('should identify the caller IP when enforcing the sign-in request limit', async () => {
+      mockProviderOk();
 
-    expect(res.headers.get('Retry-After')).toBe('31');
-  });
+      const req = makeRequest({ method: 'POST' });
+      await POST(req);
 
-  it('calls getClientIp to extract the caller IP for rate limiting', async () => {
-    mockProviderOk();
-
-    const req = makeRequest({ method: 'POST' });
-    await POST(req);
-
-    expect(rateLimitMock.getClientIp).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not contact the provider when rate limit is exceeded', async () => {
-    rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
-      limited: true,
-      remaining: 0,
-      resetInMs: 10_000,
+      expect(rateLimitMock.getClientIp).toHaveBeenCalledTimes(1);
     });
 
-    const req = makeRequest({ method: 'POST' });
-    await POST(req);
+    it('should not contact the provider when rate limit is exceeded', async () => {
+      rateLimitMock.rateLimitLogin.mockResolvedValueOnce({
+        limited: true,
+        remaining: 0,
+        resetInMs: 10_000,
+      });
 
-    expect(fetchMock).not.toHaveBeenCalled();
+      const req = makeRequest({ method: 'POST' });
+      await POST(req);
+
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
   });
 
   // ── Provider failures ─────────────────────────────────────────────────────
 
-  it('returns 500 when the KPI-ID provider returns a non-OK HTTP status', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockProviderError(503);
+  describe('when the sign-in provider fails or returns incomplete data', () => {
+    it('should return 500 when the KPI-ID provider returns a non-OK HTTP status', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockProviderError(503);
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(500);
-    consoleSpy.mockRestore();
-  });
+      expect(res.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
 
-  it('returns 500 when a 4xx error is returned by the provider', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockProviderError(404);
+    it('should return 500 when a 4xx error is returned by the provider', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockProviderError(404);
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(500);
-    consoleSpy.mockRestore();
-  });
+      expect(res.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
 
-  it('returns 500 when the fetch to the provider throws a network error', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockProviderNetworkFailure();
+    it('should return 500 when the fetch to the provider throws a network error', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockProviderNetworkFailure();
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(500);
-    consoleSpy.mockRestore();
-  });
+      expect(res.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
 
-  it('returns 500 when provider responds with an empty deepLink', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockProviderOk(makeLinkResponse({ deepLink: '' }));
+    it('should return 500 when provider responds with an empty deepLink', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockProviderOk(makeLinkResponse({ deepLink: '' }));
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(500);
-    consoleSpy.mockRestore();
-  });
+      expect(res.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
 
-  it('returns 500 when provider responds with an empty requestId', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockProviderOk(makeLinkResponse({ requestId: '' }));
+    it('should return 500 when provider responds with an empty requestId', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockProviderOk(makeLinkResponse({ requestId: '' }));
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(500);
-    consoleSpy.mockRestore();
-  });
+      expect(res.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
 
-  it('returns 500 when provider response omits deepLink entirely', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockProviderOk(makeLinkResponse({ deepLink: undefined }));
+    it('should return 500 when provider response omits deepLink entirely', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockProviderOk(makeLinkResponse({ deepLink: undefined }));
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(500);
-    consoleSpy.mockRestore();
-  });
+      expect(res.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
 
-  it('returns 500 when provider response omits requestId entirely', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockProviderOk(makeLinkResponse({ requestId: undefined }));
+    it('should return 500 when provider response omits requestId entirely', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockProviderOk(makeLinkResponse({ requestId: undefined }));
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(500);
-    consoleSpy.mockRestore();
+      expect(res.status).toBe(500);
+      consoleSpy.mockRestore();
+    });
   });
 
   // ── QR code failures ──────────────────────────────────────────────────────
 
-  it('returns 500 when QRCode.toDataURL throws', async () => {
+  it('should return 500 when QRCode.toDataURL throws', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockProviderOk();
     qrCodeMock.toDataURL.mockRejectedValueOnce(new Error('canvas error'));
@@ -217,79 +231,80 @@ describe('POST /api/auth/diia/init', () => {
 
   // ── Happy path ────────────────────────────────────────────────────────────
 
-  it('returns 200 on a successful request', async () => {
-    mockProviderOk();
+  describe('when sign-in initialization succeeds', () => {
+    it('should return 200 on a successful request when initializing Diia sign-in', async () => {
+      mockProviderOk();
 
-    const req = makeRequest({ method: 'POST' });
-    const res = await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      const res = await POST(req);
 
-    expect(res.status).toBe(200);
-  });
+      expect(res.status).toBe(200);
+    });
 
-  it('response body contains deepLink matching provider value', async () => {
-    mockProviderOk();
+    it('should return the provider deep link when sign-in initialization succeeds', async () => {
+      mockProviderOk();
 
-    const req = makeRequest({ method: 'POST' });
-    const { body } = await parseJson<any>(await POST(req));
+      const req = makeRequest({ method: 'POST' });
+      const { body } = await parseJson<any>(await POST(req));
 
-    expect(body.deepLink).toBe(MOCK_DEEP_LINK);
-  });
+      expect(body.deepLink).toBe(MOCK_DEEP_LINK);
+    });
 
-  it('response body contains requestId matching provider value', async () => {
-    mockProviderOk();
+    it('should return the provider request ID when sign-in initialization succeeds', async () => {
+      mockProviderOk();
 
-    const req = makeRequest({ method: 'POST' });
-    const { body } = await parseJson<any>(await POST(req));
+      const req = makeRequest({ method: 'POST' });
+      const { body } = await parseJson<any>(await POST(req));
 
-    expect(body.requestId).toBe(MOCK_REQUEST_ID);
-  });
+      expect(body.requestId).toBe(MOCK_REQUEST_ID);
+    });
 
-  it('response body contains the QR code data-URL produced by QRCode.toDataURL', async () => {
-    mockProviderOk();
+    it('should return the generated sign-in QR code when initialization succeeds', async () => {
+      mockProviderOk();
 
-    const req = makeRequest({ method: 'POST' });
-    const { body } = await parseJson<any>(await POST(req));
+      const req = makeRequest({ method: 'POST' });
+      const { body } = await parseJson<any>(await POST(req));
 
-    expect(body.qrCode).toBe(MOCK_QR_DATA_URL);
-  });
+      expect(body.qrCode).toBe(MOCK_QR_DATA_URL);
+    });
 
-  it('response body contains a valid ISO expiresAt timestamp', async () => {
-    mockProviderOk();
+    it('should return an ISO expiration timestamp when sign-in initialization succeeds', async () => {
+      mockProviderOk();
 
-    const req = makeRequest({ method: 'POST' });
-    const { body } = await parseJson<any>(await POST(req));
+      const req = makeRequest({ method: 'POST' });
+      const { body } = await parseJson<any>(await POST(req));
 
-    expect(body.expiresAt).toBeDefined();
-    expect(isNaN(new Date(body.expiresAt).getTime())).toBe(false);
-  });
+      expect(body.expiresAt).toBeDefined();
+      expect(isNaN(new Date(body.expiresAt).getTime())).toBe(false);
+    });
 
-  it('expiresAt is set in the future relative to the request time', async () => {
-    mockProviderOk();
+    it('should expire the sign-in link after the configured lifetime when initialization succeeds', async () => {
+      mockProviderOk();
 
-    const before = Date.now();
-    const req = makeRequest({ method: 'POST' });
-    const { body } = await parseJson<any>(await POST(req));
+      const req = makeRequest({ method: 'POST' });
+      const { body } = await parseJson<any>(await POST(req));
 
-    expect(new Date(body.expiresAt).getTime()).toBeGreaterThan(before);
-  });
+      expect(body.expiresAt).toBe(new Date(TEST_NOW + DIIA_LINK_TTL_MS).toISOString());
+    });
 
-  it('passes the provider deepLink to QRCode.toDataURL', async () => {
-    mockProviderOk();
+    it('should generate the QR code from the provider deep link when initializing sign-in', async () => {
+      mockProviderOk();
 
-    const req = makeRequest({ method: 'POST' });
-    await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      await POST(req);
 
-    expect(qrCodeMock.toDataURL).toHaveBeenCalledTimes(1);
-    expect(qrCodeMock.toDataURL).toHaveBeenCalledWith(MOCK_DEEP_LINK, expect.any(Object));
-  });
+      expect(qrCodeMock.toDataURL).toHaveBeenCalledTimes(1);
+      expect(qrCodeMock.toDataURL).toHaveBeenCalledWith(MOCK_DEEP_LINK, expect.any(Object));
+    });
 
-  it('hits the /api/diia/app-link endpoint on the KPI-ID provider', async () => {
-    mockProviderOk();
+    it('should request a Diia sign-in link from the provider when initialization is requested', async () => {
+      mockProviderOk();
 
-    const req = makeRequest({ method: 'POST' });
-    await POST(req);
+      const req = makeRequest({ method: 'POST' });
+      await POST(req);
 
-    const calledUrl: string = fetchMock.mock.calls[0][0];
-    expect(calledUrl).toContain('/api/diia/app-link');
+      const calledUrl = String(fetchMock.mock.calls[0][0]);
+      expect(calledUrl).toContain('/api/diia/app-link');
+    });
   });
 });

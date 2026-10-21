@@ -1,5 +1,5 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 vi.mock('@/lib/prisma', async () => {
@@ -65,29 +66,37 @@ async function adminReq() {
   return makeAuthRequest(access.token, { method: 'DELETE' });
 }
 
-describe('DELETE /api/bypass/election/[tokenHash]', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Deleting an election bypass token (DELETE /api/bypass/election/[tokenHash])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('Bypass');
     allure.story('Soft-Delete Election Bypass Token');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'DELETE' });
     const res = await DELETE(req, params('hash-abc'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 404 when token does not exist', async () => {
+  it('should return 404 when token does not exist', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(null);
     const res = await DELETE(req, params('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when token is already soft-deleted', async () => {
+  it('should return 400 when token is already soft-deleted', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ deleted_at: new Date(), deleted_by: 'superadmin-001' }),
@@ -96,7 +105,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 204 when owner soft-deletes their token', async () => {
+  it('should return 204 when owner soft-deletes their token', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ created_by: 'superadmin-001' }),
@@ -106,7 +115,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(res.status).toBe(204);
   });
 
-  it('calls update with deleted_at and deleted_by instead of hard-deleting', async () => {
+  it('should preserve the token record and record its deletion actor when deleting an election bypass', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ created_by: 'superadmin-001' }),
@@ -126,7 +135,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(prismaMock.electionBypassToken.delete).not.toHaveBeenCalled();
   });
 
-  it('sets deleted_by to the requesting admin user_id', async () => {
+  it('should record the requesting admin as the deletion actor when removing a bypass token', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ created_by: 'superadmin-001' }),
@@ -138,7 +147,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(updateCall.data.deleted_by).toBe('superadmin-001');
   });
 
-  it('bulk-revokes all usages and sets revoked_by on delete', async () => {
+  it('should mark all activations as revoked by the requesting admin when deleting a bypass token', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({
@@ -160,7 +169,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     );
   });
 
-  it('invalidates bypass cache for all users who activated the token', async () => {
+  it('should invalidate bypass cache for all users who activated the token when deleting an election bypass token', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({
@@ -174,7 +183,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(safeRedis).toHaveBeenCalled();
   });
 
-  it('returns 403 when caller is not creator or ancestor', async () => {
+  it('should return 403 when caller is not creator or ancestor', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ created_by: 'other-admin' }),
@@ -193,7 +202,7 @@ describe('DELETE /api/bypass/election/[tokenHash]', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 204 when ancestor deletes subordinate creator token', async () => {
+  it('should return 204 when ancestor deletes subordinate creator token', async () => {
     const req = await adminReq();
     prismaMock.electionBypassToken.findUnique.mockResolvedValueOnce(
       makeElectionBypassTokenRecord({ created_by: 'admin-002' }),

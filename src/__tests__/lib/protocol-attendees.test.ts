@@ -41,8 +41,8 @@ function withoutUid(rows: ReturnType<typeof deriveAttendees>) {
   }));
 }
 
-describe('deriveAttendees', () => {
-  it('lists every current member, absent, in roster order when there is no saved protocol', () => {
+describe('Restoring protocol attendees', () => {
+  it('should list every current member, absent, in roster order when there is no saved protocol', () => {
     const members = [
       member('u1', 'Іваненко Іван', 'Член'),
       member('u2', 'Петренко Петро', 'Голова'),
@@ -68,7 +68,7 @@ describe('deriveAttendees', () => {
     ]);
   });
 
-  it('preserves a custom saved order exactly, even though it differs from roster order', () => {
+  it('should preserve the saved attendee order when it differs from the current roster', () => {
     const members = [
       member('u1', 'Іваненко Іван'),
       member('u2', 'Петренко Петро'),
@@ -87,7 +87,7 @@ describe('deriveAttendees', () => {
     expect(result.map((a) => a.userId)).toEqual(['u3', 'u2', 'u1']);
   });
 
-  it('appends only genuinely new members (not in the saved snapshot) at the end', () => {
+  it('should append new roster members when they are absent from the saved protocol', () => {
     const members = [
       member('u1', 'Іваненко Іван'),
       member('u2', 'Петренко Петро'),
@@ -104,7 +104,7 @@ describe('deriveAttendees', () => {
     expect(result[2]).toMatchObject({ userId: 'u3', isPresent: false });
   });
 
-  it('keeps a former member (no longer in the roster) at their saved position instead of dropping them to the end', () => {
+  it('should preserve a former member at their saved position when they leave the current roster', () => {
     const members = [member('u1', 'Іваненко Іван'), member('u3', 'Сидоренко Сидір')];
     const saved: ProtocolAttendee[] = [
       attendee('u1', 'Іваненко Іван', 'Голова', PRESENT_TEXT_MALE),
@@ -119,7 +119,7 @@ describe('deriveAttendees', () => {
     expect(result.map((a) => a.userId)).toEqual(['u1', 'u2', 'u3']);
   });
 
-  it('keeps a manually-added row (no userId) at its saved position, interleaved with the rest', () => {
+  it('should preserve a manually added attendee at their saved position when restoring a protocol', () => {
     const members = [member('u1', 'Іваненко Іван'), member('u2', 'Петренко Петро')];
     const saved: ProtocolAttendee[] = [
       attendee('u1', 'Іваненко Іван', 'Голова', PRESENT_TEXT_MALE),
@@ -139,7 +139,7 @@ describe('deriveAttendees', () => {
     expect(result[1]).toMatchObject({ userId: null, fullname: 'Гість Гостьович' });
   });
 
-  it('derives isPresent from present_text for both saved and newly-added rows', () => {
+  it('should infer attendance from the saved attendance text when restoring existing and new rows', () => {
     const members = [member('u1', 'Іваненко Іван'), member('u2', 'Нова Учасниця')];
     const saved: ProtocolAttendee[] = [
       attendee('u1', 'Іваненко Іван', 'Член', PRESENT_TEXT_FEMALE), // custom/unexpected gendered text, still "present"
@@ -152,7 +152,7 @@ describe('deriveAttendees', () => {
     expect(result.find((a) => a.userId === 'u2')?.isPresent).toBe(false);
   });
 
-  it('returns an empty list when there are no members and nothing was saved', () => {
+  it('should return an empty list when there are no members and nothing was saved', () => {
     expect(deriveAttendees([], null)).toEqual([]);
   });
 });

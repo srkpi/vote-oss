@@ -1,5 +1,5 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 vi.mock('@/lib/prisma', async () => {
@@ -28,7 +29,7 @@ vi.mock('@/lib/cache', async () => {
 
 import { DELETE as DELETE_BY_HASH } from '@/app/api/admins/invite/[tokenHash]/route';
 
-const FUTURE = new Date(Date.now() + 86_400_000);
+const FUTURE = new Date(TEST_NOW + 86_400_000);
 
 function makeTokenRecord(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -57,40 +58,50 @@ const params = (hash: string) => ({ params: Promise.resolve({ tokenHash: hash })
 // DELETE /api/admins/invite/[tokenHash]
 // ===========================================================================
 
-describe('DELETE /api/admins/invite/[tokenHash]', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Deleting an admin invitation (DELETE /api/admins/invite/[tokenHash])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('Admins');
     allure.story('Delete Invite Token');
   });
 
   // ── Auth guards ───────────────────────────────────────────────────────────
 
-  it('returns 401 when unauthenticated', async () => {
-    const req = makeRequest({ method: 'DELETE' });
-    const res = await DELETE_BY_HASH(req, params('hash-abc'));
-    expect(res.status).toBe(401);
-  });
+  describe('when checking caller access', () => {
+    it('should return 401 when no user is signed in', async () => {
+      const req = makeRequest({ method: 'DELETE' });
+      const res = await DELETE_BY_HASH(req, params('hash-abc'));
+      expect(res.status).toBe(401);
+    });
 
-  it('returns 403 when caller is not an admin', async () => {
-    const { access } = await makeTokenPair(USER_PAYLOAD);
-    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
-    const req = makeAuthRequest(access.token, { method: 'DELETE' });
-    const res = await DELETE_BY_HASH(req, params('hash-abc'));
-    expect(res.status).toBe(403);
-  });
+    it('should return 403 when the signed-in user is not an admin', async () => {
+      const { access } = await makeTokenPair(USER_PAYLOAD);
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+      const req = makeAuthRequest(access.token, { method: 'DELETE' });
+      const res = await DELETE_BY_HASH(req, params('hash-abc'));
+      expect(res.status).toBe(403);
+    });
 
-  it('returns 403 when admin lacks manage_admins', async () => {
-    const req = await adminReq({ ...ADMIN_RECORD, manage_admins: false });
-    const res = await DELETE_BY_HASH(req, params('hash-abc'));
-    expect(res.status).toBe(403);
+    it('should return 403 when the admin cannot manage other admins', async () => {
+      const req = await adminReq({ ...ADMIN_RECORD, manage_admins: false });
+      const res = await DELETE_BY_HASH(req, params('hash-abc'));
+      expect(res.status).toBe(403);
+    });
   });
 
   // ── Token lookup ──────────────────────────────────────────────────────────
 
-  it('returns 404 when token does not exist', async () => {
+  it('should return 404 when token does not exist', async () => {
     const req = await adminReq();
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(null);
     const res = await DELETE_BY_HASH(req, params('nonexistent-hash'));
@@ -99,65 +110,69 @@ describe('DELETE /api/admins/invite/[tokenHash]', () => {
 
   // ── Owner deletes own token (no graph query needed) ───────────────────────
 
-  it('returns 204 when owner deletes their own token', async () => {
-    const req = await adminReq();
-    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ created_by: 'superadmin-001' }),
-    );
-    prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
+  describe('when the invitation creator deletes their invitation', () => {
+    it('should return 204 when owner deletes their own token', async () => {
+      const req = await adminReq();
+      prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+        makeTokenRecord({ created_by: 'superadmin-001' }),
+      );
+      prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
 
-    const res = await DELETE_BY_HASH(req, params('hash-abc'));
-    expect(res.status).toBe(204);
-  });
+      const res = await DELETE_BY_HASH(req, params('hash-abc'));
+      expect(res.status).toBe(204);
+    });
 
-  it('skips the graph query when caller owns the token', async () => {
-    const req = await adminReq();
-    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ created_by: 'superadmin-001' }),
-    );
-    prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
+    it('should skip the graph query when caller owns the token', async () => {
+      const req = await adminReq();
+      prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+        makeTokenRecord({ created_by: 'superadmin-001' }),
+      );
+      prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
 
-    await DELETE_BY_HASH(req, params('hash-abc'));
+      await DELETE_BY_HASH(req, params('hash-abc'));
 
-    expect(prismaMock.admin.findMany).not.toHaveBeenCalled();
+      expect(prismaMock.admin.findMany).not.toHaveBeenCalled();
+    });
   });
 
   // ── Ancestor deletes subordinate's token ──────────────────────────────────
 
-  it('returns 204 when ancestor deletes a subordinate token', async () => {
-    const req = await adminReq();
-    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ created_by: 'admin-002' }),
-    );
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-    ]);
-    prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
+  describe('when an ancestor deletes a subordinate invitation', () => {
+    it('should return 204 when ancestor deletes a subordinate token', async () => {
+      const req = await adminReq();
+      prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+        makeTokenRecord({ created_by: 'admin-002' }),
+      );
+      prismaMock.admin.findMany.mockResolvedValueOnce([
+        { user_id: 'superadmin-001', promoted_by: null },
+        { user_id: 'admin-002', promoted_by: 'superadmin-001' },
+      ]);
+      prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
 
-    const res = await DELETE_BY_HASH(req, params('hash-abc'));
-    expect(res.status).toBe(204);
-  });
+      const res = await DELETE_BY_HASH(req, params('hash-abc'));
+      expect(res.status).toBe(204);
+    });
 
-  it('loads the hierarchy graph with a single findMany (no N+1)', async () => {
-    const req = await adminReq();
-    prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
-      makeTokenRecord({ created_by: 'admin-002' }),
-    );
-    prismaMock.admin.findMany.mockResolvedValueOnce([
-      { user_id: 'superadmin-001', promoted_by: null },
-      { user_id: 'admin-002', promoted_by: 'superadmin-001' },
-    ]);
-    prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
+    it('should load the hierarchy graph with a single findMany (no N+1) when deleting an admin invitation', async () => {
+      const req = await adminReq();
+      prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
+        makeTokenRecord({ created_by: 'admin-002' }),
+      );
+      prismaMock.admin.findMany.mockResolvedValueOnce([
+        { user_id: 'superadmin-001', promoted_by: null },
+        { user_id: 'admin-002', promoted_by: 'superadmin-001' },
+      ]);
+      prismaMock.adminInviteToken.delete.mockResolvedValueOnce({});
 
-    await DELETE_BY_HASH(req, params('hash-abc'));
+      await DELETE_BY_HASH(req, params('hash-abc'));
 
-    expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.admin.findMany).toHaveBeenCalledTimes(1);
+    });
   });
 
   // ── Non-ancestor forbidden ────────────────────────────────────────────────
 
-  it('returns 403 when caller is not ancestor of token creator', async () => {
+  it('should return 403 when caller is not ancestor of token creator', async () => {
     const req = await adminReq();
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
       makeTokenRecord({ created_by: 'other-admin' }),
@@ -174,7 +189,7 @@ describe('DELETE /api/admins/invite/[tokenHash]', () => {
 
   // ── Cache invalidation ────────────────────────────────────────────────────
 
-  it('invalidates invite token cache after deletion', async () => {
+  it('should invalidate invite token cache after deletion', async () => {
     const req = await adminReq();
     prismaMock.adminInviteToken.findUnique.mockResolvedValueOnce(
       makeTokenRecord({ created_by: 'superadmin-001' }),

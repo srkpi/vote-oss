@@ -1,5 +1,5 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -16,6 +16,7 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { BYPASS_TOKEN_MAX_USAGE_MAX } from '@/lib/constants';
 
@@ -47,51 +48,61 @@ function mockAdminGraph() {
   cacheMock.getCachedAdmins.mockResolvedValueOnce([ADMIN_API, RESTRICTED_ADMIN_API] as any);
 }
 
-describe('POST /api/elections/[id]/bypass', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Creating an election bypass token (POST /api/elections/[id]/bypass)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('Bypass');
     allure.story('Create Election Bypass Token');
   });
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  it('returns 401 when unauthenticated', async () => {
-    const req = makeRequest({ method: 'POST', body: {} });
-    const res = await POST(req, PARAMS);
-    expect(res.status).toBe(401);
-  });
-
-  it('returns 400 for non-uuid election id', async () => {
-    const req = await adminReq({});
-    const res = await POST(req, { params: Promise.resolve({ id: 'bad-id' }) });
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 404 when election does not exist', async () => {
-    const req = await adminReq({});
-    prismaMock.election.findUnique.mockResolvedValueOnce(null);
-    const res = await POST(req, PARAMS);
-    expect(res.status).toBe(404);
-  });
-
-  it('returns 400 when election has no restrictions', async () => {
-    const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection({ restrictions: [] }),
-      restrictions: [],
+  describe('when checking caller access', () => {
+    it('should return 401 when no user is signed in', async () => {
+      const req = makeRequest({ method: 'POST', body: {} });
+      const res = await POST(req, PARAMS);
+      expect(res.status).toBe(401);
     });
-    mockAdminGraph();
-    const { status, body } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(/no restrictions/i);
+
+    it('should return 400 for non-uuid election id when creating an election bypass token', async () => {
+      const req = await adminReq({});
+      const res = await POST(req, { params: Promise.resolve({ id: 'bad-id' }) });
+      expect(res.status).toBe(400);
+    });
+
+    it('should return 404 when election does not exist', async () => {
+      const req = await adminReq({});
+      prismaMock.election.findUnique.mockResolvedValueOnce(null);
+      const res = await POST(req, PARAMS);
+      expect(res.status).toBe(404);
+    });
+
+    it('should return 400 when election has no restrictions', async () => {
+      const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection({ restrictions: [] }),
+        restrictions: [],
+      });
+      mockAdminGraph();
+      const { status, body } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/no restrictions/i);
+    });
   });
 
   // ── No validUntil — token validity tied to election closes_at ─────────────
 
-  it('does NOT accept a validUntil field (ignored / not required)', async () => {
+  it('should create the bypass without a separate expiration when the request omits validUntil', async () => {
     const req = await adminReq({
       bypassRestrictions: ['FACULTY'],
       maxUsage: 1,
@@ -108,95 +119,99 @@ describe('POST /api/elections/[id]/bypass', () => {
 
   // ── Restriction validation ────────────────────────────────────────────────
 
-  it('returns 400 when bypassRestrictions is empty', async () => {
-    const req = await adminReq({ bypassRestrictions: [], maxUsage: 1 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+  describe('when validating the bypassed restrictions', () => {
+    it('should return 400 when bypassRestrictions is empty', async () => {
+      const req = await adminReq({ bypassRestrictions: [], maxUsage: 1 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status, body } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/at least one/i);
     });
-    mockAdminGraph();
-    const { status, body } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(/at least one/i);
-  });
 
-  it('returns 400 when bypassRestrictions contains a type not on the election', async () => {
-    const req = await adminReq({ bypassRestrictions: ['GROUP'], maxUsage: 1 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    it('should return 400 when bypassRestrictions contains a type not on the election', async () => {
+      const req = await adminReq({ bypassRestrictions: ['GROUP'], maxUsage: 1 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status, body } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/GROUP/);
     });
-    mockAdminGraph();
-    const { status, body } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(/GROUP/);
-  });
 
-  it('returns 400 when bypassRestrictions contains an unknown type', async () => {
-    const req = await adminReq({ bypassRestrictions: ['INVALID_TYPE'], maxUsage: 1 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    it('should return 400 when bypassRestrictions contains an unknown type', async () => {
+      const req = await adminReq({ bypassRestrictions: ['INVALID_TYPE'], maxUsage: 1 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
     });
-    mockAdminGraph();
-    const { status } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
-  });
 
-  it('returns 400 when omitting bypassRestrictions entirely', async () => {
-    const req = await adminReq({ maxUsage: 1 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    it('should return 400 when omitting bypassRestrictions entirely', async () => {
+      const req = await adminReq({ maxUsage: 1 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
     });
-    mockAdminGraph();
-    const { status } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
   });
 
   // ── maxUsage validation ────────────────────────────────────────────────────
 
-  it('returns 400 when maxUsage is not provided', async () => {
-    const req = await adminReq({ bypassRestrictions: ['FACULTY'] });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+  describe('when validating the bypass usage limit', () => {
+    it('should return 400 when maxUsage is not provided', async () => {
+      const req = await adminReq({ bypassRestrictions: ['FACULTY'] });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status, body } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/maxUsage/);
     });
-    mockAdminGraph();
-    const { status, body } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(/maxUsage/);
-  });
 
-  it('returns 400 when maxUsage exceeds BYPASS_TOKEN_MAX_USAGE_MAX', async () => {
-    const req = await adminReq({
-      bypassRestrictions: ['FACULTY'],
-      maxUsage: BYPASS_TOKEN_MAX_USAGE_MAX + 1,
+    it('should return 400 when maxUsage exceeds BYPASS_TOKEN_MAX_USAGE_MAX', async () => {
+      const req = await adminReq({
+        bypassRestrictions: ['FACULTY'],
+        maxUsage: BYPASS_TOKEN_MAX_USAGE_MAX + 1,
+      });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status, body } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(new RegExp(String(BYPASS_TOKEN_MAX_USAGE_MAX)));
     });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
-    });
-    mockAdminGraph();
-    const { status, body } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(new RegExp(String(BYPASS_TOKEN_MAX_USAGE_MAX)));
-  });
 
-  it('returns 400 when maxUsage is zero', async () => {
-    const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 0 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    it('should return 400 when maxUsage is zero', async () => {
+      const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 0 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(400);
     });
-    mockAdminGraph();
-    const { status } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(400);
   });
 
   // ── Token limit counts only active (non-deleted) tokens ───────────────────
 
-  it('counts only non-deleted tokens toward the per-election limit', async () => {
+  it('should exclude deleted bypass tokens when enforcing the election token limit', async () => {
     const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
     prismaMock.election.findUnique.mockResolvedValueOnce({
       ...makeElection(),
@@ -219,7 +234,7 @@ describe('POST /api/elections/[id]/bypass', () => {
 
   // ── Hierarchy ─────────────────────────────────────────────────────────────
 
-  it('returns 403 when admin is not the creator or ancestor', async () => {
+  it('should return 403 when admin is not the creator or ancestor', async () => {
     const { access } = await makeTokenPair(RESTRICTED_ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);
@@ -244,64 +259,63 @@ describe('POST /api/elections/[id]/bypass', () => {
 
   // ── Successful creation ────────────────────────────────────────────────────
 
-  it('returns 201 with valid FACULTY bypass for election with FACULTY restriction', async () => {
-    const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+  describe('when bypass creation succeeds', () => {
+    it('should return 201 with valid FACULTY bypass for election with FACULTY restriction when creating an election bypass token', async () => {
+      const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      const { status, body } = await parseJson<any>(await POST(req, PARAMS));
+      expect(status).toBe(201);
+      expect(body.bypassRestrictions).toEqual(['FACULTY']);
+      expect(body.maxUsage).toBe(1);
     });
-    mockAdminGraph();
-    const { status, body } = await parseJson<any>(await POST(req, PARAMS));
-    expect(status).toBe(201);
-    expect(body.bypassRestrictions).toEqual(['FACULTY']);
-    expect(body.maxUsage).toBe(1);
-  });
 
-  it('stores maxUsage in the database', async () => {
-    const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 5 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+    it('should store maxUsage in the database when creating an election bypass token', async () => {
+      const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 5 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      await POST(req, PARAMS);
+      expect(prismaMock.electionBypassToken.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ max_usage: 5, current_usage: 0 }),
+        }),
+      );
     });
-    mockAdminGraph();
-    await POST(req, PARAMS);
-    expect(prismaMock.electionBypassToken.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ max_usage: 5, current_usage: 0 }),
-      }),
-    );
-  });
 
-  it('stores correct fields in database (no valid_until, no deleted_at)', async () => {
-    const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
-    prismaMock.election.findUnique.mockResolvedValueOnce({
-      ...makeElection(),
-      restrictions: [{ type: 'FACULTY', value: 'FICE' }],
-    });
-    mockAdminGraph();
-    await POST(req, PARAMS);
-    const createCall = prismaMock.electionBypassToken.create.mock.calls[0][0];
-    expect(createCall.data).not.toHaveProperty('valid_until');
-    expect(createCall.data).not.toHaveProperty('deleted_at');
-    expect(createCall.data).toMatchObject({
-      election_id: MOCK_ELECTION_ID,
-      bypass_restrictions: ['FACULTY'],
-      max_usage: 1,
-      current_usage: 0,
+    it('should save election bypass settings without explicit expiration or deletion fields when creating a token', async () => {
+      const req = await adminReq({ bypassRestrictions: ['FACULTY'], maxUsage: 1 });
+      prismaMock.election.findUnique.mockResolvedValueOnce({
+        ...makeElection(),
+        restrictions: [{ type: 'FACULTY', value: 'FICE' }],
+      });
+      mockAdminGraph();
+      await POST(req, PARAMS);
+      const createCall = prismaMock.electionBypassToken.create.mock.calls[0][0];
+      expect(createCall.data).not.toHaveProperty('valid_until');
+      expect(createCall.data).not.toHaveProperty('deleted_at');
+      expect(createCall.data).toMatchObject({
+        election_id: MOCK_ELECTION_ID,
+        bypass_restrictions: ['FACULTY'],
+        max_usage: 1,
+        current_usage: 0,
+      });
     });
   });
 });
 
-describe('GET /api/elections/[id]/bypass', () => {
+describe('Listing election bypass tokens (GET /api/elections/[id]/bypass)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('Bypass');
     allure.story('List Election Bypass Tokens');
   });
 
-  it('returns tokens with deletedAt field and canDelete/canRevokeUsages', async () => {
+  it('should return tokens with deletion history and management permissions when listing election bypass tokens', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
@@ -337,7 +351,7 @@ describe('GET /api/elections/[id]/bypass', () => {
     expect(body[0].canRevokeUsages).toBe(true);
   });
 
-  it('includes soft-deleted tokens in the listing (for audit trail)', async () => {
+  it('should include soft-deleted tokens in the listing (for audit trail) when listing election bypass tokens', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
@@ -382,7 +396,7 @@ describe('GET /api/elections/[id]/bypass', () => {
     expect(body[0].usages).toHaveLength(1);
   });
 
-  it('returns all tokens (active + deleted) without filtering', async () => {
+  it('should return all tokens (active + deleted) without filtering when listing election bypass tokens', async () => {
     const { access } = await makeTokenPair(ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);
@@ -425,7 +439,7 @@ describe('GET /api/elections/[id]/bypass', () => {
     expect(body).toHaveLength(2); // both active and deleted are returned
   });
 
-  it('sets canDelete=false and canRevokeUsages=false for restricted admin on other creator token', async () => {
+  it('should deny deletion and activation revocation when a faculty-limited admin views another creator token', async () => {
     const { access } = await makeTokenPair(RESTRICTED_ADMIN_PAYLOAD);
     prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
     prismaMock.admin.findUnique.mockResolvedValueOnce(RESTRICTED_ADMIN_RECORD);

@@ -1,10 +1,11 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { rateLimitMock, resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import { getResponseCookie, makeRefreshRequest, makeRequest } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { COOKIE_ACCESS, COOKIE_REFRESH } from '@/lib/constants';
 
@@ -23,16 +24,24 @@ vi.mock('@/lib/rate-limit', async () => {
 
 import { POST } from '@/app/api/auth/refresh/route';
 
-describe('POST /api/auth/refresh', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetRateLimitMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Renewing the session (POST /api/auth/refresh)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetRateLimitMock();
     allure.feature('Auth');
     allure.story('Token Refresh');
   });
 
-  it('returns 429 when the refresh rate limit is exceeded', async () => {
+  it('should return 429 when the refresh rate limit is exceeded', async () => {
     rateLimitMock.rateLimitRefresh.mockResolvedValueOnce({
       limited: true,
       remaining: 0,
@@ -44,13 +53,13 @@ describe('POST /api/auth/refresh', () => {
     expect(res.headers.get('Retry-After')).toBe('30');
   });
 
-  it('returns 401 when the refresh token cookie is missing', async () => {
+  it('should return 401 when the refresh token cookie is missing', async () => {
     const req = makeRequest({ method: 'POST' });
     const res = await POST(req);
     expect(res.status).toBe(401);
   });
 
-  it('returns 401 when isRefreshTokenValid returns false (token revoked)', async () => {
+  it('should return 401 when isRefreshTokenValid returns false (token revoked)', async () => {
     const { refresh } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(false);
 
@@ -59,14 +68,14 @@ describe('POST /api/auth/refresh', () => {
     expect(res.status).toBe(401);
   });
 
-  it('rejects an access token placed in the refresh cookie slot', async () => {
+  it('should reject an access token placed in the refresh cookie slot when renewing the session', async () => {
     const { access } = await makeTokenPair(USER_PAYLOAD);
     const req = makeRefreshRequest(access.token, { method: 'POST' });
     const res = await POST(req);
     expect(res.status).toBe(401);
   });
 
-  it('returns 200 for a valid refresh token', async () => {
+  it('should return 200 for a valid refresh token when renewing the session', async () => {
     const { refresh } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
@@ -76,7 +85,7 @@ describe('POST /api/auth/refresh', () => {
     expect(res.status).toBe(200);
   });
 
-  it('revokes the old refresh token pair via revokeByRefreshJti', async () => {
+  it('should revoke the old session tokens when renewing the session', async () => {
     const { refresh } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
@@ -90,7 +99,7 @@ describe('POST /api/auth/refresh', () => {
     );
   });
 
-  it('persists the new token pair via persistTokenPair', async () => {
+  it('should save the replacement session tokens when renewal succeeds', async () => {
     const { refresh } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
@@ -106,7 +115,7 @@ describe('POST /api/auth/refresh', () => {
     );
   });
 
-  it('sets new access_token and refresh_token cookies', async () => {
+  it('should replace both session cookies after successful session renewal', async () => {
     const { refresh } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);
@@ -118,7 +127,7 @@ describe('POST /api/auth/refresh', () => {
     expect(getResponseCookie(res, COOKIE_REFRESH)).not.toBeNull();
   });
 
-  it('re-checks admin status from DB during rotation', async () => {
+  it('should refresh admin permissions from current records when renewing the session', async () => {
     const { refresh } = await makeTokenPair(USER_PAYLOAD);
     tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
     prismaMock.admin.findUnique.mockResolvedValueOnce(null);

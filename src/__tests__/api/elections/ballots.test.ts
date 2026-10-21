@@ -1,5 +1,5 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import {
   JWT_TOKEN_RECORD,
@@ -10,6 +10,7 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 vi.mock('@/lib/prisma', async () => {
@@ -41,28 +42,36 @@ async function authReq() {
 const MOCK_BALLOT = {
   id: '550e8400-e29b-41d4-a716-446655440001',
   encrypted_ballot: 'enc-data-base64',
-  created_at: new Date(),
+  created_at: new Date(TEST_NOW),
   signature: 'sig-base64',
   previous_hash: null,
   current_hash: 'abc123',
 };
 
-describe('GET /api/elections/[id]/ballots', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Viewing election ballots (GET /api/elections/[id]/ballots)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
     allure.feature('Elections');
     allure.story('Public Ballot Transparency');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest();
     const res = await GET(req, PARAMS);
 
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for non-uuid election id', async () => {
+  it('should return 400 for non-uuid election id when viewing election ballots', async () => {
     const req = await authReq();
 
     const res = await GET(req, {
@@ -72,7 +81,7 @@ describe('GET /api/elections/[id]/ballots', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when election does not exist', async () => {
+  it('should return 404 when election does not exist', async () => {
     const req = await authReq();
 
     prismaMock.election.findUnique.mockResolvedValueOnce(null);
@@ -82,7 +91,7 @@ describe('GET /api/elections/[id]/ballots', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns ballots for the election', async () => {
+  it('should return ballots for the election when viewing election ballots', async () => {
     const req = await authReq();
 
     const mockElection = makeElection();
@@ -98,7 +107,7 @@ describe('GET /api/elections/[id]/ballots', () => {
     expect(body.ballots[0].id).toBe(MOCK_BALLOT.id);
   });
 
-  it('returns ballots ordered by id ascending', async () => {
+  it('should return ballots ordered by id ascending when viewing election ballots', async () => {
     const req = await authReq();
 
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
@@ -113,7 +122,7 @@ describe('GET /api/elections/[id]/ballots', () => {
     );
   });
 
-  it('exposes encryptedBallot, signature and hash chain in camelCase', async () => {
+  it('should expose encryptedBallot, signature and hash chain in camelCase when viewing election ballots', async () => {
     const req = await authReq();
 
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
@@ -130,7 +139,7 @@ describe('GET /api/elections/[id]/ballots', () => {
     expect(ballot.previousHash).toBeDefined();
   });
 
-  it('returns empty ballots array when no votes exist', async () => {
+  it('should return empty ballots array when no votes exist', async () => {
     const req = await authReq();
 
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());

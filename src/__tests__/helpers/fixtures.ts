@@ -11,6 +11,8 @@ import type { TokenPayload } from '@/types/auth';
 import type { WinningConditions } from '@/types/election';
 import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
+import { TEST_NOW } from './time';
+
 export const USER_PAYLOAD: TokenPayload = {
   sub: 'user-001',
   faculty: 'FICE',
@@ -157,7 +159,7 @@ export const MOCK_ADMIN_GRAPH = new Map<string, string | null>([
 export const JWT_TOKEN_RECORD = {
   access_jti: 'access-jti-stub',
   refresh_jti: 'refresh-jti-stub',
-  created_at: new Date(),
+  created_at: new Date(TEST_NOW),
 };
 
 // ---------------------------------------------------------------------------
@@ -211,7 +213,7 @@ function makeElectionBase(keys: { publicKey: string; privateKey: string }) {
     public_key: keys.publicKey,
     private_key: keys.privateKey,
     deleter: null as { full_name: string } | null,
-    choices: MOCK_ELECTION_CHOICES,
+    choices: MOCK_ELECTION_CHOICES.map((choice) => ({ ...choice })),
     _count: { ballots: 0 },
     deleted_at: null as Date | null,
     deleted_by: null as string | null,
@@ -223,9 +225,8 @@ export function makeElection(
     winningConditions?: WinningConditions;
   } = {},
 ) {
-  const keys = generateElectionKeyPair();
   const { winningConditions, ...rest } = overrides;
-  const base = makeElectionBase(keys);
+  const base = makeElectionBase(generateElectionKeyPair());
   return {
     ...base,
     ...rest,

@@ -1,5 +1,5 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -16,6 +16,7 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { computeNullifier, generateVoteToken, signVoteToken } from '@/lib/crypto';
 
@@ -46,35 +47,43 @@ async function authReq(body: object) {
   return makeAuthRequest(access.token, { method: 'POST', body });
 }
 
-describe('POST /api/elections/[id]/ballot', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Submitting a ballot (POST /api/elections/[id]/ballot)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('Elections');
     allure.story('Submit Ballot');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'POST' });
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for non-uuid election id', async () => {
+  it('should return 400 for non-uuid election id when submitting a ballot', async () => {
     const req = await authReq({});
     const res = await POST(req, { params: Promise.resolve({ id: 'abc' }) });
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when required fields are missing', async () => {
+  it('should return 400 when required fields are missing', async () => {
     const req = await authReq({ token: 'x' }); // missing signature, encryptedBallot, nullifier
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when election does not exist', async () => {
+  it('should return 404 when election does not exist', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq(ballot);
@@ -83,7 +92,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when election has not started', async () => {
+  it('should return 400 when election has not started', async () => {
     const election = makeElection({
       opens_at: new Date(Date.now() + 3_600_000),
       closes_at: new Date(Date.now() + 7_200_000),
@@ -95,7 +104,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when election has closed', async () => {
+  it('should return 400 when election has closed', async () => {
     const election = makeElection({
       opens_at: new Date(Date.now() - 7_200_000),
       closes_at: new Date(Date.now() - 3_600_000),
@@ -107,7 +116,30 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when vote token signature is invalid', async () => {
+  it.each([
+    { label: '1ms before opening', offset: -1, status: 400 },
+    { label: 'exactly at opening', offset: 0, status: 201 },
+    { label: '1ms after opening', offset: 1, status: 201 },
+    { label: '1ms before closing', offset: 59_999, status: 201 },
+    { label: 'exactly at closing', offset: 60_000, status: 201 },
+    { label: '1ms after closing', offset: 60_001, status: 400 },
+  ])('should return $status when a ballot is submitted $label', async ({ offset, status }) => {
+    vi.setSystemTime(TEST_NOW + offset);
+    const election = makeElection({
+      opens_at: new Date(TEST_NOW),
+      closes_at: new Date(TEST_NOW + 60_000),
+    });
+    const req = await authReq(makeVoteBallot(election));
+    prismaMock.election.findUnique.mockResolvedValueOnce(election);
+    prismaMock.usedTokenNullifier.findUnique.mockResolvedValueOnce(null);
+    prismaMock.ballot.findFirst.mockResolvedValueOnce(null);
+    prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
+
+    expect((await POST(req, PARAMS)).status).toBe(status);
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(status === 201 ? 1 : 0);
+  });
+
+  it('should return 400 when vote token signature is invalid', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq({ ...ballot, signature: 'invalidsignature' });
@@ -116,7 +148,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when token belongs to a different election', async () => {
+  it('should return 400 when token belongs to a different election', async () => {
     const election = makeElection();
     const { token: wrongToken } = generateVoteToken(MOCK_ELECTION_ID_NOT_EXISTING);
     const signature = signVoteToken(election.private_key, wrongToken);
@@ -132,7 +164,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when nullifier does not match H(token)', async () => {
+  it('should return 400 when nullifier does not match H(token)', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq({ ...ballot, nullifier: 'wrong-nullifier' });
@@ -141,7 +173,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 409 when nullifier already used (double-vote attempt)', async () => {
+  it('should return 409 when nullifier already used (double-vote attempt)', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq(ballot);
@@ -151,7 +183,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(409);
   });
 
-  it('returns 400 when encrypted ballot decrypts to invalid choice id', async () => {
+  it('should return 400 when encrypted ballot decrypts to invalid choice id', async () => {
     const election = makeElection();
     const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
@@ -168,7 +200,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when encrypted ballot is garbage', async () => {
+  it('should return 400 when encrypted ballot is garbage', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq({ ...ballot, encryptedBallot: 'bm90LXZhbGlkLWpzb24=' }); // base64 of "not-valid-json"
@@ -178,7 +210,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when number of choices exceeds max_choices', async () => {
+  it('should return 400 when number of choices exceeds max_choices', async () => {
     const election = makeElection({ min_choices: 1, max_choices: 1 });
     const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
@@ -195,7 +227,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 201 with ballotHash for a fully valid single-choice submission', async () => {
+  it('should return 201 with ballotHash for a fully valid single-choice submission when submitting a ballot', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq(ballot);
@@ -213,7 +245,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(body.ballotHash).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it('chains to previous ballot hash when one exists', async () => {
+  it('should link the new ballot to the previous ballot when the election already has votes', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq(ballot);
@@ -231,7 +263,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(ballotCreate?.data?.previous_hash).toBe(prevHash);
   });
 
-  it('returns 201 for valid multi-choice submission when max_choices=2', async () => {
+  it('should return 201 for valid multi-choice submission when max_choices=2', async () => {
     const election = makeElection({ min_choices: 1, max_choices: 2 });
     const { token } = generateVoteToken(election.id);
     const signature = signVoteToken(election.private_key, token);
@@ -252,7 +284,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(res.status).toBe(201);
   });
 
-  it('persists nullifier and ballot atomically via $transaction', async () => {
+  it('should save the ballot and its spent-token marker together when accepting a vote', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq(ballot);
@@ -266,7 +298,7 @@ describe('POST /api/elections/[id]/ballot', () => {
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
   });
 
-  it('increment elections ballot count cache to ensure correct vote count', async () => {
+  it('should increment the live ballot count after a ballot is accepted', async () => {
     const election = makeElection();
     const ballot = makeVoteBallot(election);
     const req = await authReq(ballot);

@@ -1,10 +1,11 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { makeTokenPair, USER_PAYLOAD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { resetRateLimitMock } from '@/__tests__/helpers/rate-limit-mock';
 import { makeRefreshRequest } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
 vi.mock('@/lib/prisma', async () => {
@@ -22,7 +23,7 @@ vi.mock('@/lib/rate-limit', async () => {
 
 import { POST } from '@/app/api/auth/refresh/route';
 
-const INITIAL_AUTH_AT = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
+const INITIAL_AUTH_AT = Math.floor(TEST_NOW / 1000) - 3600; // 1 hour ago
 
 async function makeRefreshReq(initialAuthAt?: number) {
   const payload = { ...USER_PAYLOAD, ...(initialAuthAt !== undefined ? { initialAuthAt } : {}) };
@@ -32,16 +33,24 @@ async function makeRefreshReq(initialAuthAt?: number) {
   return makeRefreshRequest(refresh.token, { method: 'POST' });
 }
 
-describe('POST /api/auth/refresh — global bypass revocation check', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetRateLimitMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Renewing the session — global bypass revocation check (POST /api/auth/refresh)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetRateLimitMock();
     allure.feature('Auth');
     allure.story('Refresh – Bypass Revocation');
   });
 
-  it('returns 401 when a global bypass usage was revoked after initial_auth_at', async () => {
+  it('should return 401 when a global bypass usage was revoked after initial_auth_at', async () => {
     const req = await makeRefreshReq(INITIAL_AUTH_AT);
 
     // Simulate a bypass usage revoked after the user first authenticated
@@ -51,7 +60,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
     expect(res.status).toBe(401);
   });
 
-  it('includes an informative error message when bypass is revoked', async () => {
+  it('should include an informative error message when bypass is revoked', async () => {
     const req = await makeRefreshReq(INITIAL_AUTH_AT);
     prismaMock.globalBypassTokenUsage.findFirst.mockResolvedValueOnce({ id: 'usage-1' });
 
@@ -60,7 +69,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
     expect(body.message).toMatch(/revoked/i);
   });
 
-  it('returns 200 when no bypass usages were revoked after initial_auth_at', async () => {
+  it('should return 200 when no bypass usages were revoked after initial_auth_at', async () => {
     const req = await makeRefreshReq(INITIAL_AUTH_AT);
     prismaMock.globalBypassTokenUsage.findFirst.mockResolvedValueOnce(null);
 
@@ -68,7 +77,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
     expect(res.status).toBe(200);
   });
 
-  it('skips bypass check entirely when token has no initialAuthAt', async () => {
+  it('should skip bypass check entirely when token has no initialAuthAt', async () => {
     // Tokens without initialAuthAt (legacy or admin tokens) are not subject to this check
     const req = await makeRefreshReq(undefined);
 
@@ -77,7 +86,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
     expect(prismaMock.globalBypassTokenUsage.findFirst).not.toHaveBeenCalled();
   });
 
-  it('queries globalBypassTokenUsage with correct filters', async () => {
+  it('should check for global bypass activations revoked after initial sign-in when renewing the session', async () => {
     const req = await makeRefreshReq(INITIAL_AUTH_AT);
     prismaMock.globalBypassTokenUsage.findFirst.mockResolvedValueOnce(null);
 
@@ -106,7 +115,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
     );
   });
 
-  it('still issues new tokens when bypass check passes', async () => {
+  it('should issue replacement session tokens when the global bypass remains valid', async () => {
     const req = await makeRefreshReq(INITIAL_AUTH_AT);
     prismaMock.globalBypassTokenUsage.findFirst.mockResolvedValueOnce(null);
 
@@ -116,7 +125,7 @@ describe('POST /api/auth/refresh — global bypass revocation check', () => {
     expect(tokenStoreMock.revokeByRefreshJti).toHaveBeenCalledTimes(1);
   });
 
-  it('does NOT check election bypass usages (only global)', async () => {
+  it('should not check election bypass usages (only global) when renewing the session', async () => {
     const req = await makeRefreshReq(INITIAL_AUTH_AT);
     prismaMock.globalBypassTokenUsage.findFirst.mockResolvedValueOnce(null);
 

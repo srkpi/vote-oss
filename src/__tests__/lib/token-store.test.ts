@@ -1,9 +1,10 @@
 import * as allure from 'allure-js-commons';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { bloomMock, resetBloomMock } from '@/__tests__/helpers/bloom-mock';
 import { JWT_TOKEN_RECORD } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 
 vi.mock('@/lib/bloom', async () => {
   const { bloomMock } = await import('@/__tests__/helpers/bloom-mock');
@@ -24,21 +25,29 @@ import {
   revokeTokenPair,
 } from '@/lib/token-store';
 
-const NOW_SECS = Math.floor(Date.now() / 1_000);
+const NOW_SECS = Math.floor(TEST_NOW / 1_000);
 // iat 5 seconds ago (well within access token lifetime)
 const RECENT_IAT = NOW_SECS - 5;
 
-describe('token-store', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetBloomMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Session persistence and revocation', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetBloomMock();
     allure.feature('Token Store');
   });
 
-  describe('persistTokenPair', () => {
+  describe('Saving a session', () => {
     beforeEach(() => allure.story('persistTokenPair'));
 
-    it('creates a jwtToken DB record with the given JTIs', async () => {
+    it('should create a jwtToken DB record with the given JTIs when saving a session', async () => {
       prismaMock.jwtToken.create.mockResolvedValueOnce({});
       const initialAuthAt = new Date();
       await persistTokenPair('access-jti', 'refresh-jti', initialAuthAt);
@@ -51,7 +60,7 @@ describe('token-store', () => {
       });
     });
 
-    it('includes created_at timestamp', async () => {
+    it('should include created_at timestamp when saving a session', async () => {
       prismaMock.jwtToken.create.mockResolvedValueOnce({});
       await persistTokenPair('a', 'b', new Date());
       const { data } = prismaMock.jwtToken.create.mock.calls[0][0];
@@ -59,55 +68,55 @@ describe('token-store', () => {
     });
   });
 
-  describe('isAccessTokenValid', () => {
+  describe('Checking an access token', () => {
     beforeEach(() => allure.story('isAccessTokenValid'));
 
-    it('falls back to DB when iat predates the bloom reset and record exists', async () => {
+    it('should fall back to DB when iat predates the bloom reset and record exists', async () => {
       bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ access_jti: 'jti' });
 
       expect(await isAccessTokenValid('jti', NOW_SECS - 10)).toBe(true);
     });
 
-    it('falls back to DB when iat predates the bloom reset and record does not exist', async () => {
+    it('should fall back to DB when iat predates the bloom reset and record does not exist', async () => {
       bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
 
       expect(await isAccessTokenValid('jti', NOW_SECS - 10)).toBe(false);
     });
 
-    it('does NOT reject when iat is after the bloom reset', async () => {
+    it('should not reject when iat is after the bloom reset', async () => {
       const pastResetAt = Date.now() - 10_000; // 10s ago
       bloomMock.getBloomResetAt.mockResolvedValueOnce(pastResetAt);
       bloomMock.isTokenClean.mockResolvedValueOnce(true);
       expect(await isAccessTokenValid('jti', NOW_SECS)).toBe(true);
     });
 
-    it('returns true immediately when bloom says CLEAN (no DB call)', async () => {
+    it('should return true immediately when bloom says CLEAN (no DB call)', async () => {
       bloomMock.isTokenClean.mockResolvedValueOnce(true);
       expect(await isAccessTokenValid('jti', RECENT_IAT)).toBe(true);
       expect(prismaMock.jwtToken.findFirst).not.toHaveBeenCalled();
     });
 
-    it('returns false immediately when bloom says REVOKED (no DB call)', async () => {
+    it('should return false immediately when bloom says REVOKED (no DB call)', async () => {
       bloomMock.isTokenClean.mockResolvedValueOnce(false);
       expect(await isAccessTokenValid('jti', RECENT_IAT)).toBe(false);
       expect(prismaMock.jwtToken.findFirst).not.toHaveBeenCalled();
     });
 
-    it('falls back to DB when bloom returns null (Redis unavailable) and record exists', async () => {
+    it('should fall back to DB when bloom returns null (Redis unavailable) and record exists', async () => {
       bloomMock.isTokenClean.mockResolvedValueOnce(null);
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ access_jti: 'jti' });
       expect(await isAccessTokenValid('jti', RECENT_IAT)).toBe(true);
     });
 
-    it('falls back to DB when bloom returns null and record is absent → returns false', async () => {
+    it('should fall back to DB when bloom returns null and record is absent → returns false', async () => {
       bloomMock.isTokenClean.mockResolvedValueOnce(null);
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       expect(await isAccessTokenValid('jti', RECENT_IAT)).toBe(false);
     });
 
-    it('queries DB with the correct access_jti on fallback', async () => {
+    it('should look up the access token by its verified ID when revocation lookup requires stored session data', async () => {
       bloomMock.isTokenClean.mockResolvedValueOnce(null);
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
       await isAccessTokenValid('my-jti', RECENT_IAT);
@@ -116,7 +125,7 @@ describe('token-store', () => {
       );
     });
 
-    it('skips the reset-time gate when resetAt is 0 (disabled)', async () => {
+    it('should skip the reset-time gate when resetAt is 0 (disabled)', async () => {
       bloomMock.getBloomResetAt.mockResolvedValueOnce(0);
       bloomMock.isTokenClean.mockResolvedValueOnce(true);
       // Very old iat but resetAt=0 → gate is off → should still pass
@@ -124,30 +133,30 @@ describe('token-store', () => {
     });
   });
 
-  describe('isRefreshTokenValid', () => {
+  describe('Checking a refresh token', () => {
     beforeEach(() => allure.story('isRefreshTokenValid'));
 
-    it('falls back to DB when iat predates the bloom reset and record exists', async () => {
+    it('should fall back to DB when iat predates the bloom reset and record exists', async () => {
       bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ refresh_jti: 'jti' });
 
       expect(await isRefreshTokenValid('jti', NOW_SECS - 10)).toBe(true);
     });
 
-    it('falls back to DB when iat predates the bloom reset and record does not exist', async () => {
+    it('should fall back to DB when iat predates the bloom reset and record does not exist', async () => {
       bloomMock.getBloomResetAt.mockResolvedValueOnce(Date.now());
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
 
       expect(await isRefreshTokenValid('jti', NOW_SECS - 10)).toBe(false);
     });
 
-    it('returns true from bloom fast-path', async () => {
+    it('should return true from bloom fast-path when checking a refresh token', async () => {
       bloomMock.isTokenClean.mockResolvedValueOnce(true);
       expect(await isRefreshTokenValid('jti', RECENT_IAT)).toBe(true);
       expect(prismaMock.jwtToken.findFirst).not.toHaveBeenCalled();
     });
 
-    it('falls back to DB with refresh_jti selector', async () => {
+    it('should fall back to DB with refresh_jti selector when checking a refresh token', async () => {
       bloomMock.isTokenClean.mockResolvedValueOnce(null);
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ refresh_jti: 'jti' });
       await isRefreshTokenValid('jti', RECENT_IAT);
@@ -157,17 +166,41 @@ describe('token-store', () => {
     });
   });
 
-  describe('revokeByAccessJti', () => {
+  describe.each([
+    { name: 'access', validate: isAccessTokenValid },
+    { name: 'refresh', validate: isRefreshTokenValid },
+  ])('$name token bloom reset boundary', ({ validate }) => {
+    beforeEach(() => allure.story('Bloom Reset Boundary'));
+
+    it.each([
+      { offset: -1, valid: false },
+      { offset: 0, valid: true },
+      { offset: 1, valid: true },
+    ])(
+      'should report token validity as $valid when issued $offset seconds from the revocation filter reset',
+      async ({ offset, valid }) => {
+        bloomMock.getBloomResetAt.mockResolvedValueOnce(TEST_NOW);
+        bloomMock.isTokenClean.mockResolvedValueOnce(true);
+        prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
+
+        expect(await validate('jti', NOW_SECS + offset)).toBe(valid);
+        expect(prismaMock.jwtToken.findFirst).toHaveBeenCalledTimes(valid ? 0 : 1);
+        expect(bloomMock.isTokenClean).toHaveBeenCalledTimes(valid ? 1 : 0);
+      },
+    );
+  });
+
+  describe('Revoking an access token', () => {
     beforeEach(() => allure.story('revokeByAccessJti'));
 
-    it('bloom-adds the access JTI immediately', async () => {
+    it('should mark the access token as revoked immediately when signing out its session', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeByAccessJti('access-jti', NOW_SECS - 5);
       expect(bloomMock.bloomAdd).toHaveBeenCalledWith('access-jti', expect.any(Number));
     });
 
-    it('deletes the DB record by access_jti', async () => {
+    it('should delete the DB record by access_jti when revoking an access token', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeByAccessJti('access-jti', NOW_SECS - 5);
@@ -176,7 +209,7 @@ describe('token-store', () => {
       });
     });
 
-    it('also bloom-adds the sibling refresh JTI when the DB record is found', async () => {
+    it('should mark the paired refresh token as revoked when its saved session is found', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({
         refresh_jti: 'refresh-jti',
         created_at: new Date(Date.now() - 5_000),
@@ -188,7 +221,7 @@ describe('token-store', () => {
       expect(calls).toContain('refresh-jti');
     });
 
-    it('skips refresh bloom-add when no sibling record is found', async () => {
+    it('should skip refresh bloom-add when no sibling record is found', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 0 });
       await revokeByAccessJti('access-jti', NOW_SECS - 5);
@@ -196,7 +229,7 @@ describe('token-store', () => {
       expect(bloomMock.bloomAdd).toHaveBeenCalledTimes(1);
     });
 
-    it('clamps TTL to minimum 1 when token has already expired', async () => {
+    it('should clamp TTL to minimum 1 when token has already expired', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 0 });
       // iat far in the past
@@ -206,10 +239,10 @@ describe('token-store', () => {
     });
   });
 
-  describe('revokeByRefreshJti', () => {
+  describe('Revoking a refresh token', () => {
     beforeEach(() => allure.story('revokeByRefreshJti'));
 
-    it('looks up the sibling access JTI from DB', async () => {
+    it('should look up the sibling access JTI from DB when revoking a refresh token', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ access_jti: 'access-jti' });
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeByRefreshJti('refresh-jti', RECENT_IAT);
@@ -218,14 +251,14 @@ describe('token-store', () => {
       );
     });
 
-    it('bloom-adds the refresh JTI', async () => {
+    it('should mark the refresh token as revoked when replacing its session tokens', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeByRefreshJti('refresh-jti', RECENT_IAT);
       expect(bloomMock.bloomAdd).toHaveBeenCalledWith('refresh-jti', expect.any(Number));
     });
 
-    it('bloom-adds the sibling access JTI when found', async () => {
+    it('should mark the paired access token as revoked when the saved session is found', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ access_jti: 'access-jti' });
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeByRefreshJti('refresh-jti', RECENT_IAT);
@@ -233,21 +266,21 @@ describe('token-store', () => {
       expect(addedJtis).toContain('access-jti');
     });
 
-    it('returns the sibling access JTI', async () => {
+    it('should return the sibling access JTI when revoking a refresh token', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce({ access_jti: 'access-jti' });
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       const result = await revokeByRefreshJti('refresh-jti', RECENT_IAT);
       expect(result.accessJti).toBe('access-jti');
     });
 
-    it('returns null accessJti when no DB record is found', async () => {
+    it('should return null accessJti when no DB record is found', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 0 });
       const result = await revokeByRefreshJti('refresh-jti', RECENT_IAT);
       expect(result.accessJti).toBeNull();
     });
 
-    it('deletes the DB record by refresh_jti', async () => {
+    it('should delete the DB record by refresh_jti when revoking a refresh token', async () => {
       prismaMock.jwtToken.findFirst.mockResolvedValueOnce(null);
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeByRefreshJti('refresh-jti', RECENT_IAT);
@@ -257,10 +290,10 @@ describe('token-store', () => {
     });
   });
 
-  describe('revokeTokenPair', () => {
+  describe('Revoking a session', () => {
     beforeEach(() => allure.story('revokeTokenPair'));
 
-    it('bloom-adds both access and refresh JTIs', async () => {
+    it('should mark both session tokens as revoked when the session is terminated', async () => {
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeTokenPair('acc-jti', 'ref-jti', RECENT_IAT, RECENT_IAT);
       const addedJtis = bloomMock.bloomAdd.mock.calls.map((c) => c[0]);
@@ -268,7 +301,7 @@ describe('token-store', () => {
       expect(addedJtis).toContain('ref-jti');
     });
 
-    it('deletes the DB record by access_jti', async () => {
+    it('should delete the DB record by access_jti when revoking a session', async () => {
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       await revokeTokenPair('acc-jti', 'ref-jti', RECENT_IAT, RECENT_IAT);
       expect(prismaMock.jwtToken.deleteMany).toHaveBeenCalledWith({
@@ -276,7 +309,7 @@ describe('token-store', () => {
       });
     });
 
-    it('computes access TTL correctly', async () => {
+    it('should keep the access token revocation until its remaining lifetime ends when terminating a session', async () => {
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       const iat = NOW_SECS - 60; // 60 seconds ago
       await revokeTokenPair('acc-jti', 'ref-jti', iat, iat);
@@ -285,7 +318,7 @@ describe('token-store', () => {
       expect(accCall[1]).toBeCloseTo(expectedTtl, -1);
     });
 
-    it('computes refresh TTL correctly', async () => {
+    it('should keep the refresh token revocation until its remaining lifetime ends when terminating a session', async () => {
       prismaMock.jwtToken.deleteMany.mockResolvedValueOnce({ count: 1 });
       const iat = NOW_SECS - 3600;
       await revokeTokenPair('acc-jti', 'ref-jti', iat, iat);

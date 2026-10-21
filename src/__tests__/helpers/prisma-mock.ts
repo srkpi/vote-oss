@@ -1,4 +1,4 @@
-import { vi, type Mock } from 'vitest';
+import { vi } from 'vitest';
 
 /**
  * Typed deep mock of the Prisma client.
@@ -144,13 +144,13 @@ export function resetPrismaMock() {
   Object.values(prismaMock).forEach((delegate) => {
     if (typeof delegate === 'object' && delegate !== null) {
       Object.values(delegate).forEach((fn) => {
-        if (typeof fn === 'function') {
-          (fn as Mock).mockReset();
+        if (vi.isMockFunction(fn)) {
+          fn.mockReset();
         }
       });
     }
-    if (typeof delegate === 'function') {
-      (delegate as Mock).mockReset();
+    if (vi.isMockFunction(delegate)) {
+      delegate.mockReset();
     }
   });
 
