@@ -1,29 +1,14 @@
 import './globals.css';
 
 import type { Metadata, Viewport } from 'next';
-import { Bitter, Onest } from 'next/font/google';
 
 import { CatgirlModeProvider } from '@/hooks/use-catgirl-mode';
 import { ThemeProvider } from '@/hooks/use-theme';
 import { APP_NAME, APP_URL } from '@/lib/config/client';
 import { LOCAL_STORAGE_CATGIRL_MODE_KEY, LOCAL_STORAGE_THEME_KEY } from '@/lib/constants';
-import { cn } from '@/lib/utils/common';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 import { AvatarDeleteDialogProvider } from '@/providers/avatar-delete-dialog-provider';
 import { ToastProvider } from '@/providers/toast-provider';
-
-const onest = Onest({
-  subsets: ['latin', 'cyrillic'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-sans',
-});
-
-const bitter = Bitter({
-  subsets: ['latin', 'cyrillic'],
-  weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-display',
-});
 
 const title = `${APP_NAME} — Система електронного голосування`;
 const description =
@@ -91,12 +76,17 @@ const CATGIRL_INIT_SCRIPT = `
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="uk"
-      className={cn('font-sans', onest.variable, bitter.variable)}
-      suppressHydrationWarning
-    >
+    <html lang="uk" className="font-sans" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* App Router root layout loads fonts globally. */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        {/* oxlint-disable-next-line nextjs/no-page-custom-font */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Onest:wght@300;400;500;600;700&display=swap"
+        />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: CATGIRL_INIT_SCRIPT }} />
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />

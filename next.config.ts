@@ -19,10 +19,10 @@ const NEKOSIA_API_DOMAIN = 'https://api.nekosia.cat';
 const ContentSecurityPolicy = `
   default-src 'self';
   script-src 'self' 'unsafe-inline' 'unsafe-eval' ${POSTHOG_DOMAINS};
-  style-src 'self' 'unsafe-inline' ${POSTHOG_DOMAINS};
-  style-src-elem 'self' 'unsafe-inline' ${POSTHOG_DOMAINS};
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${POSTHOG_DOMAINS};
+  style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com ${POSTHOG_DOMAINS};
   img-src ${IMG_SRC};
-  font-src 'self';
+  font-src 'self' https://fonts.gstatic.com;
   connect-src 'self' ${POSTHOG_DOMAINS} ${NEKOSIA_API_DOMAIN};
   worker-src 'self' blob: data:;
   object-src 'none';

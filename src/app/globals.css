@@ -6,8 +6,8 @@
 @custom-variant catgirl (&:is(.catgirl *));
 
 @theme inline {
-  --font-display: var(--font-display);
-  --font-sans: var(--font-sans);
+  --font-display: 'Bitter', Georgia, serif;
+  --font-sans: 'Onest', Arial, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --color-kpi-navy: var(--kpi-navy);
