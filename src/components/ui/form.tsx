@@ -3,97 +3,90 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils/common';
 
-export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+export interface LabelProps extends React.ComponentProps<'label'> {
   required?: boolean;
 }
 
-export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
-  ({ className, required, children, ...props }, ref) => (
+export function Label({ className, required, children, ...props }: LabelProps) {
+  return (
     <label
-      ref={ref}
       className={cn('font-body mb-1.5 block text-sm font-medium text-foreground', className)}
       {...props}
     >
       {children}
       {required && <span className="ml-1 text-error">*</span>}
     </label>
-  ),
-);
-Label.displayName = 'Label';
+  );
+}
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.ComponentProps<'input'> {
   error?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, error, leftIcon, rightIcon, type, ...props }, ref) => {
-    if (leftIcon || rightIcon) {
-      return (
-        <div className="relative">
-          {leftIcon && (
-            <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
-              {leftIcon}
-            </div>
-          )}
-          <input
-            type={type}
-            className={cn(
-              'flex h-10 w-full rounded-(--radius) bg-card',
-              'border-border-color border',
-              'font-body px-3 py-2 text-sm text-foreground',
-              'placeholder:text-subtle',
-              'transition-colors duration-150',
-              'hover:border-kpi-blue-light',
-              'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
-              error && 'border-error focus:border-error focus:ring-error/20',
-              'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
-              className,
-            )}
-            ref={ref}
-            {...props}
-          />
-          {rightIcon && (
-            <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
-              {rightIcon}
-            </div>
-          )}
-        </div>
-      );
-    }
-
+export function Input({ className, error, leftIcon, rightIcon, type, ...props }: InputProps) {
+  if (leftIcon || rightIcon) {
     return (
-      <input
-        type={type}
-        className={cn(
-          'flex h-10 w-full rounded-(--radius) bg-card',
-          'border-border-color border',
-          'font-body px-3 py-2 text-sm text-foreground',
-          'placeholder:text-subtle',
-          'transition-colors duration-150',
-          'hover:border-kpi-blue-light',
-          'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
-          error && 'border-error focus:border-error focus:ring-error/20',
-          'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
-          className,
+      <div className="relative">
+        {leftIcon && (
+          <div className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
+            {leftIcon}
+          </div>
         )}
-        ref={ref}
-        {...props}
-      />
+        <input
+          type={type}
+          className={cn(
+            'flex h-10 w-full rounded-(--radius) bg-card',
+            'border-border-color border',
+            'font-body px-3 py-2 text-sm text-foreground',
+            'placeholder:text-subtle',
+            'transition-colors duration-150',
+            'hover:border-kpi-blue-light',
+            'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
+            leftIcon && 'pl-10',
+            rightIcon && 'pr-10',
+            error && 'border-error focus:border-error focus:ring-error/20',
+            'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
+            className,
+          )}
+          {...props}
+        />
+        {rightIcon && (
+          <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground">
+            {rightIcon}
+          </div>
+        )}
+      </div>
     );
-  },
-);
-Input.displayName = 'Input';
+  }
 
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  return (
+    <input
+      type={type}
+      className={cn(
+        'flex h-10 w-full rounded-(--radius) bg-card',
+        'border-border-color border',
+        'font-body px-3 py-2 text-sm text-foreground',
+        'placeholder:text-subtle',
+        'transition-colors duration-150',
+        'hover:border-kpi-blue-light',
+        'focus:border-kpi-blue-light focus:ring-2 focus:ring-kpi-blue-light/20 focus:outline-none',
+        error && 'border-error focus:border-error focus:ring-error/20',
+        'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export interface TextareaProps extends React.ComponentProps<'textarea'> {
   error?: boolean;
 }
 
-export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, error, ...props }, ref) => (
+export function Textarea({ className, error, ...props }: TextareaProps) {
+  return (
     <textarea
       className={cn(
         'flex min-h-20 w-full rounded-(--radius) bg-card',
@@ -108,12 +101,10 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         'disabled:cursor-not-allowed disabled:bg-surface disabled:opacity-50',
         className,
       )}
-      ref={ref}
       {...props}
     />
-  ),
-);
-Textarea.displayName = 'Textarea';
+  );
+}
 
 interface FormFieldProps {
   label?: string;
