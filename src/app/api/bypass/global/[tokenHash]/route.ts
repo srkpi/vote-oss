@@ -7,45 +7,6 @@ import { Errors } from '@/lib/errors';
 import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/bypass/global/{tokenHash}:
- *   delete:
- *     summary: Soft-delete a global bypass token
- *     description: >
- *       Marks the specified global bypass token as deleted (sets `deleted_at`
- *       and `deleted_by`). As part of the same operation, all existing active
- *       usages of the token are revoked (their `revoked_at` and `revoked_by`
- *       are set), immediately removing platform access granted through this
- *       token. Because global bypass tokens gate platform-level access, users
- *       whose bypass was revoked will be denied on their next token refresh.
- *
- *       The token and its usage history remain visible for audit purposes.
- *       Only non-restricted admins may manage global bypass tokens. The caller
- *       must be the creator or a transitive ancestor in the admin hierarchy.
- *     tags:
- *       - Bypass
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: tokenHash
- *         required: true
- *         schema:
- *           type: string
- *         description: SHA-256 hex hash of the raw bypass token
- *     responses:
- *       204:
- *         description: Token soft-deleted and all usages revoked
- *       400:
- *         description: Missing tokenHash or token is already deleted
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller is faculty-restricted, or is outside the creator's hierarchy branch
- *       404:
- *         description: Token not found
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ tokenHash: string }> },
@@ -60,15 +21,21 @@ export async function DELETE(
   }
 
   const { tokenHash } = await params;
-  if (!tokenHash) return Errors.badRequest('tokenHash is required');
+  if (!tokenHash) {
+    return Errors.badRequest('tokenHash is required');
+  }
 
   const token = await prisma.globalBypassToken.findUnique({
     where: { token_hash: tokenHash },
     include: { usages: { select: { user_id: true } } },
   });
 
-  if (!token) return Errors.notFound('Global bypass token not found');
-  if (token.deleted_at) return Errors.badRequest('Token is already deleted');
+  if (!token) {
+    return Errors.notFound('Global bypass token not found');
+  }
+  if (token.deleted_at) {
+    return Errors.badRequest('Token is already deleted');
+  }
 
   if (token.created_by !== auth.user.sub) {
     const adminGraph = await buildAdminGraph();

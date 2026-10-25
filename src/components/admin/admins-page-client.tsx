@@ -77,13 +77,13 @@ export function AdminsPageClient({
   const manageFaqCount = admins.filter((a) => a.manageFaq).length;
 
   return (
-    <div className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-4 py-4 sm:px-6">
+    <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="bg-kpi-navy flex h-8 w-8 items-center justify-center rounded-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-kpi-navy">
             <Users className="h-4 w-4 text-white" />
           </div>
-          <h2 className="font-display text-foreground text-base font-semibold sm:text-lg">
+          <h2 className="font-display text-base font-semibold text-foreground sm:text-lg">
             Список адміністраторів
           </h2>
         </div>
@@ -112,30 +112,30 @@ export function AdminsPageClient({
       {!error && currentUser && (
         <div className="space-y-5 p-4 sm:p-6">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1">
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
-              <strong className="text-foreground font-bold">{adminsCount}</strong>{' '}
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              <strong className="font-bold text-foreground">{adminsCount}</strong>{' '}
               {pluralize(
                 adminsCount,
                 ['адміністратор', 'адміністратори', 'адміністраторів'],
                 false,
               )}
             </span>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
-              <strong className="text-foreground font-bold">{canInviteCount}</strong> керує адмінами
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              <strong className="font-bold text-foreground">{canInviteCount}</strong> керує адмінами
             </span>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
-              <strong className="text-foreground font-bold">{manageGroupsCount}</strong> керує
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              <strong className="font-bold text-foreground">{manageGroupsCount}</strong> керує
               групами
             </span>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
-              <strong className="text-foreground font-bold">{managePetitionsCount}</strong> керує
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              <strong className="font-bold text-foreground">{managePetitionsCount}</strong> керує
               петиціями
             </span>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
-              <strong className="text-foreground font-bold">{manageFaqCount}</strong> редагує FAQ
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              <strong className="font-bold text-foreground">{manageFaqCount}</strong> редагує FAQ
             </span>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">
-              <strong className="text-foreground font-bold">{restrictedCount}</strong>{' '}
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              <strong className="font-bold text-foreground">{restrictedCount}</strong>{' '}
               {pluralize(restrictedCount, ['обмежений', 'обмежені', 'обмежених'], false)}
             </span>
           </div>

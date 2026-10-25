@@ -41,7 +41,7 @@ export function Avatar({
 
   // Reset on src change so switching to a freshly-uploaded URL (or back to
   // "no avatar") doesn't stay stuck showing the previous fallback state.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
+  // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => setFailed(false), [src]);
 
   const showImage = !!src && !failed;
@@ -57,7 +57,7 @@ export function Avatar({
       style={{ width: size, height: size, fontSize: Math.max(10, Math.round(size * 0.42)) }}
     >
       {showImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- pre-sized, same-origin uploaded content; see comment above
+        // oxlint-disable-next-line nextjs/no-img-element -- pre-sized, same-origin uploaded content; see comment above
         <img
           src={src}
           alt={name ?? 'Avatar'}

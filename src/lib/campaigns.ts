@@ -31,9 +31,10 @@ import { generateElectionKeyPair } from '@/lib/crypto';
 import { safeDecrypt } from '@/lib/elections-view';
 import { encryptField } from '@/lib/encryption';
 import { prisma } from '@/lib/prisma';
+import { campaignCreateBodySchema, campaignDatesBodySchema } from '@/lib/schemas/campaign';
+import { validationMessage } from '@/lib/schemas/common';
 import type {
   CampaignBoundaryEditability,
-  CreateElectionCampaignRequest,
   ElectionCampaign,
   ElectionCampaignRestriction,
 } from '@/types/campaign';
@@ -90,8 +91,12 @@ function isAllowedCampaignRestrictionType(type: string): type is RestrictionType
 function validateRestrictions(
   raw: unknown,
 ): { ok: true; restrictions: ElectionCampaignRestriction[] } | { ok: false; error: string } {
-  if (raw === undefined || raw === null) return { ok: true, restrictions: [] };
-  if (!Array.isArray(raw)) return { ok: false, error: 'restrictions must be an array' };
+  if (raw === undefined || raw === null) {
+    return { ok: true, restrictions: [] };
+  }
+  if (!Array.isArray(raw)) {
+    return { ok: false, error: 'restrictions must be an array' };
+  }
   if (raw.length > CAMPAIGN_MAX_RESTRICTIONS) {
     return {
       ok: false,
@@ -116,7 +121,9 @@ function validateRestrictions(
       };
     }
     const trimmed = value.trim();
-    if (!trimmed) return { ok: false, error: 'restriction value must not be empty' };
+    if (!trimmed) {
+      return { ok: false, error: 'restriction value must not be empty' };
+    }
     if (trimmed.length > CAMPAIGN_RESTRICTION_VALUE_MAX_LENGTH) {
       return {
         ok: false,
@@ -124,7 +131,9 @@ function validateRestrictions(
       };
     }
     const dedupeKey = `${type}|${trimmed}`;
-    if (seen.has(dedupeKey)) continue;
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
     seen.add(dedupeKey);
     result.push({ type, value: trimmed });
   }
@@ -163,10 +172,13 @@ function parseTimestamp(
   raw: unknown,
   field: string,
 ): { ok: true; date: Date } | { ok: false; error: string } {
-  if (typeof raw !== 'string') return { ok: false, error: `${field} is required` };
+  if (typeof raw !== 'string') {
+    return { ok: false, error: `${field} is required` };
+  }
   const d = new Date(raw);
-  if (Number.isNaN(d.getTime()))
+  if (Number.isNaN(d.getTime())) {
     return { ok: false, error: `${field} must be a valid ISO timestamp` };
+  }
   return { ok: true, date: d };
 }
 
@@ -174,11 +186,16 @@ export function validateCreateCampaignBody(
   body: unknown,
   now: Date = new Date(),
 ): { ok: true; data: ValidatedCreateCampaignBody } | { ok: false; error: string } {
-  if (!body || typeof body !== 'object') return { ok: false, error: 'Invalid body' };
-  const raw = body as Partial<CreateElectionCampaignRequest> & Record<string, unknown>;
+  const parsedBody = campaignCreateBodySchema.safeParse(body);
+  if (!parsedBody.success) {
+    return { ok: false, error: validationMessage(parsedBody.error) };
+  }
+  const raw = parsedBody.data;
 
   const positionTitle = typeof raw.positionTitle === 'string' ? raw.positionTitle.trim() : '';
-  if (!positionTitle) return { ok: false, error: 'positionTitle is required' };
+  if (!positionTitle) {
+    return { ok: false, error: 'positionTitle is required' };
+  }
   if (positionTitle.length > CAMPAIGN_POSITION_TITLE_MAX_LENGTH) {
     return {
       ok: false,
@@ -195,7 +212,9 @@ export function validateCreateCampaignBody(
   }
 
   const announcedRes = parseTimestamp(raw.announcedAt, 'announcedAt');
-  if (!announcedRes.ok) return announcedRes;
+  if (!announcedRes.ok) {
+    return announcedRes;
+  }
   // A campaign can't be announced in the past — silently start it "now"
   // instead of honouring a stale/backdated timestamp (mirrors how election
   // creation clamps opens_at). Every later boundary is validated against
@@ -203,7 +222,9 @@ export function validateCreateCampaignBody(
   const announcedAt = announcedRes.date < now ? now : announcedRes.date;
 
   const regClosesRes = parseTimestamp(raw.registrationClosesAt, 'registrationClosesAt');
-  if (!regClosesRes.ok) return regClosesRes;
+  if (!regClosesRes.ok) {
+    return regClosesRes;
+  }
   const registrationClosesAt = regClosesRes.date;
 
   if (typeof raw.signatureCollection !== 'boolean') {
@@ -216,9 +237,13 @@ export function validateCreateCampaignBody(
 
   if (raw.signatureCollection) {
     const sigOpensRes = parseTimestamp(raw.signaturesOpensAt, 'signaturesOpensAt');
-    if (!sigOpensRes.ok) return sigOpensRes;
+    if (!sigOpensRes.ok) {
+      return sigOpensRes;
+    }
     const sigClosesRes = parseTimestamp(raw.signaturesClosesAt, 'signaturesClosesAt');
-    if (!sigClosesRes.ok) return sigClosesRes;
+    if (!sigClosesRes.ok) {
+      return sigClosesRes;
+    }
     signaturesOpensAt = sigOpensRes.date;
     signaturesClosesAt = sigClosesRes.date;
 
@@ -231,7 +256,9 @@ export function validateCreateCampaignBody(
       CAMPAIGN_SIGNATURE_QUORUM_MAX,
       'signatureQuorum',
     );
-    if (err) return { ok: false, error: err };
+    if (err) {
+      return { ok: false, error: err };
+    }
     signatureQuorum = raw.signatureQuorum;
   } else {
     if (
@@ -248,14 +275,18 @@ export function validateCreateCampaignBody(
 
   let teamSize = 0;
   if (raw.teamSize !== undefined) {
-    if (!isInt(raw.teamSize)) return { ok: false, error: 'teamSize must be an integer' };
+    if (!isInt(raw.teamSize)) {
+      return { ok: false, error: 'teamSize must be an integer' };
+    }
     const err = checkRange(
       raw.teamSize,
       CAMPAIGN_TEAM_SIZE_MIN,
       CAMPAIGN_TEAM_SIZE_MAX,
       'teamSize',
     );
-    if (err) return { ok: false, error: err };
+    if (err) {
+      return { ok: false, error: err };
+    }
     teamSize = raw.teamSize;
   }
 
@@ -268,9 +299,13 @@ export function validateCreateCampaignBody(
   }
 
   const votingOpensRes = parseTimestamp(raw.votingOpensAt, 'votingOpensAt');
-  if (!votingOpensRes.ok) return votingOpensRes;
+  if (!votingOpensRes.ok) {
+    return votingOpensRes;
+  }
   const votingClosesRes = parseTimestamp(raw.votingClosesAt, 'votingClosesAt');
-  if (!votingClosesRes.ok) return votingClosesRes;
+  if (!votingClosesRes.ok) {
+    return votingClosesRes;
+  }
   const votingOpensAt = votingOpensRes.date;
   const votingClosesAt = votingClosesRes.date;
 
@@ -282,10 +317,14 @@ export function validateCreateCampaignBody(
     votingOpensAt,
     votingClosesAt,
   });
-  if (!chainRes.ok) return chainRes;
+  if (!chainRes.ok) {
+    return chainRes;
+  }
 
   const restrictionsRes = validateRestrictions(raw.restrictions);
-  if (!restrictionsRes.ok) return { ok: false, error: restrictionsRes.error };
+  if (!restrictionsRes.ok) {
+    return { ok: false, error: restrictionsRes.error };
+  }
 
   return {
     ok: true,
@@ -428,17 +467,28 @@ export function validateCampaignDatesUpdate(
   existing: CampaignBoundaryRow,
   now: Date = new Date(),
 ): { ok: true; data: ValidatedCampaignDatesUpdate } | { ok: false; error: string } {
-  if (!body || typeof body !== 'object') return { ok: false, error: 'Invalid body' };
-  const raw = body as Record<string, unknown>;
+  const parsedBody = campaignDatesBodySchema.safeParse(body);
+  if (!parsedBody.success) {
+    return { ok: false, error: validationMessage(parsedBody.error) };
+  }
+  const raw = parsedBody.data;
 
   const announcedRes = parseTimestamp(raw.announcedAt, 'announcedAt');
-  if (!announcedRes.ok) return announcedRes;
+  if (!announcedRes.ok) {
+    return announcedRes;
+  }
   const regClosesRes = parseTimestamp(raw.registrationClosesAt, 'registrationClosesAt');
-  if (!regClosesRes.ok) return regClosesRes;
+  if (!regClosesRes.ok) {
+    return regClosesRes;
+  }
   const votingOpensRes = parseTimestamp(raw.votingOpensAt, 'votingOpensAt');
-  if (!votingOpensRes.ok) return votingOpensRes;
+  if (!votingOpensRes.ok) {
+    return votingOpensRes;
+  }
   const votingClosesRes = parseTimestamp(raw.votingClosesAt, 'votingClosesAt');
-  if (!votingClosesRes.ok) return votingClosesRes;
+  if (!votingClosesRes.ok) {
+    return votingClosesRes;
+  }
 
   const hasSignaturePhase =
     existing.signatures_opens_at !== null && existing.signatures_closes_at !== null;
@@ -446,9 +496,13 @@ export function validateCampaignDatesUpdate(
   let signaturesClosesAt: Date | null = null;
   if (hasSignaturePhase) {
     const sigOpensRes = parseTimestamp(raw.signaturesOpensAt, 'signaturesOpensAt');
-    if (!sigOpensRes.ok) return sigOpensRes;
+    if (!sigOpensRes.ok) {
+      return sigOpensRes;
+    }
     const sigClosesRes = parseTimestamp(raw.signaturesClosesAt, 'signaturesClosesAt');
-    if (!sigClosesRes.ok) return sigClosesRes;
+    if (!sigClosesRes.ok) {
+      return sigClosesRes;
+    }
     signaturesOpensAt = sigOpensRes.date;
     signaturesClosesAt = sigClosesRes.date;
   } else if (raw.signaturesOpensAt != null || raw.signaturesClosesAt != null) {
@@ -507,7 +561,9 @@ export function validateCampaignDatesUpdate(
       );
     }
   }
-  if (err) return { ok: false, error: err };
+  if (err) {
+    return { ok: false, error: err };
+  }
 
   // announcedAt is the only boundary that can still move to an arbitrary new
   // value (when 'editable') — clamp it exactly like creation does, so it's
@@ -523,7 +579,9 @@ export function validateCampaignDatesUpdate(
     votingOpensAt: votingOpensRes.date,
     votingClosesAt: votingClosesRes.date,
   });
-  if (!chainRes.ok) return chainRes;
+  if (!chainRes.ok) {
+    return chainRes;
+  }
 
   return {
     ok: true,
@@ -589,7 +647,9 @@ export async function applyCampaignDatesUpdate(
         where: { campaign_id: campaignId, candidate_registration_id: { not: null } },
         data: { opens_at: data.signaturesOpensAt, closes_at: data.signaturesClosesAt },
       });
-      if (res.count > 0) electionsTouched = true;
+      if (res.count > 0) {
+        electionsTouched = true;
+      }
     }
 
     if (campaign.final_election_id) {
@@ -603,7 +663,9 @@ export async function applyCampaignDatesUpdate(
     return campaign;
   });
 
-  if (electionsTouched) await invalidateElections();
+  if (electionsTouched) {
+    await invalidateElections();
+  }
   return updated;
 }
 
@@ -754,7 +816,9 @@ export async function ensureCampaignRegistrationForm(campaignId: string): Promis
         restrictions: { select: { type: true, value: true } },
       },
     });
-    if (!c || c.deleted_at || c.registration_form_id) return;
+    if (!c || c.deleted_at || c.registration_form_id) {
+      return;
+    }
 
     const form = await tx.candidateRegistrationForm.create({
       data: {
@@ -787,7 +851,9 @@ export async function ensureCampaignRegistrationForm(campaignId: string): Promis
  * the FAILED-override decision since no candidates can exist without a form.
  */
 async function countApprovedCandidates(formId: string | null): Promise<number> {
-  if (!formId) return 0;
+  if (!formId) {
+    return 0;
+  }
   return prisma.candidateRegistration.count({
     where: { form_id: formId, status: 'APPROVED' },
   });
@@ -826,9 +892,15 @@ export async function ensureCampaignSignatureElections(campaignId: string): Prom
       restrictions: { select: { type: true, value: true } },
     },
   });
-  if (!campaign || campaign.deleted_at) return;
-  if (campaign.state === 'CANCELLED' || campaign.state === 'FAILED') return;
-  if (!campaign.signature_collection) return;
+  if (!campaign || campaign.deleted_at) {
+    return;
+  }
+  if (campaign.state === 'CANCELLED' || campaign.state === 'FAILED') {
+    return;
+  }
+  if (!campaign.signature_collection) {
+    return;
+  }
   if (
     !campaign.registration_form_id ||
     campaign.signature_quorum === null ||
@@ -848,7 +920,9 @@ export async function ensureCampaignSignatureElections(campaignId: string): Prom
   });
 
   const missing = approved.filter((reg) => reg.signature_election === null);
-  if (missing.length === 0) return;
+  if (missing.length === 0) {
+    return;
+  }
 
   const winningConditions: Prisma.InputJsonObject = {
     hasMostVotes: false,
@@ -869,7 +943,9 @@ export async function ensureCampaignSignatureElections(campaignId: string): Prom
           where: { candidate_registration_id: reg.id },
           select: { id: true },
         });
-        if (existing) return;
+        if (existing) {
+          return;
+        }
 
         const { publicKey, privateKey } = generateElectionKeyPair();
         const candidateName = safeDecrypt(reg.full_name);
@@ -913,7 +989,9 @@ export async function ensureCampaignSignatureElections(campaignId: string): Prom
       // Concurrent tick may have inserted between our pre-check and create.
       // Swallow the unique-constraint race; other errors propagate.
       const code = (err as { code?: string })?.code;
-      if (code !== 'P2002') throw err;
+      if (code !== 'P2002') {
+        throw err;
+      }
     }
   }
 
@@ -934,7 +1012,9 @@ async function listCandidatesPassingSignatureGate(campaign: {
   signature_quorum: number | null;
   registration_form_id: string | null;
 }): Promise<Array<{ id: string; full_name: string }>> {
-  if (!campaign.registration_form_id) return [];
+  if (!campaign.registration_form_id) {
+    return [];
+  }
   const approved = await prisma.candidateRegistration.findMany({
     where: { form_id: campaign.registration_form_id, status: 'APPROVED' },
     select: {
@@ -987,12 +1067,20 @@ export async function ensureCampaignFinalElection(campaignId: string): Promise<v
       restrictions: { select: { type: true, value: true } },
     },
   });
-  if (!campaign || campaign.deleted_at) return;
-  if (campaign.state === 'CANCELLED' || campaign.state === 'FAILED') return;
-  if (campaign.final_election_id) return;
+  if (!campaign || campaign.deleted_at) {
+    return;
+  }
+  if (campaign.state === 'CANCELLED' || campaign.state === 'FAILED') {
+    return;
+  }
+  if (campaign.final_election_id) {
+    return;
+  }
 
   const qualifying = await listCandidatesPassingSignatureGate(campaign);
-  if (qualifying.length === 0) return;
+  if (qualifying.length === 0) {
+    return;
+  }
 
   const winningConditions: Prisma.InputJsonObject = {
     hasMostVotes: true,
@@ -1009,7 +1097,9 @@ export async function ensureCampaignFinalElection(campaignId: string): Promise<v
       where: { id: campaign.id },
       select: { final_election_id: true, deleted_at: true },
     });
-    if (!fresh || fresh.deleted_at || fresh.final_election_id) return;
+    if (!fresh || fresh.deleted_at || fresh.final_election_id) {
+      return;
+    }
 
     const { publicKey, privateKey } = generateElectionKeyPair();
     const now = new Date();

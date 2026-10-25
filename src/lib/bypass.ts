@@ -15,7 +15,9 @@ function bypassCacheKey(userId: string): string {
 
 async function getCachedBypass(userId: string): Promise<UserBypassInfo | null> {
   const raw = await safeRedis(() => redis.get(bypassCacheKey(userId)));
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     return JSON.parse(raw) as UserBypassInfo;
   } catch {
@@ -44,7 +46,9 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
     const global = cached.global && cached.global.validUntil > now ? cached.global : null;
     const elections: Record<string, ElectionBypassInfo> = {};
     for (const [electionId, info] of Object.entries(cached.elections)) {
-      if (info.validUntil > now) elections[electionId] = info;
+      if (info.validUntil > now) {
+        elections[electionId] = info;
+      }
     }
     return { global, elections };
   }
@@ -106,9 +110,13 @@ export async function getUserBypassInfo(userId: string): Promise<UserBypassInfo>
   const elections: Record<string, ElectionBypassInfo> = {};
   for (const usage of electionUsages) {
     const { token } = usage;
-    if (!token.election_id) continue;
+    if (!token.election_id) {
+      continue;
+    }
     const newTypes = token.bypass_restrictions as string[];
-    if (newTypes.length === 0) continue;
+    if (newTypes.length === 0) {
+      continue;
+    }
 
     const validUntil = token.election.closes_at.getTime();
     const existing = elections[token.election_id];
@@ -142,9 +150,15 @@ export async function getElectionBypassForUser(
 ): Promise<string[] | null> {
   const info = await getUserBypassInfo(userId);
   const entry = info.elections[electionId];
-  if (!entry) return null;
-  if (entry.validUntil < Date.now()) return null;
-  if (entry.bypassedTypes.length === 0) return null;
+  if (!entry) {
+    return null;
+  }
+  if (entry.validUntil < Date.now()) {
+    return null;
+  }
+  if (entry.bypassedTypes.length === 0) {
+    return null;
+  }
   return entry.bypassedTypes;
 }
 
@@ -230,7 +244,9 @@ export async function applyBypassToken(
     include: { election: { select: { closes_at: true, deleted_at: true } } },
   });
 
-  if (!electionToken) throw new BypassTokenError('Invalid bypass token', 404);
+  if (!electionToken) {
+    throw new BypassTokenError('Invalid bypass token', 404);
+  }
 
   if (electionToken.election.deleted_at) {
     throw new BypassTokenError('Election has been deleted', 400);
@@ -247,7 +263,9 @@ export async function applyBypassToken(
   });
 
   if (existing) {
-    if (existing.revoked_at) throw new BypassTokenError('Your bypass access has been revoked', 400);
+    if (existing.revoked_at) {
+      throw new BypassTokenError('Your bypass access has been revoked', 400);
+    }
   } else {
     await prisma.$transaction([
       prisma.electionBypassTokenUsage.create({

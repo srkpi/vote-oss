@@ -179,24 +179,32 @@ export async function bloomCheck(jti: string): Promise<'clean' | 'revoked' | 'fp
     pipeline.exists(revokedKey(jti));
 
     const results = await pipeline.exec();
-    if (!results) return 'error';
+    if (!results) {
+      return 'error';
+    }
 
     // Check all bloom bits
     let allSet = true;
     for (let i = 0; i < BLOOM_K; i++) {
       const [err, bit] = results[i] as [Error | null, number];
-      if (err) return 'error';
+      if (err) {
+        return 'error';
+      }
       if (bit === 0) {
         allSet = false;
         break;
       }
     }
 
-    if (!allSet) return 'clean'; // Definitely not in the filter
+    if (!allSet) {
+      return 'clean';
+    } // Definitely not in the filter
 
     // Bloom hit – check the confirmation key
     const [confErr, exists] = results[BLOOM_K] as [Error | null, number];
-    if (confErr) return 'error';
+    if (confErr) {
+      return 'error';
+    }
 
     return exists === 1 ? 'revoked' : 'fp';
   } catch (err) {
@@ -211,6 +219,8 @@ export async function bloomCheck(jti: string): Promise<'clean' | 'revoked' | 'fp
  */
 export async function isTokenClean(jti: string): Promise<boolean | null> {
   const result = await bloomCheck(jti);
-  if (result === 'error') return null; // Redis down → caller decides
+  if (result === 'error') {
+    return null;
+  } // Redis down → caller decides
   return result === 'clean' || result === 'fp'; // fp = not actually revoked
 }

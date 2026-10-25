@@ -6,51 +6,16 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/groups/{id}/members:
- *   get:
- *     summary: List active members of a group
- *     description: >
- *       Returns all non-deleted members ordered by join date ascending. Only
- *       accessible to current active members of the group or admins with
- *       `manage_groups`.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Group UUID
- *     responses:
- *       200:
- *         description: Array of active group members
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/GroupMember'
- *       400:
- *         description: Invalid group UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not a member of this group and does not have manage_groups
- *       404:
- *         description: Group not found or soft-deleted
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: groupId } = await params;
-  if (!isValidUuid(groupId)) return Errors.badRequest('Invalid group id');
+  if (!isValidUuid(groupId)) {
+    return Errors.badRequest('Invalid group id');
+  }
 
   const isAdminWithManageGroups = (auth.user.isAdmin ?? false) && (auth.user.manageGroups ?? false);
 
@@ -60,7 +25,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     select: { id: true, owner_id: true, deleted_at: true },
   });
 
-  if (!group || group.deleted_at) return Errors.notFound('Group not found');
+  if (!group || group.deleted_at) {
+    return Errors.notFound('Group not found');
+  }
 
   // Check caller is a member or a groups admin
   if (!isAdminWithManageGroups) {

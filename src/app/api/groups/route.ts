@@ -2,6 +2,7 @@ import type { File as DbFile } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin, requireAuth } from '@/lib/auth';
 import { getCachedElections } from '@/lib/cache';
 import { GROUP_MAX_OWNED, GROUP_NAME_MAX_LENGTH } from '@/lib/constants';
@@ -9,44 +10,13 @@ import { Errors } from '@/lib/errors';
 import { shapeFileSummary } from '@/lib/files';
 import { invalidateUserOwnedGroups } from '@/lib/groups';
 import { prisma } from '@/lib/prisma';
+import { groupCreateBodySchema } from '@/lib/schemas/group';
 
-/**
- * @swagger
- * /api/groups:
- *   get:
- *     summary: List groups the caller belongs to or can discover
- *     description: >
- *       Returns two categories of groups combined into a single array:
- *
- *       1. All non-deleted groups the caller is an active member of (ordered
- *          by join date ascending).
- *       2. Groups the caller is NOT a member of but which have at least one
- *          non-deleted, publicly-viewable election restricted to their
- *          membership (so non-members can discover the group via its public
- *          poll).
- *
- *       Each entry includes computed `isOwner` and `isMember` flags. Admins
- *       with `manage_groups` who need the full system-wide group list should
- *       use GET /api/groups/all.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: Array of group summaries
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/GroupSummary'
- *       401:
- *         description: Unauthorized
- */
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { user } = auth;
 
@@ -95,9 +65,13 @@ export async function GET(req: NextRequest) {
   if (cachedElections) {
     const set = new Set<string>();
     for (const e of cachedElections) {
-      if (!e.publicViewing || e.deletedAt) continue;
+      if (!e.publicViewing || e.deletedAt) {
+        continue;
+      }
       for (const r of e.restrictions) {
-        if (r.type === 'GROUP_MEMBERSHIP') set.add(r.value);
+        if (r.type === 'GROUP_MEMBERSHIP') {
+          set.add(r.value);
+        }
       }
     }
     publicGroupIds = [...set];
@@ -166,51 +140,11 @@ export async function GET(req: NextRequest) {
   ]);
 }
 
-/**
- * @swagger
- * /api/groups:
- *   post:
- *     summary: Create a new group
- *     description: >
- *       Creates a group and automatically adds the creator as its owner and
- *       first member. Requires admin authentication with `manage_groups`
- *       permission. A user may own at most `GROUP_MAX_OWNED` groups
- *       simultaneously.
- *     tags:
- *       - Groups
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *                 minLength: 1
- *                 maxLength: 100
- *                 description: Display name for the new group.
- *     responses:
- *       201:
- *         description: Group created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/GroupSummary'
- *       400:
- *         description: Missing or invalid name, or ownership limit reached
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller is not an admin with manage_groups
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
-  if (!auth.ok) return Errors.forbidden(auth.error);
+  if (!auth.ok) {
+    return Errors.forbidden(auth.error);
+  }
 
   const { user, admin } = auth;
 
@@ -218,15 +152,16 @@ export async function POST(req: NextRequest) {
     return Errors.forbidden('Only admin with manage groups permission can create groups');
   }
 
-  let body: { name?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, groupCreateBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const name = body.name?.trim();
-  if (!name) return Errors.badRequest('name is required');
+  if (!name) {
+    return Errors.badRequest('name is required');
+  }
   if (name.length > GROUP_NAME_MAX_LENGTH) {
     return Errors.badRequest(`name must be at most ${GROUP_NAME_MAX_LENGTH} characters`);
   }

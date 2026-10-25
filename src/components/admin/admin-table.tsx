@@ -58,7 +58,9 @@ export function AdminTable({
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
 
     const result = await api.admins.delete(deleteTarget.userId);
@@ -78,7 +80,7 @@ export function AdminTable({
 
   if (admins.length === 0) {
     return (
-      <div className="font-body text-muted-foreground py-12 text-center text-sm">
+      <div className="font-body py-12 text-center text-sm text-muted-foreground">
         Адміністраторів не знайдено
       </div>
     );
@@ -89,18 +91,18 @@ export function AdminTable({
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead>
-            <tr className="border-border-subtle border-b">
+            <tr className="border-b border-border-subtle">
               {['Користувач', 'Підрозділ', 'Група', 'Призначено', 'Права', ''].map((h) => (
                 <th
                   key={h}
-                  className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
+                  className="font-body px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                 >
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-border-subtle divide-y">
+          <tbody className="divide-y divide-border-subtle">
             {admins.map((admin) => (
               <AdminRow
                 key={admin.userId}

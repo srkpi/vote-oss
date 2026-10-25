@@ -49,7 +49,9 @@ export function ProtocolsPanel({
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
     const result = await api.protocols.delete(deleteTarget.id);
     if (result.success) {
@@ -63,11 +65,11 @@ export function ProtocolsPanel({
   };
 
   return (
-    <div className="border-border-color shadow-card bg-card rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+    <div className="border-border-color rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <div className="flex items-center gap-2">
-          <FileText className="text-kpi-gray-mid h-4 w-4" />
-          <h2 className="font-display text-foreground text-base font-semibold">Протоколи</h2>
+          <FileText className="h-4 w-4 text-kpi-gray-mid" />
+          <h2 className="font-display text-base font-semibold text-foreground">Протоколи</h2>
         </div>
         {canManage ? (
           <Button variant="accent" size="sm" asChild>
@@ -77,7 +79,7 @@ export function ProtocolsPanel({
             </Link>
           </Button>
         ) : (
-          <span className="font-body text-muted-foreground text-sm">{protocols.length}</span>
+          <span className="font-body text-sm text-muted-foreground">{protocols.length}</span>
         )}
       </div>
 
@@ -86,11 +88,11 @@ export function ProtocolsPanel({
           <Alert variant="error">{initialLoadError}</Alert>
         </div>
       ) : protocols.length === 0 ? (
-        <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+        <p className="font-body px-5 py-8 text-center text-sm text-muted-foreground">
           У цій групі ще немає протоколів
         </p>
       ) : (
-        <ul className="divide-border-subtle divide-y">
+        <ul className="divide-y divide-border-subtle">
           {paged.map((p) => {
             const year = new Date(p.date).getFullYear();
             return (
@@ -98,12 +100,12 @@ export function ProtocolsPanel({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="bg-kpi-navy/10 text-kpi-navy rounded-full px-2 py-0.5 text-xs font-semibold">
+                      <span className="rounded-full bg-kpi-navy/10 px-2 py-0.5 text-xs font-semibold text-kpi-navy">
                         №{p.number}/{year}
                       </span>
-                      <p className="font-body text-foreground text-sm font-semibold">{p.name}</p>
+                      <p className="font-body text-sm font-semibold text-foreground">{p.name}</p>
                     </div>
-                    <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       <span>
                         Дата: <LocalDate date={p.date} />
                       </span>
@@ -112,7 +114,7 @@ export function ProtocolsPanel({
                         Пунктів: {p.agendaItemCount}
                       </span>
                     </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Створено <LocalDateTime date={p.createdAt} />
                       {p.updatedAt !== p.createdAt && (
                         <>
@@ -147,7 +149,7 @@ export function ProtocolsPanel({
       )}
 
       {totalPages > 1 && (
-        <div className="border-border-subtle border-t px-5 py-3">
+        <div className="border-t border-border-subtle px-5 py-3">
           <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
         </div>
       )}

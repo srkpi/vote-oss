@@ -23,9 +23,13 @@ export function ChoiceButton({
   disabled = false,
 }: ChoiceButtonProps) {
   function handleClick() {
-    if (disabled) return;
+    if (disabled) {
+      return;
+    }
     if (selected) {
-      if (multiple) onDeselect(choice);
+      if (multiple) {
+        onDeselect(choice);
+      }
     } else {
       onSelect(choice);
     }
@@ -38,11 +42,11 @@ export function ChoiceButton({
       className={cn(
         'flex w-full items-center gap-4 rounded-lg p-4',
         'border-2 text-left transition-all duration-200',
-        'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+        'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:ring-offset-2 focus-visible:outline-none',
         'animate-fade-up ph-no-capture',
         selected
           ? 'border-kpi-navy bg-kpi-navy/5 shadow-card'
-          : 'border-border-color hover:border-kpi-blue-light/50 hover:bg-surface bg-card',
+          : 'border-border-color bg-card hover:border-kpi-blue-light/50 hover:bg-surface',
         disabled && !selected && 'cursor-not-allowed opacity-50',
       )}
       style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}

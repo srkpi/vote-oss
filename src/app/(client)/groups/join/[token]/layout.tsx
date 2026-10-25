@@ -9,7 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default async function UseTokenLayout({ children }: { children: React.ReactNode }) {
-  if (await isBotRequest()) return null;
+  if (await isBotRequest()) {
+    return null;
+  }
 
   return children;
 }

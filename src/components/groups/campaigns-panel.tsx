@@ -1,5 +1,6 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   CalendarClock,
   ExternalLink,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,11 @@ import {
   CAMPAIGN_TEAM_SIZE_MIN,
   CAMPAIGNS_PAGE_SIZE,
 } from '@/lib/constants';
+import {
+  createCampaignFormSchema,
+  serializeCampaignSchedule,
+  type CampaignFormValues,
+} from '@/lib/schemas/campaign-form';
 import type { ElectionCampaign, ElectionCampaignRestriction, ElectionKind } from '@/types/campaign';
 
 interface CampaignsPanelProps {
@@ -68,7 +75,9 @@ export function CampaignsPanel({
   );
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
     const result = await api.campaigns.delete(deleteTarget.id);
     if (result.success) {
@@ -82,11 +91,11 @@ export function CampaignsPanel({
   };
 
   return (
-    <div className="border-border-color shadow-card bg-card rounded-xl border">
-      <div className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+    <div className="border-border-color rounded-xl border bg-card shadow-card">
+      <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <div className="flex items-center gap-2">
-          <Megaphone className="text-kpi-gray-mid h-4 w-4" />
-          <h2 className="font-display text-foreground text-base font-semibold">Вибори</h2>
+          <Megaphone className="h-4 w-4 text-kpi-gray-mid" />
+          <h2 className="font-display text-base font-semibold text-foreground">Вибори</h2>
         </div>
         <Button variant="accent" size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-3.5 w-3.5" />
@@ -99,11 +108,11 @@ export function CampaignsPanel({
           <Alert variant="error">{initialLoadError}</Alert>
         </div>
       ) : campaigns.length === 0 ? (
-        <p className="font-body text-muted-foreground px-5 py-8 text-center text-sm">
+        <p className="font-body px-5 py-8 text-center text-sm text-muted-foreground">
           У цій групі ще немає виборчих кампаній
         </p>
       ) : (
-        <ul className="divide-border-subtle divide-y">
+        <ul className="divide-y divide-border-subtle">
           {paged.map((c) => {
             const badge = CAMPAIGN_STATE_BADGE[c.state];
             return (
@@ -114,10 +123,10 @@ export function CampaignsPanel({
                       {c.positionTitle}
                       <StatusBadge status={badge.kind} size="sm" label={badge.label} />
                     </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {ELECTION_KIND_LABEL[c.electionKind]}
                     </p>
-                    <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <CalendarClock className="h-3 w-3" />
                         Голосування: <LocalDateTime date={c.votingOpensAt} /> —{' '}
@@ -167,7 +176,7 @@ export function CampaignsPanel({
       )}
 
       {totalPages > 1 && (
-        <div className="border-border-subtle border-t px-5 py-3">
+        <div className="border-t border-border-subtle px-5 py-3">
           <Pagination page={safePage} totalPages={totalPages} setPage={setPage} />
         </div>
       )}
@@ -229,65 +238,70 @@ function defaultAnnouncedAt(): Date {
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
+function campaignDefaults(): CampaignFormValues {
+  const announcedAt = defaultAnnouncedAt();
+  const registrationClosesAt = new Date(announcedAt.getTime() + 7 * DAY_MS);
+  const signaturesOpensAt = new Date(registrationClosesAt.getTime() + 2 * DAY_MS);
+  const signaturesClosesAt = new Date(signaturesOpensAt.getTime() + 7 * DAY_MS);
+  const votingOpensAt = new Date(signaturesClosesAt.getTime() + 2 * DAY_MS);
+  return {
+    positionTitle: '',
+    electionKind: 'REGULAR',
+    announcedAt,
+    registrationClosesAt,
+    signatureCollection: false,
+    signaturesOpensAt,
+    signaturesClosesAt,
+    signatureQuorum: 100,
+    teamSize: 0,
+    requiresCampaignProgram: false,
+    votingOpensAt,
+    votingClosesAt: new Date(votingOpensAt.getTime() + 3 * DAY_MS),
+    faculties: [],
+  };
+}
 function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCreateDialogProps) {
-  const [positionTitle, setPositionTitle] = useState('');
-  const [electionKind, setElectionKind] = useState<ElectionKind>('REGULAR');
-  const [announcedAt, setAnnouncedAt] = useState<Date>(defaultAnnouncedAt());
-  const [registrationClosesAt, setRegistrationClosesAt] = useState<Date | null>(null);
-  const [signatureCollection, setSignatureCollection] = useState(false);
-  const [signaturesOpensAt, setSignaturesOpensAt] = useState<Date | null>(null);
-  const [signaturesClosesAt, setSignaturesClosesAt] = useState<Date | null>(null);
-  const [signatureQuorum, setSignatureQuorum] = useState(100);
-  const [teamSize, setTeamSize] = useState(0);
-  const [requiresCampaignProgram, setRequiresCampaignProgram] = useState(false);
-  const [votingOpensAt, setVotingOpensAt] = useState<Date | null>(null);
-  const [votingClosesAt, setVotingClosesAt] = useState<Date | null>(null);
-  const [faculties, setFaculties] = useState<string[]>([]);
+  const {
+    register,
+    control,
+    handleSubmit: submitForm,
+    reset,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting: submitting },
+  } = useForm<CampaignFormValues>({
+    resolver: zodResolver(createCampaignFormSchema()),
+    defaultValues: campaignDefaults(),
+  });
+  const { positionTitle, signatureCollection } = useWatch({ control }) as CampaignFormValues;
+  const error = errors.root?.message;
   const [facultyOptions, setFacultyOptions] = useState<string[]>([]);
   const [facultiesLoading, setFacultiesLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Re-renders every minute so date-pickers and validation stay in sync with "now".
   const [renderNowMs, setRenderNowMs] = useState(() => Date.now());
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const id = setInterval(() => setRenderNowMs(Date.now()), 60_000);
     return () => clearInterval(id);
   }, [open]);
   const minFutureDate = new Date(renderNowMs + 60 * 1000);
 
-  // Reset state and seed sensible defaults each time the dialog opens.
   useEffect(() => {
-    if (!open) return;
-    const announced = defaultAnnouncedAt();
-    const regCloses = new Date(announced.getTime() + 7 * DAY_MS);
-    const sigOpens = new Date(regCloses.getTime() + 2 * DAY_MS);
-    const sigCloses = new Date(sigOpens.getTime() + 7 * DAY_MS);
-    const votingOpens = new Date(sigCloses.getTime() + 2 * DAY_MS);
-    const votingCloses = new Date(votingOpens.getTime() + 3 * DAY_MS);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPositionTitle('');
-    setElectionKind('REGULAR');
-    setAnnouncedAt(announced);
-    setRegistrationClosesAt(regCloses);
-    setSignatureCollection(false);
-    setSignaturesOpensAt(sigOpens);
-    setSignaturesClosesAt(sigCloses);
-    setSignatureQuorum(100);
-    setTeamSize(0);
-    setRequiresCampaignProgram(false);
-    setVotingOpensAt(votingOpens);
-    setVotingClosesAt(votingCloses);
-    setFaculties([]);
-    setError(null);
-  }, [open]);
+    if (open) {
+      reset(campaignDefaults());
+    }
+  }, [open, reset]);
 
   // Load faculty list once.
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     if (facultyOptions.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // oxlint-disable-next-line react/set-state-in-effect
       setFacultiesLoading(false);
       return;
     }
@@ -296,7 +310,9 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
         const list = Object.keys(res.data).sort((a, b) => {
           const aNN = a.startsWith('НН ');
           const bNN = b.startsWith('НН ');
-          if (aNN !== bNN) return aNN ? 1 : -1;
+          if (aNN !== bNN) {
+            return aNN ? 1 : -1;
+          }
           return a.localeCompare(b, 'uk');
         });
         setFacultyOptions(list);
@@ -305,72 +321,26 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
     });
   }, [open, facultyOptions.length]);
 
-  const toggleFaculty = (faculty: string) => {
-    setFaculties((prev) =>
-      prev.includes(faculty) ? prev.filter((f) => f !== faculty) : [...prev, faculty],
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (!registrationClosesAt || !votingOpensAt || !votingClosesAt) return;
-    if (signatureCollection && (!signaturesOpensAt || !signaturesClosesAt)) return;
-
-    const futureChecks: Array<[Date, string]> = [
-      [announcedAt, 'Початок реєстрації'],
-      [registrationClosesAt, 'Кінець реєстрації'],
-      [votingOpensAt, 'Початок голосування'],
-      [votingClosesAt, 'Кінець голосування'],
-    ];
-    if (signatureCollection) {
-      futureChecks.push(
-        [signaturesOpensAt!, 'Початок збору підписів'],
-        [signaturesClosesAt!, 'Кінець збору підписів'],
-      );
-    }
-    const nowMs = Date.now();
-    const pastField = futureChecks.find(([d]) => d.getTime() <= nowMs);
-    if (pastField) {
-      setError(`«${pastField[1]}» має бути після поточного часу`);
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
+  const handleSubmit = submitForm(async (values) => {
+    clearErrors('root');
+    const { faculties, signatureQuorum, ...fields } = values;
     const restrictions: ElectionCampaignRestriction[] = faculties.map((value) => ({
       type: 'FACULTY',
       value,
     }));
-    const payload = {
-      positionTitle: positionTitle.trim(),
-      electionKind,
-      announcedAt: announcedAt.toISOString(),
-      registrationClosesAt: registrationClosesAt.toISOString(),
-      signatureCollection,
-      signaturesOpensAt: signatureCollection ? signaturesOpensAt!.toISOString() : null,
-      signaturesClosesAt: signatureCollection ? signaturesClosesAt!.toISOString() : null,
-      signatureQuorum: signatureCollection ? signatureQuorum : null,
-      teamSize,
-      requiresCampaignProgram,
-      votingOpensAt: votingOpensAt.toISOString(),
-      votingClosesAt: votingClosesAt.toISOString(),
+    const result = await api.groups.campaigns.create(groupId, {
+      ...fields,
+      ...serializeCampaignSchedule(values),
+      signatureQuorum: values.signatureCollection ? signatureQuorum : null,
       restrictions,
-    };
-    const result = await api.groups.campaigns.create(groupId, payload);
+    });
     if (result.success) {
       onCreated(result.data);
     } else {
-      setError(result.error);
+      setError('root', { message: result.error });
     }
-    setSubmitting(false);
-  };
-
-  const canSubmit =
-    positionTitle.trim().length > 0 &&
-    !!registrationClosesAt &&
-    !!votingOpensAt &&
-    !!votingClosesAt &&
-    (!signatureCollection || (!!signaturesOpensAt && !!signaturesClosesAt)) &&
-    !submitting;
+  });
+  const canSubmit = !!positionTitle.trim() && !submitting;
 
   return (
     <Dialog open={open} onClose={() => !submitting && onClose()}>
@@ -381,16 +351,20 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
         </DialogHeader>
         <DialogBody className="space-y-4">
           {error && (
-            <Alert variant="error" onDismiss={() => setError(null)}>
+            <Alert variant="error" onDismiss={() => clearErrors('root')}>
               {error}
             </Alert>
           )}
 
-          <FormField label="Тип посади" required htmlFor="position-title">
+          <FormField
+            label="Тип посади"
+            required
+            htmlFor="position-title"
+            error={errors.positionTitle?.message}
+          >
             <Input
               id="position-title"
-              value={positionTitle}
-              onChange={(e) => setPositionTitle(e.target.value)}
+              {...register('positionTitle')}
               maxLength={CAMPAIGN_POSITION_TITLE_MAX_LENGTH}
               placeholder="Наприклад: Голова студради ФІОТ"
             />
@@ -398,9 +372,8 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
 
           <FormField label="Тип виборів" required>
             <select
-              className="border-border-color bg-card w-full rounded-md border px-3 py-2 text-sm"
-              value={electionKind}
-              onChange={(e) => setElectionKind(e.target.value as ElectionKind)}
+              className="border-border-color w-full rounded-md border bg-card px-3 py-2 text-sm"
+              {...register('electionKind')}
             >
               {(Object.keys(ELECTION_KIND_LABEL) as ElectionKind[]).map((kind) => (
                 <option key={kind} value={kind}>
@@ -411,100 +384,134 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
           </FormField>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField label="Початок реєстрації" required htmlFor="announced-at">
-              <KyivDateTimePicker
-                id="announced-at"
-                value={announcedAt}
-                onChange={(d) => setAnnouncedAt(d)}
-                min={minFutureDate}
-                minuteStep={30}
+            <FormField
+              label="Початок реєстрації"
+              required
+              htmlFor="announced-at"
+              error={errors.announcedAt?.message}
+            >
+              <Controller
+                control={control}
+                name="announcedAt"
+                render={({ field }) => (
+                  <KyivDateTimePicker
+                    id="announced-at"
+                    value={field.value}
+                    onChange={field.onChange}
+                    ref={field.ref}
+                    min={minFutureDate}
+                    minuteStep={30}
+                  />
+                )}
               />
             </FormField>
-            <FormField label="Кінець реєстрації" required htmlFor="registration-closes-at">
-              <KyivDateTimePicker
-                id="registration-closes-at"
-                value={registrationClosesAt ?? defaultAnnouncedAt()}
-                onChange={(d) => setRegistrationClosesAt(d)}
-                min={minFutureDate}
-                minuteStep={30}
+            <FormField
+              label="Кінець реєстрації"
+              required
+              htmlFor="registration-closes-at"
+              error={errors.registrationClosesAt?.message}
+            >
+              <Controller
+                control={control}
+                name="registrationClosesAt"
+                render={({ field }) => (
+                  <KyivDateTimePicker
+                    id="registration-closes-at"
+                    value={field.value}
+                    onChange={field.onChange}
+                    ref={field.ref}
+                    min={minFutureDate}
+                    minuteStep={30}
+                  />
+                )}
               />
             </FormField>
           </div>
 
           <FormField label="Збір підписів">
             <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={signatureCollection}
-                onChange={(e) => setSignatureCollection(e.target.checked)}
-              />
+              <input type="checkbox" {...register('signatureCollection')} />
               <span>Кандидати мають зібрати підписи перед фінальним голосуванням</span>
             </label>
           </FormField>
 
           {signatureCollection && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <FormField label="Початок збору підписів" required htmlFor="signatures-opens-at">
-                <KyivDateTimePicker
-                  id="signatures-opens-at"
-                  value={signaturesOpensAt ?? defaultAnnouncedAt()}
-                  onChange={(d) => setSignaturesOpensAt(d)}
-                  min={minFutureDate}
-                  minuteStep={30}
+              <FormField
+                label="Початок збору підписів"
+                required
+                htmlFor="signatures-opens-at"
+                error={errors.signaturesOpensAt?.message}
+              >
+                <Controller
+                  control={control}
+                  name="signaturesOpensAt"
+                  render={({ field }) => (
+                    <KyivDateTimePicker
+                      id="signatures-opens-at"
+                      value={field.value}
+                      onChange={field.onChange}
+                      ref={field.ref}
+                      min={minFutureDate}
+                      minuteStep={30}
+                    />
+                  )}
                 />
               </FormField>
-              <FormField label="Кінець збору підписів" required htmlFor="signatures-closes-at">
-                <KyivDateTimePicker
-                  id="signatures-closes-at"
-                  value={signaturesClosesAt ?? defaultAnnouncedAt()}
-                  onChange={(d) => setSignaturesClosesAt(d)}
-                  min={minFutureDate}
-                  minuteStep={30}
+              <FormField
+                label="Кінець збору підписів"
+                required
+                htmlFor="signatures-closes-at"
+                error={errors.signaturesClosesAt?.message}
+              >
+                <Controller
+                  control={control}
+                  name="signaturesClosesAt"
+                  render={({ field }) => (
+                    <KyivDateTimePicker
+                      id="signatures-closes-at"
+                      value={field.value}
+                      onChange={field.onChange}
+                      ref={field.ref}
+                      min={minFutureDate}
+                      minuteStep={30}
+                    />
+                  )}
                 />
               </FormField>
-              <FormField label="Кворум підписів" required htmlFor="signature-quorum">
+              <FormField
+                label="Кворум підписів"
+                required
+                htmlFor="signature-quorum"
+                error={errors.signatureQuorum?.message}
+              >
                 <Input
                   id="signature-quorum"
                   type="number"
                   min={CAMPAIGN_SIGNATURE_QUORUM_MIN}
                   max={CAMPAIGN_SIGNATURE_QUORUM_MAX}
-                  value={signatureQuorum}
-                  onChange={(e) => setSignatureQuorum(parseInt(e.target.value, 10) || 0)}
+                  {...register('signatureQuorum', {
+                    setValueAs: (value) => (value === '' ? null : Number(value)),
+                  })}
                 />
               </FormField>
             </div>
           )}
 
-          <FormField label="Вимоги до заявки">
+          <FormField label="Вимоги до заявки" error={errors.teamSize?.message}>
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={requiresCampaignProgram}
-                  onChange={(e) => setRequiresCampaignProgram(e.target.checked)}
-                />
+                <input type="checkbox" {...register('requiresCampaignProgram')} />
                 <span>Кандидат має додати посилання на передвиборчу програму</span>
               </label>
               <div>
-                <label className="text-foreground mb-1 flex items-center gap-2 text-sm">
+                <label className="mb-1 flex items-center gap-2 text-sm text-foreground">
                   <span>Розмір команди</span>
                   <Input
                     type="number"
                     min={CAMPAIGN_TEAM_SIZE_MIN}
                     max={CAMPAIGN_TEAM_SIZE_MAX}
-                    value={teamSize}
-                    onChange={(e) => {
-                      const n = parseInt(e.target.value, 10);
-                      if (Number.isNaN(n)) {
-                        setTeamSize(0);
-                        return;
-                      }
-                      const clamped = Math.max(
-                        CAMPAIGN_TEAM_SIZE_MIN,
-                        Math.min(CAMPAIGN_TEAM_SIZE_MAX, n),
-                      );
-                      setTeamSize(clamped);
-                    }}
+                    {...register('teamSize', { valueAsNumber: true })}
                     className="w-20"
                   />
                 </label>
@@ -513,53 +520,73 @@ function CampaignCreateDialog({ groupId, open, onClose, onCreated }: CampaignCre
           </FormField>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField label="Початок голосування" required htmlFor="voting-opens-at">
-              <KyivDateTimePicker
-                id="voting-opens-at"
-                value={votingOpensAt ?? defaultAnnouncedAt()}
-                onChange={(d) => setVotingOpensAt(d)}
-                min={minFutureDate}
-                minuteStep={30}
+            <FormField
+              label="Початок голосування"
+              required
+              htmlFor="voting-opens-at"
+              error={errors.votingOpensAt?.message}
+            >
+              <Controller
+                control={control}
+                name="votingOpensAt"
+                render={({ field }) => (
+                  <KyivDateTimePicker
+                    id="voting-opens-at"
+                    value={field.value}
+                    onChange={field.onChange}
+                    ref={field.ref}
+                    min={minFutureDate}
+                    minuteStep={30}
+                  />
+                )}
               />
             </FormField>
-            <FormField label="Кінець голосування" required htmlFor="voting-closes-at">
-              <KyivDateTimePicker
-                id="voting-closes-at"
-                value={votingClosesAt ?? defaultAnnouncedAt()}
-                onChange={(d) => setVotingClosesAt(d)}
-                min={minFutureDate}
-                minuteStep={30}
+            <FormField
+              label="Кінець голосування"
+              required
+              htmlFor="voting-closes-at"
+              error={errors.votingClosesAt?.message}
+            >
+              <Controller
+                control={control}
+                name="votingClosesAt"
+                render={({ field }) => (
+                  <KyivDateTimePicker
+                    id="voting-closes-at"
+                    value={field.value}
+                    onChange={field.onChange}
+                    ref={field.ref}
+                    min={minFutureDate}
+                    minuteStep={30}
+                  />
+                )}
               />
             </FormField>
           </div>
 
           <FormField label="Підрозділи (необов’язково)">
             {facultiesLoading ? (
-              <p className="text-muted-foreground text-xs">Завантажуємо список підрозділів…</p>
+              <p className="text-xs text-muted-foreground">Завантажуємо список підрозділів…</p>
             ) : (
               <div className="border-border-color max-h-48 overflow-y-auto rounded-md border p-2">
                 {facultyOptions.length === 0 ? (
-                  <p className="text-muted-foreground p-2 text-xs">
+                  <p className="p-2 text-xs text-muted-foreground">
                     Не вдалося завантажити підрозділи
                   </p>
                 ) : (
                   facultyOptions.map((f) => (
                     <label
                       key={f}
-                      className="hover:bg-surface flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm"
+                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1 text-sm hover:bg-surface"
                     >
-                      <input
-                        type="checkbox"
-                        checked={faculties.includes(f)}
-                        onChange={() => toggleFaculty(f)}
-                      />
+                      <input type="checkbox" value={f} {...register('faculties')} />
                       <span>{f}</span>
                     </label>
                   ))
                 )}
               </div>
             )}
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="mt-1 text-xs text-muted-foreground">
               Якщо обрано хоча б один підрозділ — у виборах беруть участь лише його студенти.
             </p>
           </FormField>

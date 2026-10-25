@@ -165,4 +165,21 @@ describe('fetchFacultyGroups', () => {
     const result = await fetchFacultyGroups();
     expect(result).toHaveProperty('FICE');
   });
+
+  it('refetches when cached JSON has an invalid shape', async () => {
+    redisMock.get.mockResolvedValueOnce(JSON.stringify({ FICE: 123 }));
+    mockFetch(SAMPLE_API_RESPONSE);
+    expect(await fetchFacultyGroups()).toHaveProperty('FICE', ['KV-11', 'KV-91']);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([null, {}, [null], [{ name: 'Group', faculty: 123 }]])(
+    'rejects invalid upstream data without caching it: %j',
+    async (input) => {
+      redisMock.get.mockResolvedValueOnce(null);
+      mockFetch(input);
+      await expect(fetchFacultyGroups()).rejects.toThrow('invalid group data');
+      expect(redisMock.set).not.toHaveBeenCalled();
+    },
+  );
 });

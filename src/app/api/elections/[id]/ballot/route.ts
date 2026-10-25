@@ -15,93 +15,16 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/elections/{id}/ballot:
- *   post:
- *     summary: Cast a ballot in an election
- *     description: >
- *       Submits an encrypted ballot for an open election. The endpoint
- *       verifies the vote token signature, checks that the nullifier has not
- *       been used before (replay protection), decrypts the ballot to validate
- *       the selected choice(s), and appends the ballot to the hash chain.
- *
- *       After the ballot is persisted the live ballot counter in Redis is
- *       incremented via INCR — the elections metadata cache is NOT invalidated,
- *       so concurrent reads continue to be served from cache without a DB
- *       round-trip.  The live counter expires after CACHE_TTL_ELECTION_VOTE_COUNT_SECS
- *       and falls back to the ballotCount stored in the metadata cache.
- *
- *       For non-anonymous elections the ballot must be encoded as a v2
- *       envelope containing the voter's userId and fullName.  The server
- *       validates that the embedded voterId matches the authenticated caller.
- *       This ensures voters cannot impersonate others in identified elections.
- *
- *       Requires any authenticated user.
- *     tags:
- *       - Elections
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Election UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - token
- *               - signature
- *               - encryptedBallot
- *               - nullifier
- *             properties:
- *               token:
- *                 type: string
- *                 description: Vote token issued by POST /api/elections/{id}/token
- *               signature:
- *                 type: string
- *                 description: ECDSA signature of the vote token
- *               encryptedBallot:
- *                 type: string
- *                 description: RSA-encrypted choice ID
- *               nullifier:
- *                 type: string
- *                 description: SHA-256 hash of the vote token (prevents double-voting)
- *     responses:
- *       201:
- *         description: Ballot recorded
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               required:
- *                 - ballotHash
- *               properties:
- *                 ballotHash:
- *                   type: string
- *                   description: Current hash in the ballot chain for this ballot
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Election not found
- *       409:
- *         description: Vote token already used
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   let body: {
     token?: string;
@@ -129,10 +52,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     include: { choices: true },
   });
 
-  if (!election) return Errors.notFound('Election not found');
+  if (!election) {
+    return Errors.notFound('Election not found');
+  }
 
-  if (now < election.opens_at) return Errors.badRequest('Election has not started yet');
-  if (now > election.closes_at) return Errors.badRequest('Election has already closed');
+  if (now < election.opens_at) {
+    return Errors.badRequest('Election has not started yet');
+  }
+  if (now > election.closes_at) {
+    return Errors.badRequest('Election has already closed');
+  }
 
   const privateKeyPem = decryptField(election.private_key);
 
@@ -153,7 +82,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const usedNullifier = await prisma.usedTokenNullifier.findUnique({
     where: { nullifier, election_id: electionId },
   });
-  if (usedNullifier) return Errors.conflict('This vote token has already been used');
+  if (usedNullifier) {
+    return Errors.conflict('This vote token has already been used');
+  }
 
   let decryptResult: ReturnType<typeof decryptBallot>;
   try {

@@ -12,8 +12,12 @@ export const metadata: Metadata = {
 
 export default async function AdminGroupsPage() {
   const session = await getServerSession();
-  if (!session) redirect('/login');
-  if (!session.isAdmin || !session.manageGroups) redirect('/admin');
+  if (!session) {
+    redirect('/login');
+  }
+  if (!session.isAdmin || !session.manageGroups) {
+    redirect('/admin');
+  }
 
   const { data: groups, error } = await serverApi.groups.all();
 

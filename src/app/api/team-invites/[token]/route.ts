@@ -7,53 +7,16 @@ import { safeDecrypt } from '@/lib/elections-view';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/team-invites/{token}:
- *   get:
- *     summary: Preview a team invite token
- *     description: >
- *       Returns descriptive metadata about the team invite — candidate name,
- *       form title, owning group name, token validity, and current status —
- *       so the prospective team member knows what they are agreeing to before
- *       accepting or rejecting. Authentication is required; the prospective
- *       member must be logged in to respond.
- *
- *       `formClosed` is true when the form has been soft-deleted or its
- *       submission window ([opensAt, closesAt]) has ended. The preview still
- *       renders in that case (200) — accept/reject will fail with 400/404 —
- *       so the UI can explain why rather than showing a bare error.
- *     tags:
- *       - TeamInvites
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: Raw (unhashed) team invite token received from the candidate
- *     responses:
- *       200:
- *         description: Invite preview
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/TeamInvitePreview'
- *       400:
- *         description: Missing token parameter
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Invite token not found (invalid or never existed)
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { token } = await params;
-  if (!token) return Errors.badRequest('Missing token');
+  if (!token) {
+    return Errors.badRequest('Missing token');
+  }
   const hash = hashToken(token);
 
   const row = await prisma.teamMemberInviteToken.findUnique({
@@ -80,7 +43,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     },
   });
 
-  if (!row) return Errors.notFound('Invite not found');
+  if (!row) {
+    return Errors.notFound('Invite not found');
+  }
 
   const form = row.registration.form;
   const now = new Date();

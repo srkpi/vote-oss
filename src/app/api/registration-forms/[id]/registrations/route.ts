@@ -15,64 +15,34 @@ import { shapeRegistration } from '@/lib/registrations';
 import { checkRestrictions } from '@/lib/restrictions';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/registration-forms/{id}/registrations:
- *   get:
- *     summary: List registrations submitted to a form (reviewer view)
- *     description: >
- *       Returns every non-draft registration for the form ordered by
- *       submission date descending. DRAFT registrations (private to the
- *       candidate) are excluded. Caller must be an active member of the
- *       form's owning ВКСУ group.
- *     tags:
- *       - CandidateRegistrations
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Registration form UUID
- *     responses:
- *       200:
- *         description: Array of candidate registrations (may be empty)
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CandidateRegistration'
- *       400:
- *         description: Invalid form UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not an active member of the owning ВКСУ group
- *       404:
- *         description: Form not found or soft-deleted
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: formId } = await params;
-  if (!isValidUuid(formId)) return Errors.badRequest('Invalid form id');
+  if (!isValidUuid(formId)) {
+    return Errors.badRequest('Invalid form id');
+  }
 
   const form = await prisma.candidateRegistrationForm.findUnique({
     where: { id: formId },
     select: { id: true, group_id: true, deleted_at: true },
   });
-  if (!form || form.deleted_at) return Errors.notFound('Form not found');
+  if (!form || form.deleted_at) {
+    return Errors.notFound('Form not found');
+  }
 
   try {
     await requireVKSUGroupMember(form.group_id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 
@@ -84,84 +54,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json(registrations.map(shapeRegistration));
 }
 
-/**
- * @swagger
- * /api/registration-forms/{id}/registrations:
- *   post:
- *     summary: Create or update the caller's draft registration for a form
- *     description: >
- *       Idempotent for draft registrations: if the caller already has a DRAFT
- *       registration for this form, it is updated in place (200). If no
- *       registration exists, a new one is created (201). If a non-draft
- *       registration already exists (submitted), the request is rejected (409).
- *       Submitting (transitioning out of DRAFT) is done via
- *       POST /api/registrations/{id}/submit.
- *
- *       Validation:
- *         - The form must be within its open window (opens_at ≤ now ≤ closes_at).
- *         - The caller must satisfy the form's eligibility restrictions.
- *         - Non-empty phone and Telegram values are validated on save; blank
- *           values are accepted in DRAFT state.
- *         - The campaign programme URL (when provided) must be a valid URL.
- *     tags:
- *       - CandidateRegistrations
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Registration form UUID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               phoneNumber:
- *                 type: string
- *                 description: Ukrainian phone number. Blank is accepted in draft state.
- *               telegramTag:
- *                 type: string
- *                 description: Telegram username without the leading @. Blank is accepted in draft state.
- *               campaignProgramUrl:
- *                 type: string
- *                 nullable: true
- *                 description: URL to the candidate's campaign programme. Required at submission time when requiresCampaignProgram is true.
- *     responses:
- *       200:
- *         description: Existing draft registration updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CandidateRegistration'
- *       201:
- *         description: New draft registration created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CandidateRegistration'
- *       400:
- *         description: Invalid UUID, form not yet open, form already closed, or field validation failure
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller does not satisfy the form's eligibility restrictions
- *       404:
- *         description: Form not found or soft-deleted
- *       409:
- *         description: A non-draft registration already exists for this user on this form
- */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: formId } = await params;
-  if (!isValidUuid(formId)) return Errors.badRequest('Invalid form id');
+  if (!isValidUuid(formId)) {
+    return Errors.badRequest('Invalid form id');
+  }
 
   const form = await prisma.candidateRegistrationForm.findUnique({
     where: { id: formId },
@@ -170,15 +72,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       group: { select: { type: true, deleted_at: true } },
     },
   });
-  if (!form || form.deleted_at) return Errors.notFound('Form not found');
+  if (!form || form.deleted_at) {
+    return Errors.notFound('Form not found');
+  }
   if (form.group.deleted_at !== null || form.group.type !== 'VKSU') {
     return Errors.notFound('Form not found');
   }
 
   // Time window
   const now = new Date();
-  if (now < form.opens_at) return Errors.badRequest('Реєстрація ще не відкрита');
-  if (now > form.closes_at) return Errors.badRequest('Прийом заявок закрито');
+  if (now < form.opens_at) {
+    return Errors.badRequest('Реєстрація ще не відкрита');
+  }
+  if (now > form.closes_at) {
+    return Errors.badRequest('Прийом заявок закрито');
+  }
 
   // Eligibility
   const eligible = checkRestrictions(
@@ -191,7 +99,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       studyForm: auth.user.studyForm,
     },
   );
-  if (!eligible) return Errors.forbidden('Ви не відповідаєте обмеженням цієї форми');
+  if (!eligible) {
+    return Errors.forbidden('Ви не відповідаєте обмеженням цієї форми');
+  }
 
   let body: {
     phoneNumber?: string;
@@ -211,15 +121,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Drafts allow blank values; we still validate non-empty ones so candidates
   // see errors as they type.
   const phone = phoneRaw ? validatePhoneNumber(phoneRaw) : { ok: true as const, value: '' };
-  if (!phone.ok) return Errors.badRequest(phone.error);
+  if (!phone.ok) {
+    return Errors.badRequest(phone.error);
+  }
 
   const tag = tagRaw ? validateTelegramTag(tagRaw) : { ok: true as const, value: '' };
-  if (!tag.ok) return Errors.badRequest(tag.error);
+  if (!tag.ok) {
+    return Errors.badRequest(tag.error);
+  }
 
   let programUrl: string | null = null;
   if (programRaw !== null && programRaw !== '') {
     const res = validateCampaignProgramUrl(programRaw);
-    if (!res.ok) return Errors.badRequest(res.error);
+    if (!res.ok) {
+      return Errors.badRequest(res.error);
+    }
     programUrl = res.value;
   }
 

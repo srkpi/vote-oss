@@ -1,51 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin } from '@/lib/auth';
 import { invalidateFaq } from '@/lib/cache';
-import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { faqCategoryBodySchema } from '@/lib/schemas/faq';
 
-/**
- * @swagger
- * /api/faq/categories/{id}:
- *   put:
- *     summary: Update a FAQ category title
- *     description: Renames the specified FAQ category. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ category ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FaqCategoryCreateBody'
- *     responses:
- *       200:
- *         description: Category updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FaqCategoryMeta'
- *       400:
- *         description: Missing or invalid title
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Category not found
- */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -59,25 +21,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
-
-  let body: { title?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  if (!id) {
+    return Errors.badRequest('id is required');
   }
+
+  const parsedBody = await parseRequestBody(req, faqCategoryBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const body = parsedBody.data;
 
   const { title } = body;
-  if (!title || typeof title !== 'string' || !title.trim()) {
-    return Errors.badRequest('title is required');
-  }
-  if (title.trim().length > FAQ_CATEGORY_TITLE_MAX_LENGTH) {
-    return Errors.badRequest(`title must be at most ${FAQ_CATEGORY_TITLE_MAX_LENGTH} characters`);
-  }
 
   const existing = await prisma.faqCategory.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ category not found');
+  if (!existing) {
+    return Errors.notFound('FAQ category not found');
+  }
 
   const updated = await prisma.faqCategory.update({
     where: { id },
@@ -103,33 +62,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 }
 
-/**
- * @swagger
- * /api/faq/categories/{id}:
- *   delete:
- *     summary: Delete a FAQ category
- *     description: Permanently deletes the category and all its items. Requires the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: FAQ category ID
- *     responses:
- *       204:
- *         description: Category deleted
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       404:
- *         description: Category not found
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -143,10 +75,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const { id } = await params;
-  if (!id) return Errors.badRequest('id is required');
+  if (!id) {
+    return Errors.badRequest('id is required');
+  }
 
   const existing = await prisma.faqCategory.findUnique({ where: { id } });
-  if (!existing) return Errors.notFound('FAQ category not found');
+  if (!existing) {
+    return Errors.notFound('FAQ category not found');
+  }
 
   await prisma.faqCategory.delete({ where: { id } });
 

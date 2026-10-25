@@ -14,7 +14,9 @@ const KNOWN_ABSENT = new Set([ABSENT_TEXT_MALE, ABSENT_TEXT_FEMALE]);
  * Falls back to male form when the name is empty or gender is unknown.
  */
 export function getGenderedPresentText(fullname: string): string {
-  if (!fullname.trim()) return PRESENT_TEXT_MALE;
+  if (!fullname.trim()) {
+    return PRESENT_TEXT_MALE;
+  }
   return getGender(fullname.trim()) === 'female' ? PRESENT_TEXT_FEMALE : PRESENT_TEXT_MALE;
 }
 
@@ -23,7 +25,9 @@ export function getGenderedPresentText(fullname: string): string {
  * Falls back to male form when the name is empty or gender is unknown.
  */
 export function getGenderedAbsentText(fullname: string): string {
-  if (!fullname.trim()) return ABSENT_TEXT_MALE;
+  if (!fullname.trim()) {
+    return ABSENT_TEXT_MALE;
+  }
   return getGender(fullname.trim()) === 'female' ? ABSENT_TEXT_FEMALE : ABSENT_TEXT_MALE;
 }
 
@@ -43,7 +47,11 @@ export function isAttendeePresentByText(presentText: string): boolean {
  */
 export function rederivePresenceText(currentText: string, newFullname: string): string {
   const lower = currentText.toLowerCase();
-  if (KNOWN_PRESENT.has(lower)) return getGenderedPresentText(newFullname);
-  if (KNOWN_ABSENT.has(lower)) return getGenderedAbsentText(newFullname);
+  if (KNOWN_PRESENT.has(lower)) {
+    return getGenderedPresentText(newFullname);
+  }
+  if (KNOWN_ABSENT.has(lower)) {
+    return getGenderedAbsentText(newFullname);
+  }
   return currentText;
 }

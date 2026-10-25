@@ -50,8 +50,12 @@ function PetitionStatusBadge({
   petition: Election;
   size?: 'sm' | 'md';
 }) {
-  if (petition.deletedAt) return <StatusBadge status="deleted" size={size} />;
-  if (!petition.approved) return <StatusBadge status="pending" size={size} />;
+  if (petition.deletedAt) {
+    return <StatusBadge status="deleted" size={size} />;
+  }
+  if (!petition.approved) {
+    return <StatusBadge status="pending" size={size} />;
+  }
   if (petition.status === 'closed') {
     return petition.ballotCount >= petitionQuorum(petition) ? (
       <StatusBadge status="quorum" size={size} />
@@ -73,7 +77,7 @@ function ProgressCell({ petition, dim }: { petition: Election; dim?: boolean }) 
           className={`font-display text-sm font-semibold ${dim ? 'text-muted-foreground/50' : 'text-foreground'}`}
         >
           {petition.ballotCount.toLocaleString('uk-UA')}
-          <span className="text-muted-foreground/70 ml-1 text-xs font-normal">/ {quorum}</span>
+          <span className="ml-1 text-xs font-normal text-muted-foreground/70">/ {quorum}</span>
         </span>
         <span
           className={`font-body text-xs ${dim ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}
@@ -81,7 +85,7 @@ function ProgressCell({ petition, dim }: { petition: Election; dim?: boolean }) 
           {pct}%
         </span>
       </div>
-      <div className="bg-surface h-1.5 w-full overflow-hidden rounded-full">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
             dim ? 'bg-kpi-gray-mid/40' : 'bg-kpi-navy'
@@ -116,10 +120,17 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
 
   const visible = (() => {
     let list: Election[];
-    if (tab === 'deleted') list = petitions.filter((p) => !!p.deletedAt);
-    else list = petitions.filter((p) => !p.deletedAt);
-    if (tab === 'pending') list = list.filter((p) => !p.approved);
-    if (tab === 'approved') list = list.filter((p) => p.approved);
+    if (tab === 'deleted') {
+      list = petitions.filter((p) => !!p.deletedAt);
+    } else {
+      list = petitions.filter((p) => !p.deletedAt);
+    }
+    if (tab === 'pending') {
+      list = list.filter((p) => !p.approved);
+    }
+    if (tab === 'approved') {
+      list = list.filter((p) => p.approved);
+    }
     const q = search.toLowerCase().trim();
     if (q) {
       list = list.filter(
@@ -167,7 +178,9 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget) {
+      return;
+    }
     setDeleting(true);
     const res = await api.elections.delete(deleteTarget.id);
     if (res.success) {
@@ -196,7 +209,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
               handleApprove(p.id);
             }}
             loading={approving === p.id}
-            className="text-success hover:bg-success-bg transition-colors"
+            className="text-success transition-colors hover:bg-success-bg"
           >
             <CheckCircle2 className="h-4 w-4" />
           </Button>
@@ -211,7 +224,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                 handleRestore(p.id);
               }}
               loading={restoring === p.id}
-              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+              className="text-kpi-navy transition-colors hover:bg-kpi-blue-light/10"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </Button>
@@ -224,7 +237,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
               e.stopPropagation();
               setDeleteTarget(p);
             }}
-            className="text-error hover:bg-error-bg transition-colors"
+            className="text-error transition-colors hover:bg-error-bg"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -249,7 +262,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
       </div>
 
       {visible.length === 0 ? (
-        <div className="border-border-color bg-card overflow-hidden rounded-xl border p-4 shadow-sm sm:p-6">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-card p-4 shadow-sm sm:p-6">
           <EmptyState
             icon={<Megaphone className="h-10 w-10" />}
             title="Петицій не знайдено"
@@ -257,22 +270,22 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
           />
         </div>
       ) : (
-        <div className="border-border-color bg-card overflow-hidden rounded-xl border shadow-sm">
+        <div className="border-border-color overflow-hidden rounded-xl border bg-card shadow-sm">
           <div className="hidden overflow-x-auto lg:block">
             <table className="w-full">
               <thead>
-                <tr className="border-border-subtle border-b">
+                <tr className="border-b border-border-subtle">
                   {['Назва', 'Статус', 'Створено', 'Підписи', ''].map((h) => (
                     <th
                       key={h}
-                      className="font-body text-muted-foreground px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase"
+                      className="font-body px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-border-subtle divide-y">
+              <tbody className="divide-y divide-border-subtle">
                 {visible.map((p) => {
                   const isDeleted = !!p.deletedAt;
                   const cellClass = cn('px-4 py-3.5', !isDeleted && 'cursor-pointer');
@@ -283,7 +296,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                   return (
                     <tr
                       key={p.id}
-                      className="group hover:bg-surface transition-colors duration-150"
+                      className="group transition-colors duration-150 hover:bg-surface"
                     >
                       <td className={cn('max-w-xs', cellClass)} onClick={handleClick}>
                         <p
@@ -295,11 +308,11 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                         >
                           {p.title}
                         </p>
-                        <p className="font-body text-muted-foreground/60 mt-0.5 truncate text-xs">
+                        <p className="font-body mt-0.5 truncate text-xs text-muted-foreground/60">
                           {p.createdBy.fullName}
                         </p>
                         {isDeleted && p.deletedBy && (
-                          <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 truncate text-xs">
+                          <p className="font-body mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground/50">
                             <Trash2 className="h-3 w-3" />
                             {p.deletedBy.fullName}
                           </p>
@@ -330,7 +343,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
             </table>
           </div>
 
-          <div className="divide-border-subtle divide-y border-t lg:hidden">
+          <div className="divide-y divide-border-subtle border-t lg:hidden">
             {visible.map((p) => {
               const isDeleted = !!p.deletedAt;
 
@@ -348,11 +361,11 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                       >
                         {p.title}
                       </p>
-                      <p className="font-body text-muted-foreground/60 mt-0.5 text-xs">
+                      <p className="font-body mt-0.5 text-xs text-muted-foreground/60">
                         {p.createdBy.fullName}
                       </p>
                       {isDeleted && p.deletedBy && (
-                        <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 text-xs">
+                        <p className="font-body mt-0.5 flex items-center gap-1 text-xs text-muted-foreground/50">
                           <Trash2 className="h-3 w-3" />
                           {p.deletedBy.fullName}
                         </p>
@@ -370,7 +383,7 @@ export function AdminPetitionsClient({ initialPetitions }: AdminPetitionsClientP
                       'font-body space-y-2 text-xs',
                       isDeleted
                         ? 'text-muted-foreground/50'
-                        : 'text-muted-foreground cursor-pointer',
+                        : 'cursor-pointer text-muted-foreground',
                     )}
                   >
                     <div className="flex items-center gap-2">

@@ -20,17 +20,17 @@ export function BuildInfo({ className }: BuildInfoProps) {
     : null;
 
   return (
-    <div className={cn('border-border-color font-body bg-card rounded-xl border p-5', className)}>
+    <div className={cn('border-border-color font-body rounded-xl border bg-card p-5', className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="text-kpi-navy h-4 w-4 shrink-0" />
-          <span className="text-foreground text-sm font-medium">Прозорість збірки</span>
+          <ShieldCheck className="h-4 w-4 shrink-0 text-kpi-navy" />
+          <span className="text-sm font-medium text-foreground">Прозорість збірки</span>
         </div>
         <Badge variant={isProd ? 'navy' : 'warning'}>{capitalizeFirst(NODE_ENV)}</Badge>
       </div>
 
       {build.isLocalBuild ? (
-        <p className="text-muted-foreground mt-3 text-xs">
+        <p className="mt-3 text-xs text-muted-foreground">
           Локальна збірка без даних CI: інформація про коміт, образ і перевірку походження
           з’являється лише у версіях, зібраних через GitHub Actions.
         </p>
@@ -39,7 +39,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
           <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-2.5 text-xs sm:grid-cols-2">
             {build.commit && (
               <div className="flex items-center gap-2">
-                <dt className="text-muted-foreground shrink-0">Коміт</dt>
+                <dt className="shrink-0 text-muted-foreground">Коміт</dt>
                 <dd className="flex min-w-0 items-center gap-1.5">
                   <TextLink
                     href={build.commitUrl ?? undefined}
@@ -56,7 +56,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
 
             {build.builtAt && (
               <div className="flex items-center gap-2">
-                <dt className="text-muted-foreground shrink-0">Зібрано</dt>
+                <dt className="shrink-0 text-muted-foreground">Зібрано</dt>
                 <dd className="text-foreground">
                   <LocalDateTime date={build.builtAt} />
                 </dd>
@@ -65,7 +65,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
 
             {build.docker && (
               <div className="flex items-center gap-2">
-                <dt className="text-muted-foreground shrink-0">Образ</dt>
+                <dt className="shrink-0 text-muted-foreground">Образ</dt>
                 <dd className="flex min-w-0 items-center">
                   <TextLink
                     href={build.docker.hubUrl}
@@ -80,7 +80,7 @@ export function BuildInfo({ className }: BuildInfoProps) {
 
             {build.actionsRunUrl && (
               <div className="flex items-center gap-2">
-                <dt className="text-muted-foreground shrink-0">CI-запуск</dt>
+                <dt className="shrink-0 text-muted-foreground">CI-запуск</dt>
                 <dd>
                   <TextLink href={build.actionsRunUrl} className="inline-flex items-center gap-1">
                     GitHub Actions
@@ -92,13 +92,13 @@ export function BuildInfo({ className }: BuildInfoProps) {
           </dl>
 
           {build.verify && manualVerifyExample && (
-            <details className="group/main border-border-subtle mt-4 border-t pt-3 [&::-webkit-details-marker]:hidden">
-              <summary className="text-kpi-navy flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium">
+            <details className="group/main mt-4 border-t border-border-subtle pt-3 [&::-webkit-details-marker]:hidden">
+              <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-kpi-navy">
                 <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-open/main:rotate-90" />
                 Як перевірити, що сайт запускає саме цей код?
               </summary>
 
-              <div className="text-muted-foreground mt-3 space-y-3 text-xs leading-relaxed">
+              <div className="mt-3 space-y-3 text-xs leading-relaxed text-muted-foreground">
                 <p>
                   Кожен образ і кожен JS-файл, які ми публікуємо, підписуються GitHub через{' '}
                   <TextLink href="https://www.sigstore.dev/">Sigstore</TextLink> — той самий
@@ -113,21 +113,21 @@ export function BuildInfo({ className }: BuildInfoProps) {
                 </p>
 
                 <div>
-                  <p className="text-foreground font-medium">
+                  <p className="font-medium text-foreground">
                     Одна команда, яка перевіряє все одразу (потрібні{' '}
                     <TextLink href="https://nodejs.org/">Node.js</TextLink> і{' '}
                     <TextLink href="https://cli.github.com/">GitHub CLI</TextLink>
                     ).
                   </p>
-                  <p className="text-foreground mb-1 font-medium">Linux / macOS:</p>
-                  <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="mb-1 font-medium text-foreground">Linux / macOS:</p>
+                  <div className="flex flex-col gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <code className="overflow-x-auto font-mono whitespace-nowrap">
                       {build.verify.scriptCommand}
                     </code>
                     <CopyButton text={build.verify.scriptCommand} label="Копіювати" />
                   </div>
-                  <p className="text-foreground my-1 font-medium">Windows (PowerShell):</p>
-                  <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="my-1 font-medium text-foreground">Windows (PowerShell):</p>
+                  <div className="flex flex-col gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                     <code className="overflow-x-auto font-mono whitespace-nowrap">
                       {build.verify.scriptCommandWindows}
                     </code>
@@ -142,18 +142,18 @@ export function BuildInfo({ className }: BuildInfoProps) {
                   </TextLink>
                 </div>
 
-                <details className="group/nested border-border-subtle border-t pt-4 [&::-webkit-details-marker]:hidden">
+                <details className="group/nested border-t border-border-subtle pt-4 [&::-webkit-details-marker]:hidden">
                   <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium">
                     <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 group-[[open]]/nested:rotate-90" />
                     Або вручну, крок за кроком
                   </summary>
                   <div className="mt-2 space-y-3">
                     <div>
-                      <p className="text-foreground mb-1 font-medium">
+                      <p className="mb-1 font-medium text-foreground">
                         1. Переглянути, що саме запаковано в образ (потрібен{' '}
                         <TextLink href="https://www.docker.com/">Docker</TextLink>):
                       </p>
-                      <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                         <code className="overflow-x-auto font-mono whitespace-nowrap">
                           {build.verify.inspect}
                         </code>
@@ -162,11 +162,11 @@ export function BuildInfo({ className }: BuildInfoProps) {
                     </div>
 
                     <div>
-                      <p className="text-foreground mb-1 font-medium">
+                      <p className="mb-1 font-medium text-foreground">
                         2. Перевірити походження образу (потрібен{' '}
                         <TextLink href="https://cli.github.com/">GitHub CLI</TextLink>):
                       </p>
-                      <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                         <code className="overflow-x-auto font-mono whitespace-nowrap">
                           {build.verify.attest}
                         </code>
@@ -175,11 +175,11 @@ export function BuildInfo({ className }: BuildInfoProps) {
                     </div>
 
                     <div>
-                      <p className="text-foreground mb-1 font-medium">
+                      <p className="mb-1 font-medium text-foreground">
                         3. Завантажити будь-який файл із вкладки браузера «Network» (шлях виду{' '}
                         <span className="font-mono">/_next/static/…</span>) і перевірити саме його:
                       </p>
-                      <div className="bg-surface border-border-subtle flex flex-col gap-1.5 rounded-md border px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-1.5 rounded-md border border-border-subtle bg-surface px-2.5 py-1.5 sm:flex-row sm:items-center sm:justify-between">
                         <code className="flex flex-col overflow-x-auto font-mono whitespace-nowrap">
                           {manualVerifyExample}
                         </code>

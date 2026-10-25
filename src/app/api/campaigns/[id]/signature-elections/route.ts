@@ -14,57 +14,25 @@ function computeStatus(
   closesAt: Date,
   now: Date,
 ): CampaignSignatureElectionSummary['status'] {
-  if (now < opensAt) return 'upcoming';
-  if (now >= closesAt) return 'closed';
+  if (now < opensAt) {
+    return 'upcoming';
+  }
+  if (now >= closesAt) {
+    return 'closed';
+  }
   return 'open';
 }
 
-/**
- * @swagger
- * /api/campaigns/{id}/signature-elections:
- *   get:
- *     summary: List per-candidate signature elections for a campaign
- *     description: >
- *       Returns one summary entry per APPROVED candidate who has an
- *       auto-spawned signature election attached to them. Candidates who were
- *       not yet approved or whose signature election was not created yet are
- *       excluded. Caller must be an active member of the campaign's ВКСУ group.
- *     tags:
- *       - ElectionCampaigns
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Campaign UUID
- *     responses:
- *       200:
- *         description: Array of signature election summaries (may be empty)
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CampaignSignatureElectionSummary'
- *       400:
- *         description: Invalid campaign UUID
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Caller is not an active member of the campaign's group
- *       404:
- *         description: Campaign not found, soft-deleted, or its group is soft-deleted
- */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id } = await params;
-  if (!isValidUuid(id)) return Errors.badRequest('Invalid campaign id');
+  if (!isValidUuid(id)) {
+    return Errors.badRequest('Invalid campaign id');
+  }
 
   const campaign = await prisma.electionCampaign.findUnique({
     where: { id },
@@ -83,8 +51,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     await requireVKSUGroupMember(campaign.group_id, auth.user.sub);
   } catch (err) {
-    if (err instanceof GroupNotFoundError) return Errors.notFound(err.message);
-    if (err instanceof GroupForbiddenError) return Errors.forbidden(err.message);
+    if (err instanceof GroupNotFoundError) {
+      return Errors.notFound(err.message);
+    }
+    if (err instanceof GroupForbiddenError) {
+      return Errors.forbidden(err.message);
+    }
     throw err;
   }
 

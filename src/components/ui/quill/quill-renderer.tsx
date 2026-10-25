@@ -48,21 +48,32 @@ function parseLines(ops: QuillDeltaOp[]): Line[] {
   const pushLine = (blockAttrs: Record<string, unknown> = {}) => {
     let blockType: BlockType = 'paragraph';
 
-    if (blockAttrs.list === 'bullet') blockType = 'list-bullet';
-    else if (blockAttrs.list === 'ordered') blockType = 'list-ordered';
-    else if (blockAttrs.header === 1) blockType = 'header-1';
-    else if (blockAttrs.header === 2) blockType = 'header-2';
-    else if (blockAttrs.header === 3) blockType = 'header-3';
-    else if (blockAttrs.header === 4) blockType = 'header-4';
-    else if (blockAttrs.blockquote) blockType = 'blockquote';
-    else if (blockAttrs['code-block']) blockType = 'code-block';
+    if (blockAttrs.list === 'bullet') {
+      blockType = 'list-bullet';
+    } else if (blockAttrs.list === 'ordered') {
+      blockType = 'list-ordered';
+    } else if (blockAttrs.header === 1) {
+      blockType = 'header-1';
+    } else if (blockAttrs.header === 2) {
+      blockType = 'header-2';
+    } else if (blockAttrs.header === 3) {
+      blockType = 'header-3';
+    } else if (blockAttrs.header === 4) {
+      blockType = 'header-4';
+    } else if (blockAttrs.blockquote) {
+      blockType = 'blockquote';
+    } else if (blockAttrs['code-block']) {
+      blockType = 'code-block';
+    }
 
     lines.push({ segments: currentSegments, blockType });
     currentSegments = [];
   };
 
   for (const op of ops) {
-    if (typeof op.insert !== 'string') continue;
+    if (typeof op.insert !== 'string') {
+      continue;
+    }
 
     const text = op.insert;
     const attrs = op.attributes ?? {};
@@ -70,8 +81,12 @@ function parseLines(ops: QuillDeltaOp[]): Line[] {
 
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
-      if (part.length > 0) currentSegments.push({ text: part, attrs });
-      if (i < parts.length - 1) pushLine(i === parts.length - 2 ? attrs : {});
+      if (part.length > 0) {
+        currentSegments.push({ text: part, attrs });
+      }
+      if (i < parts.length - 1) {
+        pushLine(i === parts.length - 2 ? attrs : {});
+      }
     }
   }
 
@@ -97,15 +112,23 @@ function renderSegment(seg: InlineSegment, idx: number): React.ReactNode {
   }
   if (a.code) {
     node = (
-      <code className="border-border-subtle bg-surface rounded border px-1 py-0.5 font-mono text-[0.8em]">
+      <code className="rounded border border-border-subtle bg-surface px-1 py-0.5 font-mono text-[0.8em]">
         {node}
       </code>
     );
   }
-  if (a.bold) node = <strong className="font-semibold">{node}</strong>;
-  if (a.italic) node = <em>{node}</em>;
-  if (a.underline) node = <u>{node}</u>;
-  if (a.strike) node = <s className="text-muted-foreground">{node}</s>;
+  if (a.bold) {
+    node = <strong className="font-semibold">{node}</strong>;
+  }
+  if (a.italic) {
+    node = <em>{node}</em>;
+  }
+  if (a.underline) {
+    node = <u>{node}</u>;
+  }
+  if (a.strike) {
+    node = <s className="text-muted-foreground">{node}</s>;
+  }
 
   return <React.Fragment key={idx}>{node}</React.Fragment>;
 }
@@ -133,16 +156,22 @@ function groupLines(lines: Line[]): Group[] {
 
     if (line.blockType === 'list-bullet') {
       const items: Line[] = [];
-      while (i < lines.length && lines[i].blockType === 'list-bullet') items.push(lines[i++]);
+      while (i < lines.length && lines[i].blockType === 'list-bullet') {
+        items.push(lines[i++]);
+      }
       groups.push({ kind: 'ul', lines: items });
     } else if (line.blockType === 'list-ordered') {
       const items: Line[] = [];
-      while (i < lines.length && lines[i].blockType === 'list-ordered') items.push(lines[i++]);
+      while (i < lines.length && lines[i].blockType === 'list-ordered') {
+        items.push(lines[i++]);
+      }
       groups.push({ kind: 'ol', lines: items });
     } else if (line.blockType === 'code-block') {
       // Merge consecutive code-block lines into one <pre> block
       const items: Line[] = [];
-      while (i < lines.length && lines[i].blockType === 'code-block') items.push(lines[i++]);
+      while (i < lines.length && lines[i].blockType === 'code-block') {
+        items.push(lines[i++]);
+      }
       groups.push({ kind: 'code', lines: items });
     } else {
       groups.push({ kind: 'single', line });
@@ -156,7 +185,7 @@ function groupLines(lines: Line[]): Group[] {
 function renderGroup(group: Group, idx: number): React.ReactNode {
   if (group.kind === 'ul') {
     return (
-      <ul key={`ul-${idx}`} className="text-foreground/80 my-1.5 list-disc space-y-0.5 pl-5">
+      <ul key={`ul-${idx}`} className="my-1.5 list-disc space-y-0.5 pl-5 text-foreground/80">
         {group.lines.map((l, li) => (
           <li key={li}>{renderLineContent(l.segments)}</li>
         ))}
@@ -166,7 +195,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
 
   if (group.kind === 'ol') {
     return (
-      <ol key={`ol-${idx}`} className="text-foreground/80 my-1.5 list-decimal space-y-0.5 pl-5">
+      <ol key={`ol-${idx}`} className="my-1.5 list-decimal space-y-0.5 pl-5 text-foreground/80">
         {group.lines.map((l, li) => (
           <li key={li}>{renderLineContent(l.segments)}</li>
         ))}
@@ -183,7 +212,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
         key={`code-${idx}`}
         className={cn(
           'my-2 rounded-sm',
-          'border-border-subtle bg-surface border',
+          'border border-border-subtle bg-surface',
           'px-3.5 py-2.5',
           'font-mono text-[0.8125rem] leading-relaxed',
           'overflow-x-auto whitespace-pre',
@@ -205,7 +234,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h1
           key={idx}
-          className="text-foreground mt-3 mb-1.5 text-2xl leading-tight font-bold first:mt-0"
+          className="mt-3 mb-1.5 text-2xl leading-tight font-bold text-foreground first:mt-0"
         >
           {content}
         </h1>
@@ -214,7 +243,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h2
           key={idx}
-          className="text-foreground mt-2.5 mb-1 text-xl leading-snug font-semibold first:mt-0"
+          className="mt-2.5 mb-1 text-xl leading-snug font-semibold text-foreground first:mt-0"
         >
           {content}
         </h2>
@@ -223,7 +252,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h3
           key={idx}
-          className="text-foreground mt-2 mb-1 text-base leading-snug font-semibold first:mt-0"
+          className="mt-2 mb-1 text-base leading-snug font-semibold text-foreground first:mt-0"
         >
           {content}
         </h3>
@@ -232,7 +261,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <h4
           key={idx}
-          className="text-muted-foreground mt-1.5 mb-0.5 text-sm leading-snug font-semibold first:mt-0"
+          className="mt-1.5 mb-0.5 text-sm leading-snug font-semibold text-muted-foreground first:mt-0"
         >
           {content}
         </h4>
@@ -241,7 +270,7 @@ function renderGroup(group: Group, idx: number): React.ReactNode {
       return (
         <blockquote
           key={idx}
-          className="border-border-color text-muted-foreground my-1.5 border-l-[3px] pl-3 italic"
+          className="border-border-color my-1.5 border-l-[3px] pl-3 text-muted-foreground italic"
         >
           {content}
         </blockquote>
@@ -268,7 +297,9 @@ export interface QuillRendererProps {
 
 export function QuillRenderer({ content, className }: QuillRendererProps) {
   const delta = parseQuillDelta(content);
-  if (!delta) return null;
+  if (!delta) {
+    return null;
+  }
 
   const lines = parseLines(delta.ops);
   const groups = groupLines(lines);
@@ -276,7 +307,7 @@ export function QuillRenderer({ content, className }: QuillRendererProps) {
   return (
     <div
       className={cn(
-        'font-body text-foreground/80 text-sm leading-relaxed wrap-break-word',
+        'font-body text-sm leading-relaxed wrap-break-word text-foreground/80',
         className,
       )}
     >

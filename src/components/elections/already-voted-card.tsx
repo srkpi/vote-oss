@@ -16,7 +16,9 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
   const [copied, setCopied] = useState(false);
 
   const copyHash = async () => {
-    if (!record) return;
+    if (!record) {
+      return;
+    }
     try {
       await navigator.clipboard.writeText(record.ballotHash);
       setCopied(true);
@@ -29,21 +31,21 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
   if (!record) {
     return (
       <div className="space-y-4">
-        <div className="border-success/30 bg-success-bg flex items-center gap-3 rounded-lg border p-4">
-          <div className="bg-success/15 flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
-            <CheckCircle className="text-success h-5 w-5" />
+        <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success-bg p-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success/15">
+            <CheckCircle className="h-5 w-5 text-success" />
           </div>
           <div>
-            <p className="font-body text-success text-sm font-semibold">Ви вже проголосували</p>
-            <p className="font-body text-muted-foreground mt-0.5 text-xs">
+            <p className="font-body text-sm font-semibold text-success">Ви вже проголосували</p>
+            <p className="font-body mt-0.5 text-xs text-muted-foreground">
               Ваш голос зафіксовано системою
             </p>
           </div>
         </div>
 
-        <div className="border-border-subtle bg-surface flex items-start gap-3 rounded-lg border p-4">
-          <MonitorSmartphone className="text-kpi-gray-mid mt-0.5 h-4 w-4 shrink-0" />
-          <p className="font-body text-muted-foreground text-xs leading-relaxed">
+        <div className="flex items-start gap-3 rounded-lg border border-border-subtle bg-surface p-4">
+          <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-kpi-gray-mid" />
+          <p className="font-body text-xs leading-relaxed text-muted-foreground">
             Деталі бюлетеня недоступні. Вони зберігаються локально в браузері, де ви голосували.
           </p>
         </div>
@@ -53,20 +55,20 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
 
   return (
     <div className="space-y-5">
-      <div className="border-success/30 bg-success-bg flex items-center gap-3 rounded-lg border p-4">
-        <div className="bg-success/15 flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
-          <CheckCircle className="text-success h-5 w-5" />
+      <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success-bg p-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success/15">
+          <CheckCircle className="h-5 w-5 text-success" />
         </div>
         <div>
-          <p className="font-body text-success text-sm font-semibold">Ви вже проголосували</p>
-          <p className="font-body text-muted-foreground ph-no-capture mt-0.5 text-xs">
+          <p className="font-body text-sm font-semibold text-success">Ви вже проголосували</p>
+          <p className="font-body ph-no-capture mt-0.5 text-xs text-muted-foreground">
             <LocalDateTime date={record.votedAt} />
           </p>
         </div>
       </div>
 
       <div className="ph-no-capture">
-        <p className="font-body text-muted-foreground mb-2 text-[10px] font-semibold tracking-wider uppercase">
+        <p className="font-body mb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
           {record.choiceLabels.length > 1 ? 'Ваші вибори' : 'Ваш вибір'}
         </p>
         <div className="space-y-2">
@@ -75,13 +77,13 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
               key={i}
               className={cn(
                 'flex items-center gap-3 rounded-lg p-4',
-                'border-kpi-navy/20 bg-kpi-navy/5 border-2',
+                'border-2 border-kpi-navy/20 bg-kpi-navy/5',
               )}
             >
-              <span className="bg-kpi-navy font-display flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base font-bold text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-kpi-navy font-display text-base font-bold text-white">
                 ✓
               </span>
-              <span className="font-body text-kpi-navy min-w-0 font-semibold wrap-break-word">
+              <span className="font-body min-w-0 font-semibold wrap-break-word text-kpi-navy">
                 {label}
               </span>
             </div>
@@ -90,7 +92,7 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
       </div>
 
       <div>
-        <p className="font-body text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wider uppercase">
+        <p className="font-body mb-1.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
           Хеш вашого бюлетеня
         </p>
         <button
@@ -104,8 +106,8 @@ export function AlreadyVotedCard({ record }: AlreadyVotedCardProps) {
           )}
         >
           <div className="flex items-center gap-2">
-            <Hash className="text-kpi-gray-mid h-3.5 w-3.5 shrink-0" />
-            <p className="ph-no-capture text-foreground flex-1 font-mono text-sm leading-relaxed break-all">
+            <Hash className="h-3.5 w-3.5 shrink-0 text-kpi-gray-mid" />
+            <p className="ph-no-capture flex-1 font-mono text-sm leading-relaxed break-all text-foreground">
               {record.ballotHash}
             </p>
             <div

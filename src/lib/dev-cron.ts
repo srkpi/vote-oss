@@ -24,7 +24,9 @@ if (process.env.NODE_ENV !== 'production' && !globalThis.__campaignTickInterval)
   const periodMs = 30_000;
 
   const tick = async () => {
-    if (globalThis.__campaignTickRunning) return;
+    if (globalThis.__campaignTickRunning) {
+      return;
+    }
     globalThis.__campaignTickRunning = true;
     try {
       const updated = await transitionCampaignsByDate();

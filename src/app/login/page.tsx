@@ -1,4 +1,4 @@
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, CircleCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -57,7 +57,7 @@ export default function LoginPage() {
         </Link>
 
         <div className="relative z-10">
-          <h2 className="font-display mb-4 text-4xl leading-tight font-bold text-white xl:text-5xl">
+          <h2 className="mb-4 font-display text-4xl leading-tight font-bold text-white xl:text-5xl">
             Ваш голос — ваша{' '}
             <span
               className="bg-clip-text text-transparent"
@@ -79,17 +79,7 @@ export default function LoginPage() {
               className="animate-badge-pop flex items-center gap-1.5 rounded-full border border-white/12 bg-white/8 px-3 py-1.5 backdrop-blur-sm"
               style={{ animationDelay: `${400 + i * 80}ms`, willChange: 'transform, opacity' }}
             >
-              <svg
-                className="text-kpi-blue-light h-3.5 w-3.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <CircleCheck className="h-3.5 w-3.5 text-kpi-blue-light" />
               <span className="font-body text-xs text-white/75">{badge}</span>
             </div>
           ))}
@@ -99,29 +89,29 @@ export default function LoginPage() {
       <div className="relative flex flex-1 items-center justify-center p-8">
         <div className="absolute inset-0 overflow-hidden lg:hidden">
           <VoteScene variant="ambient" eager />
-          <div className="bg-background/85 absolute inset-0" />
+          <div className="absolute inset-0 bg-background/85" />
         </div>
 
         <div className="relative z-10 w-full max-w-sm">
           <div className="flex items-center justify-center">
             <Link className="mb-8 flex items-center gap-3 lg:hidden" href="/">
               <Image src="/logo.svg" alt="Logo" height={36} width={36} preload />
-              <span className="font-display text-kpi-navy text-2xl font-bold">{APP_NAME}</span>
+              <span className="font-display text-2xl font-bold text-kpi-navy">{APP_NAME}</span>
             </Link>
           </div>
 
-          <h1 className="font-display text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
+          <h1 className="mb-8 text-center font-display text-3xl font-bold text-foreground sm:text-4xl">
             Ласкаво просимо
           </h1>
 
           <div className="space-y-6">
             <KpiIdButton fullWidth />
 
-            <p className="font-body text-muted-foreground text-center text-xs">
+            <p className="font-body text-center text-xs text-muted-foreground">
               Натисканням на кнопку ви погоджуєтесь з{' '}
               <Link
                 href="/privacy"
-                className="hover:text-kpi-navy underline underline-offset-2 transition-colors"
+                className="underline underline-offset-2 transition-colors hover:text-kpi-navy"
               >
                 Політикою конфіденційності
               </Link>

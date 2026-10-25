@@ -78,7 +78,7 @@ export function UserAvatarMenu({
           <div
             className={cn(
               'border-border-color absolute top-full left-0 z-50 mt-2 w-48',
-              'bg-card origin-top-left overflow-hidden rounded-xl border shadow-xl',
+              'origin-top-left overflow-hidden rounded-xl border bg-card shadow-xl',
             )}
           >
             <button
@@ -87,7 +87,7 @@ export function UserAvatarMenu({
                 setMenuOpen(false);
                 requestDelete({ userId, fullName });
               }}
-              className="font-body text-error hover:bg-error-bg flex w-full items-center gap-2 px-3 py-2 text-left text-sm"
+              className="font-body flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-error hover:bg-error-bg"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Видалити аватар

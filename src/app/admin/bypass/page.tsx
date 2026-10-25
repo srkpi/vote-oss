@@ -12,8 +12,12 @@ export const metadata: Metadata = {
 
 export default async function BypassPage() {
   const session = await getServerSession();
-  if (!session) redirect('/login');
-  if (session.restrictedToFaculty) redirect('/admin');
+  if (!session) {
+    redirect('/login');
+  }
+  if (session.restrictedToFaculty) {
+    redirect('/admin');
+  }
 
   const { data: tokens, error } = await serverApi.bypass.listGlobal();
 

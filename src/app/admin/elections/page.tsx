@@ -27,10 +27,16 @@ export default async function AdminElectionsPage() {
   const all = data?.elections ?? [];
   const { openCount, upcomingCount, closedCount, totalBallots } = all.reduce(
     (acc, e) => {
-      if (e.deletedAt) return acc;
-      if (e.status === 'open') acc.openCount++;
-      else if (e.status === 'upcoming') acc.upcomingCount++;
-      else if (e.status === 'closed') acc.closedCount++;
+      if (e.deletedAt) {
+        return acc;
+      }
+      if (e.status === 'open') {
+        acc.openCount++;
+      } else if (e.status === 'upcoming') {
+        acc.upcomingCount++;
+      } else if (e.status === 'closed') {
+        acc.closedCount++;
+      }
       acc.totalBallots += e.ballotCount ?? 0;
       return acc;
     },

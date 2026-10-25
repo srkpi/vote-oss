@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils/common';
@@ -71,8 +72,8 @@ function MetricScale({ scale }: { scale: MetricScaleConfig }) {
         </div>
       </div>
       <div className="flex justify-between">
-        <span className="text-muted-foreground text-[10px] font-medium">{labels[0]}</span>
-        <span className="text-muted-foreground text-[10px] font-medium">{labels[1]}</span>
+        <span className="text-[10px] font-medium text-muted-foreground">{labels[0]}</span>
+        <span className="text-[10px] font-medium text-muted-foreground">{labels[1]}</span>
       </div>
     </div>
   );
@@ -85,7 +86,9 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+      }
     };
     window.addEventListener('keydown', handleKey);
     const prev = document.body.style.overflow;
@@ -104,7 +107,6 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
     <div
       className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4"
       role="dialog"
-      aria-modal="true"
     >
       <div
         className="animate-fade-in absolute inset-0 bg-black/55 backdrop-blur-sm"
@@ -117,7 +119,7 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
         tabIndex={-1}
         className={cn(
           'relative z-10 w-full outline-none sm:max-w-lg',
-          'animate-scale-in bg-card overflow-hidden rounded-t-2xl shadow-xl sm:rounded-2xl',
+          'animate-scale-in overflow-hidden rounded-t-2xl bg-card shadow-xl sm:rounded-2xl',
         )}
         style={{ animationDuration: '200ms' }}
       >
@@ -137,7 +139,7 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
               <p className="text-[10px] font-semibold tracking-wider text-white/65 uppercase">
                 Показник голосування
               </p>
-              <h2 className="font-display mt-0.5 text-lg leading-tight font-bold text-white">
+              <h2 className="mt-0.5 font-display text-lg leading-tight font-bold text-white">
                 {metric.label}
               </h2>
             </div>
@@ -157,19 +159,19 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
         <div className="max-h-[60vh] space-y-5 overflow-y-auto px-6 py-5">
           {metric.scale && (
             <div>
-              <p className="text-muted-foreground mb-3 text-[10px] font-semibold tracking-wider uppercase">
+              <p className="mb-3 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
                 Шкала значень
               </p>
               <MetricScale scale={metric.scale} />
             </div>
           )}
-          {metric.scale && <div className="border-border-subtle border-t" />}
+          {metric.scale && <div className="border-t border-border-subtle" />}
 
           <div>
-            <p className="text-muted-foreground mb-2 text-[10px] font-semibold tracking-wider uppercase">
+            <p className="mb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
               Що показує цей показник?
             </p>
-            <p className="text-foreground font-body text-sm leading-relaxed">
+            <p className="font-body text-sm leading-relaxed text-foreground">
               {metric.description}
             </p>
           </div>
@@ -184,7 +186,7 @@ function MetricDetailModal({ metric, onClose }: { metric: MetricCardConfig; onCl
               >
                 В цьому голосуванні
               </p>
-              <p className="font-body text-foreground text-sm leading-relaxed">{metric.insight}</p>
+              <p className="font-body text-sm leading-relaxed text-foreground">{metric.insight}</p>
             </div>
           )}
         </div>
@@ -206,52 +208,40 @@ export function AnalyticsMetricCard({
     <button
       onClick={() => onOpen(metric)}
       className={cn(
-        'group bg-card w-full rounded-xl border p-5 text-left',
+        'group w-full rounded-xl border bg-card p-5 text-left',
         'cursor-pointer transition-all duration-200',
         'shadow-sm hover:-translate-y-0.5 hover:shadow-md',
         styles.border,
-        'focus-visible:ring-kpi-blue-light focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+        'focus-visible:ring-2 focus-visible:ring-kpi-blue-light focus-visible:ring-offset-2 focus-visible:outline-none',
       )}
     >
       <div className="mb-4 flex items-start justify-between">
         <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg', styles.iconBg)}>
           <span className={styles.iconText}>{metric.icon}</span>
         </div>
-        <svg
-          className="text-muted-foreground h-3.5 w-3.5 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
-          viewBox="0 0 16 16"
-          fill="none"
-        >
-          <path
-            d="M3 13L13 3M13 3H7M13 3V9"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
       </div>
 
       <div
         className={cn(
-          'font-display mb-1.5 text-2xl leading-none font-bold tabular-nums',
+          'mb-1.5 font-display text-2xl leading-none font-bold tabular-nums',
           styles.iconText,
         )}
       >
         {metric.value}
       </div>
 
-      <p className="text-muted-foreground font-body mb-3 line-clamp-2 text-xs leading-snug">
+      <p className="font-body mb-3 line-clamp-2 text-xs leading-snug text-muted-foreground">
         {metric.interpretation}
       </p>
 
-      <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+      <p className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
         {metric.label}
       </p>
 
       {metric.scale && (
-        <div className="border-border-subtle mt-3.5 border-t pt-3.5">
-          <div className="bg-border-subtle relative h-1.5 w-full overflow-hidden rounded-full">
+        <div className="mt-3.5 border-t border-border-subtle pt-3.5">
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-border-subtle">
             <div
               className="absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out"
               style={{
@@ -268,7 +258,9 @@ export function AnalyticsMetricCard({
 
 export function AnalyticsMetricsGrid({ metrics }: { metrics: MetricCardConfig[] }) {
   const [activeMetric, setActiveMetric] = useState<MetricCardConfig | null>(null);
-  if (metrics.length === 0) return null;
+  if (metrics.length === 0) {
+    return null;
+  }
 
   return (
     <>

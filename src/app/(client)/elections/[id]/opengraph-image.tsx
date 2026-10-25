@@ -35,7 +35,7 @@ export default async function ElectionOgImage({ params }: Props) {
   }
 
   return new ImageResponse(
-    buildOgImageElement({
+    await buildOgImageElement({
       title: clampTitle(metaTitle),
       icon: ICON_ELECTION,
       iconBg: 'rgba(255,255,255,0.10)',

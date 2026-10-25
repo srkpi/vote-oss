@@ -12,7 +12,9 @@ function createClient(): Redis {
     // Retry strategy: exponential back-off up to 30 s, give up after 10 attempts
     maxRetriesPerRequest: 2,
     retryStrategy(times) {
-      if (times > 10) return null; // stop retrying – surface the error
+      if (times > 10) {
+        return null;
+      } // stop retrying – surface the error
       return Math.min(100 * Math.pow(2, times), 30_000);
     },
 
@@ -42,7 +44,9 @@ function createClient(): Redis {
 const g = globalThis as typeof globalThis & { _redis?: Redis };
 
 function getRedis(): Redis {
-  if (!g._redis) g._redis = createClient();
+  if (!g._redis) {
+    g._redis = createClient();
+  }
   return g._redis;
 }
 

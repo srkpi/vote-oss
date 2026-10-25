@@ -1,8 +1,10 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, Pencil, ScrollText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -13,6 +15,12 @@ import { StatusBadge, type StatusKind } from '@/components/ui/status-badge';
 import { api } from '@/lib/api/browser';
 import { computeCampaignStageEditabilityFromApi } from '@/lib/campaign-stage-editability';
 import { CAMPAIGN_STATE_BADGE } from '@/lib/campaigns-display';
+import {
+  createCampaignScheduleSchema,
+  campaignScheduleDefaults,
+  serializeCampaignSchedule,
+  type CampaignScheduleValues,
+} from '@/lib/schemas/campaign-form';
 import type {
   CampaignBoundaryEditability,
   CampaignState,
@@ -89,19 +97,27 @@ function timelineEntryBadge(
   current: CampaignState,
 ): { kind: StatusKind; label: string } {
   const fullLabel = CAMPAIGN_STATE_BADGE[entry].label;
-  if (entry === current) return CAMPAIGN_STATE_BADGE[entry];
+  if (entry === current) {
+    return CAMPAIGN_STATE_BADGE[entry];
+  }
   if (current === 'COMPLETED' || current === 'FAILED' || current === 'CANCELLED') {
     return { kind: 'closed', label: fullLabel };
   }
   const entryIdx = STATE_ORDER.indexOf(entry);
   const currentIdx = STATE_ORDER.indexOf(current);
-  if (entryIdx < currentIdx) return { kind: 'closed', label: fullLabel };
+  if (entryIdx < currentIdx) {
+    return { kind: 'closed', label: fullLabel };
+  }
   return { kind: 'upcoming', label: fullLabel };
 }
 
 function editabilityHint(state: CampaignBoundaryEditability): string | undefined {
-  if (state === 'locked') return 'Вже минуло — редагування недоступне';
-  if (state === 'extend_only') return 'Вже триває — можна лише перенести на пізніше';
+  if (state === 'locked') {
+    return 'Вже минуло — редагування недоступне';
+  }
+  if (state === 'extend_only') {
+    return 'Вже триває — можна лише перенести на пізніше';
+  }
   return undefined;
 }
 
@@ -114,6 +130,7 @@ interface BoundaryFieldProps {
   editability: CampaignBoundaryEditability;
   minFutureDate: Date;
   onChange: (d: Date) => void;
+  error?: string;
 }
 
 function BoundaryField({
@@ -124,6 +141,7 @@ function BoundaryField({
   editability,
   minFutureDate,
   onChange,
+  error,
 }: BoundaryFieldProps) {
   const locked = editability === 'locked';
   const min =
@@ -133,9 +151,15 @@ function BoundaryField({
         ? minFutureDate
         : undefined;
   return (
-    <FormField label={label} required htmlFor={id} hint={editabilityHint(editability)}>
+    <FormField
+      label={label}
+      required
+      htmlFor={id}
+      hint={editabilityHint(editability)}
+      error={error}
+    >
       <div className="flex items-center gap-2">
-        {locked && <Lock className="text-muted-foreground h-3.5 w-3.5 shrink-0" />}
+        {locked && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
         <KyivDateTimePicker
           id={id}
           value={value}
@@ -154,7 +178,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
   const router = useRouter();
   const [campaign, setCampaign] = useState(initialCampaign);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setCampaign(initialCampaign);
   }, [initialCampaign]);
 
@@ -175,65 +199,44 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
     !isTerminal && Object.values(editability).some((v) => v === 'editable' || v === 'extend_only');
 
   const [editing, setEditing] = useState(false);
-  const [announcedAt, setAnnouncedAt] = useState(() => new Date(campaign.announcedAt));
-  const [registrationClosesAt, setRegistrationClosesAt] = useState(
-    () => new Date(campaign.registrationClosesAt),
-  );
-  const [signaturesOpensAt, setSignaturesOpensAt] = useState<Date | null>(
-    campaign.signaturesOpensAt ? new Date(campaign.signaturesOpensAt) : null,
-  );
-  const [signaturesClosesAt, setSignaturesClosesAt] = useState<Date | null>(
-    campaign.signaturesClosesAt ? new Date(campaign.signaturesClosesAt) : null,
-  );
-  const [votingOpensAt, setVotingOpensAt] = useState(() => new Date(campaign.votingOpensAt));
-  const [votingClosesAt, setVotingClosesAt] = useState(() => new Date(campaign.votingClosesAt));
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting: submitting },
+  } = useForm<CampaignScheduleValues>({
+    resolver: zodResolver(createCampaignScheduleSchema(campaign)),
+    defaultValues: campaignScheduleDefaults(campaign),
+  });
+  const { signaturesOpensAt, signaturesClosesAt } = useWatch({ control });
+  const error = errors.root?.message;
   const startEditing = () => {
-    setAnnouncedAt(new Date(campaign.announcedAt));
-    setRegistrationClosesAt(new Date(campaign.registrationClosesAt));
-    setSignaturesOpensAt(campaign.signaturesOpensAt ? new Date(campaign.signaturesOpensAt) : null);
-    setSignaturesClosesAt(
-      campaign.signaturesClosesAt ? new Date(campaign.signaturesClosesAt) : null,
-    );
-    setVotingOpensAt(new Date(campaign.votingOpensAt));
-    setVotingClosesAt(new Date(campaign.votingClosesAt));
-    setError(null);
+    reset(campaignScheduleDefaults(campaign));
     setEditing(true);
   };
-
   const minFutureDate = new Date(nowMs + 60 * 1000);
-
-  const handleSave = async () => {
-    setSubmitting(true);
-    setError(null);
-    const result = await api.campaigns.update(campaign.id, {
-      announcedAt: announcedAt.toISOString(),
-      registrationClosesAt: registrationClosesAt.toISOString(),
-      signaturesOpensAt: hasSignaturePhase ? signaturesOpensAt!.toISOString() : null,
-      signaturesClosesAt: hasSignaturePhase ? signaturesClosesAt!.toISOString() : null,
-      votingOpensAt: votingOpensAt.toISOString(),
-      votingClosesAt: votingClosesAt.toISOString(),
-    });
+  const handleSave = handleSubmit(async (values) => {
+    clearErrors('root');
+    const result = await api.campaigns.update(campaign.id, serializeCampaignSchedule(values));
     if (result.success) {
       setCampaign(result.data);
       setEditing(false);
       router.refresh();
     } else {
-      setError(result.error);
+      setError('root', { message: result.error });
     }
-    setSubmitting(false);
-  };
+  });
 
   const timeline = buildTimeline(campaign);
 
   return (
-    <section className="border-border-color shadow-card bg-card rounded-xl border">
-      <header className="border-border-subtle flex items-center justify-between border-b px-5 py-4">
+    <section className="border-border-color rounded-xl border bg-card shadow-card">
+      <header className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <div className="flex items-center gap-2">
-          <ScrollText className="text-kpi-gray-mid h-4 w-4" />
-          <h2 className="font-display text-foreground text-base font-semibold">Етапи кампанії</h2>
+          <ScrollText className="h-4 w-4 text-kpi-gray-mid" />
+          <h2 className="font-display text-base font-semibold text-foreground">Етапи кампанії</h2>
         </div>
         {anyEditable && !editing && (
           <Button variant="ghost" size="sm" onClick={startEditing}>
@@ -244,7 +247,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
       </header>
 
       {!editing ? (
-        <ol className="divide-border-subtle divide-y">
+        <ol className="divide-y divide-border-subtle">
           {timeline.map((entry) => {
             const stageBadge = timelineEntryBadge(entry.state, campaign.state);
             return (
@@ -255,7 +258,7 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
                 <div className="flex items-center gap-3">
                   <StatusBadge status={stageBadge.kind} label={stageBadge.label} size="sm" />
                 </div>
-                <span className="text-muted-foreground text-xs">
+                <span className="text-xs text-muted-foreground">
                   <LocalDateTime date={entry.startsAt.toISOString()} /> —{' '}
                   <LocalDateTime date={entry.endsAt.toISOString()} />
                 </span>
@@ -266,87 +269,129 @@ export function CampaignStageEditor({ campaign: initialCampaign }: CampaignStage
       ) : (
         <div className="space-y-4 px-5 py-4">
           {error && (
-            <Alert variant="error" onDismiss={() => setError(null)}>
+            <Alert variant="error" onDismiss={() => clearErrors('root')}>
               {error}
             </Alert>
           )}
 
           <div>
-            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Реєстрація
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <BoundaryField
-                id="edit-announced-at"
-                label="Початок реєстрації"
-                value={announcedAt}
-                original={new Date(campaign.announcedAt)}
-                editability={editability.announcedAt}
-                minFutureDate={minFutureDate}
-                onChange={setAnnouncedAt}
+              <Controller
+                control={control}
+                name="announcedAt"
+                render={({ field }) => (
+                  <BoundaryField
+                    id="edit-announced-at"
+                    label="Початок реєстрації"
+                    value={field.value!}
+                    original={new Date(campaign.announcedAt)}
+                    editability={editability.announcedAt}
+                    minFutureDate={minFutureDate}
+                    onChange={field.onChange}
+                    error={errors.announcedAt?.message}
+                  />
+                )}
               />
-              <BoundaryField
-                id="edit-registration-closes-at"
-                label="Кінець реєстрації"
-                value={registrationClosesAt}
-                original={new Date(campaign.registrationClosesAt)}
-                editability={editability.registrationClosesAt}
-                minFutureDate={minFutureDate}
-                onChange={setRegistrationClosesAt}
+              <Controller
+                control={control}
+                name="registrationClosesAt"
+                render={({ field }) => (
+                  <BoundaryField
+                    id="edit-registration-closes-at"
+                    label="Кінець реєстрації"
+                    value={field.value!}
+                    original={new Date(campaign.registrationClosesAt)}
+                    editability={editability.registrationClosesAt}
+                    minFutureDate={minFutureDate}
+                    onChange={field.onChange}
+                    error={errors.registrationClosesAt?.message}
+                  />
+                )}
               />
             </div>
           </div>
 
           {hasSignaturePhase && signaturesOpensAt && signaturesClosesAt && (
             <div>
-              <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+              <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Збір підписів
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <BoundaryField
-                  id="edit-signatures-opens-at"
-                  label="Початок збору підписів"
-                  value={signaturesOpensAt}
-                  original={new Date(campaign.signaturesOpensAt!)}
-                  editability={editability.signaturesOpensAt!}
-                  minFutureDate={minFutureDate}
-                  onChange={setSignaturesOpensAt}
+                <Controller
+                  control={control}
+                  name="signaturesOpensAt"
+                  render={({ field }) => (
+                    <BoundaryField
+                      id="edit-signatures-opens-at"
+                      label="Початок збору підписів"
+                      value={field.value!}
+                      original={new Date(campaign.signaturesOpensAt!)}
+                      editability={editability.signaturesOpensAt!}
+                      minFutureDate={minFutureDate}
+                      onChange={field.onChange}
+                      error={errors.signaturesOpensAt?.message}
+                    />
+                  )}
                 />
-                <BoundaryField
-                  id="edit-signatures-closes-at"
-                  label="Кінець збору підписів"
-                  value={signaturesClosesAt}
-                  original={new Date(campaign.signaturesClosesAt!)}
-                  editability={editability.signaturesClosesAt!}
-                  minFutureDate={minFutureDate}
-                  onChange={setSignaturesClosesAt}
+                <Controller
+                  control={control}
+                  name="signaturesClosesAt"
+                  render={({ field }) => (
+                    <BoundaryField
+                      id="edit-signatures-closes-at"
+                      label="Кінець збору підписів"
+                      value={field.value!}
+                      original={new Date(campaign.signaturesClosesAt!)}
+                      editability={editability.signaturesClosesAt!}
+                      minFutureDate={minFutureDate}
+                      onChange={field.onChange}
+                      error={errors.signaturesClosesAt?.message}
+                    />
+                  )}
                 />
               </div>
             </div>
           )}
 
           <div>
-            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Голосування
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <BoundaryField
-                id="edit-voting-opens-at"
-                label="Початок голосування"
-                value={votingOpensAt}
-                original={new Date(campaign.votingOpensAt)}
-                editability={editability.votingOpensAt}
-                minFutureDate={minFutureDate}
-                onChange={setVotingOpensAt}
+              <Controller
+                control={control}
+                name="votingOpensAt"
+                render={({ field }) => (
+                  <BoundaryField
+                    id="edit-voting-opens-at"
+                    label="Початок голосування"
+                    value={field.value!}
+                    original={new Date(campaign.votingOpensAt)}
+                    editability={editability.votingOpensAt}
+                    minFutureDate={minFutureDate}
+                    onChange={field.onChange}
+                    error={errors.votingOpensAt?.message}
+                  />
+                )}
               />
-              <BoundaryField
-                id="edit-voting-closes-at"
-                label="Кінець голосування"
-                value={votingClosesAt}
-                original={new Date(campaign.votingClosesAt)}
-                editability={editability.votingClosesAt}
-                minFutureDate={minFutureDate}
-                onChange={setVotingClosesAt}
+              <Controller
+                control={control}
+                name="votingClosesAt"
+                render={({ field }) => (
+                  <BoundaryField
+                    id="edit-voting-closes-at"
+                    label="Кінець голосування"
+                    value={field.value!}
+                    original={new Date(campaign.votingClosesAt)}
+                    editability={editability.votingClosesAt}
+                    minFutureDate={minFutureDate}
+                    onChange={field.onChange}
+                    error={errors.votingClosesAt?.message}
+                  />
+                )}
               />
             </div>
           </div>

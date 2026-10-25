@@ -6,7 +6,9 @@ import { cache } from 'react';
 import type { User } from '@/types/auth';
 
 function decodeHeader(headerValue: string | null): string {
-  if (!headerValue) return '';
+  if (!headerValue) {
+    return '';
+  }
   try {
     return Buffer.from(headerValue, 'base64').toString('utf8');
   } catch {
@@ -17,7 +19,9 @@ function decodeHeader(headerValue: string | null): string {
 export const getServerSession = cache(async (): Promise<User | null> => {
   const h = await headers();
   const userId = h.get('x-user-id');
-  if (!userId) return null;
+  if (!userId) {
+    return null;
+  }
 
   const isAdmin = h.get('x-user-is-admin') === 'true';
   const studyYearRaw = h.get('x-user-study-year');
