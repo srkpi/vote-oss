@@ -1,8 +1,9 @@
+import { vi } from 'vitest';
 export const avatarsMock = {
-  getAvatarUrlMap: jest.fn().mockImplementation(() => Promise.resolve(new Map())),
-  setCachedAvatarUrl: jest.fn().mockImplementation(() => Promise.resolve(undefined)),
-  clearCachedAvatarUrl: jest.fn().mockImplementation(() => Promise.resolve(undefined)),
-  withAvatarUrl: jest
+  getAvatarUrlMap: vi.fn().mockImplementation(() => Promise.resolve(new Map())),
+  setCachedAvatarUrl: vi.fn().mockImplementation(() => Promise.resolve(undefined)),
+  clearCachedAvatarUrl: vi.fn().mockImplementation(() => Promise.resolve(undefined)),
+  withAvatarUrl: vi
     .fn()
     .mockImplementation(
       <T extends { userId: string }>(entity: T, avatarMap: Map<string, string>) => {

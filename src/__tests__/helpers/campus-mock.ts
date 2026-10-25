@@ -1,9 +1,14 @@
+import { vi } from 'vitest';
+
 /**
  * Mock for @/lib/campus-api.
  *
  * Usage:
  *   import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
- *   jest.mock('@/lib/campus-api', () => campusMock);
+ *   vi.mock('@/lib/campus-api', async () => {
+ *     const { campusMock } = await import('@/__tests__/helpers/campus-mock');
+ *     return campusMock;
+ *   });
  *   beforeEach(() => resetCampusMock());
  *
  * Default: `fetchFacultyGroups` resolves with a small representative map that
@@ -19,9 +24,9 @@ export const MOCK_FACULTY_GROUPS: Record<string, string[]> = {
 };
 
 export const campusMock = {
-  fetchFacultyGroups: jest.fn<Promise<Record<string, string[]>>, []>(),
-  fixFacultyName: jest.fn((faculty: string) => faculty),
-  invalidateCampusGroupsCache: jest.fn<Promise<void>, []>(),
+  fetchFacultyGroups: vi.fn<(...args: []) => Promise<Record<string, string[]>>>(),
+  fixFacultyName: vi.fn((faculty: string) => faculty),
+  invalidateCampusGroupsCache: vi.fn<(...args: []) => Promise<void>>(),
 };
 
 export function resetCampusMock(): void {

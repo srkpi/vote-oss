@@ -1,6 +1,7 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
-import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
+import { resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
   JWT_TOKEN_RECORD,
   makeElection,
@@ -11,17 +12,27 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { TEST_NOW } from '@/__tests__/helpers/time';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
-jest.mock('@/lib/encryption', () => ({
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
+vi.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
-jest.mock('@/lib/bypass', () => ({
-  getElectionBypassForUser: jest.fn().mockResolvedValue(null),
+vi.mock('@/lib/bypass', () => ({
+  getElectionBypassForUser: vi.fn().mockResolvedValue(null),
 }));
 
 import { POST } from '@/app/api/elections/[id]/token/route';
@@ -34,35 +45,43 @@ async function authReq(payload = USER_PAYLOAD) {
   return makeAuthRequest(access.token, { method: 'POST' });
 }
 
-describe('POST /api/elections/[id]/token', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Requesting a voting token (POST /api/elections/[id]/token)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('Elections');
     allure.story('Issue Vote Token');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'POST' });
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(401);
   });
 
-  it('returns 400 for non-uuid election id', async () => {
+  it('should return 400 for non-uuid election id when requesting a voting token', async () => {
     const req = await authReq();
     const res = await POST(req, { params: Promise.resolve({ id: 'xyz' }) });
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when election does not exist', async () => {
+  it('should return 404 when election does not exist', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(null);
     const res = await POST(req, PARAMS);
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when election has not started yet', async () => {
+  it('should return 400 when election has not started yet', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -74,7 +93,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when election has already closed', async () => {
+  it('should return 400 when election has already closed', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -86,7 +105,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 403 when user faculty does not match restriction', async () => {
+  it('should return 403 when user faculty does not match restriction', async () => {
     const req = await authReq(OTHER_FACULTY_PAYLOAD); // FEL
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({ restrictions: [{ type: 'FACULTY', value: 'FICE' }] }),
@@ -95,7 +114,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 403 when user group does not match restriction', async () => {
+  it('should return 403 when user group does not match restriction', async () => {
     const req = await authReq(USER_PAYLOAD); // KV-91
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -109,7 +128,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 409 when vote token is already issued to this user', async () => {
+  it('should return 409 when vote token is already issued to this user', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
     prismaMock.issuedToken.findUnique.mockResolvedValueOnce({ id: MOCK_ELECTION_ID });
@@ -117,7 +136,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(res.status).toBe(409);
   });
 
-  it('returns 200 with token and signature for eligible user', async () => {
+  it('should return 200 with token and signature for eligible user when requesting a voting token', async () => {
     const req = await authReq();
     const election = makeElection();
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -133,7 +152,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(body.token.startsWith(`${MOCK_ELECTION_ID}:`)).toBe(true);
   });
 
-  it('issued token signature is verifiable with election public key', async () => {
+  it('should issue a token that verifies with the election public key when an eligible voter requests it', async () => {
     const req = await authReq();
     const election = makeElection();
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -147,7 +166,7 @@ describe('POST /api/elections/[id]/token', () => {
     expect(verifyVoteTokenSignature(election.public_key, body.token, body.signature)).toBe(true);
   });
 
-  it('records token issuance in the database', async () => {
+  it('should record that the voter received a voting token when issuance succeeds', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
     prismaMock.issuedToken.findUnique.mockResolvedValueOnce(null);

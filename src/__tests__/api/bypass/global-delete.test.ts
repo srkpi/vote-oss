@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import {
   ADMIN_PAYLOAD,
@@ -11,16 +12,23 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { TEST_NOW } from '@/__tests__/helpers/time';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => ({
-  getCachedAdmins: jest.fn().mockResolvedValue(null),
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', () => ({
+  getCachedAdmins: vi.fn().mockResolvedValue(null),
 }));
-jest.mock('@/lib/redis', () => ({
-  redis: { del: jest.fn().mockResolvedValue(1), get: jest.fn().mockResolvedValue(null) },
-  safeRedis: jest.fn().mockImplementation((fn: () => unknown) => {
+vi.mock('@/lib/redis', () => ({
+  redis: { del: vi.fn().mockResolvedValue(1), get: vi.fn().mockResolvedValue(null) },
+  safeRedis: vi.fn().mockImplementation((fn: () => unknown) => {
     try {
       return fn();
     } catch {
@@ -47,34 +55,42 @@ async function restrictedAdminReq() {
   return makeAuthRequest(access.token, { method: 'DELETE' });
 }
 
-describe('DELETE /api/bypass/global/[tokenHash]', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Deleting a global bypass token (DELETE /api/bypass/global/[tokenHash])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
     allure.feature('Bypass');
     allure.story('Soft-Delete Global Bypass Token');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'DELETE' });
     const res = await DELETE(req, params('some-hash'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 for restricted admin', async () => {
+  it('should return 403 when the admin is faculty-limited and deleting a global bypass token', async () => {
     const req = await restrictedAdminReq();
     const res = await DELETE(req, params('some-hash'));
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when token does not exist', async () => {
+  it('should return 404 when token does not exist', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce(null);
     const res = await DELETE(req, params('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when token is already soft-deleted', async () => {
+  it('should return 400 when token is already soft-deleted', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken(),
@@ -86,7 +102,7 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 204 when owner soft-deletes their token', async () => {
+  it('should return 204 when owner soft-deletes their token', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
@@ -99,7 +115,7 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     expect(res.status).toBe(204);
   });
 
-  it('calls update with deleted_at and deleted_by instead of deleting the record', async () => {
+  it('should preserve the token record and record its deletion actor when deleting a global bypass', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
@@ -122,7 +138,7 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     expect(prismaMock.globalBypassToken.delete).not.toHaveBeenCalled();
   });
 
-  it('sets deleted_by to the requesting admin user_id', async () => {
+  it('should record the requesting admin as the deletion actor when removing a bypass token', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
@@ -137,7 +153,7 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     expect(updateCall.data.deleted_by).toBe('superadmin-001');
   });
 
-  it('bulk-revokes all usages and sets revoked_by on delete', async () => {
+  it('should mark all activations as revoked by the requesting admin when deleting a bypass token', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
@@ -159,7 +175,7 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
     );
   });
 
-  it('invalidates bypass cache for all users who used the token', async () => {
+  it('should invalidate bypass cache for all users who used the token when deleting a global bypass token', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'superadmin-001' }),
@@ -168,12 +184,12 @@ describe('DELETE /api/bypass/global/[tokenHash]', () => {
       usages: [{ user_id: 'user-001' }, { user_id: 'user-002' }],
     });
 
-    const { safeRedis } = jest.requireMock('@/lib/redis');
+    const { safeRedis } = await vi.importMock('@/lib/redis');
     await DELETE(req, params('some-hash'));
     expect(safeRedis).toHaveBeenCalled();
   });
 
-  it('returns 403 when caller is not creator or ancestor of creator', async () => {
+  it('should return 403 when caller is not creator or ancestor of creator', async () => {
     const req = await adminReq();
     prismaMock.globalBypassToken.findUnique.mockResolvedValueOnce({
       ...makeGlobalBypassToken({ created_by: 'other-root-admin' }),

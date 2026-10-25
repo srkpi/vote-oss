@@ -1,8 +1,9 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
-import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
-import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
-import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
+import { resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
+import { resetCacheMock } from '@/__tests__/helpers/cache-mock';
+import { resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -16,6 +17,7 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import {
   WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE,
@@ -27,18 +29,33 @@ import {
 } from '@/lib/constants';
 import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
-jest.mock('@/lib/campus-api', () => campusMock);
-jest.mock('@/lib/encryption', () => ({
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
+vi.mock('@/lib/campus-api', async () => {
+  const { campusMock } = await import('@/__tests__/helpers/campus-mock');
+  return campusMock;
+});
+vi.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
-jest.mock('@/lib/bypass', () => ({
-  getElectionBypassForUser: jest.fn().mockResolvedValue(null),
+vi.mock('@/lib/bypass', () => ({
+  getElectionBypassForUser: vi.fn().mockResolvedValue(null),
 }));
-jest.mock('@/lib/avatars', () => avatarsMock);
+vi.mock('@/lib/avatars', async () => {
+  const { avatarsMock } = await import('@/__tests__/helpers/avatars-mock');
+  return avatarsMock;
+});
 
 import { GET } from '@/app/api/elections/[id]/route';
 import { POST } from '@/app/api/elections/route';
@@ -47,8 +64,8 @@ import { POST } from '@/app/api/elections/route';
 // Helpers
 // ---------------------------------------------------------------------------
 
-const FUTURE_OPEN = new Date(Date.now() + 3_600_000).toISOString();
-const FUTURE_CLOSE = new Date(Date.now() + 7_200_000).toISOString();
+const FUTURE_OPEN = new Date(TEST_NOW + 3_600_000).toISOString();
+const FUTURE_CLOSE = new Date(TEST_NOW + 7_200_000).toISOString();
 
 const validBody = {
   title: 'Winning Conditions Test Election',
@@ -86,20 +103,28 @@ function mockElectionCreate(winningConditions = DEFAULT_WINNING_CONDITIONS) {
 // POST /api/elections — winning conditions validation
 // ---------------------------------------------------------------------------
 
-describe('POST /api/elections — winning conditions validation', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+  resetCampusMock();
+  resetAvatarsMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Creating an election — winning conditions validation (POST /api/elections)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetCampusMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Create Election – Winning Conditions Validation');
   });
 
   // ── Default behaviour ─────────────────────────────────────────────────────
 
-  it('creates election with default winning conditions when not provided', async () => {
+  it('should create election with default winning conditions when not provided', async () => {
     const req = await makeAdminReq(validBody);
     mockElectionCreate();
     const { status, body } = await parseJson<any>(await POST(req));
@@ -107,7 +132,7 @@ describe('POST /api/elections — winning conditions validation', () => {
     expect(body.winningConditions).toEqual(DEFAULT_WINNING_CONDITIONS);
   });
 
-  it('stores hasMostVotes=true as default', async () => {
+  it('should store hasMostVotes=true as default when creating an election', async () => {
     const req = await makeAdminReq(validBody);
     mockElectionCreate();
     const { body } = await parseJson<any>(await POST(req));
@@ -119,237 +144,245 @@ describe('POST /api/elections — winning conditions validation', () => {
 
   // ── hasMostVotes ──────────────────────────────────────────────────────────
 
-  it('accepts hasMostVotes: true explicitly', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: true },
+  describe('when selecting the most-votes winning condition', () => {
+    it('should accept hasMostVotes: true explicitly when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: true },
+      });
+      mockElectionCreate({
+        hasMostVotes: true,
+        reachesPercentage: null,
+        reachesVotes: null,
+        quorum: null,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: true,
-      reachesPercentage: null,
-      reachesVotes: null,
-      quorum: null,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-  });
 
-  it('accepts hasMostVotes: false with another condition', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: false, reachesVotes: 5 },
+    it('should accept hasMostVotes: false with another condition when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: false, reachesVotes: 5 },
+      });
+      mockElectionCreate({
+        hasMostVotes: false,
+        reachesPercentage: null,
+        reachesVotes: 5,
+        quorum: null,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: false,
-      reachesPercentage: null,
-      reachesVotes: 5,
-      quorum: null,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
   });
 
   // ── reachesPercentage validation ──────────────────────────────────────────
 
-  it(`accepts reachesPercentage at minimum (${WINNING_CONDITION_PERCENTAGE_MIN})`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: {
+  describe('when validating the winning vote percentage', () => {
+    it(`accepts reachesPercentage at minimum (${WINNING_CONDITION_PERCENTAGE_MIN})`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: {
+          hasMostVotes: true,
+          reachesPercentage: WINNING_CONDITION_PERCENTAGE_MIN,
+        },
+      });
+      mockElectionCreate({
         hasMostVotes: true,
         reachesPercentage: WINNING_CONDITION_PERCENTAGE_MIN,
-      },
+        reachesVotes: null,
+        quorum: null,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: true,
-      reachesPercentage: WINNING_CONDITION_PERCENTAGE_MIN,
-      reachesVotes: null,
-      quorum: null,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-  });
 
-  it('accepts reachesPercentage just below max (99)', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: true, reachesPercentage: 99 },
+    it('should accept reachesPercentage just below max (99) when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: true, reachesPercentage: 99 },
+      });
+      mockElectionCreate({
+        hasMostVotes: true,
+        reachesPercentage: 99,
+        reachesVotes: null,
+        quorum: null,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: true,
-      reachesPercentage: 99,
-      reachesVotes: null,
-      quorum: null,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-  });
 
-  it(`rejects reachesPercentage >= ${WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE}`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesPercentage: WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE },
+    it(`rejects reachesPercentage >= ${WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE}`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesPercentage: WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE },
+      });
+      const { status, body } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/reachesPercentage/);
     });
-    const { status, body } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(/reachesPercentage/);
-  });
 
-  it('rejects reachesPercentage = 100', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesPercentage: 100 },
+    it('should reject reachesPercentage = 100 when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesPercentage: 100 },
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
     });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-  });
 
-  it('rejects reachesPercentage < 0', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesPercentage: -1 },
+    it('should reject reachesPercentage < 0 when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesPercentage: -1 },
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
     });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-  });
 
-  it('accepts decimal reachesPercentage within range (e.g. 50.5)', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: true, reachesPercentage: 50.5 },
+    it('should accept decimal reachesPercentage within range (e.g. 50.5) when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: true, reachesPercentage: 50.5 },
+      });
+      mockElectionCreate({
+        hasMostVotes: true,
+        reachesPercentage: 50.5,
+        reachesVotes: null,
+        quorum: null,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: true,
-      reachesPercentage: 50.5,
-      reachesVotes: null,
-      quorum: null,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
   });
 
   // ── reachesVotes validation ───────────────────────────────────────────────
 
-  it(`accepts reachesVotes at minimum (${WINNING_CONDITION_VOTES_MIN})`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesVotes: WINNING_CONDITION_VOTES_MIN },
+  describe('when validating the winning vote count', () => {
+    it(`accepts reachesVotes at minimum (${WINNING_CONDITION_VOTES_MIN})`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesVotes: WINNING_CONDITION_VOTES_MIN },
+      });
+      mockElectionCreate({
+        hasMostVotes: false,
+        reachesPercentage: null,
+        reachesVotes: WINNING_CONDITION_VOTES_MIN,
+        quorum: null,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: false,
-      reachesPercentage: null,
-      reachesVotes: WINNING_CONDITION_VOTES_MIN,
-      quorum: null,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-  });
 
-  it(`accepts reachesVotes at maximum (${WINNING_CONDITION_VOTES_MAX})`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesVotes: WINNING_CONDITION_VOTES_MAX },
+    it(`accepts reachesVotes at maximum (${WINNING_CONDITION_VOTES_MAX})`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesVotes: WINNING_CONDITION_VOTES_MAX },
+      });
+      mockElectionCreate({
+        hasMostVotes: false,
+        reachesPercentage: null,
+        reachesVotes: WINNING_CONDITION_VOTES_MAX,
+        quorum: null,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: false,
-      reachesPercentage: null,
-      reachesVotes: WINNING_CONDITION_VOTES_MAX,
-      quorum: null,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-  });
 
-  it('rejects reachesVotes = 0 (below minimum)', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesVotes: 0 },
+    it('should reject reachesVotes = 0 (below minimum) when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesVotes: 0 },
+      });
+      const { status, body } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/reachesVotes/);
     });
-    const { status, body } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(/reachesVotes/);
-  });
 
-  it(`rejects reachesVotes above maximum (${WINNING_CONDITION_VOTES_MAX + 1})`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesVotes: WINNING_CONDITION_VOTES_MAX + 1 },
+    it(`rejects reachesVotes above maximum (${WINNING_CONDITION_VOTES_MAX + 1})`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesVotes: WINNING_CONDITION_VOTES_MAX + 1 },
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
     });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-  });
 
-  it('rejects non-integer reachesVotes', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { reachesVotes: 5.5 },
+    it('should reject non-integer reachesVotes when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { reachesVotes: 5.5 },
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
     });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
   });
 
   // ── quorum validation ─────────────────────────────────────────────────────
 
-  it(`accepts quorum at minimum (${WINNING_CONDITION_QUORUM_MIN})`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: true, quorum: WINNING_CONDITION_QUORUM_MIN },
+  describe('when validating the participation quorum', () => {
+    it(`accepts quorum at minimum (${WINNING_CONDITION_QUORUM_MIN})`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: true, quorum: WINNING_CONDITION_QUORUM_MIN },
+      });
+      mockElectionCreate({
+        hasMostVotes: true,
+        reachesPercentage: null,
+        reachesVotes: null,
+        quorum: WINNING_CONDITION_QUORUM_MIN,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: true,
-      reachesPercentage: null,
-      reachesVotes: null,
-      quorum: WINNING_CONDITION_QUORUM_MIN,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-  });
 
-  it(`accepts quorum at maximum (${WINNING_CONDITION_QUORUM_MAX})`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: true, quorum: WINNING_CONDITION_QUORUM_MAX },
+    it(`accepts quorum at maximum (${WINNING_CONDITION_QUORUM_MAX})`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: true, quorum: WINNING_CONDITION_QUORUM_MAX },
+      });
+      mockElectionCreate({
+        hasMostVotes: true,
+        reachesPercentage: null,
+        reachesVotes: null,
+        quorum: WINNING_CONDITION_QUORUM_MAX,
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
     });
-    mockElectionCreate({
-      hasMostVotes: true,
-      reachesPercentage: null,
-      reachesVotes: null,
-      quorum: WINNING_CONDITION_QUORUM_MAX,
-    });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-  });
 
-  it('rejects quorum = 0', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: true, quorum: 0 },
+    it('should reject quorum = 0 when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: true, quorum: 0 },
+      });
+      const { status, body } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
+      expect(body.message).toMatch(/quorum/);
     });
-    const { status, body } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-    expect(body.message).toMatch(/quorum/);
-  });
 
-  it(`rejects quorum above maximum (${WINNING_CONDITION_QUORUM_MAX + 1})`, async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { quorum: WINNING_CONDITION_QUORUM_MAX + 1 },
+    it(`rejects quorum above maximum (${WINNING_CONDITION_QUORUM_MAX + 1})`, async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { quorum: WINNING_CONDITION_QUORUM_MAX + 1 },
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
     });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
-  });
 
-  it('rejects non-integer quorum', async () => {
-    const req = await makeAdminReq({
-      ...validBody,
-      winningConditions: { hasMostVotes: true, quorum: 10.5 },
+    it('should reject non-integer quorum when creating an election', async () => {
+      const req = await makeAdminReq({
+        ...validBody,
+        winningConditions: { hasMostVotes: true, quorum: 10.5 },
+      });
+      const { status } = await parseJson<any>(await POST(req));
+      expect(status).toBe(400);
     });
-    const { status } = await parseJson<any>(await POST(req));
-    expect(status).toBe(400);
   });
 
   // ── Combined conditions ───────────────────────────────────────────────────
 
-  it('accepts all conditions combined', async () => {
+  it('should accept all conditions combined when creating an election', async () => {
     const req = await makeAdminReq({
       ...validBody,
       winningConditions: {
@@ -370,7 +403,7 @@ describe('POST /api/elections — winning conditions validation', () => {
     });
   });
 
-  it('rejects non-object winningConditions', async () => {
+  it('should reject non-object winningConditions when creating an election', async () => {
     const req = await makeAdminReq({
       ...validBody,
       winningConditions: 'invalid',
@@ -379,7 +412,7 @@ describe('POST /api/elections — winning conditions validation', () => {
     expect(status).toBe(400);
   });
 
-  it('includes bounds in the error message for invalid reachesPercentage', async () => {
+  it('should include bounds in the error message for invalid reachesPercentage when creating an election', async () => {
     const req = await makeAdminReq({
       ...validBody,
       winningConditions: { reachesPercentage: 100 },
@@ -388,7 +421,7 @@ describe('POST /api/elections — winning conditions validation', () => {
     expect(body.message).toMatch(new RegExp(String(WINNING_CONDITION_PERCENTAGE_MAX_EXCLUSIVE)));
   });
 
-  it('includes bounds in the error message for invalid reachesVotes', async () => {
+  it('should include bounds in the error message for invalid reachesVotes when creating an election', async () => {
     const req = await makeAdminReq({
       ...validBody,
       winningConditions: { reachesVotes: WINNING_CONDITION_VOTES_MAX + 1 },
@@ -397,7 +430,7 @@ describe('POST /api/elections — winning conditions validation', () => {
     expect(body.message).toMatch(new RegExp(String(WINNING_CONDITION_VOTES_MAX)));
   });
 
-  it('includes bounds in the error message for invalid quorum', async () => {
+  it('should include bounds in the error message for invalid quorum when creating an election', async () => {
     const req = await makeAdminReq({
       ...validBody,
       winningConditions: { quorum: WINNING_CONDITION_QUORUM_MAX + 1 },
@@ -411,17 +444,13 @@ describe('POST /api/elections — winning conditions validation', () => {
 // GET /api/elections/[id] — winning conditions in response
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — winning conditions in response', () => {
+describe('Viewing an election — winning conditions in response (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Winning Conditions');
   });
 
-  it('returns winningConditions on the detail response', async () => {
+  it('should return winningConditions on the detail response when viewing an election', async () => {
     const req = await makeUserReq();
     const conditions = {
       hasMostVotes: true,
@@ -437,7 +466,7 @@ describe('GET /api/elections/[id] — winning conditions in response', () => {
     expect(body.winningConditions).toEqual(conditions);
   });
 
-  it('returns default winningConditions when stored as empty object', async () => {
+  it('should return default winningConditions when stored as empty object', async () => {
     const req = await makeUserReq();
     const election = makeElection();
     // Simulate old DB record with empty JSON
@@ -453,17 +482,13 @@ describe('GET /api/elections/[id] — winning conditions in response', () => {
 // GET /api/elections/[id] — tally with hasMostVotes condition
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — hasMostVotes tally condition', () => {
+describe('Viewing an election — hasMostVotes tally condition (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: hasMostVotes');
   });
 
-  it('marks option with most votes as winner (hasMostVotes only)', async () => {
+  it('should mark option with most votes as winner (hasMostVotes only) when viewing an election', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -488,7 +513,7 @@ describe('GET /api/elections/[id] — hasMostVotes tally condition', () => {
     expect(b.winner).toBe(false);
   });
 
-  it('marks tied options as co-winners', async () => {
+  it('should mark tied options as co-winners when viewing an election', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -510,7 +535,7 @@ describe('GET /api/elections/[id] — hasMostVotes tally condition', () => {
     expect(body.choices.every((c: any) => c.winner === true)).toBe(true);
   });
 
-  it('marks no winners when all votes are zero', async () => {
+  it('should mark no winners when all votes are zero', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -537,17 +562,13 @@ describe('GET /api/elections/[id] — hasMostVotes tally condition', () => {
 // GET /api/elections/[id] — tally with reachesPercentage condition
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — reachesPercentage tally condition', () => {
+describe('Viewing an election — reachesPercentage tally condition (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: reachesPercentage');
   });
 
-  it('winner only if strictly more than X% of total votes', async () => {
+  it('should declare a winner when the vote share exceeds the configured percentage', async () => {
     const req = await makeUserReq();
     // Option A: 6/10 = 60% → wins with threshold 50%
     // Option B: 4/10 = 40% → loses
@@ -575,7 +596,7 @@ describe('GET /api/elections/[id] — reachesPercentage tally condition', () => 
     expect(b.winner).toBe(false);
   });
 
-  it('does not win if exactly at the percentage threshold (must be strictly greater)', async () => {
+  it('should not win when exactly at the percentage threshold (must be strictly greater)', async () => {
     const req = await makeUserReq();
     // Option A: 5/10 = 50%, threshold = 50 → must be strictly > 50%, so does NOT win
     prismaMock.election.findUnique.mockResolvedValueOnce(
@@ -599,7 +620,7 @@ describe('GET /api/elections/[id] — reachesPercentage tally condition', () => 
     expect(body.choices.every((c: any) => c.winner === false)).toBe(true);
   });
 
-  it('no winner when percentage condition is combined with hasMostVotes and winner fails percentage', async () => {
+  it('should declare no winner when the leading choice fails the required vote percentage', async () => {
     const req = await makeUserReq();
     // A has most votes (7) but only 70% > 80% threshold? 70% is not > 80%, so no winner
     prismaMock.election.findUnique.mockResolvedValueOnce(
@@ -628,17 +649,13 @@ describe('GET /api/elections/[id] — reachesPercentage tally condition', () => 
 // GET /api/elections/[id] — tally with reachesVotes condition
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — reachesVotes tally condition', () => {
+describe('Viewing an election — reachesVotes tally condition (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: reachesVotes');
   });
 
-  it('winner if vote count meets threshold (hasMostVotes disabled)', async () => {
+  it('should declare a winner when its vote count reaches the threshold without requiring the most votes', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -665,7 +682,7 @@ describe('GET /api/elections/[id] — reachesVotes tally condition', () => {
     expect(b.winner).toBe(false);
   });
 
-  it('both options win when both meet the votes threshold', async () => {
+  it('should declare both choices winners when both reach the required vote count', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -688,7 +705,7 @@ describe('GET /api/elections/[id] — reachesVotes tally condition', () => {
     expect(body.choices.every((c: any) => c.winner === true)).toBe(true);
   });
 
-  it('no winner when neither option meets the votes threshold', async () => {
+  it('should declare no winner when neither choice reaches the required vote count', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -716,17 +733,13 @@ describe('GET /api/elections/[id] — reachesVotes tally condition', () => {
 // GET /api/elections/[id] — tally with quorum condition
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — quorum tally condition', () => {
+describe('Viewing an election — quorum tally condition (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: quorum');
   });
 
-  it('no winners when quorum is not met', async () => {
+  it('should declare no winner when participation is below quorum', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -750,7 +763,7 @@ describe('GET /api/elections/[id] — quorum tally condition', () => {
     expect(body.choices.every((c: any) => c.winner === false)).toBe(true);
   });
 
-  it('winners computed normally when quorum is exactly met', async () => {
+  it('should declare eligible winners when participation exactly reaches quorum', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -777,7 +790,7 @@ describe('GET /api/elections/[id] — quorum tally condition', () => {
     expect(b.winner).toBe(false);
   });
 
-  it('winners computed normally when quorum is exceeded', async () => {
+  it('should declare eligible winners when participation exceeds quorum', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -801,7 +814,7 @@ describe('GET /api/elections/[id] — quorum tally condition', () => {
     expect(a.winner).toBe(true);
   });
 
-  it('no winners even if option has most votes when quorum fails', async () => {
+  it('should declare no winner when quorum fails even if one choice has the most votes', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({
@@ -829,17 +842,13 @@ describe('GET /api/elections/[id] — quorum tally condition', () => {
 // GET /api/elections/[id] — combined conditions (AND logic)
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — combined winning conditions (AND logic)', () => {
+describe('Viewing an election — combined winning conditions (AND logic) (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Tally: Combined Conditions');
   });
 
-  it('ALL conditions must be satisfied — fails if any one condition fails', async () => {
+  it('should declare no winner when any required winning condition fails', async () => {
     const req = await makeUserReq();
     // A has most votes (7), 70% > 50%, but 7 < reachesVotes threshold of 10 → no win
     prismaMock.election.findUnique.mockResolvedValueOnce(
@@ -863,7 +872,7 @@ describe('GET /api/elections/[id] — combined winning conditions (AND logic)', 
     expect(body.choices.every((c: any) => c.winner === false)).toBe(true);
   });
 
-  it('wins when ALL conditions are satisfied simultaneously', async () => {
+  it('should declare a winner when every required winning condition is satisfied', async () => {
     const req = await makeUserReq();
     // A: 15/20 = 75% > 50%, 15 >= 10, has most votes, quorum 20 met
     prismaMock.election.findUnique.mockResolvedValueOnce(
@@ -895,17 +904,13 @@ describe('GET /api/elections/[id] — combined winning conditions (AND logic)', 
 // GET /api/elections/[id] — lazy tally computation with conditions
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — lazy tally with winning conditions', () => {
+describe('Viewing an election — lazy tally with winning conditions (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Lazy Tally with Conditions');
   });
 
-  it('applies winning conditions when computing tally lazily from ballots', async () => {
+  it('should apply winning conditions when computing tally lazily from ballots', async () => {
     const election = makeElection({
       opens_at: new Date(Date.now() - 7_200_000),
       closes_at: new Date(Date.now() - 100),
@@ -944,7 +949,7 @@ describe('GET /api/elections/[id] — lazy tally with winning conditions', () =>
     expect(body.choices.every((c: any) => c.winner === false)).toBe(true);
   });
 
-  it('applies reachesVotes condition during lazy tally computation', async () => {
+  it('should apply reachesVotes condition during lazy tally computation', async () => {
     const election = makeElection({
       opens_at: new Date(Date.now() - 7_200_000),
       closes_at: new Date(Date.now() - 100),

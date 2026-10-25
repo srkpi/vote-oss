@@ -1,27 +1,42 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import { MOCK_ELECTION_ID } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/cache', () => cacheMock);
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
 
 import { GET } from '@/app/api/elections/[id]/og/route';
 
 const PARAMS = { params: Promise.resolve({ id: MOCK_ELECTION_ID }) };
 
-describe('GET /api/elections/[id]/og', () => {
-  beforeEach(() => {
-    resetPrismaMock();
-    resetCacheMock();
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetCacheMock();
+});
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Loading an election preview (GET /api/elections/[id]/og)', () => {
+  beforeEach(() => {
     allure.feature('Elections');
     allure.story('Open Graph Metadata');
   });
 
-  it('returns 400 for invalid uuid', async () => {
+  it('should return 400 for invalid uuid when loading an election preview', async () => {
     const res = await GET(makeRequest(), {
       params: Promise.resolve({ id: 'invalid' }),
     });
@@ -29,7 +44,7 @@ describe('GET /api/elections/[id]/og', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when election does not exist', async () => {
+  it('should return 404 when election does not exist', async () => {
     prismaMock.election.findUnique.mockResolvedValueOnce(null);
 
     const res = await GET(makeRequest(), PARAMS);
@@ -37,7 +52,7 @@ describe('GET /api/elections/[id]/og', () => {
     expect(res.status).toBe(404);
   });
 
-  it('returns 200 with data from DB when cache is empty', async () => {
+  it('should return 200 with data from DB when the cache is empty', async () => {
     prismaMock.election.findUnique.mockResolvedValueOnce({
       title: 'Student Election',
       type: 'ELECTION',
@@ -55,7 +70,7 @@ describe('GET /api/elections/[id]/og', () => {
     });
   });
 
-  it('returns 200 from cache when available', async () => {
+  it('should return 200 from cache when available', async () => {
     cacheMock.getCachedElections.mockResolvedValueOnce([
       {
         id: MOCK_ELECTION_ID,
@@ -73,7 +88,7 @@ describe('GET /api/elections/[id]/og', () => {
     expect(prismaMock.election.findUnique).not.toHaveBeenCalled();
   });
 
-  it('returns 404 when cached elections exist but id not found', async () => {
+  it('should return 404 when cached elections exist but id not found', async () => {
     cacheMock.getCachedElections.mockResolvedValueOnce([
       { id: 'other-id', title: 'Other', type: 'ELECTION' },
     ] as any);

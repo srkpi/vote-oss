@@ -1,8 +1,9 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
-import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
+import { resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
-import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
+import { resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -15,21 +16,37 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { shuffleChoicesForUser } from '@/lib/utils/shuffle-choices';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
-jest.mock('@/lib/campus-api', () => campusMock);
-jest.mock('@/lib/encryption', () => ({
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
+vi.mock('@/lib/campus-api', async () => {
+  const { campusMock } = await import('@/__tests__/helpers/campus-mock');
+  return campusMock;
+});
+vi.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
-jest.mock('@/lib/bypass', () => ({
-  getElectionBypassForUser: jest.fn().mockResolvedValue(null),
+vi.mock('@/lib/bypass', () => ({
+  getElectionBypassForUser: vi.fn().mockResolvedValue(null),
 }));
-jest.mock('@/lib/avatars', () => avatarsMock);
+vi.mock('@/lib/avatars', async () => {
+  const { avatarsMock } = await import('@/__tests__/helpers/avatars-mock');
+  return avatarsMock;
+});
 
 import { GET as getBallots } from '@/app/api/elections/[id]/ballots/route';
 import { GET as getDetail } from '@/app/api/elections/[id]/route';
@@ -37,8 +54,8 @@ import { GET as getList, POST as createElection } from '@/app/api/elections/rout
 
 const DETAIL_PARAMS = { params: Promise.resolve({ id: MOCK_ELECTION_ID }) };
 
-const FUTURE_OPEN = new Date(Date.now() + 3_600_000).toISOString();
-const FUTURE_CLOSE = new Date(Date.now() + 7_200_000).toISOString();
+const FUTURE_OPEN = new Date(TEST_NOW + 3_600_000).toISOString();
+const FUTURE_CLOSE = new Date(TEST_NOW + 7_200_000).toISOString();
 
 const validBody = {
   title: 'Shuffle Test Election',
@@ -95,7 +112,20 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
 // Unit tests for shuffleChoicesForUser utility
 // ---------------------------------------------------------------------------
 
-describe('shuffleChoicesForUser utility', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+  resetCampusMock();
+  resetAvatarsMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Shuffling election choices', () => {
   const choices = [
     { id: 'a', choice: 'A', position: 0 },
     { id: 'b', choice: 'B', position: 1 },
@@ -103,14 +133,14 @@ describe('shuffleChoicesForUser utility', () => {
     { id: 'd', choice: 'D', position: 3 },
   ];
 
-  it('returns all original choices (no additions or deletions)', () => {
+  it('should return all original choices (no additions or deletions) when shuffling election choices', () => {
     const result = shuffleChoicesForUser(choices, 'user-1', 'election-1');
     expect(result).toHaveLength(choices.length);
     const ids = result.map((c) => c.id).sort();
     expect(ids).toEqual(['a', 'b', 'c', 'd']);
   });
 
-  it('assigns new 0-based positions in shuffled order', () => {
+  it('should renumber choice positions from zero when shuffling election choices', () => {
     const result = shuffleChoicesForUser(choices, 'user-1', 'election-1');
     const positions = result.map((c) => c.position).sort((a, b) => a - b);
     expect(positions).toEqual([0, 1, 2, 3]);
@@ -118,26 +148,26 @@ describe('shuffleChoicesForUser utility', () => {
     result.forEach((c, i) => expect(c.position).toBe(i));
   });
 
-  it('is deterministic — same (userId, electionId) always yields same order', () => {
+  it('should preserve the choice order when the voter and election are unchanged', () => {
     const r1 = shuffleChoicesForUser(choices, 'user-42', 'election-99');
     const r2 = shuffleChoicesForUser(choices, 'user-42', 'election-99');
     expect(r1.map((c) => c.id)).toEqual(r2.map((c) => c.id));
   });
 
-  it('produces different orderings for different users', () => {
+  it('should produce different orderings for different users when shuffling election choices', () => {
     const orderA = shuffleChoicesForUser(choices, 'user-A', 'election-1').map((c) => c.id);
     const orderB = shuffleChoicesForUser(choices, 'user-B', 'election-1').map((c) => c.id);
     // Statistically almost certain to differ for 4+ choices with different seeds
     expect(orderA).not.toEqual(orderB);
   });
 
-  it('produces different orderings for the same user in different elections', () => {
+  it('should produce different orderings for the same user in different elections when shuffling election choices', () => {
     const order1 = shuffleChoicesForUser(choices, 'user-X', 'election-1').map((c) => c.id);
     const order2 = shuffleChoicesForUser(choices, 'user-X', 'election-2').map((c) => c.id);
     expect(order1).not.toEqual(order2);
   });
 
-  it('handles a single choice without error', () => {
+  it('should preserve the only choice when shuffling a single-choice election', () => {
     const single = [{ id: 'only', choice: 'Only', position: 0 }];
     const result = shuffleChoicesForUser(single, 'user-1', 'election-1');
     expect(result).toHaveLength(1);
@@ -145,13 +175,13 @@ describe('shuffleChoicesForUser utility', () => {
     expect(result[0].position).toBe(0);
   });
 
-  it('does not mutate the original array', () => {
+  it('should not mutate the original array when shuffling election choices', () => {
     const original = choices.map((c) => ({ ...c }));
     shuffleChoicesForUser(choices, 'user-1', 'election-1');
     expect(choices).toEqual(original);
   });
 
-  it('preserves all properties of each choice object', () => {
+  it('should preserve all properties of each choice object when shuffling election choices', () => {
     const richChoices = choices.map((c) => ({ ...c, votes: 5, winner: true }));
     const result = shuffleChoicesForUser(richChoices, 'user-1', 'election-1');
     result.forEach((c) => {
@@ -165,18 +195,13 @@ describe('shuffleChoicesForUser utility', () => {
 // POST /api/elections — shuffleChoices field
 // ---------------------------------------------------------------------------
 
-describe('POST /api/elections — shuffleChoices', () => {
+describe('Creating an election — shuffleChoices (POST /api/elections)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetCampusMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Create Election – Shuffle Choices');
   });
 
-  it('creates election with shuffleChoices: false by default', async () => {
+  it('should create election with shuffleChoices: false by default when creating an election', async () => {
     const req = await makeAdminReq(validBody);
     prismaMock.election.create.mockResolvedValueOnce({
       ...makeElection(),
@@ -191,7 +216,7 @@ describe('POST /api/elections — shuffleChoices', () => {
     expect(body.shuffleChoices).toBe(false);
   });
 
-  it('creates election with shuffleChoices: true when requested', async () => {
+  it('should create election with shuffleChoices: true when requested', async () => {
     const req = await makeAdminReq({ ...validBody, shuffleChoices: true });
     prismaMock.election.create.mockResolvedValueOnce({
       ...makeElection({ shuffle_choices: true } as any),
@@ -206,7 +231,7 @@ describe('POST /api/elections — shuffleChoices', () => {
     expect(body.shuffleChoices).toBe(true);
   });
 
-  it('passes shuffle_choices: true to prisma.election.create', async () => {
+  it('should pass shuffle_choices: true to prisma.election.create when creating an election', async () => {
     const req = await makeAdminReq({ ...validBody, shuffleChoices: true });
     prismaMock.election.create.mockResolvedValueOnce({
       ...makeElection(),
@@ -222,7 +247,7 @@ describe('POST /api/elections — shuffleChoices', () => {
     expect(createCall.data.shuffle_choices).toBe(true);
   });
 
-  it('passes shuffle_choices: false to prisma when not provided', async () => {
+  it('should pass shuffle_choices: false to prisma when not provided', async () => {
     const req = await makeAdminReq(validBody); // no shuffleChoices key
     prismaMock.election.create.mockResolvedValueOnce({
       ...makeElection(),
@@ -238,7 +263,7 @@ describe('POST /api/elections — shuffleChoices', () => {
     expect(createCall.data.shuffle_choices).toBe(false);
   });
 
-  it('returns shuffled choices in creation response when shuffleChoices: true', async () => {
+  it('should return shuffled choices in creation response when shuffleChoices: true', async () => {
     const req = await makeAdminReq({ ...validBody, shuffleChoices: true });
     const election = makeElection({ shuffle_choices: true } as any);
     prismaMock.election.create.mockResolvedValueOnce({
@@ -268,12 +293,8 @@ describe('POST /api/elections — shuffleChoices', () => {
 // GET /api/elections — shuffleChoices in list response
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections — shuffleChoices', () => {
+describe('Listing elections — shuffleChoices (GET /api/elections)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('List Elections – Shuffle Choices');
   });
@@ -284,7 +305,7 @@ describe('GET /api/elections — shuffleChoices', () => {
     return makeAuthRequest(access.token);
   }
 
-  it('includes shuffleChoices: false when not enabled', async () => {
+  it('should include shuffleChoices: false when not enabled', async () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce([makeCachedElection()] as any);
 
@@ -292,7 +313,7 @@ describe('GET /api/elections — shuffleChoices', () => {
     expect(body.elections[0].shuffleChoices).toBe(false);
   });
 
-  it('includes shuffleChoices: true when enabled', async () => {
+  it('should include shuffleChoices: true when enabled', async () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce([
       { ...makeCachedElection(), shuffleChoices: true },
@@ -302,7 +323,7 @@ describe('GET /api/elections — shuffleChoices', () => {
     expect(body.elections[0].shuffleChoices).toBe(true);
   });
 
-  it('shuffles choices for the requesting user when shuffleChoices is true', async () => {
+  it('should shuffle choices for the requesting user when shuffleChoices is true', async () => {
     const req = await makeAuthReq();
     const cached = { ...makeCachedElection(), shuffleChoices: true };
     cacheMock.getCachedElections.mockResolvedValueOnce([cached] as any);
@@ -317,7 +338,7 @@ describe('GET /api/elections — shuffleChoices', () => {
     body.elections[0].choices.forEach((c: any, i: number) => expect(c.position).toBe(i));
   });
 
-  it('does not shuffle choices when shuffleChoices is false', async () => {
+  it('should not shuffle choices when shuffleChoices is false', async () => {
     const req = await makeAuthReq();
     const cached = { ...makeCachedElection(), shuffleChoices: false };
     cacheMock.getCachedElections.mockResolvedValueOnce([cached] as any);
@@ -334,17 +355,13 @@ describe('GET /api/elections — shuffleChoices', () => {
 // GET /api/elections/[id] — shuffleChoices in detail response
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id] — shuffleChoices', () => {
+describe('Viewing an election — shuffleChoices (GET /api/elections/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Election Detail – Shuffle Choices');
   });
 
-  it('returns shuffleChoices: false on detail when not enabled', async () => {
+  it('should return shuffleChoices: false on detail when not enabled', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
 
@@ -352,7 +369,7 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
     expect(body.shuffleChoices).toBe(false);
   });
 
-  it('returns shuffleChoices: true on detail when enabled', async () => {
+  it('should return shuffleChoices: true on detail when enabled', async () => {
     const req = await makeUserReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({ shuffle_choices: true } as any),
@@ -362,7 +379,7 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
     expect(body.shuffleChoices).toBe(true);
   });
 
-  it('shuffles choices for user when shuffleChoices is true', async () => {
+  it('should shuffle choices for user when shuffleChoices is true', async () => {
     const req = await makeUserReq();
     const election = makeElection({ shuffle_choices: true } as any);
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -377,7 +394,7 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
     body.choices.forEach((c: any, i: number) => expect(c.position).toBe(i));
   });
 
-  it('same user sees consistent order on repeated requests', async () => {
+  it('should preserve the voter choice order when the same voter requests the election again', async () => {
     const election = makeElection({ shuffle_choices: true } as any);
 
     const req1 = await makeUserReq();
@@ -391,7 +408,7 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
     expect(body1.choices.map((c: any) => c.id)).toEqual(body2.choices.map((c: any) => c.id));
   });
 
-  it('does not shuffle choices when shuffleChoices is false', async () => {
+  it('should not shuffle choices when shuffleChoices is false', async () => {
     const req = await makeUserReq();
     const election = makeElection(); // shuffle_choices: false by default
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -406,7 +423,7 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
     expect(returnedIds).toEqual(originalIds);
   });
 
-  it('shuffles choices for closed elections with tally data', async () => {
+  it('should shuffle choices for closed elections with tally data when viewing an election', async () => {
     const req = await makeUserReq();
     const election = makeElection({
       opens_at: new Date(Date.now() - 7_200_000),
@@ -432,7 +449,7 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
     body.choices.forEach((c: any, i: number) => expect(c.position).toBe(i));
   });
 
-  it('reads shuffleChoices from cache when available', async () => {
+  it('should read shuffleChoices from cache when available', async () => {
     const req = await makeUserReq();
     const cached = makeCachedElection({ shuffle_choices: true } as any);
     cacheMock.getCachedElections.mockResolvedValueOnce([
@@ -450,12 +467,8 @@ describe('GET /api/elections/[id] — shuffleChoices', () => {
 // GET /api/elections/[id]/ballots — shuffleChoices in ballots response
 // ---------------------------------------------------------------------------
 
-describe('GET /api/elections/[id]/ballots — shuffleChoices', () => {
+describe('Viewing election ballots — shuffleChoices (GET /api/elections/[id]/ballots)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('Ballot Transparency – Shuffle Choices');
   });
@@ -468,7 +481,7 @@ describe('GET /api/elections/[id]/ballots — shuffleChoices', () => {
     });
   }
 
-  it('returns shuffleChoices: false when not enabled', async () => {
+  it('should return shuffleChoices: false when not enabled', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(makeElection());
     prismaMock.ballot.findMany.mockResolvedValueOnce([]);
@@ -477,7 +490,7 @@ describe('GET /api/elections/[id]/ballots — shuffleChoices', () => {
     expect(body.election.shuffleChoices).toBe(false);
   });
 
-  it('returns shuffleChoices: true when enabled', async () => {
+  it('should return shuffleChoices: true when enabled', async () => {
     const req = await authReq();
     prismaMock.election.findUnique.mockResolvedValueOnce(
       makeElection({ shuffle_choices: true } as any),
@@ -488,7 +501,7 @@ describe('GET /api/elections/[id]/ballots — shuffleChoices', () => {
     expect(body.election.shuffleChoices).toBe(true);
   });
 
-  it('shuffles choices in ballot response when shuffleChoices is true', async () => {
+  it('should shuffle choices in ballot response when shuffleChoices is true', async () => {
     const req = await authReq();
     const election = makeElection({ shuffle_choices: true } as any);
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -502,7 +515,7 @@ describe('GET /api/elections/[id]/ballots — shuffleChoices', () => {
     body.election.choices.forEach((c: any, i: number) => expect(c.position).toBe(i));
   });
 
-  it('does not shuffle choices in ballot response when disabled', async () => {
+  it('should not shuffle choices in ballot response when disabled', async () => {
     const req = await authReq();
     const election = makeElection(); // shuffle_choices: false
     prismaMock.election.findUnique.mockResolvedValueOnce(election);
@@ -515,7 +528,7 @@ describe('GET /api/elections/[id]/ballots — shuffleChoices', () => {
     expect(returnedIds).toEqual(originalIds);
   });
 
-  it('reads shuffleChoices from cache for ballots route', async () => {
+  it('should read shuffleChoices from cache for ballots route when viewing election ballots', async () => {
     const req = await authReq();
     const cached = { ...makeCachedElection(), shuffleChoices: true };
     cacheMock.getCachedElections.mockResolvedValueOnce([cached] as any);

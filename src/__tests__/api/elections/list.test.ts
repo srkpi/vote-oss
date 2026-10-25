@@ -1,8 +1,9 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
-import { avatarsMock, resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
+import { resetAvatarsMock } from '@/__tests__/helpers/avatars-mock';
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
-import { campusMock, resetCampusMock } from '@/__tests__/helpers/campus-mock';
+import { resetCampusMock } from '@/__tests__/helpers/campus-mock';
 import {
   ADMIN_PAYLOAD,
   ADMIN_RECORD,
@@ -12,18 +13,34 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { DEFAULT_WINNING_CONDITIONS } from '@/types/election';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
-jest.mock('@/lib/campus-api', () => campusMock);
-jest.mock('@/lib/encryption', () => ({
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
+vi.mock('@/lib/campus-api', async () => {
+  const { campusMock } = await import('@/__tests__/helpers/campus-mock');
+  return campusMock;
+});
+vi.mock('@/lib/encryption', () => ({
   encryptField: (s: string) => s,
   decryptField: (s: string) => s,
 }));
-jest.mock('@/lib/avatars', () => avatarsMock);
+vi.mock('@/lib/avatars', async () => {
+  const { avatarsMock } = await import('@/__tests__/helpers/avatars-mock');
+  return avatarsMock;
+});
 
 import { GET, POST } from '@/app/api/elections/route';
 
@@ -73,23 +90,31 @@ function makeCachedElection(overrides: Parameters<typeof makeElection>[0] = {}) 
 
 // ── GET /api/elections ────────────────────────────────────────────────────────
 
-describe('GET /api/elections', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+  resetCampusMock();
+  resetAvatarsMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Listing elections (GET /api/elections)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetCampusMock();
-    resetAvatarsMock();
     allure.feature('Elections');
     allure.story('List Elections');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const res = await GET(makeRequest());
     expect(res.status).toBe(401);
   });
 
-  it('returns cached data immediately on a cache hit (no DB query)', async () => {
+  it('should return cached data immediately when cached data is available (no DB query)', async () => {
     const req = await makeAuthReq();
     const cached = [makeCachedElection()];
     cacheMock.getCachedElections.mockResolvedValueOnce(cached as any);
@@ -102,7 +127,7 @@ describe('GET /api/elections', () => {
     expect(prismaMock.election.findMany).not.toHaveBeenCalled();
   });
 
-  it('queries the DB on a cache miss', async () => {
+  it('should query the DB when the cache is empty', async () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce(null); // miss
     prismaMock.election.findMany.mockResolvedValueOnce([]);
@@ -111,7 +136,7 @@ describe('GET /api/elections', () => {
     expect(prismaMock.election.findMany).toHaveBeenCalledTimes(1);
   });
 
-  it('populates the cache after a DB hit', async () => {
+  it('should populate the cache after a DB hit', async () => {
     const req = await makeAuthReq();
     const election = makeElection();
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
@@ -129,7 +154,7 @@ describe('GET /api/elections', () => {
     expect(cacheMock.setCachedElections).toHaveBeenCalledWith(expect.any(Array));
   });
 
-  it('cache stores elections without a status field', async () => {
+  it('should leave status out of cached election data when caching the directory', async () => {
     const req = await makeAuthReq();
     const election = makeElection();
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
@@ -149,7 +174,7 @@ describe('GET /api/elections', () => {
     expect(storedArray[0]).not.toHaveProperty('status');
   });
 
-  it('filters cached elections by the requesting user faculty', async () => {
+  it('should filter cached elections by the requesting user faculty when listing elections', async () => {
     const req = await makeAuthReq(); // USER_PAYLOAD.faculty = 'FICE'
     const ficeElection = makeCachedElection({
       restrictions: [{ type: 'FACULTY', value: 'FICE' }],
@@ -166,7 +191,7 @@ describe('GET /api/elections', () => {
     expect(body.elections[0].restrictions).toContainEqual({ type: 'FACULTY', value: 'FICE' });
   });
 
-  it('filters cached elections by the requesting user group', async () => {
+  it('should filter cached elections by the requesting user group when listing elections', async () => {
     const req = await makeAuthReq(); // USER_PAYLOAD.group = 'KV-91'
     const myGroup = makeCachedElection({
       restrictions: [
@@ -189,7 +214,7 @@ describe('GET /api/elections', () => {
     expect(body.elections[0].restrictions).toContainEqual({ type: 'GROUP', value: 'KV-91' });
   });
 
-  it('includes status field computed at serve time (upcoming/open/closed)', async () => {
+  it('should show each election as upcoming, open, or closed when listing elections', async () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
     const election = makeElection(); // open
@@ -208,7 +233,7 @@ describe('GET /api/elections', () => {
     expect(body.elections[0].status).toBe('open');
   });
 
-  it('computes correct status from cached elections at serve time', async () => {
+  it('should recompute the current election status when serving cached elections', async () => {
     const req = await makeAuthReq();
     const openElection = makeCachedElection(); // open
     const upcomingElection = makeCachedElection({
@@ -234,7 +259,7 @@ describe('GET /api/elections', () => {
     expect(statuses).toContain('closed');
   });
 
-  it('does not include votes/winner in choices for open elections', async () => {
+  it('should not include votes/winner in choices for open elections when listing elections', async () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
     const election = makeElection(); // open
@@ -256,7 +281,7 @@ describe('GET /api/elections', () => {
     expect(body.elections[0].results).toBeUndefined();
   });
 
-  it('embeds votes and winner in choices for closed elections with tally data', async () => {
+  it('should embed votes and winner in choices for closed elections with tally data when listing elections', async () => {
     const req = await makeAuthReq();
     const closedElection = makeCachedElection({
       opens_at: new Date(Date.now() - 7_200_000),
@@ -284,7 +309,7 @@ describe('GET /api/elections', () => {
     expect(body.elections[0].results).toBeUndefined();
   });
 
-  it('returns 200 with empty array when no elections exist', async () => {
+  it('should return 200 with empty array when no elections exist', async () => {
     const req = await makeAuthReq();
     cacheMock.getCachedElections.mockResolvedValueOnce(null);
     prismaMock.election.findMany.mockResolvedValueOnce([]);
@@ -297,30 +322,26 @@ describe('GET /api/elections', () => {
 
 // ── POST /api/elections ───────────────────────────────────────────────────────
 
-describe('POST /api/elections', () => {
+describe('Creating an election (POST /api/elections)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
-    resetCampusMock();
     allure.feature('Elections');
     allure.story('Create Election');
   });
 
   const validBody = {
     title: 'New Election',
-    opensAt: new Date(Date.now() + 3_600_000).toISOString(),
-    closesAt: new Date(Date.now() + 7_200_000).toISOString(),
+    opensAt: new Date(TEST_NOW + 3_600_000).toISOString(),
+    closesAt: new Date(TEST_NOW + 7_200_000).toISOString(),
     choices: ['Option A', 'Option B'],
   };
 
-  it('returns 400 when required fields are missing', async () => {
+  it('should return 400 when required fields are missing', async () => {
     const req = await makeAdminReq({ title: 'Only title' });
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when closesAt is before opensAt', async () => {
+  it('should return 400 when closesAt is before opensAt', async () => {
     const req = await makeAdminReq({
       ...validBody,
       opensAt: new Date(Date.now() + 7_200_000).toISOString(),
@@ -330,7 +351,7 @@ describe('POST /api/elections', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 201 with election data on success', async () => {
+  it('should return 201 with election data when the request succeeds', async () => {
     const req = await makeAdminReq(validBody);
     const election = makeElection();
     prismaMock.election.create.mockResolvedValueOnce({
@@ -348,7 +369,7 @@ describe('POST /api/elections', () => {
     expect(body.results).toBeUndefined();
   });
 
-  it('invalidates the elections cache after creation', async () => {
+  it('should invalidate the elections cache after creation', async () => {
     const req = await makeAdminReq(validBody);
     const election = makeElection();
     prismaMock.election.create.mockResolvedValueOnce({

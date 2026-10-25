@@ -1,22 +1,38 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { redisMock, resetRedisMock } from '@/__tests__/helpers/redis-mock';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/redis', () => ({ redis: redisMock }));
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/redis', async () => {
+  const { redisMock } = await import('@/__tests__/helpers/redis-mock');
+  return { redis: redisMock };
+});
 
 import { GET } from '@/app/api/health/route';
 
-describe('GET /api/health', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetRedisMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Checking service health (GET /api/health)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetRedisMock();
     allure.feature('Health Check');
     allure.story('GET /api/health');
   });
 
-  it('returns 200 when both DB and Redis are healthy', async () => {
+  it('should return 200 when both DB and Redis are healthy', async () => {
     prismaMock.$queryRaw.mockResolvedValueOnce(1);
 
     const res = await GET();
@@ -26,9 +42,9 @@ describe('GET /api/health', () => {
     expect(json).toEqual({ status: 'ok' });
   });
 
-  it('returns 503 when DB check fails', async () => {
+  it('should return 503 when DB check fails', async () => {
     prismaMock.$queryRaw.mockRejectedValueOnce(new Error('DB down'));
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -40,10 +56,10 @@ describe('GET /api/health', () => {
     spy.mockRestore();
   });
 
-  it('returns 503 when Redis check fails', async () => {
+  it('should return 503 when Redis check fails', async () => {
     prismaMock.$queryRaw.mockResolvedValueOnce(1);
     redisMock.ping.mockRejectedValueOnce(new Error('Redis down'));
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -55,10 +71,10 @@ describe('GET /api/health', () => {
     spy.mockRestore();
   });
 
-  it('returns 503 when both DB and Redis fail', async () => {
+  it('should return 503 when both DB and Redis fail', async () => {
     prismaMock.$queryRaw.mockRejectedValueOnce(new Error('DB down'));
     redisMock.ping.mockRejectedValueOnce(new Error('Redis down'));
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -70,10 +86,10 @@ describe('GET /api/health', () => {
     spy.mockRestore();
   });
 
-  it('handles unexpected ping responses gracefully', async () => {
+  it('should report Redis as unhealthy when its ping response is unexpected', async () => {
     prismaMock.$queryRaw.mockResolvedValueOnce(1);
     redisMock.ping.mockResolvedValueOnce('INVALID');
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const res = await GET();
     const json = await res.json();
@@ -85,8 +101,8 @@ describe('GET /api/health', () => {
     spy.mockRestore();
   });
 
-  it('logs errors without throwing', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  it('should record dependency failures when checking service health', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     prismaMock.$queryRaw.mockRejectedValueOnce(new Error('DB down'));
     redisMock.ping.mockRejectedValueOnce(new Error('Redis down'));
