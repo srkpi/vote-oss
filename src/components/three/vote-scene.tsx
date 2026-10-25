@@ -74,10 +74,7 @@ export function VoteScene({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        'absolute inset-0 overflow-hidden bg-[#0a1f42] catgirl:bg-[#28101f]',
-        className,
-      )}
+      className={cn('absolute inset-0 overflow-hidden bg-[#0a1f42]', className)}
     >
       <SceneFallback
         variant={variant}

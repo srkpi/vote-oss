@@ -9,7 +9,6 @@ import {
   auroraFragmentShaderLow,
   auroraVertexShader,
 } from '@/lib/three/aurora-shader';
-import { CATGIRL_SCENE_COLORS } from '@/lib/three/catgirl-scene-theme';
 
 const BACKDROP_DEPTH = -9;
 
@@ -23,26 +22,18 @@ const DEFAULT_AURORA_COLORS = {
 interface AuroraBackdropProps {
   quality: 'high' | 'low';
   intensity?: number;
-  catgirl?: boolean;
 }
 
-export function AuroraBackdrop({ quality, intensity = 1, catgirl = false }: AuroraBackdropProps) {
-  return (
-    <AuroraBackdropMesh
-      key={`${quality}-${catgirl}`}
-      quality={quality}
-      intensity={intensity}
-      catgirl={catgirl}
-    />
-  );
+export function AuroraBackdrop({ quality, intensity = 1 }: AuroraBackdropProps) {
+  return <AuroraBackdropMesh key={quality} quality={quality} intensity={intensity} />;
 }
 
-function AuroraBackdropMesh({ quality, intensity = 1, catgirl = false }: AuroraBackdropProps) {
+function AuroraBackdropMesh({ quality, intensity = 1 }: AuroraBackdropProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   const fragmentShader = quality === 'high' ? auroraFragmentShaderHigh : auroraFragmentShaderLow;
-  const colors = catgirl ? CATGIRL_SCENE_COLORS.aurora : DEFAULT_AURORA_COLORS;
+  const colors = DEFAULT_AURORA_COLORS;
 
   // Uniforms are only ever mutated in place (below, inside useFrame) via the
   // ref to the live material — this object itself never needs to change

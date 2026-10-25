@@ -2,89 +2,19 @@
 
 import { Float, MeshTransmissionMaterial } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
-import { createCatgirlFaceGeometry } from '@/lib/three/catgirl-face-geometry';
-import { CATGIRL_SCENE_COLORS } from '@/lib/three/catgirl-scene-theme';
 import { createLogoMarkGeometry } from '@/lib/three/logo-geometry';
-import type { CatgirlImage } from '@/types/catgirl';
 
 import type { PointerRef } from './pointer-parallax';
 
-const NAVY = '#13294f';
-const BLUE = '#008acf';
-const BLUE_LIGHT = '#5fc4f5';
-const GLASS_WHITE = '#f4f8ff';
-
-const MAX_PHOTO_LONG_SIDE = 2.5;
-const PHOTO_MAT_MARGIN = 0.16;
-const PHOTO_GLOW_MARGIN = 0.62;
-
-/**
- * How long we wait, after entering catgirl mode with no photo yet, before
- * revealing the procedural cat-face fallback at all. The photo fetch is
- * usually well inside this window, so the badge goes straight from the
- * checkmark to the real photo with nothing in between — the fallback face
- * never has a chance to pop in only to be swapped out moments later (the
- * "flicker" this delay exists to avoid). A slow connection or a failed
- * fetch still gets the fallback once this elapses, so the badge is never
- * left empty for long.
- */
-const FALLBACK_REVEAL_DELAY_MS = 400;
-/**
- * Damping speed (see `THREE.MathUtils.damp`) shared by the fallback-mark
- * and photo-card reveal below, so whichever transition happens — checkmark
- * to fallback, fallback to photo, or checkmark straight to photo — reads as
- * one smooth dissolve rather than two independently-timed pieces.
- */
-const REVEAL_DAMP_SPEED = 7;
-
-function computePhotoPlaneSize(
-  width: number | undefined,
-  height: number | undefined,
-): [number, number] {
-  const aspect = width && height && height > 0 ? width / height : 1;
-  return aspect >= 1
-    ? [MAX_PHOTO_LONG_SIDE, MAX_PHOTO_LONG_SIDE / aspect]
-    : [MAX_PHOTO_LONG_SIDE * aspect, MAX_PHOTO_LONG_SIDE];
-}
-
-function useCatgirlTexture(url: string | null): THREE.Texture | null {
-  const [result, setResult] = useState<{ url: string; texture: THREE.Texture } | null>(null);
-
-  useEffect(() => {
-    if (!url) {
-      return;
-    }
-
-    let cancelled = false;
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin('anonymous');
-
-    loader.load(
-      url,
-      (loaded) => {
-        if (cancelled) {
-          loaded.dispose();
-          return;
-        }
-        loaded.colorSpace = THREE.SRGBColorSpace;
-        loaded.wrapS = THREE.ClampToEdgeWrapping;
-        loaded.wrapT = THREE.ClampToEdgeWrapping;
-        setResult({ url, texture: loaded });
-      },
-      undefined,
-      () => {},
-    );
-
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
-
-  return result?.url === url ? result.texture : null;
-}
+const MARK_COLORS = {
+  navy: '#13294f',
+  blue: '#008acf',
+  blueLight: '#5fc4f5',
+  glassWhite: '#f4f8ff',
+};
 
 interface Satellite {
   phase: number;
@@ -119,122 +49,26 @@ interface LogoMarkProps {
    * to state directly where the mark ends up on screen.
    */
   pointerFocus?: { x: number; y: number };
-  catgirl?: boolean;
-  catgirlImage?: CatgirlImage | null;
 }
 
-/**
- * The Vote OSS mark, rebuilt as real 3D geometry (see `logo-geometry.ts`),
- * normally set inside a frosted white glass disc — the same "icon in a soft
- * translucent badge" language as `opengraph-image.tsx`. The glass and the
- * tick move together as a single rigid badge (an earlier version spun the
- * tick independently inside a still frame, which read as broken rather than
- * intentional), given two coordinated layers of motion:
- *  - a pointer-driven tilt on the whole badge, damped so it trails the
- *    cursor like a physical object rather than snapping to it,
- *  - a "hover charge": emissive glow, glass opacity/clearcoat and scale all
- *    ease toward a lit-up state when the pointer is near, and back down
- *    when it isn't — the "effects on hover" the mark is designed around.
- *
- * In catgirl mode the mark becomes a floating photo card showing a real
- * image claimed from the same pool `<CatgirlGallery>` draws from
- * elsewhere on the page (see `useCatgirlImage`) — sized from the image's own
- * true aspect ratio (`computePhotoPlaneSize`) rather than cropped to a fixed
- * shape, so nothing about the artwork is ever cut off. A thin white mat plus
- * a soft glow in the image's own dominant color (see `colors.main` in
- * `nekosia-client.ts`) frames it instead of the round glass disc — a
- * circular puck sized for the small line mark doesn't fit a full-size
- * rectangular photo — and the whole card tilts slightly toward the pointer
- * independently of the badge's own tilt (see the `photoTilt` group below)
- * for a little extra life. A detailed "anime style" face is an
- * illustration, not something swept tube geometry can produce the way the
- * checkmark mark itself is built, so this uses real art instead of
- * approximating one.
- *
- * While that photo is loading (or if it fails — CORS/network), the mark
- * falls back to `createCatgirlFaceGeometry`'s simple procedural mark inside
- * the glass disc, like the checkmark, so the badge is never left empty —
- * but only once `FALLBACK_REVEAL_DELAY_MS` has passed with still no photo.
- * Before that it just... waits, because a fetch that resolves inside the
- * window (the common case) would otherwise flash the fallback face for a
- * fraction of a second only to replace it with the photo moments later,
- * which reads as a flicker rather than a deliberate loading state. The
- * fallback mark and the photo card are both always mounted once catgirl
- * mode is on; `fallbackReveal`/`photoReveal` (see `useFrame`) scale and
- * fade each one in or out, so every transition — checkmark to fallback,
- * fallback to photo, or checkmark straight to photo — is a brief dissolve
- * instead of an instant swap.
- *
- * The canvas this renders into is `pointer-events: none` (see
- * `vote-scene-canvas.tsx`) so the mark never steals clicks meant for the
- * headline/buttons stacked on top of it — which also means real DOM
- * pointer-over events never reach it. "Hover" is therefore proximity-based:
- * distance from the pointer (tracked independently in `pointer-parallax.tsx`)
- * to the mark's on-screen center, which works regardless of what's stacked
- * on top of the canvas.
- */
+/** The glass checkmark badge follows the pointer and glows on proximity. */
 export function LogoMark({
   pointerRef,
   quality,
   scale = 1,
   position = [0, 0, 0],
   pointerFocus = { x: 0, y: 0 },
-  catgirl = false,
-  catgirlImage = null,
 }: LogoMarkProps) {
-  const markColors = catgirl
-    ? CATGIRL_SCENE_COLORS.logoMark
-    : { navy: NAVY, blue: BLUE, blueLight: BLUE_LIGHT, glassWhite: GLASS_WHITE };
-
-  const photoTexture = useCatgirlTexture(catgirl ? (catgirlImage?.url ?? null) : null);
-  const showPhoto = catgirl && photoTexture !== null;
-
-  // See `FALLBACK_REVEAL_DELAY_MS` above: don't let the procedural fallback
-  // mark reveal itself until the photo has had a real chance to beat it
-  // there. A plain ref rather than state — `useFrame` below already reads
-  // it every frame, so there's nothing for a re-render to accomplish here,
-  // and setting it needs no cleanup the way a `setTimeout` would. `null`
-  // means "not waiting" (catgirl is off, or the photo already showed up);
-  // resetting it whenever either of those is true means a quick toggle
-  // off/on starts the wait over cleanly rather than reusing a stale one.
-  const fallbackDeadline = useRef<number | null>(null);
-  useEffect(() => {
-    fallbackDeadline.current =
-      !catgirl || showPhoto ? null : performance.now() + FALLBACK_REVEAL_DELAY_MS;
-  }, [catgirl, showPhoto]);
-
+  const markColors = MARK_COLORS;
   const geometry = useMemo(
     () =>
-      catgirl
-        ? createCatgirlFaceGeometry({
-            radius: 1,
-            tubeThickness: 0.145,
-            ringSegments: 220,
-            radialSegments: 22,
-          })
-        : createLogoMarkGeometry({
-            radius: 1,
-            tubeThickness: 0.145,
-            ringSegments: 220,
-            radialSegments: 22,
-          }),
-    [catgirl],
-  );
-  const [photoWidth, photoHeight] = useMemo(
-    () => computePhotoPlaneSize(catgirlImage?.width, catgirlImage?.height),
-    [catgirlImage?.width, catgirlImage?.height],
-  );
-  const photoGeometry = useMemo(
-    () => new THREE.PlaneGeometry(photoWidth, photoHeight),
-    [photoWidth, photoHeight],
-  );
-  const photoMatGeometry = useMemo(
-    () => new THREE.PlaneGeometry(photoWidth + PHOTO_MAT_MARGIN, photoHeight + PHOTO_MAT_MARGIN),
-    [photoWidth, photoHeight],
-  );
-  const photoGlowGeometry = useMemo(
-    () => new THREE.PlaneGeometry(photoWidth + PHOTO_GLOW_MARGIN, photoHeight + PHOTO_GLOW_MARGIN),
-    [photoWidth, photoHeight],
+      createLogoMarkGeometry({
+        radius: 1,
+        tubeThickness: 0.145,
+        ringSegments: 220,
+        radialSegments: 22,
+      }),
+    [],
   );
   // A shallow puck rather than a flat disc, so it reads as real glass with
   // a visible edge/rim under lighting rather than a paper-thin card.
@@ -245,22 +79,10 @@ export function LogoMark({
   const satellites = useMemo(() => createSatellites(7), []);
 
   const tiltGroup = useRef<THREE.Group>(null);
-  const fallbackGroup = useRef<THREE.Group>(null);
-  const photoTilt = useRef<THREE.Group>(null);
   const glassRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
-  const photoGlowMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
-  const photoMatMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
-  const photoImageMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const satelliteRefs = useRef<(THREE.Mesh | null)[]>([]);
-
   const charge = useRef(0);
-  // Crossfade blend factors, each 0 (hidden) to 1 (fully shown) — see the
-  // big doc comment above. `fallbackReveal` starts at 1 so the default,
-  // non-catgirl checkmark needs no reveal animation of its own; only
-  // entering/leaving catgirl mode ever moves it away from that.
-  const fallbackReveal = useRef(1);
-  const photoReveal = useRef(0);
 
   useFrame((state, delta) => {
     const clampedDelta = Math.min(delta, 1 / 30);
@@ -273,29 +95,6 @@ export function LogoMark({
     const dy = pointer.y - pointerFocus.y;
     const proximity = 1 - Math.min(1, Math.hypot(dx, dy) / 0.55);
     charge.current = THREE.MathUtils.damp(charge.current, proximity, 4, clampedDelta);
-
-    // Crossfade targets: outside catgirl mode the fallback (checkmark) is
-    // always fully shown; inside it, exactly one of "fallback" or "photo"
-    // is the target at any moment, per the doc comment above.
-    const fallbackAllowed =
-      fallbackDeadline.current !== null && performance.now() >= fallbackDeadline.current;
-    const fallbackTarget = catgirl ? (showPhoto ? 0 : fallbackAllowed ? 1 : 0) : 1;
-    fallbackReveal.current = THREE.MathUtils.damp(
-      fallbackReveal.current,
-      fallbackTarget,
-      REVEAL_DAMP_SPEED,
-      clampedDelta,
-    );
-    photoReveal.current = THREE.MathUtils.damp(
-      photoReveal.current,
-      showPhoto ? 1 : 0,
-      REVEAL_DAMP_SPEED,
-      clampedDelta,
-    );
-
-    if (fallbackGroup.current) {
-      fallbackGroup.current.scale.setScalar(fallbackReveal.current);
-    }
 
     if (tiltGroup.current) {
       const targetX = pointer.y * 0.22;
@@ -325,37 +124,6 @@ export function LogoMark({
       const glassMat = glassRef.current.material as THREE.MeshPhysicalMaterial;
       glassMat.opacity = 0.5 + charge.current * 0.14;
       glassMat.clearcoat = 0.45 + charge.current * 0.3;
-    }
-
-    if (photoTilt.current) {
-      const liveliness = 0.35 + charge.current * 0.65;
-      const targetPhotoX = -pointer.y * 0.3 * liveliness;
-      const targetPhotoY = pointer.x * 0.4 * liveliness;
-      photoTilt.current.rotation.x = THREE.MathUtils.damp(
-        photoTilt.current.rotation.x,
-        targetPhotoX,
-        3,
-        clampedDelta,
-      );
-      photoTilt.current.rotation.y = THREE.MathUtils.damp(
-        photoTilt.current.rotation.y,
-        targetPhotoY,
-        3,
-        clampedDelta,
-      );
-      // Scale up from a slightly-smaller starting point rather than a bare
-      // 0 → a subtle "settle in" alongside the opacity fade below, instead
-      // of the card visibly growing from a single point.
-      photoTilt.current.scale.setScalar(THREE.MathUtils.lerp(0.88, 1, photoReveal.current));
-    }
-    if (photoGlowMaterialRef.current) {
-      photoGlowMaterialRef.current.opacity = 0.25 * photoReveal.current;
-    }
-    if (photoMatMaterialRef.current) {
-      photoMatMaterialRef.current.opacity = 0.92 * photoReveal.current;
-    }
-    if (photoImageMaterialRef.current) {
-      photoImageMaterialRef.current.opacity = photoReveal.current;
     }
 
     // Orbiting satellite nodes: small verified-ballot markers circling the
@@ -388,16 +156,7 @@ export function LogoMark({
         floatingRange={[-0.12, 0.12]}
       >
         <group ref={tiltGroup} scale={scale}>
-          {/* Glass disc + fallback/checkmark mark, together: always
-              mounted (unlike the old hard `!showPhoto` conditional) so
-              `fallbackReveal` can shrink them away smoothly instead of
-              having React unmount them the instant a photo texture lands.
-              A circular puck behind a much larger rectangular photo would
-              read as a mismatched leftover shape behind it, so once fully
-              revealed the photo's own mat + glow (below) are what actually
-              frame it — this group is scaled to (near enough) zero by then,
-              not just hidden behind it. */}
-          <group ref={fallbackGroup}>
+          <group>
             <mesh
               ref={glassRef}
               geometry={glassGeometry}
@@ -452,42 +211,6 @@ export function LogoMark({
               )}
             </mesh>
           </group>
-
-          {/* Photo card: mounted as soon as a texture exists, faded/scaled
-              in via `photoReveal` rather than appearing on the same frame
-              its texture resolves. Kept mounted (at reveal 0) even if
-              catgirl mode is later switched off, so toggling out fades the
-              photo away too instead of popping it out. */}
-          {photoTexture && (
-            <group ref={photoTilt}>
-              {/* `toneMapped` left at its default `true` on all three of
-                  these (unlike the satellites/fallback mark, which are
-                  small emissive accents meant to glow) — an un-tonemapped
-                  material reads as much brighter to the scene's Bloom pass
-                  (see `vote-scene-canvas.tsx`, `luminanceThreshold={0.18}`),
-                  which washed out a full-frame photo to overexposed white
-                  well before it would visibly affect a small accent glint. */}
-              <mesh geometry={photoGlowGeometry} position={[0, 0, -0.1]}>
-                <meshBasicMaterial
-                  ref={photoGlowMaterialRef}
-                  color={catgirlImage?.color ?? markColors.blue}
-                  transparent
-                  opacity={0}
-                />
-              </mesh>
-              <mesh geometry={photoMatGeometry} position={[0, 0, -0.02]}>
-                <meshBasicMaterial
-                  ref={photoMatMaterialRef}
-                  color="#ffffff"
-                  transparent
-                  opacity={0}
-                />
-              </mesh>
-              <mesh geometry={photoGeometry} position={[0, 0, 0.02]}>
-                <meshBasicMaterial ref={photoImageMaterialRef} map={photoTexture} transparent />
-              </mesh>
-            </group>
-          )}
 
           {satellites.map((satellite, i) => (
             <mesh

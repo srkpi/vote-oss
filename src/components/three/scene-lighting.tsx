@@ -2,11 +2,8 @@
 
 import { Environment, Lightformer } from '@react-three/drei';
 
-import { CATGIRL_SCENE_COLORS } from '@/lib/three/catgirl-scene-theme';
-
 interface SceneLightingProps {
   quality: 'high' | 'low';
-  catgirl?: boolean;
 }
 
 const DEFAULT_LIGHTING_COLORS = {
@@ -28,11 +25,9 @@ const DEFAULT_LIGHTING_COLORS = {
  * widening that allowlist for a decorative asset isn't a good trade — this
  * way the mark's reflections need zero extra network requests and zero CSP
  * changes, and keep working if a deployment is fully offline/air-gapped.
- * Catgirl mode keeps that property: it only swaps which hardcoded hex
- * strings are used below, no new asset or request.
  */
-export function SceneLighting({ quality, catgirl = false }: SceneLightingProps) {
-  const c = catgirl ? CATGIRL_SCENE_COLORS.lighting : DEFAULT_LIGHTING_COLORS;
+export function SceneLighting({ quality }: SceneLightingProps) {
+  const c = DEFAULT_LIGHTING_COLORS;
 
   return (
     <>

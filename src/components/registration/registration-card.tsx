@@ -1,7 +1,6 @@
 import { Calendar, ClipboardList, FileText, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 
-import { CatgirlGallery } from '@/components/catgirl/catgirl-gallery';
 import { MyRegistrationStatusBadge } from '@/components/registration/my-registration-status-badge';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -78,8 +77,6 @@ export function RegistrationCard({ form, status, index = 0 }: RegistrationCardPr
             {form.description}
           </p>
         )}
-
-        <CatgirlGallery size="sm" />
 
         <div className="mt-auto">
           <div className="space-y-2">

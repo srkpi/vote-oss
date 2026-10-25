@@ -1,7 +1,6 @@
 import { Calendar, Crown, FileText } from 'lucide-react';
 import Link from 'next/link';
 
-import { CatgirlGallery } from '@/components/catgirl/catgirl-gallery';
 import { Avatar } from '@/components/ui/avatar';
 import { LocalDate, LocalDateTime } from '@/components/ui/local-time';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -101,8 +100,6 @@ export function ElectionCard({ election, index = 0 }: ElectionCardProps) {
         >
           {election.title}
         </h3>
-
-        <CatgirlGallery size="sm" />
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

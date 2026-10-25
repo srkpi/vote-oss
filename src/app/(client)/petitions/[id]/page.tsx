@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
-import { CatgirlGallery } from '@/components/catgirl/catgirl-gallery';
 import { PageHeader } from '@/components/common/page-header';
 import { PetitionAdminActions } from '@/components/petitions/petition-admin-actions';
 import { PetitionOfficialAnswer } from '@/components/petitions/petition-official-answer';
@@ -151,7 +150,6 @@ export default async function PetitionPage({ params }: PetitionPageProps) {
             <div className="font-body max-w-[68ch] text-[15px] leading-relaxed wrap-break-word whitespace-pre-wrap">
               {linkifyText(petition.description ?? '')}
             </div>
-            <CatgirlGallery size="md" className="mt-4 max-w-[68ch]" />
           </div>
 
           <PetitionOfficialAnswer
