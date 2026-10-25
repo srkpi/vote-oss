@@ -1,8 +1,8 @@
 'use client';
 
 import { Suspense } from 'react';
+import { useIsClient } from 'usehooks-ts';
 
-import { useHydration } from '@/hooks/use-hydration';
 import { formatDate, formatDateTime } from '@/lib/utils/common';
 
 type Props = React.ComponentProps<'time'> & {
@@ -11,7 +11,7 @@ type Props = React.ComponentProps<'time'> & {
 
 export function LocalDate({ date, ...props }: Props) {
   const iso = new Date(date).toISOString();
-  const hydrated = useHydration();
+  const hydrated = useIsClient();
   return (
     <Suspense key={hydrated ? 'local' : 'utc'}>
       <time dateTime={iso} title={iso} {...props}>
@@ -28,7 +28,7 @@ export function LocalDateTime({
   separator?: string;
 }) {
   const iso = new Date(date).toISOString();
-  const hydrated = useHydration();
+  const hydrated = useIsClient();
   return (
     <Suspense key={hydrated ? 'local' : 'utc'}>
       <time dateTime={iso} title={iso} {...props}>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useHydration } from '@/hooks/use-hydration';
+import { useIsClient } from 'usehooks-ts';
+
 import { cn } from '@/lib/utils/common';
 
 const getGreeting = (): string => {
@@ -22,7 +23,7 @@ interface AdminGreetingProps {
 }
 
 export function AdminGreeting({ name }: AdminGreetingProps) {
-  const hydrated = useHydration();
+  const hydrated = useIsClient();
   const greeting = hydrated ? `${getGreeting()}, ${name}!` : <span className="invisible">M</span>;
 
   return (

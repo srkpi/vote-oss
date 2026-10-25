@@ -1,9 +1,9 @@
 'use client';
 
 import { Clock } from 'lucide-react';
+import { useIsClient } from 'usehooks-ts';
 
 import { useCountdown } from '@/hooks/use-countdown';
-import { useHydration } from '@/hooks/use-hydration';
 import { cn } from '@/lib/utils/common';
 
 interface CountdownTimerProps {
@@ -36,7 +36,7 @@ function BlankTimerSkeleton({ className }: { className?: string }) {
 }
 
 export function CountdownTimer({ targetDate, className }: CountdownTimerProps) {
-  const isHydrated = useHydration();
+  const isHydrated = useIsClient();
   const { days, hours, minutes, seconds, expired } = useCountdown(targetDate);
 
   if (!isHydrated) {
