@@ -2,9 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMediaQuery } from 'usehooks-ts';
 
 import { useLazyInView } from '@/hooks/use-lazy-in-view';
-import { usePrefersReducedMotion } from '@/hooks/use-reduced-motion';
 import { detectDeviceTier, detectWebglSupport } from '@/lib/three/use-webgl-support';
 import { cn } from '@/lib/utils/common';
 
@@ -33,7 +33,9 @@ export function VoteScene({
 }: VoteSceneProps) {
   const [containerRef, inView] = useLazyInView<HTMLDivElement>({ eager });
   const pointerRef = usePointerParallax(containerRef);
-  const reducedMotion = usePrefersReducedMotion();
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)', {
+    initializeWithValue: false,
+  });
 
   const [capability, setCapability] = useState<{
     webgl: boolean;
