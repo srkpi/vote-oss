@@ -1,6 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 
+import dynamicIconImports from 'lucide-react/dynamicIconImports.mjs';
+import { createElement } from 'react';
+
 import { APP_NAME } from '@/lib/config/client';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
 
@@ -48,73 +51,35 @@ export function buildOgFontConfig(onest: Buffer, bitter: Buffer) {
   ];
 }
 
-// ─── Lucide icon path data ────────────────────────────────────────────────────
-// Store path/circle descriptors here so we never scatter raw SVG strings across
-// opengraph files. Add new icons as needed.
-
-type SvgPath = { d: string };
-type SvgCircle = { cx: number; cy: number; r: number };
-type SvgPolyline = { points: string };
-
-export interface OgIconDescriptor {
-  paths?: SvgPath[];
-  circles?: SvgCircle[];
-  polylines?: SvgPolyline[];
-  strokeWidth?: number;
-}
-
-export const ICON_ELECTION: OgIconDescriptor = {
-  paths: [{ d: 'M21.801 10A10 10 0 1 1 17 3.335' }, { d: 'm9 11 3 3L22 4' }],
-  strokeWidth: 1.5,
-};
-
-export const ICON_PETITION: OgIconDescriptor = {
-  paths: [
-    { d: 'M12 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L20 7.5V12' },
-    { d: 'm18 14-6 6h-4v-4l6-6 4 4Z' },
-  ],
-  polylines: [{ points: '14 2 14 8 20 8' }],
-  strokeWidth: 1.6,
-};
-
-export const ICON_GROUPS: OgIconDescriptor = {
-  paths: [
-    { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' },
-    { d: 'M22 21v-2a4 4 0 0 0-3-3.87' },
-    { d: 'M16 3.13a4 4 0 0 1 0 7.75' },
-  ],
-  circles: [{ cx: 9, cy: 7, r: 4 }],
-  strokeWidth: 1.5,
-};
-
-function OgIcon({ icon }: { icon: OgIconDescriptor }) {
+// ImageResponse cannot run Lucide's context hooks. Use the library's SVG data.
+export async function ogIconElement(
+  name: 'circle-check-big' | 'file-pen-line' | 'users',
+  size: number,
+) {
+  const { __iconData } = await dynamicIconImports[name]();
   return (
     <svg
-      width="25"
-      height="25"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="white"
-      stroke-width={String(icon.strokeWidth ?? 1.5)}
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      {icon.paths?.map(({ d }, i) => (
-        <path key={`p${i}`} d={d} />
-      ))}
-      {icon.circles?.map(({ cx, cy, r }, i) => (
-        <circle key={`c${i}`} cx={cx} cy={cy} r={r} />
-      ))}
-      {icon.polylines?.map(({ points }, i) => (
-        <polyline key={`pl${i}`} points={points} />
-      ))}
+      {__iconData.node.map(([tag, attrs]) => createElement(tag, attrs))}
     </svg>
   );
 }
 
+export const ICON_ELECTION = 'circle-check-big';
+export const ICON_PETITION = 'file-pen-line';
+export const ICON_GROUPS = 'users';
+
 export interface OgImageOptions {
   title: string;
-  icon: OgIconDescriptor;
+  icon: Parameters<typeof ogIconElement>[0];
   iconBg: string;
   iconBorder: string;
   accentColor: string;
@@ -122,7 +87,7 @@ export interface OgImageOptions {
   labelColor?: string;
 }
 
-export function buildOgImageElement({
+export async function buildOgImageElement({
   title,
   icon,
   iconBg,
@@ -265,7 +230,7 @@ export function buildOgImageElement({
               border: iconBorder,
             }}
           >
-            <OgIcon icon={icon} />
+            {await ogIconElement(icon, 25)}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

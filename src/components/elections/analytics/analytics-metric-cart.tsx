@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowUpRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils/common';
@@ -218,19 +219,7 @@ export function AnalyticsMetricCard({
         <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg', styles.iconBg)}>
           <span className={styles.iconText}>{metric.icon}</span>
         </div>
-        <svg
-          className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
-          viewBox="0 0 16 16"
-          fill="none"
-        >
-          <path
-            d="M3 13L13 3M13 3H7M13 3V9"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
       </div>
 
       <div

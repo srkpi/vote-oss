@@ -35,7 +35,7 @@ export default async function PetitionOgImage({ params }: Props) {
   }
 
   return new ImageResponse(
-    buildOgImageElement({
+    await buildOgImageElement({
       title: clampTitle(metaTitle),
       icon: ICON_PETITION,
       iconBg: 'rgba(240,125,0,0.18)',

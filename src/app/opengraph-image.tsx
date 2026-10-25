@@ -5,6 +5,7 @@ import { ImageResponse } from 'next/og';
 
 import { APP_NAME } from '@/lib/config/client';
 import { OPENGRAPH_IMAGE_DATA } from '@/lib/utils/metadata';
+import { ogIconElement } from '@/lib/utils/og-image';
 
 export const runtime = 'nodejs';
 export const alt = OPENGRAPH_IMAGE_DATA.alt;
@@ -22,7 +23,7 @@ const BLUE_CY = 150;
 const ORANGE_CX = 150;
 const ORANGE_CY = 520;
 
-export default function OgImage() {
+export default async function OgImage() {
   const [onest, bitter] = [
     fs.readFileSync(path.join(process.cwd(), 'public/fonts/Onest/Onest-Bold.ttf')),
     fs.readFileSync(path.join(process.cwd(), 'public/fonts/Bitter/Bitter-Bold.ttf')),
@@ -159,19 +160,7 @@ export default function OgImage() {
             justifyContent: 'center',
           }}
         >
-          <svg
-            width="100"
-            height="100"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21.801 10A10 10 0 1 1 17 3.335" />
-            <path d="m9 11 3 3L22 4" />
-          </svg>
+          {await ogIconElement('circle-check-big', 100)}
         </div>
         <span
           style={{

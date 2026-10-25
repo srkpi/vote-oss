@@ -33,7 +33,7 @@ export default async function GroupOgImage({ params }: Props) {
   }
 
   return new ImageResponse(
-    buildOgImageElement({
+    await buildOgImageElement({
       title: clampTitle(metaTitle),
       icon: ICON_GROUPS,
       iconBg: 'rgba(0,138,207,0.18)',
