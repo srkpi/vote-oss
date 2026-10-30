@@ -25,7 +25,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   return (
     <div className="flex min-h-dvh">
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 lg:flex">
@@ -115,6 +120,12 @@ export default function LoginPage() {
           </h1>
 
           <div className="space-y-6">
+            {error === 'kpi-id' && (
+              <p role="alert" className="text-error text-center text-sm">
+                Не вдалося увійти через KPI ID. Скористайтеся Дією або BankID і спробуйте ще раз.
+                Платформа доступна лише активним студентам.
+              </p>
+            )}
             <KpiIdButton fullWidth />
 
             <p className="font-body text-muted-foreground text-center text-xs">
