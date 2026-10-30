@@ -1,21 +1,17 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
-import { KPI_APP_ID, KPI_AUTH_URL } from '@/lib/config/client';
 import { cn } from '@/lib/utils/common';
 
 type Size = 'sm' | 'md' | 'lg';
 type LogoAlignment = 'left' | 'right';
 
 interface KpiIdButtonProps {
-  appId?: string;
   size?: Size;
   logoAlignment?: LogoAlignment;
   caption?: string;
   fullWidth?: boolean;
   className?: string;
-  authUrl?: string;
 }
 
 const SIZE_PADDING: Record<Size, string> = {
@@ -31,16 +27,13 @@ const LOGO_SIZES: Record<Size, number> = {
 };
 
 export function KpiIdButton({
-  appId = KPI_APP_ID,
   size = 'lg',
   logoAlignment = 'left',
   caption = 'Увійти з KPI ID',
   fullWidth = false,
   className = '',
-  authUrl = KPI_AUTH_URL,
 }: KpiIdButtonProps) {
   const logoSize = LOGO_SIZES[size];
-  const href = `${authUrl}/uk/?appId=${appId}`;
 
   return (
     <Button
@@ -53,10 +46,12 @@ export function KpiIdButton({
         className,
       )}
     >
-      <Link href={href}>
+      {/* Full navigation is required for the OIDC redirect and transaction cookie. */}
+      {/* eslint-disable-next-line next/no-html-link-for-pages */}
+      <a href="/api/auth/kpi-id/login">
         <Image src="/kpi-logo.svg" alt="KPI Logo" width={logoSize} height={logoSize} preload />
         <span>{caption}</span>
-      </Link>
+      </a>
     </Button>
   );
 }

@@ -326,6 +326,7 @@ export async function resolveUserData(
 
 export async function getCampusUserData(
   kpiIdInfo: KpiIdUserInfo,
+  userId = kpiIdInfo.STUDENT_ID,
 ): Promise<NextResponse<ApiError> | UserInfo> {
   const { data: userInfo, errors } = await resolveUserData(kpiIdInfo);
 
@@ -341,7 +342,7 @@ export async function getCampusUserData(
       return Errors.unauthorized(err.message);
     }
 
-    const bypassInfo = await getUserBypassInfo(kpiIdInfo.STUDENT_ID);
+    const bypassInfo = await getUserBypassInfo(userId);
 
     const notStudyingError = errors.find((err) => err instanceof NotStudyingError);
     if (notStudyingError && !bypassInfo.global?.bypassNotStudying) {
@@ -354,7 +355,7 @@ export async function getCampusUserData(
     }
 
     if (userInfo) {
-      return userInfo;
+      return { ...userInfo, userId };
     }
 
     console.error('[auth/shared] resolveTicket errors:', errors);
@@ -365,5 +366,5 @@ export async function getCampusUserData(
     return Errors.internal('Failed to resolve user info');
   }
 
-  return userInfo;
+  return { ...userInfo, userId };
 }

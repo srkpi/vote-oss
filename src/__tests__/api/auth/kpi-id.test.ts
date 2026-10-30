@@ -38,6 +38,7 @@ vi.mock('@/lib/bypass', () => ({
 import { POST } from '@/app/api/auth/kpi-id/route';
 import { requireAuth } from '@/lib/auth';
 import { applyBypassToken } from '@/lib/bypass';
+import { completeLogin } from '@/lib/login-session';
 
 beforeEach(() => {
   vi.setSystemTime(TEST_NOW);
@@ -281,5 +282,31 @@ describe('Signing in through KPI-ID (POST /api/auth/kpi-id)', () => {
       // kpiIdMock.getCampusUserData returns MOCK_USER_INFO by default → 200
       expect(res.status).toBe(200);
     });
+  });
+  it.each(['//evil.test', '/\\evil.test'])(
+    'rejects an external return_to (%s)',
+    async (returnTo) => {
+      const response = await POST(
+        makeRequest({
+          method: 'POST',
+          body: { ticketId: 'ticket-user-1' },
+          cookies: { [COOKIE_RETURN_TO]: returnTo },
+        }),
+      );
+      expect((await response.json()).redirectTo).toBe('/elections');
+    },
+  );
+  it('can issue session cookies directly on the OIDC redirect response', async () => {
+    const student = await kpiIdMock.resolveTicket('ticket-user-1');
+    const request = makeRequest({ cookies: { [COOKIE_RETURN_TO]: '/elections/fallback' } });
+    const response = await completeLogin(request, student, {
+      userId: 'stable-user-id',
+      redirect: true,
+    });
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('https://example.com/elections/fallback');
+    expect(response.cookies.get(COOKIE_ACCESS)?.value).toBeTruthy();
+    expect(response.cookies.get(COOKIE_RETURN_TO)?.maxAge).toBe(0);
+    expect(kpiIdMock.getCampusUserData).toHaveBeenCalledWith(student, 'stable-user-id');
   });
 });
