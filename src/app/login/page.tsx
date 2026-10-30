@@ -121,7 +121,7 @@ export default async function LoginPage({
 
           <div className="space-y-6">
             {error === 'kpi-id' && (
-              <p role="alert" className="text-error text-center text-sm">
+              <p role="alert" className="text-center text-sm text-error">
                 Не вдалося увійти через KPI ID. Скористайтеся Дією або BankID і спробуйте ще раз.
                 Платформа доступна лише активним студентам.
               </p>
