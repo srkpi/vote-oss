@@ -1,0 +1,1 @@
+{"id":"70b8abe42f5c9212e953187f4fbd4d27.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/oidc-login.test.ts#OIDC initiation does not redirect to KPI ID if the transaction cannot be sealed","name":"does not redirect to KPI ID if the transaction cannot be sealed","status":"passed","testResultsByEnv":{"default":"dfbf709a7b7a971ba48963d3bf3c4c39"}}

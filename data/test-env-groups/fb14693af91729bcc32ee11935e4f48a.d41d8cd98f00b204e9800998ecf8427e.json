@@ -1,0 +1,1 @@
+{"id":"fb14693af91729bcc32ee11935e4f48a.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/kpi-id.test.ts#POST /api/auth/kpi-id can issue session cookies directly on the OIDC redirect response","name":"can issue session cookies directly on the OIDC redirect response","status":"passed","testResultsByEnv":{"default":"226c392f64439bfdfb972ecd5a88c6a2"}}

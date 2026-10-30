@@ -1,0 +1,1 @@
+{"id":"160572658518c06e3a49c8bf9643b865.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/kpi-oidc.test.ts#KPI OIDC claims rejects accounts without student records (undefined)","name":"rejects accounts without student records (undefined)","status":"passed","testResultsByEnv":{"default":"f230d3ec8d8c00d78b911ad7834fbb59"}}

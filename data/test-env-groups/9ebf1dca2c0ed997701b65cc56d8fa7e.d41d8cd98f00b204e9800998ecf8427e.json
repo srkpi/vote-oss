@@ -1,0 +1,1 @@
+{"id":"9ebf1dca2c0ed997701b65cc56d8fa7e.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/oidc-login.test.ts#OIDC initiation stores a short-lived browser-bound transaction and requests PKCE","name":"stores a short-lived browser-bound transaction and requests PKCE","status":"passed","testResultsByEnv":{"default":"0a7b07c1ccc0a56a480e9c37d0be5288"}}

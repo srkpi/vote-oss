@@ -1,0 +1,1 @@
+{"id":"c8ab65c70b0d00441b40c919930aef8b.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/oidc.test.ts#OIDC callback rejects untrusted claims before binding an account","name":"rejects untrusted claims before binding an account","status":"passed","testResultsByEnv":{"default":"cacf39d00a3a2f6069e3290a5dbf7a20"}}

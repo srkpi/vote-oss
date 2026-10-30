@@ -1,0 +1,1 @@
+{"id":"4c89c2e8e76cd7783ba7e2d89056b09f.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/kpi-oidc.test.ts#KPI OIDC claims rejects Google even when trusted is true","name":"rejects Google even when trusted is true","status":"passed","testResultsByEnv":{"default":"b3b41bfb130b97f81718270232a9506d"}}

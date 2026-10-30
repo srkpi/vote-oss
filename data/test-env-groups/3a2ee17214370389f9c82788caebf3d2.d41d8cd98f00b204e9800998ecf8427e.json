@@ -1,0 +1,1 @@
+{"id":"3a2ee17214370389f9c82788caebf3d2.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/oidc.test.ts#OIDC callback handles provider errors without issuing a session","name":"handles provider errors without issuing a session","status":"passed","testResultsByEnv":{"default":"30d39e54c5a73ea7c6afa3a3bac4751e"}}

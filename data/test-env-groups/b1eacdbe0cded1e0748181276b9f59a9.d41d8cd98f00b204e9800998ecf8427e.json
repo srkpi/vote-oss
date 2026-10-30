@@ -1,0 +1,1 @@
+{"id":"b1eacdbe0cded1e0748181276b9f59a9.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/lib/kpi-oidc.test.ts#encrypted KPI OIDC transaction rejects a missing or malformed cookie ()","name":"rejects a missing or malformed cookie ()","status":"passed","testResultsByEnv":{"default":"3f19fdbd79295eefbb2c0d05181ff843"}}

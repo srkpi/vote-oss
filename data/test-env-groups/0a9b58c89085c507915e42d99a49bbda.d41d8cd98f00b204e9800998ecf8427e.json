@@ -1,0 +1,1 @@
+{"id":"0a9b58c89085c507915e42d99a49bbda.d41d8cd98f00b204e9800998ecf8427e","fullName":"vote-oss:src/__tests__/api/auth/oidc.test.ts#OIDC callback refuses an identity conflict instead of issuing another account","name":"refuses an identity conflict instead of issuing another account","status":"passed","testResultsByEnv":{"default":"05c49c8f718e62b53e596bcff51ceca2"}}
