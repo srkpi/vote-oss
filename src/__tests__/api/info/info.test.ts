@@ -1,10 +1,12 @@
+import { describe, it, expect } from 'vitest';
+
 import { GET } from '@/app/api/info/route';
 import { getBuildInfo } from '@/lib/build-info';
 import { APP_NAME, APP_URL } from '@/lib/config/client';
 import { NODE_ENV } from '@/lib/config/server';
 
-describe('GET /api/info', () => {
-  it('returns app info', async () => {
+describe('Requesting application information (GET /api/info)', () => {
+  it('should return application identity and build information when requested', async () => {
     const response = await GET();
     const data = await response.json();
     const build = getBuildInfo();
@@ -29,7 +31,7 @@ describe('GET /api/info', () => {
     });
   });
 
-  it('is null for a local build with no CI provenance metadata', async () => {
+  it('should omit build provenance when the application was built without CI metadata', async () => {
     const response = await GET();
     const data = await response.json();
 

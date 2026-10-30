@@ -1,17 +1,18 @@
 import { NextRequest } from 'next/server';
 import * as oidc from 'openid-client';
-jest.mock('openid-client', () => ({
-  randomPKCECodeVerifier: jest.fn(),
-  randomState: jest.fn(),
-  randomNonce: jest.fn(),
-  calculatePKCECodeChallenge: jest.fn(),
-  buildAuthorizationUrl: jest.fn(),
+import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
+vi.mock('openid-client', () => ({
+  randomPKCECodeVerifier: vi.fn(),
+  randomState: vi.fn(),
+  randomNonce: vi.fn(),
+  calculatePKCECodeChallenge: vi.fn(),
+  buildAuthorizationUrl: vi.fn(),
 }));
-jest.mock('@/lib/kpi-oidc', () => ({
-  getOidcConfig: jest.fn(),
+vi.mock('@/lib/kpi-oidc', () => ({
+  getOidcConfig: vi.fn(),
   OIDC_CALLBACK: 'https://example.com/api/auth/kpi-id/callback',
   OIDC_COOKIE: 'kpi_oidc',
-  sealOidcTransaction: jest.fn(),
+  sealOidcTransaction: vi.fn(),
   oidcCookieOptions: {
     httpOnly: true,
     secure: true,
@@ -20,22 +21,20 @@ jest.mock('@/lib/kpi-oidc', () => ({
     maxAge: 900,
   },
 }));
-jest.mock('@/lib/rate-limit', () => ({ getClientIp: jest.fn(), rateLimitLogin: jest.fn() }));
+vi.mock('@/lib/rate-limit', () => ({ getClientIp: vi.fn(), rateLimitLogin: vi.fn() }));
 import { GET } from '@/app/api/auth/kpi-id/login/route';
 import { getOidcConfig, sealOidcTransaction } from '@/lib/kpi-oidc';
 import { rateLimitLogin } from '@/lib/rate-limit';
 describe('OIDC initiation', () => {
   beforeEach(() => {
-    (getOidcConfig as jest.Mock).mockResolvedValue({});
-    (rateLimitLogin as jest.Mock).mockResolvedValue({ limited: false });
-    (oidc.randomPKCECodeVerifier as jest.Mock).mockReturnValue('verifier');
-    (oidc.randomState as jest.Mock).mockReturnValue('state');
-    (oidc.randomNonce as jest.Mock).mockReturnValue('nonce');
-    (oidc.calculatePKCECodeChallenge as jest.Mock).mockResolvedValue('challenge');
-    (oidc.buildAuthorizationUrl as jest.Mock).mockReturnValue(
-      new URL('https://auth.kpi.ua/authorize'),
-    );
-    (sealOidcTransaction as jest.Mock).mockResolvedValue('encrypted-transaction');
+    (getOidcConfig as Mock).mockResolvedValue({});
+    (rateLimitLogin as Mock).mockResolvedValue({ limited: false });
+    (oidc.randomPKCECodeVerifier as Mock).mockReturnValue('verifier');
+    (oidc.randomState as Mock).mockReturnValue('state');
+    (oidc.randomNonce as Mock).mockReturnValue('nonce');
+    (oidc.calculatePKCECodeChallenge as Mock).mockResolvedValue('challenge');
+    (oidc.buildAuthorizationUrl as Mock).mockReturnValue(new URL('https://auth.kpi.ua/authorize'));
+    (sealOidcTransaction as Mock).mockResolvedValue('encrypted-transaction');
   });
   it('stores a short-lived browser-bound transaction and requests PKCE', async () => {
     const response = await GET(
@@ -68,13 +67,13 @@ describe('OIDC initiation', () => {
     expect(response.headers.get('location')).toBe('https://auth.kpi.ua/authorize');
   });
   it('does not redirect to KPI ID if the transaction cannot be sealed', async () => {
-    (sealOidcTransaction as jest.Mock).mockRejectedValue(new Error('encryption failed'));
+    (sealOidcTransaction as Mock).mockRejectedValue(new Error('encryption failed'));
     const response = await GET(new NextRequest('https://example.com/api/auth/kpi-id/login'));
     expect(response.headers.get('location')).toBe('https://example.com/login?error=kpi-id');
     expect(response.cookies.get('kpi_oidc')).toBeUndefined();
   });
   it('rate limits initiation before contacting the provider', async () => {
-    (rateLimitLogin as jest.Mock).mockResolvedValue({ limited: true, resetInMs: 2000 });
+    (rateLimitLogin as Mock).mockResolvedValue({ limited: true, resetInMs: 2000 });
     const response = await GET(new NextRequest('https://example.com/api/auth/kpi-id/login'));
     expect(response.status).toBe(429);
     expect(response.headers.get('retry-after')).toBe('2');

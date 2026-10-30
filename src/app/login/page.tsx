@@ -62,7 +62,7 @@ export default async function LoginPage({
         </Link>
 
         <div className="relative z-10">
-          <h2 className="font-display mb-4 text-4xl leading-tight font-bold text-white xl:text-5xl">
+          <h2 className="mb-4 font-display text-4xl leading-tight font-bold text-white xl:text-5xl">
             Ваш голос — ваша{' '}
             <span
               className="bg-clip-text text-transparent"
@@ -85,7 +85,7 @@ export default async function LoginPage({
               style={{ animationDelay: `${400 + i * 80}ms`, willChange: 'transform, opacity' }}
             >
               <svg
-                className="text-kpi-blue-light h-3.5 w-3.5"
+                className="h-3.5 w-3.5 text-kpi-blue-light"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -104,35 +104,35 @@ export default async function LoginPage({
       <div className="relative flex flex-1 items-center justify-center p-8">
         <div className="absolute inset-0 overflow-hidden lg:hidden">
           <VoteScene variant="ambient" eager />
-          <div className="bg-background/85 absolute inset-0" />
+          <div className="absolute inset-0 bg-background/85" />
         </div>
 
         <div className="relative z-10 w-full max-w-sm">
           <div className="flex items-center justify-center">
             <Link className="mb-8 flex items-center gap-3 lg:hidden" href="/">
               <Image src="/logo.svg" alt="Logo" height={36} width={36} preload />
-              <span className="font-display text-kpi-navy text-2xl font-bold">{APP_NAME}</span>
+              <span className="font-display text-2xl font-bold text-kpi-navy">{APP_NAME}</span>
             </Link>
           </div>
 
-          <h1 className="font-display text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
+          <h1 className="mb-8 text-center font-display text-3xl font-bold text-foreground sm:text-4xl">
             Ласкаво просимо
           </h1>
 
           <div className="space-y-6">
             {error === 'kpi-id' && (
-              <p role="alert" className="text-error text-center text-sm">
+              <p role="alert" className="text-center text-sm text-error">
                 Не вдалося увійти через KPI ID. Скористайтеся Дією або BankID і спробуйте ще раз.
                 Платформа доступна лише активним студентам.
               </p>
             )}
             <KpiIdButton fullWidth />
 
-            <p className="font-body text-muted-foreground text-center text-xs">
+            <p className="font-body text-center text-xs text-muted-foreground">
               Натисканням на кнопку ви погоджуєтесь з{' '}
               <Link
                 href="/privacy"
-                className="hover:text-kpi-navy underline underline-offset-2 transition-colors"
+                className="underline underline-offset-2 transition-colors hover:text-kpi-navy"
               >
                 Політикою конфіденційності
               </Link>

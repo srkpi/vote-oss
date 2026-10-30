@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import {
   ADMIN_PAYLOAD,
@@ -8,26 +9,41 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRefreshRequest, makeRequest } from '@/__tests__/helpers/request';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
 
 import { requireAdmin, requireAuth, requireRefreshAuth } from '@/lib/auth';
 
-describe('auth', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Session access', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
     allure.feature('Auth Middleware');
   });
 
   // ── requireAuth ───────────────────────────────────────────────────────────
 
-  describe('requireAuth', () => {
+  describe('Authenticating an access token', () => {
     beforeEach(() => allure.story('requireAuth'));
 
-    it('returns ok=false (401) when access token cookie is absent', async () => {
+    it('should deny access with 401 when the access-token cookie is absent', async () => {
       const req = makeRequest();
       const result = await requireAuth(req);
       expect(result.ok).toBe(false);
@@ -35,14 +51,14 @@ describe('auth', () => {
       expect((result as any).status).toBe(401);
     });
 
-    it('returns ok=false (401) for a malformed token string', async () => {
+    it('should deny access with 401 when the access token is malformed', async () => {
       const req = makeAuthRequest('not.a.valid.jwt');
       const result = await requireAuth(req);
       expect(result.ok).toBe(false);
       expect((result as any).error).toMatch(/Invalid/i);
     });
 
-    it('returns ok=false (401) when isAccessTokenValid returns false (revoked)', async () => {
+    it('should deny access with 401 when the access token has been revoked', async () => {
       const { access } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(false);
 
@@ -52,7 +68,7 @@ describe('auth', () => {
       expect((result as any).error).toMatch(/revoked/i);
     });
 
-    it('returns ok=true with user payload when token is valid', async () => {
+    it('should authenticate the token owner when the access token is valid', async () => {
       const { access } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
 
@@ -67,7 +83,7 @@ describe('auth', () => {
       }
     });
 
-    it('exposes iat in the verified payload', async () => {
+    it('should expose iat in the verified payload when authenticating an access token', async () => {
       const { access } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
 
@@ -80,7 +96,7 @@ describe('auth', () => {
       }
     });
 
-    it('calls isAccessTokenValid with the jti and iat from the token', async () => {
+    it('should check revocation for the verified token ID and issue time when authenticating an access token', async () => {
       const { access } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
 
@@ -93,7 +109,7 @@ describe('auth', () => {
       );
     });
 
-    it('does not call prisma.jwtToken.findFirst directly (hot path uses token-store)', async () => {
+    it('should use the revocation lookup without an extra session query when authenticating an access token', async () => {
       const { access } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
 
@@ -105,17 +121,17 @@ describe('auth', () => {
 
   // ── requireRefreshAuth ────────────────────────────────────────────────────
 
-  describe('requireRefreshAuth', () => {
+  describe('Authenticating a refresh token', () => {
     beforeEach(() => allure.story('requireRefreshAuth'));
 
-    it('returns ok=false when refresh token cookie is absent', async () => {
+    it('should deny session renewal when the refresh-token cookie is absent', async () => {
       const req = makeRequest();
       const result = await requireRefreshAuth(req);
       expect(result.ok).toBe(false);
       expect((result as any).error).toMatch(/Missing/i);
     });
 
-    it('returns ok=false when isRefreshTokenValid returns false', async () => {
+    it('should deny session renewal when the refresh token has been revoked', async () => {
       const { refresh } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(false);
 
@@ -124,7 +140,7 @@ describe('auth', () => {
       expect(result.ok).toBe(false);
     });
 
-    it('returns ok=true with correct user for a valid refresh token', async () => {
+    it('should authenticate the token owner when their refresh token is valid', async () => {
       const { refresh } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
 
@@ -137,14 +153,14 @@ describe('auth', () => {
       }
     });
 
-    it('rejects an access token placed in the refresh cookie slot', async () => {
+    it('should reject an access token placed in the refresh cookie slot when authenticating a refresh token', async () => {
       const { access } = await makeTokenPair(USER_PAYLOAD);
       const req = makeRefreshRequest(access.token);
       const result = await requireRefreshAuth(req);
       expect(result.ok).toBe(false);
     });
 
-    it('calls isRefreshTokenValid with the correct jti and iat', async () => {
+    it('should check revocation for the verified token ID and issue time when authenticating a refresh token', async () => {
       const { refresh } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isRefreshTokenValid.mockResolvedValueOnce(true);
 
@@ -160,16 +176,16 @@ describe('auth', () => {
 
   // ── requireAdmin ──────────────────────────────────────────────────────────
 
-  describe('requireAdmin', () => {
+  describe('Checking admin access', () => {
     beforeEach(() => allure.story('requireAdmin'));
 
-    it('returns ok=false when auth fails (no cookie)', async () => {
+    it('should deny admin access when the access-token cookie is absent', async () => {
       const req = makeRequest();
       const result = await requireAdmin(req);
       expect(result.ok).toBe(false);
     });
 
-    it('returns ok=false (403) when is_admin flag is false', async () => {
+    it('should deny admin access with 403 when the session has no admin claim', async () => {
       const { access } = await makeTokenPair(USER_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
 
@@ -180,7 +196,7 @@ describe('auth', () => {
       expect((result as any).status).toBe(403);
     });
 
-    it('returns ok=false (403) when is_admin=true but DB record is missing', async () => {
+    it('should deny admin access with 403 when the session claims admin access without an active admin record', async () => {
       const { access } = await makeTokenPair(ADMIN_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
       prismaMock.admin.findUnique.mockResolvedValueOnce(null);
@@ -191,7 +207,7 @@ describe('auth', () => {
       expect((result as any).error).toMatch(/Admin record not found/i);
     });
 
-    it('returns ok=true with admin record when all checks pass', async () => {
+    it('should grant admin access and return the admin profile when authentication and admin checks pass', async () => {
       const { access } = await makeTokenPair(ADMIN_PAYLOAD);
       tokenStoreMock.isAccessTokenValid.mockResolvedValueOnce(true);
       prismaMock.admin.findUnique.mockResolvedValueOnce(ADMIN_RECORD);

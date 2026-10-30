@@ -27,7 +27,7 @@ export function AdminRow({
   return (
     <tr
       className={cn(
-        'hover:bg-surface transition-colors duration-150',
+        'transition-colors duration-150 hover:bg-surface',
         isCurrentUser && 'bg-kpi-blue-light/10',
       )}
     >
@@ -41,24 +41,24 @@ export function AdminRow({
             canDelete={canManageAdmins}
           />
           <div>
-            <p className="font-body text-foreground text-sm font-medium">{admin.fullName}</p>
-            <p className="font-body text-muted-foreground text-xs">{admin.userId}</p>
+            <p className="font-body text-sm font-medium text-foreground">{admin.fullName}</p>
+            <p className="font-body text-xs text-muted-foreground">{admin.userId}</p>
           </div>
         </div>
       </td>
       <td className="px-4 py-3.5">
-        <span className="font-body text-foreground text-sm">{admin.faculty}</span>
+        <span className="font-body text-sm text-foreground">{admin.faculty}</span>
       </td>
       <td className="px-4 py-3.5">
-        <span className="font-body text-foreground text-sm">{admin.group}</span>
+        <span className="font-body text-sm text-foreground">{admin.group}</span>
       </td>
       <td className="px-4 py-3.5">
         <div>
-          <p className="font-body text-foreground text-sm">
+          <p className="font-body text-sm text-foreground">
             <LocalDate date={admin.promotedAt} />
           </p>
           {admin.promoter && (
-            <p className="font-body text-muted-foreground text-xs">{admin.promoter.fullName}</p>
+            <p className="font-body text-xs text-muted-foreground">{admin.promoter.fullName}</p>
           )}
         </div>
       </td>
@@ -108,7 +108,7 @@ export function AdminRow({
                 variant="ghost"
                 size="md"
                 onClick={onEdit}
-                className="text-muted-foreground hover:text-kpi-navy hover:bg-surface"
+                className="text-muted-foreground hover:bg-surface hover:text-kpi-navy"
                 title="Редагувати права"
               >
                 <Pencil className="h-4 w-4" />

@@ -26,39 +26,6 @@ function computeDeletableIds(
   return deletable;
 }
 
-/**
- * @swagger
- * /api/admins:
- *   get:
- *     summary: List all active admins
- *     description: >
- *       Returns every non-deleted admin record, augmented with a `deletable`
- *       flag indicating whether the caller may remove that admin. Results are
- *       served from cache when available. Requires admin authentication.
- *     tags:
- *       - Admins
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: Array of admin records
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 allOf:
- *                   - $ref: '#/components/schemas/Admin'
- *                   - type: object
- *                     properties:
- *                       deletable:
- *                         type: boolean
- *                         description: Whether the calling admin may delete this record
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – caller is not an admin
- */
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -116,7 +83,9 @@ export async function GET(req: NextRequest) {
   const avatarIds = new Set<string>();
   for (const a of admins) {
     avatarIds.add(a.userId);
-    if (a.promoter) avatarIds.add(a.promoter.userId);
+    if (a.promoter) {
+      avatarIds.add(a.promoter.userId);
+    }
   }
   const avatarMap = await getAvatarUrlMap([...avatarIds]);
 

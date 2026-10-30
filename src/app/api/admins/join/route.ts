@@ -1,50 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAuth } from '@/lib/auth';
 import { invalidateAdmins, invalidateInviteTokens } from '@/lib/cache';
 import { hashToken } from '@/lib/crypto';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { tokenBodySchema } from '@/lib/schemas/group';
 
-/**
- * @swagger
- * /api/admins/join:
- *   post:
- *     summary: Become an admin via invite token
- *     description: >
- *       Redeems a valid invite token for the currently authenticated user,
- *       creating or reactivating their admin record. If the token reaches its
- *       maximum usage after this redemption it is automatically deleted.
- *       Any logged-in user (non-admin included) may call this endpoint.
- *     tags:
- *       - Admins
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - token
- *             properties:
- *               token:
- *                 type: string
- *                 description: Raw (unhashed) invite token received from an existing admin
- *     responses:
- *       201:
- *         description: Admin record created or reactivated
- *       400:
- *         description: Missing token, expired token, or token usage limit reached
- *       401:
- *         description: Unauthorized – user is not logged in
- *       404:
- *         description: Invalid invite token
- *       409:
- *         description: User is already an active admin
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (!auth.ok) {
@@ -53,12 +17,11 @@ export async function POST(req: NextRequest) {
 
   const { user } = auth;
 
-  let body: { token?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, tokenBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { token } = body;
   if (!token || typeof token !== 'string') {
@@ -73,8 +36,12 @@ export async function POST(req: NextRequest) {
     include: { creator: true },
   });
 
-  if (!inviteToken) return Errors.notFound('Invalid invite token');
-  if (inviteToken.valid_due < now) return Errors.badRequest('Invite token has expired');
+  if (!inviteToken) {
+    return Errors.notFound('Invalid invite token');
+  }
+  if (inviteToken.valid_due < now) {
+    return Errors.badRequest('Invite token has expired');
+  }
   if (inviteToken.current_usage >= inviteToken.max_usage) {
     return Errors.badRequest('Invite token has reached its maximum usage');
   }

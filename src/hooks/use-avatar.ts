@@ -24,14 +24,18 @@ export function useAvatar(
   const key = userId ?? '';
   const getSnapshot = useCallback(() => getCachedAvatar(key), [key]);
   const value = useSyncExternalStore(subscribeAvatars, getSnapshot, getSnapshot);
-  if (!userId) return null;
+  if (!userId) {
+    return null;
+  }
   return value !== undefined ? value : fallback;
 }
 
 /** Hydrates + refreshes the signed-in user's own avatar (header, join page, ...). */
 export function useSelfAvatarSync(userId: string | null | undefined): void {
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
     primeSelfAvatarFromStorage(userId);
     void ensureAvatars([userId]);
   }, [userId]);

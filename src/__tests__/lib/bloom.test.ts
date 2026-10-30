@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, afterEach, it } from 'vitest';
 
 import {
   bloomHitResults,
@@ -7,21 +8,25 @@ import {
   redisMock,
   resetRedisMock,
 } from '@/__tests__/helpers/redis-mock';
+import { TEST_NOW } from '@/__tests__/helpers/time';
 
 // ---------------------------------------------------------------------------
 // Module mock – must precede the import of bloom
 // ---------------------------------------------------------------------------
-jest.mock('@/lib/redis', () => ({
-  redis: redisMock,
-  isRedisReady: jest.fn(() => redisMock.status === 'ready'),
-  safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
-    try {
-      return await fn();
-    } catch {
-      return null;
-    }
-  },
-}));
+vi.mock('@/lib/redis', async () => {
+  const { redisMock } = await import('@/__tests__/helpers/redis-mock');
+  return {
+    redis: redisMock,
+    isRedisReady: vi.fn(() => redisMock.status === 'ready'),
+    safeRedis: async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      try {
+        return await fn();
+      } catch {
+        return null;
+      }
+    },
+  };
+});
 
 import {
   bloomAdd,
@@ -36,52 +41,60 @@ const SAMPLE_JTI = 'aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb';
 const NOW_MS = 1_700_000_000_000;
 const RESET_INTERVAL = 7 * 24 * 60 * 60 * 1_000;
 
-describe('bloom filter', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetRedisMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Token revocation filter', () => {
   beforeEach(() => {
-    resetRedisMock();
     invalidateResetAtCache();
     allure.feature('Bloom Filter');
-    jest.spyOn(Date, 'now').mockReturnValue(NOW_MS);
+    vi.spyOn(Date, 'now').mockReturnValue(NOW_MS);
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   // ── revokedKey ────────────────────────────────────────────────────────────
 
-  describe('revokedKey', () => {
-    it('produces key with revoked: prefix', () => {
+  describe('Identifying a revoked token', () => {
+    it('should produce key with revoked: prefix when identifying a revoked token', () => {
       expect(revokedKey(SAMPLE_JTI)).toBe(`revoked:${SAMPLE_JTI}`);
     });
   });
 
   // ── bloomAdd ─────────────────────────────────────────────────────────────
 
-  describe('bloomAdd', () => {
+  describe('Revoking a token', () => {
     beforeEach(() => allure.story('bloomAdd'));
 
-    it('calls pipeline exactly once', async () => {
+    it('should batch revocation commands together when revoking a token', async () => {
       await bloomAdd(SAMPLE_JTI, 900);
       expect(redisMock.pipeline).toHaveBeenCalledTimes(1);
     });
 
-    it('sets exactly 7 bits via setbit', async () => {
+    it('should set exactly 7 bits via setbit when revoking a token', async () => {
       await bloomAdd(SAMPLE_JTI, 900);
       expect(pipelineMock.setbit).toHaveBeenCalledTimes(7);
     });
 
-    it('writes the confirmed-revocation key with the given TTL', async () => {
+    it('should write the confirmed-revocation key with the given TTL when revoking a token', async () => {
       await bloomAdd(SAMPLE_JTI, 900);
       expect(pipelineMock.set).toHaveBeenCalledWith(revokedKey(SAMPLE_JTI), '1', 'EX', 900);
     });
 
-    it('executes the pipeline once', async () => {
+    it('should execute the pipeline once when revoking a token', async () => {
       await bloomAdd(SAMPLE_JTI, 900);
       expect(pipelineMock.exec).toHaveBeenCalledTimes(1);
     });
 
-    it('clamps TTL to 1 second minimum when remaining time is ≤ 0', async () => {
+    it('should clamp TTL to 1 second minimum when remaining time is ≤ 0', async () => {
       await bloomAdd(SAMPLE_JTI, 0);
       expect(pipelineMock.set).toHaveBeenCalledWith(
         revokedKey(SAMPLE_JTI),
@@ -91,7 +104,7 @@ describe('bloom filter', () => {
       );
     });
 
-    it('is deterministic: same JTI always sets the same 7 bit positions', async () => {
+    it('should set the same seven revocation bits when revoking the same token again', async () => {
       await bloomAdd(SAMPLE_JTI, 900);
       const firstCall = pipelineMock.setbit.mock.calls.map((c) => c[1] as number);
 
@@ -102,7 +115,7 @@ describe('bloom filter', () => {
       expect(firstCall).toEqual(secondCall);
     });
 
-    it('produces different bit positions for different JTIs', async () => {
+    it('should produce different bit positions for different JTIs when revoking a token', async () => {
       await bloomAdd(SAMPLE_JTI, 900);
       const posA = pipelineMock.setbit.mock.calls.map((c) => c[1] as number);
 
@@ -114,7 +127,7 @@ describe('bloom filter', () => {
       expect(posA).not.toEqual(posB);
     });
 
-    it('returns silently when Redis throws (safeRedis absorbs the error)', async () => {
+    it('should return silently when Redis throws (safeRedis absorbs the error)', async () => {
       pipelineMock.exec.mockRejectedValueOnce(new Error('Redis connection lost'));
       await expect(bloomAdd(SAMPLE_JTI, 900)).resolves.toBeUndefined();
     });
@@ -122,52 +135,52 @@ describe('bloom filter', () => {
 
   // ── bloomCheck ───────────────────────────────────────────────────────────
 
-  describe('bloomCheck', () => {
+  describe('Checking token revocation', () => {
     beforeEach(() => allure.story('bloomCheck'));
 
-    it('returns "clean" when the first bit is 0 (not in filter)', async () => {
+    it('should return "clean" when the first bit is 0 (not in filter)', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomMissResults());
       expect(await bloomCheck(SAMPLE_JTI)).toBe('clean');
     });
 
-    it('returns "revoked" when all bits are set AND confirmed key exists', async () => {
+    it('should return "revoked" when all bits are set AND confirmed key exists', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomHitResults(1));
       expect(await bloomCheck(SAMPLE_JTI)).toBe('revoked');
     });
 
-    it('returns "fp" (false positive) when all bits are set but confirmed key is absent', async () => {
+    it('should return "fp" (false positive) when all bits are set but confirmed key is absent', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomHitResults(0));
       expect(await bloomCheck(SAMPLE_JTI)).toBe('fp');
     });
 
-    it('returns "error" when pipeline.exec() rejects', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    it('should return "error" when pipeline.exec() rejects', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockRejectedValueOnce(new Error('timeout'));
       expect(await bloomCheck(SAMPLE_JTI)).toBe('error');
       spy.mockRestore();
     });
 
-    it('returns "error" when pipeline.exec() returns null', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    it('should return "error" when pipeline.exec() returns null', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockResolvedValueOnce(null);
       expect(await bloomCheck(SAMPLE_JTI)).toBe('error');
       spy.mockRestore();
     });
 
-    it('checks exactly 7 bits + 1 EXISTS in a single pipeline', async () => {
+    it('should check exactly 7 bits + 1 EXISTS in a single pipeline when checking token revocation', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomMissResults());
       await bloomCheck(SAMPLE_JTI);
       expect(pipelineMock.getbit).toHaveBeenCalledTimes(7);
       expect(pipelineMock.exists).toHaveBeenCalledWith(revokedKey(SAMPLE_JTI));
     });
 
-    it('checks the confirmed key using revokedKey(jti)', async () => {
+    it('should check the confirmed key using revokedKey(jti) when checking token revocation', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomHitResults(1));
       await bloomCheck(SAMPLE_JTI);
       expect(pipelineMock.exists).toHaveBeenCalledWith(`revoked:${SAMPLE_JTI}`);
     });
 
-    it('returns "error" when a getbit result contains an error', async () => {
+    it('should return "error" when a getbit result contains an error', async () => {
       // First bit has an error
       const results: [Error | null, number][] = [
         [new Error('bit error'), 0],
@@ -181,16 +194,16 @@ describe('bloom filter', () => {
 
   // ── getBloomResetAt ───────────────────────────────────────────────────────
 
-  describe('getBloomResetAt', () => {
+  describe('Reading the revocation filter reset time', () => {
     beforeEach(() => allure.story('getBloomResetAt'));
 
-    it('returns the timestamp from Redis eval', async () => {
+    it('should return the timestamp from Redis eval when reading the revocation filter reset time', async () => {
       redisMock.eval.mockResolvedValueOnce(NOW_MS);
       const result = await getBloomResetAt();
       expect(result).toBe(NOW_MS);
     });
 
-    it('calls redis.eval with the bits key, reset_at key, now, and interval', async () => {
+    it('should supply the filter keys and reset schedule when synchronizing revocation state', async () => {
       redisMock.eval.mockResolvedValueOnce(NOW_MS);
       await getBloomResetAt();
       const [, keys, ...args] = redisMock.eval.mock.calls[0] as unknown[];
@@ -201,14 +214,14 @@ describe('bloom filter', () => {
       expect(Number(args[3])).toBe(RESET_INTERVAL);
     });
 
-    it('caches the result and does not hit Redis twice within 60 s', async () => {
+    it('should reuse the cached reset time when it is requested again within 60 seconds', async () => {
       redisMock.eval.mockResolvedValueOnce(NOW_MS);
       await getBloomResetAt(); // first call – hits Redis
       await getBloomResetAt(); // second call – served from cache
       expect(redisMock.eval).toHaveBeenCalledTimes(1);
     });
 
-    it('refreshes the cache after invalidateResetAtCache()', async () => {
+    it('should refresh the cache after invalidateResetAtCache()', async () => {
       redisMock.eval.mockResolvedValue(NOW_MS);
       await getBloomResetAt();
       invalidateResetAtCache();
@@ -216,7 +229,7 @@ describe('bloom filter', () => {
       expect(redisMock.eval).toHaveBeenCalledTimes(2);
     });
 
-    it('returns the last cached value (0) when Redis is down', async () => {
+    it('should return the last cached value (0) when Redis is down', async () => {
       redisMock.eval.mockRejectedValueOnce(new Error('ECONNREFUSED'));
       const result = await getBloomResetAt();
       // safeRedis returns null → cache stays 0
@@ -226,26 +239,26 @@ describe('bloom filter', () => {
 
   // ── isTokenClean ──────────────────────────────────────────────────────────
 
-  describe('isTokenClean', () => {
+  describe('Checking whether a token is revoked', () => {
     beforeEach(() => allure.story('isTokenClean'));
 
-    it('returns true when bloomCheck returns "clean"', async () => {
+    it('should return true when bloomCheck returns "clean"', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomMissResults());
       expect(await isTokenClean(SAMPLE_JTI)).toBe(true);
     });
 
-    it('returns true when bloomCheck returns "fp" (false positive = not actually revoked)', async () => {
+    it('should return true when bloomCheck returns "fp" (false positive = not actually revoked)', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomHitResults(0));
       expect(await isTokenClean(SAMPLE_JTI)).toBe(true);
     });
 
-    it('returns false when bloomCheck returns "revoked"', async () => {
+    it('should return false when bloomCheck returns "revoked"', async () => {
       pipelineMock.exec.mockResolvedValueOnce(bloomHitResults(1));
       expect(await isTokenClean(SAMPLE_JTI)).toBe(false);
     });
 
-    it('returns null when bloomCheck returns "error" (Redis unavailable)', async () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    it('should return null when bloomCheck returns "error" (Redis unavailable)', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       pipelineMock.exec.mockRejectedValueOnce(new Error('timeout'));
       expect(await isTokenClean(SAMPLE_JTI)).toBeNull();
       spy.mockRestore();

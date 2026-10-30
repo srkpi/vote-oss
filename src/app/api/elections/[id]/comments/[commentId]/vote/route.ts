@@ -19,73 +19,32 @@ async function loadVotableComment(electionId: string, commentId: string) {
   });
 }
 
-/**
- * @swagger
- * /api/elections/{id}/comments/{commentId}/vote:
- *   put:
- *     summary: Cast or change your vote on a comment
- *     description: >
- *       Idempotent set: call again with a different value to switch your
- *       vote. Comment votes are **not** anonymous — your name is visible
- *       to anyone who opens the "who voted" list on this comment. Voting
- *       stays open even while the petition's discussion is closed. You
- *       cannot vote on your own comment.
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: path
- *         name: commentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CommentVoteBody'
- *     responses:
- *       200:
- *         description: Updated vote totals
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CommentVoteSummary'
- *       400:
- *         description: Invalid value, or voting on your own comment
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Petition or comment not found
- *       429:
- *         description: Too many vote changes recently
- */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId, commentId } = await params;
-  if (!isValidUuid(electionId) || !isValidUuid(commentId)) return Errors.badRequest('Invalid id');
+  if (!isValidUuid(electionId) || !isValidUuid(commentId)) {
+    return Errors.badRequest('Invalid id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
 
   const comment = await loadVotableComment(electionId, commentId);
-  if (!comment || comment.deleted_at) return Errors.notFound('Comment not found');
-  if (comment.user_id === auth.user.sub)
+  if (!comment || comment.deleted_at) {
+    return Errors.notFound('Comment not found');
+  }
+  if (comment.user_id === auth.user.sub) {
     return Errors.badRequest('You cannot vote on your own comment');
+  }
 
   let body: unknown;
   try {
@@ -155,7 +114,9 @@ export async function PUT(
   } catch (err) {
     // Concurrent duplicate request for the same user/comment (e.g. a
     // double-click) — safe to ignore, fall through and report current state.
-    if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) throw err;
+    if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) {
+      throw err;
+    }
   }
 
   const fresh = await prisma.comment.findUniqueOrThrow({
@@ -170,61 +131,37 @@ export async function PUT(
   });
 }
 
-/**
- * @swagger
- * /api/elections/{id}/comments/{commentId}/vote:
- *   delete:
- *     summary: Revoke your vote on a comment
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *       - in: path
- *         name: commentId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *     responses:
- *       200:
- *         description: Updated vote totals
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CommentVoteSummary'
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Petition, comment, or existing vote not found
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> },
 ) {
   const auth = await requireAuth(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
 
   const { id: electionId, commentId } = await params;
-  if (!isValidUuid(electionId) || !isValidUuid(commentId)) return Errors.badRequest('Invalid id');
+  if (!isValidUuid(electionId) || !isValidUuid(commentId)) {
+    return Errors.badRequest('Invalid id');
+  }
 
   const gate = await getPetitionGate(electionId, auth.user);
-  if (!gate.ok) return apiError(gate.message, gate.status);
+  if (!gate.ok) {
+    return apiError(gate.message, gate.status);
+  }
 
   const comment = await loadVotableComment(electionId, commentId);
-  if (!comment || comment.deleted_at) return Errors.notFound('Comment not found');
+  if (!comment || comment.deleted_at) {
+    return Errors.notFound('Comment not found');
+  }
 
   const deletedVote = await prisma.$transaction(async (tx) => {
     const existingVote = await tx.commentVote.findUnique({
       where: { comment_id_user_id: { comment_id: commentId, user_id: auth.user.sub } },
     });
-    if (!existingVote) return null;
+    if (!existingVote) {
+      return null;
+    }
 
     await tx.commentVote.delete({ where: { id: existingVote.id } });
     await tx.comment.update({
@@ -237,7 +174,9 @@ export async function DELETE(
     return existingVote;
   });
 
-  if (!deletedVote) return Errors.notFound('You have not voted on this comment');
+  if (!deletedVote) {
+    return Errors.notFound('You have not voted on this comment');
+  }
 
   const fresh = await prisma.comment.findUniqueOrThrow({
     where: { id: commentId },

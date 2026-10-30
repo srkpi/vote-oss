@@ -11,62 +11,30 @@ import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { isValidUuid } from '@/lib/utils/common';
 
-/**
- * @swagger
- * /api/elections/{id}/official-answer:
- *   put:
- *     summary: Create or update the petition's official answer (admin, manage_petitions)
- *     description: >
- *       Upsert — the first call creates the answer, later calls edit it.
- *       The original author stays recorded even when a different admin
- *       later edits it; the edit is tracked separately (editedBy/editedAt).
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *          type: string
- *          format: uuid
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CommentCreateBody'
- *     responses:
- *       200:
- *         description: The official answer
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/PetitionOfficialAnswer'
- *       400:
- *         description: Empty answer, too long, or not a petition
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Admin lacks manage_petitions
- *       404:
- *         description: Petition not found
- */
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
-  if (!auth.admin.manage_petitions) return Errors.forbidden('Requires manage_petitions');
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
+  if (!auth.admin.manage_petitions) {
+    return Errors.forbidden('Requires manage_petitions');
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const election = await prisma.election.findUnique({
     where: { id: electionId },
     select: { type: true, deleted_at: true },
   });
-  if (!election || election.deleted_at) return Errors.notFound('Petition not found');
-  if (election.type !== 'PETITION') return Errors.badRequest('Only available for petitions');
+  if (!election || election.deleted_at) {
+    return Errors.notFound('Petition not found');
+  }
+  if (election.type !== 'PETITION') {
+    return Errors.badRequest('Only available for petitions');
+  }
 
   let body: unknown;
   try {
@@ -75,8 +43,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return Errors.badRequest('Invalid JSON body');
   }
   const text = (body as { body?: unknown })?.body;
-  if (typeof text !== 'string' || text.trim().length === 0)
+  if (typeof text !== 'string' || text.trim().length === 0) {
     return Errors.badRequest('Answer body is required');
+  }
   if (text.length > PETITION_OFFICIAL_ANSWER_MAX_LENGTH) {
     return Errors.badRequest(
       `Answer must be at most ${PETITION_OFFICIAL_ANSWER_MAX_LENGTH} characters`,
@@ -126,44 +95,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   });
 }
 
-/**
- * @swagger
- * /api/elections/{id}/official-answer:
- *   delete:
- *     summary: Remove the petition's official answer (admin, manage_petitions)
- *     tags:
- *       - Petition comments
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema: { type: string, format: uuid }
- *     responses:
- *       204:
- *         description: Removed
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Admin lacks manage_petitions
- *       404:
- *         description: Petition or answer not found
- */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
-  if (!auth.ok) return Errors.unauthorized(auth.error);
-  if (!auth.admin.manage_petitions) return Errors.forbidden('Requires manage_petitions');
+  if (!auth.ok) {
+    return Errors.unauthorized(auth.error);
+  }
+  if (!auth.admin.manage_petitions) {
+    return Errors.forbidden('Requires manage_petitions');
+  }
 
   const { id: electionId } = await params;
-  if (!isValidUuid(electionId)) return Errors.badRequest('Invalid election id');
+  if (!isValidUuid(electionId)) {
+    return Errors.badRequest('Invalid election id');
+  }
 
   const election = await prisma.election.findUnique({
     where: { id: electionId },
     select: { type: true },
   });
-  if (!election) return Errors.notFound('Petition not found');
-  if (election.type !== 'PETITION') return Errors.badRequest('Only available for petitions');
+  if (!election) {
+    return Errors.notFound('Petition not found');
+  }
+  if (election.type !== 'PETITION') {
+    return Errors.badRequest('Only available for petitions');
+  }
 
   try {
     await prisma.petitionOfficialAnswer.delete({

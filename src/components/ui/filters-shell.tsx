@@ -33,9 +33,13 @@ export function FilterDropdown<T extends string>({
   const isFiltered = value !== options[0]?.value;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const onPointer = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
     document.addEventListener('pointerdown', onPointer);
     return () => document.removeEventListener('pointerdown', onPointer);
@@ -50,26 +54,26 @@ export function FilterDropdown<T extends string>({
           'font-body flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150',
           isFiltered
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
+            : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light/50',
           open && !isFiltered && 'border-kpi-blue-light',
         )}
       >
         <span className="flex-1 truncate text-left">{selected?.label ?? label}</span>
         {isFiltered && (
-          <span className="bg-kpi-navy/10 text-kpi-navy shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums">
+          <span className="shrink-0 rounded-full bg-kpi-navy/10 px-1.5 py-0.5 text-[10px] font-bold text-kpi-navy tabular-nums">
             {selected?.count}
           </span>
         )}
         <ChevronDown
           className={cn(
-            'text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform duration-150',
+            'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-150',
             open && 'rotate-180',
           )}
         />
       </button>
 
       {open && (
-        <div className="border-border-color bg-card absolute top-full left-0 z-200 mt-1 min-w-52.5 overflow-hidden rounded-lg border shadow-lg">
+        <div className="border-border-color absolute top-full left-0 z-200 mt-1 min-w-52.5 overflow-hidden rounded-lg border bg-card shadow-lg">
           {options.map((opt) => {
             const isSelected = opt.value === value;
             const isDisabled = opt.count === 0 && opt.value !== options[0]?.value;
@@ -84,14 +88,14 @@ export function FilterDropdown<T extends string>({
                 }}
                 className={cn(
                   'font-body flex w-full items-center justify-between gap-3 px-3 py-2.5 text-sm transition-colors duration-75',
-                  isSelected ? 'bg-kpi-navy/5 text-kpi-navy font-semibold' : 'text-foreground',
+                  isSelected ? 'bg-kpi-navy/5 font-semibold text-kpi-navy' : 'text-foreground',
                   !isSelected && !isDisabled && 'hover:bg-surface',
                   isDisabled && 'cursor-not-allowed opacity-35',
                 )}
               >
                 <span className="flex items-center gap-2.5">
                   <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
-                    {isSelected && <Check className="text-kpi-navy h-3.5 w-3.5" />}
+                    {isSelected && <Check className="h-3.5 w-3.5 text-kpi-navy" />}
                   </span>
                   {opt.label}
                 </span>
@@ -137,7 +141,9 @@ export function FilterMultiDropdown({
   const isFiltered = value.length > 0;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const onPointer = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
@@ -174,44 +180,44 @@ export function FilterMultiDropdown({
           'font-body flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-150',
           isFiltered
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
+            : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light/50',
           open && !isFiltered && 'border-kpi-blue-light',
         )}
       >
         <span className="flex-1 truncate text-left">{triggerLabel}</span>
         {isFiltered && (
-          <span className="bg-kpi-navy flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white">
+          <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-kpi-navy text-[10px] font-bold text-white">
             {value.length}
           </span>
         )}
         <ChevronDown
           className={cn(
-            'text-muted-foreground h-3.5 w-3.5 shrink-0 transition-transform duration-150',
+            'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-150',
             open && 'rotate-180',
           )}
         />
       </button>
 
       {open && (
-        <div className="border-border-color bg-card absolute top-full left-0 z-200 mt-1 w-72 overflow-hidden rounded-lg border shadow-lg">
+        <div className="border-border-color absolute top-full left-0 z-200 mt-1 w-72 overflow-hidden rounded-lg border bg-card shadow-lg">
           {showSearch && (
-            <div className="border-border-subtle border-b p-2">
+            <div className="border-b border-border-subtle p-2">
               <div className="relative">
-                <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+                <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <input
                   ref={searchRef}
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Пошук…"
-                  className="font-body bg-surface text-foreground placeholder:text-subtle focus:border-kpi-blue-light h-8 w-full rounded-md border border-transparent py-1 pr-8 pl-8 text-sm focus:outline-none"
+                  className="font-body h-8 w-full rounded-md border border-transparent bg-surface py-1 pr-8 pl-8 text-sm text-foreground placeholder:text-subtle focus:border-kpi-blue-light focus:outline-none"
                 />
                 {search && (
                   <button
                     type="button"
                     tabIndex={-1}
                     onClick={() => setSearch('')}
-                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                    className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -222,7 +228,7 @@ export function FilterMultiDropdown({
 
           <div className="max-h-56 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <p className="text-muted-foreground px-3 py-6 text-center text-sm">
+              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                 Нічого не знайдено
               </p>
             ) : (
@@ -237,7 +243,7 @@ export function FilterMultiDropdown({
                     onClick={() => toggle(opt.value)}
                     className={cn(
                       'font-body flex w-full items-center justify-between gap-2 px-3 py-2 text-sm transition-colors duration-75',
-                      isSelected ? 'bg-kpi-navy/5 text-kpi-navy font-medium' : 'text-foreground',
+                      isSelected ? 'bg-kpi-navy/5 font-medium text-kpi-navy' : 'text-foreground',
                       !isSelected && !isDisabled && 'hover:bg-surface',
                       isDisabled && 'cursor-not-allowed opacity-35',
                     )}
@@ -270,11 +276,11 @@ export function FilterMultiDropdown({
           </div>
 
           {value.length > 0 && (
-            <div className="border-border-subtle border-t p-2">
+            <div className="border-t border-border-subtle p-2">
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="font-body text-muted-foreground hover:text-foreground hover:bg-surface w-full rounded-md px-2 py-1.5 text-xs transition-colors"
+                className="font-body w-full rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
               >
                 Скинути вибір
               </button>
@@ -290,7 +296,7 @@ export function FilterMultiDropdown({
 
 export function FilterSectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-body text-subtle mb-2 text-[10px] font-semibold tracking-widest uppercase">
+    <p className="font-body mb-2 text-[10px] font-semibold tracking-widest text-subtle uppercase">
       {children}
     </p>
   );
@@ -314,33 +320,30 @@ function MobileFiltersSheet({
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div
-        className="bg-card relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl shadow-2xl"
+        className="relative flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex shrink-0 items-center justify-between px-5 pt-4 pb-3">
-          <div className="bg-border absolute top-2.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full" />
-          <h2 className="font-display text-foreground text-base font-semibold">Фільтри</h2>
+          <div className="absolute top-2.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-border" />
+          <h2 className="font-display text-base font-semibold text-foreground">Фільтри</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground hover:bg-surface flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-            aria-label="Закрити"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="overflow-y-auto px-5 pb-4">{children}</div>
-        <div className="border-border-subtle shrink-0 border-t px-5 py-4">
+        <div className="shrink-0 border-t border-border-subtle px-5 py-4">
           <Button variant="primary" fullWidth size="lg" onClick={onClose}>
             Показати результати
           </Button>
@@ -364,20 +367,26 @@ function DesktopFiltersPopover({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
     const onPointer = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
     };
     document.addEventListener('pointerdown', onPointer);
     return () => document.removeEventListener('pointerdown', onPointer);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   return (
     <div
       ref={ref}
-      className="border-border-color animate-scale-in bg-card absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border p-5 shadow-xl"
+      className="border-border-color animate-scale-in absolute top-full right-0 z-40 mt-2 w-80 rounded-2xl border bg-card p-5 shadow-xl"
     >
       {children}
     </div>
@@ -414,19 +423,19 @@ export function FiltersButton({ activeCount, className, children }: FiltersButto
           'font-body inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-all duration-150',
           activeCount > 0
             ? 'border-kpi-navy bg-kpi-navy/5 text-kpi-navy shadow-sm'
-            : 'border-border-color text-foreground hover:border-kpi-blue-light/50 bg-card',
+            : 'border-border-color bg-card text-foreground hover:border-kpi-blue-light/50',
         )}
       >
         <Filter className="h-3.5 w-3.5" />
         <span>Фільтри</span>
         {activeCount > 0 && (
-          <span className="bg-kpi-navy flex h-4.5 w-4.5 items-center justify-center rounded-full text-[10px] font-bold text-white">
+          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-kpi-navy text-[10px] font-bold text-white">
             {activeCount}
           </span>
         )}
         <ChevronDown
           className={cn(
-            'text-muted-foreground hidden h-3.5 w-3.5 transition-transform duration-150 sm:block',
+            'hidden h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 sm:block',
             open && 'rotate-180',
           )}
         />
@@ -454,12 +463,14 @@ export function FiltersResetButton({
   activeCount: number;
   onReset: () => void;
 }) {
-  if (activeCount === 0) return null;
+  if (activeCount === 0) {
+    return null;
+  }
   return (
     <button
       type="button"
       onClick={onReset}
-      className="font-body text-error border-error/20 bg-error-bg hover:bg-error/15 flex w-full items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-colors"
+      className="font-body flex w-full items-center justify-center gap-1.5 rounded-lg border border-error/20 bg-error-bg py-2 text-xs font-medium text-error transition-colors hover:bg-error/15"
     >
       <RotateCcw className="h-3.5 w-3.5" />
       Скинути фільтри ({activeCount})

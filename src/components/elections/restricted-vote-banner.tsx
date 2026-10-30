@@ -43,7 +43,9 @@ function getUserValueForType(type: RestrictionType, user: UserContext): string |
       return user.studyForm;
     case 'LEVEL_COURSE':
       const yearDigit = parseGroupYearEnteredDigit(user.group);
-      if (yearDigit === null) return undefined;
+      if (yearDigit === null) {
+        return undefined;
+      }
       const level = parseGroupLevel(user.group);
       const course = calculateCourse(yearDigit);
       return `${level}${course}`;
@@ -79,8 +81,8 @@ export function RestrictedVoteBanner({
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">
-        <AlertCircle className="text-error mt-0.5 h-5 w-5 shrink-0" />
-        <p className="font-display text-foreground font-semibold">
+        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-error" />
+        <p className="font-display font-semibold text-foreground">
           Ви не можете взяти участь у цьому голосуванні
         </p>
       </div>
@@ -95,15 +97,15 @@ export function RestrictedVoteBanner({
           }`}
         >
           {bypassRequiredMet ? (
-            <CheckCircle2 className="text-success h-4 w-4 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
           ) : (
-            <KeyRound className="text-warning h-4 w-4 shrink-0" />
+            <KeyRound className="h-4 w-4 shrink-0 text-warning" />
           )}
           <div className="min-w-0 flex-1">
-            <p className="font-body text-foreground text-sm font-medium">
+            <p className="font-body text-sm font-medium text-foreground">
               {RESTRICTION_TYPE_LABELS['BYPASS_REQUIRED']}
             </p>
-            <p className="font-body text-muted-foreground text-xs">
+            <p className="font-body text-xs text-muted-foreground">
               {bypassRequiredMet
                 ? 'Токен доступу застосовано'
                 : 'Потрібен токен доступу від організатора'}
@@ -134,15 +136,15 @@ export function RestrictedVoteBanner({
             let statusLabel: string;
 
             if (isBypassed) {
-              icon = <CheckCircle2 className="text-warning h-4 w-4 shrink-0" />;
+              icon = <CheckCircle2 className="h-4 w-4 shrink-0 text-warning" />;
               rowClass = 'border-warning/20 bg-warning-bg';
               statusLabel = 'Обійдено';
             } else if (isMet) {
-              icon = <CheckCircle2 className="text-success h-4 w-4 shrink-0" />;
+              icon = <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />;
               rowClass = 'border-success/20 bg-success-bg';
               statusLabel = 'Виконано';
             } else {
-              icon = <XCircle className="text-error h-4 w-4 shrink-0" />;
+              icon = <XCircle className="h-4 w-4 shrink-0 text-error" />;
               rowClass = 'border-error/20 bg-error-bg';
               statusLabel = 'Не виконано';
             }
@@ -154,17 +156,17 @@ export function RestrictedVoteBanner({
               >
                 {icon}
                 <div className="min-w-0 flex-1">
-                  <p className="font-body text-foreground text-sm font-medium">
+                  <p className="font-body text-sm font-medium text-foreground">
                     {RESTRICTION_TYPE_LABELS[type] ?? type}
                   </p>
-                  <p className="font-body text-muted-foreground text-xs">
+                  <p className="font-body text-xs text-muted-foreground">
                     Вимагається:{' '}
                     {values
                       .map((v) => formatRestrictionValue(type, v, restrictedGroups))
                       .join(', ')}
                   </p>
                   {userValue && !isMet && !isBypassed && (
-                    <p className="font-body text-muted-foreground text-xs">
+                    <p className="font-body text-xs text-muted-foreground">
                       Ваше значення: {formatRestrictionValue(type, userValue)}
                     </p>
                   )}
@@ -176,7 +178,7 @@ export function RestrictedVoteBanner({
       </div>
 
       {bypassSet.size > 0 && (
-        <p className="font-body text-muted-foreground text-xs">
+        <p className="font-body text-xs text-muted-foreground">
           Деякі обмеження обійдено за допомогою токена доступу, але інші залишаються невиконаними.
         </p>
       )}

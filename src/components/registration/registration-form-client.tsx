@@ -1,7 +1,9 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, Clock, FileText, ShieldCheck, Users, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 
 import { PageHeader } from '@/components/common/page-header';
 import { TeamSlotsPanel } from '@/components/registration/team-slots-panel';
@@ -28,10 +30,9 @@ import {
   REGISTRATION_TELEGRAM_TAG_MAX_LENGTH,
 } from '@/lib/constants';
 import {
-  validateCampaignProgramUrl,
-  validatePhoneNumber,
-  validateTelegramTag,
-} from '@/lib/registration-validators';
+  createCandidateRegistrationSchemas,
+  type CandidateRegistrationFormValues,
+} from '@/lib/schemas/candidate-registration-form';
 import { cn } from '@/lib/utils/common';
 import type {
   CandidateRegistration,
@@ -76,82 +77,87 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
 
   const editable = !registration || registration.status === 'DRAFT';
 
-  const [phone, setPhone] = useState(registration?.phoneNumber ?? '');
-  const [tag, setTag] = useState(registration?.telegramTag ?? '');
-  const [programUrl, setProgramUrl] = useState(registration?.campaignProgramUrl ?? '');
-  const [confirmedNoOverlap, setConfirmedNoOverlap] = useState(false);
-  const [confirmedDataAccurate, setConfirmedDataAccurate] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const schemas = createCandidateRegistrationSchemas(form.requiresCampaignProgram);
+  const intent = useRef<'draft' | 'submission'>('draft');
+  const [action, setAction] = useState<'draft' | 'submission'>('draft');
+  const {
+    register,
+    control,
+    handleSubmit: submitForm,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm<CandidateRegistrationFormValues>({
+    resolver: (values, context, options) =>
+      zodResolver(schemas[intent.current])(values, context, options),
+    mode: 'onChange',
+    defaultValues: {
+      phoneNumber: registration?.phoneNumber ?? '',
+      telegramTag: registration?.telegramTag ?? '',
+      campaignProgramUrl: registration?.campaignProgramUrl ?? '',
+      confirmedNoOverlap: false,
+      confirmedDataAccurate: false,
+    },
+  });
+  const values = useWatch({ control }) as CandidateRegistrationFormValues;
+  const saving = isSubmitting && action === 'draft';
+  const submitting = isSubmitting && action === 'submission';
+  const error = errors.root?.message;
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const status = registration?.status ?? null;
   const [now] = useState(() => Date.now());
   const closed = now > new Date(form.closesAt).getTime();
   const notYetOpen = now < new Date(form.opensAt).getTime();
 
-  const phoneCheck = phone.trim() ? validatePhoneNumber(phone) : null;
-  const tagCheck = tag.trim() ? validateTelegramTag(tag) : null;
-  const programCheck =
-    form.requiresCampaignProgram && programUrl.trim()
-      ? validateCampaignProgramUrl(programUrl)
-      : null;
-  const phoneError = phoneCheck && !phoneCheck.ok ? phoneCheck.error : null;
-  const tagError = tagCheck && !tagCheck.ok ? tagCheck.error : null;
-  const programError = programCheck && !programCheck.ok ? programCheck.error : null;
-  const hasFieldErrors = !!(phoneError || tagError || programError);
-  const allRequiredFilled =
-    phone.trim().length > 0 && (!form.requiresCampaignProgram || programUrl.trim().length > 0);
-  const allConfirmed = confirmedNoOverlap && confirmedDataAccurate;
-  const canSubmit = !hasFieldErrors && allRequiredFilled && allConfirmed;
+  const phoneError = errors.phoneNumber?.message;
+  const tagError = errors.telegramTag?.message;
+  const programError = errors.campaignProgramUrl?.message;
+  const canSubmit = schemas.submission.safeParse(values).success;
 
-  const saveDraft = async (): Promise<CandidateRegistration | null> => {
-    setSaving(true);
-    setError(null);
-    const result = await api.registrationForms.saveDraft(form.id, {
-      phoneNumber: phone,
-      telegramTag: tag,
-      campaignProgramUrl: form.requiresCampaignProgram ? programUrl : null,
-    });
-    setSaving(false);
-    if (!result.success) {
-      setError(result.error);
-      return null;
-    }
-    setRegistration(result.data);
-    return result.data;
-  };
-
-  const handleSaveDraft = async () => {
-    const saved = await saveDraft();
-    if (saved) toast({ title: 'Чернетку збережено', variant: 'success' });
-  };
-
-  const handleSubmit = async () => {
-    const saved = await saveDraft();
-    if (!saved) return;
-
-    setSubmitting(true);
-    const result = await api.registrations.submit(saved.id);
-    setSubmitting(false);
-    if (!result.success) {
-      setError(result.error);
+  const runAction = async (nextAction: 'draft' | 'submission') => {
+    if (isSubmitting || withdrawing || !editable || closed || notYetOpen || !form.eligible) {
       return;
     }
-    setRegistration(result.data);
-    toast({
-      title:
-        result.data.status === 'AWAITING_TEAM'
-          ? 'Заявку подано — очікує підтвердження команди'
-          : 'Заявку подано на розгляд',
-      variant: 'success',
-    });
+    intent.current = nextAction;
+    setAction(nextAction);
+    await submitForm(async (data) => {
+      clearErrors('root');
+      const saved = await api.registrationForms.saveDraft(form.id, {
+        phoneNumber: data.phoneNumber,
+        telegramTag: data.telegramTag,
+        campaignProgramUrl: form.requiresCampaignProgram ? data.campaignProgramUrl : null,
+      });
+      if (!saved.success) {
+        setError('root', { message: saved.error });
+        return;
+      }
+      setRegistration(saved.data);
+      if (nextAction === 'draft') {
+        toast({ title: 'Чернетку збережено', variant: 'success' });
+        return;
+      }
+      const result = await api.registrations.submit(saved.data.id);
+      if (!result.success) {
+        setError('root', { message: result.error });
+        return;
+      }
+      setRegistration(result.data);
+      toast({
+        title:
+          result.data.status === 'AWAITING_TEAM'
+            ? 'Заявку подано — очікує підтвердження команди'
+            : 'Заявку подано на розгляд',
+        variant: 'success',
+      });
+    })();
   };
 
   const handleWithdraw = async () => {
-    if (!registration) return;
+    if (!registration) {
+      return;
+    }
     setWithdrawing(true);
     const wasDraft = registration.status === 'DRAFT';
     const result = await api.registrations.withdraw(registration.id);
@@ -176,14 +182,14 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         isContainer
       />
       <div className="container max-w-2xl py-8">
-        <div className="border-border-color shadow-card bg-card mb-6 space-y-3 rounded-xl border p-5">
+        <div className="border-border-color mb-6 space-y-3 rounded-xl border bg-card p-5 shadow-card">
           {form.description && (
-            <p className="text-foreground text-sm whitespace-pre-line">{form.description}</p>
+            <p className="text-sm whitespace-pre-line text-foreground">{form.description}</p>
           )}
-          <p className="text-muted-foreground text-xs">
-            Орган: <span className="text-foreground font-medium">{form.groupName}</span>
+          <p className="text-xs text-muted-foreground">
+            Орган: <span className="font-medium text-foreground">{form.groupName}</span>
           </p>
-          <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {form.requiresCampaignProgram && (
               <span className="inline-flex items-center gap-1">
                 <FileText className="h-3 w-3" />
@@ -228,14 +234,14 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {status && (
-          <div className="border-border-color shadow-card bg-card mb-6 rounded-xl border p-5">
+          <div className="border-border-color mb-6 rounded-xl border bg-card p-5 shadow-card">
             <div className="flex items-center gap-2">
               {status === 'APPROVED' ? (
-                <CheckCircle2 className="text-success h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
               ) : status === 'REJECTED' || status === 'WITHDRAWN' ? (
-                <XCircle className="text-muted-foreground h-4 w-4" />
+                <XCircle className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <Clock className="text-kpi-navy h-4 w-4" />
+                <Clock className="h-4 w-4 text-kpi-navy" />
               )}
               <span
                 className={cn(
@@ -246,13 +252,13 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
                 {STATUS_LABEL[status]}
               </span>
               {registration?.submittedAt && (
-                <span className="text-muted-foreground text-xs">
+                <span className="text-xs text-muted-foreground">
                   Подано: <LocalDateTime date={registration.submittedAt} />
                 </span>
               )}
             </div>
             {status === 'AWAITING_TEAM' && (
-              <p className="text-muted-foreground mt-2 text-sm">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Згенеруйте посилання нижче і надішліть їх членам команди. Коли учасник перейде за
                 посиланням і прийме запрошення — підтвердьте або відхиліть його у себе. Щойно ви
                 підтвердите всіх — заявка автоматично піде на розгляд.
@@ -260,16 +266,16 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             )}
             {status === 'REJECTED' && registration?.rejectionReason && (
               <div className="mt-3">
-                <p className="text-muted-foreground text-xs font-semibold uppercase">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
                   Причина відхилення
                 </p>
-                <p className="text-foreground mt-1 text-sm whitespace-pre-line">
+                <p className="mt-1 text-sm whitespace-pre-line text-foreground">
                   {registration.rejectionReason}
                 </p>
               </div>
             )}
             {registration?.reviewedByFullName && (
-              <p className="text-muted-foreground mt-2 text-xs">
+              <p className="mt-2 text-xs text-muted-foreground">
                 Розглянув: {registration.reviewedByFullName}
                 {registration.reviewedAt && (
                   <>
@@ -283,32 +289,32 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {registration && status !== null && status !== 'DRAFT' && (
-          <div className="border-border-color shadow-card bg-card mb-6 space-y-3 rounded-xl border p-5">
-            <p className="font-display text-foreground text-sm font-semibold">Ваша заявка</p>
+          <div className="border-border-color mb-6 space-y-3 rounded-xl border bg-card p-5 shadow-card">
+            <p className="font-display text-sm font-semibold text-foreground">Ваша заявка</p>
             <dl className="grid items-baseline gap-x-4 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
               {registration.faculty && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Підрозділ</dt>
-                  <dd className="text-foreground wrap-break-word">{registration.faculty}</dd>
+                  <dt className="text-xs text-muted-foreground uppercase">Підрозділ</dt>
+                  <dd className="wrap-break-word text-foreground">{registration.faculty}</dd>
                 </>
               )}
               {registration.group && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Група</dt>
-                  <dd className="text-foreground wrap-break-word">{registration.group}</dd>
+                  <dt className="text-xs text-muted-foreground uppercase">Група</dt>
+                  <dd className="wrap-break-word text-foreground">{registration.group}</dd>
                 </>
               )}
-              <dt className="text-muted-foreground text-xs uppercase">Телефон</dt>
-              <dd className="text-foreground wrap-break-word">{registration.phoneNumber}</dd>
+              <dt className="text-xs text-muted-foreground uppercase">Телефон</dt>
+              <dd className="wrap-break-word text-foreground">{registration.phoneNumber}</dd>
               {registration.telegramTag && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Telegram</dt>
-                  <dd className="text-foreground wrap-break-word">{registration.telegramTag}</dd>
+                  <dt className="text-xs text-muted-foreground uppercase">Telegram</dt>
+                  <dd className="wrap-break-word text-foreground">{registration.telegramTag}</dd>
                 </>
               )}
               {form.requiresCampaignProgram && registration.campaignProgramUrl && (
                 <>
-                  <dt className="text-muted-foreground text-xs uppercase">Програма</dt>
+                  <dt className="text-xs text-muted-foreground uppercase">Програма</dt>
                   <dd className="wrap-break-word">
                     <TextLink href={registration.campaignProgramUrl}>
                       {registration.campaignProgramUrl}
@@ -333,9 +339,9 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
         )}
 
         {editable && form.eligible && !closed && !notYetOpen && (
-          <div className="border-border-color shadow-card bg-card space-y-4 rounded-xl border p-5">
+          <div className="border-border-color space-y-4 rounded-xl border bg-card p-5 shadow-card">
             {error && (
-              <Alert variant="error" onDismiss={() => setError(null)}>
+              <Alert variant="error" onDismiss={() => clearErrors('root')}>
                 {error}
               </Alert>
             )}
@@ -353,8 +359,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             >
               <Input
                 id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                {...register('phoneNumber')}
                 placeholder="+380 XX XXX XX XX"
                 maxLength={REGISTRATION_PHONE_MAX_LENGTH}
                 error={!!phoneError}
@@ -374,8 +379,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             >
               <Input
                 id="telegram"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
+                {...register('telegramTag')}
                 placeholder="@username"
                 maxLength={REGISTRATION_TELEGRAM_TAG_MAX_LENGTH}
                 error={!!tagError}
@@ -399,8 +403,7 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
               >
                 <Input
                   id="program"
-                  value={programUrl}
-                  onChange={(e) => setProgramUrl(e.target.value)}
+                  {...register('campaignProgramUrl')}
                   placeholder="https://drive.google.com/..."
                   maxLength={REGISTRATION_PROGRAM_URL_MAX_LENGTH}
                   error={!!programError}
@@ -416,11 +419,10 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
-                  checked={confirmedNoOverlap}
-                  onChange={(e) => setConfirmedNoOverlap(e.target.checked)}
-                  className="accent-kpi-navy mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+                  {...register('confirmedNoOverlap')}
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-kpi-navy"
                 />
-                <span className="text-foreground text-sm">
+                <span className="text-sm text-foreground">
                   Я підтверджую, що не займаю посад у Первинній профспілковій організації студентів
                   та Науковому товаристві студентів та аспірантів
                 </span>
@@ -428,11 +430,10 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
-                  checked={confirmedDataAccurate}
-                  onChange={(e) => setConfirmedDataAccurate(e.target.checked)}
-                  className="accent-kpi-navy mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+                  {...register('confirmedDataAccurate')}
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-kpi-navy"
                 />
-                <span className="text-foreground text-sm">
+                <span className="text-sm text-foreground">
                   Я підтверджую, що надані мною дані правдиві та актуальні
                 </span>
               </label>
@@ -441,17 +442,17 @@ export function RegistrationFormClient({ initial }: RegistrationFormClientProps)
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
-                onClick={handleSaveDraft}
+                onClick={() => runAction('draft')}
                 loading={saving}
-                disabled={hasFieldErrors}
+                disabled={isSubmitting || withdrawing}
               >
                 Зберегти чернетку
               </Button>
               <Button
                 variant="accent"
-                onClick={handleSubmit}
+                onClick={() => runAction('submission')}
                 loading={submitting}
-                disabled={!canSubmit}
+                disabled={!canSubmit || isSubmitting || withdrawing}
               >
                 Подати заявку
               </Button>

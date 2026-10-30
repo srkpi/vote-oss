@@ -45,26 +45,26 @@ export function DecryptionPanel({
             )}
           >
             {isDecrypting ? (
-              <Loader2 className="text-kpi-navy h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin text-kpi-navy" />
             ) : isClean ? (
-              <ShieldCheck className="text-success h-5 w-5" />
+              <ShieldCheck className="h-5 w-5 text-success" />
             ) : hasProblem ? (
-              <ShieldAlert className="text-error h-5 w-5" />
+              <ShieldAlert className="h-5 w-5 text-error" />
             ) : (
-              <Unlock className="text-kpi-orange h-5 w-5" />
+              <Unlock className="h-5 w-5 text-kpi-orange" />
             )}
           </div>
 
           <div className="min-w-0">
             {isDecrypting && (
-              <p className="text-foreground text-sm font-semibold">Розшифрування бюлетенів…</p>
+              <p className="text-sm font-semibold text-foreground">Розшифрування бюлетенів…</p>
             )}
             {!isDecrypting && !decryptionDone && (
               <>
-                <p className="text-foreground text-sm font-semibold">
+                <p className="text-sm font-semibold text-foreground">
                   Розшифрувати бюлетені локально
                 </p>
-                <p className="font-body text-muted-foreground mt-0.5 text-xs leading-snug">
+                <p className="font-body mt-0.5 text-xs leading-snug text-muted-foreground">
                   Голосування закрито — приватний ключ відкрито. Розшифрування відбувається у вашому
                   браузері.
                 </p>
@@ -82,7 +82,7 @@ export function DecryptionPanel({
                     ? `Усі бюлетені успішно розшифровано та верифіковано`
                     : `${pluralize(malformedCount, ['зіпсований', 'зіпсовані', 'зіпсованих'])} · ${invalidHashCount} з некоректним хешем`}
                 </p>
-                <p className="font-body text-muted-foreground mt-0.5 text-xs leading-snug">
+                <p className="font-body mt-0.5 text-xs leading-snug text-muted-foreground">
                   Розшифровано локально у вашому браузері
                 </p>
               </>

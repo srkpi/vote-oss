@@ -39,13 +39,17 @@ export function PetitionAdminActions({
   const { toast } = useToast();
   const router = useRouter();
 
-  if (!canApprove && !canDelete && !canManageDiscussion) return null;
+  if (!canApprove && !canDelete && !canManageDiscussion) {
+    return null;
+  }
 
   const handleApprove = async () => {
     setApproving(true);
     try {
       const { error } = await api.elections.approve(petitionId);
-      if (error) throw new Error(error);
+      if (error) {
+        throw new Error(error);
+      }
       toast({ title: 'Петицію підтверджено' });
       router.refresh();
     } catch (err) {
@@ -65,7 +69,9 @@ export function PetitionAdminActions({
       const { error } = discussionClosed
         ? await api.elections.comments.open(petitionId)
         : await api.elections.comments.close(petitionId);
-      if (error) throw new Error(error);
+      if (error) {
+        throw new Error(error);
+      }
       toast({ title: discussionClosed ? 'Обговорення відкрито' : 'Обговорення закрито' });
       router.refresh();
     } catch (err) {
@@ -83,7 +89,9 @@ export function PetitionAdminActions({
     setDeleting(true);
     try {
       const { error } = await api.elections.delete(petitionId);
-      if (error) throw new Error(error);
+      if (error) {
+        throw new Error(error);
+      }
       toast({ title: 'Петицію видалено' });
       setConfirmingDelete(false);
       router.push('/petitions');
@@ -99,7 +107,7 @@ export function PetitionAdminActions({
   };
 
   return (
-    <div className="border-border-color shadow-card bg-card space-y-3 rounded-xl border p-6">
+    <div className="border-border-color space-y-3 rounded-xl border bg-card p-6 shadow-card">
       <h2 className="font-body text-sm font-semibold">Дії адміністратора</h2>
 
       {canApprove && (
@@ -139,7 +147,7 @@ export function PetitionAdminActions({
             <DialogCloseButton onClose={() => setConfirmingDelete(false)} />
           </DialogHeader>
           <DialogBody>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               Петицію можна буде відновити пізніше зі списку видалених.
             </p>
           </DialogBody>

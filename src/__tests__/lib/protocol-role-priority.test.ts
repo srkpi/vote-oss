@@ -1,3 +1,5 @@
+import { describe, it, expect } from 'vitest';
+
 import {
   compareByRoleImportance,
   getRolePriority,
@@ -6,8 +8,8 @@ import {
 
 // ── getRolePriority ───────────────────────────────────────────────────────
 
-describe('getRolePriority', () => {
-  it('ranks the exact hierarchy from most to least important', () => {
+describe('Ranking protocol roles', () => {
+  it('should rank the exact hierarchy from most to least important when ranking protocol roles', () => {
     expect(getRolePriority('Президент')).toBe(0);
     expect(getRolePriority('Заступник президента')).toBe(1);
     expect(getRolePriority("Виконуючий обов'язки президента")).toBe(2);
@@ -20,7 +22,7 @@ describe('getRolePriority', () => {
     expect(getRolePriority('Член')).toBe(7);
   });
 
-  it('is strictly ordered most → least important', () => {
+  it('should keep each role below the preceding role when ranking roles by importance', () => {
     const ranks = [
       getRolePriority('Президент'),
       getRolePriority('Заступник президента'),
@@ -36,25 +38,25 @@ describe('getRolePriority', () => {
     }
   });
 
-  it('returns ROLE_PRIORITY_OTHER for unrecognised or empty roles', () => {
+  it('should return ROLE_PRIORITY_OTHER for unrecognised or empty roles when ranking protocol roles', () => {
     expect(getRolePriority('Бухгалтер')).toBe(ROLE_PRIORITY_OTHER);
     expect(getRolePriority('')).toBe(ROLE_PRIORITY_OTHER);
     expect(getRolePriority('   ')).toBe(ROLE_PRIORITY_OTHER);
   });
 
-  it('is case-insensitive', () => {
+  it('should assign the same role priority when letter casing changes', () => {
     expect(getRolePriority('ГОЛОВА')).toBe(3);
     expect(getRolePriority('президент')).toBe(0);
     expect(getRolePriority('сЕкРеТаР')).toBe(5);
   });
 
-  it('allows partial matches within a longer posada', () => {
+  it('should allow partial matches within a longer posada when ranking protocol roles', () => {
     expect(getRolePriority('Голова Студради')).toBe(3);
     expect(getRolePriority('Член комісії')).toBe(7);
     expect(getRolePriority('Голова наглядової ради')).toBe(3);
   });
 
-  it('recognises "в.о." in any punctuation/spacing variant', () => {
+  it('should recognize "в.о." in any punctuation/spacing variant when ranking protocol roles', () => {
     expect(getRolePriority('в.о. голови')).toBe(4);
     expect(getRolePriority('в. о. голови')).toBe(4);
     expect(getRolePriority('во голови')).toBe(4);
@@ -63,23 +65,23 @@ describe('getRolePriority', () => {
     expect(getRolePriority('во президента')).toBe(2);
   });
 
-  it('does not confuse "Заступник голови" (genitive) with bare "Голова"', () => {
+  it('should not confuse "Заступник голови" (genitive) with bare "Голова" when ranking protocol roles', () => {
     expect(getRolePriority('Заступник голови')).toBe(6);
     expect(getRolePriority('Заступниця голови')).toBe(6);
   });
 
-  it('does not confuse "Заступник президента" (genitive) with bare "Президент"', () => {
+  it('should not confuse "Заступник президента" (genitive) with bare "Президент" when ranking protocol roles', () => {
     expect(getRolePriority('Заступник президента')).toBe(1);
   });
 
-  it('does not match unrelated titles that merely share a stem', () => {
+  it('should not match unrelated titles that merely share a stem when ranking protocol roles', () => {
     // "Головний" (chief/main) shares the "голов" stem with "Голова" but is a
     // different word (nominative "голова" ends in "а", not "н").
     expect(getRolePriority('Головний бухгалтер')).toBe(ROLE_PRIORITY_OTHER);
     expect(getRolePriority('Головний спеціаліст')).toBe(ROLE_PRIORITY_OTHER);
   });
 
-  it('handles the apostrophe in "обов\'язки" with straight, curly, or missing apostrophe', () => {
+  it('should recognize acting roles when their apostrophe is straight, curly, or omitted', () => {
     expect(getRolePriority("Виконуючий обов'язки голови")).toBe(4);
     expect(getRolePriority('Виконуючий обов’язки голови')).toBe(4);
     expect(getRolePriority('Виконуючий обовязки голови')).toBe(4);
@@ -88,8 +90,8 @@ describe('getRolePriority', () => {
 
 // ── compareByRoleImportance ──────────────────────────────────────────────
 
-describe('compareByRoleImportance', () => {
-  it('sorts a mixed list into the expected importance order', () => {
+describe('Sorting protocol attendees', () => {
+  it('should sort a mixed list into the expected importance order when sorting protocol attendees', () => {
     const people = [
       { posada: 'Член', fullname: 'Іванов Іван' },
       { posada: 'Секретар', fullname: 'Петренко Петро' },
@@ -115,7 +117,7 @@ describe('compareByRoleImportance', () => {
     ]);
   });
 
-  it('sorts alphabetically by fullname (uk locale) within the same role', () => {
+  it('should sort alphabetically by fullname (uk locale) within the same role when sorting protocol attendees', () => {
     const people = [
       { posada: 'Член', fullname: 'Яценко Ярослав' },
       { posada: 'Член', fullname: 'Андрієнко Анна' },
@@ -131,7 +133,7 @@ describe('compareByRoleImportance', () => {
     ]);
   });
 
-  it('is stable-equivalent: same role + same name order stays put', () => {
+  it('should preserve attendee order when their names and role priorities are equal', () => {
     const a = { posada: 'Член', fullname: 'Однакове Ім’я' };
     const b = { posada: 'Член комісії', fullname: 'Однакове Ім’я' };
     expect(compareByRoleImportance(a, b)).toBe(0);

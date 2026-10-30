@@ -37,8 +37,8 @@ function GroupCard({ group }: { group: Group }) {
     <Link
       href={`/groups/${group.id}`}
       className={cn(
-        'group border-border-color shadow-card bg-card block rounded-xl border',
-        'hover:shadow-card-hover transition-all duration-200 hover:-translate-y-0.5',
+        'group border-border-color block rounded-xl border bg-card shadow-card',
+        'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover',
         'flex flex-col overflow-hidden',
       )}
     >
@@ -69,34 +69,34 @@ function GroupCard({ group }: { group: Group }) {
                     : 'bg-kpi-gray-mid'),
             )}
           />
-          <h3 className="font-display text-foreground group-hover:text-kpi-navy line-clamp-2 text-base leading-tight font-semibold transition-colors">
+          <h3 className="line-clamp-2 font-display text-base leading-tight font-semibold text-foreground transition-colors group-hover:text-kpi-navy">
             {group.name}
           </h3>
         </div>
 
         <div className="mt-auto flex flex-wrap items-center gap-2">
-          <div className="font-body text-muted-foreground flex items-center gap-1.5 rounded-full text-xs font-medium">
+          <div className="font-body flex items-center gap-1.5 rounded-full text-xs font-medium text-muted-foreground">
             <Users className="h-3 w-3" />
             <span>{group.memberCount}</span>
           </div>
 
           {group.isOwner && (
-            <span className="font-body text-kpi-orange border-kpi-orange/30 bg-warning-bg rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+            <span className="font-body rounded-full border border-kpi-orange/30 bg-warning-bg px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-kpi-orange uppercase">
               Власник
             </span>
           )}
           {!group.isOwner && group.isMember && (
-            <span className="font-body text-kpi-navy border-kpi-navy/30 bg-kpi-navy/8 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+            <span className="font-body rounded-full border border-kpi-navy/30 bg-kpi-navy/8 px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-kpi-navy uppercase">
               Учасник
             </span>
           )}
           {!group.isOwner && !group.isMember && (
-            <span className="font-body border-border bg-muted text-muted-foreground rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+            <span className="font-body rounded-full border border-border bg-muted px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
               Публічна
             </span>
           )}
           {group.type === 'VKSU' && (
-            <span className="font-body text-kpi-navy border-kpi-navy/30 bg-kpi-navy/8 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wider uppercase">
+            <span className="font-body inline-flex items-center gap-1 rounded-full border border-kpi-navy/30 bg-kpi-navy/8 px-2.5 py-0.5 text-[10px] font-semibold tracking-wider text-kpi-navy uppercase">
               <ShieldCheck className="h-3 w-3" />
               ВКСУ
             </span>
@@ -118,7 +118,9 @@ export function GroupsClient({ initialGroups, canCreateGroups, error }: GroupsCl
 
   const handleCreate = async () => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
     setCreating(true);
     setCreateError(null);
 
@@ -163,7 +165,7 @@ export function GroupsClient({ initialGroups, canCreateGroups, error }: GroupsCl
         )}
 
         {!error && groups.length === 0 ? (
-          <div className="border-border-color bg-card rounded-xl border shadow-sm">
+          <div className="border-border-color rounded-xl border bg-card shadow-sm">
             <EmptyState
               icon={<Users className="h-8 w-8" />}
               title="Ви не належите до жодної з груп"
@@ -203,7 +205,9 @@ export function GroupsClient({ initialGroups, canCreateGroups, error }: GroupsCl
                   maxLength={GROUP_NAME_MAX_LENGTH}
                   autoFocus
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && name.trim()) handleCreate();
+                    if (e.key === 'Enter' && name.trim()) {
+                      handleCreate();
+                    }
                   }}
                 />
               </FormField>

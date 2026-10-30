@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -11,12 +12,22 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { TEST_NOW } from '@/__tests__/helpers/time';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
 
 import { GET, POST } from '@/app/api/faq/route';
 
@@ -55,23 +66,31 @@ const SAMPLE_FAQ_CATEGORIES = [
   },
 ];
 
-describe('GET /api/faq', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Reading the FAQ (GET /api/faq)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Public FAQ list');
   });
 
-  it('returns 200 with empty array when no categories exist', async () => {
+  it('should return 200 with empty array when no categories exist', async () => {
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([]);
     const { status, body } = await parseJson<unknown[]>(await GET());
     expect(status).toBe(200);
     expect(body).toEqual([]);
   });
 
-  it('returns categories with nested items ordered by position', async () => {
+  it('should return categories with nested items ordered by position when reading the FAQ', async () => {
     prismaMock.faqCategory.findMany.mockResolvedValueOnce(SAMPLE_FAQ_CATEGORIES);
 
     const { status, body } = await parseJson<any[]>(await GET());
@@ -82,7 +101,7 @@ describe('GET /api/faq', () => {
     expect(body[0].items).toHaveLength(2);
   });
 
-  it('does not require authentication', async () => {
+  it('should not require authentication when reading the FAQ', async () => {
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([]);
     const res = await GET();
     expect(res.status).toBe(200);
@@ -92,7 +111,7 @@ describe('GET /api/faq', () => {
 
   // ── Cache behaviour ───────────────────────────────────────────────────────
 
-  it('returns cached data without hitting the database on a cache hit', async () => {
+  it('should return cached data without hitting the database when cached data is available', async () => {
     cacheMock.getCachedFaq.mockResolvedValueOnce(SAMPLE_FAQ_CATEGORIES as any);
 
     const { status, body } = await parseJson<any[]>(await GET());
@@ -103,7 +122,7 @@ describe('GET /api/faq', () => {
     expect(prismaMock.faqCategory.findMany).not.toHaveBeenCalled();
   });
 
-  it('calls setCachedFaq with the DB result on a cache miss', async () => {
+  it('should cache the returned FAQ categories and items when the cache is empty', async () => {
     cacheMock.getCachedFaq.mockResolvedValueOnce(null);
     prismaMock.faqCategory.findMany.mockResolvedValueOnce(SAMPLE_FAQ_CATEGORIES);
 
@@ -112,7 +131,7 @@ describe('GET /api/faq', () => {
     expect(cacheMock.setCachedFaq).toHaveBeenCalledWith(SAMPLE_FAQ_CATEGORIES);
   });
 
-  it('queries the database when the cache is empty', async () => {
+  it('should query the database when the cache is empty', async () => {
     cacheMock.getCachedFaq.mockResolvedValueOnce(null);
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([]);
 
@@ -122,173 +141,178 @@ describe('GET /api/faq', () => {
   });
 });
 
-describe('POST /api/faq (create category)', () => {
+describe('Creating a FAQ category (create category) (POST /api/faq)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Create FAQ category');
   });
 
   // ── Auth guards ───────────────────────────────────────────────────────────
 
-  it('returns 401 when unauthenticated', async () => {
-    const req = makeRequest({ method: 'POST', body: { title: 'Test' } });
-    const res = await POST(req);
-    expect(res.status).toBe(401);
-  });
+  describe('when checking caller access', () => {
+    it('should return 401 when no user is signed in', async () => {
+      const req = makeRequest({ method: 'POST', body: { title: 'Test' } });
+      const res = await POST(req);
+      expect(res.status).toBe(401);
+    });
 
-  it('returns 403 when called by a restricted user', async () => {
-    const { access } = await makeTokenPair(USER_PAYLOAD);
-    prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
-    const req = makeAuthRequest(access.token, { method: 'POST', body: { title: 'Test' } });
-    const res = await POST(req);
-    expect(res.status).toBe(403);
-  });
+    it('should return 403 when called by a restricted user', async () => {
+      const { access } = await makeTokenPair(USER_PAYLOAD);
+      prismaMock.jwtToken.findFirst.mockResolvedValueOnce(JWT_TOKEN_RECORD);
+      const req = makeAuthRequest(access.token, { method: 'POST', body: { title: 'Test' } });
+      const res = await POST(req);
+      expect(res.status).toBe(403);
+    });
 
-  it('returns 403 when admin does not have FAQ management rights', async () => {
-    const req = await restrictedAdminReq({ title: 'Test' });
-    const res = await POST(req);
-    expect(res.status).toBe(403);
+    it('should return 403 when admin does not have FAQ management rights', async () => {
+      const req = await restrictedAdminReq({ title: 'Test' });
+      const res = await POST(req);
+      expect(res.status).toBe(403);
+    });
   });
 
   // ── Input validation ──────────────────────────────────────────────────────
 
-  it('returns 400 when title is missing', async () => {
-    const req = await unrestrictedAdminReq({});
-    const res = await POST(req);
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 400 when title is empty string', async () => {
-    const req = await unrestrictedAdminReq({ title: '   ' });
-    const res = await POST(req);
-    expect(res.status).toBe(400);
-  });
-
-  it(`returns 400 when title exceeds ${FAQ_CATEGORY_TITLE_MAX_LENGTH} characters`, async () => {
-    const req = await unrestrictedAdminReq({
-      title: 'A'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH + 1),
+  describe('when validating submitted data', () => {
+    it('should return 400 when title is missing', async () => {
+      const req = await unrestrictedAdminReq({});
+      const res = await POST(req);
+      expect(res.status).toBe(400);
     });
-    const res = await POST(req);
-    expect(res.status).toBe(400);
-  });
 
-  it(`accepts title exactly ${FAQ_CATEGORY_TITLE_MAX_LENGTH} characters long`, async () => {
-    const req = await unrestrictedAdminReq({ title: 'A'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH) });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
-    prismaMock.faqCategory.create.mockResolvedValueOnce({
-      id: 'cat-1',
-      title: 'A'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH),
-      position: 0,
-      created_at: new Date(),
-      updated_at: new Date(),
+    it('should return 400 when title is empty string', async () => {
+      const req = await unrestrictedAdminReq({ title: '   ' });
+      const res = await POST(req);
+      expect(res.status).toBe(400);
     });
-    const res = await POST(req);
-    expect(res.status).toBe(201);
+
+    it(`returns 400 when title exceeds ${FAQ_CATEGORY_TITLE_MAX_LENGTH} characters`, async () => {
+      const req = await unrestrictedAdminReq({
+        title: 'A'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH + 1),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(400);
+    });
+
+    it(`accepts title exactly ${FAQ_CATEGORY_TITLE_MAX_LENGTH} characters long`, async () => {
+      const req = await unrestrictedAdminReq({ title: 'A'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH) });
+      prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
+      prismaMock.faqCategory.create.mockResolvedValueOnce({
+        id: 'cat-1',
+        title: 'A'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH),
+        position: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(201);
+    });
   });
 
   // ── Success path ──────────────────────────────────────────────────────────
 
-  it('returns 201 with category data on success', async () => {
-    const req = await unrestrictedAdminReq({ title: 'General' });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
-    prismaMock.faqCategory.create.mockResolvedValueOnce({
-      id: 'cat-1',
-      title: 'General',
-      position: 0,
-      created_at: new Date(),
-      updated_at: new Date(),
+  describe('when an authorized request succeeds', () => {
+    it('should return the created FAQ category with 201 when an authorized admin submits a valid title', async () => {
+      const req = await unrestrictedAdminReq({ title: 'General' });
+      prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
+      prismaMock.faqCategory.create.mockResolvedValueOnce({
+        id: 'cat-1',
+        title: 'General',
+        position: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      const { status, body } = await parseJson<any>(await POST(req));
+      expect(status).toBe(201);
+      expect(body.title).toBe('General');
+      expect(body.position).toBe(0);
     });
 
-    const { status, body } = await parseJson<any>(await POST(req));
-    expect(status).toBe(201);
-    expect(body.title).toBe('General');
-    expect(body.position).toBe(0);
-  });
+    it('should append new category after the last one (position = last.position + 1)', async () => {
+      const req = await unrestrictedAdminReq({ title: 'New Cat' });
+      prismaMock.faqCategory.findFirst.mockResolvedValueOnce({ position: 3 });
+      prismaMock.faqCategory.create.mockResolvedValueOnce({
+        id: 'cat-5',
+        title: 'New Cat',
+        position: 4,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
 
-  it('appends new category after the last one (position = last.position + 1)', async () => {
-    const req = await unrestrictedAdminReq({ title: 'New Cat' });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce({ position: 3 });
-    prismaMock.faqCategory.create.mockResolvedValueOnce({
-      id: 'cat-5',
-      title: 'New Cat',
-      position: 4,
-      created_at: new Date(),
-      updated_at: new Date(),
+      await POST(req);
+
+      expect(prismaMock.faqCategory.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ position: 4 }),
+        }),
+      );
     });
 
-    await POST(req);
+    it('should store created_by from the authenticated user when creating a FAQ category', async () => {
+      const req = await unrestrictedAdminReq({ title: 'Security' });
+      prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
+      prismaMock.faqCategory.create.mockResolvedValueOnce({
+        id: 'cat-2',
+        title: 'Security',
+        position: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
 
-    expect(prismaMock.faqCategory.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ position: 4 }),
-      }),
-    );
-  });
+      await POST(req);
 
-  it('stores created_by from the authenticated user', async () => {
-    const req = await unrestrictedAdminReq({ title: 'Security' });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
-    prismaMock.faqCategory.create.mockResolvedValueOnce({
-      id: 'cat-2',
-      title: 'Security',
-      position: 0,
-      created_at: new Date(),
-      updated_at: new Date(),
+      expect(prismaMock.faqCategory.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ created_by: 'superadmin-001' }),
+        }),
+      );
     });
 
-    await POST(req);
+    it('should trim whitespace from title before saving', async () => {
+      const req = await unrestrictedAdminReq({ title: '  General  ' });
+      prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
+      prismaMock.faqCategory.create.mockResolvedValueOnce({
+        id: 'cat-1',
+        title: 'General',
+        position: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
 
-    expect(prismaMock.faqCategory.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ created_by: 'superadmin-001' }),
-      }),
-    );
-  });
+      await POST(req);
 
-  it('trims whitespace from title before saving', async () => {
-    const req = await unrestrictedAdminReq({ title: '  General  ' });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
-    prismaMock.faqCategory.create.mockResolvedValueOnce({
-      id: 'cat-1',
-      title: 'General',
-      position: 0,
-      created_at: new Date(),
-      updated_at: new Date(),
+      expect(prismaMock.faqCategory.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ title: 'General' }),
+        }),
+      );
     });
-
-    await POST(req);
-
-    expect(prismaMock.faqCategory.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ title: 'General' }),
-      }),
-    );
   });
 
   // ── Cache invalidation ────────────────────────────────────────────────────
 
-  it('invalidates the FAQ cache after creating a category', async () => {
-    const req = await unrestrictedAdminReq({ title: 'New' });
-    prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
-    prismaMock.faqCategory.create.mockResolvedValueOnce({
-      id: 'cat-1',
-      title: 'New',
-      position: 0,
-      created_at: new Date(),
-      updated_at: new Date(),
+  describe('when deciding whether cached data is stale', () => {
+    it('should invalidate the FAQ cache after creating a category', async () => {
+      const req = await unrestrictedAdminReq({ title: 'New' });
+      prismaMock.faqCategory.findFirst.mockResolvedValueOnce(null);
+      prismaMock.faqCategory.create.mockResolvedValueOnce({
+        id: 'cat-1',
+        title: 'New',
+        position: 0,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      await POST(req);
+
+      expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
     });
 
-    await POST(req);
-
-    expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not invalidate the cache when validation fails', async () => {
-    const req = await unrestrictedAdminReq({ title: '' });
-    await POST(req);
-    expect(cacheMock.invalidateFaq).not.toHaveBeenCalled();
+    it('should not invalidate the cache when validation fails', async () => {
+      const req = await unrestrictedAdminReq({ title: '' });
+      await POST(req);
+      expect(cacheMock.invalidateFaq).not.toHaveBeenCalled();
+    });
   });
 });

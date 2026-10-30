@@ -27,7 +27,10 @@ import {
 import { detectImageMime } from '@/lib/files';
 
 export type AvatarValidationCode =
-  'unsupported_format' | 'invalid_image' | 'image_too_large' | 'image_too_complex';
+  | 'unsupported_format'
+  | 'invalid_image'
+  | 'image_too_large'
+  | 'image_too_complex';
 
 export class AvatarValidationError extends Error {
   constructor(

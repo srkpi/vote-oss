@@ -46,6 +46,8 @@ export function KpiIdButton({
         className,
       )}
     >
+      {/* Full navigation is required for the OIDC redirect and transaction cookie. */}
+      {/* eslint-disable-next-line next/no-html-link-for-pages */}
       <a href="/api/auth/kpi-id/login">
         <Image src="/kpi-logo.svg" alt="KPI Logo" width={logoSize} height={logoSize} preload />
         <span>{caption}</span>

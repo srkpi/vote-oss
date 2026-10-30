@@ -2,9 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMediaQuery } from 'usehooks-ts';
 
 import { useLazyInView } from '@/hooks/use-lazy-in-view';
-import { usePrefersReducedMotion } from '@/hooks/use-reduced-motion';
 import { detectDeviceTier, detectWebglSupport } from '@/lib/three/use-webgl-support';
 import { cn } from '@/lib/utils/common';
 
@@ -33,7 +33,9 @@ export function VoteScene({
 }: VoteSceneProps) {
   const [containerRef, inView] = useLazyInView<HTMLDivElement>({ eager });
   const pointerRef = usePointerParallax(containerRef);
-  const reducedMotion = usePrefersReducedMotion();
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)', {
+    initializeWithValue: false,
+  });
 
   const [capability, setCapability] = useState<{
     webgl: boolean;
@@ -42,7 +44,7 @@ export function VoteScene({
   const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setCapability({ webgl: detectWebglSupport(), tier: detectDeviceTier() });
   }, []);
 
@@ -52,14 +54,20 @@ export function VoteScene({
   });
   const hasFiredFullyLoaded = useRef(false);
   const fireFullyLoadedOnce = useCallback(() => {
-    if (hasFiredFullyLoaded.current) return;
+    if (hasFiredFullyLoaded.current) {
+      return;
+    }
     hasFiredFullyLoaded.current = true;
     onSceneFullyLoadedRef.current?.();
   }, []);
 
   useEffect(() => {
-    if (capability === null) return;
-    if (!capability.webgl || reducedMotion) fireFullyLoadedOnce();
+    if (capability === null) {
+      return;
+    }
+    if (!capability.webgl || reducedMotion) {
+      fireFullyLoadedOnce();
+    }
   }, [capability, reducedMotion, fireFullyLoadedOnce]);
 
   const showRealScene = inView && capability !== null && capability.webgl && !reducedMotion;
@@ -68,10 +76,7 @@ export function VoteScene({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        'catgirl:bg-[#28101f] absolute inset-0 overflow-hidden bg-[#0a1f42]',
-        className,
-      )}
+      className={cn('absolute inset-0 overflow-hidden bg-[#0a1f42]', className)}
     >
       <SceneFallback
         variant={variant}

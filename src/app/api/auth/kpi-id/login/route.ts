@@ -14,11 +14,12 @@ import { getClientIp, rateLimitLogin } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest) {
   const limit = await rateLimitLogin(getClientIp(req.headers));
-  if (limit.limited)
+  if (limit.limited) {
     return new NextResponse(null, {
       status: 429,
       headers: { 'Retry-After': String(Math.ceil(limit.resetInMs / 1000)) },
     });
+  }
   try {
     const config = await getOidcConfig();
     const verifier = oidc.randomPKCECodeVerifier();

@@ -7,39 +7,6 @@ import { Errors } from '@/lib/errors';
 import { buildAdminGraph, isAncestorInGraph } from '@/lib/graph';
 import { prisma } from '@/lib/prisma';
 
-/**
- * @swagger
- * /api/admins/invite/{tokenHash}:
- *   delete:
- *     summary: Delete an invite token
- *     description: >
- *       Permanently deletes a single admin invite token identified by its
- *       hash. The caller must have `manage_admins` and either own the token
- *       or be a transitive ancestor of the token's creator in the admin
- *       hierarchy.
- *     tags:
- *       - Admin Invites
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: path
- *         name: tokenHash
- *         required: true
- *         schema:
- *           type: string
- *         description: SHA-256 hash of the raw invite token
- *     responses:
- *       204:
- *         description: Token deleted
- *       400:
- *         description: Missing tokenHash
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – no manage_admins or token is outside caller's hierarchy
- *       404:
- *         description: Invite token not found
- */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ tokenHash: string }> },
@@ -56,13 +23,17 @@ export async function DELETE(
   }
 
   const { tokenHash } = await params;
-  if (!tokenHash) return Errors.badRequest('tokenHash is required');
+  if (!tokenHash) {
+    return Errors.badRequest('tokenHash is required');
+  }
 
   const token = await prisma.adminInviteToken.findUnique({
     where: { token_hash: tokenHash },
   });
 
-  if (!token) return Errors.notFound('Invite token not found');
+  if (!token) {
+    return Errors.notFound('Invite token not found');
+  }
 
   // Owner may always delete their own token without a graph query
   if (token.created_by !== user.sub) {

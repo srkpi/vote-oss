@@ -1,4 +1,5 @@
 import * as allure from 'allure-js-commons';
+import { vi, describe, expect, beforeEach, it, afterEach } from 'vitest';
 
 import { cacheMock, resetCacheMock } from '@/__tests__/helpers/cache-mock';
 import {
@@ -10,16 +11,26 @@ import {
 } from '@/__tests__/helpers/fixtures';
 import { prismaMock, resetPrismaMock } from '@/__tests__/helpers/prisma-mock';
 import { makeAuthRequest, makeRequest, parseJson } from '@/__tests__/helpers/request';
-import { resetTokenStoreMock, tokenStoreMock } from '@/__tests__/helpers/token-store-mock';
+import { TEST_NOW } from '@/__tests__/helpers/time';
+import { resetTokenStoreMock } from '@/__tests__/helpers/token-store-mock';
 import {
   FAQ_CATEGORY_TITLE_MAX_LENGTH,
   FAQ_ITEM_CONTENT_MAX_LENGTH,
   FAQ_ITEM_TITLE_MAX_LENGTH,
 } from '@/lib/constants';
 
-jest.mock('@/lib/prisma', () => ({ prisma: prismaMock }));
-jest.mock('@/lib/token-store', () => tokenStoreMock);
-jest.mock('@/lib/cache', () => cacheMock);
+vi.mock('@/lib/prisma', async () => {
+  const { prismaMock } = await import('@/__tests__/helpers/prisma-mock');
+  return { prisma: prismaMock };
+});
+vi.mock('@/lib/token-store', async () => {
+  const { tokenStoreMock } = await import('@/__tests__/helpers/token-store-mock');
+  return tokenStoreMock;
+});
+vi.mock('@/lib/cache', async () => {
+  const { cacheMock } = await import('@/__tests__/helpers/cache-mock');
+  return cacheMock;
+});
 
 import { PATCH as reorderItems } from '@/app/api/faq/categories/[id]/items/reorder/route';
 import { POST as postItem } from '@/app/api/faq/categories/[id]/items/route';
@@ -57,45 +68,53 @@ async function restrictedAdminReq(method: string, body?: object) {
   return makeAuthRequest(access.token, { method, body });
 }
 
-const catParams = (id: string) => ({ params: Promise.resolve({ id }) });
+const categoryParams = (id: string) => ({ params: Promise.resolve({ id }) });
 const itemParams = (id: string) => ({ params: Promise.resolve({ id }) });
 
 // ===========================================================================
 // PUT /api/faq/categories/[id]
 // ===========================================================================
 
-describe('PUT /api/faq/categories/[id]', () => {
+beforeEach(() => {
+  vi.setSystemTime(TEST_NOW);
+  resetPrismaMock();
+  resetTokenStoreMock();
+  resetCacheMock();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+describe('Updating a FAQ category (PUT /api/faq/categories/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Update FAQ category');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'PUT', body: { title: 'Updated' } });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when restricted admin', async () => {
+  it('should return 403 when the admin is restricted to a faculty', async () => {
     const req = await restrictedAdminReq('PUT', { title: 'Updated' });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when category does not exist', async () => {
+  it('should return 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'Updated' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await putCategory(req, catParams('nonexistent'));
+    const res = await putCategory(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when title is missing', async () => {
+  it('should return 400 when title is missing', async () => {
     const req = await unrestrictedAdminReq('PUT', {});
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -104,11 +123,11 @@ describe('PUT /api/faq/categories/[id]', () => {
       title: 'X'.repeat(FAQ_CATEGORY_TITLE_MAX_LENGTH + 1),
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
-    const res = await putCategory(req, catParams('cat-1'));
+    const res = await putCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 200 with updated category on success', async () => {
+  it('should return the updated FAQ category with 200 when an authorized admin submits a valid title', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'Updated Title' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
     prismaMock.faqCategory.update.mockResolvedValueOnce({
@@ -118,13 +137,13 @@ describe('PUT /api/faq/categories/[id]', () => {
       updated_at: new Date(),
     });
 
-    const { status, body } = await parseJson<any>(await putCategory(req, catParams('cat-1')));
+    const { status, body } = await parseJson<any>(await putCategory(req, categoryParams('cat-1')));
     expect(status).toBe(200);
     expect(body.title).toBe('Updated Title');
     expect(body.updatedAt).toBeDefined();
   });
 
-  it('stores updated_by from authenticated user', async () => {
+  it('should store updated_by from authenticated user when updating a FAQ category', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'New' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
     prismaMock.faqCategory.update.mockResolvedValueOnce({
@@ -134,7 +153,7 @@ describe('PUT /api/faq/categories/[id]', () => {
       updated_at: new Date(),
     });
 
-    await putCategory(req, catParams('cat-1'));
+    await putCategory(req, categoryParams('cat-1'));
 
     expect(prismaMock.faqCategory.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -143,7 +162,7 @@ describe('PUT /api/faq/categories/[id]', () => {
     );
   });
 
-  it('invalidates the FAQ cache after updating a category', async () => {
+  it('should invalidate the FAQ cache after updating a category', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'New' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
     prismaMock.faqCategory.update.mockResolvedValueOnce({
@@ -153,15 +172,15 @@ describe('PUT /api/faq/categories/[id]', () => {
       updated_at: new Date(),
     });
 
-    await putCategory(req, catParams('cat-1'));
+    await putCategory(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
 
-  it('does not invalidate the cache when validation fails', async () => {
+  it('should not invalidate the cache when validation fails', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: '' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1', title: 'Old' });
-    await putCategory(req, catParams('cat-1'));
+    await putCategory(req, categoryParams('cat-1'));
     expect(cacheMock.invalidateFaq).not.toHaveBeenCalled();
   });
 });
@@ -170,59 +189,56 @@ describe('PUT /api/faq/categories/[id]', () => {
 // DELETE /api/faq/categories/[id]
 // ===========================================================================
 
-describe('DELETE /api/faq/categories/[id]', () => {
+describe('Deleting a FAQ category (DELETE /api/faq/categories/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Delete FAQ category');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'DELETE' });
-    const res = await deleteCategory(req, catParams('cat-1'));
+    const res = await deleteCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when restricted admin', async () => {
+  it('should return 403 when the admin is restricted to a faculty', async () => {
     const req = await restrictedAdminReq('DELETE');
-    const res = await deleteCategory(req, catParams('cat-1'));
+    const res = await deleteCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when category does not exist', async () => {
+  it('should return 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await deleteCategory(req, catParams('nonexistent'));
+    const res = await deleteCategory(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 204 on success', async () => {
+  it('should return 204 when the request succeeds', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-1' });
 
-    const res = await deleteCategory(req, catParams('cat-1'));
+    const res = await deleteCategory(req, categoryParams('cat-1'));
     expect(res.status).toBe(204);
   });
 
-  it('calls prisma.faqCategory.delete with the correct id', async () => {
+  it('should delete the requested FAQ category when an authorized admin removes it', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-99' });
     prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-99' });
 
-    await deleteCategory(req, catParams('cat-99'));
+    await deleteCategory(req, categoryParams('cat-99'));
 
     expect(prismaMock.faqCategory.delete).toHaveBeenCalledWith({ where: { id: 'cat-99' } });
   });
 
-  it('invalidates the FAQ cache after deleting a category', async () => {
+  it('should invalidate the FAQ cache after deleting a category', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqCategory.delete.mockResolvedValueOnce({ id: 'cat-1' });
 
-    await deleteCategory(req, catParams('cat-1'));
+    await deleteCategory(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
@@ -232,45 +248,42 @@ describe('DELETE /api/faq/categories/[id]', () => {
 // POST /api/faq/categories/[id]/items
 // ===========================================================================
 
-describe('POST /api/faq/categories/[id]/items', () => {
+describe('Creating a FAQ item (POST /api/faq/categories/[id]/items)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Create FAQ item');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'POST', body: { title: 'Q', content: VALID_CONTENT } });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when restricted admin', async () => {
+  it('should return 403 when the admin is restricted to a faculty', async () => {
     const req = await restrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when category does not exist', async () => {
+  it('should return 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await postItem(req, catParams('nonexistent'));
+    const res = await postItem(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when title is missing', async () => {
+  it('should return 400 when title is missing', async () => {
     const req = await unrestrictedAdminReq('POST', { content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is missing', async () => {
+  it('should return 400 when content is missing', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q' });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -280,27 +293,27 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: VALID_CONTENT,
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is not valid Quill Delta JSON', async () => {
+  it('should return 400 when content is not valid Quill Delta JSON', async () => {
     const req = await unrestrictedAdminReq('POST', {
       title: 'Q',
       content: '<p>plain html is rejected</p>',
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is JSON but not a Quill Delta', async () => {
+  it('should return 400 when content is JSON but not a Quill Delta', async () => {
     const req = await unrestrictedAdminReq('POST', {
       title: 'Q',
       content: JSON.stringify({ text: 'hello' }),
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
@@ -310,11 +323,11 @@ describe('POST /api/faq/categories/[id]/items', () => {
       content: OVER_LIMIT_CONTENT,
     });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
-    const res = await postItem(req, catParams('cat-1'));
+    const res = await postItem(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 201 with item data on success', async () => {
+  it('should return the created FAQ item with 201 when an authorized admin submits valid content', async () => {
     const req = await unrestrictedAdminReq('POST', {
       title: 'How to vote?',
       content: VALID_CONTENT,
@@ -331,13 +344,13 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    const { status, body } = await parseJson<any>(await postItem(req, catParams('cat-1')));
+    const { status, body } = await parseJson<any>(await postItem(req, categoryParams('cat-1')));
     expect(status).toBe(201);
     expect(body.title).toBe('How to vote?');
     expect(body.categoryId).toBe('cat-1');
   });
 
-  it('stores Quill Delta content verbatim in the database', async () => {
+  it('should store Quill Delta content verbatim in the database when creating a FAQ item', async () => {
     const req = await unrestrictedAdminReq('POST', {
       title: 'Q',
       content: VALID_CONTENT,
@@ -354,7 +367,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    await postItem(req, catParams('cat-1'));
+    await postItem(req, categoryParams('cat-1'));
 
     expect(prismaMock.faqItem.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -363,7 +376,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
     );
   });
 
-  it('appends item after the last one in the category', async () => {
+  it('should append item after the last one in the category', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqItem.findFirst.mockResolvedValueOnce({ position: 2 });
@@ -377,7 +390,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    await postItem(req, catParams('cat-1'));
+    await postItem(req, categoryParams('cat-1'));
 
     expect(prismaMock.faqItem.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -386,7 +399,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
     );
   });
 
-  it('invalidates the FAQ cache after creating an item', async () => {
+  it('should invalidate the FAQ cache after creating an item', async () => {
     const req = await unrestrictedAdminReq('POST', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqItem.findFirst.mockResolvedValueOnce(null);
@@ -400,7 +413,7 @@ describe('POST /api/faq/categories/[id]/items', () => {
       updated_at: new Date(),
     });
 
-    await postItem(req, catParams('cat-1'));
+    await postItem(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });
@@ -410,49 +423,46 @@ describe('POST /api/faq/categories/[id]/items', () => {
 // PUT /api/faq/items/[id]
 // ===========================================================================
 
-describe('PUT /api/faq/items/[id]', () => {
+describe('Updating a FAQ item (PUT /api/faq/items/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Update FAQ item');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'PUT', body: { title: 'Q', content: VALID_CONTENT } });
     const res = await putItem(req, itemParams('item-1'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when restricted admin', async () => {
+  it('should return 403 when the admin is restricted to a faculty', async () => {
     const req = await restrictedAdminReq('PUT', { title: 'Q', content: VALID_CONTENT });
     const res = await putItem(req, itemParams('item-1'));
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when item does not exist', async () => {
+  it('should return 404 when item does not exist', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqItem.findUnique.mockResolvedValueOnce(null);
     const res = await putItem(req, itemParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when title is missing', async () => {
+  it('should return 400 when title is missing', async () => {
     const req = await unrestrictedAdminReq('PUT', { content: VALID_CONTENT });
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     const res = await putItem(req, itemParams('item-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is missing', async () => {
+  it('should return 400 when content is missing', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'Q' });
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     const res = await putItem(req, itemParams('item-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is not valid Quill Delta JSON', async () => {
+  it('should return 400 when content is not valid Quill Delta JSON', async () => {
     const req = await unrestrictedAdminReq('PUT', {
       title: 'Q',
       content: '<p>html is rejected</p>',
@@ -462,7 +472,7 @@ describe('PUT /api/faq/items/[id]', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when content is JSON but not a Quill Delta', async () => {
+  it('should return 400 when content is JSON but not a Quill Delta', async () => {
     const req = await unrestrictedAdminReq('PUT', {
       title: 'Q',
       content: JSON.stringify({ text: 'hello' }),
@@ -482,7 +492,7 @@ describe('PUT /api/faq/items/[id]', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 200 with updated item on success', async () => {
+  it('should return the updated FAQ item with 200 when an authorized admin submits valid content', async () => {
     const updatedContent = makeQuillContent('Updated answer.');
     const req = await unrestrictedAdminReq('PUT', {
       title: 'Updated Q',
@@ -505,7 +515,7 @@ describe('PUT /api/faq/items/[id]', () => {
     expect(body.updatedAt).toBeDefined();
   });
 
-  it('stores Quill Delta content verbatim in the database', async () => {
+  it('should store Quill Delta content verbatim in the database when updating a FAQ item', async () => {
     const richContent = makeQuillContent('Bold answer with details.');
     const req = await unrestrictedAdminReq('PUT', { title: 'Q', content: richContent });
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
@@ -527,7 +537,7 @@ describe('PUT /api/faq/items/[id]', () => {
     );
   });
 
-  it('stores updated_by from authenticated user', async () => {
+  it('should store updated_by from authenticated user when updating a FAQ item', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     prismaMock.faqItem.update.mockResolvedValueOnce({
@@ -548,7 +558,7 @@ describe('PUT /api/faq/items/[id]', () => {
     );
   });
 
-  it('invalidates the FAQ cache after updating an item', async () => {
+  it('should invalidate the FAQ cache after updating an item', async () => {
     const req = await unrestrictedAdminReq('PUT', { title: 'Q', content: VALID_CONTENT });
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     prismaMock.faqItem.update.mockResolvedValueOnce({
@@ -570,35 +580,32 @@ describe('PUT /api/faq/items/[id]', () => {
 // DELETE /api/faq/items/[id]
 // ===========================================================================
 
-describe('DELETE /api/faq/items/[id]', () => {
+describe('Deleting a FAQ item (DELETE /api/faq/items/[id])', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Delete FAQ item');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'DELETE' });
     const res = await deleteItem(req, itemParams('item-1'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when restricted admin', async () => {
+  it('should return 403 when the admin is restricted to a faculty', async () => {
     const req = await restrictedAdminReq('DELETE');
     const res = await deleteItem(req, itemParams('item-1'));
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when item does not exist', async () => {
+  it('should return 404 when item does not exist', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqItem.findUnique.mockResolvedValueOnce(null);
     const res = await deleteItem(req, itemParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 204 on success', async () => {
+  it('should return 204 when the request succeeds', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     prismaMock.faqItem.delete.mockResolvedValueOnce({ id: 'item-1' });
@@ -607,7 +614,7 @@ describe('DELETE /api/faq/items/[id]', () => {
     expect(res.status).toBe(204);
   });
 
-  it('calls prisma.faqItem.delete with the correct id', async () => {
+  it('should delete the requested FAQ item when an authorized admin removes it', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-99' });
     prismaMock.faqItem.delete.mockResolvedValueOnce({ id: 'item-99' });
@@ -617,7 +624,7 @@ describe('DELETE /api/faq/items/[id]', () => {
     expect(prismaMock.faqItem.delete).toHaveBeenCalledWith({ where: { id: 'item-99' } });
   });
 
-  it('invalidates the FAQ cache after deleting an item', async () => {
+  it('should invalidate the FAQ cache after deleting an item', async () => {
     const req = await unrestrictedAdminReq('DELETE');
     prismaMock.faqItem.findUnique.mockResolvedValueOnce({ id: 'item-1' });
     prismaMock.faqItem.delete.mockResolvedValueOnce({ id: 'item-1' });
@@ -632,41 +639,38 @@ describe('DELETE /api/faq/items/[id]', () => {
 // PATCH /api/faq/categories/reorder
 // ===========================================================================
 
-describe('PATCH /api/faq/categories/reorder', () => {
+describe('Reordering FAQ categories (PATCH /api/faq/categories/reorder)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Reorder FAQ categories');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'PATCH', body: { order: ['cat-1', 'cat-2'] } });
     const res = await reorderCategories(req);
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when restricted admin', async () => {
+  it('should return 403 when the admin is restricted to a faculty', async () => {
     const req = await restrictedAdminReq('PATCH', { order: ['cat-1', 'cat-2'] });
     const res = await reorderCategories(req);
     expect(res.status).toBe(403);
   });
 
-  it('returns 400 when order is not an array', async () => {
+  it('should return 400 when order is not an array', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: 'not-an-array' });
     const res = await reorderCategories(req);
     expect(res.status).toBe(400);
   });
 
-  it('returns 400 when order contains unknown category IDs', async () => {
+  it('should return 400 when order contains unknown category IDs', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['unknown-cat'] });
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([{ id: 'cat-1' }, { id: 'cat-2' }]);
     const res = await reorderCategories(req);
     expect(res.status).toBe(400);
   });
 
-  it('returns 204 and updates positions via transaction', async () => {
+  it('should save all category positions together and return 204 when reordering FAQ categories', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['cat-2', 'cat-1'] });
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([{ id: 'cat-1' }, { id: 'cat-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
@@ -675,7 +679,7 @@ describe('PATCH /api/faq/categories/reorder', () => {
     expect(res.status).toBe(204);
   });
 
-  it('invalidates the FAQ cache after reordering categories', async () => {
+  it('should invalidate the FAQ cache after reordering categories', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['cat-2', 'cat-1'] });
     prismaMock.faqCategory.findMany.mockResolvedValueOnce([{ id: 'cat-1' }, { id: 'cat-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
@@ -690,59 +694,56 @@ describe('PATCH /api/faq/categories/reorder', () => {
 // PATCH /api/faq/categories/[id]/items/reorder
 // ===========================================================================
 
-describe('PATCH /api/faq/categories/[id]/items/reorder', () => {
+describe('Reordering FAQ items (PATCH /api/faq/categories/[id]/items/reorder)', () => {
   beforeEach(() => {
-    resetPrismaMock();
-    resetTokenStoreMock();
-    resetCacheMock();
     allure.feature('FAQ');
     allure.story('Reorder FAQ items within category');
   });
 
-  it('returns 401 when unauthenticated', async () => {
+  it('should return 401 when no user is signed in', async () => {
     const req = makeRequest({ method: 'PATCH', body: { order: ['item-1', 'item-2'] } });
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(401);
   });
 
-  it('returns 403 when restricted admin', async () => {
+  it('should return 403 when the admin is restricted to a faculty', async () => {
     const req = await restrictedAdminReq('PATCH', { order: ['item-1'] });
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(403);
   });
 
-  it('returns 404 when category does not exist', async () => {
+  it('should return 404 when category does not exist', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['item-1'] });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce(null);
-    const res = await reorderItems(req, catParams('nonexistent'));
+    const res = await reorderItems(req, categoryParams('nonexistent'));
     expect(res.status).toBe(404);
   });
 
-  it('returns 400 when order contains IDs from another category', async () => {
+  it('should return 400 when order contains IDs from another category', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['item-foreign'] });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(400);
   });
 
-  it('returns 204 and reorders items atomically', async () => {
+  it('should save all item positions together and return 204 when reordering FAQ items', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['item-2', 'item-1'] });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
-    const res = await reorderItems(req, catParams('cat-1'));
+    const res = await reorderItems(req, categoryParams('cat-1'));
     expect(res.status).toBe(204);
   });
 
-  it('invalidates the FAQ cache after reordering items', async () => {
+  it('should invalidate the FAQ cache after reordering items', async () => {
     const req = await unrestrictedAdminReq('PATCH', { order: ['item-2', 'item-1'] });
     prismaMock.faqCategory.findUnique.mockResolvedValueOnce({ id: 'cat-1' });
     prismaMock.faqItem.findMany.mockResolvedValueOnce([{ id: 'item-1' }, { id: 'item-2' }]);
     prismaMock.$transaction.mockResolvedValueOnce([{}, {}]);
 
-    await reorderItems(req, catParams('cat-1'));
+    await reorderItems(req, categoryParams('cat-1'));
 
     expect(cacheMock.invalidateFaq).toHaveBeenCalledTimes(1);
   });

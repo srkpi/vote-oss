@@ -25,8 +25,12 @@ interface CampaignDashboardProps {
 
 function formStatusKind(form: CandidateRegistrationFormAdminSummary): StatusKind {
   const now = Date.now();
-  if (now < new Date(form.opensAt).getTime()) return 'upcoming';
-  if (now > new Date(form.closesAt).getTime()) return 'closed';
+  if (now < new Date(form.opensAt).getTime()) {
+    return 'upcoming';
+  }
+  if (now > new Date(form.closesAt).getTime()) {
+    return 'closed';
+  }
   return 'open';
 }
 
@@ -40,7 +44,9 @@ function FinalElectionBody({ election, isCompleted }: FinalElectionBodyProps) {
     if (isCompleted) {
       const av = a.voteCount ?? -1;
       const bv = b.voteCount ?? -1;
-      if (bv !== av) return bv - av;
+      if (bv !== av) {
+        return bv - av;
+      }
     }
     return a.position - b.position;
   });
@@ -50,13 +56,13 @@ function FinalElectionBody({ election, isCompleted }: FinalElectionBodyProps) {
 
   return (
     <div>
-      <div className="text-muted-foreground border-border-subtle flex flex-wrap gap-x-4 gap-y-1 border-b px-5 py-3 text-xs">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 border-b border-border-subtle px-5 py-3 text-xs text-muted-foreground">
         <span>
           <LocalDateTime date={election.opensAt} /> — <LocalDateTime date={election.closesAt} />
         </span>
         <span>Бюлетенів: {election.ballotCount}</span>
       </div>
-      <ul className="divide-border-subtle divide-y">
+      <ul className="divide-y divide-border-subtle">
         {choices.map((c) => {
           const isWinner =
             isCompleted &&
@@ -69,20 +75,20 @@ function FinalElectionBody({ election, isCompleted }: FinalElectionBodyProps) {
               className="flex items-start justify-between gap-3 px-5 py-3"
             >
               <div className="flex items-center gap-2">
-                <span className="font-body text-foreground text-sm">{c.candidateFullName}</span>
+                <span className="font-body text-sm text-foreground">{c.candidateFullName}</span>
                 {isWinner && <StatusBadge status="quorum" size="sm" label="Переможець" />}
               </div>
-              <span className="text-muted-foreground text-xs">
+              <span className="text-xs text-muted-foreground">
                 {c.voteCount === null ? '—' : `${c.voteCount} голосів`}
               </span>
             </li>
           );
         })}
       </ul>
-      <div className="border-border-subtle border-t px-5 py-3">
+      <div className="border-t border-border-subtle px-5 py-3">
         <Link
           href={`/elections/${election.electionId}`}
-          className="text-kpi-navy text-sm underline hover:no-underline"
+          className="text-sm text-kpi-navy underline hover:no-underline"
         >
           Відкрити голосування
         </Link>
@@ -124,26 +130,26 @@ export function CampaignDashboard({
             <CampaignStageEditor campaign={campaign} />
 
             {/* Registration form (Stage 2) */}
-            <section className="border-border-color shadow-card bg-card rounded-xl border">
-              <header className="border-border-subtle flex items-center gap-2 border-b px-5 py-4">
-                <ClipboardList className="text-kpi-gray-mid h-4 w-4" />
-                <h2 className="font-display text-foreground text-base font-semibold">
+            <section className="border-border-color rounded-xl border bg-card shadow-card">
+              <header className="flex items-center gap-2 border-b border-border-subtle px-5 py-4">
+                <ClipboardList className="h-4 w-4 text-kpi-gray-mid" />
+                <h2 className="font-display text-base font-semibold text-foreground">
                   Реєстрація кандидатів
                 </h2>
               </header>
               {registrationForm ? (
                 <div className="space-y-2 px-5 py-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-body text-foreground text-sm font-semibold">
+                    <p className="font-body text-sm font-semibold text-foreground">
                       {registrationForm.title}
                     </p>
                     <StatusBadge status={formStatusKind(registrationForm)} size="sm" />
                   </div>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-xs text-muted-foreground">
                     Прийом заявок: <LocalDateTime date={registrationForm.opensAt} /> —{' '}
                     <LocalDateTime date={registrationForm.closesAt} />
                   </p>
-                  <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <Inbox className="h-3 w-3" />
                       Подано: {registrationForm.submittedCount}
@@ -163,7 +169,7 @@ export function CampaignDashboard({
                       </span>
                     )}
                   </div>
-                  <p className="text-muted-foreground pt-2 text-xs">
+                  <p className="pt-2 text-xs text-muted-foreground">
                     Заявки опрацьовуються на сторінці{' '}
                     <Link
                       href={`/groups/${group.id}`}
@@ -175,16 +181,16 @@ export function CampaignDashboard({
                   </p>
                 </div>
               ) : campaign.state === 'ANNOUNCED' ? (
-                <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                   Реєстраційну форму буде створено автоматично, коли кампанія перейде у стан
                   «Реєстрація».
                 </p>
               ) : campaign.state === 'CANCELLED' ? (
-                <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                   Кампанію скасовано — реєстраційну форму не створено.
                 </p>
               ) : (
-                <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                   Реєстраційну форму ще не створено. Cron підхопить її на наступному запуску.
                 </p>
               )}
@@ -192,22 +198,22 @@ export function CampaignDashboard({
 
             {/* Stage 3: signature collection */}
             {campaign.signatureCollection && (
-              <section className="border-border-color shadow-card bg-card rounded-xl border">
-                <header className="border-border-subtle flex items-center justify-between gap-2 border-b px-5 py-4">
+              <section className="border-border-color rounded-xl border bg-card shadow-card">
+                <header className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="text-kpi-gray-mid h-4 w-4" />
-                    <h2 className="font-display text-foreground text-base font-semibold">
+                    <ShieldCheck className="h-4 w-4 text-kpi-gray-mid" />
+                    <h2 className="font-display text-base font-semibold text-foreground">
                       Збір підписів
                     </h2>
                   </div>
                   {campaign.signatureQuorum !== null && (
-                    <span className="text-muted-foreground text-xs">
+                    <span className="text-xs text-muted-foreground">
                       Кворум: {campaign.signatureQuorum}
                     </span>
                   )}
                 </header>
                 {signatureElections.length > 0 ? (
-                  <ul className="divide-border-subtle divide-y">
+                  <ul className="divide-y divide-border-subtle">
                     {signatureElections.map((sig) => (
                       <li
                         key={sig.electionId}
@@ -217,7 +223,7 @@ export function CampaignDashboard({
                           <div className="flex flex-wrap items-center gap-2">
                             <Link
                               href={`/elections/${sig.electionId}`}
-                              className="font-body text-foreground hover:text-kpi-navy text-sm font-semibold transition-colors"
+                              className="font-body text-sm font-semibold text-foreground transition-colors hover:text-kpi-navy"
                             >
                               {sig.candidateFullName}
                             </Link>
@@ -226,17 +232,17 @@ export function CampaignDashboard({
                               <StatusBadge status="quorum" size="sm" label="Кворум зібрано" />
                             )}
                           </div>
-                          <p className="text-muted-foreground mt-1 text-xs">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             <LocalDateTime date={sig.opensAt} /> —{' '}
                             <LocalDateTime date={sig.closesAt} />
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-body text-foreground text-sm font-semibold">
+                          <p className="font-body text-sm font-semibold text-foreground">
                             {sig.ballotCount}
-                            <span className="text-muted-foreground text-xs"> / {sig.quorum}</span>
+                            <span className="text-xs text-muted-foreground"> / {sig.quorum}</span>
                           </p>
-                          <p className="text-muted-foreground text-xs">підписів</p>
+                          <p className="text-xs text-muted-foreground">підписів</p>
                         </div>
                       </li>
                     ))}
@@ -244,19 +250,19 @@ export function CampaignDashboard({
                 ) : campaign.state === 'ANNOUNCED' ||
                   campaign.state === 'REGISTRATION_OPEN' ||
                   campaign.state === 'REGISTRATION_REVIEW' ? (
-                  <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                  <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                     Голосування за підписи створяться автоматично після завершення розгляду заявок.
                   </p>
                 ) : campaign.state === 'CANCELLED' ? (
-                  <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                  <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                     Кампанію скасовано — голосування за підписи не створено.
                   </p>
                 ) : campaign.state === 'FAILED' ? (
-                  <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                  <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                     Кампанія не відбулася — жоден кандидат не пройшов розгляд заявок.
                   </p>
                 ) : (
-                  <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                  <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                     Голосування за підписи ще не створено. Cron підхопить їх на наступному запуску.
                   </p>
                 )}
@@ -264,11 +270,11 @@ export function CampaignDashboard({
             )}
 
             {/* Stage 4: final election */}
-            <section className="border-border-color shadow-card bg-card rounded-xl border">
-              <header className="border-border-subtle flex items-center justify-between gap-2 border-b px-5 py-4">
+            <section className="border-border-color rounded-xl border bg-card shadow-card">
+              <header className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <Vote className="text-kpi-gray-mid h-4 w-4" />
-                  <h2 className="font-display text-foreground text-base font-semibold">
+                  <Vote className="h-4 w-4 text-kpi-gray-mid" />
+                  <h2 className="font-display text-base font-semibold text-foreground">
                     Фінальне голосування
                   </h2>
                 </div>
@@ -280,15 +286,15 @@ export function CampaignDashboard({
                   isCompleted={campaign.state === 'COMPLETED'}
                 />
               ) : campaign.state === 'CANCELLED' ? (
-                <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                   Кампанію скасовано — голосування не створено.
                 </p>
               ) : campaign.state === 'FAILED' ? (
-                <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                   Кампанія не відбулася — голосування не створено.
                 </p>
               ) : (
-                <p className="font-body text-muted-foreground px-5 py-6 text-sm">
+                <p className="font-body px-5 py-6 text-sm text-muted-foreground">
                   Голосування з усіма пройшовшими кандидатами створиться автоматично перед його
                   початком.
                 </p>
@@ -298,32 +304,32 @@ export function CampaignDashboard({
 
           {/* Sidebar */}
           <div className="space-y-4">
-            <section className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-              <header className="border-border-subtle border-b px-5 py-4">
-                <h3 className="font-display text-foreground text-base font-semibold">Параметри</h3>
+            <section className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+              <header className="border-b border-border-subtle px-5 py-4">
+                <h3 className="font-display text-base font-semibold text-foreground">Параметри</h3>
               </header>
-              <dl className="divide-border-subtle divide-y">
+              <dl className="divide-y divide-border-subtle">
                 <div className="px-5 py-3">
-                  <dt className="text-muted-foreground text-xs">Тип виборів</dt>
-                  <dd className="text-foreground text-sm">
+                  <dt className="text-xs text-muted-foreground">Тип виборів</dt>
+                  <dd className="text-sm text-foreground">
                     {ELECTION_KIND_LABEL[campaign.electionKind]}
                   </dd>
                 </div>
                 <div className="px-5 py-3">
-                  <dt className="text-muted-foreground text-xs">Розмір команди</dt>
-                  <dd className="text-foreground text-sm">
+                  <dt className="text-xs text-muted-foreground">Розмір команди</dt>
+                  <dd className="text-sm text-foreground">
                     {campaign.teamSize === 0 ? 'Без команди' : campaign.teamSize}
                   </dd>
                 </div>
                 <div className="px-5 py-3">
-                  <dt className="text-muted-foreground text-xs">Передвиборча програма</dt>
-                  <dd className="text-foreground text-sm">
+                  <dt className="text-xs text-muted-foreground">Передвиборча програма</dt>
+                  <dd className="text-sm text-foreground">
                     {campaign.requiresCampaignProgram ? 'Обов’язкова' : 'Необов’язкова'}
                   </dd>
                 </div>
                 <div className="px-5 py-3">
-                  <dt className="text-muted-foreground text-xs">Створено</dt>
-                  <dd className="text-foreground text-sm">
+                  <dt className="text-xs text-muted-foreground">Створено</dt>
+                  <dd className="text-sm text-foreground">
                     <LocalDateTime date={campaign.createdAt} />
                   </dd>
                 </div>
@@ -331,22 +337,22 @@ export function CampaignDashboard({
             </section>
 
             {/* Restrictions */}
-            <section className="border-border-color shadow-card bg-card overflow-hidden rounded-xl border">
-              <header className="border-border-subtle border-b px-5 py-4">
-                <h3 className="font-display text-foreground text-base font-semibold">Обмеження</h3>
+            <section className="border-border-color overflow-hidden rounded-xl border bg-card shadow-card">
+              <header className="border-b border-border-subtle px-5 py-4">
+                <h3 className="font-display text-base font-semibold text-foreground">Обмеження</h3>
               </header>
               {campaign.restrictions.length === 0 ? (
-                <p className="font-body text-muted-foreground px-5 py-4 text-sm">
+                <p className="font-body px-5 py-4 text-sm text-muted-foreground">
                   Без обмежень — у виборах беруть участь усі студенти.
                 </p>
               ) : (
-                <dl className="divide-border-subtle divide-y">
+                <dl className="divide-y divide-border-subtle">
                   {Object.entries(groupedRestrictions).map(([type, values]) => (
                     <div key={type} className="px-5 py-3">
-                      <dt className="text-muted-foreground text-xs">
+                      <dt className="text-xs text-muted-foreground">
                         {RESTRICTION_TYPE_LABELS[type] ?? type}
                       </dt>
-                      <dd className="text-foreground text-sm">{values.join(', ')}</dd>
+                      <dd className="text-sm text-foreground">{values.join(', ')}</dd>
                     </div>
                   ))}
                 </dl>

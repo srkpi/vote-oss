@@ -26,8 +26,11 @@ export default async function GroupOgImage({ params }: Props) {
   const { data, status } = await serverApi.groups.og(id);
 
   let metaTitle = 'Група';
-  if (status === 404) metaTitle = 'Групу не знайдено';
-  else if (data?.name) metaTitle = data.name;
+  if (status === 404) {
+    metaTitle = 'Групу не знайдено';
+  } else if (data?.name) {
+    metaTitle = data.name;
+  }
 
   return new ImageResponse(
     buildOgImageElement({

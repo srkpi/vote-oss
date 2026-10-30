@@ -92,7 +92,9 @@ export function createChainNetworkLayout(options: ChainNetworkOptions = {}): Cha
 
     for (const { j } of distances) {
       const key = i < j ? `${i}-${j}` : `${j}-${i}`;
-      if (edgeSet.has(key)) continue;
+      if (edgeSet.has(key)) {
+        continue;
+      }
       edgeSet.add(key);
       edges.push(i < j ? [i, j] : [j, i]);
     }

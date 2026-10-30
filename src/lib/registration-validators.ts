@@ -24,7 +24,9 @@ export type ValidationResult<T> = { ok: true; value: T } | { ok: false; error: s
  */
 export function validatePhoneNumber(raw: string): ValidationResult<string> {
   const trimmed = raw.trim();
-  if (!trimmed) return { ok: false, error: 'Номер телефону обовʼязковий' };
+  if (!trimmed) {
+    return { ok: false, error: 'Номер телефону обовʼязковий' };
+  }
   if (trimmed.length > REGISTRATION_PHONE_MAX_LENGTH) {
     return { ok: false, error: `Номер не довший за ${REGISTRATION_PHONE_MAX_LENGTH} символів` };
   }
@@ -39,7 +41,9 @@ export function validatePhoneNumber(raw: string): ValidationResult<string> {
 /** Accepts `@username` or `username`; normalises to `@username`. */
 export function validateTelegramTag(raw: string): ValidationResult<string> {
   const trimmed = raw.trim();
-  if (!trimmed) return { ok: false, error: 'Telegram-тег обовʼязковий' };
+  if (!trimmed) {
+    return { ok: false, error: 'Telegram-тег обовʼязковий' };
+  }
   const stripped = trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
   if (!/^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(stripped)) {
     return {
@@ -57,7 +61,9 @@ export function validateTelegramTag(raw: string): ValidationResult<string> {
 /** Accepts a Google Drive / Docs URL only. */
 export function validateCampaignProgramUrl(raw: string): ValidationResult<string> {
   const trimmed = raw.trim();
-  if (!trimmed) return { ok: false, error: 'Посилання на програму обовʼязкове' };
+  if (!trimmed) {
+    return { ok: false, error: 'Посилання на програму обовʼязкове' };
+  }
   if (trimmed.length > REGISTRATION_PROGRAM_URL_MAX_LENGTH) {
     return {
       ok: false,

@@ -6,10 +6,6 @@ import { Bloom, EffectComposer, Vignette } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import { type ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCatgirlImage } from '@/hooks/use-catgirl-image';
-import { useCatgirlMode } from '@/hooks/use-catgirl-mode';
-import { CATGIRL_SCENE_COLORS } from '@/lib/three/catgirl-scene-theme';
-
 import { AuroraBackdrop } from './backdrop-aurora';
 import { ChainNetwork } from './chain-network';
 import { LogoMark } from './logo-mark';
@@ -112,8 +108,12 @@ function ResponsiveLogoMark({
 }: { visibility: LogoVisibility } & ComponentProps<typeof LogoMark>) {
   const width = useThree((state) => state.size.width);
 
-  if (visibility === 'never') return null;
-  if (visibility === 'desktop-only' && width < DESKTOP_BREAKPOINT_PX) return null;
+  if (visibility === 'never') {
+    return null;
+  }
+  if (visibility === 'desktop-only' && width < DESKTOP_BREAKPOINT_PX) {
+    return null;
+  }
 
   return <LogoMark {...logoProps} />;
 }
@@ -133,8 +133,6 @@ export function VoteSceneCanvas({
 }: VoteSceneCanvasProps) {
   const [quality, setQuality] = useState(initialQuality);
   const config = VARIANT_CONFIG[variant];
-  const { enabled: catgirl } = useCatgirlMode();
-  const catgirlImage = useCatgirlImage();
 
   const dpr = useMemo((): [number, number] => (quality === 'high' ? [1, 2] : [1, 1.4]), [quality]);
   const [showEnhancements, setShowEnhancements] = useState(false);
@@ -150,7 +148,9 @@ export function VoteSceneCanvas({
   });
 
   useEffect(() => {
-    if (!showEnhancements) return;
+    if (!showEnhancements) {
+      return;
+    }
     let innerRaf = 0;
     const outerRaf = requestAnimationFrame(() => {
       innerRaf = requestAnimationFrame(() => onFullyReadyRef.current?.());
@@ -184,17 +184,11 @@ export function VoteSceneCanvas({
           slow frame only to tank again a second later reads as flicker. */}
       <PerformanceMonitor onDecline={() => setQuality('low')} />
 
-      <color
-        attach="background"
-        args={[catgirl ? CATGIRL_SCENE_COLORS.canvasBackground : '#0a1f42']}
-      />
-      <fog
-        attach="fog"
-        args={[catgirl ? CATGIRL_SCENE_COLORS.canvasBackground : '#0a1f42', 9, 20]}
-      />
+      <color attach="background" args={['#0a1f42']} />
+      <fog attach="fog" args={['#0a1f42', 9, 20]} />
 
-      <SceneLighting quality={quality} catgirl={catgirl} />
-      <AuroraBackdrop quality={quality} catgirl={catgirl} />
+      <SceneLighting quality={quality} />
+      <AuroraBackdrop quality={quality} />
 
       {config.showNetwork && (
         <ChainNetwork
@@ -212,22 +206,18 @@ export function VoteSceneCanvas({
           scale={config.logoScale}
           position={config.logoPosition}
           pointerFocus={config.logoPointerFocus}
-          catgirl={catgirl}
-          catgirlImage={catgirlImage}
         />
       )}
 
       {showEnhancements && !reducedMotion && (
         <EffectComposer multisampling={0}>
-          {!catgirl && (
-            <Bloom
-              luminanceThreshold={0.18}
-              luminanceSmoothing={0.85}
-              intensity={config.bloomIntensity}
-              mipmapBlur
-              radius={0.7}
-            />
-          )}
+          <Bloom
+            luminanceThreshold={0.18}
+            luminanceSmoothing={0.85}
+            intensity={config.bloomIntensity}
+            mipmapBlur
+            radius={0.7}
+          />
           <Vignette
             eskil={false}
             offset={0.18}

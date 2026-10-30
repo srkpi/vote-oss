@@ -1,4 +1,5 @@
-jest.mock('openid-client', () => ({ discovery: jest.fn(), enableNonRepudiationChecks: jest.fn() }));
+import { vi, describe, it, expect, afterEach } from 'vitest';
+vi.mock('openid-client', () => ({ discovery: vi.fn(), enableNonRepudiationChecks: vi.fn() }));
 import {
   OIDC_TTL,
   openOidcTransaction,
@@ -49,7 +50,7 @@ describe('encrypted KPI OIDC transaction', () => {
     state: 'browser-state',
     nonce: 'token-nonce',
   };
-  afterEach(() => jest.useRealTimers());
+  afterEach(() => vi.useRealTimers());
   it('round-trips the transaction without exposing the verifier in the cookie', async () => {
     const sealed = await sealOidcTransaction(transaction);
     expect(sealed.split('.')).toHaveLength(5);
@@ -63,12 +64,12 @@ describe('encrypted KPI OIDC transaction', () => {
     await expect(openOidcTransaction(parts.join('.'))).rejects.toThrow();
   });
   it('allows identification to take more than five minutes but expires after fifteen', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const startedAt = Date.now();
     const sealed = await sealOidcTransaction(transaction);
-    jest.setSystemTime(startedAt + 6 * 60 * 1000);
+    vi.setSystemTime(startedAt + 6 * 60 * 1000);
     await expect(openOidcTransaction(sealed)).resolves.toEqual(transaction);
-    jest.setSystemTime(startedAt + (OIDC_TTL + 1) * 1000);
+    vi.setSystemTime(startedAt + (OIDC_TTL + 1) * 1000);
     await expect(openOidcTransaction(sealed)).rejects.toThrow();
   });
   it.each([undefined, '', 'not-a-jwe'])(

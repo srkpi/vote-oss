@@ -46,8 +46,8 @@ export function StatusBadge({ status, size = 'md', muted, label }: StatusBadgePr
     <Badge variant={config.variant} size={size} dot={config.dot} muted={muted}>
       {config.pulse && (
         <span className="relative flex h-1.5 w-1.5">
-          <span className="bg-success absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
-          <span className="bg-success relative inline-flex h-1.5 w-1.5 rounded-full" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
         </span>
       )}
       {label ?? config.label}

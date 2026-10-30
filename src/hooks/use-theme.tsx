@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light');
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setThemeState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
   }, []);
 
@@ -58,7 +58,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // As long as the user hasn't made an explicit choice, keep following the
   // OS-level preference if it changes while the app is open.
   useEffect(() => {
-    if (readStoredTheme() !== null) return;
+    if (readStoredTheme() !== null) {
+      return;
+    }
 
     const query = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (event: MediaQueryListEvent) => {

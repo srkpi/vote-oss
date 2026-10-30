@@ -1,12 +1,6 @@
 import type { NextConfig } from 'next';
 
-const IMG_SRC = [
-  "'self'",
-  'data:',
-  'blob:',
-  'https://count.getloli.com',
-  'https://cdn.nekosia.cat',
-].join(' ');
+const IMG_SRC = ["'self'", 'data:', 'blob:'].join(' ');
 const POSTHOG_DOMAINS = [
   'https://eu.posthog.com',
   'https://us.posthog.com',
@@ -14,7 +8,6 @@ const POSTHOG_DOMAINS = [
   'https://eu-assets.i.posthog.com',
   'https://us-assets.i.posthog.com',
 ].join(' ');
-const NEKOSIA_API_DOMAIN = 'https://api.nekosia.cat';
 
 const ContentSecurityPolicy = `
   default-src 'self';
@@ -23,7 +16,7 @@ const ContentSecurityPolicy = `
   style-src-elem 'self' 'unsafe-inline' ${POSTHOG_DOMAINS};
   img-src ${IMG_SRC};
   font-src 'self';
-  connect-src 'self' ${POSTHOG_DOMAINS} ${NEKOSIA_API_DOMAIN};
+  connect-src 'self' ${POSTHOG_DOMAINS};
   worker-src 'self' blob: data:;
   object-src 'none';
   base-uri 'self';
@@ -35,6 +28,9 @@ const ContentSecurityPolicy = `
   .trim();
 
 const nextConfig: NextConfig = {
+  experimental: {
+    useTypeScriptCli: true,
+  },
   output: 'standalone',
   reactCompiler: true,
   poweredByHeader: false,

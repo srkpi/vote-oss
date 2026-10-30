@@ -31,17 +31,17 @@ export function ElectionMobileCard({
       >
         {election.title}
       </p>
-      <p className="font-body text-muted-foreground/60 mt-0.5 text-xs">
+      <p className="font-body mt-0.5 text-xs text-muted-foreground/60">
         {election.createdBy.fullName}
       </p>
       {election.editedAt && election.editedBy && (
-        <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 text-xs">
+        <p className="font-body mt-0.5 flex items-center gap-1 text-xs text-muted-foreground/50">
           <Pencil className="h-3 w-3" />
           {election.editedBy.fullName}
         </p>
       )}
       {isDeleted && election.deletedBy && (
-        <p className="font-body text-muted-foreground/50 mt-0.5 flex items-center gap-1 text-xs">
+        <p className="font-body mt-0.5 flex items-center gap-1 text-xs text-muted-foreground/50">
           <Trash2 className="h-3 w-3" />
           {election.deletedBy.fullName}
         </p>
@@ -88,7 +88,7 @@ export function ElectionMobileCard({
               variant="ghost"
               size="xs"
               asChild
-              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+              className="text-kpi-navy transition-colors hover:bg-kpi-blue-light/10"
             >
               <Link href={`/admin/elections/${election.id}/edit`}>
                 <Pencil className="h-4 w-4" />
@@ -103,7 +103,7 @@ export function ElectionMobileCard({
                 e.stopPropagation();
                 onRestore();
               }}
-              className="text-kpi-navy hover:bg-kpi-blue-light/10 transition-colors"
+              className="text-kpi-navy transition-colors hover:bg-kpi-blue-light/10"
             >
               <RotateCcw className="h-4 w-4" />
             </Button>

@@ -48,7 +48,7 @@ export function useBallotDecryption({
   useEffect(() => {
     abortRef.current?.abort();
     statusRef.current = 'idle';
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // oxlint-disable-next-line react/set-state-in-effect
     setDecryptedMap(new Map());
     setStatus('idle');
   }, [ballots, privateKey]);
@@ -58,7 +58,9 @@ export function useBallotDecryption({
   }, []);
 
   const decrypt = useCallback(() => {
-    if (statusRef.current !== 'idle') return;
+    if (statusRef.current !== 'idle') {
+      return;
+    }
 
     const { ballots, privateKey, choices } = latestRef.current;
 
@@ -87,13 +89,17 @@ export function useBallotDecryption({
 
     decryptBallots({ ballots, privateKey, choices, signal: controller.signal })
       .then((map) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          return;
+        }
         setDecryptedMap(map);
         statusRef.current = 'done';
         setStatus('done');
       })
       .catch((err) => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          return;
+        }
         console.error('Failed to decrypt ballots:', err);
         setDecryptedMap(new Map());
         statusRef.current = 'done';

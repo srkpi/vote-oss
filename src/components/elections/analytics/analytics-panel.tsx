@@ -82,17 +82,17 @@ function DecryptBanner({
   onDecrypt: () => void;
 }) {
   return (
-    <div className="border-kpi-orange/30 bg-card rounded-xl border p-5">
+    <div className="rounded-xl border border-kpi-orange/30 bg-card p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="bg-kpi-orange/15 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-            <Unlock className="text-kpi-orange h-5 w-5" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-kpi-orange/15">
+            <Unlock className="h-5 w-5 text-kpi-orange" />
           </div>
           <div>
-            <p className="font-body text-foreground text-sm font-semibold">
+            <p className="font-body text-sm font-semibold text-foreground">
               Розшифруйте бюлетені для повної аналітики
             </p>
-            <p className="font-body text-muted-foreground mt-0.5 text-xs leading-snug">
+            <p className="font-body mt-0.5 text-xs leading-snug text-muted-foreground">
               Часова аналітика вже доступна. Після дешифрування з&apos;явиться більше показників.
             </p>
           </div>
@@ -113,7 +113,7 @@ function DecryptBanner({
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
-  return <h2 className="font-display text-foreground text-lg font-semibold">{children}</h2>;
+  return <h2 className="font-display text-lg font-semibold text-foreground">{children}</h2>;
 }
 
 export function AnalyticsPanel({
@@ -127,10 +127,10 @@ export function AnalyticsPanel({
 }: AnalyticsPanelProps) {
   if (ballots.length === 0) {
     return (
-      <div className="border-border-color bg-card rounded-xl border p-12 text-center shadow-sm">
+      <div className="border-border-color rounded-xl border bg-card p-12 text-center shadow-sm">
         <EmptyState
           title="Немає даних для аналізу"
-          icon={<BarChart2 className="text-kpi-gray-mid h-7 w-7" />}
+          icon={<BarChart2 className="h-7 w-7 text-kpi-gray-mid" />}
         />
       </div>
     );
@@ -157,7 +157,7 @@ export function AnalyticsPanel({
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <SectionHeader>Аналітичні показники</SectionHeader>
-            <p className="text-muted-foreground hidden text-xs sm:inline">
+            <p className="hidden text-xs text-muted-foreground sm:inline">
               Натисніть на картку для деталей
             </p>
           </div>

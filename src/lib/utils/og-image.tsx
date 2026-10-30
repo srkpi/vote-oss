@@ -21,9 +21,15 @@ export function clampTitle(title: string, max = 255): string {
 }
 
 export function titleFontSize(title: string): number {
-  if (title.length <= 30) return 72;
-  if (title.length <= 50) return 58;
-  if (title.length <= 70) return 46;
+  if (title.length <= 30) {
+    return 72;
+  }
+  if (title.length <= 50) {
+    return 58;
+  }
+  if (title.length <= 70) {
+    return 46;
+  }
   return 40;
 }
 

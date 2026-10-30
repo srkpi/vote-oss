@@ -17,10 +17,14 @@ function detectGenderByPatronymic(patronymic: string): Gender {
   const lower = patronymic.toLowerCase();
 
   for (const ending of FEMALE_PATRONYMIC_ENDINGS) {
-    if (lower.endsWith(ending)) return 'female';
+    if (lower.endsWith(ending)) {
+      return 'female';
+    }
   }
   for (const ending of MALE_PATRONYMIC_ENDINGS) {
-    if (lower.endsWith(ending)) return 'male';
+    if (lower.endsWith(ending)) {
+      return 'male';
+    }
   }
   return 'unknown';
 }
@@ -36,10 +40,14 @@ function detectGenderByLastName(lastName: string): Gender {
   const lower = lastName.toLowerCase();
 
   for (const ending of FEMALE_LAST_NAME_ENDINGS) {
-    if (lower.endsWith(ending)) return 'female';
+    if (lower.endsWith(ending)) {
+      return 'female';
+    }
   }
   for (const ending of MALE_LAST_NAME_ENDINGS) {
-    if (lower.endsWith(ending)) return 'male';
+    if (lower.endsWith(ending)) {
+      return 'male';
+    }
   }
   return 'unknown';
 }
@@ -53,7 +61,9 @@ function detectGenderByFirstName(firstName: string): Gender {
   const lower = firstName.toLowerCase();
 
   // Apostrophe-containing names like Дар'я still end in 'я'
-  if (lower.endsWith('а') || lower.endsWith('я')) return 'female';
+  if (lower.endsWith('а') || lower.endsWith('я')) {
+    return 'female';
+  }
 
   // Ukrainian male names very rarely end in -а/-я
   // (exceptions: Ілля, Микола, Сава — but patronymics will have caught those)

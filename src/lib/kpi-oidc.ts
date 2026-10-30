@@ -44,7 +44,9 @@ export function sealOidcTransaction(transaction: OidcTransaction): Promise<strin
 }
 
 export async function openOidcTransaction(cookie: string | undefined): Promise<OidcTransaction> {
-  if (!cookie) throw new Error('Missing login transaction');
+  if (!cookie) {
+    throw new Error('Missing login transaction');
+  }
   const { payload } = await jwtDecrypt(cookie, transactionKey, {
     issuer: APP_URL,
     audience: OIDC_CALLBACK,
@@ -97,8 +99,9 @@ export function parseStudentClaims(claims: Record<string, unknown>): {
   ) {
     throw new InvalidUserDataError();
   }
-  if (!Array.isArray(claims.student_ids) || claims.student_ids.length === 0)
+  if (!Array.isArray(claims.student_ids) || claims.student_ids.length === 0) {
     throw new NotStudentError();
+  }
   if (!claims.student_ids.every((id) => typeof id === 'string' && id.trim())) {
     throw new InvalidUserDataError();
   }

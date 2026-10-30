@@ -1,33 +1,13 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { parseRequestBody } from '@/lib/api/request';
 import { requireAdmin } from '@/lib/auth';
 import { getCachedFaq, invalidateFaq, setCachedFaq } from '@/lib/cache';
-import { FAQ_CATEGORY_TITLE_MAX_LENGTH } from '@/lib/constants';
 import { Errors } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { faqCategoryBodySchema } from '@/lib/schemas/faq';
 
-/**
- * @swagger
- * /api/faq:
- *   get:
- *     summary: List all FAQ categories with their items
- *     description: >
- *       Public endpoint – no authentication required. Returns the full FAQ
- *       tree ordered by category position, with each category's items ordered
- *       by item position. Results are served from cache when available.
- *     tags:
- *       - FAQ
- *     responses:
- *       200:
- *         description: Array of FAQ categories
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/FaqCategory'
- */
 export async function GET() {
   const cached = await getCachedFaq();
   if (cached) {
@@ -57,38 +37,6 @@ export async function GET() {
   return NextResponse.json(categories);
 }
 
-/**
- * @swagger
- * /api/faq:
- *   post:
- *     summary: Create a FAQ category
- *     description: >
- *       Creates a new FAQ category appended at the end of the existing order.
- *       Restricted to admins with the `manage_faq` permission.
- *     tags:
- *       - FAQ
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/FaqCategoryCreateBody'
- *     responses:
- *       201:
- *         description: Category created
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FaqCategoryMeta'
- *       400:
- *         description: Missing or invalid title
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden – admin does not have FAQ management rights
- */
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (!auth.ok) {
@@ -101,20 +49,13 @@ export async function POST(req: NextRequest) {
     return Errors.forbidden('Only admins with FAQ management rights can manage FAQ');
   }
 
-  let body: { title?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return Errors.badRequest('Invalid JSON body');
+  const parsedBody = await parseRequestBody(req, faqCategoryBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
+  const body = parsedBody.data;
 
   const { title } = body;
-  if (!title || typeof title !== 'string' || !title.trim()) {
-    return Errors.badRequest('title is required');
-  }
-  if (title.trim().length > FAQ_CATEGORY_TITLE_MAX_LENGTH) {
-    return Errors.badRequest(`title must be at most ${FAQ_CATEGORY_TITLE_MAX_LENGTH} characters`);
-  }
 
   const last = await prisma.faqCategory.findFirst({
     orderBy: { position: 'desc' },
